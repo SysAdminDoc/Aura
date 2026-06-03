@@ -38,8 +38,8 @@ android {
         applicationId = "com.freevibe"
         minSdk = 26
         targetSdk = 35
-        versionCode = 111
-        versionName = "6.31.0"
+        versionCode = 112
+        versionName = "6.31.1"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
@@ -66,6 +66,11 @@ android {
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
+        // Backport java.* APIs (e.g. URLEncoder.encode(String, Charset), added in
+        // API 33) to our minSdk 26 floor. NewPipeExtractor's Utils.encodeUrlUtf8
+        // calls that overload on every search, which crashed with NoSuchMethodError
+        // on Android < 13 (issue #2: Sounds tab tap → crash on Android 10).
+        isCoreLibraryDesugaringEnabled = true
     }
 
     kotlinOptions {
@@ -95,6 +100,10 @@ android {
 }
 
 dependencies {
+    // Core library desugaring — required by NewPipeExtractor on API < 33 so
+    // URLEncoder.encode(String, Charset) and friends resolve at runtime (issue #2).
+    coreLibraryDesugaring(libs.desugar.jdk.libs)
+
     // Core
     implementation(libs.core.ktx)
     implementation(libs.activity.compose)

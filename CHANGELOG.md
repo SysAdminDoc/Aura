@@ -17,6 +17,9 @@ All notable changes to Aura will be documented in this file.
 - **CI verification (NX-12)**: new `.github/workflows/verify.yml` runs `assembleDebug` + `testDebugUnitTest` + `lintDebug` on every push to main and every PR. Uploads test + lint reports as artifacts on failure.
 - **Fastlane refresh (NX-8 partial)**: fastlane metadata bumped from stale FreeVibe naming to Aura with current feature set; `changelogs/111.txt` lands v6.31.0 release notes; new `obtainium.json` at repo root lets Obtainium users track Aura via the GitHub Releases feed.
 
+## v6.31.1
+- **Fix: Sounds/search crash on Android < 13 (issue #2)**: enabled core library desugaring (`desugar_jdk_libs:2.1.5`). NewPipeExtractor's `Utils.encodeUrlUtf8` calls `URLEncoder.encode(String, Charset)` — an API 33 method — on every YouTube search, which threw `NoSuchMethodError` and crashed the app the moment the Sounds tab loaded on Android 8–12. Desugaring backports the method down to the minSdk 26 floor.
+
 ## v6.31.0
 - **Shareable collections**: wallpaper collections now publish Firebase-backed Aura links, include those links in the system share sheet, and can display scannable QR codes.
 - **Collection import**: Collections now has an import action for pasted Aura links, shared JSON files, and QR images, with imported media remaining URL-backed until opened or applied.

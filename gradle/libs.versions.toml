@@ -28,10 +28,12 @@ turbine = "1.2.0"
 mockk = "1.13.13"
 androidx-test-ext-junit = "1.2.1"
 androidx-test-runner = "1.6.2"
+desugar-jdk-libs = "2.1.5"
 
 [libraries]
 # Core
 core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "core-ktx" }
+desugar-jdk-libs = { group = "com.android.tools", name = "desugar_jdk_libs", version.ref = "desugar-jdk-libs" }
 activity-compose = { group = "androidx.activity", name = "activity-compose", version.ref = "activity-compose" }
 
 # Compose BOM
