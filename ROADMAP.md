@@ -18,7 +18,7 @@ This roadmap is fed continuously by a research machine. On every pass, the build
 4. Check off ✅ each item you complete, leave it in place with the checkmark, commit per logical change with a "why" message, and push.
 5. Never edit this Implementer Instructions block or the 🔬 Researcher Queue headings. Never force-push.
 
-**Last researched:** 2026-06-04 / Cycle 13.
+**Last researched:** 2026-06-04 / Cycle 14.
 
 ---
 
@@ -714,6 +714,54 @@ Append-only Cycle 13 handoff. Every item below is source-backed in `docs/researc
   - Touches: cache/favorite/download metadata, detail reload paths, source-health diagnostics, storage cleanup, user copy, report/takedown queue.
   - Acceptance: stale/source-deleted media stops appearing in remote catalog, favorites/downloads show a clear unavailable/local-only state, users can delete local copies, and provider terms decide whether offline copies are retained or purged.
   - Verify: simulate deleted Reddit post, removed Pexels/Pixabay result, unavailable YouTube video, and deleted community upload; detail screens do not misrepresent source status; cleanup removes policy-required local copies.
+
+---
+
+## 🔬 Researcher Queue (Cycle 14 — 2026-06-04)
+
+Append-only Cycle 14 handoff. Every item below is source-backed in `docs/research/cycle-14-2026-06-04.md`; merge into the existing Now/Next/Later item named in `Touches` when implementation starts.
+
+- [ ] 🤖 🔬 **P0 — Background work status and scheduling ledger**
+  - Why: Aura has periodic auto-rotation, daily wallpaper, weather refresh, Aura Originals download, and trigger one-shots, but Settings does not show WorkManager state, last run, constraint delays, failures, or quota downgrades.
+  - Evidence: `AutoWallpaperWorker.kt`; `DailyWallpaperWorker.kt`; `WeatherUpdateWorker.kt`; `AuraOriginalsDownloader.kt`; `RotationTriggerService.kt`; Android WorkManager and Doze/App Standby docs.
+  - Touches: Settings diagnostics, worker result receipts, WorkManager inspection helpers, support/crash diagnostics, release QA script.
+  - Acceptance: Settings exposes each unique work name, enabled state, last success/failure, last error class, current WorkManager state, constraints, and user-actionable deferral reasons; support bundle includes a redacted background-work section.
+  - Verify: schedule/cancel/reschedule every worker; simulate no network, metered network, low battery, notification denial, Doze, and standby bucket changes; confirm status text matches WorkInfo and local receipts.
+
+- [ ] 🤖 🔬 **P0 — Boot-completed permission decision for rotation triggers**
+  - Why: `RECEIVE_BOOT_COMPLETED` is declared, but no boot receiver was found. WorkManager periodic jobs can persist without it, while rotation-trigger dynamic receivers do not restart after reboot until Aura cold-starts.
+  - Evidence: `AndroidManifest.xml`; no `BOOT_COMPLETED` receiver/source hit; `FreeVibeApp.reconcileRotationTriggers()`; `RotationTriggerService.kt`; Android Doze/background docs; Play foreground-service declaration docs.
+  - Touches: manifest, optional boot receiver, rotation-trigger settings, FGS declaration packet, permission ledger, release QA.
+  - Acceptance: either remove `RECEIVE_BOOT_COMPLETED` and document "rotation triggers resume after opening Aura", or add a boot receiver that starts `RotationTriggerService` only when the user opted in and only with clear notification/FGS evidence.
+  - Verify: reboot with triggers off/on; inspect foreground service and notification state before opening app; merged manifest permission diff; Play declaration matches chosen behavior.
+
+- [ ] 🤖 🔬 **P1 — Rotation trigger reliability and expedited-work fallback tests**
+  - Why: Unlock/screen-off and Tasker actions enqueue expedited `AutoWallpaperWorker` with `RUN_AS_NON_EXPEDITED_WORK_REQUEST`, so rotations can be delayed by quota, battery-not-low, network, Doze, App Standby, or `ExistingWorkPolicy.KEEP` coalescing.
+  - Evidence: `RotationTriggerService.enqueueRotation()`; `TaskerActionReceiver.kt`; Android WorkManager expedited/quota docs; Android Doze/App Standby docs.
+  - Touches: trigger settings copy, Tasker docs, worker diagnostics, manual QA script, FGS declaration packet.
+  - Acceptance: UI/docs say trigger actions enqueue a constrained rotation attempt; diagnostics show coalesced/downgraded/deferred attempts; visible manual rotation path reports immediate success/failure separately from background attempts.
+  - Verify: repeated unlocks, screen-off, and Tasker broadcasts under active/rare/restricted standby buckets; expedited quota exhaustion; no network; low battery; confirm one-shot coalescing and user-facing deferral reason.
+
+- [ ] 🤖 🔬 **P1 — WorkManager unique-work policy matrix**
+  - Why: Auto-wallpaper uses `UPDATE`, daily/weather/Aura Originals use `KEEP`, and future interval/constraint/manifest changes can silently leave stale work unless the intended policy is documented.
+  - Evidence: `AutoWallpaperWorker.scheduleWithConstraints()`; `DailyWallpaperWorker.schedule()`; `WeatherUpdateWorker.schedule()`; `AuraOriginalsDownloader.enqueue()`; WorkManager periodic-work docs.
+  - Touches: `docs/background-work-runbook.md`, Settings scheduling code, release checklist, worker tests.
+  - Acceptance: runbook lists unique work name, work type, enqueue policy, interval, flex/initial delay, constraints, retry/backoff, schedule trigger, cancel trigger, and when changes require update/cancel/re-enqueue or versioned work names.
+  - Verify: unit/static test compares declared runbook rows with code constants; changing scheduler interval/constraints updates work; daily/weather/originals do not duplicate work; Aura Originals manifest revision can force needed refresh.
+
+- [ ] 🤖 🔬 **P1 — Background network and data-saver posture**
+  - Why: Weather refresh uses connected network every 30 minutes, daily wallpaper fetches Reddit daily, Aura Originals requires unmetered network, and auto-rotation can fetch remote wallpapers unless Wi-Fi-only is enabled.
+  - Evidence: `WeatherUpdateWorker.kt`; `DailyWallpaperWorker.kt`; `AuraOriginalsDownloader.kt`; `AutoWallpaperWorker.kt`; Settings Wi-Fi/charging/idle controls; Android Doze/App Standby and WorkManager constraint docs.
+  - Touches: settings copy, worker constraints, Data safety/provider policy docs, diagnostics, release QA.
+  - Acceptance: each background network job declares metered/unmetered behavior, user toggle, provider/data impact, retry behavior, and failure UX; weather optionally supports unmetered-only or lower cadence; Data Saver/low battery states are tested.
+  - Verify: metered vs unmetered network, Data Saver on/off, no network, low battery, weather enabled/disabled, daily notifications denied/granted, provider failures.
+
+- [ ] 🤖 🔬 **P2 — Battery/vitals regression lab for live wallpapers and schedulers**
+  - Why: Video live wallpapers have FPS caps and a battery dashboard, but release planning needs measured evidence for battery saver, charging state, foreground-service time, background jobs, and network usage.
+  - Evidence: `VideoWallpaperService.kt`; `VideoBatteryProfile.kt`; `SettingsScreen.kt` battery dashboard; Android vitals categories; Doze/App Standby docs.
+  - Touches: manual QA scripts, `docs/performance/battery-lab.md`, release checklist, diagnostics/support bundle, video wallpaper settings.
+  - Acceptance: lab records effective FPS, requested FPS, battery percent, charging state, foreground/background visibility, FGS time, job count, network bytes, and user-visible copy for low-battery auto-caps.
+  - Verify: run video wallpaper visible/hidden, charging/unplugged, low battery, battery saver on/off, scheduled rotation active, daily/weather enabled; compare dumpsys/batterystats outputs before release.
 
 ---
 
@@ -2070,3 +2118,9 @@ Stars/dates as of research pass 2026-05-16.
 - Cycle 13 planning record — [docs/research/cycle-13-2026-06-04.md](docs/research/cycle-13-2026-06-04.md).
 - Store and provider IP/licensing policy — [Google Play Intellectual Property](https://support.google.com/googleplay/android-developer/answer/9888072), [Pexels license](https://www.pexels.com/license/), [Pexels API documentation](https://www.pexels.com/api/documentation/), [Pixabay content license summary](https://pixabay.com/service/license-summary/), [Freesound API terms](https://freesound.org/docs/api/terms_of_use.html).
 - User-generated and video/audio-source policy — [Reddit Developer Terms](https://redditinc.com/policies/developer-terms), [YouTube API Services Developer Policies](https://developers.google.com/youtube/terms/developer-policies).
+
+## Appendix R — Cycle 14 Sources
+
+- Cycle 14 planning record — [docs/research/cycle-14-2026-06-04.md](docs/research/cycle-14-2026-06-04.md).
+- Android background execution — [WorkManager define work requests](https://developer.android.com/develop/background-work/background-tasks/persistent/getting-started/define-work), [Doze and App Standby](https://developer.android.com/training/monitoring-device-state/doze-standby), [schedule alarms](https://developer.android.com/develop/background-work/services/alarms).
+- Foreground-service review — [Android foreground service types](https://developer.android.com/develop/background-work/services/fgs/service-types), [Play foreground service declarations](https://support.google.com/googleplay/android-developer/answer/13392821).
