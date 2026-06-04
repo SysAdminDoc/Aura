@@ -11,6 +11,9 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
+      id-token: write
+      attestations: write
+      artifact-metadata: write
     env:
       KEYSTORE_PATH: ${{ github.workspace }}/freevibe-release.jks
       RELEASE_DIR: release
@@ -144,12 +147,21 @@ jobs:
 
           echo "cert_sha256=$CERT_SHA256" >> "$GITHUB_OUTPUT"
 
-      - name: Generate checksums and release notes
+      - name: Generate checksums
         run: |
           (
             cd "$RELEASE_DIR"
             sha256sum "${{ steps.package.outputs.apk_name }}" > SHA256SUMS.txt
           )
+
+      - name: Attest release artifacts
+        id: attest
+        uses: actions/attest@v4
+        with:
+          subject-checksums: release/SHA256SUMS.txt
+
+      - name: Generate release notes
+        run: |
           APK_SHA256="$(cut -d ' ' -f 1 "$RELEASE_DIR/SHA256SUMS.txt")"
           {
             printf 'Aura %s (versionCode %s)\n\n' '${{ steps.package.outputs.version_name }}' '${{ steps.package.outputs.version_code }}'
@@ -157,6 +169,7 @@ jobs:
             printf -- '- APK: %s\n' '${{ steps.package.outputs.apk_name }}'
             printf -- '- APK SHA-256: %s\n' "$APK_SHA256"
             printf -- '- Signing certificate SHA-256: %s\n' '${{ steps.verify_apk.outputs.cert_sha256 }}'
+            printf -- '- GitHub artifact attestation: %s\n' '${{ steps.attest.outputs.attestation-url }}'
             printf -- '- Build type: release, android:debuggable=false\n\n'
             printf 'GitHub Releases and Obtainium should install the signed release APK. Debug APKs are development-only and are not published by this workflow.\n'
           } > "$RELEASE_DIR/RELEASE_NOTES.md"
