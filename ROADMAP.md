@@ -18,7 +18,7 @@ This roadmap is fed continuously by a research machine. On every pass, the build
 4. Check off ✅ each item you complete, leave it in place with the checkmark, commit per logical change with a "why" message, and push.
 5. Never edit this Implementer Instructions block or the 🔬 Researcher Queue headings. Never force-push.
 
-**Last researched:** 2026-06-04 / Cycle 11.
+**Last researched:** 2026-06-04 / Cycle 12.
 
 ---
 
@@ -618,6 +618,54 @@ Append-only Cycle 11 handoff. Every item below is source-backed in `docs/researc
   - Touches: Play app-content packet, notification/channel copy, rotation-trigger settings, audio playback QA script, release checklist.
   - Acceptance: packet lists every foreground service, type, trigger, user-visible notification, why delay/deferral is not equivalent, interruption impact, and demo-video script; notification-denied behavior is documented for playback and rotation triggers; no `BOOT_COMPLETED` media-playback launch exists.
   - Verify: start/stop playback and rotation triggers, inspect `dumpsys activity services`/notification state, deny `POST_NOTIFICATIONS`, capture demo-video steps, and compare manifest services with Play declaration rows.
+
+---
+
+## 🔬 Researcher Queue (Cycle 12 — 2026-06-04)
+
+Append-only Cycle 12 handoff. Every item below is source-backed in `docs/research/cycle-12-2026-06-04.md`; merge into the existing Now/Next/Later item named in `Touches` when implementation starts.
+
+- [ ] 🤖 🔬 **P0 — Lazy community identity creation and consent boundary**
+  - Why: Aura advertises "no account required," but startup currently calls `CommunityIdentityProvider.ensureSignedIn()`, which can create a Firebase anonymous account before the user uploads, votes, follows, or opens creator profile.
+  - Evidence: `FreeVibeApp.warmCommunityIdentity()`; `CommunityIdentityProvider.ensureSignedIn()`; fastlane "no account required" copy; Firebase anonymous-auth docs; Play account-deletion guidance.
+  - Touches: app startup warm-up, community write flows, creator profile entry, admin-claim refresh, privacy/Data safety docs, fastlane metadata.
+  - Acceptance: fresh install and public community browsing do not create a Firebase Auth user; anonymous identity is created only after an explicit community write/profile action; the UI labels the current identity type before writes; admin custom-claim refresh is lazy or behind an admin-only path.
+  - Verify: fresh install with network and Firebase configured, inspect Auth/current-user state before browsing; open public community feed; then upload/vote/follow/open creator profile and confirm identity creation plus auth label.
+
+- [ ] 🤖 🔬 **P0 — Accountless community deletion contract**
+  - Why: Anonymous community data spans Auth, RTDB, Storage, local identity prefs, votes, follows, creator profile state, and public uploads; deleting only the Firebase user would orphan public data.
+  - Evidence: `CommunityIdentityProvider`; `UploadRepository`; `WallpaperUploadRepository`; `VoteRepository`; `CreatorProfileRepository`; `database.rules.json`; Play account-deletion and Data safety docs; Firebase Auth/RTDB/Storage delete docs.
+  - Touches: Settings community/privacy controls, creator profile screen, `docs/privacy/privacy-policy.md`, Data safety matrix, community backend runbook, Firebase rules/tests.
+  - Acceptance: in-app deletion path lets users delete their community identity and associated data; scope explicitly includes uploads, Storage objects, upload metadata, vote markers, follows, profiles, collection shares, local fallback UUID, and local community caches; any retained moderation/abuse record is disclosed with reason and retention.
+  - Verify: seed user with sound upload, wallpaper upload, votes, follows, profile data, and collection share; run deletion; confirm RTDB/Storage/Auth/local prefs reflect the documented result and public feeds no longer expose deleted content.
+
+- [ ] 🤖 🔬 **P0 — Firebase deletion orchestrator and web request runbook**
+  - Why: Play expects a web deletion resource for users who uninstalled or cannot access the app; an Android-only deletion button cannot satisfy those requests, especially for anonymous Firebase identities.
+  - Evidence: Play account-deletion web-resource requirements; `database.rules.json` owner/admin paths; missing `firebase.json`/rules test harness from Cycle 9; Firebase `removeValue()`, `updateChildren(null)`, Storage `delete()`, and Auth `delete()` docs.
+  - Touches: Cloud Function or trusted admin script, support/deletion request page, identity-verification receipt, Firebase rules tests, admin runbook, release checklist.
+  - Acceptance: trusted deletion job can accept a verified UID/deletion code, enumerate all user-owned RTDB paths and Storage objects, delete/anonymize according to policy, delete the Auth user where possible, and record a minimal nonpublic audit receipt; web/email request instructions are discoverable from the privacy policy.
+  - Verify: emulator/admin dry run with seeded data; deletion failure retry path; post-delete public read checks; web-request support script produces a human-readable receipt without exposing other users' data.
+
+- [ ] 🤖 🔬 **P1 — Owner indexes and Storage deletion handles for community uploads**
+  - Why: Upload metadata stores public download URLs but not a canonical `storagePath` or per-owner upload index, making owner deletion and admin web deletion dependent on broad scans and brittle URL parsing.
+  - Evidence: `UploadRepository.uploadSound()` Storage path and RTDB metadata; `WallpaperUploadRepository.uploadWallpaper()` Storage path and RTDB metadata; `database.rules.json`; Firebase RTDB/Storage delete docs.
+  - Touches: upload metadata schema, RTDB rules, new owner index (`owner_uploads/{uid}` or equivalent), Storage rules, migration/backfill script, community backend runbook.
+  - Acceptance: new uploads store `storagePath`, owner UID, content type, and upload ID in both public metadata and an owner-scoped index; rules allow owners/admins to delete their own records; legacy uploads are backfilled or marked "admin-only deletion until migrated."
+  - Verify: upload sound/wallpaper, inspect metadata/index, delete by owner from app and by admin script, confirm Storage object deletion and public feed removal; rules tests reject cross-owner deletes.
+
+- [ ] 🤖 🔬 **P1 — Vote, follow, profile, and moderation deletion semantics**
+  - Why: Vote markers prevent duplicate voting, follows create both outbound user data and inbound creator references, and moderated content may need an audit trail. These cannot all use the same "hard delete" rule without policy decisions.
+  - Evidence: `VoteRepository.upvote()` nested and legacy voter markers; `CreatorProfileRepository.followCreator()`/`unfollowCreator()`; `database.rules.json` moderation and follow paths; Play deletion-retention guidance.
+  - Touches: deletion contract, privacy policy, RTDB schema, moderation runbook, abuse-prevention design, rules tests.
+  - Acceptance: deletion policy separately defines behavior for public uploads, vote counts, voter markers, outbound follows, inbound follows to a deleted creator, creator profile labels, moderation records, and abuse-prevention tombstones; retained records are nonpublic and minimized.
+  - Verify: deletion seed with voted content, followed creators, followers of deleted creator, and moderated upload; confirm post-delete counts, visibility, and retention match the policy.
+
+- [ ] 🤖 🔬 **P2 — Community data receipt/export surface**
+  - Why: Users need a way to understand and request deletion of an anonymous identity, especially after reinstall or when using the web deletion path.
+  - Evidence: `CreatorProfileScreen` currently shows uploads/votes/follows/leaderboard but no UID, export, or delete controls; `CommunityIdentityProvider.currentAuthLabel()` already exposes auth type; Play web deletion guidance.
+  - Touches: creator profile/settings UI, support docs, privacy policy, deletion request page, diagnostics redaction.
+  - Acceptance: UI shows auth type, UID suffix/deletion code, owned upload IDs, follow count, vote count or vote-marker count, and links to delete/export/community privacy details; export/share output redacts full tokens and does not include other users' private data.
+  - Verify: signed-out/local/Firebase-anonymous states; export before and after upload/vote/follow; deletion request code maps to the correct UID in admin tooling; diagnostics bundle redacts the full UID unless explicitly copied by the user.
 
 ---
 
@@ -1962,3 +2010,9 @@ Stars/dates as of research pass 2026-05-16.
 - Google Play sensitive data and declarations — [Permissions and APIs that Access Sensitive Information](https://support.google.com/googleplay/android-developer/answer/16558241), [Data safety section](https://support.google.com/googleplay/android-developer/answer/10787469), [foreground service declarations](https://support.google.com/googleplay/android-developer/answer/13392821).
 - Android permission behavior — [runtime permissions](https://developer.android.com/training/permissions/requesting), [runtime location permissions](https://developer.android.com/develop/sensors-and-location/location/permissions/runtime), [notification runtime permission](https://developer.android.com/develop/ui/compose/notifications/notification-permission).
 - Android special access and service APIs — [`Settings.System.canWrite`](https://developer.android.com/reference/android/provider/Settings.System#canWrite(android.content.Context)), [`Settings.ACTION_MANAGE_WRITE_SETTINGS`](https://developer.android.com/reference/android/provider/Settings#ACTION_MANAGE_WRITE_SETTINGS), [`SET_ALARM`](https://developer.android.com/reference/android/Manifest.permission#SET_ALARM), [foreground service types](https://developer.android.com/develop/background-work/services/fgs/service-types).
+
+## Appendix P — Cycle 12 Sources
+
+- Cycle 12 planning record — [docs/research/cycle-12-2026-06-04.md](docs/research/cycle-12-2026-06-04.md).
+- Google Play deletion and data disclosure — [app account deletion requirements](https://support.google.com/googleplay/android-developer/answer/13327111), [Data safety section](https://support.google.com/googleplay/android-developer/answer/10787469).
+- Firebase identity and deletion APIs — [anonymous authentication](https://firebase.google.com/docs/auth/android/anonymous-auth), [delete a Firebase user](https://firebase.google.com/docs/auth/android/manage-users#delete_a_user), [Realtime Database delete data](https://firebase.google.com/docs/database/android/read-and-write#delete_data), [Cloud Storage delete files](https://firebase.google.com/docs/storage/android/delete-files).
