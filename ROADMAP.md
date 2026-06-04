@@ -3,9 +3,22 @@
 > Open-source Android personalization: wallpapers, video wallpapers, ringtones, sounds.
 > Stay the OSS alternative to Zedge: no ads, no surprise charges, no dark patterns.
 
-**Version:** 2026-05-17-rev4 (freshness pass: Android 17 stable approaches June 2026 — added NX-10 EyeDropper API, NX-11 Photo Picker 9:16, NX-12 CI verification, NX-13 predictive-back wiring, L-10 adaptive layouts; logged yt-dlp CVE-2026-26331 risk row; competitor validation from One UI 8.5 stable rollout).
-**Code version at write:** v6.31.0 / versionCode 111 (per `app/build.gradle.kts`; build verification still pending in N-1 toolchain pass).
+**Version:** 2026-06-04-cycle1 (research refresh: reconciled v6.31.1, CI verification now present, local Android SDK still absent; added Cycle 1 researcher queue for App Check, performance profiling, distribution verification, foreground-service policy hardening, provenance/reporting, and video playlists).
+**Code version at write:** v6.31.1 / versionCode 112 (per `app/build.gradle.kts`; local build verification still pending because Android SDK 35 is absent on this machine).
 **Charter:** personalization, AMOLED-first, free-by-default, multi-source content aggregation, community-fed catalog, polite live wallpapers (battery-aware, pause-on-invisible).
+
+---
+
+## ▶ Implementer Instructions (for the build machine)
+
+This roadmap is fed continuously by a research machine. On every pass, the build machine should:
+1. `git pull --rebase` to get the latest researched items before starting.
+2. Work the open 🤖 items top-down by priority (P0 → P3). Build them properly: multi-file structure, real error handling, no runtime auto-install hacks, version strings synced, docs/CHANGELOG updated in the same commit.
+3. In addition to building items, run a full UX audit each pass. Walk every screen / page / dialog / form / table / empty-loading-error-disabled state across light/dark/high-contrast themes. Check onboarding, navigation clarity, spacing/contrast/alignment, clipping/overflow, hierarchy, microcopy, destructive-action guards, keyboard + screen-reader accessibility, and trust signals. Fix what you find, or file it back as a new 🤖 roadmap item if it is larger than a pass.
+4. Check off ✅ each item you complete, leave it in place with the checkmark, commit per logical change with a "why" message, and push.
+5. Never edit this Implementer Instructions block or the 🔬 Researcher Queue headings. Never force-push.
+
+**Last researched:** 2026-06-04 / Cycle 1.
 
 ---
 
@@ -22,15 +35,15 @@ If you're adding a feature and the source isn't in the Appendix, do not add it. 
 
 ---
 
-## State of the Repo (snapshot, 2026-05-17)
+## State of the Repo (snapshot, 2026-06-04)
 
 - Kotlin 2.1.0 / Compose / Material 3, Hilt 2.53.1, Room 2.6.1 (v14), Retrofit 2.11.0, OkHttp 4.12.0, Media3 1.5.1, Coil 2.7.0, WorkManager 2.10.0, Glance 1.1.1, NewPipe Extractor 0.24.8, youtubedl-android 0.18.1, **ML Kit `segmentation-subject:16.0.0-beta1`** (N-3 migrated 2026-05-16), **Firebase BoM 34.13.0** (N-2 shipped 2026-05-16), `play-services-base:18.5.0` (ModuleInstallClient for unbundled segmenter).
-- 124 Kotlin files in `app/src/main/java/com/freevibe/`, 49 unit-test files (+1 audit-pass tests), 0 known CVEs in scanner, 1 design-note TODO resolved (`VoteRepository.kt` admin auth → Custom Claims).
-- Shipped via 22 Implementation Passes since 2026-04-25 (latest: 2026-05-17 hardening audit). See Implementation Log.
-- Distribution: GitHub Releases only; signed via `freevibe.jks`. CI workflow `.github/workflows/release.yml` triggered on `v*` tag. Per-ABI splits + F-Droid metadata still pending (NX-8).
+- 130 Kotlin files in `app/src/main/java/com/freevibe/`, 50 unit-test files, scanner not rerun in Cycle 1, 1 design-note TODO resolved (`VoteRepository.kt` admin auth → Custom Claims).
+- Shipped via implementation passes since 2026-04-25 (latest code release tag: `v6.31.1`, Android 8-12 YouTube/Sounds crash fixed with core library desugaring). See Implementation Log.
+- Distribution: GitHub Releases + Obtainium manifest; signed via `freevibe.jks`. CI workflow `.github/workflows/verify.yml` now runs assembleDebug/testDebugUnitTest/lintDebug on push/PR; `.github/workflows/release.yml` still owns tag-triggered APK upload. Per-ABI splits + F-Droid/Izzy metadata still pending (NX-8).
 - Package id `com.freevibe`, brand "Aura"; do not change without a migration plan (re-installs lose data; existing community uploads keyed by device id).
-- Build env on the executing VM: **no JDK/Android SDK installed** — every Implementation Pass since 2026-04-25 has been static-review-only. `./gradlew :app:assembleDebug` runtime verification (N-1 gating) requires a workstation with the Android Studio JBR + SDK 35.
-- CI surface (rev4 note): `.github/workflows/release.yml` only triggers on `v*` tag push or `workflow_dispatch`. There is **no automated PR / push build verification, no unit-test run, no lint** — the manual gating gap that NX-12 closes.
+- Build env on the executing VM: OpenJDK 21 and Gradle wrapper work, but Android SDK 35 is absent (`local.properties` points to a non-existent SDK path). `./gradlew :app:assembleDebug` runtime verification still needs Android SDK installation or a workstation with Android Studio SDK 35.
+- CI surface (Cycle 1 note): `.github/workflows/verify.yml` closes the prior no-PR-build gap. Branch protection requiring `verify` is still an owner action.
 - Platform horizon (rev4 note): Android 17 reached Platform Stability in Beta 3 (March 2026), Beta 4 shipped 2026-04-16, stable expected June 2026 — sets API 37 baseline with EyeDropper, PhotoPicker 9:16 customization, Contacts Picker, ACCESS_LOCAL_NETWORK, Bubbles. One UI 8.5 stable rolling out May 2026 with Smart Subject Placement + AI Weather Effects — competitor validation of Aura's existing Phase 6.3 weather trajectory + NX-2 lockscreen-depth direction. ([Android 17 release notes](https://developer.android.com/about/versions/17/release-notes); [9to5Google Beta 2 EyeDropper](https://9to5google.com/2026/02/26/android-17-beta-2-contacts-and-display-color-access/); [SamMobile One UI 8.5 features](https://www.sammobile.com/news/one-ui-8-5-update-top-features/).)
 
 ### What is shipped (Phase 1-7 status)
@@ -75,11 +88,11 @@ Preserved verbatim from prior passes; do not edit unless a regression occurred.
 - [x] 6.2 Dark/light auto-switch (`SystemThemeListener` via `ComponentCallbacks.onConfigurationChanged`; per-slot wallpaper IDs; `WallpaperApplier.applyByLocator` handles file/content/http schemes).
 - [x] 6.3 Weather effects overlay (`WeatherParticleRenderer` + `WeatherWallpaperService`, NOAA-coded effects, 30-min `WeatherUpdateWorker`).
 - [x] 6.4 Time-of-day adaptive tint (`SolarCalculator` DST-aware, `ColorMatrix` cached per 5-min bucket).
-- [ ] **6.5 Smart Crop with subject detection** — never shipped. Carried to **Next** below.
+- [x] **6.5 Smart Crop with subject detection** — wallpaper and video variants shipped 2026-05-17 (`SmartCropCalculator`, `SmartCropDetector`, `WallpaperCropViewModel.applySmartCrop`, `VideoCropScreen` frame extraction). Remaining lockscreen-depth use belongs to NX-2.
 
 #### Phase 7 — Polish & Infra
 - [x] 7.1 Unified Audio Service (`AudioPlaybackService` + MediaSession + `AudioPreviewCache`).
-- [ ] **7.2 SelectedContentHolder replacement** — still a global singleton; brittle on process death. Carried to **Next**.
+- [~] **7.2 SelectedContentHolder replacement** — primary selected wallpaper/sound now survive process death via SharedPreferences JSON; full nav-graph-scoped replacement and pager-list removal still pending under NX-4.
 - [ ] **7.3 Favorites sync (Firestore + Google sign-in)** — blocked on `default_web_client_id` in `google-services.json`. Carried to **Next**.
 - [ ] 7.4 Additional widgets (Daily Wallpaper, Sound Quick-Set, Scheduler Controls) — partial; shuffle widget exists. Carried to **Later**.
 - [ ] 7.5 True offline mode + prefetch + < 1.5 s cold start — partial; Coil disk cache shipped, offline favorites manager exists. Carried to **Later**.
@@ -89,6 +102,54 @@ Preserved verbatim from prior passes; do not edit unless a regression occurred.
 - 8.2 Wear OS companion. **Later** (re-scoped for Wear OS 6 + Watch Face Push).
 - 8.3 Desktop companion (Tauri/Electron). **Later.**
 - 8.4 Stickers / emoji. **Under Consideration.**
+
+---
+
+## 🔬 Researcher Queue (Cycle 1 — 2026-06-04)
+
+Append-only Cycle 1 handoff. Every item below is source-backed in `docs/research/cycle-1-2026-06-04.md`; merge into the existing Now/Next/Later item named in `Touches` when implementation starts instead of creating a second parallel feature.
+
+- [ ] 🤖 🔬 **P0 — Add Firebase App Check for community writes**
+  - Why: Anonymous Firebase Auth proves a user session, not that writes originate from Aura. Community uploads/votes now have server-side admin Custom Claims, but RTDB/Storage writes are still cheap for non-Aura clients to automate.
+  - Evidence: `database.rules.json:9`, `database.rules.json:41`, `database.rules.json:52`, `app/build.gradle.kts:201-204`; Firebase App Check docs support Realtime Database and Cloud Storage and recommend monitoring metrics before enforcement.
+  - Touches: N-2 follow-up; `gradle/libs.versions.toml`, `app/build.gradle.kts`, `FreeVibeApp.kt`, Firebase console setup, `docs/firebase-admin-claims.md`, new App Check rollout doc.
+  - Acceptance: debug provider works for emulator/dev builds; release builds send Play Integrity App Check tokens; Firebase metrics are monitored before enforcement; RTDB/Storage enforcement can be enabled without locking out legitimate users.
+  - Verify: debug-provider upload/vote on emulator; release-device upload/vote; Firebase App Check request metrics; RTDB/Storage rules still reject unauthenticated writes.
+
+- [ ] 🤖 🔬 **P1 — Baseline Profile + Macrobenchmark gate for startup and grid jank**
+  - Why: Aura claims instant startup and L-8 targets <1.5 s cold start, but there is no benchmark/profile module to prove startup, first-scroll, or dense-grid smoothness.
+  - Evidence: `README.md:23`, `ROADMAP.md:359-362`; source search found no `androidx.benchmark`, `BaselineProfile`, `Macrobenchmark`, or `JankStats` dependency; Android Baseline Profile docs recommend app-specific critical-user-journey profiles.
+  - Touches: L-8 / U-13; `settings.gradle.kts`, `gradle/libs.versions.toml`, app Gradle config, new benchmark/baseline-profile module, CI artifact upload, optional debug-only Settings diagnostics.
+  - Acceptance: generated profile covers Wallpapers, Videos, Sounds, Favorites, and Wallpaper Detail; Macrobenchmark captures startup and scroll metrics; profile/no-profile results are attached to CI or release notes.
+  - Verify: `generateBaselineProfile`; Macrobenchmark on a physical device, not emulator-only; compare startup and frame metrics before/after profile.
+
+- [ ] 🤖 🔬 **P1 — Fold Android developer verification + release provenance into NX-8**
+  - Why: Aura's distribution path is GitHub Releases/Obtainium/F-Droid/Izzy, and Android developer verification begins affecting non-Play installs on certified devices in select regions in September 2026.
+  - Evidence: Android developer verification docs; current `obtainium.json`; NX-8 still has per-ABI splits/F-Droid/Izzy pending.
+  - Touches: NX-8; release workflow, GitHub release template, `docs/distribution`, fastlane metadata, checksums/SBOM/provenance, signing-key continuity docs.
+  - Acceptance: package registration path is documented for owner action; releases publish SHA-256 checksums; Obtainium/Izzy/F-Droid install paths are documented; branch protection requiring `verify` is enabled or explicitly marked owner-blocked.
+  - Verify: owner confirms package registration status; install/update via Obtainium; compare APK checksum to release note; `git tag v*` release attaches expected APK assets.
+
+- [ ] 🤖 🔬 **P1 — Rotation trigger foreground-service policy hardening**
+  - Why: The unlock/screen-off rotation feature uses a long-lived `specialUse` foreground service. Android docs allow `specialUse`, but Play reviews the manifest property/use case, so Aura needs a policy-ready runbook and fallback decision.
+  - Evidence: `app/src/main/AndroidManifest.xml:29`, `app/src/main/AndroidManifest.xml:150-155`; Android foreground-service docs require enough manifest/Play Console explanation for `specialUse`.
+  - Touches: NX-6; `RotationTriggerService.kt`, manifest property text, Settings rotation copy, fastlane/release policy notes, exact-alarm/WorkManager fallback decision.
+  - Acceptance: service runs only while user-enabled triggers are active; notification copy explains the active trigger; Play declaration text exists; exact-alarm alternative is scoped without silently adding a restricted permission.
+  - Verify: toggle unlock/screen-off triggers on/off; inspect foreground notification; Android 14+ background/doze manual pass; Play policy declaration reviewed by owner before submission.
+
+- [ ] 🤖 🔬 **P1 — Source provenance panel + community report queue**
+  - Why: Aura aggregates third-party content and hosts community uploads. It already stores source URLs/uploader/license fields, but users need consistent provenance, and moderators need a report intake that does not rely on public comments or ad hoc downvotes.
+  - Evidence: `Mappers.kt` maps `sourcePageUrl`/`uploaderName`, `WallpaperDetailScreen.kt` and `SoundDetailScreen.kt` show source fields; Pexels/Pixabay expose creator/source metadata; YouTube branding guidance calls for clear source attribution in mixed-source apps; Zedge requires account + metadata for uploads.
+  - Touches: T-E / N-2; models/entities, `WallpaperDetailScreen.kt`, `SoundDetailScreen.kt`, RTDB moderation/report queue, rules, licenses screen.
+  - Acceptance: every detail screen has compact source/provenance affordance; community entries have a report action; reports are App-Checked/authenticated; admins can resolve/hide/unhide through Custom Claim rules.
+  - Verify: manual detail-screen pass by source (Pexels/Pixabay/Reddit/YouTube/community/bundled); Firebase rules tests for report/create/read and admin resolution.
+
+- [ ] 🤖 🔬 **P2 — Video wallpaper playlists and per-video behavior profiles**
+  - Why: Aura has local video import, Fit/Fill, crop, thumbnails, Smart Crop, and battery dashboard, but users with multiple clips still apply one video at a time. Focused FOSS video-wallpaper competitors now expose playlists, shuffle/loop, smart start times, and one-shot behavior.
+  - Evidence: UndeadWallpaper feature set; Aura `VideoWallpapersScreen`, `VideoCropScreen`, and `VideoWallpaperService` already own the core local-video primitives.
+  - Touches: NX-1 after GL/AGSL/ExoPlayer engine migration; Room migration, video ViewModel, video wallpaper engine, Settings/apply sheet.
+  - Acceptance: users can create a video wallpaper profile with ordered clips, shuffle/loop/one-shot, per-clip crop/fit/FPS, missing-media recovery, and low-battery FPS cap.
+  - Verify: create/reorder/delete playlist, apply it, reboot, test unlock behavior, delete one media URI, verify graceful fallback and battery cap.
 
 ---
 
@@ -1181,3 +1242,16 @@ Stars/dates as of research pass 2026-05-16.
 - Compose Multiplatform 2026 (informs L-4) — [Compatibility & versioning matrix](https://kotlinlang.org/docs/multiplatform/compose-compatibility-and-versioning.html), [Kotlin 2.2.20 what's new](https://kotlinlang.org/docs/whatsnew2220.html), [Production-ready in 2026 BestHub](https://www.besthub.dev/articles/why-kotlin-multiplatform-compose-multiplatform-are-production-ready-in-2026-24d731545514), [KMP ultimate guide 2026 commonmain.dev](https://commonmain.dev/kotlin-multiplatform/).
 - Sunrise alarm references — [yuriykulikov/AlarmClock GitHub](https://github.com/yuriykulikov/AlarmClock).
 - Custom ringtones Android UX — [9to5Google March 2024 contacts](https://9to5google.com/2024/03/20/google-contacts-custom-ringtones-android/).
+
+---
+
+## Appendix E — Cycle 1 Sources
+
+- Cycle 1 planning record — [docs/research/cycle-1-2026-06-04.md](docs/research/cycle-1-2026-06-04.md).
+- Firebase App Check and Play Integrity — [App Check overview](https://firebase.google.com/docs/app-check), [Android Play Integrity provider](https://firebase.google.com/docs/app-check/android/play-integrity-provider).
+- Android performance guardrails — [Baseline Profiles overview](https://developer.android.com/topic/performance/baselineprofiles/overview), [create Baseline Profile](https://developer.android.com/topic/performance/baselineprofiles/create-baselineprofile), [Dex layout optimizations](https://developer.android.com/topic/performance/baselineprofiles/dex-layout-optimizations), [Macrobenchmark overview](https://developer.android.com/topic/performance/benchmarking/macrobenchmark-overview), [JankStats](https://developer.android.com/topic/performance/jankstats).
+- Android distribution and policy — [Developer verification](https://developer.android.com/developer-verification), [foreground service types](https://developer.android.com/develop/background-work/services/fgs/service-types), [Play Console foreground service declaration](https://support.google.com/googleplay/android-developer/answer/13392821), [document provider access](https://developer.android.com/training/data-storage/shared/documents-files).
+- Open-source wallpaper ecosystem — [Muzei API](https://api.muzei.co/), [Muzei repository](https://github.com/muzei/muzei), [Doodle](https://github.com/patzly/doodle-android), [UndeadWallpaper](https://github.com/DroidWorksStudio/UndeadWallpaper).
+- Marketplace comparison — [Zedge community upload guide](https://help.zedge.net/hc/en-us/articles/21801574348948-Uploading-Content-to-the-Zedge-Community-from-Your-Mobile-Device), [Zedge Play listing](https://play.google.com/store/apps/details?id=net.zedge.android), [Backdrops Play listing](https://play.google.com/store/apps/details?id=com.backdrops.wallpapers).
+- Content-source constraints — [Pexels API docs](https://www.pexels.com/api/documentation/), [Pexels license](https://www.pexels.com/license/), [Pixabay API docs](https://pixabay.com/api/docs/), [YouTube API Services Terms](https://developers.google.com/youtube/terms/api-services-terms-of-service), [YouTube API branding guidelines](https://developers.google.com/youtube/terms/branding-guidelines).
+- Extractor dependency watch — [NewPipeExtractor releases](https://github.com/TeamNewPipe/NewPipeExtractor/releases), [youtubedl-android releases](https://github.com/yausername/youtubedl-android/releases), [youtubedl-android Maven artifact](https://central.sonatype.com/artifact/io.github.junkfood02.youtubedl-android/library).
