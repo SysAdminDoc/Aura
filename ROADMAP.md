@@ -477,6 +477,54 @@ Append-only Cycle 8 handoff. Every item below is source-backed in `docs/research
 
 ---
 
+## 🔬 Researcher Queue (Cycle 9 — 2026-06-04)
+
+Append-only Cycle 9 handoff. Every item below is source-backed in `docs/research/cycle-9-2026-06-04.md`; merge into the existing Now/Next/Later item named in `Touches` when implementation starts.
+
+- [ ] 🤖 🔬 **P0 — Firebase rules test and deploy harness**
+  - Why: Aura has tracked RTDB rules but no tracked Firebase deploy config, Storage rules file, emulator config, or rules test harness.
+  - Evidence: `database.rules.json`; missing `firebase.json`, `.firebaserc`, `storage.rules`, and rules-unit test files; Firebase Emulator Suite docs; Firebase RTDB/Storage rules docs.
+  - Touches: `firebase.json`, `.firebaserc` or documented project alias policy, `database.rules.json`, new `storage.rules`, rules tests, CI/release checklist, `docs/firebase-admin-claims.md`.
+  - Acceptance: emulator-backed tests cover public read, authenticated write, owner update/delete, admin moderation, votes/voters, reports, creator profiles, and collection shares; deploy and rollback commands are documented; CI or a release preflight runs the rules suite.
+  - Verify: rules tests fail on unauthenticated writes and non-owner updates; admin Custom Claim tests pass; `firebase emulators:exec` or equivalent command exits cleanly before deploy.
+
+- [ ] 🤖 🔬 **P0 — Community owner field normalization and delete/takedown flow**
+  - Why: RTDB rules authorize owners through `uploaderUid`, while upload repositories write `uploaderId`; Aura cannot safely promise self-service delete/edit or owner-only metadata writes until this is consistent.
+  - Evidence: `database.rules.json`; `UploadRepository.kt`; `WallpaperUploadRepository.kt`; Cycle 4 community data lifecycle finding; Firebase Storage delete docs.
+  - Touches: upload metadata schema, migration/backfill plan, RTDB rules, Storage delete path, upload detail actions, privacy/community-data docs.
+  - Acceptance: one canonical owner field is used for sounds and wallpapers; existing metadata is migrated or dual-read safely; owners can delete their metadata and Storage object; admins can takedown content; failed blob/metadata deletes leave auditable retry state.
+  - Verify: owner delete removes feed item and Storage object; non-owner delete fails in rules tests; admin takedown hides/removes as designed; orphan retry path is exercised.
+
+- [ ] 🤖 🔬 **P1 — Storage rules and orphan lifecycle cleanup**
+  - Why: Upload size/type/path checks currently live in app code, but Storage needs server-side enforcement and cleanup for orphaned blobs or removed content.
+  - Evidence: no tracked `storage.rules`; sound uploads allow 20 MB locally; wallpaper uploads compress to 4 MB locally; Firebase Storage rules docs expose `request.resource.size` and `request.resource.contentType`; Cloud Storage lifecycle docs.
+  - Touches: `storage.rules`, Storage emulator tests, upload repositories, cleanup job/runbook, lifecycle policy docs, release checklist.
+  - Acceptance: Storage rules restrict writes to authenticated owner paths, enforce sound/image MIME and size ceilings, define read behavior, and block cross-user overwrite/delete; lifecycle or cleanup process handles abandoned temp/orphan objects without deleting valid public uploads.
+  - Verify: emulator tests reject oversize/wrong-type/cross-owner uploads; metadata-save failure cleanup still works; orphan cleanup dry run reports expected objects before delete.
+
+- [ ] 🤖 🔬 **P1 — App Check and community abuse throttling**
+  - Why: Anonymous Auth and vote markers do not prove requests come from Aura or prevent scripted uploads, votes, reports, follows, and profile writes at scale.
+  - Evidence: `CommunityIdentityProvider.ensureSignedIn()` anonymous/fallback identity; `VoteRepository.upvote()` voter marker; no App Check init/runbook found; Firebase App Check docs for RTDB and Storage.
+  - Touches: App Check initialization, debug-provider docs, Firebase console enforcement runbook, upload/vote/report quota design, backend counters or Cloud Functions if needed, release checklist.
+  - Acceptance: App Check is installed with Play Integrity plus debug/dev instructions; request metrics are monitored before enforcement; RTDB and Storage enforcement dates are recorded; abuse quotas exist for uploads, reports, votes, follows, and profile edits.
+  - Verify: debug build works with debug token; release build obtains valid token; monitor-mode metrics are reviewed; after enforcement, unauthenticated/unverified scripted requests fail while normal app flows pass.
+
+- [ ] 🤖 🔬 **P1 — Moderation report queue and audit trail**
+  - Why: The current `/moderation/{contentId}=true` boolean hides content but does not capture report reason, reporter privacy, resolver, timestamp, status, appeal/restore, or block semantics required for public UGC operations.
+  - Evidence: `VoteRepository.moderateHide()` and `moderateUnhide()`; `database.rules.json` moderation path; Cycle 1 report queue item; Cycle 8 Play UGC policy review.
+  - Touches: report models/repository, report actions in content detail screens, RTDB rules, admin moderation UI, privacy/report docs, Play app-content packet.
+  - Acceptance: users can report community content with categories; reports are App-Checked/authenticated and rate-limited; admins can resolve/hide/unhide with reason and timestamp; audit entries record resolver UID without exposing reporter identity publicly; block-user behavior is defined or explicitly out of scope.
+  - Verify: report create/read/admin-resolve rules tests; manual report -> admin hide -> feed removal -> unhide flow; reporter data is not public; Play UGC checklist row is complete.
+
+- [ ] 🤖 🔬 **P2 — Community backend operations runbook**
+  - Why: Community backend changes can break public reads/writes independently from APK builds, and Aura has no single release artifact tying rules, App Check, Storage cleanup, moderation, and deletion evidence together.
+  - Evidence: `docs/firebase-admin-claims.md` manual deploy notes; missing Firebase deploy config; Cycle 8 release metadata packet; Firebase and Cloud Storage lifecycle docs.
+  - Touches: `docs/community-backend-runbook.md`, release checklist, deploy/rollback notes, incident/takedown notes, App Check enforcement ledger, Storage lifecycle policy evidence.
+  - Acceptance: runbook records current deployed rules hash/version, deploy command, rollback command, App Check monitor/enforce status, rules test command, cleanup cadence, takedown SLA, and owner/admin deletion verification steps.
+  - Verify: dry-run release checklist includes backend evidence; a simulated bad rules deploy has a rollback path; a sample takedown/delete case leaves documented evidence without leaking user data.
+
+---
+
 ## Now — execute this cycle
 
 Five items. Four landed in the 2026-05-16 autonomous batch (N-2..N-5, marked
@@ -1797,3 +1845,10 @@ Stars/dates as of research pass 2026-05-16.
 - Cycle 8 planning record — [docs/research/cycle-8-2026-06-04.md](docs/research/cycle-8-2026-06-04.md).
 - Google Play listing and policy docs — [preview assets](https://support.google.com/googleplay/android-developer/answer/9866151), [metadata policy](https://support.google.com/googleplay/android-developer/answer/9898842), [User Data / privacy policy](https://support.google.com/googleplay/android-developer/answer/10144311), [content rating](https://support.google.com/googleplay/android-developer/answer/9859655), [user-generated content](https://support.google.com/googleplay/android-developer/answer/9876937), [AI-generated content](https://support.google.com/googleplay/android-developer/answer/13985936).
 - Alternate store metadata — [F-Droid Inclusion Policy](https://f-droid.org/docs/Inclusion_Policy/), [F-Droid Anti-Features](https://f-droid.org/en/docs/Anti-Features/), [F-Droid descriptions/graphics/screenshots](https://f-droid.org/en/docs/All_About_Descriptions_Graphics_and_Screenshots/), [IzzyOnDroid APK repository notes](https://apt.izzysoft.de/fdroid/index/apk).
+
+## Appendix M — Cycle 9 Sources
+
+- Cycle 9 planning record — [docs/research/cycle-9-2026-06-04.md](docs/research/cycle-9-2026-06-04.md).
+- Firebase rules and auth — [Realtime Database Security Rules](https://firebase.google.com/docs/database/security), [Custom Claims and Security Rules](https://firebase.google.com/docs/auth/admin/custom-claims), [Local Emulator Suite for Security Rules](https://firebase.google.com/docs/rules/emulator-setup), [Cloud Storage Security Rules conditions](https://firebase.google.com/docs/storage/security/rules-conditions).
+- Firebase backend operations — [App Check overview](https://firebase.google.com/docs/app-check), [Play Integrity provider](https://firebase.google.com/docs/app-check/android/play-integrity-provider), [App Check enforcement](https://firebase.google.com/docs/app-check/enable-enforcement), [delete files with Cloud Storage on Android](https://firebase.google.com/docs/storage/android/delete-files), [Cloud Storage lifecycle management](https://docs.cloud.google.com/storage/docs/lifecycle).
+- UGC policy — [Google Play user-generated content](https://support.google.com/googleplay/android-developer/answer/9876937).
