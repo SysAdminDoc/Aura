@@ -3,7 +3,7 @@
 > Open-source Android personalization: wallpapers, video wallpapers, ringtones, sounds.
 > Stay the OSS alternative to Zedge: no ads, no surprise charges, no dark patterns.
 
-**Version:** 2026-06-04-cycle1 (research refresh: reconciled v6.31.1, CI verification now present, local Android SDK still absent; added Cycle 1 researcher queue for App Check, performance profiling, distribution verification, foreground-service policy hardening, provenance/reporting, and video playlists).
+**Version:** 2026-06-04-cycle2 (research refresh: added release-integrity blockers for debug-vs-release APKs, F-Droid flavor feasibility, supply-chain verification, and opt-in crash diagnostics).
 **Code version at write:** v6.31.1 / versionCode 112 (per `app/build.gradle.kts`; local build verification still pending because Android SDK 35 is absent on this machine).
 **Charter:** personalization, AMOLED-first, free-by-default, multi-source content aggregation, community-fed catalog, polite live wallpapers (battery-aware, pause-on-invisible).
 
@@ -18,7 +18,7 @@ This roadmap is fed continuously by a research machine. On every pass, the build
 4. Check off ✅ each item you complete, leave it in place with the checkmark, commit per logical change with a "why" message, and push.
 5. Never edit this Implementer Instructions block or the 🔬 Researcher Queue headings. Never force-push.
 
-**Last researched:** 2026-06-04 / Cycle 1.
+**Last researched:** 2026-06-04 / Cycle 2.
 
 ---
 
@@ -150,6 +150,40 @@ Append-only Cycle 1 handoff. Every item below is source-backed in `docs/research
   - Touches: NX-1 after GL/AGSL/ExoPlayer engine migration; Room migration, video ViewModel, video wallpaper engine, Settings/apply sheet.
   - Acceptance: users can create a video wallpaper profile with ordered clips, shuffle/loop/one-shot, per-clip crop/fit/FPS, missing-media recovery, and low-battery FPS cap.
   - Verify: create/reorder/delete playlist, apply it, reboot, test unlock behavior, delete one media URI, verify graceful fallback and battery cap.
+
+---
+
+## 🔬 Researcher Queue (Cycle 2 — 2026-06-04)
+
+Append-only Cycle 2 handoff. Every item below is source-backed in `docs/research/cycle-2-2026-06-04.md`; merge into the existing Now/Next/Later item named in `Touches` when implementation starts.
+
+- [ ] 🤖 🔬 **P0 — Release workflow must publish signed release APKs, not debug APKs**
+  - Why: The tag-triggered release workflow is named "Build & Release APK", but it runs `assembleDebug` and uploads from `app/build/outputs/apk/debug`. GitHub/Obtainium users need a signed, non-debuggable release artifact.
+  - Evidence: `.github/workflows/release.yml:37-44`; Android command-line docs distinguish debug APKs from release builds and say release builds should be signed; `apksigner` can verify APK signatures and certificate fingerprints.
+  - Touches: NX-8; `.github/workflows/release.yml`, signing docs, GitHub release template, `obtainium.json`, future per-ABI split outputs.
+  - Acceptance: tag workflow builds signed release/universal plus any split APKs; fails if the uploaded APK is debuggable; runs `apksigner verify --print-certs`; publishes SHA-256 checksums and versionCode/versionName; release notes identify the signing certificate fingerprint.
+  - Verify: dry-run tag on a non-public test tag or workflow_dispatch; install/update through Obtainium; compare checksum from release notes; confirm `android:debuggable=false`.
+
+- [ ] 🤖 🔬 **P0 — Decide full-vs-foss distribution flavor before F-Droid work**
+  - Why: Aura wants F-Droid/Izzy/GitHub distribution, but current dependencies include Firebase, Google Services, Play Services ML Kit, and no product flavors. F-Droid mainline eligibility is not credible until proprietary dependency boundaries are explicit.
+  - Evidence: `app/build.gradle.kts:10`, `app/build.gradle.kts:201-204`, `app/build.gradle.kts:223`, `app/build.gradle.kts:226`; F-Droid policy/FAQ says F-Droid cannot build apps that depend on proprietary Google/Firebase libraries.
+  - Touches: NX-8, N-2, N-3, Cycle 1 App Check item; build flavors, source sets, DI boundaries, community upload/vote feature flags, segmentation fallback.
+  - Acceptance: documented matrix for GitHub/Obtainium/Izzy/F-Droid; `full` keeps Firebase/community/App Check; `foss` either disables those surfaces or swaps acceptable dependencies; CI proves selected variants; F-Droid metadata is blocked until the matrix is resolved.
+  - Verify: `assembleFullRelease` and `assembleFossRelease` or an explicit documented decision not to pursue F-Droid mainline; dependency tree review for the FOSS flavor; Izzy/F-Droid preflight notes.
+
+- [ ] 🤖 🔬 **P1 — Add a supply-chain verification lane**
+  - Why: A side-loaded personalization app needs dependency and artifact provenance beyond a GitHub release asset link, especially with extractor/native/FFmpeg-style dependencies.
+  - Evidence: source search found no `gradle/verification-metadata.xml`, dependency locking, Dependency Review, OpenSSF Scorecard, SBOM, artifact attestation, or checksum publication; Gradle and GitHub docs provide these controls.
+  - Touches: NX-8, NX-12, N-1; Gradle verification metadata, GitHub workflow permissions, Dependency Review, OpenSSF Scorecard, release checksum/attestation generation, SBOM plan.
+  - Acceptance: dependency checksum metadata committed; PRs run dependency/license review and Scorecard; release artifacts publish SHA-256 files and GitHub artifact attestations; SBOM scope is documented even if generation is deferred.
+  - Verify: dependency-change PR triggers review; Gradle fails on checksum drift; GitHub release shows checksums and attestation; Scorecard result is visible to maintainers.
+
+- [ ] 🤖 🔬 **P1 — Opt-in crash/ANR diagnostics bundle**
+  - Why: Aura avoids automatic analytics, but GitHub/Obtainium/F-Droid users still need a way to send actionable crash evidence after release-only issues.
+  - Evidence: `FreeVibeApp.kt` writes a local `filesDir/crash.log`; no Crashlytics/Sentry dependency was found; Android vitals/Play crash dashboards are Play-centric and not enough for non-Play installs.
+  - Touches: Settings diagnostics, issue template, local crash-log export, support docs.
+  - Acceptance: Settings exposes last crash timestamp and a "copy/export diagnostics" action; bundle includes app version, Android version, ABI, active source/provider, sanitized crash log tail, and reproduction fields; nothing uploads automatically.
+  - Verify: synthetic crash writes log; export redacts paths/tokens/API keys; issue template accepts bundle; network monitor confirms no automatic upload.
 
 ---
 
@@ -1255,3 +1289,13 @@ Stars/dates as of research pass 2026-05-16.
 - Marketplace comparison — [Zedge community upload guide](https://help.zedge.net/hc/en-us/articles/21801574348948-Uploading-Content-to-the-Zedge-Community-from-Your-Mobile-Device), [Zedge Play listing](https://play.google.com/store/apps/details?id=net.zedge.android), [Backdrops Play listing](https://play.google.com/store/apps/details?id=com.backdrops.wallpapers).
 - Content-source constraints — [Pexels API docs](https://www.pexels.com/api/documentation/), [Pexels license](https://www.pexels.com/license/), [Pixabay API docs](https://pixabay.com/api/docs/), [YouTube API Services Terms](https://developers.google.com/youtube/terms/api-services-terms-of-service), [YouTube API branding guidelines](https://developers.google.com/youtube/terms/branding-guidelines).
 - Extractor dependency watch — [NewPipeExtractor releases](https://github.com/TeamNewPipe/NewPipeExtractor/releases), [youtubedl-android releases](https://github.com/yausername/youtubedl-android/releases), [youtubedl-android Maven artifact](https://central.sonatype.com/artifact/io.github.junkfood02.youtubedl-android/library).
+
+---
+
+## Appendix F — Cycle 2 Sources
+
+- Cycle 2 planning record — [docs/research/cycle-2-2026-06-04.md](docs/research/cycle-2-2026-06-04.md).
+- Android release artifacts — [command-line builds](https://developer.android.com/build/building-cmdline), [build/run debug-vs-release overview](https://developer.android.com/studio/run), [build variants](https://developer.android.com/build/build-variants), [apksigner](https://developer.android.com/tools/apksigner), [SHA-256 certificate fingerprint help](https://support.google.com/android-developer-console/answer/16641489).
+- F-Droid feasibility — [Inclusion Policy](https://fdroid.gitlab.io/jekyll-fdroid/docs/Inclusion_Policy/), [App Developer FAQ](https://f-droid.org/en/docs/FAQ_-_App_Developers/), [Reproducible Builds](https://f-droid.org/docs/Reproducible_Builds/).
+- Supply-chain controls — [Gradle dependency verification](https://docs.gradle.org/current/userguide/dependency_verification.html), [GitHub artifact attestations](https://docs.github.com/en/actions/how-tos/security-for-github-actions/using-artifact-attestations/using-artifact-attestations-to-establish-provenance-for-builds), [GitHub Dependency Review Action](https://docs.github.com/en/code-security/how-tos/secure-your-supply-chain/manage-your-dependency-security/configuring-the-dependency-review-action), [OpenSSF Scorecard action](https://github.com/ossf/scorecard-action).
+- Crash/ANR evidence — [Android vitals](https://developer.android.com/games/optimize/vitals), [Play Console crashes and ANRs](https://support.google.com/googleplay/android-developer/answer/9859174).
