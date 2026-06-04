@@ -12,7 +12,7 @@ class SelectedContentHolderTest {
 
     @Test
     fun selectWallpaper_withoutList_clearsPreviousSharedContext() {
-        val holder = SelectedContentHolder()
+        val holder = testSelectedContentHolder()
         val first = wallpaper(id = "shared", source = ContentSource.PEXELS)
         val second = wallpaper(id = "standalone", source = ContentSource.PIXABAY)
 
@@ -26,7 +26,7 @@ class SelectedContentHolderTest {
 
     @Test
     fun updateSelectedWallpaper_preservesExistingPagerContext() {
-        val holder = SelectedContentHolder()
+        val holder = testSelectedContentHolder()
         val first = wallpaper(id = "one", source = ContentSource.PEXELS)
         val second = wallpaper(id = "two", source = ContentSource.PIXABAY)
         val sharedList = listOf(first, second)

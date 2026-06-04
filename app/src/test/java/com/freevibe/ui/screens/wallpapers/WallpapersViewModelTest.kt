@@ -21,6 +21,7 @@ import com.freevibe.service.DualWallpaperService
 import com.freevibe.service.OfflineFavoritesManager
 import com.freevibe.service.SeasonalContentManager
 import com.freevibe.service.SelectedContentHolder
+import com.freevibe.service.testSelectedContentHolder
 import com.freevibe.service.WallpaperApplier
 import com.freevibe.service.WallpaperHistoryManager
 import io.mockk.coEvery
@@ -112,7 +113,7 @@ class WallpapersViewModelTest {
     fun `findSimilarById resolves wallpaper from shared holder`() = runTest(dispatcher) {
         val wallpaperRepo = mockk<WallpaperRepository>()
         val redditRepo = mockk<RedditRepository>()
-        val selectedContent = SelectedContentHolder()
+        val selectedContent = testSelectedContentHolder()
         val source = wallpaper(id = "wh_123", color = "#112233")
         selectedContent.selectWallpaper(source, listOf(source))
 
@@ -153,7 +154,7 @@ class WallpapersViewModelTest {
     fun `findSimilarById uses route identity when raw ids collide across providers`() = runTest(dispatcher) {
         val wallpaperRepo = mockk<WallpaperRepository>()
         val redditRepo = mockk<RedditRepository>()
-        val selectedContent = SelectedContentHolder()
+        val selectedContent = testSelectedContentHolder()
         val pexelsWallpaper = wallpaper(
             id = "shared_42",
             color = "#112233",
@@ -427,7 +428,7 @@ class WallpapersViewModelTest {
     private fun createViewModel(
         wallpaperRepo: WallpaperRepository,
         redditRepo: RedditRepository,
-        selectedContent: SelectedContentHolder = SelectedContentHolder(),
+        selectedContent: SelectedContentHolder = testSelectedContentHolder(),
         downloadManagerOverride: DownloadManager? = null,
         voteRepoOverride: VoteRepository? = null,
         cacheManagerOverride: WallpaperCacheManager? = null,

@@ -22,11 +22,35 @@ import android.graphics.RectF
 object SmartCropCalculator {
 
     data class Transform(val scale: Float, val offsetX: Float, val offsetY: Float)
+    data class SubjectBounds(val left: Float, val top: Float, val right: Float, val bottom: Float)
 
     fun computeTransform(
         bitmapWidth: Int,
         bitmapHeight: Int,
         subject: RectF,
+        viewportWidth: Int,
+        viewportHeight: Int,
+        targetCoverage: Float = 0.75f,
+        maxScale: Float = 4f,
+    ): Transform = computeTransform(
+        bitmapWidth = bitmapWidth,
+        bitmapHeight = bitmapHeight,
+        subject = SubjectBounds(
+            left = subject.left,
+            top = subject.top,
+            right = subject.right,
+            bottom = subject.bottom,
+        ),
+        viewportWidth = viewportWidth,
+        viewportHeight = viewportHeight,
+        targetCoverage = targetCoverage,
+        maxScale = maxScale,
+    )
+
+    fun computeTransform(
+        bitmapWidth: Int,
+        bitmapHeight: Int,
+        subject: SubjectBounds,
         viewportWidth: Int,
         viewportHeight: Int,
         targetCoverage: Float = 0.75f,

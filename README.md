@@ -132,6 +132,8 @@ Requires JDK 17+ and Android SDK 35. Android Studio Ladybug (2024.2.1) or later 
 
 > Always use the included Gradle wrapper. It pins Gradle 8.12 which is required by AGP 8.7.3.
 
+Copy `local.properties.example` to `local.properties` for local SDK, optional API keys, and release signing values. GitHub tag releases use repository secrets to build a signed, non-debuggable release APK, verify it with `apksigner`, and attach `SHA256SUMS.txt` for GitHub/Obtainium users. See [release signing docs](docs/distribution/release-signing.md).
+
 ## Contributing
 
 Issues and PRs welcome. Please follow existing code style (Kotlin, Compose, Hilt patterns).

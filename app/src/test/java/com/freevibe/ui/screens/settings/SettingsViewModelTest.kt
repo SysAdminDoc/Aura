@@ -223,6 +223,8 @@ class SettingsViewModelTest {
             every { prefs.autoWallpaperRequiresCharging } returns flowOf(false)
             every { prefs.autoWallpaperRequiresWiFiOnly } returns flowOf(false)
             every { prefs.autoWallpaperRequiresIdle } returns flowOf(false)
+            every { prefs.rotateOnUnlock } returns flowOf(false)
+            every { prefs.rotateOnScreenOff } returns flowOf(false)
             // Added in v6.13/v6.14 — these StateFlow-backed VM fields fail-fast on
             // first collection if not stubbed. Pre-existing test fixture gap caught
             // during a deeper audit pass.

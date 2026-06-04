@@ -3,8 +3,8 @@
 > Open-source Android personalization: wallpapers, video wallpapers, ringtones, sounds.
 > Stay the OSS alternative to Zedge: no ads, no surprise charges, no dark patterns.
 
-**Version:** 2026-06-04-cycle2 (research refresh: added release-integrity blockers for debug-vs-release APKs, F-Droid flavor feasibility, supply-chain verification, and opt-in crash diagnostics).
-**Code version at write:** v6.31.1 / versionCode 112 (per `app/build.gradle.kts`; local build verification still pending because Android SDK 35 is absent on this machine).
+**Version:** 2026-06-04-cycle2-impl1 (implemented release-integrity blocker: signed release workflow, APK verification, checksums, release notes, and distribution docs).
+**Code version at write:** v6.31.1 / versionCode 112 (per `app/build.gradle.kts`; release/lint Gradle runs are memory-heavy on this Windows workstation, so rerun APK compilation only when explicitly needed).
 **Charter:** personalization, AMOLED-first, free-by-default, multi-source content aggregation, community-fed catalog, polite live wallpapers (battery-aware, pause-on-invisible).
 
 ---
@@ -40,9 +40,9 @@ If you're adding a feature and the source isn't in the Appendix, do not add it. 
 - Kotlin 2.1.0 / Compose / Material 3, Hilt 2.53.1, Room 2.6.1 (v14), Retrofit 2.11.0, OkHttp 4.12.0, Media3 1.5.1, Coil 2.7.0, WorkManager 2.10.0, Glance 1.1.1, NewPipe Extractor 0.24.8, youtubedl-android 0.18.1, **ML Kit `segmentation-subject:16.0.0-beta1`** (N-3 migrated 2026-05-16), **Firebase BoM 34.13.0** (N-2 shipped 2026-05-16), `play-services-base:18.5.0` (ModuleInstallClient for unbundled segmenter).
 - 130 Kotlin files in `app/src/main/java/com/freevibe/`, 50 unit-test files, scanner not rerun in Cycle 1, 1 design-note TODO resolved (`VoteRepository.kt` admin auth → Custom Claims).
 - Shipped via implementation passes since 2026-04-25 (latest code release tag: `v6.31.1`, Android 8-12 YouTube/Sounds crash fixed with core library desugaring). See Implementation Log.
-- Distribution: GitHub Releases + Obtainium manifest; signed via `freevibe.jks`. CI workflow `.github/workflows/verify.yml` now runs assembleDebug/testDebugUnitTest/lintDebug on push/PR; `.github/workflows/release.yml` still owns tag-triggered APK upload. Per-ABI splits + F-Droid/Izzy metadata still pending (NX-8).
+- Distribution: GitHub Releases + Obtainium manifest; signed via `freevibe.jks`. CI workflow `.github/workflows/verify.yml` runs assembleDebug/testDebugUnitTest/lintDebug on push/PR. `.github/workflows/release.yml` now builds signed `assembleRelease` APKs from GitHub secrets, rejects debuggable artifacts, runs `apksigner verify --print-certs`, and publishes SHA-256 checksums/release notes. Per-ABI splits + F-Droid/Izzy metadata still pending (NX-8).
 - Package id `com.freevibe`, brand "Aura"; do not change without a migration plan (re-installs lose data; existing community uploads keyed by device id).
-- Build env on the executing VM: OpenJDK 21 and Gradle wrapper work, but Android SDK 35 is absent (`local.properties` points to a non-existent SDK path). `./gradlew :app:assembleDebug` runtime verification still needs Android SDK installation or a workstation with Android Studio SDK 35.
+- Build env note: use Android Studio's bundled JBR and SDK 35. Release/lint Gradle runs are memory-heavy on this Windows workstation; prefer focused unit tests and lightweight file checks unless APK compilation is explicitly needed.
 - CI surface (Cycle 1 note): `.github/workflows/verify.yml` closes the prior no-PR-build gap. Branch protection requiring `verify` is still an owner action.
 - Platform horizon (rev4 note): Android 17 reached Platform Stability in Beta 3 (March 2026), Beta 4 shipped 2026-04-16, stable expected June 2026 — sets API 37 baseline with EyeDropper, PhotoPicker 9:16 customization, Contacts Picker, ACCESS_LOCAL_NETWORK, Bubbles. One UI 8.5 stable rolling out May 2026 with Smart Subject Placement + AI Weather Effects — competitor validation of Aura's existing Phase 6.3 weather trajectory + NX-2 lockscreen-depth direction. ([Android 17 release notes](https://developer.android.com/about/versions/17/release-notes); [9to5Google Beta 2 EyeDropper](https://9to5google.com/2026/02/26/android-17-beta-2-contacts-and-display-color-access/); [SamMobile One UI 8.5 features](https://www.sammobile.com/news/one-ui-8-5-update-top-features/).)
 
@@ -157,7 +157,7 @@ Append-only Cycle 1 handoff. Every item below is source-backed in `docs/research
 
 Append-only Cycle 2 handoff. Every item below is source-backed in `docs/research/cycle-2-2026-06-04.md`; merge into the existing Now/Next/Later item named in `Touches` when implementation starts.
 
-- [ ] 🤖 🔬 **P0 — Release workflow must publish signed release APKs, not debug APKs**
+- [x] 🤖 🔬 **P0 — Release workflow must publish signed release APKs, not debug APKs** — shipped 2026-06-04 (`release.yml` signed `assembleRelease`, debuggable guard, `apksigner`, SHA-256 checksums, release-note fingerprint, `docs/distribution/release-signing.md`).
   - Why: The tag-triggered release workflow is named "Build & Release APK", but it runs `assembleDebug` and uploads from `app/build/outputs/apk/debug`. GitHub/Obtainium users need a signed, non-debuggable release artifact.
   - Evidence: `.github/workflows/release.yml:37-44`; Android command-line docs distinguish debug APKs from release builds and say release builds should be signed; `apksigner` can verify APK signatures and certificate fingerprints.
   - Touches: NX-8; `.github/workflows/release.yml`, signing docs, GitHub release template, `obtainium.json`, future per-ABI split outputs.
@@ -321,11 +321,13 @@ Thirteen items. All scored 18–25. Pull from the top of this list when Now clos
 - **Risk:** Firestore quota; Anonymous-Firebase-identity → Google-auth account-link path is fragile (must `linkWithCredential` not re-create). Document the failure mode for users who sign in on two devices simultaneously.
 - **Fit 4 / Impact 4 / Effort 2 / Risk 3 / Deps 3 (N-2) / Novelty 2 = 18 → NEXT.**
 
-### NX-8. Distribution to F-Droid + IzzyOnDroid + Obtainium — `[~]` fastlane refresh + Obtainium manifest shipped 2026-05-17 rev4-impl
+### NX-8. Distribution to F-Droid + IzzyOnDroid + Obtainium — `[~]` release integrity + metadata partials shipped
 
 > Fastlane metadata under `fastlane/metadata/android/en-US/` refreshed: title (`FreeVibe` → `Aura`), short description bumped to reflect no-ads / no-tracking, full description rewritten against the current feature set (29 features incl. NX-3 Smart Crop, NX-6 rotation triggers, L-2 Tasker hook, parallax, weather effects). New `changelogs/111.txt` lands v6.31.0 release notes. New `obtainium.json` at repo root lets Obtainium users track Aura via GitHub Releases with the `v*` tag regex + APK filter.
 >
-> Still pending: per-ABI `splits { abi { ... } }` in `app/build.gradle.kts` (needs N-1 build verification to cut the universal APK from one fat binary to four lean ones), F-Droid metadata PR (depends on reproducible builds + Firebase question), IzzyOnDroid submission (path of least friction; can submit once a `v*` tag is signed and visible). The `verify.yml` workflow (NX-12) is the prerequisite for F-Droid reproducible-build verification.
+> 2026-06-04 Cycle 2 P0 release-integrity pass fixed the tag workflow: it now restores release signing material from GitHub secrets, runs `:app:assembleRelease`, rejects debuggable APKs, runs `apksigner verify --print-certs`, and publishes `SHA256SUMS.txt` plus release notes with versionName/versionCode and signing certificate SHA-256. `docs/distribution/release-signing.md` is the signing/runbook surface for GitHub Releases + Obtainium.
+>
+> Still pending: per-ABI `splits { abi { ... } }` in `app/build.gradle.kts` (needs N-1 build verification to cut the universal APK from one fat binary to four lean ones), F-Droid metadata PR (depends on reproducible builds + Firebase/full-vs-foss decision), IzzyOnDroid submission (path of least friction; can submit once a `v*` tag is signed and visible). The `verify.yml` workflow (NX-12) is the prerequisite for F-Droid reproducible-build verification.
 
 
 
@@ -696,6 +698,29 @@ Kept verbatim — these are the receipts.
 ## Implementation Log (preserved release-pass entries)
 
 These are the dated receipts. The newest entries supersede the oldest where they overlap; do not edit prior entries.
+
+### 2026-06-04 — Cycle 2 P0 release-integrity pass
+
+**Items shipped**
+
+- **Cycle 2 P0 / NX-8 — signed GitHub release workflow**
+  `.github/workflows/release.yml` now restores signing material from GitHub secrets, writes temporary release `local.properties`, runs signed `:app:assembleRelease`, packages `Aura-vX.Y.Z-versionCode-N-universal-release.apk`, verifies it with `apksigner --print-certs`, rejects `application-debuggable`, publishes `SHA256SUMS.txt`, and uses generated release notes with versionName/versionCode plus signing certificate SHA-256. Manual workflow dispatch uploads the same release bundle as an artifact for dry-run inspection; tag runs attach the APK/checksums to GitHub Releases.
+
+- **Distribution runbook**
+  New `docs/distribution/release-signing.md` documents required GitHub secrets, local signing verification, checksum checks, and Obtainium expectations. `local.properties.example` now matches the actual lowercase Gradle property names for API keys and release signing.
+
+- **Unit-test target repair**
+  Stale tests from prior implementation batches now compile/run again: `SelectedContentHolder` tests use a mock SharedPreferences + Moshi factory, crop ViewModel tests wire `SmartCropDetector`, Settings tests stub NX-6 rotation-trigger flows, and `SmartCropCalculator` exposes a pure `SubjectBounds` overload so JVM tests do not depend on stubbed Android `RectF` constructors.
+
+**Verification**
+
+- `git diff --check` passed.
+- `./gradlew.bat :app:testDebugUnitTest --stacktrace --no-daemon` passed: 303 tests.
+- A local `:app:assembleRelease` run passed earlier in the pass and the generated APK verified with v2 signing plus no `application-debuggable` marker before the final pure-JVM SmartCrop helper change. A repeat APK/lint compile was stopped by operator request because OpenJDK was exhausting workstation memory.
+
+**Next up**
+
+- Cycle 2 P0 — Decide full-vs-foss distribution flavor before F-Droid work.
 
 ### 2026-05-17 — Rev4-impl-2 autonomous batch (6 more items, code + docs)
 

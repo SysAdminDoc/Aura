@@ -1,14 +1,17 @@
-# FreeVibe - All content sources work without API keys!
-# These optional keys unlock higher rate limits or extra features.
+# Aura local build configuration.
+# Copy this file to local.properties and fill only the values you need.
 
-# Wallhaven: Optional - unlocks NSFW content + higher rate limits
-# Get from: https://wallhaven.cc/settings/account
-WALLHAVEN_API_KEY=
+sdk.dir=C:/Users/Xray/AppData/Local/Android/Sdk
 
-# NASA: Optional - DEMO_KEY is built-in (30 req/hr)
-# Get from: https://api.nasa.gov/
-NASA_API_KEY=DEMO_KEY
+# Optional provider keys. The app also lets users configure keys in Settings.
+pexels.api.key=
+pixabay.api.key=
+freesound.api.key=
+soundcloud.client.id=
+stability.ai.key=
 
-# Freesound: Required for sound browsing - free key
-# Get from: https://freesound.org/apiv2/apply/
-FREESOUND_API_KEY=
+# Required only for signed release builds.
+signing.keystore.path=../freevibe.jks
+signing.keystore.password=
+signing.key.alias=
+signing.key.password=

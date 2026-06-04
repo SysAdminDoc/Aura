@@ -27,6 +27,7 @@ import com.freevibe.service.SeasonalContentManager
 import com.freevibe.service.SelectedContentHolder
 import com.freevibe.service.SoundApplier
 import com.freevibe.service.SoundUrlResolver
+import com.freevibe.service.testSelectedContentHolder
 import io.mockk.clearMocks
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -943,7 +944,7 @@ class SoundsViewModelTest {
             favoritesRepo = favoritesRepo,
             soundApplier = mockk<SoundApplier>(relaxed = true),
             downloadManager = downloadManagerOverride ?: mockk<DownloadManager>(relaxed = true),
-            selectedContent = SelectedContentHolder(),
+            selectedContent = testSelectedContentHolder(),
             searchHistoryRepo = searchHistoryRepo,
             audioTrimmer = mockk<com.freevibe.service.AudioTrimmer>(relaxed = true),
             prefs = prefs,

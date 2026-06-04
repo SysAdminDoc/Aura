@@ -1,6 +1,7 @@
 package com.freevibe.ui.screens.editor
 
 import app.cash.turbine.test
+import com.freevibe.service.SmartCropDetector
 import com.freevibe.service.WallpaperApplier
 import io.mockk.mockk
 import kotlinx.coroutines.Dispatchers
@@ -27,6 +28,7 @@ class WallpaperCropViewModelTest {
         viewModel = WallpaperCropViewModel(
             wallpaperApplier = mockk(relaxed = true),
             okHttpClient = mockk(relaxed = true),
+            smartCropDetector = mockk<SmartCropDetector>(relaxed = true),
         )
     }
 

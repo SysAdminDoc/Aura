@@ -1,21 +1,20 @@
 package com.freevibe.service
 
-import android.graphics.RectF
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
 /**
  * Pure-JVM tests for [SmartCropCalculator]. Geometry only; ML Kit not exercised.
- * `android.graphics.RectF` is available in unit-test classpath via the
- * `androidx.test.ext` deps already wired into the test runner.
+ * Uses [SmartCropCalculator.SubjectBounds] because local unit-test android.jar
+ * RectF constructors are stubs.
  */
 class SmartCropCalculatorTest {
 
     @Test
     fun centerSubject_landscape_bitmap_portrait_viewport_zoomsToFillAndCenters() {
         // 1600x900 wallpaper, subject is a 200x200 square centred at (400, 450)
-        val subject = RectF(300f, 350f, 500f, 550f)
+        val subject = bounds(300f, 350f, 500f, 550f)
         val t = SmartCropCalculator.computeTransform(
             bitmapWidth = 1600,
             bitmapHeight = 900,
@@ -36,7 +35,7 @@ class SmartCropCalculatorTest {
     @Test
     fun subjectOffCenter_offsetMovesItToViewportCenter() {
         // Subject near top-left corner of a square wallpaper
-        val subject = RectF(100f, 100f, 200f, 200f)
+        val subject = bounds(100f, 100f, 200f, 200f)
         val t = SmartCropCalculator.computeTransform(
             bitmapWidth = 1000,
             bitmapHeight = 1000,
@@ -54,7 +53,7 @@ class SmartCropCalculatorTest {
     @Test
     fun tinySubject_doesNotZoomBeyondMaxScale() {
         // A 1-pixel subject would otherwise demand huge zoom
-        val subject = RectF(500f, 500f, 501f, 501f)
+        val subject = bounds(500f, 500f, 501f, 501f)
         val t = SmartCropCalculator.computeTransform(
             bitmapWidth = 1000,
             bitmapHeight = 1000,
@@ -70,7 +69,7 @@ class SmartCropCalculatorTest {
     fun largeSubjectFillingMostOfBitmap_floorsAtViewportFill() {
         // Subject is almost the entire bitmap → fitting it to 75 % coverage gives < 1
         // The floor must clamp scale up so there's no letterboxing.
-        val subject = RectF(0f, 0f, 900f, 900f)
+        val subject = bounds(0f, 0f, 900f, 900f)
         val t = SmartCropCalculator.computeTransform(
             bitmapWidth = 900,
             bitmapHeight = 900,
@@ -84,7 +83,7 @@ class SmartCropCalculatorTest {
 
     @Test
     fun afterTransform_subjectScreenCenterEqualsViewportCenter() {
-        val subject = RectF(120f, 480f, 380f, 720f) // off-centre subject
+        val subject = bounds(120f, 480f, 380f, 720f) // off-centre subject
         val bitmapW = 1200; val bitmapH = 1600
         val viewW = 1080; val viewH = 1920
         val t = SmartCropCalculator.computeTransform(
@@ -110,7 +109,7 @@ class SmartCropCalculatorTest {
         SmartCropCalculator.computeTransform(
             bitmapWidth = 0,
             bitmapHeight = 100,
-            subject = RectF(0f, 0f, 10f, 10f),
+            subject = bounds(0f, 0f, 10f, 10f),
             viewportWidth = 100,
             viewportHeight = 100,
         )
@@ -121,7 +120,7 @@ class SmartCropCalculatorTest {
         SmartCropCalculator.computeTransform(
             bitmapWidth = 100,
             bitmapHeight = 100,
-            subject = RectF(0f, 0f, 10f, 10f),
+            subject = bounds(0f, 0f, 10f, 10f),
             viewportWidth = 100,
             viewportHeight = 0,
         )
@@ -132,10 +131,17 @@ class SmartCropCalculatorTest {
         SmartCropCalculator.computeTransform(
             bitmapWidth = 100,
             bitmapHeight = 100,
-            subject = RectF(0f, 0f, 10f, 10f),
+            subject = bounds(0f, 0f, 10f, 10f),
             viewportWidth = 100,
             viewportHeight = 100,
             targetCoverage = 0.05f,
         )
     }
+
+    private fun bounds(
+        left: Float,
+        top: Float,
+        right: Float,
+        bottom: Float,
+    ) = SmartCropCalculator.SubjectBounds(left, top, right, bottom)
 }
