@@ -18,7 +18,7 @@ This roadmap is fed continuously by a research machine. On every pass, the build
 4. Check off ✅ each item you complete, leave it in place with the checkmark, commit per logical change with a "why" message, and push.
 5. Never edit this Implementer Instructions block or the 🔬 Researcher Queue headings. Never force-push.
 
-**Last researched:** 2026-06-04 / Cycle 14.
+**Last researched:** 2026-06-04 / Cycle 15.
 
 ---
 
@@ -762,6 +762,54 @@ Append-only Cycle 14 handoff. Every item below is source-backed in `docs/researc
   - Touches: manual QA scripts, `docs/performance/battery-lab.md`, release checklist, diagnostics/support bundle, video wallpaper settings.
   - Acceptance: lab records effective FPS, requested FPS, battery percent, charging state, foreground/background visibility, FGS time, job count, network bytes, and user-visible copy for low-battery auto-caps.
   - Verify: run video wallpaper visible/hidden, charging/unplugged, low battery, battery saver on/off, scheduled rotation active, daily/weather enabled; compare dumpsys/batterystats outputs before release.
+
+---
+
+## 🔬 Researcher Queue (Cycle 15 — 2026-06-04)
+
+Append-only Cycle 15 handoff. Every item below is source-backed in `docs/research/cycle-15-2026-06-04.md`; merge into the existing Now/Next/Later item named in `Touches` when implementation starts.
+
+- [ ] 🤖 🔬 **P0 — Cleartext release gate and ccMixter HTTPS-only decision**
+  - Why: The manifest disables cleartext globally, but `network_security_config.xml` permits cleartext for all `ccmixter.org` subdomains and `CcMixterRepository` retries over HTTP on TLS failure.
+  - Evidence: `AndroidManifest.xml`; `network_security_config.xml`; `CcMixterRepository.buildCcMixterFallbackUrl()`; Android cleartext-communications and Network Security Configuration docs; Cycle 6/10 cleartext notes.
+  - Touches: ccMixter repository, provider policy matrix, network security config, release preflight, source-health UI, Izzy/store metadata.
+  - Acceptance: release builds do not downgrade ccMixter to HTTP by default; either ccMixter is HTTPS-only, disabled/degraded when HTTPS fails, or explicitly debug/internal-only with provider-policy approval and expiration.
+  - Verify: static check for `cleartextTrafficPermitted="true"` and provider `http://` URLs; simulated `SSLException` does not fetch HTTP in release; release metadata reports no cleartext traffic unless an approved exception exists.
+
+- [ ] 🤖 🔬 **P0 — Provider credential release guard for BuildConfig/local.properties**
+  - Why: `app/build.gradle.kts` can bake Pexels, Pixabay, Freesound, SoundCloud, and Stability AI values from `local.properties` into `BuildConfig`, making local release APKs leak quota-bearing or paid provider credentials.
+  - Evidence: `app/build.gradle.kts`; `docs/distribution/release-signing.md`; `PreferencesManager.kt`; Android security checklist on API-key storage; Stability key handling from Cycle 7.
+  - Touches: Gradle release preflight, release workflow, `docs/distribution/release-signing.md`, provider settings copy, APK artifact scan.
+  - Acceptance: release builds fail when optional provider keys/client IDs are nonblank unless an explicit internal-build flag is set; public GitHub/Obtainium/Izzy builds ship blank defaults and require user-entered keys where needed.
+  - Verify: set fake keys in `local.properties` and confirm release preflight fails; internal override path succeeds with a warning; `strings`/APK scan proves sentinel keys are absent from public release artifacts.
+
+- [ ] 🤖 🔬 **P1 — Provider credential storage classification and Keystore decision**
+  - Why: User-entered provider keys live in DataStore and are excluded from backup/device transfer, but app-private DataStore is not Keystore-backed encrypted storage.
+  - Evidence: `PreferencesManager.kt`; `backup_rules.xml`; `data_extraction_rules.xml`; Android Keystore and security checklist docs; Cycle 4 backup/privacy item.
+  - Touches: provider settings, key-storage helper, backup matrix, privacy/data-safety docs, diagnostics support docs.
+  - Acceptance: every provider credential is classified as public client ID, optional quota key, or paid/sensitive secret; sensitive keys either use Keystore-backed encrypted storage or have a documented no-strong-at-rest-protection disclosure and user control.
+  - Verify: set every key, inspect backup/transfer exclusions, rotate/delete keys, export diagnostics, and confirm no raw key appears in app backup artifacts or support bundles.
+
+- [ ] 🤖 🔬 **P1 — Redacted URL and request logging contract**
+  - Why: Wallhaven, Pixabay, Freesound, and SoundCloud credentials are sent in query strings, while SoundCloud also embeds `client_id` in stream URLs. Raw URLs must not enter logs, source metrics, crash messages, diagnostics, or UI.
+  - Evidence: `WallhavenApi.kt`; `PixabayApi.kt`; `FreesoundV2Api.kt`; `SoundCloudApi.kt`; `SoundCloudRepository.kt`; `CrashDiagnosticsCollector.kt`; provider auth docs.
+  - Touches: shared URL redactor, SourceMetrics/source-health UI, provider repositories, debug logging policy, diagnostics bundle, tests.
+  - Acceptance: code has one reusable redacted URL/request formatter; source metrics and diagnostics store host/source/status/error class, not raw authenticated URLs; providers use header auth where officially supported.
+  - Verify: mock failures containing authenticated URLs for each provider; debug/release diagnostics and logs contain redacted query values; source-health cards show no secrets.
+
+- [ ] 🤖 🔬 **P1 — Diagnostics redaction fixture suite for provider secrets**
+  - Why: Crash diagnostics are user-copyable and already redact broad token shapes, but the release gate needs provider-specific tests for real Aura credential formats.
+  - Evidence: `CrashDiagnosticsCollector.kt`; `docs/support/crash-diagnostics.md`; provider query/header shapes; Cycle 2 diagnostics export item.
+  - Touches: JVM tests for `CrashDiagnosticsText`, support docs, issue template, future background/source diagnostics.
+  - Acceptance: fixtures cover `apikey`, `key`, `token`, `client_id`, `Authorization: Bearer`, assignment-style `apiKey`, `stability.ai.key`, `local.properties`, `file://`, and app-private paths.
+  - Verify: synthetic crash log export keeps provider/source context but redacts every secret value; regression test fails on any raw sentinel key.
+
+- [ ] 🤖 🔬 **P2 — Network endpoint and credential inventory runbook**
+  - Why: Aura depends on many remote providers plus Firebase, Open-Meteo, direct media URLs, NewPipe/yt-dlp, and optional AI generation; target-SDK and store reviews need an auditable endpoint/security inventory.
+  - Evidence: Retrofit API modules; provider repositories; `AppModule.kt`; Cycle 10 Android 17 network preflight; Android Network Security Configuration docs.
+  - Touches: `docs/security/network-endpoints.md`, provider policy matrix, release checklist, privacy/data-safety matrix, static scanner.
+  - Acceptance: runbook lists endpoint host, scheme, auth location, cleartext status, data sent, media cached, rate limit/cache policy, fallback behavior, kill switch, and release owner for every network surface.
+  - Verify: static endpoint scan matches the runbook; adding a new host/provider fails CI until the runbook and privacy/provider policy rows are updated.
 
 ---
 
@@ -2124,3 +2172,9 @@ Stars/dates as of research pass 2026-05-16.
 - Cycle 14 planning record — [docs/research/cycle-14-2026-06-04.md](docs/research/cycle-14-2026-06-04.md).
 - Android background execution — [WorkManager define work requests](https://developer.android.com/develop/background-work/background-tasks/persistent/getting-started/define-work), [Doze and App Standby](https://developer.android.com/training/monitoring-device-state/doze-standby), [schedule alarms](https://developer.android.com/develop/background-work/services/alarms).
 - Foreground-service review — [Android foreground service types](https://developer.android.com/develop/background-work/services/fgs/service-types), [Play foreground service declarations](https://support.google.com/googleplay/android-developer/answer/13392821).
+
+## Appendix S — Cycle 15 Sources
+
+- Cycle 15 planning record — [docs/research/cycle-15-2026-06-04.md](docs/research/cycle-15-2026-06-04.md).
+- Android network and key security — [Cleartext communications](https://developer.android.com/privacy-and-security/risks/cleartext-communications), [Network Security Configuration](https://developer.android.com/training/articles/security-config), [Security checklist](https://developer.android.com/guide/practices/security), [Android Keystore](https://developer.android.com/privacy-and-security/keystore), [cryptography](https://developer.android.com/guide/topics/security/cryptography).
+- Provider credential docs — [Pexels API documentation](https://www.pexels.com/api/documentation/), [Pixabay API docs](https://pixabay.com/api/docs/), [Freesound authentication](https://freesound.org/docs/api/authentication.html), [Freesound APIv2 overview](https://freesound.org/docs/api/overview.html), [Stability developer docs](https://platform.stability.ai/docs/getting-started).
