@@ -18,7 +18,7 @@ This roadmap is fed continuously by a research machine. On every pass, the build
 4. Check off ✅ each item you complete, leave it in place with the checkmark, commit per logical change with a "why" message, and push.
 5. Never edit this Implementer Instructions block or the 🔬 Researcher Queue headings. Never force-push.
 
-**Last researched:** 2026-06-04 / Cycle 6.
+**Last researched:** 2026-06-04 / Cycle 7.
 
 ---
 
@@ -378,6 +378,54 @@ Append-only Cycle 6 handoff. Every item below is source-backed in `docs/research
   - Touches: Settings storage screen, cache managers, backup/privacy docs, release QA.
   - Acceptance: `docs/privacy/storage-ledger.md` lists each directory/store, budget, retention, backup status, user cleanup action, and uninstall behavior; Settings cleanup copy matches actual behavior.
   - Verify: smoke-run all media flows, list files/directories, run clear cache, confirm retained/deleted state matches the ledger.
+
+---
+
+## 🔬 Researcher Queue (Cycle 7 — 2026-06-04)
+
+Append-only Cycle 7 handoff. Every item below is source-backed in `docs/research/cycle-7-2026-06-04.md`; merge into the existing Now/Next/Later item named in `Touches` when implementation starts.
+
+- [ ] 🤖 🔬 **P0 — AI generation disclosure and consent gate**
+  - Why: Aura sends user prompts to Stability AI, uses the user's API key and credits, stores generated PNGs locally, and stores prompt-derived metadata when saved.
+  - Evidence: `AiWallpaperRepository.generate()` multipart prompt/API-key call; `AiWallpaperViewModel.saveToFavorites()` prompt-derived favorite name; Stability API key and credit docs; Stability Acceptable Use Policy.
+  - Touches: `AiWallpaperScreen`, Settings API-key card, Settings privacy screen, `docs/privacy/ai-generation.md`, release privacy checklist.
+  - Acceptance: first AI generation shows a concise disclosure before the network call; disclosure covers prompt sharing, key/credit use, local storage, retention/deletion, and Stability policy boundaries; user can review it later in Settings.
+  - Verify: first-run disclosure appears once; deny/cancel does not call Stability; accepted state persists; Settings reset/review works; privacy docs and Data safety matrix include prompt sharing and generated-image storage.
+
+- [ ] 🤖 🔬 **P0 — AI-generated content report/flag path**
+  - Why: Google Play requires AI-generating apps to include in-app reporting or flagging for offensive generated content without requiring users to exit the app.
+  - Evidence: Google Play AI-generated content policy; Aura has text-to-image generation and no report/flag action on generated results or saved AI favorites.
+  - Touches: AI result screen, Favorites detail actions, report storage/diagnostics path, moderation/report docs, privacy policy.
+  - Acceptance: generated AI wallpapers and saved AI favorites expose a report/flag action; report categories cover offensive/unsafe/deceptive/other; reports do not include the user's API key; release docs define retention and moderation response.
+  - Verify: generate result -> report; saved favorite -> report; report survives process restart if local; report export/redaction path omits keys; Play policy checklist has an AI report row.
+
+- [ ] 🤖 🔬 **P1 — BYO Stability key hardening and release guard**
+  - Why: User-supplied keys are appropriate, but release builds should not accidentally ship a bundled Stability key, and stored keys should have a documented security posture.
+  - Evidence: `BuildConfig.STABILITY_AI_KEY` from `local.properties`; `PreferencesManager.stabilityAiKey` DataStore flow; Android security guidance on source-code API keys and Keystore.
+  - Touches: release preflight, `docs/privacy/API-key-storage.md`, Settings key UI, diagnostics redaction test, optional encrypted-storage migration plan.
+  - Acceptance: release verification fails on nonblank bundled `STABILITY_AI_KEY` unless explicitly marked internal; docs explain where keys are stored and excluded from backup; diagnostics and reports redact all provider keys; encryption migration decision is recorded.
+  - Verify: static/release-preflight test with blank and nonblank keys; diagnostics export key-redaction fixture; backup/data-extraction matrix still excludes key storage.
+
+- [ ] 🤖 🔬 **P1 — AI credit, rate-limit, and duplicate-generation guardrails**
+  - Why: Stability requests consume credits, pricing can change, and repeat taps or retries can spend user-owned credits unexpectedly.
+  - Evidence: Stability pricing docs; Aura handles 402/429 after the fact; `cancelGeneration()` warns cancellation may not refund once provider billing has started.
+  - Touches: `AiWallpaperViewModel`, AI screen state, Settings/provider docs, local generation history.
+  - Acceptance: UI states one request may spend provider credits; active generation disables duplicate submits; retrying the same prompt/style after a recent success requires confirmation; optional local session/day count is visible; 402/429 messages link to the right provider action.
+  - Verify: rapid taps create one request; same prompt retry asks confirmation; 402/429 tests still map cleanly; cancel copy does not imply refunds.
+
+- [ ] 🤖 🔬 **P1 — Prompt metadata retention and deletion policy**
+  - Why: Aura stores prompt snippets in favorite names and prompt words in tags, which can preserve sensitive user text even after the generated image is no longer visible.
+  - Evidence: `AiWallpaperRepository` mines five prompt words for tags; `AiWallpaperViewModel.saveToFavorites()` stores `AI: ${prompt.take(60)}`; Cycle 4 privacy matrix covers local user content.
+  - Touches: favorite naming, tag creation, AI deletion flow, privacy/storage ledgers, Room migration if metadata fields change.
+  - Acceptance: prompt-derived metadata is opt-in or easy to clear; deleting an AI wallpaper removes generated file and prompt-derived favorite/tag metadata; privacy docs classify prompts as local sensitive user content and third-party-shared request content.
+  - Verify: save with sensitive prompt; clear/delete flow removes prompt text from Room and generated file; search no longer finds deleted prompt words; backup matrix matches behavior.
+
+- [ ] 🤖 🔬 **P2 — On-device AI wallpaper decision gate**
+  - Why: Local generation could improve privacy and cost control, but it has unresolved hardware, battery, storage, licensing, and moderation constraints.
+  - Evidence: U-2/U-14 roadmap notes; Qualcomm/local-dream references in Appendix D; Stability hosted generation currently shipped.
+  - Touches: U-2 research, model licensing notes, performance/battery test plan, FOSS flavor strategy.
+  - Acceptance: revisit criteria list required device baseline, model size, expected latency, battery/thermal budget, license compatibility, moderation/report behavior, and fallback to hosted/BYO mode.
+  - Verify: no on-device generation implementation starts without meeting the criteria; any prototype includes battery/profile evidence and license review.
 
 ---
 
@@ -1688,3 +1736,10 @@ Stars/dates as of research pass 2026-05-16.
 - Cycle 6 planning record — [docs/research/cycle-6-2026-06-04.md](docs/research/cycle-6-2026-06-04.md).
 - Network and file sharing — [Network Security Configuration](https://developer.android.com/privacy-and-security/security-config), [FileProvider](https://developer.android.com/reference/androidx/core/content/FileProvider), [secure file sharing](https://developer.android.com/training/secure-file-sharing/share-file).
 - Storage and media handling — [data and file storage overview](https://developer.android.com/training/data-storage), [shared media storage](https://developer.android.com/training/data-storage/shared/media), [storage use cases and best practices](https://developer.android.com/training/data-storage/use-cases).
+
+## Appendix K — Cycle 7 Sources
+
+- Cycle 7 planning record — [docs/research/cycle-7-2026-06-04.md](docs/research/cycle-7-2026-06-04.md).
+- Stability AI API and policy — [getting started](https://platform.stability.ai/docs/getting-started), [Stable Image overview](https://platform.stability.ai/docs/getting-started/stable-image), [pricing](https://platform.stability.ai/pricing), [Acceptable Use Policy](https://stability.ai/use-policy).
+- Google Play AI-generated content policy — [policy overview](https://support.google.com/googleplay/android-developer/answer/14094294), [AI-generated content requirements](https://support.google.com/googleplay/android-developer/answer/13985936).
+- Android secret storage guidance — [security checklist](https://developer.android.com/guide/practices/security), [Android Keystore](https://developer.android.com/privacy-and-security/keystore), [Jetpack Security releases](https://developer.android.com/jetpack/androidx/releases/security).
