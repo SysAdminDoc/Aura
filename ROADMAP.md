@@ -18,7 +18,7 @@ This roadmap is fed continuously by a research machine. On every pass, the build
 4. Check off ✅ each item you complete, leave it in place with the checkmark, commit per logical change with a "why" message, and push.
 5. Never edit this Implementer Instructions block or the 🔬 Researcher Queue headings. Never force-push.
 
-**Last researched:** 2026-06-04 / Cycle 10.
+**Last researched:** 2026-06-04 / Cycle 11.
 
 ---
 
@@ -570,6 +570,54 @@ Append-only Cycle 10 handoff. Every item below is source-backed in `docs/researc
   - Touches: NX-10/NX-11 follow-up; wallpaper picker, collection import picker, parallax photo picker, changelog/release notes, fallback logging.
   - Acceptance: direct `Intent.ACTION_OPEN_EYE_DROPPER`/`Intent.EXTRA_COLOR` and direct Photo Picker customization API are primary paths on compileSdk 37; fallback logging remains for missing system components; reflection/raw constants are isolated or deleted.
   - Verify: Android 17 device/emulator EyeDropper result; Photo Picker 9:16 grid on all three call sites; Android 16 and below keep default picker behavior; debug logs show no unexpected reflection failure.
+
+---
+
+## 🔬 Researcher Queue (Cycle 11 — 2026-06-04)
+
+Append-only Cycle 11 handoff. Every item below is source-backed in `docs/research/cycle-11-2026-06-04.md`; merge into the existing Now/Next/Later item named in `Touches` when implementation starts.
+
+- [ ] 🤖 🔬 **P0 — Sensitive-permission inventory and release preflight**
+  - Why: Aura declares `WRITE_SETTINGS`, microphone, coarse location, contacts, notification, foreground-service, legacy storage, and alarm-related permissions, but no single docs-side ledger maps each permission to a current feature, user action, Data safety row, denial path, retention decision, and store declaration.
+  - Evidence: `AndroidManifest.xml`; `fastlane/metadata/android/en-US/full_description.txt`; missing `docs/privacy`; Play permissions/sensitive-API policy; Play personal/sensitive user-data policy; Play Data safety docs.
+  - Touches: Cycle 4 privacy matrix; Cycle 8 app-content packet; `docs/privacy/data-safety.md`, `docs/distribution/play-app-content.md`, release preflight/static manifest check, fastlane metadata.
+  - Acceptance: every manifest permission has a row for purpose, triggering UI, data accessed, collection/sharing, retention, denial behavior, Play declaration status, alternate-store disclosure, and owner signoff; new permissions fail release preflight until the row exists; listing/privacy/Data safety claims are internally consistent.
+  - Verify: parse merged manifest and compare with ledger; review Play Data safety fields for location, contacts, voice/sound recordings, other audio files, crash/diagnostics, user-generated content, and device IDs; confirm fastlane copy does not contradict the ledger.
+
+- [ ] 🤖 🔬 **P0 — `WRITE_SETTINGS` ringtone/sound special-access contract**
+  - Why: Aura uses special app access to set default ringtone, notification, and alarm sounds; Android requires a user-specific system-settings grant, and the settings activity may be absent on some devices.
+  - Evidence: `SoundApplier.canWriteSettings()`; `SoundApplier.requestWriteSettings()`; `SoundDetailScreen.kt`; `SoundsScreen.kt`; `RingtoneManager.setActualDefaultRingtoneUri()` usage; Android `Settings.System.canWrite()` and `ACTION_MANAGE_WRITE_SETTINGS` docs; Play restricted-permission guidance.
+  - Touches: ringtone/notification/alarm apply flows, quick-apply sheet, contact-ringtone apply path, privacy/Data safety copy, release QA script.
+  - Acceptance: each apply path shows a rationale before opening special app access, validates grant state on return, handles revoke/deny/no-settings-activity cases, separates default-sound changes from contact-write permission, and documents that Aura modifies system sound settings only after explicit user action.
+  - Verify: revoke `WRITE_SETTINGS` and attempt detail apply, quick apply, local trimmed-file apply, and contact ringtone apply; grant and apply each default sound type; simulate/no-op guard for missing settings activity; inspect MediaStore row and default sound URI after success.
+
+- [ ] 🤖 🔬 **P1 — Remove or justify dormant manifest permissions**
+  - Why: `com.android.alarm.permission.SET_ALARM` is declared, but local source search found no `AlarmClock`, `ACTION_SET_ALARM`, or `AlarmManager` flow. Dormant permissions create store-review and trust risk even when protection level is normal.
+  - Evidence: `AndroidManifest.xml`; `SoundApplier` alarm-sound path uses `RingtoneManager.TYPE_ALARM`; no source hits for alarm-setting APIs; Android `SET_ALARM` permission docs.
+  - Touches: manifest, release preflight, alarm-sound apply docs, app-content packet, permission ledger.
+  - Acceptance: `SET_ALARM` is removed unless Aura ships a user-initiated alarm-setting feature; any retained normal/legacy permission such as `WRITE_EXTERNAL_STORAGE` with `maxSdkVersion=28` has a current code path and disclosure row.
+  - Verify: manifest permission diff after removal/justification; alarm ringtone apply still works through `WRITE_SETTINGS`/MediaStore; preflight reports zero permission rows with "unknown" or "future feature" purpose.
+
+- [ ] 🤖 🔬 **P1 — Microphone/community audio disclosure and retention**
+  - Why: Community recording requests `RECORD_AUDIO` from a user action and writes a cache file, but the roadmap needs explicit evidence that recordings stay local until upload, become public only after upload, can be discarded, and are cleaned up if abandoned.
+  - Evidence: `SoundsScreen.kt`; `CommunityAudioRecorder.kt`; `SoundsViewModel.kt`; `file_paths.xml`; Play personal/sensitive user-data policy; Play Data safety audio/user-generated-content categories; Android runtime-permission guidance.
+  - Touches: community record/upload dialogs, temp-file cleanup, report/delete flows, Data safety packet, community backend runbook.
+  - Acceptance: first-record and upload copy explain local temp storage, upload/public visibility, deletion/reporting, and discard behavior; stale temp recordings are pruned; upload requires explicit user confirmation; Data safety rows cover voice/sound recordings, other audio files, user-generated content, and sharing with Firebase/community backend.
+  - Verify: deny/allow/permanently deny microphone; record-stop-discard and inspect cache; record-stop-upload and inspect metadata; app restart with stale temp files; no automatic upload before confirmation.
+
+- [ ] 🤖 🔬 **P1 — Weather location disclosure, precision, and clearing**
+  - Why: Aura requests only coarse location for weather effects, but `WeatherUpdateWorker` sends latitude/longitude to Open-Meteo and stores `location_lat`/`location_lon`; disabling weather cancels work but no stored-coordinate wipe was found.
+  - Evidence: `SettingsScreen.kt`; `WeatherUpdateWorker.kt`; `backup_rules.xml`; `data_extraction_rules.xml`; Android runtime-location docs; Play location-policy guidance; Play Data safety approximate-location category.
+  - Touches: weather effects settings copy, worker/state cleanup, privacy/Data safety docs, backup/transfer rules, release QA script.
+  - Acceptance: weather opt-in copy names the external weather provider and stored location precision; Aura stores the minimum useful precision or documents why not; disabling weather clears stored coordinates/weather state and cancels work; fine/background location remain absent.
+  - Verify: enable with coarse location, inspect prefs/network request precision, disable and inspect `freevibe_weather_wp`; backup/transfer exclusions remain; preflight fails on `ACCESS_FINE_LOCATION` or `ACCESS_BACKGROUND_LOCATION` without new review.
+
+- [ ] 🤖 🔬 **P1 — Foreground-service and notification declaration packet**
+  - Why: Aura declares `mediaPlayback` and `specialUse` foreground services; Play target-34+ updates require service-type descriptions, user-impact explanations, and demonstration videos, while Android notification permission denial changes user-visible notification behavior.
+  - Evidence: `AndroidManifest.xml`; `AudioPlaybackService.kt`; `RotationTriggerService.kt`; `SettingsScreen.kt`; Android foreground-service type docs; Play foreground-service declaration docs; Android notification-permission docs.
+  - Touches: Play app-content packet, notification/channel copy, rotation-trigger settings, audio playback QA script, release checklist.
+  - Acceptance: packet lists every foreground service, type, trigger, user-visible notification, why delay/deferral is not equivalent, interruption impact, and demo-video script; notification-denied behavior is documented for playback and rotation triggers; no `BOOT_COMPLETED` media-playback launch exists.
+  - Verify: start/stop playback and rotation triggers, inspect `dumpsys activity services`/notification state, deny `POST_NOTIFICATIONS`, capture demo-video steps, and compare manifest services with Play declaration rows.
 
 ---
 
@@ -1907,3 +1955,10 @@ Stars/dates as of research pass 2026-05-16.
 - Android 17 SDK and release state — [release notes](https://developer.android.com/about/versions/17/release-notes), [set up SDK](https://developer.android.com/about/versions/17/setup-sdk), [Beta 3 Platform Stability blog](https://android-developers.googleblog.com/2026/03/the-third-beta-of-android-17.html).
 - Android 17 feature and behavior gates — [Contact Picker](https://developer.android.com/about/versions/17/features/contact-picker), [background audio hardening](https://developer.android.com/about/versions/17/changes/bg-audio), [orientation/resizability restrictions ignored](https://developer.android.com/about/versions/17/changes/ff-restrictions-ignored), [target-SDK behavior changes](https://developer.android.com/about/versions/17/behavior-changes-17), [local network permission](https://developer.android.com/privacy-and-security/local-network-permission).
 - Android 17 API references — [Intent.ACTION_OPEN_EYE_DROPPER and EXTRA_COLOR](https://developer.android.com/reference/android/content/Intent#ACTION_OPEN_EYE_DROPPER).
+
+## Appendix O — Cycle 11 Sources
+
+- Cycle 11 planning record — [docs/research/cycle-11-2026-06-04.md](docs/research/cycle-11-2026-06-04.md).
+- Google Play sensitive data and declarations — [Permissions and APIs that Access Sensitive Information](https://support.google.com/googleplay/android-developer/answer/16558241), [Data safety section](https://support.google.com/googleplay/android-developer/answer/10787469), [foreground service declarations](https://support.google.com/googleplay/android-developer/answer/13392821).
+- Android permission behavior — [runtime permissions](https://developer.android.com/training/permissions/requesting), [runtime location permissions](https://developer.android.com/develop/sensors-and-location/location/permissions/runtime), [notification runtime permission](https://developer.android.com/develop/ui/compose/notifications/notification-permission).
+- Android special access and service APIs — [`Settings.System.canWrite`](https://developer.android.com/reference/android/provider/Settings.System#canWrite(android.content.Context)), [`Settings.ACTION_MANAGE_WRITE_SETTINGS`](https://developer.android.com/reference/android/provider/Settings#ACTION_MANAGE_WRITE_SETTINGS), [`SET_ALARM`](https://developer.android.com/reference/android/Manifest.permission#SET_ALARM), [foreground service types](https://developer.android.com/develop/background-work/services/fgs/service-types).
