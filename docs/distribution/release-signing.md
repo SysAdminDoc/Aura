@@ -32,7 +32,7 @@ Do not commit `freevibe.jks`, `local.properties`, copied APKs, or generated base
 5. Runs `apksigner verify --verbose --print-certs`.
 6. Fails if `aapt dump badging` reports `application-debuggable`.
 7. Creates a GitHub artifact attestation for the checksum file.
-8. Publishes `SHA256SUMS.txt` and release notes containing versionName, versionCode, APK SHA-256, signing certificate SHA-256, and the attestation URL.
+8. Publishes `SHA256SUMS.txt` and release notes containing versionName, versionCode, APK SHA-256, signing certificate SHA-256, artifact attestation URL, and Android developer verification status.
 
 Manual `workflow_dispatch` runs upload the same files as workflow artifacts for dry-run inspection. Tag runs also attach the APK and checksum file to the GitHub Release.
 
@@ -59,3 +59,7 @@ The `application-debuggable` search should return no output.
 ## Obtainium
 
 `obtainium.json` tracks GitHub Releases with an APK asset filter. Users should install the `Aura-vX.Y.Z-versionCode-N-universal-release.apk` asset and compare it to `SHA256SUMS.txt` when verifying a release manually.
+
+## Developer verification
+
+Android developer verification and IzzyOnDroid prep live in [developer-verification.md](developer-verification.md). Keep release notes at `owner-confirmation-required` until the owner confirms `com.freevibe` and the current signing certificate SHA-256 in Android Developer Console or Play Console.

@@ -5,6 +5,11 @@ on:
     tags:
       - 'v*'
   workflow_dispatch:
+    inputs:
+      android_developer_verification_status:
+        description: 'Release-note status for Android developer verification'
+        required: false
+        default: 'owner-confirmation-required'
 
 jobs:
   release:
@@ -161,8 +166,11 @@ jobs:
           subject-checksums: release/SHA256SUMS.txt
 
       - name: Generate release notes
+        env:
+          ANDROID_DEVELOPER_VERIFICATION_STATUS: ${{ github.event.inputs.android_developer_verification_status }}
         run: |
           APK_SHA256="$(cut -d ' ' -f 1 "$RELEASE_DIR/SHA256SUMS.txt")"
+          DEV_VERIFICATION_STATUS="${ANDROID_DEVELOPER_VERIFICATION_STATUS:-owner-confirmation-required}"
           {
             printf 'Aura %s (versionCode %s)\n\n' '${{ steps.package.outputs.version_name }}' '${{ steps.package.outputs.version_code }}'
             printf 'Signed release artifact:\n'
@@ -171,6 +179,10 @@ jobs:
             printf -- '- Signing certificate SHA-256: %s\n' '${{ steps.verify_apk.outputs.cert_sha256 }}'
             printf -- '- GitHub artifact attestation: %s\n' '${{ steps.attest.outputs.attestation-url }}'
             printf -- '- Build type: release, android:debuggable=false\n\n'
+            printf 'Android developer verification:\n'
+            printf -- '- Package: com.freevibe\n'
+            printf -- '- Status: %s\n' "$DEV_VERIFICATION_STATUS"
+            printf -- '- Owner runbook: docs/distribution/developer-verification.md\n\n'
             printf 'GitHub Releases and Obtainium should install the signed release APK. Debug APKs are development-only and are not published by this workflow.\n'
           } > "$RELEASE_DIR/RELEASE_NOTES.md"
 

@@ -49,3 +49,5 @@ The script intentionally does not compile APKs. It scans the Gradle files for th
 6. Document any remaining anti-features or non-free network-service dependencies before metadata submission.
 
 Until those criteria are met, GitHub Releases + Obtainium remain the supported install/update path and IzzyOnDroid is the realistic app-store submission target.
+
+Android developer verification, branch-protection owner actions, and IzzyOnDroid submission prep are tracked in [developer-verification.md](developer-verification.md).
