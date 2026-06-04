@@ -1,0 +1,34 @@
+name: Crash or ANR report
+description: Report a crash, freeze, or ANR with Aura's local diagnostics bundle.
+title: "[Crash/ANR]: "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Open Aura > Settings > Diagnostics > Crash diagnostics bundle, then use Copy and paste the sanitized bundle below. Aura does not upload this automatically.
+  - type: textarea
+    id: diagnostics-bundle
+    attributes:
+      label: Sanitized diagnostics bundle
+      description: Paste the full bundle generated in Settings. It includes reproduction fields you can fill in before submitting.
+      placeholder: |
+        # Aura diagnostics bundle
+        Generated: ...
+        Automatic upload: disabled...
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+      description: What should Aura have done instead?
+    validations:
+      required: false
+  - type: textarea
+    id: notes
+    attributes:
+      label: Additional notes
+      description: Include screenshots, videos, or links only if they help explain the crash or freeze.
+    validations:
+      required: false

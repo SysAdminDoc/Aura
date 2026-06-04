@@ -136,7 +136,7 @@ Copy `local.properties.example` to `local.properties` for local SDK, optional AP
 
 ## Contributing
 
-Issues and PRs welcome. Please follow existing code style (Kotlin, Compose, Hilt patterns).
+Issues and PRs welcome. Please follow existing code style (Kotlin, Compose, Hilt patterns). For crashes or ANRs, use Settings > Diagnostics > Crash diagnostics bundle and paste it into the crash report template; see [crash diagnostics](docs/support/crash-diagnostics.md).
 
 ## License
 

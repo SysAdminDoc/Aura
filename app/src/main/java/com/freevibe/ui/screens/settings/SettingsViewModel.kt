@@ -8,6 +8,8 @@ import com.freevibe.data.model.WallpaperCollectionEntity
 import com.freevibe.data.repository.CollectionRepository
 import com.freevibe.di.IoDispatcher
 import com.freevibe.service.AutoWallpaperWorker
+import com.freevibe.service.CrashDiagnosticsCollector
+import com.freevibe.service.CrashDiagnosticsSummary
 import com.freevibe.service.OfflineFavoritesManager
 import com.freevibe.service.SourceMetrics
 import com.freevibe.service.VideoWallpaperSelectionResult
@@ -44,6 +46,7 @@ class SettingsViewModel @Inject constructor(
     private val wallpaperApplier: WallpaperApplier,
     private val videoWallpaperStorage: VideoWallpaperStorage,
     private val sourceMetrics: SourceMetrics,
+    private val crashDiagnosticsCollector: CrashDiagnosticsCollector,
     @IoDispatcher private val ioDispatcher: CoroutineDispatcher,
 ) : ViewModel() {
 
@@ -136,9 +139,12 @@ class SettingsViewModel @Inject constructor(
     )
     private val _cacheUsage = MutableStateFlow(CacheUsageState())
     val cacheUsage: StateFlow<CacheUsageState> = _cacheUsage.asStateFlow()
+    private val _crashDiagnostics = MutableStateFlow(CrashDiagnosticsSummary())
+    val crashDiagnostics: StateFlow<CrashDiagnosticsSummary> = _crashDiagnostics.asStateFlow()
 
     init {
         refreshCacheUsage()
+        refreshCrashDiagnostics()
     }
 
     fun setAutoWallpaper(enabled: Boolean) = viewModelScope.launch {
@@ -204,6 +210,16 @@ class SettingsViewModel @Inject constructor(
         .map { sourceMetrics.snapshotAll() }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), sourceMetrics.snapshotAll())
     fun resetDiagnostics() = sourceMetrics.reset()
+
+    fun refreshCrashDiagnostics() = viewModelScope.launch {
+        _crashDiagnostics.value = withContext(ioDispatcher) {
+            crashDiagnosticsCollector.readSummary()
+        }
+    }
+
+    suspend fun buildCrashDiagnosticsBundle(): String = withContext(ioDispatcher) {
+        crashDiagnosticsCollector.buildBundle()
+    }
 
     fun clearWallpaperHistory() = viewModelScope.launch {
         historyManager.clearAll()

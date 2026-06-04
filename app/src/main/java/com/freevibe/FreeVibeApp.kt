@@ -11,6 +11,8 @@ import coil.ImageLoaderFactory
 import coil.disk.DiskCache
 import coil.memory.MemoryCache
 import com.freevibe.data.local.WallpaperCacheManager
+import com.freevibe.service.CrashDiagnosticsCollector
+import com.freevibe.service.CrashDiagnosticsText
 import com.freevibe.service.CommunityIdentityProvider
 import com.freevibe.service.OfflineFavoritesManager
 import dagger.hilt.android.HiltAndroidApp
@@ -21,8 +23,6 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import okhttp3.OkHttpClient
 import java.io.File
-import java.io.PrintWriter
-import java.io.StringWriter
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -155,11 +155,12 @@ class FreeVibeApp : Application(), Configuration.Provider, ImageLoaderFactory {
         val defaultHandler = Thread.getDefaultUncaughtExceptionHandler()
         Thread.setDefaultUncaughtExceptionHandler { thread, throwable ->
             try {
-                val logFile = File(filesDir, "crash.log")
+                val logFile = File(filesDir, CrashDiagnosticsCollector.CRASH_LOG_FILE_NAME)
                 val timestamp = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.US).format(Date())
-                val sw = StringWriter()
-                throwable.printStackTrace(PrintWriter(sw))
-                logFile.appendText("--- Crash at $timestamp on thread ${thread.name} ---\n$sw\n")
+                logFile.appendText(
+                    CrashDiagnosticsText.formatCrashEntry(timestamp, thread.name, throwable),
+                    Charsets.UTF_8,
+                )
                 // Keep log file reasonable (max 500KB) — trim tail without full read
                 if (logFile.length() > 512_000) {
                     try {

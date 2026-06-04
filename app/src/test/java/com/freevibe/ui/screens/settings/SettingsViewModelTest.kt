@@ -4,6 +4,7 @@ import android.content.Context
 import android.net.Uri
 import com.freevibe.data.local.PreferencesManager
 import com.freevibe.data.local.WallpaperCacheManager
+import com.freevibe.service.CrashDiagnosticsCollector
 import com.freevibe.service.OfflineFavoritesManager
 import com.freevibe.service.VideoWallpaperSelectionResult
 import com.freevibe.service.VideoWallpaperStorage
@@ -182,6 +183,11 @@ class SettingsViewModelTest {
             wallpaperApplier = wallpaperApplier,
             videoWallpaperStorage = videoWallpaperStorage,
             sourceMetrics = com.freevibe.service.SourceMetrics(),
+            crashDiagnosticsCollector = CrashDiagnosticsCollector(
+                context = context,
+                prefs = prefs,
+                sourceMetrics = com.freevibe.service.SourceMetrics(),
+            ),
             ioDispatcher = dispatcher,
         )
     }

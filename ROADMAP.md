@@ -3,7 +3,7 @@
 > Open-source Android personalization: wallpapers, video wallpapers, ringtones, sounds.
 > Stay the OSS alternative to Zedge: no ads, no surprise charges, no dark patterns.
 
-**Version:** 2026-06-04-cycle2-impl3 (implemented release-integrity, full-vs-foss decision/preflight, and supply-chain workflow/checksum lanes).
+**Version:** 2026-06-04-cycle2-impl4 (implemented release-integrity, full-vs-foss decision/preflight, supply-chain workflow/checksum lanes, and local crash diagnostics export).
 **Code version at write:** v6.31.1 / versionCode 112 (per `app/build.gradle.kts`; release/lint Gradle runs are memory-heavy on this Windows workstation, so rerun APK compilation only when explicitly needed).
 **Charter:** personalization, AMOLED-first, free-by-default, multi-source content aggregation, community-fed catalog, polite live wallpapers (battery-aware, pause-on-invisible).
 
@@ -41,6 +41,7 @@ If you're adding a feature and the source isn't in the Appendix, do not add it. 
 - 130 Kotlin files in `app/src/main/java/com/freevibe/`, 50 unit-test files, scanner not rerun in Cycle 1, 1 design-note TODO resolved (`VoteRepository.kt` admin auth → Custom Claims).
 - Shipped via implementation passes since 2026-04-25 (latest code release tag: `v6.31.1`, Android 8-12 YouTube/Sounds crash fixed with core library desugaring). See Implementation Log.
 - Distribution: GitHub Releases + Obtainium manifest; signed via `freevibe.jks`. CI workflow `.github/workflows/verify.yml` runs assembleDebug/testDebugUnitTest/lintDebug on push/PR. `.github/workflows/release.yml` now builds signed `assembleRelease` APKs from GitHub secrets, rejects debuggable artifacts, runs `apksigner verify --print-certs`, publishes SHA-256 checksums/release notes, and creates GitHub artifact attestations. Cycle 2 decided Aura is full-only for GitHub/Obtainium today, with IzzyOnDroid as the realistic near-term app-store target; F-Droid mainline remains blocked until a real FOSS flavor removes/isolates Firebase, Google Services, and Play Services ML Kit. Dependency Review and OpenSSF Scorecard workflows now cover PR/scheduled supply-chain checks.
+- Diagnostics: Aura does not use automatic crash analytics. Settings now exposes a local-only crash diagnostics bundle with last crash timestamp, app/Android/ABI/source context, reproduction fields, and sanitized `crash.log` tail; Copy/Share require explicit user action.
 - Package id `com.freevibe`, brand "Aura"; do not change without a migration plan (re-installs lose data; existing community uploads keyed by device id).
 - Build env note: use Android Studio's bundled JBR and SDK 35. Release/lint Gradle runs are memory-heavy on this Windows workstation; prefer focused unit tests and lightweight file checks unless APK compilation is explicitly needed.
 - CI surface (Cycle 1 note): `.github/workflows/verify.yml` closes the prior no-PR-build gap. Branch protection requiring `verify` is still an owner action.
@@ -178,7 +179,7 @@ Append-only Cycle 2 handoff. Every item below is source-backed in `docs/research
   - Acceptance: dependency checksum metadata committed; PRs run dependency/license review and Scorecard; release artifacts publish SHA-256 files and GitHub artifact attestations; SBOM scope is documented even if generation is deferred.
   - Verify: dependency-change PR triggers review; Gradle fails on checksum drift; GitHub release shows checksums and attestation; Scorecard result is visible to maintainers.
 
-- [ ] 🤖 🔬 **P1 — Opt-in crash/ANR diagnostics bundle**
+- [x] 🤖 🔬 **P1 — Opt-in crash/ANR diagnostics bundle** — shipped 2026-06-04 (`CrashDiagnosticsCollector`, Settings Copy/Share dialog, crash report issue template, `docs/support/crash-diagnostics.md`).
   - Why: Aura avoids automatic analytics, but GitHub/Obtainium/F-Droid users still need a way to send actionable crash evidence after release-only issues.
   - Evidence: `FreeVibeApp.kt` writes a local `filesDir/crash.log`; no Crashlytics/Sentry dependency was found; Android vitals/Play crash dashboards are Play-centric and not enough for non-Play installs.
   - Touches: Settings diagnostics, issue template, local crash-log export, support docs.
@@ -768,6 +769,32 @@ These are the dated receipts. The newest entries supersede the oldest where they
 **Next up**
 
 - Cycle 2 P1 — Opt-in crash/ANR diagnostics bundle.
+
+### 2026-06-04 — Cycle 2 P1 crash/ANR diagnostics bundle
+
+**Items shipped**
+
+- **Local diagnostics collector**
+  New `CrashDiagnosticsCollector` reads the existing `filesDir/crash.log`, parses the newest crash timestamp, and formats a local issue bundle with app version, build type, Android version, security patch, device/ABI, active source/provider context, scheduler/auto-wallpaper source settings, reproduction fields, and a sanitized crash log tail. `FreeVibeApp` now writes crash entries through the shared formatter so parsing stays stable.
+
+- **Settings copy/share flow**
+  Settings > Diagnostics now includes "Crash diagnostics bundle" with the last local crash status. The dialog states that nothing uploads automatically; Copy writes to the clipboard and Share opens Android's chooser only after user action.
+
+- **Support/reporting surface**
+  Added `.github/ISSUE_TEMPLATE/crash_report.yml` and `docs/support/crash-diagnostics.md`. The README now points crash/ANR reporters to the in-app bundle and issue template.
+
+- **Dependency verification follow-up**
+  The focused JVM test exposed missing Windows `aapt2` detached-configuration checksums after dependency verification was introduced. `gradle/verification-metadata.xml` now includes those artifacts.
+
+**Verification**
+
+- `.\gradlew.bat --no-daemon "-Dorg.gradle.jvmargs=-Xmx1536m -Dfile.encoding=UTF-8" :app:testDebugUnitTest --tests com.freevibe.service.CrashDiagnosticsTextTest --stacktrace` passed.
+- Initial targeted test run failed on dependency verification for Windows `aapt2`; rerunning with `--write-verification-metadata sha256` added the missing checksums, then the strict run passed.
+- No local APK compile was run for this diagnostics batch.
+
+**Next up**
+
+- Cycle 2 P1 — Reproducible-build/IzzyOnDroid prep.
 
 ### 2026-05-17 — Rev4-impl-2 autonomous batch (6 more items, code + docs)
 

@@ -1,6 +1,8 @@
 package com.freevibe.ui.screens.settings
 
 import android.Manifest
+import android.content.ClipData
+import android.content.ClipboardManager
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
@@ -40,6 +42,7 @@ import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.freevibe.service.CrashDiagnosticsSummary
 import com.freevibe.service.DailyWallpaperWorker
 import com.freevibe.service.SourceMetrics
 import com.freevibe.service.VIDEO_STATS_PREFS_NAME
@@ -55,6 +58,7 @@ import com.freevibe.ui.components.GlassCard
 import com.freevibe.ui.components.HighlightPill
 import com.freevibe.ui.launchLiveWallpaperPicker
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
@@ -68,6 +72,7 @@ fun SettingsScreen(
     viewModel: SettingsViewModel = hiltViewModel(),
 ) {
     val context = LocalContext.current
+    val diagnosticsScope = rememberCoroutineScope()
     val autoWpEnabled by viewModel.autoWpEnabled.collectAsStateWithLifecycle()
     val autoWpInterval by viewModel.autoWpInterval.collectAsStateWithLifecycle()
     val autoWpSource by viewModel.autoWpSource.collectAsStateWithLifecycle()
@@ -110,6 +115,7 @@ fun SettingsScreen(
     val videoAutoBatterySaver by viewModel.videoAutoBatterySaver.collectAsStateWithLifecycle()
     val cacheUsage by viewModel.cacheUsage.collectAsStateWithLifecycle()
     val diagnostics by viewModel.diagnostics.collectAsStateWithLifecycle()
+    val crashDiagnostics by viewModel.crashDiagnostics.collectAsStateWithLifecycle()
     val videoWallpaperSelectionResult by viewModel.videoWallpaperSelectionResult.collectAsStateWithLifecycle()
     val videoBatteryDashboard by rememberVideoBatteryDashboardState(
         context = context,
@@ -256,6 +262,8 @@ fun SettingsScreen(
     var showYtBlockedEditor by remember { mutableStateOf(false) }
     var showDarkModeWallpaperPicker by remember { mutableStateOf(false) }
     var showLightModeWallpaperPicker by remember { mutableStateOf(false) }
+    var showCrashDiagnostics by remember { mutableStateOf(false) }
+    var crashDiagnosticsBusy by remember { mutableStateOf(false) }
     var touchEffectStrength by remember {
         mutableStateOf(
             context.getSharedPreferences("freevibe_weather_wp", Context.MODE_PRIVATE)
@@ -1187,8 +1195,17 @@ fun SettingsScreen(
         var showDiagnostics by remember { mutableStateOf(false) }
         SettingsSection(
             title = "Diagnostics",
-            description = "Per-source request counts and latency snapshots for this session.",
+            description = "Local-only troubleshooting details. Nothing is uploaded automatically.",
         ) {
+            SettingsItem(
+                icon = Icons.Default.BugReport,
+                title = "Crash diagnostics bundle",
+                subtitle = crashDiagnosticsSubtitle(crashDiagnostics),
+                onClick = {
+                    viewModel.refreshCrashDiagnostics()
+                    showCrashDiagnostics = true
+                },
+            )
             SettingsItem(
                 icon = Icons.Default.MonitorHeart,
                 title = "Source diagnostics",
@@ -1233,6 +1250,81 @@ fun SettingsScreen(
                     TextButton(onClick = {
                         viewModel.resetDiagnostics()
                     }) { Text("Reset") }
+                },
+            )
+        }
+        if (showCrashDiagnostics) {
+            AlertDialog(
+                onDismissRequest = { if (!crashDiagnosticsBusy) showCrashDiagnostics = false },
+                title = { Text("Crash diagnostics") },
+                text = {
+                    Column(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalArrangement = Arrangement.spacedBy(12.dp),
+                    ) {
+                        Text(
+                            crashDiagnosticsSubtitle(crashDiagnostics),
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurface,
+                        )
+                        Text(
+                            "The bundle includes app and Android versions, ABI, active source/provider context, reproduction fields, and a sanitized tail of the local crash log.",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                        Text(
+                            "Aura does not send this data unless you copy it or choose a share target.",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                        if (crashDiagnosticsBusy) {
+                            LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
+                        }
+                    }
+                },
+                confirmButton = {
+                    TextButton(
+                        enabled = !crashDiagnosticsBusy,
+                        onClick = {
+                            diagnosticsScope.launch {
+                                crashDiagnosticsBusy = true
+                                try {
+                                    val bundle = viewModel.buildCrashDiagnosticsBundle()
+                                    copyCrashDiagnosticsBundle(context, bundle)
+                                    viewModel.refreshCrashDiagnostics()
+                                } catch (_: Exception) {
+                                    Toast.makeText(context, "Could not build diagnostics", Toast.LENGTH_SHORT).show()
+                                } finally {
+                                    crashDiagnosticsBusy = false
+                                }
+                            }
+                        },
+                    ) { Text("Copy") }
+                },
+                dismissButton = {
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        TextButton(
+                            enabled = !crashDiagnosticsBusy,
+                            onClick = { showCrashDiagnostics = false },
+                        ) { Text("Close") }
+                        TextButton(
+                            enabled = !crashDiagnosticsBusy,
+                            onClick = {
+                                diagnosticsScope.launch {
+                                    crashDiagnosticsBusy = true
+                                    try {
+                                        val bundle = viewModel.buildCrashDiagnosticsBundle()
+                                        shareCrashDiagnosticsBundle(context, bundle)
+                                        viewModel.refreshCrashDiagnostics()
+                                    } catch (_: Exception) {
+                                        Toast.makeText(context, "Could not build diagnostics", Toast.LENGTH_SHORT).show()
+                                    } finally {
+                                        crashDiagnosticsBusy = false
+                                    }
+                                }
+                            },
+                        ) { Text("Share") }
+                    }
                 },
             )
         }
@@ -2100,6 +2192,32 @@ private fun SettingsToggle(
                 colors = SwitchDefaults.colors(checkedTrackColor = MaterialTheme.colorScheme.primary),
             )
         }
+    }
+}
+
+private fun crashDiagnosticsSubtitle(summary: CrashDiagnosticsSummary): String =
+    if (summary.hasCrashLog) {
+        "Last crash ${summary.lastCrashAt ?: "recorded"} • Copy or share a sanitized issue bundle"
+    } else {
+        "No local crash log yet • Copy or share environment details if the app freezes"
+    }
+
+private fun copyCrashDiagnosticsBundle(context: Context, bundle: String) {
+    val clipboard = context.getSystemService(ClipboardManager::class.java)
+    clipboard.setPrimaryClip(ClipData.newPlainText("Aura diagnostics", bundle))
+    Toast.makeText(context, "Diagnostics copied", Toast.LENGTH_SHORT).show()
+}
+
+private fun shareCrashDiagnosticsBundle(context: Context, bundle: String) {
+    val intent = Intent(Intent.ACTION_SEND).apply {
+        type = "text/plain"
+        putExtra(Intent.EXTRA_SUBJECT, "Aura diagnostics bundle")
+        putExtra(Intent.EXTRA_TEXT, bundle)
+    }
+    try {
+        context.startActivity(Intent.createChooser(intent, "Share diagnostics"))
+    } catch (_: Exception) {
+        Toast.makeText(context, "No app can share diagnostics", Toast.LENGTH_SHORT).show()
     }
 }
 
