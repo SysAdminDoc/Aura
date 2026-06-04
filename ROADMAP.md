@@ -18,7 +18,7 @@ This roadmap is fed continuously by a research machine. On every pass, the build
 4. Check off ✅ each item you complete, leave it in place with the checkmark, commit per logical change with a "why" message, and push.
 5. Never edit this Implementer Instructions block or the 🔬 Researcher Queue headings. Never force-push.
 
-**Last researched:** 2026-06-04 / Cycle 12.
+**Last researched:** 2026-06-04 / Cycle 13.
 
 ---
 
@@ -666,6 +666,54 @@ Append-only Cycle 12 handoff. Every item below is source-backed in `docs/researc
   - Touches: creator profile/settings UI, support docs, privacy policy, deletion request page, diagnostics redaction.
   - Acceptance: UI shows auth type, UID suffix/deletion code, owned upload IDs, follow count, vote count or vote-marker count, and links to delete/export/community privacy details; export/share output redacts full tokens and does not include other users' private data.
   - Verify: signed-out/local/Firebase-anonymous states; export before and after upload/vote/follow; deletion request code maps to the correct UID in admin tooling; diagnostics bundle redacts the full UID unless explicitly copied by the user.
+
+---
+
+## 🔬 Researcher Queue (Cycle 13 — 2026-06-04)
+
+Append-only Cycle 13 handoff. Every item below is source-backed in `docs/research/cycle-13-2026-06-04.md`; merge into the existing Now/Next/Later item named in `Touches` when implementation starts.
+
+- [ ] 🤖 🔬 **P0 — Unified provenance and action-capability model**
+  - Why: Sounds carry `license`, wallpapers generally do not, video wallpaper items have a separate metadata shape, and the static licenses screen does not prove whether a specific item can be edited, applied, downloaded, shared, bundled, or kept offline.
+  - Evidence: `Models.kt`; `Mappers.kt`; `FreesoundV2Repository.kt`; `CcMixterRepository.kt`; `AudiusRepository.kt`; `SoundCloudRepository.kt`; `WallpaperDetailScreen.kt`; `SoundDetailScreen.kt`; Pexels/Pixabay/Freesound/YouTube/Reddit policy docs.
+  - Touches: content models/entities, migrations, remote mappers, favorites/downloads/cache restoration, detail/share/apply/edit flows, provider policy docs, licenses screen.
+  - Acceptance: every content item can expose source, source page, creator/uploader, normalized license, provider terms, takedown/report URL, and allowed actions; unsupported or risky actions are disabled or require source-specific confirmation; favorites/downloads preserve provenance.
+  - Verify: fixture items for Pexels, Pixabay, Reddit, YouTube, Freesound, ccMixter, Audius, SoundCloud, community, bundled, AI-generated, and local content render provenance consistently across cards, detail screens, share sheets, favorites, downloads, and editors.
+
+- [ ] 🤖 🔬 **P0 — IP takedown/report queue for community and mirrored content**
+  - Why: Google Play can require evidence of rights to use copyrighted content, and Aura needs one route for community-upload reports plus another for provider/source-deletion reconciliation.
+  - Evidence: `database.rules.json` moderation boolean; no rights-holder report queue found; Cycle 9 moderation queue item; Google Play IP policy; Reddit developer terms; Pexels/Pixabay report-content links.
+  - Touches: report repository/model, RTDB rules, admin moderation UI, detail-screen report actions, privacy/support docs, community backend runbook.
+  - Acceptance: users and rights holders can report community uploads with IP/license/safety/source-removed reasons; admins can hide/delete/restore with timestamp/reason; third-party mirrored entries can be marked source-deleted/unavailable; takedown status is not exposed in a way that leaks reporter identity.
+  - Verify: report -> admin hide/delete -> public feed removal -> restore flow; rights-holder report from detail/source screen; source-deleted Reddit/Pexels/Pixabay fixture stops appearing as live catalog content; rules tests block non-admin resolution.
+
+- [ ] 🤖 🔬 **P1 — YouTube store-risk containment profile**
+  - Why: Aura's Play-facing listing currently promotes YouTube-first ringtone discovery and video wallpapers, while Play IP policy and YouTube developer policies are restrictive around unauthorized downloads, cached audiovisual content, offline playback, and infringement encouragement.
+  - Evidence: `fastlane/metadata/android/en-US/full_description.txt`; `SoundsViewModel.kt` YouTube tab and pasted-URL import; `VideoWallpapersViewModel.kt` YouTube video path; YouTube API policies; Google Play IP policy; Cycle 3 YouTube legal-mode item.
+  - Touches: distribution/channel strategy, build/runtime provider switches, Sounds/Videos UI, fastlane metadata, screenshots, release checklist.
+  - Acceptance: Play/Izzy/F-Droid/GitHub distribution profiles declare whether YouTube is enabled; disabled profiles remove YouTube tabs/search/default queries/video wallpaper paths and avoid promotional copy/screenshots that encourage unauthorized downloads; fallback sources remain useful.
+  - Verify: run app with YouTube disabled and browse Sounds/Videos; confirm no yt-dlp/NewPipe resolution or cache writes; review Play metadata/screenshots for copyrighted-download language; GitHub profile can still enable YouTube when explicitly chosen.
+
+- [ ] 🤖 🔬 **P1 — Community upload rights attestation and license metadata**
+  - Why: Community uploads publish audio/wallpaper metadata with `uploaderId`/`uploaderLabel`, but no explicit rights attestation, license, source URL, model/property release state, or takedown contact. Community sounds currently show `license = "User Upload"`.
+  - Evidence: `UploadRepository.uploadSound()`; `WallpaperUploadRepository.uploadWallpaper()`; `SoundsScreen.kt` upload dialog; Play IP policy; Pixabay/Pexels third-party-rights warnings.
+  - Touches: upload dialogs, metadata schema, RTDB rules, community cards/detail screens, privacy/policy docs, deletion/takedown runbook.
+  - Acceptance: uploader must attest they own or have rights to share the media, choose a license/usage label, optionally provide source URL/credit, acknowledge public visibility and takedown rules, and understand that infringing content may be removed; metadata stores that evidence.
+  - Verify: upload blocked until attestation complete; uploaded metadata includes license/source/rights fields; detail and report flows show license/takedown context; admin can remove content by rights reason.
+
+- [ ] 🤖 🔬 **P1 — Aura Originals provenance gate**
+  - Why: The curation guide correctly requires CC0, source URL, and sha256, but the release gate does not yet prove every bundled sound has reviewed provenance and a retroactive removal path.
+  - Evidence: `docs/aura-originals-curation.md`; `AuraOriginalsManifest.kt`; `aura_originals_manifest.json`; Freesound API/license terms; Cycle 5 Aura Originals queue.
+  - Touches: Aura Originals manifest, downloader verification, licenses screen, CI/source-probe job, release checklist, takedown/removal runbook.
+  - Acceptance: manifest entries include source URL, normalized license, sha256, curator/review date, removal status, and replacement plan; CI checks URL reachability/hash/duplicate IDs; only reviewed CC0 or approved-compatible assets ship in the first-run pack.
+  - Verify: manifest fixture with valid/invalid license and hash; downloader rejects mismatches; licenses/provenance screen lists bundled attributions; removal of an entry stops new installs from receiving it.
+
+- [ ] 🤖 🔬 **P2 — Source-deleted and rights-revoked local states**
+  - Why: Cached/favorited/downloaded third-party media can outlive a provider deletion or rights change, and Aura currently has no explicit UI state for "source removed", "rights revoked", or "local copy only".
+  - Evidence: `FavoriteEntity`; `WallpaperCacheEntity`; `DownloadEntity`; detail restore paths; Reddit developer terms; Pexels/Pixabay report-content links; Cycle 3 source-deletion item.
+  - Touches: cache/favorite/download metadata, detail reload paths, source-health diagnostics, storage cleanup, user copy, report/takedown queue.
+  - Acceptance: stale/source-deleted media stops appearing in remote catalog, favorites/downloads show a clear unavailable/local-only state, users can delete local copies, and provider terms decide whether offline copies are retained or purged.
+  - Verify: simulate deleted Reddit post, removed Pexels/Pixabay result, unavailable YouTube video, and deleted community upload; detail screens do not misrepresent source status; cleanup removes policy-required local copies.
 
 ---
 
@@ -2016,3 +2064,9 @@ Stars/dates as of research pass 2026-05-16.
 - Cycle 12 planning record — [docs/research/cycle-12-2026-06-04.md](docs/research/cycle-12-2026-06-04.md).
 - Google Play deletion and data disclosure — [app account deletion requirements](https://support.google.com/googleplay/android-developer/answer/13327111), [Data safety section](https://support.google.com/googleplay/android-developer/answer/10787469).
 - Firebase identity and deletion APIs — [anonymous authentication](https://firebase.google.com/docs/auth/android/anonymous-auth), [delete a Firebase user](https://firebase.google.com/docs/auth/android/manage-users#delete_a_user), [Realtime Database delete data](https://firebase.google.com/docs/database/android/read-and-write#delete_data), [Cloud Storage delete files](https://firebase.google.com/docs/storage/android/delete-files).
+
+## Appendix Q — Cycle 13 Sources
+
+- Cycle 13 planning record — [docs/research/cycle-13-2026-06-04.md](docs/research/cycle-13-2026-06-04.md).
+- Store and provider IP/licensing policy — [Google Play Intellectual Property](https://support.google.com/googleplay/android-developer/answer/9888072), [Pexels license](https://www.pexels.com/license/), [Pexels API documentation](https://www.pexels.com/api/documentation/), [Pixabay content license summary](https://pixabay.com/service/license-summary/), [Freesound API terms](https://freesound.org/docs/api/terms_of_use.html).
+- User-generated and video/audio-source policy — [Reddit Developer Terms](https://redditinc.com/policies/developer-terms), [YouTube API Services Developer Policies](https://developers.google.com/youtube/terms/developer-policies).
