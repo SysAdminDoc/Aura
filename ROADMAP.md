@@ -18,7 +18,7 @@ This roadmap is fed continuously by a research machine. On every pass, the build
 4. Check off ✅ each item you complete, leave it in place with the checkmark, commit per logical change with a "why" message, and push.
 5. Never edit this Implementer Instructions block or the 🔬 Researcher Queue headings. Never force-push.
 
-**Last researched:** 2026-06-04 / Cycle 8.
+**Last researched:** 2026-06-04 / Cycle 10.
 
 ---
 
@@ -522,6 +522,54 @@ Append-only Cycle 9 handoff. Every item below is source-backed in `docs/research
   - Touches: `docs/community-backend-runbook.md`, release checklist, deploy/rollback notes, incident/takedown notes, App Check enforcement ledger, Storage lifecycle policy evidence.
   - Acceptance: runbook records current deployed rules hash/version, deploy command, rollback command, App Check monitor/enforce status, rules test command, cleanup cadence, takedown SLA, and owner/admin deletion verification steps.
   - Verify: dry-run release checklist includes backend evidence; a simulated bad rules deploy has a rollback path; a sample takedown/delete case leaves documented evidence without leaking user data.
+
+---
+
+## 🔬 Researcher Queue (Cycle 10 — 2026-06-04)
+
+Append-only Cycle 10 handoff. Every item below is source-backed in `docs/research/cycle-10-2026-06-04.md`; merge into the existing Now/Next/Later item named in `Touches` when implementation starts.
+
+- [ ] 🤖 🔬 **P0 — API 37 toolchain and target-SDK release gate**
+  - Why: Aura is on compile/target SDK 35 and AGP 8.7.3; Android 17 SDK docs require compile/target SDK 37 and AGP 8.9.0-rc01+ for API 37 work.
+  - Evidence: `app/build.gradle.kts`; `baselineprofile/build.gradle.kts`; `gradle/libs.versions.toml`; Android 17 SDK setup docs; Android 17 Platform Stability blog.
+  - Touches: N-1; Gradle catalog, app/baseline profile Gradle files, Android Studio/SDK setup docs, CI image, dependency verification metadata, release preflight.
+  - Acceptance: app and baselineprofile modules compile at SDK 37, target SDK 37 is enabled deliberately, AGP meets the documented minimum, metadata skip workaround is removed or justified, Android 17 emulator/device smoke lane exists, and target-37 behavior changes are checklist-gated.
+  - Verify: `:app:assembleDebug`, `:app:testDebugUnitTest`, lint/manifest checks where feasible, Android 17 emulator install/smoke, and target-37 compat checklist signed off before release.
+
+- [ ] 🤖 🔬 **P0 — Android 17 Contact Picker migration for contact ringtones**
+  - Why: Aura requests broad `READ_CONTACTS` and `WRITE_CONTACTS` together, while Android 17 offers selected-contact read access through the system Contact Picker.
+  - Evidence: `AndroidManifest.xml`; `ContactPickerScreen.kt`; `ContactRingtoneService.kt`; Android 17 Contact Picker docs; Android 17 target-SDK Contacts Provider behavior notes.
+  - Touches: Cycle 4 contact-permission item; contact picker UI, ringtone apply flow, permission copy, privacy/Data safety docs, Play app-content packet.
+  - Acceptance: API 37+ selection uses the system Contact Picker without broad `READ_CONTACTS` when possible; any `WRITE_CONTACTS` request is just-in-time for applying or clearing the ringtone; older devices keep a just-in-time fallback; unsupported write cases explain the limitation.
+  - Verify: select contact on Android 17 without `READ_CONTACTS`; apply ringtone with/without `WRITE_CONTACTS`; clear ringtone; denied permission path; older-device fallback; Data safety row updated.
+
+- [ ] 🤖 🔬 **P1 — Android 17 large-screen/adaptive-layout smoke gate**
+  - Why: Target-37 apps cannot rely on orientation/resizability/aspect restrictions on `sw > 600dp` displays, and Aura has no formal window-size-class navigation or list-detail layout code.
+  - Evidence: no manifest orientation lock found; no `WindowSizeClass`/`NavigationSuiteScaffold`/`ListDetailPaneScaffold`; fixed two-column grids in several screens; Android 17 form-factor behavior docs.
+  - Touches: N-1/NX adaptive work; `FreeVibeRoot.kt`, wallpaper/category/favorites/collections grids, detail screens, screenshot/runbook matrix.
+  - Acceptance: tablet, foldable, landscape, split-screen, and desktop-windowing smoke tests are documented; no critical clipping/off-screen controls in primary flows; adaptive-nav/list-detail follow-ups are filed or implemented.
+  - Verify: Android 17 large-screen emulator screenshots for Wallpapers, Wallpaper Detail, Sounds, Contact Picker, Collections, Favorites, Settings, Video Crop, and AI Generation.
+
+- [ ] 🤖 🔬 **P1 — Android 17 background-audio hardening regression suite**
+  - Why: Aura has a Media3 `mediaPlayback` foreground service, but Android 17 can silently fail audio interactions when lifecycle/foreground-service state is invalid.
+  - Evidence: `AudioPlaybackService.kt`; manifest `FOREGROUND_SERVICE_MEDIA_PLAYBACK` and `foregroundServiceType="mediaPlayback"`; Android 17 background audio hardening docs.
+  - Touches: audio preview service, Sounds/detail playback, notification/foreground-service copy, manual QA script, release checklist.
+  - Acceptance: playback behavior is defined for visible, backgrounded, task-removed, and notification-permission states; logcat/dumpsys checks show no `AudioHardening` failures in supported flows; unsupported flows fail visibly.
+  - Verify: start preview -> background -> resume; task remove while playing/not playing; notification permission denied/allowed; `adb dumpsys audio` and logcat checked for package-prefixed `AudioHardening` entries.
+
+- [ ] 🤖 🔬 **P1 — Target-37 privacy/security compatibility preflight**
+  - Why: Android 17 adds mandatory local-network handling for target-37 apps, ECH, default Certificate Transparency, stricter reflection/static-final behavior, Contacts Provider privacy changes, and safer native DCL constraints.
+  - Evidence: no current `ACCESS_LOCAL_NETWORK`, sockets, `NsdManager`, `WifiManager`, or `.local` discovery hits; `network_security_config.xml` cleartext exception for `ccmixter.org`; Android 17 behavior-change docs; local-network permission docs.
+  - Touches: release preflight script, network/provider docs, `network_security_config.xml` review, dependency/native-loading scan, contact-provider query audit, privacy policy/Data safety.
+  - Acceptance: preflight fails on new LAN APIs without a declared decision, flags broad contacts queries and private reflection patterns, documents the `ccmixter.org` cleartext exception, and records CT/ECH provider compatibility review.
+  - Verify: static grep/preflight run; Android 17 network smoke across Wallhaven/Pexels/Pixabay/Freesound/ccMixter/YouTube/AI/Firebase; no local-network permission prompt appears in current flows.
+
+- [ ] 🤖 🔬 **P2 — Direct Android 17 API cleanup for shipped bridges**
+  - Why: EyeDropper and Photo Picker 9:16 behavior shipped through raw string/reflection bridges that should become direct API usage once compileSdk 37 lands.
+  - Evidence: `WallpapersScreen.kt`; `AuraPickVisualMedia.kt`; `PhotoPickerCustomization.kt`; Android Intent API reference; Android 17 Beta 3 Photo Picker blog; `CHANGELOG.md` bridge notes.
+  - Touches: NX-10/NX-11 follow-up; wallpaper picker, collection import picker, parallax photo picker, changelog/release notes, fallback logging.
+  - Acceptance: direct `Intent.ACTION_OPEN_EYE_DROPPER`/`Intent.EXTRA_COLOR` and direct Photo Picker customization API are primary paths on compileSdk 37; fallback logging remains for missing system components; reflection/raw constants are isolated or deleted.
+  - Verify: Android 17 device/emulator EyeDropper result; Photo Picker 9:16 grid on all three call sites; Android 16 and below keep default picker behavior; debug logs show no unexpected reflection failure.
 
 ---
 
@@ -1852,3 +1900,10 @@ Stars/dates as of research pass 2026-05-16.
 - Firebase rules and auth — [Realtime Database Security Rules](https://firebase.google.com/docs/database/security), [Custom Claims and Security Rules](https://firebase.google.com/docs/auth/admin/custom-claims), [Local Emulator Suite for Security Rules](https://firebase.google.com/docs/rules/emulator-setup), [Cloud Storage Security Rules conditions](https://firebase.google.com/docs/storage/security/rules-conditions).
 - Firebase backend operations — [App Check overview](https://firebase.google.com/docs/app-check), [Play Integrity provider](https://firebase.google.com/docs/app-check/android/play-integrity-provider), [App Check enforcement](https://firebase.google.com/docs/app-check/enable-enforcement), [delete files with Cloud Storage on Android](https://firebase.google.com/docs/storage/android/delete-files), [Cloud Storage lifecycle management](https://docs.cloud.google.com/storage/docs/lifecycle).
 - UGC policy — [Google Play user-generated content](https://support.google.com/googleplay/android-developer/answer/9876937).
+
+## Appendix N — Cycle 10 Sources
+
+- Cycle 10 planning record — [docs/research/cycle-10-2026-06-04.md](docs/research/cycle-10-2026-06-04.md).
+- Android 17 SDK and release state — [release notes](https://developer.android.com/about/versions/17/release-notes), [set up SDK](https://developer.android.com/about/versions/17/setup-sdk), [Beta 3 Platform Stability blog](https://android-developers.googleblog.com/2026/03/the-third-beta-of-android-17.html).
+- Android 17 feature and behavior gates — [Contact Picker](https://developer.android.com/about/versions/17/features/contact-picker), [background audio hardening](https://developer.android.com/about/versions/17/changes/bg-audio), [orientation/resizability restrictions ignored](https://developer.android.com/about/versions/17/changes/ff-restrictions-ignored), [target-SDK behavior changes](https://developer.android.com/about/versions/17/behavior-changes-17), [local network permission](https://developer.android.com/privacy-and-security/local-network-permission).
+- Android 17 API references — [Intent.ACTION_OPEN_EYE_DROPPER and EXTRA_COLOR](https://developer.android.com/reference/android/content/Intent#ACTION_OPEN_EYE_DROPPER).
