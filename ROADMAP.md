@@ -18,7 +18,7 @@ This roadmap is fed continuously by a research machine. On every pass, the build
 4. Check off ✅ each item you complete, leave it in place with the checkmark, commit per logical change with a "why" message, and push.
 5. Never edit this Implementer Instructions block or the 🔬 Researcher Queue headings. Never force-push.
 
-**Last researched:** 2026-06-04 / Cycle 3.
+**Last researched:** 2026-06-04 / Cycle 4.
 
 ---
 
@@ -234,6 +234,61 @@ Append-only Cycle 3 handoff. Every item below is source-backed in `docs/research
   - Touches: detail reload paths, favorites/download metadata, source health, report queue from Cycle 1, cache cleanup.
   - Acceptance: source-deleted content stops appearing in remote catalog; favorites/downloads show unavailable/source-deleted state; user can remove local copy; moderator/report queue can hide community mirrors of removed content.
   - Verify: simulate source reload failure/deleted marker; favorite remains navigable but not misrepresented as live remote content; report queue accepts removal reason.
+
+---
+
+## 🔬 Researcher Queue (Cycle 4 — 2026-06-04)
+
+Append-only Cycle 4 handoff. Every item below is source-backed in `docs/research/cycle-4-2026-06-04.md`; merge into the existing Now/Next/Later item named in `Touches` when implementation starts.
+
+- [ ] 🤖 🔬 **P0 — Privacy policy and Data safety source-of-truth matrix**
+  - Why: Aura handles contacts, coarse location, microphone recordings, user-provided media, Firebase anonymous IDs, public community metadata, crash diagnostics, local preferences, and third-party provider requests. Play requires a privacy policy and accurate Data safety disclosures.
+  - Evidence: manifest permissions; `CommunityIdentityProvider.kt`; community upload repositories; `CrashDiagnosticsCollector.kt`; Google Play User Data/Data safety/prominent-disclosure guidance.
+  - Touches: `docs/privacy/data-safety.md`, Settings privacy screen, README, release checklist, issue templates, distribution docs.
+  - Acceptance: every permission/SDK/network destination/local store has data type, purpose, collection/sharing status, retention, deletion path, and Data safety answer; in-app privacy screen links the policy and local-only diagnostics statement; release checklist requires review on manifest/dependency changes.
+  - Verify: static permission inventory matches matrix; Data safety rows cover location/contacts/audio/photos/user content/crash logs/diagnostics/device IDs; no release can ship with unchecked privacy matrix diff.
+
+- [ ] 🤖 🔬 **P0 — Community upload public-data lifecycle and deletion workflow**
+  - Why: Community sounds/wallpapers and collection shares are public-readable, and upload metadata includes Firebase download URLs, uploader labels/IDs, file names, tags, and categories. Users need to know uploads are public and need removal controls.
+  - Evidence: `database.rules.json` public reads; `UploadRepository.kt` public download URL metadata; Firebase rules guidance; Cycle 1 report queue and Cycle 3 takedown items.
+  - Touches: upload dialogs, RTDB rules, Storage metadata, creator profile repository, report queue, `docs/privacy/community-data.md`.
+  - Acceptance: upload flow says content and metadata become public; metadata excludes unnecessary original filenames or clearly justifies them; owner field names are consistent; users can delete their uploads or request removal; admin moderation hides public catalog entries and has retention notes.
+  - Verify: Firebase rules tests for owner delete/admin hide/public read; upload/delete manual pass; public catalog no longer exposes unneeded metadata; removal path documented in privacy policy.
+
+- [ ] 🤖 🔬 **P1 — Android 17 Contact Picker and contacts-permission minimization**
+  - Why: Per-contact ringtone assignment requests broad contacts read/write permissions immediately on screen entry. Android 17 provides a picker that gives selected-contact read access without broad address-book access.
+  - Evidence: `ContactPickerScreen.kt` immediate `READ_CONTACTS`/`WRITE_CONTACTS` launcher; Android 17 Contact Picker docs; Play User Data contact restrictions.
+  - Touches: `ContactPickerScreen`, `ContactRingtoneService`, permission copy, Settings privacy screen, API 37 test plan.
+  - Acceptance: API 37+ uses system Contact Picker for contact selection; broad read contacts permission is not requested before the user selects a contact; write permission is requested only when needed to set the ringtone; older devices retain a just-in-time fallback.
+  - Verify: API 37 picker flow; API 35 fallback flow; deny read/write permissions and confirm app degrades to "choose another apply target"; no automatic prompt on screen entry.
+
+- [ ] 🤖 🔬 **P1 — Backup/data-extraction inventory and secret/identity exclusions**
+  - Why: Aura excludes DataStore prefs and crash logs, but `allowBackup=true` leaves other state eligible by default, including the main Room DB and `aura_community_identity`.
+  - Evidence: `AndroidManifest.xml`; `backup_rules.xml`; `data_extraction_rules.xml`; `CommunityIdentityProvider.kt`; Android Auto Backup docs.
+  - Touches: backup XML, Room/favorites/export docs, identity prefs, API key storage docs, release checklist.
+  - Acceptance: backup matrix declares include/exclude for Room DB, DataStore API keys, local identity UUID, weather lat/lon, crash logs, downloaded media, cached provider metadata, favorites, and collections; backup XML matches the matrix for Android 11 and Android 12+.
+  - Verify: inspect APK backup XML; smoke-run app then list app data files and compare to matrix; restore simulation or manual D2D/cloud decision review.
+
+- [ ] 🤖 🔬 **P1 — Weather location disclosure, retention, and clearing**
+  - Why: Weather effects use coarse location and send lat/lon to Open-Meteo, then store lat/lon in SharedPreferences for wallpaper rendering.
+  - Evidence: `WeatherUpdateWorker.kt`; `SettingsScreen.kt`; Android approximate-location guidance; Play User Data location disclosure rules.
+  - Touches: Settings weather toggle, `WeatherUpdateWorker`, `WeatherWallpaperService`, backup XML, privacy policy.
+  - Acceptance: weather toggle explains approximate location and Open-Meteo call before permission request; app never requests `ACCESS_FINE_LOCATION` or `ACCESS_BACKGROUND_LOCATION` for weather; stored lat/lon are rounded or justified; disabling weather clears location/weather prefs and cancels work.
+  - Verify: enable/deny/disable weather flows; confirm no background-location permission; inspect prefs after disable; network call contains expected rounded/coarse coordinates.
+
+- [ ] 🤖 🔬 **P1 — Just-in-time permission disclosure and denial UX audit**
+  - Why: Aura requests sensitive capabilities across contacts, microphone recording, notifications, WRITE_SETTINGS, and location. Each needs a clear user action, rationale, decline path, and graceful fallback.
+  - Evidence: manifest permissions; `SoundsScreen.kt` record flow; `SettingsScreen.kt` notification/location/settings flows; `ContactPickerScreen.kt`; Play prominent-disclosure guidance; Android runtime-permission docs.
+  - Touches: permission launch sites, microcopy, Settings privacy screen, QA checklist.
+  - Acceptance: no sensitive permission prompt fires before an explicit feature action; every denied permission leaves the rest of the app usable; permanent-denial states link to Android settings; release QA includes permission-denial screenshots.
+  - Verify: revoke each dangerous/special permission and exercise feature flows; check no startup prompts; run manual screenshots for allow/deny/permanent-deny states.
+
+- [ ] 🤖 🔬 **P2 — External automation consent, rate limit, and diagnostics**
+  - Why: The exported Tasker/MacroDroid receiver lets any app trigger wallpaper rotation broadcasts. The feature is useful but needs an opt-in boundary and observability.
+  - Evidence: `TaskerActionReceiver.kt`; `AndroidManifest.xml` exported receiver; Play User Data and foreground-service user-awareness guidance.
+  - Touches: Settings automation toggle, `TaskerActionReceiver`, `RotationTriggerService`, source diagnostics, README automation docs.
+  - Acceptance: external broadcast actions are ignored until the user enables automation; repeated broadcasts are rate-limited; diagnostics show last external trigger time/package when available; docs list the public intent contract and risks.
+  - Verify: broadcast ignored by default; enabled broadcast rotates once; burst broadcasts coalesce; diagnostics record external trigger state.
 
 ---
 
@@ -1524,3 +1579,10 @@ Stars/dates as of research pass 2026-05-16.
 - Provider API and policy constraints — [Pexels wallpaper-app API guidance](https://help.pexels.com/hc/en-us/articles/4405588861721-Can-I-use-the-API-as-a-wallpaper-app), [Pexels API documentation](https://www.pexels.com/api/documentation/), [Pixabay API documentation](https://pixabay.com/api/docs/).
 - Sound provider constraints — [Freesound API terms](https://freesound.org/docs/api/terms_of_use.html), [Freesound API terms of use help](https://freesound.org/help/tos_api/), [SoundCloud API docs](https://developers.soundcloud.com/docs/api/), [SoundCloud API terms](https://developers.soundcloud.com/docs/api/terms-of-use).
 - User-generated and video-source constraints — [Reddit developer terms](https://redditinc.com/policies/developer-terms), [YouTube API Services developer policies](https://developers.google.com/youtube/terms/developer-policies), [YouTube API Services terms](https://developers.google.com/youtube/terms/api-services-terms-of-service).
+
+## Appendix H — Cycle 4 Sources
+
+- Cycle 4 planning record — [docs/research/cycle-4-2026-06-04.md](docs/research/cycle-4-2026-06-04.md).
+- Play privacy/disclosure policy — [User Data policy](https://support.google.com/googleplay/android-developer/answer/10144311), [Data safety section guidance](https://support.google.com/googleplay/android-developer/answer/10787469), [prominent disclosure and consent best practices](https://support.google.com/googleplay/android-developer/answer/11150561).
+- Android privacy primitives — [runtime permissions](https://developer.android.com/training/permissions/requesting), [location runtime permissions](https://developer.android.com/develop/sensors-and-location/location/permissions/runtime), [Android 17 Contact Picker](https://developer.android.com/about/versions/17/features/contact-picker), [Auto Backup/data extraction rules](https://developer.android.com/identity/data/autobackup), [notification runtime permission](https://developer.android.com/develop/ui/compose/notifications/notification-permission).
+- Firebase and foreground-service controls — [Realtime Database Security Rules](https://firebase.google.com/docs/database/security), [Android 14 foreground-service types](https://developer.android.com/about/versions/14/changes/fgs-types-required), [Play foreground-service declaration requirements](https://support.google.com/googleplay/android-developer/answer/13392821).
