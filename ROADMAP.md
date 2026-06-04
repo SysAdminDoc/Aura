@@ -18,7 +18,7 @@ This roadmap is fed continuously by a research machine. On every pass, the build
 4. Check off ✅ each item you complete, leave it in place with the checkmark, commit per logical change with a "why" message, and push.
 5. Never edit this Implementer Instructions block or the 🔬 Researcher Queue headings. Never force-push.
 
-**Last researched:** 2026-06-04 / Cycle 5.
+**Last researched:** 2026-06-04 / Cycle 6.
 
 ---
 
@@ -330,6 +330,54 @@ Append-only Cycle 5 handoff. Every item below is source-backed in `docs/research
   - Touches: Glance widget copy/actions, keyguard widget state, live-wallpaper labels/descriptions, launcher/picker QA.
   - Acceptance: widget actions have localized labels and useful spoken descriptions; live-wallpaper picker labels/descriptions are localized; keyguard widget and launcher widget remain usable at large font/display settings.
   - Verify: add widget, keyguard placement where available, trigger widget actions, inspect picker labels, run scanner/manual TalkBack pass.
+
+---
+
+## 🔬 Researcher Queue (Cycle 6 — 2026-06-04)
+
+Append-only Cycle 6 handoff. Every item below is source-backed in `docs/research/cycle-6-2026-06-04.md`; merge into the existing Now/Next/Later item named in `Touches` when implementation starts.
+
+- [ ] 🤖 🔬 **P0 — Unified media-ingestion policy and capped-copy helpers**
+  - Why: Aura downloads and imports images, audio, video, generated assets, and community media through several paths with different byte caps and validation behavior.
+  - Evidence: hardened `DownloadManager`/`WallpaperApplier`/`OfflineFavoritesManager` paths; raw `copyTo()` in `VideoWallpapersViewModel`, `VideoWallpaperStorage`, `AiWallpaperRepository`; `body.bytes()` call sites in editor/color/dual/daily paths.
+  - Touches: media ingestion helpers, download/apply/editor/video repositories, tests, `docs/security/media-ingestion.md`.
+  - Acceptance: every remote/local media path declares allowed schemes, max bytes, temp-file behavior, cleanup, MIME/content validation, and user-facing error class; no direct `body.bytes()` or unbounded `copyTo()` remains on untrusted input.
+  - Verify: unit tests for oversized advertised, oversized chunked, empty, truncated, wrong MIME, unsupported container, cancellation cleanup, and temp-file deletion.
+
+- [ ] 🤖 🔬 **P1 — Remove or quarantine the ccMixter cleartext exception**
+  - Why: `network_security_config.xml` permits cleartext traffic for `ccmixter.org`; Android guidance says insecure cleartext config should be avoided whenever possible.
+  - Evidence: `network_security_config.xml`; Android network-security-config docs; Cycle 3 provider-policy queue.
+  - Touches: ccMixter repository, provider policy matrix, network security config, source fallback UI.
+  - Acceptance: ccMixter uses HTTPS-only endpoints, is proxied/mirrored with provenance, or is disabled when HTTPS is unavailable; new cleartext domain additions require provider-policy approval.
+  - Verify: static check for `cleartextTrafficPermitted="true"`; run ccMixter search over HTTPS; disabled-source fallback still leaves Sounds useful.
+
+- [ ] 🤖 🔬 **P1 — Narrow FileProvider share surface**
+  - Why: FileProvider currently exposes offline favorites and multiple cache directories. Sharing should use purpose-built files in `cache/share_out` unless a flow explicitly requires another path.
+  - Evidence: `file_paths.xml`; `CollectionExporter.kt` safe `share_out` precedent; Android FileProvider and secure file-sharing docs.
+  - Touches: `file_paths.xml`, share/export flows, audio recorder export path, diagnostics sharing, cache cleanup.
+  - Acceptance: FileProvider paths are minimized; share flows copy/render artifacts to `share_out`; old share files are pruned; no long-lived offline/cache originals are shared directly by default.
+  - Verify: share collection/diagnostics/recording flows; inspect generated content URIs; denied direct sharing from removed paths; cleanup removes stale share artifacts.
+
+- [ ] 🤖 🔬 **P1 — Video wallpaper size/probe hardening**
+  - Why: Pexels/direct/YouTube fallback video downloads and local video selection are the highest remaining media-size risk.
+  - Evidence: raw `copyTo()` in `VideoWallpapersViewModel`; length-only validation in `VideoWallpaperStorage`; stronger 256 MB precedent in `VideoCropScreen`.
+  - Touches: `VideoWallpapersViewModel`, `VideoWallpaperStorage`, `VideoCropScreen`, video apply/export UI, tests.
+  - Acceptance: all video ingest paths stream-cap at a documented limit, reject too-small/too-large/truncated files, probe duration/dimensions/container before persisting, and surface actionable errors.
+  - Verify: local huge file, chunked oversized HTTP, wrong-extension file, truncated video, GIF path, WebM/MKV/MP4 happy paths.
+
+- [ ] 🤖 🔬 **P1 — MIME/content validation before public writes and apply actions**
+  - Why: URL extensions and content-resolver MIME strings are hints. Aura should validate actual content before writing MediaStore rows, setting system sounds, applying wallpapers, or caching favorites.
+  - Evidence: MIME guessing in `DownloadManager`/`SoundApplier`; URL/MIME extension logic in `VideoWallpaperStorage`; Android media-storage docs.
+  - Touches: image bounds decode, audio duration/container probe, video metadata probe, upload repositories, favorites/offline cache.
+  - Acceptance: public writes and apply flows require content validation; mismatched extension/MIME files are rejected or normalized; thumbnails/previews do not trust provider-declared type alone.
+  - Verify: tests for `.jpg` HTML body, `.mp3` image body, `.mp4` audio body, empty provider response, and oversized image dimensions.
+
+- [ ] 🤖 🔬 **P2 — Managed storage ledger and cache cleanup policy**
+  - Why: Aura stores previews, offline favorites, edited audio, generated wallpapers, live wallpaper media, share artifacts, downloads, and provider metadata across several directories and MediaStore.
+  - Evidence: `AudioPreviewCache` 48 MB, offline favorites 512 MB, `file_paths.xml`, Settings cache cleanup copy, backup rules from Cycle 4.
+  - Touches: Settings storage screen, cache managers, backup/privacy docs, release QA.
+  - Acceptance: `docs/privacy/storage-ledger.md` lists each directory/store, budget, retention, backup status, user cleanup action, and uninstall behavior; Settings cleanup copy matches actual behavior.
+  - Verify: smoke-run all media flows, list files/directories, run clear cache, confirm retained/deleted state matches the ledger.
 
 ---
 
@@ -1634,3 +1682,9 @@ Stars/dates as of research pass 2026-05-16.
 - Compose accessibility — [semantics](https://developer.android.com/develop/ui/compose/accessibility/semantics), [API defaults](https://developer.android.com/develop/ui/compose/accessibility/api-defaults), [accessibility testing](https://developer.android.com/develop/ui/compose/accessibility/testing).
 - Android accessibility QA — [Accessibility Scanner getting started](https://support.google.com/accessibility/android/answer/6376570), [Scanner result categories](https://support.google.com/accessibility/android/answer/6376559), [touch target size](https://support.google.com/accessibility/android/answer/7101858), [color contrast](https://support.google.com/accessibility/android/answer/7158390), [Android 14 nonlinear font scaling](https://developer.android.com/about/versions/14/features).
 - Localization — [per-app language preferences](https://developer.android.com/guide/topics/resources/app-languages).
+
+## Appendix J — Cycle 6 Sources
+
+- Cycle 6 planning record — [docs/research/cycle-6-2026-06-04.md](docs/research/cycle-6-2026-06-04.md).
+- Network and file sharing — [Network Security Configuration](https://developer.android.com/privacy-and-security/security-config), [FileProvider](https://developer.android.com/reference/androidx/core/content/FileProvider), [secure file sharing](https://developer.android.com/training/secure-file-sharing/share-file).
+- Storage and media handling — [data and file storage overview](https://developer.android.com/training/data-storage), [shared media storage](https://developer.android.com/training/data-storage/shared/media), [storage use cases and best practices](https://developer.android.com/training/data-storage/use-cases).
