@@ -18,7 +18,7 @@ This roadmap is fed continuously by a research machine. On every pass, the build
 4. Check off ✅ each item you complete, leave it in place with the checkmark, commit per logical change with a "why" message, and push.
 5. Never edit this Implementer Instructions block or the 🔬 Researcher Queue headings. Never force-push.
 
-**Last researched:** 2026-06-04 / Cycle 4.
+**Last researched:** 2026-06-04 / Cycle 5.
 
 ---
 
@@ -289,6 +289,47 @@ Append-only Cycle 4 handoff. Every item below is source-backed in `docs/research
   - Touches: Settings automation toggle, `TaskerActionReceiver`, `RotationTriggerService`, source diagnostics, README automation docs.
   - Acceptance: external broadcast actions are ignored until the user enables automation; repeated broadcasts are rate-limited; diagnostics show last external trigger time/package when available; docs list the public intent contract and risks.
   - Verify: broadcast ignored by default; enabled broadcast rotates once; burst broadcasts coalesce; diagnostics record external trigger state.
+
+---
+
+## 🔬 Researcher Queue (Cycle 5 — 2026-06-04)
+
+Append-only Cycle 5 handoff. Every item below is source-backed in `docs/research/cycle-5-2026-06-04.md`; merge into the existing Now/Next/Later item named in `Touches` when implementation starts.
+
+- [ ] 🤖 🔬 **P0 — Accessibility release gate for core Aura flows**
+  - Why: Aura has dense custom Compose surfaces and no automated accessibility-check wiring. Accessibility Scanner and Compose tests can catch regressions before release, while TalkBack/manual passes catch interaction-order and state-announcement issues.
+  - Evidence: no `enableAccessibilityChecks`/`ui-test-junit4-accessibility` found; Compose accessibility-testing docs; Accessibility Scanner docs; Aura's image/audio/video/settings/editor/widget surfaces.
+  - Touches: UI test dependencies, screen tests, QA checklist, release checklist, `docs/qa/accessibility.md`.
+  - Acceptance: key Compose screen tests enable accessibility checks; manual checklist covers TalkBack, Switch Access/keyboard-like navigation, 200% font, high contrast, dark/light themes, widget, and live-wallpaper picker; release notes require passing or explicitly waiving the gate.
+  - Verify: run focused accessibility UI tests; capture Accessibility Scanner recording for primary flows; manual TalkBack pass for Wallpapers/Videos/Sounds/Settings/detail/editor flows.
+
+- [ ] 🤖 🔬 **P1 — Extract visible strings and plan first localization batch**
+  - Why: Aura is mostly hardcoded English today, with about 300 hardcoded visible-string patterns and only the base `values` resource directory.
+  - Evidence: `rg` counts in Cycle 5 research; Android per-app language docs; existing U-11 roadmap item.
+  - Touches: Compose screens, resources, widgets, live-wallpaper metadata, CI lint/search check, Weblate/Crowdin decision.
+  - Acceptance: visible strings live in resources or a central string abstraction; no new hardcoded user-visible strings in Kotlin except test/debug/source-provider literals; first-locale list and translation workflow documented; generated locale config stays disabled until translations are complete enough to publish.
+  - Verify: hardcoded-string scanner; resource build; pseudo-localization/manual long-string pass; RTL smoke test with Arabic/Hebrew pseudo-content.
+
+- [ ] 🤖 🔬 **P1 — Custom component semantics matrix**
+  - Why: Wallpaper/video cards, audio preview buttons, waveform/progress displays, vote/hide actions, filter chips, source/license badges, crop/timeline editors, and settings toggles need explicit labels, state descriptions, and custom actions.
+  - Evidence: no `stateDescription`, `customActions`, `onClick(label=...)`, or `heading()` found; Compose semantics/API-default docs.
+  - Touches: shared components, Wallpapers/Videos/Sounds screens, Sound Detail, editor screens, Settings, widget actions.
+  - Acceptance: each reusable component declares required semantics; interactive icons have action labels; progress/waveform/timeline controls expose progress/range state; repeated card secondary actions move to custom actions where TalkBack traversal would be noisy.
+  - Verify: Compose semantics assertions; TalkBack announces play/pause/vote/apply/crop states correctly; decorative icons remain hidden from screen readers.
+
+- [ ] 🤖 🔬 **P1 — 200% font, display-size, and contrast audit**
+  - Why: Android 14 supports 200% nonlinear font scaling. Aura's dense chips, cards, overlays, bottom sheets, and editor timelines may clip or overlap at large fonts.
+  - Evidence: Android 14 nonlinear font-scaling docs; Android touch-target and color-contrast guidance; Aura compact UI/search findings.
+  - Touches: typography/layout constraints, chip/card rows, bottom sheets, dialogs, editor controls, Material color roles, screenshot QA.
+  - Acceptance: primary flows remain usable at 200% font and large display size; controls keep at least 48 dp touch targets where feasible; critical text/icon contrast passes scanner thresholds; no text overlaps controls.
+  - Verify: manual screenshots at 200% font; Accessibility Scanner contrast/touch-target results; dark/light/high-contrast pass.
+
+- [ ] 🤖 🔬 **P2 — Widget and live-wallpaper accessibility/localization coverage**
+  - Why: Widgets and live-wallpaper picker metadata are not covered by normal Compose screen traversal but are visible entry points for Aura.
+  - Evidence: `FreeVibeWidget.kt`, `freevibe_widget_info.xml`, live-wallpaper XML metadata; Android Accessibility Scanner manual workflow.
+  - Touches: Glance widget copy/actions, keyguard widget state, live-wallpaper labels/descriptions, launcher/picker QA.
+  - Acceptance: widget actions have localized labels and useful spoken descriptions; live-wallpaper picker labels/descriptions are localized; keyguard widget and launcher widget remain usable at large font/display settings.
+  - Verify: add widget, keyguard placement where available, trigger widget actions, inspect picker labels, run scanner/manual TalkBack pass.
 
 ---
 
@@ -1586,3 +1627,10 @@ Stars/dates as of research pass 2026-05-16.
 - Play privacy/disclosure policy — [User Data policy](https://support.google.com/googleplay/android-developer/answer/10144311), [Data safety section guidance](https://support.google.com/googleplay/android-developer/answer/10787469), [prominent disclosure and consent best practices](https://support.google.com/googleplay/android-developer/answer/11150561).
 - Android privacy primitives — [runtime permissions](https://developer.android.com/training/permissions/requesting), [location runtime permissions](https://developer.android.com/develop/sensors-and-location/location/permissions/runtime), [Android 17 Contact Picker](https://developer.android.com/about/versions/17/features/contact-picker), [Auto Backup/data extraction rules](https://developer.android.com/identity/data/autobackup), [notification runtime permission](https://developer.android.com/develop/ui/compose/notifications/notification-permission).
 - Firebase and foreground-service controls — [Realtime Database Security Rules](https://firebase.google.com/docs/database/security), [Android 14 foreground-service types](https://developer.android.com/about/versions/14/changes/fgs-types-required), [Play foreground-service declaration requirements](https://support.google.com/googleplay/android-developer/answer/13392821).
+
+## Appendix I — Cycle 5 Sources
+
+- Cycle 5 planning record — [docs/research/cycle-5-2026-06-04.md](docs/research/cycle-5-2026-06-04.md).
+- Compose accessibility — [semantics](https://developer.android.com/develop/ui/compose/accessibility/semantics), [API defaults](https://developer.android.com/develop/ui/compose/accessibility/api-defaults), [accessibility testing](https://developer.android.com/develop/ui/compose/accessibility/testing).
+- Android accessibility QA — [Accessibility Scanner getting started](https://support.google.com/accessibility/android/answer/6376570), [Scanner result categories](https://support.google.com/accessibility/android/answer/6376559), [touch target size](https://support.google.com/accessibility/android/answer/7101858), [color contrast](https://support.google.com/accessibility/android/answer/7158390), [Android 14 nonlinear font scaling](https://developer.android.com/about/versions/14/features).
+- Localization — [per-app language preferences](https://developer.android.com/guide/topics/resources/app-languages).
