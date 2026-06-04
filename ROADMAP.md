@@ -117,12 +117,13 @@ Append-only Cycle 1 handoff. Every item below is source-backed in `docs/research
   - Acceptance: debug provider works for emulator/dev builds; release builds send Play Integrity App Check tokens; Firebase metrics are monitored before enforcement; RTDB/Storage enforcement can be enabled without locking out legitimate users.
   - Verify: debug-provider upload/vote on emulator; release-device upload/vote; Firebase App Check request metrics; RTDB/Storage rules still reject unauthenticated writes.
 
-- [ ] 🤖 🔬 **P1 — Baseline Profile + Macrobenchmark gate for startup and grid jank**
+- [~] 🤖 🔬 **P1 — Baseline Profile + Macrobenchmark gate for startup and grid jank** — harness shipped 2026-06-04; physical-device generation/metrics pending because no adb target is attached.
   - Why: Aura claims instant startup and L-8 targets <1.5 s cold start, but there is no benchmark/profile module to prove startup, first-scroll, or dense-grid smoothness.
-  - Evidence: `README.md:23`, `ROADMAP.md:359-362`; source search found no `androidx.benchmark`, `BaselineProfile`, `Macrobenchmark`, or `JankStats` dependency; Android Baseline Profile docs recommend app-specific critical-user-journey profiles.
-  - Touches: L-8 / U-13; `settings.gradle.kts`, `gradle/libs.versions.toml`, app Gradle config, new benchmark/baseline-profile module, CI artifact upload, optional debug-only Settings diagnostics.
+  - Evidence: `README.md:23`, `ROADMAP.md:359-362`; source search now includes `androidx.benchmark`, `androidx.baselineprofile`, `ProfileInstaller`, Macrobenchmark tests, and manual performance CI artifact upload.
+  - Touches: L-8 / U-13; `settings.gradle.kts`, `gradle/libs.versions.toml`, app Gradle config, `baselineprofile`, `.github/workflows/performance.yml`, `docs/performance/baseline-profile.md`.
   - Acceptance: generated profile covers Wallpapers, Videos, Sounds, Favorites, and Wallpaper Detail; Macrobenchmark captures startup and scroll metrics; profile/no-profile results are attached to CI or release notes.
-  - Verify: `generateBaselineProfile`; Macrobenchmark on a physical device, not emulator-only; compare startup and frame metrics before/after profile.
+  - Verify: `:app:generateBaselineProfile`; `:baselineprofile:connectedBenchmarkReleaseAndroidTest` on a physical device, not emulator-only; compare startup and frame metrics before/after profile.
+  - Blocker: `adb devices` returned no attached devices on 2026-06-04, so profile generation and metric comparison remain a physical-device follow-up.
 
 - [x] 🤖 🔬 **P1 — Fold Android developer verification + release provenance into NX-8** — shipped 2026-06-04 (`docs/distribution/developer-verification.md`, release-note verification status, Izzy checklist, branch-protection owner action).
   - Why: Aura's distribution path is GitHub Releases/Obtainium/F-Droid/Izzy, and Android developer verification begins affecting non-Play installs on certified devices in select regions in September 2026.
@@ -840,6 +841,31 @@ These are the dated receipts. The newest entries supersede the oldest where they
 **Next up**
 
 - Cycle 2 P1 — Baseline Profile + Macrobenchmark gate for startup and grid jank.
+
+### 2026-06-04 — Cycle 2 P1 baseline profile + macrobenchmark harness
+
+**Items shipped**
+
+- **Baseline Profile producer module**
+  Added `:baselineprofile` as a `com.android.test` module with the `androidx.baselineprofile` plugin, `benchmark-macro-junit4`, UI Automator, and a Critical User Journey generator covering startup, Wallpapers, Wallpaper Detail, Videos, Sounds, and Favorites.
+
+- **Macrobenchmark gate**
+  Added startup benchmarks comparing `CompilationMode.None()` against `CompilationMode.Partial(BaselineProfileMode.Require)`, plus frame-timing scroll benchmarks for Wallpapers, Videos, Sounds, and Favorites. The app now includes `ProfileInstaller` and a shell-profileable manifest entry so benchmark release variants can capture/reset profiles.
+
+- **Manual performance CI artifacts**
+  Added `.github/workflows/performance.yml` for a Linux self-hosted physical-device runner. The workflow generates the Baseline Profile, runs macrobenchmarks, and uploads generated profiles, JSON reports, and Perfetto traces. Normal verify/release builds do not auto-run generation.
+
+**Verification**
+
+- `.\gradlew.bat --no-daemon "-Dorg.gradle.jvmargs=-Xmx1536m -Dfile.encoding=UTF-8" --write-verification-metadata sha256 :baselineprofile:tasks --stacktrace` passed; no APK task ran.
+- `.\gradlew.bat --no-daemon "-Dorg.gradle.jvmargs=-Xmx1536m -Dfile.encoding=UTF-8" :app:help --task generateBaselineProfile --stacktrace` passed and confirmed `:app:generateBaselineProfile`.
+- `.\gradlew.bat --no-daemon "-Dorg.gradle.jvmargs=-Xmx1536m -Dfile.encoding=UTF-8" --write-verification-metadata sha256 :baselineprofile:compileBenchmarkReleaseSources --stacktrace` passed after pinning the benchmark module Java/Kotlin target to 17 and fixing the MacrobenchmarkRule import.
+- `.\gradlew.bat --no-daemon --max-workers=1 "-Dorg.gradle.jvmargs=-Xmx1536m -Dfile.encoding=UTF-8" "-Dkotlin.compiler.execution.strategy=in-process" --write-verification-metadata sha256 :app:lintDebug --stacktrace` passed; no APK packaging task ran. This added the Linux/Windows lint tool checksums that broke the previous GitHub `verify` run.
+- `adb devices` returned no attached devices, so `:app:generateBaselineProfile` and `:baselineprofile:connectedBenchmarkReleaseAndroidTest` were not run locally.
+
+**Next up**
+
+- Physical-device run for Cycle 2 P1 — generate the profile and attach startup/frame metrics, then close the Baseline Profile item.
 
 ### 2026-05-17 — Rev4-impl-2 autonomous batch (6 more items, code + docs)
 

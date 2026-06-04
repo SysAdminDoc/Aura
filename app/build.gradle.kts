@@ -5,6 +5,7 @@ plugins {
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.kotlin.serialization)
+    alias(libs.plugins.baselineprofile)
     alias(libs.plugins.hilt)
     alias(libs.plugins.ksp)
     id("com.google.gms.google-services")
@@ -99,6 +100,12 @@ android {
     }
 }
 
+baselineProfile {
+    automaticGenerationDuringBuild = false
+    saveInSrc = true
+    mergeIntoMain = true
+}
+
 dependencies {
     // Core library desugaring — required by NewPipeExtractor on API < 33 so
     // URLEncoder.encode(String, Charset) and friends resolve at runtime (issue #2).
@@ -107,6 +114,7 @@ dependencies {
     // Core
     implementation(libs.core.ktx)
     implementation(libs.activity.compose)
+    implementation(libs.profileinstaller)
 
     // Compose
     implementation(platform(libs.compose.bom))
@@ -192,6 +200,7 @@ dependencies {
     androidTestImplementation(libs.junit4)
     androidTestImplementation(libs.androidx.test.ext.junit)
     androidTestImplementation(libs.androidx.test.runner)
+    baselineProfile(project(":baselineprofile"))
 
     // Firebase
     // BoM 34.x removes the deprecated *-ktx artifacts and updates the transitive

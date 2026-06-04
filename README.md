@@ -21,6 +21,7 @@
 - **Video wallpapers from multiple sources** — browse Reddit, Pexels, Pixabay, and YouTube, import local videos/GIFs, then tune loop, crop, Fill, or Fit before applying.
 - **Multi-source personalization** — Wallhaven, Bing, Pexels, Pixabay, Reddit, YouTube, legacy Freesound attributions, and community uploads.
 - **Instant startup** — Discover feed is cached locally. On subsequent launches wallpapers appear immediately while fresh results load in the background.
+- **Performance proof path** — Baseline Profile and Macrobenchmark tests cover startup, Wallpaper Detail, and the main media grids on a physical-device runner.
 - **5 bottom nav tabs** — Wallpapers, Videos, Sounds, Favorites, Settings.
 
 ## Quick Start
@@ -117,6 +118,7 @@ Firebase RTDB (Community Voting + Uploads + Admin Moderation)
 | YouTube Streams | yt-dlp (youtubedl-android 0.18.1) |
 | Scheduling | WorkManager 2.10.0 |
 | Widget | Glance 1.1.1 |
+| Performance | Baseline Profile + Macrobenchmark 1.4.1 |
 | Min SDK | 26 (Android 8.0) |
 | Target SDK | 35 (Android 15) |
 | Kotlin | 2.1.0 |
