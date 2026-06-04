@@ -3,7 +3,7 @@
 > Open-source Android personalization: wallpapers, video wallpapers, ringtones, sounds.
 > Stay the OSS alternative to Zedge: no ads, no surprise charges, no dark patterns.
 
-**Version:** 2026-06-04-cycle2-impl4 (implemented release-integrity, full-vs-foss decision/preflight, supply-chain workflow/checksum lanes, and local crash diagnostics export).
+**Version:** 2026-06-04-cycle2-impl5 (implemented release-integrity, full-vs-foss decision/preflight, supply-chain workflow/checksum lanes, local crash diagnostics export, and supply-chain CI follow-up).
 **Code version at write:** v6.31.1 / versionCode 112 (per `app/build.gradle.kts`; release/lint Gradle runs are memory-heavy on this Windows workstation, so rerun APK compilation only when explicitly needed).
 **Charter:** personalization, AMOLED-first, free-by-default, multi-source content aggregation, community-fed catalog, polite live wallpapers (battery-aware, pause-on-invisible).
 
@@ -40,7 +40,7 @@ If you're adding a feature and the source isn't in the Appendix, do not add it. 
 - Kotlin 2.1.0 / Compose / Material 3, Hilt 2.53.1, Room 2.6.1 (v14), Retrofit 2.11.0, OkHttp 4.12.0, Media3 1.5.1, Coil 2.7.0, WorkManager 2.10.0, Glance 1.1.1, NewPipe Extractor 0.24.8, youtubedl-android 0.18.1, **ML Kit `segmentation-subject:16.0.0-beta1`** (N-3 migrated 2026-05-16), **Firebase BoM 34.13.0** (N-2 shipped 2026-05-16), `play-services-base:18.5.0` (ModuleInstallClient for unbundled segmenter).
 - 130 Kotlin files in `app/src/main/java/com/freevibe/`, 50 unit-test files, scanner not rerun in Cycle 1, 1 design-note TODO resolved (`VoteRepository.kt` admin auth → Custom Claims).
 - Shipped via implementation passes since 2026-04-25 (latest code release tag: `v6.31.1`, Android 8-12 YouTube/Sounds crash fixed with core library desugaring). See Implementation Log.
-- Distribution: GitHub Releases + Obtainium manifest; signed via `freevibe.jks`. CI workflow `.github/workflows/verify.yml` runs assembleDebug/testDebugUnitTest/lintDebug on push/PR. `.github/workflows/release.yml` now builds signed `assembleRelease` APKs from GitHub secrets, rejects debuggable artifacts, runs `apksigner verify --print-certs`, publishes SHA-256 checksums/release notes, and creates GitHub artifact attestations. Cycle 2 decided Aura is full-only for GitHub/Obtainium today, with IzzyOnDroid as the realistic near-term app-store target; F-Droid mainline remains blocked until a real FOSS flavor removes/isolates Firebase, Google Services, and Play Services ML Kit. Dependency Review and OpenSSF Scorecard workflows now cover PR/scheduled supply-chain checks.
+- Distribution: GitHub Releases + Obtainium manifest; signed via `freevibe.jks`. CI workflow `.github/workflows/verify.yml` runs assembleDebug/testDebugUnitTest/lintDebug on push/PR. `.github/workflows/release.yml` now builds signed `assembleRelease` APKs from GitHub secrets, rejects debuggable artifacts, runs `apksigner verify --print-certs`, publishes SHA-256 checksums/release notes, and creates GitHub artifact attestations. Cycle 2 decided Aura is full-only for GitHub/Obtainium today, with IzzyOnDroid as the realistic near-term app-store target; F-Droid mainline remains blocked until a real FOSS flavor removes/isolates Firebase, Google Services, and Play Services ML Kit. Dependency Review and SARIF-only OpenSSF Scorecard workflows now cover PR/scheduled supply-chain checks.
 - Diagnostics: Aura does not use automatic crash analytics. Settings now exposes a local-only crash diagnostics bundle with last crash timestamp, app/Android/ABI/source context, reproduction fields, and sanitized `crash.log` tail; Copy/Share require explicit user action.
 - Package id `com.freevibe`, brand "Aura"; do not change without a migration plan (re-installs lose data; existing community uploads keyed by device id).
 - Build env note: use Android Studio's bundled JBR and SDK 35. Release/lint Gradle runs are memory-heavy on this Windows workstation; prefer focused unit tests and lightweight file checks unless APK compilation is explicitly needed.
@@ -791,6 +791,25 @@ These are the dated receipts. The newest entries supersede the oldest where they
 - `.\gradlew.bat --no-daemon "-Dorg.gradle.jvmargs=-Xmx1536m -Dfile.encoding=UTF-8" :app:testDebugUnitTest --tests com.freevibe.service.CrashDiagnosticsTextTest --stacktrace` passed.
 - Initial targeted test run failed on dependency verification for Windows `aapt2`; rerunning with `--write-verification-metadata sha256` added the missing checksums, then the strict run passed.
 - No local APK compile was run for this diagnostics batch.
+
+**Next up**
+
+- Cycle 2 P1 — Supply-chain CI follow-up.
+
+### 2026-06-04 — Cycle 2 P1 supply-chain CI follow-up
+
+**Items shipped**
+
+- **Scorecard permission repair**
+  `.github/workflows/scorecard.yml` now keeps `publish_results: false`, leaves top-level token permissions read-only, and scopes `security-events: write` to the SARIF-upload job. This avoids the failed public-result publishing path while preserving code-scanning evidence for maintainers.
+
+- **Clean-runner checksum metadata**
+  `gradle/verification-metadata.xml` now includes the JUnit BOM `.module` hashes that GitHub's Linux runner resolved for the buildscript classpath, plus the Guava parent POM generated during the refreshed dependency pass. `docs/distribution/supply-chain.md` now calls out `--refresh-dependencies` for CI-only checksum misses.
+
+**Verification**
+
+- `.\gradlew.bat --no-daemon "-Dorg.gradle.jvmargs=-Xmx1536m -Dfile.encoding=UTF-8" --write-verification-metadata sha256 help --stacktrace` passed; no APK task ran.
+- `.\gradlew.bat --no-daemon "-Dorg.gradle.jvmargs=-Xmx1536m -Dfile.encoding=UTF-8" --refresh-dependencies --write-verification-metadata sha256 :app:dependencies --stacktrace` passed; dependency resolution only, no APK task ran.
 
 **Next up**
 
