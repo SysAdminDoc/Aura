@@ -18,7 +18,7 @@ This roadmap is fed continuously by a research machine. On every pass, the build
 4. Check off ✅ each item you complete, leave it in place with the checkmark, commit per logical change with a "why" message, and push.
 5. Never edit this Implementer Instructions block or the 🔬 Researcher Queue headings. Never force-push.
 
-**Last researched:** 2026-06-04 / Cycle 15.
+**Last researched:** 2026-06-04 / Cycle 16.
 
 ---
 
@@ -810,6 +810,54 @@ Append-only Cycle 15 handoff. Every item below is source-backed in `docs/researc
   - Touches: `docs/security/network-endpoints.md`, provider policy matrix, release checklist, privacy/data-safety matrix, static scanner.
   - Acceptance: runbook lists endpoint host, scheme, auth location, cleartext status, data sent, media cached, rate limit/cache policy, fallback behavior, kill switch, and release owner for every network surface.
   - Verify: static endpoint scan matches the runbook; adding a new host/provider fails CI until the runbook and privacy/provider policy rows are updated.
+
+---
+
+## 🔬 Researcher Queue (Cycle 16 — 2026-06-04)
+
+Append-only Cycle 16 handoff. Every item below is source-backed in `docs/research/cycle-16-2026-06-04.md`; merge into the existing Now/Next/Later item named in `Touches` when implementation starts.
+
+- [ ] 🤖 🔬 **P0 — Collection share-token backend path and rules alignment**
+  - Why: `CollectionExporter` publishes and imports `shared_collections/{token}/payload`, while `database.rules.json` grants collection-share access under `collection_shares/{token}`. RTDB access is denied by default without a matching rule.
+  - Evidence: `CollectionExporter.kt`; `database.rules.json`; Firebase RTDB core rules docs; Cycle 9/12 community backend findings.
+  - Touches: collection sharing, RTDB rules, Firebase emulator tests, collection import UI, privacy/community data docs.
+  - Acceptance: code and rules use one canonical share-token path; rules validate payload shape, version, item count, payload length, creator UID, createdAt, owner overwrite/delete, and admin cleanup.
+  - Verify: emulator tests cover publish, public read-by-token, owner/admin overwrite/delete, unauthenticated write denial, malformed payload denial, and oversized payload denial; app share/import succeeds against emulator rules.
+
+- [ ] 🤖 🔬 **P0 — Whole-graph Room migration test and schema history gate**
+  - Why: Room is v14 with migrations from 1 through 14, but exported schemas exist only for v9-v14 and the tracked migration test validates only a manually built 8 -> 9 case.
+  - Evidence: `Database.kt`; `DatabaseMigrations.kt`; `app/schemas/com.freevibe.data.local.FreeVibeDatabase/*.json`; `DatabaseMigrationTest.kt`; Android Room migration/testing docs.
+  - Touches: Room schema exports, androidTest migration harness, CI/release preflight, future Room migration process.
+  - Acceptance: every supported starting version migrates to current without destructive fallback; representative favorites, downloads, search history, wallpaper cache, history, and collections survive; source-aware duplicate IDs across providers remain distinct.
+  - Verify: `MigrationTestHelper` tests for v1/v3/v5/v8/v9/v10/v11/v12/v13 -> v14 or an explicit supported-version policy; CI fails when database version changes without schema and migration-test updates.
+
+- [ ] 🤖 🔬 **P1 — Backup/restore reconciliation for path-backed records**
+  - Why: `freevibe.db` is eligible for backup/transfer, but path-backed fields such as `FavoriteEntity.offlinePath` and `DownloadEntity.localPath` can point to files that were not restored, were cache-cleared, or moved across devices.
+  - Evidence: `backup_rules.xml`; `data_extraction_rules.xml`; `FavoriteEntity`; `DownloadEntity`; `OfflineFavoritesManager`; `DownloadManager`; Android Auto Backup and app-specific storage docs.
+  - Touches: startup reconciliation worker, favorites/downloads UI states, backup/privacy matrix, storage ledger, support diagnostics.
+  - Acceptance: after restore or startup, Aura checks path-backed records, clears or repairs missing local paths, preserves remote provenance, and surfaces "remote-only" or "file missing" instead of broken offline/download states.
+  - Verify: seed DB with valid and missing file paths, simulate restore/cache clear/device transfer, run reconciliation, and confirm apply/play/share/delete flows handle every state.
+
+- [ ] 🤖 🔬 **P1 — Unified import payload validation for favorites and collections**
+  - Why: Favorites import has size, version, enum, URL, and field-length limits; collection URI import has byte/item/HTTPS limits, but token import reads the RTDB payload string directly and collection items lack the same validation breadth.
+  - Evidence: `FavoritesExporter.kt`; `FavoritesExporterValidationTest.kt`; `CollectionExporter.kt`; `CollectionExporterTest.kt`; Firebase RTDB data-validation docs.
+  - Touches: favorites import, collection import, shared parser/helpers, import tests, support copy.
+  - Acceptance: file, deep-link, QR, and token imports share one capped validation contract covering payload size, item count, version, source enum, URL length, HTTPS-only URLs, field lengths, duplicate identity behavior, and unknown-provider handling.
+  - Verify: fuzz fixtures for huge JSON, future/old versions, malformed fields, unsafe URLs, duplicate items, unknown sources, empty payloads, and token payloads over the cap.
+
+- [ ] 🤖 🔬 **P1 — Transactional collection import**
+  - Why: `CollectionExporter.importJson()` creates the collection row and then inserts items one by one, so an insert failure can leave an empty or partial imported collection.
+  - Evidence: `CollectionExporter.kt`; `CollectionDao`; Room transaction guidance; existing collection repository tests.
+  - Touches: `CollectionDao`, `CollectionExporter`, collection import UI, DAO tests.
+  - Acceptance: collection import is all-or-nothing; duplicate imported items are de-duped predictably; a failed item insert leaves no new collection rows or collection items.
+  - Verify: inject DAO failure after collection creation, confirm no partial collection remains; successful import creates exactly one collection with the expected source-scoped item identities.
+
+- [ ] 🤖 🔬 **P2 — Export format compatibility and provenance schema policy**
+  - Why: Favorites and collections export format version 1 payloads do not yet document how future provenance, source-deleted state, license/action-capability, or local-only metadata will migrate.
+  - Evidence: `FavoritesExporter.kt`; `CollectionExporter.kt`; Cycle 13 provenance/action-capability item; Room v12-v14 source-aware migrations.
+  - Touches: `docs/data/export-format.md`, exporter models, import compatibility tests, provenance model, release notes.
+  - Acceptance: export schemas have documented required/optional fields, forward/backward compatibility behavior, version bump rules, provenance fields, privacy exclusions, and unsupported-version user copy.
+  - Verify: golden JSON fixtures for current and prior formats; future-version rejection text; legacy favorites-list import still works; collection v1 imports remain stable after provenance fields are added.
 
 ---
 
@@ -2178,3 +2226,9 @@ Stars/dates as of research pass 2026-05-16.
 - Cycle 15 planning record — [docs/research/cycle-15-2026-06-04.md](docs/research/cycle-15-2026-06-04.md).
 - Android network and key security — [Cleartext communications](https://developer.android.com/privacy-and-security/risks/cleartext-communications), [Network Security Configuration](https://developer.android.com/training/articles/security-config), [Security checklist](https://developer.android.com/guide/practices/security), [Android Keystore](https://developer.android.com/privacy-and-security/keystore), [cryptography](https://developer.android.com/guide/topics/security/cryptography).
 - Provider credential docs — [Pexels API documentation](https://www.pexels.com/api/documentation/), [Pixabay API docs](https://pixabay.com/api/docs/), [Freesound authentication](https://freesound.org/docs/api/authentication.html), [Freesound APIv2 overview](https://freesound.org/docs/api/overview.html), [Stability developer docs](https://platform.stability.ai/docs/getting-started).
+
+## Appendix T — Cycle 16 Sources
+
+- Cycle 16 planning record — [docs/research/cycle-16-2026-06-04.md](docs/research/cycle-16-2026-06-04.md).
+- Android data durability — [Room migrations](https://developer.android.com/training/data-storage/room/migrating-db-versions), [MigrationTestHelper](https://developer.android.com/reference/androidx/room/testing/MigrationTestHelper), [test and debug Room databases](https://developer.android.com/training/data-storage/room/testing-db), [Auto Backup/data extraction rules](https://developer.android.com/identity/data/autobackup), [app-specific files and cache](https://developer.android.com/training/data-storage/app-specific).
+- Firebase rules — [Realtime Database rules core syntax](https://firebase.google.com/docs/database/security/core-syntax), [Security Rules data validation](https://firebase.google.com/docs/rules/data-validation).
