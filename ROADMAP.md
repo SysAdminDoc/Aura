@@ -18,7 +18,7 @@ This roadmap is fed continuously by a research machine. On every pass, the build
 4. Check off ✅ each item you complete, leave it in place with the checkmark, commit per logical change with a "why" message, and push.
 5. Never edit this Implementer Instructions block or the 🔬 Researcher Queue headings. Never force-push.
 
-**Last researched:** 2026-06-04 / Cycle 2.
+**Last researched:** 2026-06-04 / Cycle 3.
 
 ---
 
@@ -186,6 +186,54 @@ Append-only Cycle 2 handoff. Every item below is source-backed in `docs/research
   - Touches: Settings diagnostics, issue template, local crash-log export, support docs.
   - Acceptance: Settings exposes last crash timestamp and a "copy/export diagnostics" action; bundle includes app version, Android version, ABI, active source/provider, sanitized crash log tail, and reproduction fields; nothing uploads automatically.
   - Verify: synthetic crash writes log; export redacts paths/tokens/API keys; issue template accepts bundle; network monitor confirms no automatic upload.
+
+---
+
+## 🔬 Researcher Queue (Cycle 3 — 2026-06-04)
+
+Append-only Cycle 3 handoff. Every item below is source-backed in `docs/research/cycle-3-2026-06-04.md`; merge into the existing Now/Next/Later item named in `Touches` when implementation starts.
+
+- [ ] 🤖 🔬 **P0 — Provider compliance matrix and runtime kill switches**
+  - Why: Pexels, Pixabay, Freesound, SoundCloud, Reddit, and YouTube each impose different attribution, caching, rate-limit, download, and deletion rules. Aura currently stores some metadata but does not encode provider policy centrally.
+  - Evidence: Pexels wallpaper-app restriction; Pixabay 24-hour cache/rate-limit/hotlinking rules; Freesound non-commercial/credit/fair-use API terms; SoundCloud attribution and no-ripping restrictions; Reddit app-review/removal terms; YouTube undocumented/download/cache restrictions.
+  - Touches: provider repositories, `SourceMetrics`, Settings provider toggles, detail screens, downloader/apply flows, `docs/legal/provider-policy.md`.
+  - Acceptance: every provider has a policy row covering attribution, source link, API cache TTL, media cache TTL, hotlinking, download/apply/share allowances, rate-limit handling, deletion behavior, and kill-switch default.
+  - Verify: provider policy unit tests; Settings can disable each remote provider; disabled providers vanish from search/default feeds; existing favorites retain source-deleted/unavailable state without crashing.
+
+- [ ] 🤖 🔬 **P1 — Pexels usage guardrail and fallback plan**
+  - Why: Pexels specifically rejects standalone wallpaper/gallery API replication. Aura must prove Pexels is an enhancement source, not the product's core inventory.
+  - Evidence: Pexels API wallpaper-app guidance; Aura uses Pexels in wallpaper/video discovery and style-biased feeds.
+  - Touches: wallpaper/video source weights, onboarding defaults, provider copy, source detail attribution, fallback source selection.
+  - Acceptance: Pexels is not the sole or default required source for any first-run flow; Pexels results always show source/creator context in search/detail; provider can be disabled remotely/configurably without breaking feeds; docs explain the allowed enhancement use case.
+  - Verify: turn off Pexels and run Wallpapers/Videos first-run; source badges/links visible; no auto-rotation defaults depend only on Pexels.
+
+- [ ] 🤖 🔬 **P1 — Provider cache and rate-limit policy engine**
+  - Why: Pixabay and Freesound have explicit cache/rate-limit expectations, but Aura's rate-limit handling is currently host-specific and policy-free.
+  - Evidence: `RateLimitInterceptor.kt` targets Freesound; Pixabay docs require 24-hour request caching and expose rate-limit headers; `SourceMetrics.kt` records failures but does not enforce provider rules.
+  - Touches: `RateLimitInterceptor`, provider repositories, cache metadata, `SourceMetrics`, Settings diagnostics.
+  - Acceptance: provider policies declare request cache TTL, media URL TTL, Retry-After handling, max automatic prefetch, and mass-download guard; Settings source-health view shows quota/cache state where available.
+  - Verify: simulated 429 with Retry-After for Pixabay/Freesound; cache hit avoids duplicate request inside TTL; mass-download guard blocks batch prefetch beyond policy.
+
+- [ ] 🤖 🔬 **P1 — YouTube legal-mode/offline-risk switch**
+  - Why: Aura's YouTube feature set searches, resolves, caches, and downloads audio/video through NewPipe/yt-dlp, while YouTube's official policy is restrictive around undocumented access, downloads, caching, offline playback, and background playback.
+  - Evidence: `YouTubeRepository.kt` NewPipe/yt-dlp stream extraction; `VideoWallpapersViewModel.kt` yt-dlp download path; YouTube API developer policies.
+  - Touches: YouTube repository abstraction, Sounds YouTube tab, video wallpaper YouTube source, Settings provider toggles, distribution docs, issue templates.
+  - Acceptance: distributor can disable YouTube features; first-run does not require YouTube; UI clearly labels YouTube as optional; fallback sources remain useful; no YouTube download/cache happens when legal mode disables it.
+  - Verify: disable YouTube and run Sounds/Videos; Freesound/Audius/ccMixter/community paths still work; source metrics record disabled state separately from provider outage.
+
+- [ ] 🤖 🔬 **P1 — Sound license capability gates**
+  - Why: Licenses and provider terms differ by source and action. A badge alone is not enough to decide whether a sound can be trimmed, normalized, downloaded, set as a ringtone, shared, or bundled.
+  - Evidence: `SoundDetailScreen.kt` displays license/uploader metadata; Freesound and SoundCloud terms require source-specific credit and usage compliance.
+  - Touches: sound models, sound repositories, editor/apply/share flows, Aura Originals curation, licenses screen.
+  - Acceptance: each sound has normalized license metadata and action capabilities; restricted actions are disabled or require confirmation; Aura Originals accepts only reviewed CC0/compatible assets; source link/uploader/license appear in every detail/export path.
+  - Verify: matrix tests for CC0, CC BY, CC BY-NC, SoundCloud, YouTube, community, bundled; editor/apply/share flows respect capability gates.
+
+- [ ] 🤖 🔬 **P2 — Source deletion and takedown reconciliation**
+  - Why: Reddit and other user-generated sources can delete, hide, suspend, or remove content after Aura cached it.
+  - Evidence: Reddit developer terms require handling removed/deleted/protected content; Aura stores Reddit permalinks and authors and can cache favorites/downloads.
+  - Touches: detail reload paths, favorites/download metadata, source health, report queue from Cycle 1, cache cleanup.
+  - Acceptance: source-deleted content stops appearing in remote catalog; favorites/downloads show unavailable/source-deleted state; user can remove local copy; moderator/report queue can hide community mirrors of removed content.
+  - Verify: simulate source reload failure/deleted marker; favorite remains navigable but not misrepresented as live remote content; report queue accepts removal reason.
 
 ---
 
@@ -1469,3 +1517,10 @@ Stars/dates as of research pass 2026-05-16.
 - F-Droid feasibility — [Inclusion Policy](https://fdroid.gitlab.io/jekyll-fdroid/docs/Inclusion_Policy/), [App Developer FAQ](https://f-droid.org/en/docs/FAQ_-_App_Developers/), [Reproducible Builds](https://f-droid.org/docs/Reproducible_Builds/).
 - Supply-chain controls — [Gradle dependency verification](https://docs.gradle.org/current/userguide/dependency_verification.html), [GitHub artifact attestations](https://docs.github.com/en/actions/how-tos/security-for-github-actions/using-artifact-attestations/using-artifact-attestations-to-establish-provenance-for-builds), [GitHub Dependency Review Action](https://docs.github.com/en/code-security/how-tos/secure-your-supply-chain/manage-your-dependency-security/configuring-the-dependency-review-action), [OpenSSF Scorecard action](https://github.com/ossf/scorecard-action).
 - Crash/ANR evidence — [Android vitals](https://developer.android.com/games/optimize/vitals), [Play Console crashes and ANRs](https://support.google.com/googleplay/android-developer/answer/9859174).
+
+## Appendix G — Cycle 3 Sources
+
+- Cycle 3 planning record — [docs/research/cycle-3-2026-06-04.md](docs/research/cycle-3-2026-06-04.md).
+- Provider API and policy constraints — [Pexels wallpaper-app API guidance](https://help.pexels.com/hc/en-us/articles/4405588861721-Can-I-use-the-API-as-a-wallpaper-app), [Pexels API documentation](https://www.pexels.com/api/documentation/), [Pixabay API documentation](https://pixabay.com/api/docs/).
+- Sound provider constraints — [Freesound API terms](https://freesound.org/docs/api/terms_of_use.html), [Freesound API terms of use help](https://freesound.org/help/tos_api/), [SoundCloud API docs](https://developers.soundcloud.com/docs/api/), [SoundCloud API terms](https://developers.soundcloud.com/docs/api/terms-of-use).
+- User-generated and video-source constraints — [Reddit developer terms](https://redditinc.com/policies/developer-terms), [YouTube API Services developer policies](https://developers.google.com/youtube/terms/developer-policies), [YouTube API Services terms](https://developers.google.com/youtube/terms/api-services-terms-of-service).
