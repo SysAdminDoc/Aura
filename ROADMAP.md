@@ -3,7 +3,7 @@
 > Open-source Android personalization: wallpapers, video wallpapers, ringtones, sounds.
 > Stay the OSS alternative to Zedge: no ads, no surprise charges, no dark patterns.
 
-**Version:** 2026-06-04-cycle2-impl1 (implemented release-integrity blocker: signed release workflow, APK verification, checksums, release notes, and distribution docs).
+**Version:** 2026-06-04-cycle2-impl2 (implemented release-integrity blocker plus full-vs-foss distribution decision/preflight).
 **Code version at write:** v6.31.1 / versionCode 112 (per `app/build.gradle.kts`; release/lint Gradle runs are memory-heavy on this Windows workstation, so rerun APK compilation only when explicitly needed).
 **Charter:** personalization, AMOLED-first, free-by-default, multi-source content aggregation, community-fed catalog, polite live wallpapers (battery-aware, pause-on-invisible).
 
@@ -40,7 +40,7 @@ If you're adding a feature and the source isn't in the Appendix, do not add it. 
 - Kotlin 2.1.0 / Compose / Material 3, Hilt 2.53.1, Room 2.6.1 (v14), Retrofit 2.11.0, OkHttp 4.12.0, Media3 1.5.1, Coil 2.7.0, WorkManager 2.10.0, Glance 1.1.1, NewPipe Extractor 0.24.8, youtubedl-android 0.18.1, **ML Kit `segmentation-subject:16.0.0-beta1`** (N-3 migrated 2026-05-16), **Firebase BoM 34.13.0** (N-2 shipped 2026-05-16), `play-services-base:18.5.0` (ModuleInstallClient for unbundled segmenter).
 - 130 Kotlin files in `app/src/main/java/com/freevibe/`, 50 unit-test files, scanner not rerun in Cycle 1, 1 design-note TODO resolved (`VoteRepository.kt` admin auth → Custom Claims).
 - Shipped via implementation passes since 2026-04-25 (latest code release tag: `v6.31.1`, Android 8-12 YouTube/Sounds crash fixed with core library desugaring). See Implementation Log.
-- Distribution: GitHub Releases + Obtainium manifest; signed via `freevibe.jks`. CI workflow `.github/workflows/verify.yml` runs assembleDebug/testDebugUnitTest/lintDebug on push/PR. `.github/workflows/release.yml` now builds signed `assembleRelease` APKs from GitHub secrets, rejects debuggable artifacts, runs `apksigner verify --print-certs`, and publishes SHA-256 checksums/release notes. Per-ABI splits + F-Droid/Izzy metadata still pending (NX-8).
+- Distribution: GitHub Releases + Obtainium manifest; signed via `freevibe.jks`. CI workflow `.github/workflows/verify.yml` runs assembleDebug/testDebugUnitTest/lintDebug on push/PR. `.github/workflows/release.yml` now builds signed `assembleRelease` APKs from GitHub secrets, rejects debuggable artifacts, runs `apksigner verify --print-certs`, and publishes SHA-256 checksums/release notes. Cycle 2 decided Aura is full-only for GitHub/Obtainium today, with IzzyOnDroid as the realistic near-term app-store target; F-Droid mainline remains blocked until a real FOSS flavor removes/isolates Firebase, Google Services, and Play Services ML Kit.
 - Package id `com.freevibe`, brand "Aura"; do not change without a migration plan (re-installs lose data; existing community uploads keyed by device id).
 - Build env note: use Android Studio's bundled JBR and SDK 35. Release/lint Gradle runs are memory-heavy on this Windows workstation; prefer focused unit tests and lightweight file checks unless APK compilation is explicitly needed.
 - CI surface (Cycle 1 note): `.github/workflows/verify.yml` closes the prior no-PR-build gap. Branch protection requiring `verify` is still an owner action.
@@ -164,7 +164,7 @@ Append-only Cycle 2 handoff. Every item below is source-backed in `docs/research
   - Acceptance: tag workflow builds signed release/universal plus any split APKs; fails if the uploaded APK is debuggable; runs `apksigner verify --print-certs`; publishes SHA-256 checksums and versionCode/versionName; release notes identify the signing certificate fingerprint.
   - Verify: dry-run tag on a non-public test tag or workflow_dispatch; install/update through Obtainium; compare checksum from release notes; confirm `android:debuggable=false`.
 
-- [ ] 🤖 🔬 **P0 — Decide full-vs-foss distribution flavor before F-Droid work**
+- [x] 🤖 🔬 **P0 — Decide full-vs-foss distribution flavor before F-Droid work** — shipped 2026-06-04 (`docs/distribution/channel-strategy.md`, `tools/fdroid_preflight.py`). Decision: keep the full build for GitHub/Obtainium/Izzy; block F-Droid mainline until a real `foss` flavor removes or isolates Firebase, Google Services, and Play Services ML Kit.
   - Why: Aura wants F-Droid/Izzy/GitHub distribution, but current dependencies include Firebase, Google Services, Play Services ML Kit, and no product flavors. F-Droid mainline eligibility is not credible until proprietary dependency boundaries are explicit.
   - Evidence: `app/build.gradle.kts:10`, `app/build.gradle.kts:201-204`, `app/build.gradle.kts:223`, `app/build.gradle.kts:226`; F-Droid policy/FAQ says F-Droid cannot build apps that depend on proprietary Google/Firebase libraries.
   - Touches: NX-8, N-2, N-3, Cycle 1 App Check item; build flavors, source sets, DI boundaries, community upload/vote feature flags, segmentation fallback.
@@ -327,7 +327,9 @@ Thirteen items. All scored 18–25. Pull from the top of this list when Now clos
 >
 > 2026-06-04 Cycle 2 P0 release-integrity pass fixed the tag workflow: it now restores release signing material from GitHub secrets, runs `:app:assembleRelease`, rejects debuggable APKs, runs `apksigner verify --print-certs`, and publishes `SHA256SUMS.txt` plus release notes with versionName/versionCode and signing certificate SHA-256. `docs/distribution/release-signing.md` is the signing/runbook surface for GitHub Releases + Obtainium.
 >
-> Still pending: per-ABI `splits { abi { ... } }` in `app/build.gradle.kts` (needs N-1 build verification to cut the universal APK from one fat binary to four lean ones), F-Droid metadata PR (depends on reproducible builds + Firebase/full-vs-foss decision), IzzyOnDroid submission (path of least friction; can submit once a `v*` tag is signed and visible). The `verify.yml` workflow (NX-12) is the prerequisite for F-Droid reproducible-build verification.
+> 2026-06-04 Cycle 2 P0 full-vs-foss decision: Aura stays full-only for GitHub Releases/Obtainium, and IzzyOnDroid is the realistic near-term app-store target. F-Droid mainline is blocked while the only variant includes Firebase, the Google Services Gradle plugin, and Play Services ML Kit. `docs/distribution/channel-strategy.md` records the channel matrix and future FOSS unblock criteria; `tools/fdroid_preflight.py --expect-blocked` verifies the current blocker state without compiling APKs.
+>
+> Still pending: per-ABI `splits { abi { ... } }` in `app/build.gradle.kts` (needs N-1 build verification to cut the universal APK from one fat binary to four lean ones), IzzyOnDroid submission (path of least friction; can submit once a `v*` tag is signed and visible), and any future F-Droid metadata PR after a real `foss` flavor exists. The `verify.yml` workflow (NX-12) is the prerequisite for reproducible-build verification.
 
 
 
@@ -721,6 +723,27 @@ These are the dated receipts. The newest entries supersede the oldest where they
 **Next up**
 
 - Cycle 2 P0 — Decide full-vs-foss distribution flavor before F-Droid work.
+
+### 2026-06-04 — Cycle 2 P0 full-vs-foss distribution decision
+
+**Items shipped**
+
+- **Cycle 2 P0 / NX-8 — channel matrix and F-Droid gate**
+  New `docs/distribution/channel-strategy.md` makes GitHub Releases + Obtainium the supported install/update path, keeps IzzyOnDroid as the realistic near-term app-store submission target, and blocks F-Droid mainline until a real FOSS flavor removes or isolates Firebase, the Google Services plugin, and Play Services ML Kit.
+
+- **F-Droid preflight**
+  New `tools/fdroid_preflight.py` scans Gradle files without compiling APKs. It reports the current tree as `blocked`, lists proprietary dependency markers with file/line evidence, and has `--expect-blocked` for CI/local decision checks.
+
+**Verification**
+
+- `py -3 tools/fdroid_preflight.py --expect-blocked` passed with the expected blocked status.
+- `py -3 tools/fdroid_preflight.py --json` produced machine-readable blocker output.
+- `git diff --check` passed.
+- No APK compile was run for this docs/preflight-only batch.
+
+**Next up**
+
+- Cycle 2 P1 — Add a supply-chain verification lane.
 
 ### 2026-05-17 — Rev4-impl-2 autonomous batch (6 more items, code + docs)
 
