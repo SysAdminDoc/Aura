@@ -18,7 +18,7 @@ This roadmap is fed continuously by a research machine. On every pass, the build
 4. Check off ✅ each item you complete, leave it in place with the checkmark, commit per logical change with a "why" message, and push.
 5. Never edit this Implementer Instructions block or the 🔬 Researcher Queue headings. Never force-push.
 
-**Last researched:** 2026-06-04 / Cycle 7.
+**Last researched:** 2026-06-04 / Cycle 8.
 
 ---
 
@@ -426,6 +426,54 @@ Append-only Cycle 7 handoff. Every item below is source-backed in `docs/research
   - Touches: U-2 research, model licensing notes, performance/battery test plan, FOSS flavor strategy.
   - Acceptance: revisit criteria list required device baseline, model size, expected latency, battery/thermal budget, license compatibility, moderation/report behavior, and fallback to hosted/BYO mode.
   - Verify: no on-device generation implementation starts without meeting the criteria; any prototype includes battery/profile evidence and license review.
+
+---
+
+## 🔬 Researcher Queue (Cycle 8 — 2026-06-04)
+
+Append-only Cycle 8 handoff. Every item below is source-backed in `docs/research/cycle-8-2026-06-04.md`; merge into the existing Now/Next/Later item named in `Touches` when implementation starts.
+
+- [ ] 🤖 🔬 **P0 — Store listing metadata preflight**
+  - Why: Aura's committed short description is 81 characters, while Google Play's limit is 80 characters, and there is no automated check for title/description/changelog/listing asset limits.
+  - Evidence: `fastlane/metadata/android/en-US/short_description.txt`; Google Play preview asset docs; Google Play metadata policy.
+  - Touches: `tools/store_metadata_preflight.*`, fastlane metadata, release checklist, CI/release workflow.
+  - Acceptance: preflight checks title <=30, short description <=80, full description present, current versionCode changelog present, no stale FreeVibe naming, required privacy URL placeholder present, and required screenshot/feature-graphic files present.
+  - Verify: run preflight against current metadata and see the known short-description/screenshot/privacy failures; fix metadata later and confirm the preflight passes.
+
+- [ ] 🤖 🔬 **P0 — Public privacy policy and in-app privacy link**
+  - Why: Google Play requires a privacy-policy link in Play Console and a privacy-policy link or text in the app for every app; Aura has no tracked `docs/privacy` policy document today.
+  - Evidence: no `docs/privacy` directory; Cycle 4 privacy inventory; Cycle 7 AI prompt/key findings; Google Play User Data policy.
+  - Touches: `docs/privacy/privacy-policy.md`, Settings privacy screen, README, distribution docs, release checklist.
+  - Acceptance: policy covers developer/contact, data types, collection/sharing, third-party services, sensitive permissions, local storage, retention/deletion, community uploads, AI prompts, diagnostics, and no-sale/no-ads/no-tracking claims; public non-PDF URL plan exists; Settings links it.
+  - Verify: privacy policy rows reconcile with Data safety matrix; app link opens; release checklist blocks missing URL/text.
+
+- [ ] 🤖 🔬 **P0 — Play app-content declaration packet**
+  - Why: Aura's public community uploads, AI generation, contacts, weather location, microphone recording, and third-party provider calls affect Play forms and reviewer expectations.
+  - Evidence: community upload metadata, AI generation, contacts/weather/microphone permissions; Google Play Data safety, content rating, UGC, and AI-generated-content policies.
+  - Touches: `docs/distribution/play-app-content.md`, Data safety matrix, content rating notes, target audience decision, permissions justification, UGC/AI report queue docs.
+  - Acceptance: one owner-ready document covers Data safety answers, content rating questionnaire notes, target audience, ads declaration, app access instructions, UGC moderation/report/block flow, AI-generated-content reporting, and sensitive-permission justifications.
+  - Verify: owner can walk Play Console App content forms from the doc; every sensitive permission and user-generated/AI-generated feature has a row; no "unknown" rows remain before Play submission.
+
+- [ ] 🤖 🔬 **P1 — Screenshot and feature-graphic pipeline**
+  - Why: Aura has one root screenshot and no committed fastlane screenshot directories or feature graphic; Play requires at least two screenshots and a feature graphic and recommends four phone screenshots.
+  - Evidence: `screenshot.png` 1080x2340; `app/src/main/ic_launcher-playstore.png` 512x512; no tracked `fastlane/metadata/android/en-US/images`; Google Play preview asset docs; F-Droid metadata docs.
+  - Touches: screenshot capture script/runbook, `fastlane/metadata/android/en-US/images/phoneScreenshots/`, feature graphic asset, alt-text notes, release checklist.
+  - Acceptance: at least four current 9:16 phone screenshots cover Wallpapers, Videos, Sounds/editor, and Settings/Favorites/community; feature graphic exists; assets avoid stale device frames, third-party trademarks, Play badges, and sensitive user content; alt text is documented.
+  - Verify: image-dimension preflight; manual visual review; fastlane metadata includes expected files; README screenshot and store screenshots do not drift.
+
+- [ ] 🤖 🔬 **P1 — Alternative-store anti-feature and permission disclosure matrix**
+  - Why: Aura is full-only today and uses Firebase, Google Services, Play Services ML Kit, YouTube extraction, and third-party network services. IzzyOnDroid/F-Droid-style users need explicit disclosure.
+  - Evidence: `docs/distribution/channel-strategy.md`; `tools/fdroid_preflight.py`; F-Droid inclusion and anti-feature docs; IzzyOnDroid APK/security notes.
+  - Touches: `docs/distribution/channel-strategy.md`, `docs/distribution/alt-store-metadata.md`, Izzy submission notes, README, fastlane full description.
+  - Acceptance: each channel lists artifact source, signing/checksum, license, proprietary dependencies, network services, sensitive permissions with purpose, AI key behavior, UGC moderation, and likely anti-feature labels; F-Droid mainline remains blocked until the FOSS flavor criteria pass.
+  - Verify: run F-Droid preflight; compare APK manifest permissions against the disclosure matrix; owner can paste Izzy-sensitive-permission explanations without re-researching.
+
+- [ ] 🤖 🔬 **P2 — Release metadata consistency gate**
+  - Why: README, fastlane metadata, changelogs, generated GitHub release notes, privacy docs, and Play/Data safety answers can drift from shipped behavior.
+  - Evidence: release workflow generates artifact-only notes; fastlane changelog exists for 112; Cycle 4/7/8 docs add privacy and AI policy rows.
+  - Touches: release checklist, preflight script, docs/distribution, changelog workflow, README.
+  - Acceptance: release checklist requires current versionName/versionCode, changelog, README claim review, privacy/Data safety review, store metadata review, screenshot review, and alt-store disclosure review before tag publishing.
+  - Verify: dry-run metadata preflight on current tree; intentional stale version/changelog fixture fails; tag release notes still include signing/provenance data.
 
 ---
 
@@ -1743,3 +1791,9 @@ Stars/dates as of research pass 2026-05-16.
 - Stability AI API and policy — [getting started](https://platform.stability.ai/docs/getting-started), [Stable Image overview](https://platform.stability.ai/docs/getting-started/stable-image), [pricing](https://platform.stability.ai/pricing), [Acceptable Use Policy](https://stability.ai/use-policy).
 - Google Play AI-generated content policy — [policy overview](https://support.google.com/googleplay/android-developer/answer/14094294), [AI-generated content requirements](https://support.google.com/googleplay/android-developer/answer/13985936).
 - Android secret storage guidance — [security checklist](https://developer.android.com/guide/practices/security), [Android Keystore](https://developer.android.com/privacy-and-security/keystore), [Jetpack Security releases](https://developer.android.com/jetpack/androidx/releases/security).
+
+## Appendix L — Cycle 8 Sources
+
+- Cycle 8 planning record — [docs/research/cycle-8-2026-06-04.md](docs/research/cycle-8-2026-06-04.md).
+- Google Play listing and policy docs — [preview assets](https://support.google.com/googleplay/android-developer/answer/9866151), [metadata policy](https://support.google.com/googleplay/android-developer/answer/9898842), [User Data / privacy policy](https://support.google.com/googleplay/android-developer/answer/10144311), [content rating](https://support.google.com/googleplay/android-developer/answer/9859655), [user-generated content](https://support.google.com/googleplay/android-developer/answer/9876937), [AI-generated content](https://support.google.com/googleplay/android-developer/answer/13985936).
+- Alternate store metadata — [F-Droid Inclusion Policy](https://f-droid.org/docs/Inclusion_Policy/), [F-Droid Anti-Features](https://f-droid.org/en/docs/Anti-Features/), [F-Droid descriptions/graphics/screenshots](https://f-droid.org/en/docs/All_About_Descriptions_Graphics_and_Screenshots/), [IzzyOnDroid APK repository notes](https://apt.izzysoft.de/fdroid/index/apk).
