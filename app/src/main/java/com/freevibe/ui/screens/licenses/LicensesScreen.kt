@@ -14,6 +14,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import com.freevibe.data.legal.providerDisclosures
 
 data class OssLicense(
     val name: String,
@@ -24,6 +25,8 @@ data class OssLicense(
 
 private val licenses = listOf(
     OssLicense("Kotlin", "https://github.com/JetBrains/kotlin", "Apache 2.0", "Programming language"),
+    OssLicense("Kotlin Coroutines", "https://github.com/Kotlin/kotlinx.coroutines", "Apache 2.0", "Async runtime"),
+    OssLicense("Kotlin Serialization", "https://github.com/Kotlin/kotlinx.serialization", "Apache 2.0", "JSON serialization"),
     OssLicense("Jetpack Compose", "https://developer.android.com/jetpack/compose", "Apache 2.0", "Modern UI toolkit"),
     OssLicense("Material 3", "https://m3.material.io", "Apache 2.0", "Design system"),
     OssLicense("Hilt", "https://dagger.dev/hilt/", "Apache 2.0", "Dependency injection"),
@@ -36,20 +39,29 @@ private val licenses = listOf(
     OssLicense("WorkManager", "https://developer.android.com/topic/libraries/architecture/workmanager", "Apache 2.0", "Background scheduling"),
     OssLicense("DataStore", "https://developer.android.com/topic/libraries/architecture/datastore", "Apache 2.0", "Persistent preferences"),
     OssLicense("Paging 3", "https://developer.android.com/topic/libraries/architecture/paging/v3-overview", "Apache 2.0", "Infinite scroll"),
+    OssLicense("ProfileInstaller", "https://developer.android.com/topic/performance/baselineprofiles/overview", "Apache 2.0", "Baseline profile installation"),
+    OssLicense("Palette", "https://developer.android.com/reference/kotlin/androidx/palette/graphics/package-summary", "Apache 2.0", "Color extraction"),
+    OssLicense("ZXing", "https://github.com/zxing/zxing", "Apache 2.0", "QR code support"),
     OssLicense("Glance", "https://developer.android.com/jetpack/compose/glance", "Apache 2.0", "App widgets"),
     OssLicense("Navigation Compose", "https://developer.android.com/jetpack/compose/navigation", "Apache 2.0", "Screen navigation"),
+    OssLicense("Firebase", "https://firebase.google.com/terms", "Google/Firebase terms", "Auth, Realtime Database, and Storage"),
+    OssLicense("Google Play services", "https://developers.google.com/android/guides/overview", "Google APIs terms", "ML Kit module install and Play services base"),
+    OssLicense("ML Kit Subject Segmentation", "https://developers.google.com/ml-kit", "Google APIs terms", "Parallax subject segmentation"),
+    OssLicense("NewPipe Extractor", "https://github.com/TeamNewPipe/NewPipeExtractor", "GPL-3.0", "YouTube and streaming-site extraction"),
+    OssLicense("youtubedl-android", "https://github.com/yausername/youtubedl-android", "GPL-3.0", "yt-dlp wrapper for Android"),
+    OssLicense("yt-dlp", "https://github.com/yt-dlp/yt-dlp", "Unlicense", "YouTube stream extraction payload"),
+    OssLicense("FFmpeg", "https://ffmpeg.org/legal.html", "LGPL/GPL depending on build", "Video crop and audio processing payload"),
+    OssLicense("Core library desugaring", "https://developer.android.com/studio/write/java8-support", "Apache 2.0", "Java API backports for Android"),
 )
 
-private val contentSources = listOf(
-    OssLicense("Wallhaven", "https://wallhaven.cc/help/api", "Various per image", "Wallpaper source"),
-    OssLicense("Bing Image of the Day", "https://www.bing.com", "Wallpaper use", "Daily curated photos"),
-    OssLicense("Reddit", "https://www.reddit.com/dev/api/", "User-owned", "Wallpaper & video subreddits"),
-    OssLicense("Pexels", "https://www.pexels.com/api/", "Pexels License", "Photos & videos"),
-    OssLicense("Pixabay", "https://pixabay.com/api/docs/", "Pixabay License", "Photos & videos"),
-    OssLicense("YouTube", "https://www.youtube.com/", "Provider-defined", "Active sound feed and video wallpapers"),
-    OssLicense("NewPipe Extractor", "https://github.com/TeamNewPipe/NewPipeExtractor", "GPL-3.0", "YouTube search"),
-    OssLicense("Freesound", "https://freesound.org/docs/api/", "Various CC", "Legacy sound attribution"),
-)
+private val contentSources = providerDisclosures.map { disclosure ->
+    OssLicense(
+        name = disclosure.displayName,
+        url = disclosure.termsUrl,
+        license = disclosure.licenseSummary,
+        description = "${disclosure.status.label} - ${disclosure.content}. ${disclosure.storeDisclosure}",
+    )
+}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

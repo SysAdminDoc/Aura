@@ -18,7 +18,7 @@ This roadmap is fed continuously by a research machine. On every pass, the build
 4. Check off ✅ each item you complete, leave it in place with the checkmark, commit per logical change with a "why" message, and push.
 5. Never edit this Implementer Instructions block or the 🔬 Researcher Queue headings. Never force-push.
 
-**Last researched:** 2026-06-04 / Cycle 16.
+**Last researched:** 2026-06-04 / Cycle 17.
 
 ---
 
@@ -193,12 +193,13 @@ Append-only Cycle 2 handoff. Every item below is source-backed in `docs/research
 
 Append-only Cycle 3 handoff. Every item below is source-backed in `docs/research/cycle-3-2026-06-04.md`; merge into the existing Now/Next/Later item named in `Touches` when implementation starts.
 
-- [ ] 🤖 🔬 **P0 — Provider compliance matrix and runtime kill switches**
+- [~] 🤖 🔬 **P0 — Provider compliance matrix and runtime kill switches**
   - Why: Pexels, Pixabay, Freesound, SoundCloud, Reddit, and YouTube each impose different attribution, caching, rate-limit, download, and deletion rules. Aura currently stores some metadata but does not encode provider policy centrally.
   - Evidence: Pexels wallpaper-app restriction; Pixabay 24-hour cache/rate-limit/hotlinking rules; Freesound non-commercial/credit/fair-use API terms; SoundCloud attribution and no-ripping restrictions; Reddit app-review/removal terms; YouTube undocumented/download/cache restrictions.
   - Touches: provider repositories, `SourceMetrics`, Settings provider toggles, detail screens, downloader/apply flows, `docs/legal/provider-policy.md`.
   - Acceptance: every provider has a policy row covering attribution, source link, API cache TTL, media cache TTL, hotlinking, download/apply/share allowances, rate-limit handling, deletion behavior, and kill-switch default.
   - Verify: provider policy unit tests; Settings can disable each remote provider; disabled providers vanish from search/default feeds; existing favorites retain source-deleted/unavailable state without crashing.
+  - Progress 2026-06-05: central `ProviderDisclosure` rows now cover every `ContentSource`, `docs/legal/provider-policy.md` mirrors the matrix, and `ProviderDisclosureTest` fails when a source lacks policy coverage. Runtime provider kill switches, rate-limit enforcement, and unavailable-source states remain open.
 
 - [ ] 🤖 🔬 **P1 — Pexels usage guardrail and fallback plan**
   - Why: Pexels specifically rejects standalone wallpaper/gallery API replication. Aura must prove Pexels is an enhancement source, not the product's core inventory.
@@ -861,6 +862,55 @@ Append-only Cycle 16 handoff. Every item below is source-backed in `docs/researc
 
 ---
 
+## 🔬 Researcher Queue (Cycle 17 — 2026-06-04)
+
+Append-only Cycle 17 handoff. Every item below is source-backed in `docs/research/cycle-17-2026-06-04.md`; merge into the existing Now/Next/Later item named in `Touches` when implementation starts.
+
+- [ ] 🤖 🔬 **P0 — Generated OSS notices and license drift gate**
+  - Why: Aura's Licenses screen is hand-maintained and already omits release-runtime dependencies such as Firebase, Google Play services ML Kit/base, ZXing, Kotlin coroutines/serialization, AndroidX ProfileInstaller, Palette, desugaring, youtubedl-android, and FFmpeg.
+  - Evidence: `LicensesScreen.kt`; `app/build.gradle.kts`; no `oss-licenses`/`licensee`/`aboutlibraries`/SBOM tooling found; Google Play services OSS notices docs.
+  - Touches: Settings Licenses screen, Gradle release tasks, release workflow/preflight, `docs/distribution/supply-chain.md`, `docs/legal/third-party-notices.md`.
+  - Acceptance: release preflight generates or validates third-party notices from release runtime dependencies and native artifacts; the APK exposes the generated notices in-app or as a bundled notice artifact; adding/changing a runtime dependency creates a reviewed notice diff or fails CI.
+  - Verify: add a sentinel runtime dependency in a test branch and confirm notice generation/diff; inspect release APK notice asset; Settings displays generated notices; release preflight fails when license metadata is missing.
+
+- [ ] 🤖 🔬 **P0 — Copyleft/native extractor compliance packet**
+  - Why: NewPipe Extractor is GPL-3.0; youtubedl-android is GPL-3.0 and bundles yt-dlp/Python payloads; the FFmpeg artifact can carry LGPL or GPL obligations depending on build configuration. Aura's docs defer native/FFmpeg/youtubedl SBOM scope.
+  - Evidence: `app/build.gradle.kts`; `docs/distribution/supply-chain.md`; NewPipeExtractor GitHub license; youtubedl-android GitHub license/readme; FFmpeg legal guidance.
+  - Touches: release assets, `docs/legal/third-party-notices.md`, `docs/distribution/channel-strategy.md`, release notes, F-Droid/Izzy preflight, YouTube/video download features.
+  - Acceptance: release docs list exact artifact coordinates, upstream URLs, versions, license IDs, source locations, FFmpeg build/license mode, bundled payload inventory, and any source-offer location for binaries Aura redistributes.
+  - Verify: inspect APK/AAR contents for youtubedl/FFmpeg/Python payloads; confirm notices/source links match shipped versions; dependency version changes fail until the compliance packet is updated.
+
+- [~] 🤖 🔬 **P1 — Runtime dependency and content-source coverage matrix**
+  - Why: `ContentSource` includes Audius, ccMixter, SoundCloud, Wikimedia, Internet Archive, NASA, Picsum, Klipy, Community, Bundled, AI-generated, and Local, but the Licenses screen lists only a subset of active/legacy sources.
+  - Evidence: `ContentSource`; `LicensesScreen.kt`; provider repositories; Cycle 3 provider-policy findings; F-Droid anti-feature definitions.
+  - Touches: provider policy, Licenses screen, Settings provider toggles, `docs/legal/provider-policy.md`, store/repository metadata.
+  - Acceptance: one matrix maps every runtime dependency and every `ContentSource` value to license/terms URL, attribution fields, action capabilities, cache/deletion policy, provider toggle, anti-feature/disclosure notes, and shipped/dormant status.
+  - Verify: unit/static test compares Gradle runtime dependency inventory and `ContentSource.entries` to the matrix; adding a source or dependency fails until the matrix and notices update.
+  - Progress 2026-06-05: content-source coverage is now code-backed by `ProviderDisclosure`, exposed in the Licenses screen, documented in `docs/legal/provider-policy.md`, and guarded by `ProviderDisclosureTest`. The dependency side is improved with visible rows for Firebase, Play services, ML Kit, NewPipe, youtubedl-android, yt-dlp, FFmpeg, ZXing, ProfileInstaller, Palette, desugaring, Kotlin coroutines, and serialization, but generated dependency inventory and notice-diff gating remain open.
+
+- [ ] 🤖 🔬 **P1 — Preserve item-level license and provenance through durable flows**
+  - Why: Sounds can display license/uploader/source metadata when live objects carry it, but `FavoriteEntity` does not persist sound license; wallpapers do not have a license field; exports do not yet document license/provenance compatibility.
+  - Evidence: `SoundDetailScreen.kt`; `WallpaperDetailScreen.kt`; `FavoriteEntity`; `Mappers.kt`; `FavoritesExporter.kt`; `CollectionExporter.kt`; Cycle 13 provenance/action-capability item.
+  - Touches: favorite/download/collection entities, Room migration, exporter schemas, detail screens, apply/share/download/editor gates.
+  - Acceptance: favorites, downloads, collections, imports, exports, and restored records preserve normalized license, original source page, uploader/creator, provider item ID, and action capabilities where known.
+  - Verify: golden export/import fixtures for CC0, CC BY, CC BY-NC, YouTube, SoundCloud, community, bundled, and local items; favorite/restore/detail UI still shows source license; restricted actions respect capability fields.
+
+- [ ] 🤖 🔬 **P1 — Store/repository disclosure source of truth**
+  - Why: Google Play IP policy, F-Droid anti-feature labeling, Izzy review, GitHub release notes, README, and in-app notices all need consistent answers about third-party content, non-free services, extractor/downloader features, and bundled assets.
+  - Evidence: `README.md`; `docs/distribution/channel-strategy.md`; `docs/distribution/supply-chain.md`; Google Play intellectual-property policy; F-Droid anti-feature docs.
+  - Touches: release checklist, README/legal docs, fastlane/metadata, Obtainium/Izzy/F-Droid notes, Settings Licenses/Privacy screens.
+  - Acceptance: a single docs/legal source drives in-app notice copy, release metadata, anti-feature declarations, third-party content disclaimers, and provider/source policy links.
+  - Verify: release checklist fails if dependency/source matrix changes without metadata review; generated release notes include notice/source disclosure links; F-Droid/Izzy draft metadata matches the matrix.
+
+- [ ] 🤖 🔬 **P2 — Bundled/Aura Picks upstream attribution policy**
+  - Why: Bundled Aura Picks currently use Freesound CC0 source URLs, but visible uploader data is generic and detail UI suppresses the upstream creator for the bundled label.
+  - Evidence: `BundledContentProvider.kt`; `SoundDetailScreen.kt`; Freesound source-page URLs in bundled sound entries; README third-party content note.
+  - Touches: Aura Originals/bundled manifest, curation review docs, sound detail provenance, release notices.
+  - Acceptance: bundled content metadata records upstream creator, source asset URL, source license, curation date, review result, and whether Aura can redistribute/bundle it; UI can show concise Aura Picks branding without hiding upstream attribution.
+  - Verify: bundled manifest fixture validates every item has source/license/creator fields; Sound detail exposes a source/provenance affordance; generated notices include bundled third-party assets.
+
+---
+
 ## Now — execute this cycle
 
 Five items. Four landed in the 2026-05-16 autonomous batch (N-2..N-5, marked
@@ -1376,6 +1426,32 @@ Kept verbatim — these are the receipts.
 ## Implementation Log (preserved release-pass entries)
 
 These are the dated receipts. The newest entries supersede the oldest where they overlap; do not edit prior entries.
+
+### 2026-06-05 — Cycle 17 provider disclosure matrix pass
+
+**Items shipped**
+
+- **Cycle 17 P1 / Cycle 3 P0 partial — content-source policy matrix**
+  New `ProviderDisclosure` centralizes display name, active/legacy/local/community/generated status, terms URL, license summary, attribution requirement, cache policy, user-action policy, and store-disclosure note for every `ContentSource`. Settings > Open source licenses now builds its Content Sources section from this model instead of a short hard-coded subset.
+
+- **Legal matrix doc**
+  New `docs/legal/provider-policy.md` mirrors the source matrix for release/store review and records the remaining dependency notice, native/copyleft packet, and durable provenance follow-ups.
+
+- **Runtime dependency visibility**
+  The Licenses screen now includes visible rows for runtime/native dependencies that Cycle 17 identified as missing from the hand-maintained list: Kotlin coroutines/serialization, ProfileInstaller, Palette, ZXing, Firebase, Google Play services, ML Kit, NewPipe Extractor, youtubedl-android, yt-dlp, FFmpeg, and core library desugaring. This is a stopgap until generated OSS notices ship.
+
+**Verification**
+
+- Installed the official Android SDK command-line tools locally, accepted SDK licenses, and installed platform-tools, Android 35 platform, and build-tools 35.0.0 because no SDK existed at the repo's documented path on this VM.
+- Mirrored the repo to `C:\tmp\Aura-loop-verify` to avoid UNC/VMware Gradle issues.
+- `.\gradlew.bat --no-daemon --max-workers=2 :app:testDebugUnitTest --tests com.freevibe.data.legal.ProviderDisclosureTest` passed on the mirror using Microsoft JDK 21 and SDK 35.
+- No full APK or lint run was attempted; `CLAUDE.md` warns repeated APK/lint runs can exhaust memory on this workstation.
+
+**Next up**
+
+- Cycle 17 P0 — generated OSS notices and license drift gate.
+- Cycle 17 P0 — copyleft/native extractor compliance packet for NewPipe, youtubedl-android, yt-dlp/Python payloads, and FFmpeg.
+- Cycle 17 P1 — generated Gradle runtime dependency inventory comparison and notice-diff gate.
 
 ### 2026-06-04 — Cycle 2 P0 release-integrity pass
 
@@ -2232,3 +2308,10 @@ Stars/dates as of research pass 2026-05-16.
 - Cycle 16 planning record — [docs/research/cycle-16-2026-06-04.md](docs/research/cycle-16-2026-06-04.md).
 - Android data durability — [Room migrations](https://developer.android.com/training/data-storage/room/migrating-db-versions), [MigrationTestHelper](https://developer.android.com/reference/androidx/room/testing/MigrationTestHelper), [test and debug Room databases](https://developer.android.com/training/data-storage/room/testing-db), [Auto Backup/data extraction rules](https://developer.android.com/identity/data/autobackup), [app-specific files and cache](https://developer.android.com/training/data-storage/app-specific).
 - Firebase rules — [Realtime Database rules core syntax](https://firebase.google.com/docs/database/security/core-syntax), [Security Rules data validation](https://firebase.google.com/docs/rules/data-validation).
+
+## Appendix U — Cycle 17 Sources
+
+- Cycle 17 planning record — [docs/research/cycle-17-2026-06-04.md](docs/research/cycle-17-2026-06-04.md).
+- Notice generation and SBOMs — [Google Play services OSS notices](https://developers.google.com/android/guides/opensource), [SPDX overview](https://spdx.dev/about/overview/).
+- Copyleft/native artifact guidance — [FFmpeg legal guidance](https://ffmpeg.org/legal.html), [NewPipeExtractor repository](https://github.com/TeamNewPipe/NewPipeExtractor), [youtubedl-android repository](https://github.com/yausername/youtubedl-android).
+- Store/repository disclosure policy — [F-Droid anti-features](https://f-droid.org/en/docs/Anti-Features/), [Google Play intellectual-property policy](https://support.google.com/googleplay/android-developer/answer/9888072).
