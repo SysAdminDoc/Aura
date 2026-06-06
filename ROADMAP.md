@@ -199,7 +199,7 @@ Append-only Cycle 3 handoff. Every item below is source-backed in `docs/research
   - Touches: provider repositories, `SourceMetrics`, Settings provider toggles, detail screens, downloader/apply flows, `docs/legal/provider-policy.md`.
   - Acceptance: every provider has a policy row covering attribution, source link, API cache TTL, media cache TTL, hotlinking, download/apply/share allowances, rate-limit handling, deletion behavior, and kill-switch default.
   - Verify: provider policy unit tests; Settings can disable each remote provider; disabled providers vanish from search/default feeds; existing favorites retain source-deleted/unavailable state without crashing.
-  - Progress 2026-06-05: central `ProviderDisclosure` rows now cover every `ContentSource`, `docs/legal/provider-policy.md` mirrors the matrix, and `ProviderDisclosureTest` fails when a source lacks policy coverage. Cycle 36 added checked runtime-control rows in `ProviderDisclosure.kt` and `docs/legal/provider-runtime-controls.md`; Cycles 37-42 added default-on runtime switches for YouTube, Reddit, Wallhaven, Pexels, Pixabay, Community, and Bing Daily. Cycles 43-44 added 24-hour fresh-cache paths plus 429 backoff for Pixabay photo and video metadata requests. Remaining runtime-control/policy gaps include generated-content disablement and unavailable-source states.
+  - Progress 2026-06-05: central `ProviderDisclosure` rows now cover every `ContentSource`, `docs/legal/provider-policy.md` mirrors the matrix, and `ProviderDisclosureTest` fails when a source lacks policy coverage. Cycle 36 added checked runtime-control rows in `ProviderDisclosure.kt` and `docs/legal/provider-runtime-controls.md`; Cycles 37-42 added default-on runtime switches for YouTube, Reddit, Wallhaven, Pexels, Pixabay, Community, and Bing Daily. Cycles 43-44 added 24-hour fresh-cache paths plus 429 backoff for Pixabay photo and video metadata requests. Cycle 45 added a default-on generated-wallpapers source switch that hides generation entry points and blocks Stability requests when disabled. Remaining runtime-control/policy gaps include unavailable-source states.
 
 - [ ] 🤖 🔬 **P1 — Pexels usage guardrail and fallback plan**
   - Why: Pexels specifically rejects standalone wallpaper/gallery API replication. Aura must prove Pexels is an enhancement source, not the product's core inventory.
@@ -2868,19 +2868,25 @@ Stars/dates as of research pass 2026-05-16.
 - Primary source reference — [Pixabay API documentation](https://pixabay.com/api/docs/).
 - Verification outputs — focused VideoWallpapersViewModel and provider disclosure unit tests; release-compliance Python compile checks; dependency notice lock check; generated notice metadata parity check; native compliance lock check; dependency overlay check; dependency license policy check; `git diff --check`; and changed-line attribution scan.
 
+## Appendix AW — Cycle 45 Sources
+
+- Cycle 45 implementation record — [docs/research/cycle-45-2026-06-06.md](docs/research/cycle-45-2026-06-06.md).
+- Generated wallpaper source switch implementation — `PreferencesManager.kt`, `SettingsScreen.kt`, `SettingsViewModel.kt`, `WallpapersViewModel.kt`, `WallpapersScreen.kt`, `AiWallpaperViewModel.kt`, `AiWallpaperScreen.kt`, `ProviderDisclosure.kt`, and `docs/legal/provider-runtime-controls.md`.
+- Verification outputs — focused AI wallpaper request gate, Wallpapers, Settings, and provider disclosure unit tests; release-compliance Python compile checks; dependency notice lock check; generated notice metadata parity check; native compliance lock check; dependency overlay check; dependency license policy check; `git diff --check`; and changed-line attribution scan.
+
 ## Continuation State
 
 ### Last Completed Cycle
 
-Cycle 44: Pixabay video request-cache and backoff.
+Cycle 45: Generated wallpaper source switch.
 
 ### Current Focus
 
-Start Cycle 45 with the generated-content source flag if store/distribution profiles need to remove generation entirely. Commit and push completed work when the active project contract allows it.
+Start Cycle 46 with unavailable-source states for saved favorites/downloads when remote providers remove content. Commit and push completed work when the active project contract allows it.
 
 ### Important Findings So Far
 
-- `ROADMAP.md` has Cycle 18 through Cycle 44 research/implementation items; `docs/research/cycle-18-2026-06-06.md` through `docs/research/cycle-44-2026-06-06.md` have the source-backed analysis.
+- `ROADMAP.md` has Cycle 18 through Cycle 45 research/implementation items; `docs/research/cycle-18-2026-06-06.md` through `docs/research/cycle-45-2026-06-06.md` have the source-backed analysis.
 - `LicensesScreen.kt` still has manual dependency rows; content sources are already code-backed by `ProviderDisclosure.kt`.
 - `.github/workflows/release.yml` now publishes `THIRD-PARTY-NOTICES.md` and `NATIVE-COMPLIANCE.md` with the APK and includes both files in `SHA256SUMS.txt`; SBOM artifacts remain open.
 - `.github/workflows/verify.yml` and `.github/workflows/release.yml` now run `tools/dependency_notice_lock.py --mode check`, `tools/dependency_notice_lock.py --mode check-metadata`, `tools/native_compliance_inventory.py --mode check-lock`, `tools/dependency_overlay_check.py`, and `tools/dependency_license_policy.py` after `:app:releaseOssLicensesTask`.
@@ -2915,16 +2921,16 @@ Start Cycle 45 with the generated-content source flag if store/distribution prof
 - Bing Daily now has a default-on `bing_provider_enabled` preference plus Settings switch that skips daily-image API calls before cache fallback or Retrofit use, removes Bing from rotation pickers when disabled, and records disabled diagnostics separately from outages.
 - Wallhaven now has a default-on `wallhaven_provider_enabled` preference plus Settings switch that hides Wallhaven browsing, color/random/similar actions, rotation picker entries, and skips Wallhaven API calls before key reads, cache fallback, or Retrofit use while recording disabled diagnostics separately from outages.
 - Pixabay photo requests now use `WallpaperCacheManager.TTL_PIXABAY` for a 24-hour fresh-cache hit before API calls; Pixabay video metadata now uses app-private 24-hour metadata caching with cached stream URLs; 429 responses parse `Retry-After` or `X-RateLimit-Reset` into backoff windows.
+- Generated wallpapers now have a default-on `generated_content_provider_enabled` preference plus Settings switch that hides generation entry points and blocks Stability requests before prompt/key validation when disabled. Saved generated wallpapers remain visible as local user content.
 - Recent history was checked with `rtk git log -10 --oneline --decorate` for this pass.
 
 ### Next Best Actions
 
-1. Add a generated-content source flag if store/distribution profiles need to remove generation entirely.
-2. Add unavailable-source states for saved favorites/downloads when remote providers remove content.
-3. Run a real GitHub Actions manual release dry run after secrets are confirmed available and archive the run URL in the release docs.
-4. Add deeper UI verification for the licenses screen on an emulator or screenshot lane when a device/runtime is available.
-5. Preserve exact Termux package commit/build-log evidence for FFmpeg if the release owner can obtain it from upstream or a reproducible rebuild.
-6. Revisit CycloneDX or SPDX SBOM generation after the N-1 toolchain upgrade.
+1. Add unavailable-source states for saved favorites/downloads when remote providers remove content.
+2. Run a real GitHub Actions manual release dry run after secrets are confirmed available and archive the run URL in the release docs.
+3. Add deeper UI verification for the licenses screen on an emulator or screenshot lane when a device/runtime is available.
+4. Preserve exact Termux package commit/build-log evidence for FFmpeg if the release owner can obtain it from upstream or a reproducible rebuild.
+5. Revisit CycloneDX or SPDX SBOM generation after the N-1 toolchain upgrade.
 
 ### Unprocessed Leads
 

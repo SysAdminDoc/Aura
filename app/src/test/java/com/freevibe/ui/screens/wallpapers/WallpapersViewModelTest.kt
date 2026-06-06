@@ -568,6 +568,7 @@ class WallpapersViewModelTest {
         pexelsProviderEnabled: Boolean = true,
         pixabayProviderEnabled: Boolean = true,
         communityProviderEnabled: Boolean = true,
+        generatedContentProviderEnabled: Boolean = true,
     ): WallpapersViewModel {
         val favoritesRepo = favoritesRepoOverride ?: mockk<FavoritesRepository>()
         every { favoritesRepo.allIdentities() } returns flowOf(emptySet<FavoriteIdentity>())
@@ -591,6 +592,7 @@ class WallpapersViewModelTest {
         every { prefs.pexelsProviderEnabled } returns flowOf(pexelsProviderEnabled)
         every { prefs.pixabayProviderEnabled } returns flowOf(pixabayProviderEnabled)
         every { prefs.communityProviderEnabled } returns flowOf(communityProviderEnabled)
+        every { prefs.generatedContentProviderEnabled } returns flowOf(generatedContentProviderEnabled)
         every { prefs.preferredResolution } returns flowOf("1080x1920")
         every { prefs.userStyles } returns flowOf("minimal,nature")
 

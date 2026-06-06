@@ -116,6 +116,8 @@ class WallpapersViewModel @Inject constructor(
     val pexelsProviderEnabled = prefs.pexelsProviderEnabled.stateIn(viewModelScope, SharingStarted.Eagerly, true)
     val pixabayProviderEnabled = prefs.pixabayProviderEnabled.stateIn(viewModelScope, SharingStarted.Eagerly, true)
     val communityProviderEnabled = prefs.communityProviderEnabled.stateIn(viewModelScope, SharingStarted.Eagerly, true)
+    val generatedContentProviderEnabled =
+        prefs.generatedContentProviderEnabled.stateIn(viewModelScope, SharingStarted.Eagerly, true)
 
     val recentSearches = searchHistoryRepo.getRecentWallpaperSearches(8)
         .map { list -> list.map { it.query } }

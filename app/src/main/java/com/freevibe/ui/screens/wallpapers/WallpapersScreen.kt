@@ -107,6 +107,7 @@ fun WallpapersScreen(
     val pexelsProviderEnabled by viewModel.pexelsProviderEnabled.collectAsStateWithLifecycle()
     val pixabayProviderEnabled by viewModel.pixabayProviderEnabled.collectAsStateWithLifecycle()
     val communityProviderEnabled by viewModel.communityProviderEnabled.collectAsStateWithLifecycle()
+    val generatedContentProviderEnabled by viewModel.generatedContentProviderEnabled.collectAsStateWithLifecycle()
     val visibleSections = remember(state.wallpapers, hiddenIds, topVoted, dailyPick, state.selectedTab, communityProviderEnabled) {
         computeVisibleWallpaperSections(
             wallpapers = state.wallpapers,
@@ -452,14 +453,16 @@ fun WallpapersScreen(
                             }
                         }
                     }
-                    FilledTonalButton(
-                        onClick = onGenerateClick,
-                        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 0.dp),
-                        modifier = Modifier.heightIn(min = 34.dp),
-                    ) {
-                        Icon(Icons.Default.AutoAwesome, contentDescription = null, modifier = Modifier.size(14.dp))
-                        Spacer(Modifier.width(6.dp))
-                        Text("Generate", maxLines = 1)
+                    if (generatedContentProviderEnabled) {
+                        FilledTonalButton(
+                            onClick = onGenerateClick,
+                            contentPadding = PaddingValues(horizontal = 12.dp, vertical = 0.dp),
+                            modifier = Modifier.heightIn(min = 34.dp),
+                        ) {
+                            Icon(Icons.Default.AutoAwesome, contentDescription = null, modifier = Modifier.size(14.dp))
+                            Spacer(Modifier.width(6.dp))
+                            Text("Generate", maxLines = 1)
+                        }
                     }
                     if (state.selectedTab == WallpaperTab.DISCOVER && state.discoverFilter != WallpaperDiscoverFilter.FOR_YOU) {
                         AssistChip(

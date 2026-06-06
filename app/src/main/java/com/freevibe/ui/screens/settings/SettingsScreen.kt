@@ -111,6 +111,7 @@ fun SettingsScreen(
     val pexelsApiKey by viewModel.pexelsApiKey.collectAsStateWithLifecycle()
     val pixabayApiKey by viewModel.pixabayApiKey.collectAsStateWithLifecycle()
     val stabilityAiKey by viewModel.stabilityAiKey.collectAsStateWithLifecycle()
+    val generatedContentProviderEnabled by viewModel.generatedContentProviderEnabled.collectAsStateWithLifecycle()
     val wallhavenProviderEnabled by viewModel.wallhavenProviderEnabled.collectAsStateWithLifecycle()
     val bingProviderEnabled by viewModel.bingProviderEnabled.collectAsStateWithLifecycle()
     val pexelsProviderEnabled by viewModel.pexelsProviderEnabled.collectAsStateWithLifecycle()
@@ -1228,13 +1229,29 @@ fun SettingsScreen(
                 )
             }
             var showStabilityKey by remember { mutableStateOf(false) }
-            SettingsItem(
-                icon = Icons.Default.Key,
-                title = "Stability AI API Key",
-                subtitle = "For advanced image generation (stability.ai)",
-                onClick = { showStabilityKey = true },
+            LaunchedEffect(generatedContentProviderEnabled) {
+                if (!generatedContentProviderEnabled) showStabilityKey = false
+            }
+            SettingsToggle(
+                icon = Icons.Default.AutoAwesome,
+                title = "Enable generated wallpapers",
+                subtitle = if (generatedContentProviderEnabled) {
+                    "Shows generation entry points and allows Stability requests"
+                } else {
+                    "Hides generation entry points and blocks Stability requests"
+                },
+                checked = generatedContentProviderEnabled,
+                onCheckedChange = { viewModel.setGeneratedContentProviderEnabled(it) },
             )
-            if (showStabilityKey) {
+            if (generatedContentProviderEnabled) {
+                SettingsItem(
+                    icon = Icons.Default.Key,
+                    title = "Stability AI API Key",
+                    subtitle = "For advanced image generation (stability.ai)",
+                    onClick = { showStabilityKey = true },
+                )
+            }
+            if (generatedContentProviderEnabled && showStabilityKey) {
                 var keyText by remember { mutableStateOf(stabilityAiKey) }
                 AlertDialog(
                     onDismissRequest = { showStabilityKey = false },

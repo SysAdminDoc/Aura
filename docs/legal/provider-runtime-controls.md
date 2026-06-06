@@ -27,7 +27,7 @@ runtime-control row.
 | SoundCloud | Covered | No active browsing tab uses SoundCloud. | New feeds do not request SoundCloud; saved legacy rows can remain visible. | None. |
 | Aura Community | Covered | Settings exposes a Community source-enabled flag in addition to Firebase availability. | Disabled mode skips startup identity warm-up, hides community tabs/uploads/votes/creator profile entry points, blocks feed/upload/follow repository calls, and records disabled diagnostics separately from Firebase outages. | None for runtime disablement; keep separate public-data deletion, takedown, and App Check hardening work tracked in `ROADMAP.md`. |
 | Aura Picks | Covered | Ships with app assets and curated metadata. | No remote provider is contacted; removal requires changing bundled content metadata or assets. | None. |
-| AI-generated | Partial | Provider key gates generation; no separate generated-content source flag. | Blank key prevents provider-backed generation, but generated local outputs can remain saved. | Add a generated-content source flag if store/distribution profiles need to remove generation entirely. |
+| AI-generated | Covered | Settings exposes a generated-wallpapers source flag in addition to the provider key. | Disabled mode hides generation entry points and blocks Stability requests before provider-key validation while saved generated outputs can remain visible. | Carry the flag into channel-specific distribution defaults when store profiles are added. |
 
 ## Current Runtime-Control Notes
 
@@ -49,6 +49,9 @@ runtime-control row.
   sound/wallpaper community feeds, uploads, vote actions, creator profile
   navigation, and creator follow/unfollow calls. Data lifecycle, deletion,
   takedown, and App Check hardening remain separate community compliance items.
+- Generated wallpapers now have a default-on source flag covering the Wallpapers
+  Generate chip, the generator API-key surface, and the ViewModel request gate.
+  Saved generated wallpapers stay visible because they are local user content.
 
 ## Policy Sources
 

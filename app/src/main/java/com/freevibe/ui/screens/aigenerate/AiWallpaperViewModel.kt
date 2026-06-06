@@ -10,6 +10,7 @@ import com.freevibe.data.repository.AiStyle
 import com.freevibe.data.repository.AiWallpaperRepository
 import com.freevibe.data.repository.FavoritesRepository
 import com.freevibe.data.local.PreferencesManager
+import com.freevibe.service.SourceMetrics
 import com.freevibe.service.WallpaperApplier
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
@@ -21,6 +22,20 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+
+const val SOURCE_AI_GENERATED = "ai_generated"
+const val GENERATED_CONTENT_DISABLED_MESSAGE = "Generated wallpapers are disabled in Settings."
+
+fun generatedWallpaperRequestError(
+    providerEnabled: Boolean,
+    prompt: String,
+    apiKey: String,
+): String? = when {
+    !providerEnabled -> GENERATED_CONTENT_DISABLED_MESSAGE
+    prompt.isBlank() -> "Describe your wallpaper to get started."
+    apiKey.isBlank() -> "Enter your Stability AI key to generate images."
+    else -> null
+}
 
 data class AiWallpaperUiState(
     val prompt: String = "",
@@ -39,6 +54,7 @@ class AiWallpaperViewModel @Inject constructor(
     private val favoritesRepo: FavoritesRepository,
     private val wallpaperApplier: WallpaperApplier,
     private val prefs: PreferencesManager,
+    private val sourceMetrics: SourceMetrics,
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(AiWallpaperUiState())
@@ -53,6 +69,8 @@ class AiWallpaperViewModel @Inject constructor(
     // API key is read from DataStore so changes in Settings propagate live.
     val stabilityAiKey: StateFlow<String> = prefs.stabilityAiKey
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), "")
+    val generatedContentProviderEnabled: StateFlow<Boolean> = prefs.generatedContentProviderEnabled
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), true)
 
     fun setPrompt(p: String) {
         _state.update { it.copy(prompt = p.take(500)) }
@@ -76,12 +94,15 @@ class AiWallpaperViewModel @Inject constructor(
 
     fun generate(apiKey: String) {
         val current = _state.value
-        if (current.prompt.isBlank()) {
-            _state.update { it.copy(error = "Describe your wallpaper to get started.") }
-            return
-        }
-        if (apiKey.isBlank()) {
-            _state.update { it.copy(error = "Enter your Stability AI key to generate images.") }
+        val providerEnabled = generatedContentProviderEnabled.value
+        val requestError = generatedWallpaperRequestError(
+            providerEnabled = providerEnabled,
+            prompt = current.prompt,
+            apiKey = apiKey,
+        )
+        if (requestError != null) {
+            if (!providerEnabled) sourceMetrics.recordDisabled(SOURCE_AI_GENERATED)
+            _state.update { it.copy(error = requestError) }
             return
         }
         generationJob?.cancel()

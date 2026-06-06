@@ -85,6 +85,7 @@ fun AiWallpaperScreen(
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     val apiKey by viewModel.stabilityAiKey.collectAsStateWithLifecycle()
+    val generatedContentProviderEnabled by viewModel.generatedContentProviderEnabled.collectAsStateWithLifecycle()
 
     // NX-13: intercept back while a generation is in flight so the user can
     // cancel a request that's burning their Stability AI credit. Without this
@@ -101,8 +102,12 @@ fun AiWallpaperScreen(
 
     val snackbarHostState = remember { SnackbarHostState() }
 
-    LaunchedEffect(apiKey) {
-        if (apiKey.isBlank()) showApiKeyField = true
+    LaunchedEffect(apiKey, generatedContentProviderEnabled) {
+        if (!generatedContentProviderEnabled) {
+            showApiKeyField = false
+        } else if (apiKey.isBlank()) {
+            showApiKeyField = true
+        }
     }
     LaunchedEffect(state.applySuccess) {
         state.applySuccess?.let {
@@ -169,12 +174,15 @@ fun AiWallpaperScreen(
                     IconButton(
                         onClick = { showApiKeyField = !showApiKeyField },
                         modifier = Modifier.size(36.dp),
+                        enabled = generatedContentProviderEnabled,
                     ) {
                         Icon(
                             Icons.Default.Key,
                             contentDescription = "API key settings",
                             modifier = Modifier.size(18.dp),
-                            tint = if (apiKey.isNotBlank()) {
+                            tint = if (!generatedContentProviderEnabled) {
+                                MaterialTheme.colorScheme.onSurfaceVariant
+                            } else if (apiKey.isNotBlank()) {
                                 MaterialTheme.colorScheme.primary
                             } else {
                                 MaterialTheme.colorScheme.error
@@ -186,7 +194,7 @@ fun AiWallpaperScreen(
 
             // ── API key field ────────────────────────────────────────────
             AnimatedVisibility(
-                visible = showApiKeyField,
+                visible = generatedContentProviderEnabled && showApiKeyField,
                 enter = fadeIn() + expandVertically(),
                 exit = fadeOut() + shrinkVertically(),
             ) {
@@ -321,14 +329,26 @@ fun AiWallpaperScreen(
 
             // ── Generate button ──────────────────────────────────────────
             Button(
-                onClick = { viewModel.generate(localApiKey.ifBlank { apiKey }) },
+                onClick = {
+                    if (generatedContentProviderEnabled) {
+                        viewModel.generate(localApiKey.ifBlank { apiKey })
+                    }
+                },
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 10.dp)
                     .height(52.dp),
-                enabled = !state.isGenerating && !state.isApplying,
+                enabled = generatedContentProviderEnabled && !state.isGenerating && !state.isApplying,
             ) {
-                if (state.isGenerating) {
+                if (!generatedContentProviderEnabled) {
+                    Icon(
+                        Icons.Default.AutoAwesome,
+                        contentDescription = null,
+                        modifier = Modifier.size(18.dp),
+                    )
+                    Spacer(Modifier.width(8.dp))
+                    Text("Generated wallpapers disabled")
+                } else if (state.isGenerating) {
                     CircularProgressIndicator(
                         modifier = Modifier.size(20.dp),
                         color = MaterialTheme.colorScheme.onPrimary,

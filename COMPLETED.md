@@ -117,6 +117,11 @@ next pass can resume quickly.
   app-private 24-hour video metadata caching, restored cached stream URLs with
   cached rows, persisted 429 backoff from `Retry-After`/`X-RateLimit-Reset`, and
   marked Pixabay runtime controls covered for photo and video metadata.
+- Completed Cycle 45 generated-content source switch: added a default-on
+  generated-wallpapers preference and Settings switch, hid the Wallpapers
+  Generate chip when disabled, blocked the AI wallpaper ViewModel before prompt
+  or key validation, and marked AI-generated runtime controls covered while
+  keeping saved local generated wallpapers visible.
 
 ## 2026-06-05
 

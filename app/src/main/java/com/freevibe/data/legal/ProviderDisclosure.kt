@@ -441,10 +441,10 @@ val providerRuntimeControls = listOf(
     ProviderRuntimeControl(
         source = ContentSource.AI_GENERATED,
         surfaces = "Generated wallpaper flow backed by user/provider key settings.",
-        status = ProviderRuntimeControlStatus.PARTIAL,
-        currentControl = "Provider key gates generation; no separate generated-content source flag.",
-        disabledBehavior = "Blank key prevents provider-backed generation, but generated local outputs can remain saved.",
-        followUp = "Add a generated-content source flag if store/distribution profiles need to remove generation entirely.",
+        status = ProviderRuntimeControlStatus.COVERED,
+        currentControl = "Settings exposes a generated-wallpapers source flag in addition to the provider key.",
+        disabledBehavior = "Disabled mode hides generation entry points and blocks Stability requests before provider-key validation while saved generated outputs can remain visible.",
+        followUp = "Carry the flag into channel-specific distribution defaults when store profiles are added.",
     ),
 )
 
