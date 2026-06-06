@@ -116,6 +116,7 @@ class WallpaperRepository @Inject constructor(
     private suspend fun wallhavenApiKey(): String = prefs.wallhavenApiKey.first()
     private suspend fun pixabayApiKey(): String = prefs.pixabayApiKey.first()
     private suspend fun pexelsApiKey(): String = prefs.pexelsApiKey.first()
+    private suspend fun bingProviderEnabled(): Boolean = prefs.bingProviderEnabled.first()
     private suspend fun pixabayProviderEnabled(): Boolean = prefs.pixabayProviderEnabled.first()
     private suspend fun pexelsProviderEnabled(): Boolean = prefs.pexelsProviderEnabled.first()
 
@@ -263,8 +264,12 @@ class WallpaperRepository @Inject constructor(
 
     // -- Bing Daily --
 
-    suspend fun getBingDaily(page: Int = 1): SearchResult<Wallpaper> =
-        withCacheFallback("bing_$page", ContentSource.BING) {
+    suspend fun getBingDaily(page: Int = 1): SearchResult<Wallpaper> {
+        if (!bingProviderEnabled()) {
+            sourceMetrics.recordDisabled(SOURCE_BING)
+            return emptySourceResult(page)
+        }
+        return withCacheFallback("bing_$page", ContentSource.BING) {
             sourceMetrics.measure(SOURCE_BING) {
                 val marketsCount = BingDailyApi.MARKETS.size
                 val idx = (page - 1) / marketsCount
@@ -282,6 +287,7 @@ class WallpaperRepository @Inject constructor(
                 )
             }
         }
+    }
 
     // -- Pixabay --
 

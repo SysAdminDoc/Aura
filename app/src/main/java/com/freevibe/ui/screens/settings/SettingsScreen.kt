@@ -111,6 +111,7 @@ fun SettingsScreen(
     val pexelsApiKey by viewModel.pexelsApiKey.collectAsStateWithLifecycle()
     val pixabayApiKey by viewModel.pixabayApiKey.collectAsStateWithLifecycle()
     val stabilityAiKey by viewModel.stabilityAiKey.collectAsStateWithLifecycle()
+    val bingProviderEnabled by viewModel.bingProviderEnabled.collectAsStateWithLifecycle()
     val pexelsProviderEnabled by viewModel.pexelsProviderEnabled.collectAsStateWithLifecycle()
     val pixabayProviderEnabled by viewModel.pixabayProviderEnabled.collectAsStateWithLifecycle()
     val communityProviderEnabled by viewModel.communityProviderEnabled.collectAsStateWithLifecycle()
@@ -445,6 +446,17 @@ fun SettingsScreen(
                 checked = redditProviderEnabled,
                 onCheckedChange = { viewModel.setRedditProviderEnabled(it) },
             )
+            SettingsToggle(
+                icon = Icons.Default.ImageSearch,
+                title = "Enable Bing Daily source",
+                subtitle = if (bingProviderEnabled) {
+                    "Adds Bing Image of the Day to Discover and rotations"
+                } else {
+                    "Skips Bing daily-image calls and hides it from rotation pickers"
+                },
+                checked = bingProviderEnabled,
+                onCheckedChange = { viewModel.setBingProviderEnabled(it) },
+            )
             SettingsItem(
                 icon = Icons.Default.Category,
                 title = "Browse categories",
@@ -581,7 +593,13 @@ fun SettingsScreen(
                     "discover" to "Discover (mixed)", "favorites" to "My Favorites",
                     "wallhaven" to "Wallhaven", "pixabay" to "Pixabay", "reddit" to "Reddit",
                     "bing" to "Bing Daily", "collection" to "A collection…",
-                ).filter { (key, _) -> key != "pixabay" || pixabayProviderEnabled || schedulerSource == "pixabay" }
+                ).filter { (key, _) ->
+                    when (key) {
+                        "pixabay" -> pixabayProviderEnabled || schedulerSource == "pixabay"
+                        "bing" -> bingProviderEnabled || schedulerSource == "bing"
+                        else -> true
+                    }
+                }
                 AlertDialog(
                     onDismissRequest = { showSchedulerSource = false },
                     title = { Text("Wallpaper source") },
@@ -1439,6 +1457,7 @@ fun SettingsScreen(
     if (showSourcePicker) {
         SourcePickerDialog(
             currentSource = autoWpSource,
+            bingProviderEnabled = bingProviderEnabled,
             pixabayProviderEnabled = pixabayProviderEnabled,
             onDismiss = { showSourcePicker = false },
             onSelect = { source ->
@@ -2547,6 +2566,7 @@ private fun WallpaperSlotPickerDialog(
 @Composable
 private fun SourcePickerDialog(
     currentSource: String,
+    bingProviderEnabled: Boolean,
     pixabayProviderEnabled: Boolean,
     onDismiss: () -> Unit,
     onSelect: (String) -> Unit,
@@ -2558,7 +2578,13 @@ private fun SourcePickerDialog(
         "wallhaven" to "Wallhaven",
         "pixabay" to "Pixabay",
         "bing" to "Bing Daily",
-    ).filter { (key, _) -> key != "pixabay" || pixabayProviderEnabled || currentSource == "pixabay" }
+    ).filter { (key, _) ->
+        when (key) {
+            "pixabay" -> pixabayProviderEnabled || currentSource == "pixabay"
+            "bing" -> bingProviderEnabled || currentSource == "bing"
+            else -> true
+        }
+    }
 
     AlertDialog(
         onDismissRequest = onDismiss,

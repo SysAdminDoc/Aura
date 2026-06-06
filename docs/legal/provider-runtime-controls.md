@@ -10,7 +10,7 @@ runtime-control row.
 | --- | --- | --- | --- | --- |
 | Wallhaven | Partial | Optional API key plus sketchy/NSFW toggles; no full source disable flag. | Blank API key still allows public SFW Wallhaven calls; unsafe tiers coerce to SFW. | Add a source-enabled flag before publishing distribution profiles that must remove Wallhaven entirely. |
 | Lorem Picsum | Covered | No active repository path. | New feeds do not request Lorem Picsum; saved legacy rows can remain visible. | None. |
-| Bing Image of the Day | Missing | Always attempted as a Discover secondary source. | No first-class disabled state; failures fall back to other Discover sources. | Add a source-enabled flag or remote distribution profile before claiming Bing can be disabled. |
+| Bing Image of the Day | Covered | Settings exposes a Bing Daily provider-enabled flag. | Disabled mode skips Bing daily-image API calls, returns empty source results, records disabled diagnostics, and hides Bing from rotation pickers unless already selected. | None. |
 | Wikimedia Commons | Covered | No active repository path. | New feeds do not request Wikimedia; saved legacy rows can remain visible. | None. |
 | Internet Archive | Covered | Removed active feed. | New sound feeds do not request Internet Archive; old saved records can still render. | None. |
 | Reddit | Covered | Settings exposes a Reddit provider-enabled flag in addition to editable wallpaper subreddit lists. | Disabled mode hides Reddit wallpaper browsing, skips daily picks, video wallpaper Reddit jobs, scheduled Reddit rotations, and repository network calls while recording disabled diagnostics. | Move video subreddit lists into Preferences if distribution profiles need source-specific Reddit video curation. |
@@ -38,6 +38,8 @@ runtime-control row.
 - Reddit now has a default-on provider flag covering wallpaper browse, daily
   pick/background jobs, scheduled rotations, repository calls, and video
   wallpaper discovery. Video wallpaper subreddit curation remains hardcoded.
+- Bing Daily now has a default-on provider flag covering Discover secondary
+  daily-image calls and auto-wallpaper rotation choices.
 - Pexels and Pixabay now have default-on provider flags covering wallpaper and
   video API calls before bundled keys are read. Pixabay still needs provider TTL
   and rate-limit guards for broader policy completeness.

@@ -76,6 +76,10 @@ class AutoWallpaperWorker @AssistedInject constructor(
             wallpaperRepo.getPixabay()
             return Result.success()
         }
+        if (source == "bing" && !prefs.bingProviderEnabled.first()) {
+            wallpaperRepo.getBingDaily()
+            return Result.success()
+        }
 
         val wallpapers = fetchWallpapers(source)
         if (wallpapers.isEmpty()) return Result.retry()
@@ -107,6 +111,10 @@ class AutoWallpaperWorker @AssistedInject constructor(
         }
         if (source == "pixabay" && !prefs.pixabayProviderEnabled.first()) {
             wallpaperRepo.getPixabay()
+            return Result.success()
+        }
+        if (source == "bing" && !prefs.bingProviderEnabled.first()) {
+            wallpaperRepo.getBingDaily()
             return Result.success()
         }
 

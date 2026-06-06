@@ -99,6 +99,10 @@ next pass can resume quickly.
   disabled, hid community tabs/uploads/votes/creator profile entry points,
   blocked sound/wallpaper/creator repository Firebase calls, and recorded
   disabled diagnostics separately from Firebase outages.
+- Completed Cycle 41 Bing Daily source switch: added a default-on Bing Daily
+  provider preference and Settings switch, skipped Bing daily-image API calls
+  before cache fallback or Retrofit use, hid Bing from rotation pickers when
+  disabled, and recorded disabled diagnostics separately from outages.
 
 ## 2026-06-05
 

@@ -1,8 +1,20 @@
 package com.freevibe.data.repository
 
+import com.freevibe.data.local.PreferencesManager
+import com.freevibe.data.local.WallpaperCacheManager
 import com.freevibe.data.model.ContentSource
 import com.freevibe.data.model.SearchResult
 import com.freevibe.data.model.Wallpaper
+import com.freevibe.data.remote.bing.BingDailyApi
+import com.freevibe.data.remote.pexels.PexelsApi
+import com.freevibe.data.remote.pixabay.PixabayApi
+import com.freevibe.data.remote.wallhaven.WallhavenApi
+import com.freevibe.service.SourceMetrics
+import io.mockk.coVerify
+import io.mockk.every
+import io.mockk.mockk
+import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -102,6 +114,44 @@ class WallpaperRepositoryTest {
         assertTrue(shouldRetryBingHost(UnknownHostException("dns")))
         assertTrue(shouldRetryBingHost(ConnectException("connect")))
         assertFalse(shouldRetryBingHost(IllegalArgumentException("bad request")))
+    }
+
+    @Test
+    fun `getBingDaily disabled records disabled source and skips api`() = runTest {
+        val bingApi = mockk<BingDailyApi>()
+        val sourceMetrics = SourceMetrics()
+        val repo = wallpaperRepository(
+            bingApi = bingApi,
+            sourceMetrics = sourceMetrics,
+            bingProviderEnabled = false,
+        )
+
+        val result = repo.getBingDaily(page = 2)
+
+        assertTrue(result.items.isEmpty())
+        assertEquals(0, result.totalCount)
+        assertEquals(2, result.currentPage)
+        assertFalse(result.hasMore)
+        assertEquals(1L, sourceMetrics.snapshot("bing")?.disabledCount)
+        coVerify(exactly = 0) { bingApi.getImages(any(), any(), any(), any(), any()) }
+    }
+
+    private fun wallpaperRepository(
+        bingApi: BingDailyApi = mockk(),
+        sourceMetrics: SourceMetrics = SourceMetrics(),
+        bingProviderEnabled: Boolean = true,
+    ): WallpaperRepository {
+        val prefs = mockk<PreferencesManager>()
+        every { prefs.bingProviderEnabled } returns flowOf(bingProviderEnabled)
+        return WallpaperRepository(
+            wallhavenApi = mockk<WallhavenApi>(),
+            bingApi = bingApi,
+            pixabayApi = mockk<PixabayApi>(),
+            pexelsApi = mockk<PexelsApi>(),
+            cacheManager = mockk<WallpaperCacheManager>(relaxed = true),
+            prefs = prefs,
+            sourceMetrics = sourceMetrics,
+        )
     }
 
     private fun wallpaper(

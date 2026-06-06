@@ -304,11 +304,11 @@ val providerRuntimeControls = listOf(
     ),
     ProviderRuntimeControl(
         source = ContentSource.BING,
-        surfaces = "Wallpaper Discover secondary daily-image source.",
-        status = ProviderRuntimeControlStatus.MISSING,
-        currentControl = "Always attempted as a Discover secondary source.",
-        disabledBehavior = "No first-class disabled state; failures fall back to other Discover sources.",
-        followUp = "Add a source-enabled flag or remote distribution profile before claiming Bing can be disabled.",
+        surfaces = "Wallpaper Discover secondary daily-image source and auto-wallpaper rotation source.",
+        status = ProviderRuntimeControlStatus.COVERED,
+        currentControl = "Settings exposes a Bing Daily provider-enabled flag.",
+        disabledBehavior = "Disabled mode skips Bing daily-image API calls, returns empty source results, records disabled diagnostics, and hides Bing from rotation pickers unless already selected.",
+        followUp = "None.",
     ),
     ProviderRuntimeControl(
         source = ContentSource.WIKIMEDIA,
