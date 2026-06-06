@@ -1,0 +1,104 @@
+{
+  "schemaVersion": 1,
+  "entries": [
+    {
+      "id": "firebase-android-sdk",
+      "licenseId": "Apache-2.0",
+      "reviewNote": "Firebase is used for community identity, database, storage, and app-check surfaces. Review Google/Firebase service terms and data-safety copy when Firebase coordinates change.",
+      "sourceUrl": "https://github.com/firebase/firebase-android-sdk",
+      "target": "com.google.firebase",
+      "targetType": "group",
+      "usage": "Community authentication, uploads, votes, database, storage, and app-check dependencies."
+    },
+    {
+      "id": "ffmpeg-payload",
+      "licenseId": "LGPL-2.1-or-later or GPL-2.0-or-later depending on build flags",
+      "reviewNote": "The resolved AAR exposes FFmpeg shared-library payloads but not the exact configure line. Release owners must confirm matching source and build flags before publishing changed FFmpeg payloads.",
+      "sourceUrl": "https://ffmpeg.org/legal.html",
+      "target": "ffmpeg",
+      "targetType": "payload",
+      "usage": "Video crop/export and sound trim, fade, normalize, and conversion workflows."
+    },
+    {
+      "id": "google-mlkit-subject-segmentation",
+      "licenseId": "Google ML Kit terms / Google Play services SDK terms",
+      "reviewNote": "Subject segmentation is distributed through Google Play services ML Kit. Review ML Kit device support, beta status, and Google SDK terms when the coordinate changes.",
+      "sourceUrl": "https://developers.google.com/ml-kit/vision/subject-segmentation/android",
+      "target": "com.google.android.gms:play-services-mlkit-subject-segmentation:16.0.0-beta1",
+      "targetType": "coordinate",
+      "usage": "Subject segmentation for smart crop and parallax wallpaper depth effects."
+    },
+    {
+      "id": "google-play-services",
+      "licenseId": "Google Play services SDK terms",
+      "reviewNote": "Play services artifacts back auth/base/tasks and model-delivery paths. Review Google SDK terms and proprietary-dependency channel impact when these coordinates change.",
+      "sourceUrl": "https://developers.google.com/android/guides/overview",
+      "target": "com.google.android.gms",
+      "targetType": "group",
+      "usage": "Google service integration, task APIs, base libraries, auth, FIDO, and ML Kit delivery support."
+    },
+    {
+      "id": "newpipe-extractor",
+      "licenseId": "GPL-3.0-or-later",
+      "reviewNote": "NewPipeExtractor is the YouTube metadata/search extractor. Keep source, notice, and native-compliance records aligned with the pinned v0.24.8 coordinate family.",
+      "sourceUrl": "https://github.com/TeamNewPipe/NewPipeExtractor/tree/v0.24.8",
+      "target": "com.github.teamnewpipe",
+      "targetType": "coordinate-prefix",
+      "usage": "YouTube search metadata, stream metadata, and extractor support for sound/video discovery."
+    },
+    {
+      "id": "profileinstaller",
+      "licenseId": "Apache-2.0",
+      "reviewNote": "ProfileInstaller is included for Baseline Profile delivery. Review AndroidX release notes and baseline-profile compatibility when the coordinate changes.",
+      "sourceUrl": "https://github.com/androidx/androidx/tree/androidx-main/profileinstaller",
+      "target": "androidx.profileinstaller:profileinstaller:1.4.1",
+      "targetType": "coordinate",
+      "usage": "Installs packaged Baseline Profiles to improve startup and hot-path performance."
+    },
+    {
+      "id": "python-runtime",
+      "licenseId": "PSF-2.0 plus packaged dependency licenses",
+      "reviewNote": "The youtubedl-android library AAR embeds a Python 3.12 runtime payload. Review Python's license stack and bundled native packages when the payload version changes.",
+      "sourceUrl": "https://docs.python.org/3.12/license.html",
+      "target": "python-runtime",
+      "targetType": "payload",
+      "usage": "Embedded runtime used by youtubedl-android to execute extractor code."
+    },
+    {
+      "id": "quickjs-runtime",
+      "licenseId": "MIT",
+      "reviewNote": "QuickJS is embedded as libqjs payload entries in the youtubedl-android library AAR. Re-check source and license metadata when libqjs payloads drift.",
+      "sourceUrl": "https://bellard.org/quickjs/",
+      "target": "quickjs",
+      "targetType": "payload",
+      "usage": "JavaScript runtime support for extractor logic inside youtubedl-android."
+    },
+    {
+      "id": "youtubedl-android",
+      "licenseId": "GPL-3.0",
+      "reviewNote": "youtubedl-android wraps yt-dlp and native runtime payloads. Coordinate changes require notice, native packet, FFmpeg, Python, QuickJS, and release-source review together.",
+      "sourceUrl": "https://github.com/yausername/youtubedl-android",
+      "target": "io.github.junkfood02.youtubedl-android:",
+      "targetType": "coordinate-prefix",
+      "usage": "YouTube stream resolution plus FFmpeg integration for sound and video features."
+    },
+    {
+      "id": "yt-dlp-payload",
+      "licenseId": "Unlicense plus ISC/MIT release-file components",
+      "reviewNote": "The library AAR embeds yt-dlp 2025.11.12 payload files. Review the upstream release, bundled components, and extractor-policy impact when the payload changes.",
+      "sourceUrl": "https://github.com/yt-dlp/yt-dlp/tree/2025.11.12",
+      "target": "yt-dlp",
+      "targetType": "payload",
+      "usage": "Extractor payload used by youtubedl-android to resolve media streams."
+    },
+    {
+      "id": "zxing-core",
+      "licenseId": "Apache-2.0",
+      "reviewNote": "ZXing powers QR collection import/export paths. Review upstream release notes and license notices when the coordinate changes.",
+      "sourceUrl": "https://github.com/zxing/zxing",
+      "target": "com.google.zxing:core:3.5.3",
+      "targetType": "coordinate",
+      "usage": "QR-code encode/decode support for shareable collection workflows."
+    }
+  ]
+}

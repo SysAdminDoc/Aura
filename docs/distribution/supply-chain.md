@@ -9,6 +9,7 @@ Aura is side-loaded through GitHub Releases and Obtainium, so release artifacts 
 | Signed release APK | `.github/workflows/release.yml` | Builds the release variant, verifies the signature, rejects debuggable APKs, and publishes checksums. |
 | Third-party notices | `tools/google_oss_to_markdown.py`, `.github/workflows/release.yml` | Runs the Google OSS Licenses Gradle task for the release variant and publishes `THIRD-PARTY-NOTICES.md` next to the APK. |
 | Dependency notice lockfile | `tools/dependency_notice_lock.py`, `docs/legal/dependency-notices.lock.json` | Fails PR/main/release checks when generated release dependency notices drift without review. |
+| Dependency notice overlay | `tools/dependency_overlay_check.py`, `docs/legal/dependency-notice-overrides.json` | Requires curated source, license, usage, and release-review metadata for high-risk generated dependencies and native payloads. |
 | Native compliance packet | `tools/native_compliance_inventory.py`, `.github/workflows/release.yml` | Inventories youtubedl-android, yt-dlp/Python, FFmpeg, QuickJS, and NewPipeExtractor payload evidence and publishes `NATIVE-COMPLIANCE.md` next to the APK. |
 | Native compliance lockfile | `tools/native_compliance_inventory.py`, `docs/legal/native-compliance.lock.json` | Fails PR/main/release checks when native/copyleft artifact hashes or extracted payload facts drift without review. |
 | Artifact attestation | `.github/workflows/release.yml` | Uses `actions/attest@v4` against `release/SHA256SUMS.txt` so release artifact digests are bound to the GitHub Actions build. |
@@ -27,9 +28,10 @@ For each `v*` release:
 4. Confirm `SHA256SUMS.txt` includes the APK, `THIRD-PARTY-NOTICES.md`, and `NATIVE-COMPLIANCE.md`.
 5. Confirm the generated release notes include the APK SHA-256, third-party notices entry, native compliance packet entry, signing certificate SHA-256, and artifact attestation URL.
 6. Spot-check `THIRD-PARTY-NOTICES.md` for high-risk dependencies such as NewPipeExtractor, youtubedl-android, Firebase, Play services ML Kit, ZXing, Palette, and ProfileInstaller.
-7. Spot-check `NATIVE-COMPLIANCE.md` for youtubedl-android library, youtubedl-android ffmpeg, yt-dlp, Python, QuickJS, FFmpeg, and NewPipeExtractor evidence.
-8. Verify the APK locally with `apksigner verify --verbose --print-certs`.
-9. Compare the local SHA-256 values to `SHA256SUMS.txt`.
+7. Spot-check `docs/legal/dependency-notice-overrides.json` when any high-risk dependency or payload changed intentionally.
+8. Spot-check `NATIVE-COMPLIANCE.md` for youtubedl-android library, youtubedl-android ffmpeg, yt-dlp, Python, QuickJS, FFmpeg, and NewPipeExtractor evidence.
+9. Verify the APK locally with `apksigner verify --verbose --print-certs`.
+10. Compare the local SHA-256 values to `SHA256SUMS.txt`.
 
 ## Third-party notices
 
@@ -40,6 +42,7 @@ Generate notices locally after the release notice task has run:
 ```powershell
 .\gradlew.bat :app:releaseOssLicensesTask --stacktrace --no-daemon
 python tools\dependency_notice_lock.py --mode check --lockfile docs\legal\dependency-notices.lock.json
+python tools\dependency_overlay_check.py --overlay docs\legal\dependency-notice-overrides.json
 python tools\google_oss_to_markdown.py --variant release --output build\reports\THIRD-PARTY-NOTICES.md
 ```
 
@@ -58,6 +61,7 @@ PR/main verification and the release workflow run:
 ```bash
 python3 tools/dependency_notice_lock.py --mode check --lockfile docs/legal/dependency-notices.lock.json
 python3 tools/native_compliance_inventory.py --mode check-lock --lockfile docs/legal/native-compliance.lock.json
+python3 tools/dependency_overlay_check.py --overlay docs/legal/dependency-notice-overrides.json
 ```
 
 When a dependency, version, or generated notice text changes intentionally, refresh the lockfile after rerunning `:app:releaseOssLicensesTask`:
@@ -67,6 +71,26 @@ python tools\dependency_notice_lock.py --mode write --lockfile docs\legal\depend
 ```
 
 Review the lockfile diff in the same change as the dependency update. Do not regenerate it as a standalone cleanup unless the generated Google outputs are unchanged and the prior lockfile was stale.
+
+## Dependency notice overlay
+
+`docs/legal/dependency-notice-overrides.json` fills the review gap that generated Google OSS outputs leave open: source URLs, precise license IDs, usage descriptions, and release-owner review notes for dependencies and payloads that deserve manual attention before publishing a side-loaded APK.
+
+The overlay currently covers:
+
+- Firebase Android SDK coordinates.
+- Google Play services and the ML Kit subject-segmentation coordinate.
+- NewPipeExtractor and youtubedl-android coordinate families.
+- Embedded yt-dlp, Python, QuickJS, and FFmpeg payloads found by the native-compliance lock.
+- ProfileInstaller and ZXing.
+
+PR/main verification and the release workflow run:
+
+```bash
+python3 tools/dependency_overlay_check.py --overlay docs/legal/dependency-notice-overrides.json
+```
+
+The check fails when a required high-risk entry is missing, an entry uses an unsupported target type, an entry lacks required metadata, an entry source URL is not HTTPS, or an entry target no longer maps to the current dependency/native locks. When a covered coordinate or payload changes intentionally, update the overlay source URL, license ID, usage, and review note in the same commit as the dependency change.
 
 ## Native compliance packet
 

@@ -57,6 +57,7 @@ jobs:
           ./gradlew :app:releaseOssLicensesTask --stacktrace --no-daemon
           python3 tools/dependency_notice_lock.py --mode check --lockfile docs/legal/dependency-notices.lock.json
           python3 tools/native_compliance_inventory.py --mode check-lock --lockfile docs/legal/native-compliance.lock.json
+          python3 tools/dependency_overlay_check.py --overlay docs/legal/dependency-notice-overrides.json
 
       - name: Assemble debug
         run: ./gradlew :app:assembleDebug --stacktrace --no-daemon

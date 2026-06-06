@@ -33,6 +33,11 @@ next pass can resume quickly.
   `tools/native_compliance_inventory.py`, committed
   `docs/legal/native-compliance.lock.json`, and wired PR/main verification plus
   release builds to fail on native/copyleft artifact or extracted payload drift.
+- Completed Cycle 26 curated high-risk dependency overlay: added
+  `docs/legal/dependency-notice-overrides.json`,
+  `tools/dependency_overlay_check.py`, and wired PR/main verification plus
+  release builds to fail on missing, stale, or orphaned high-risk dependency and
+  native-payload review metadata.
 
 ## 2026-06-05
 

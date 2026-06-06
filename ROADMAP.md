@@ -3,7 +3,7 @@
 > Open-source Android personalization: wallpapers, video wallpapers, ringtones, sounds.
 > Stay the OSS alternative to Zedge: no ads, no surprise charges, no dark patterns.
 
-**Version:** 2026-06-06-cycle25-roadmap (implemented native compliance lockfile and CI freshness gate).
+**Version:** 2026-06-06-cycle26-roadmap (implemented curated dependency overlay and CI freshness gate).
 **Code version at write:** v6.31.1 / versionCode 112 (per `app/build.gradle.kts`; release/lint Gradle runs are memory-heavy on this Windows workstation, so rerun APK compilation only when explicitly needed).
 **Charter:** personalization, AMOLED-first, free-by-default, multi-source content aggregation, community-fed catalog, polite live wallpapers (battery-aware, pause-on-invisible).
 
@@ -1150,12 +1150,29 @@ Append-only Cycle 25 implementation record. The completed item is source-backed 
   - Verification: `python -m py_compile tools\native_compliance_inventory.py`; `python tools\native_compliance_inventory.py --mode check-lock --lockfile docs\legal\native-compliance.lock.json`; `python tools\native_compliance_inventory.py --output docs\legal\native-compliance.md`.
   - Remaining risk: FFmpeg exact configure/source correspondence remains release-owner review work because the AAR does not encode it.
 
-- [ ] 🤖 🔬 **P0 — Curated high-risk dependency overlay**
+- [x] 🤖 🔬 **P0 — Curated high-risk dependency overlay** — shipped 2026-06-06.
   - Why: generated notices, dependency locks, and native locks now catch drift, but Aura still lacks a curated machine-readable overlay for source URLs, license IDs, app usage, and review notes on high-risk dependencies and native payloads.
   - Evidence: `docs/legal/dependency-notices.lock.json`, `docs/legal/native-compliance.lock.json`, `docs/legal/native-compliance.md`, `ProviderDisclosure.kt`.
   - Touches: `docs/legal/dependency-notice-overrides.json`, `tools/`, `docs/distribution/supply-chain.md`, Settings licenses handoff.
   - Acceptance: high-risk dependencies and payloads have reviewed source URLs, license IDs, usage descriptions, and release-review notes; stale or orphaned overlay entries fail against the dependency/native locks.
   - Verify: removing or renaming an overlay coordinate fails; adding a high-risk dependency without an overlay fails; reviewed overlay updates restore green status.
+
+## 🔬 Researcher Queue (Cycle 26 — 2026-06-06)
+
+Append-only Cycle 26 implementation record. The completed item is source-backed in `docs/research/cycle-26-2026-06-06.md`; use the open item as the next implementation entry point.
+
+- [x] 🤖 🔬 **P0 — Curated high-risk dependency overlay shipped**
+  - Result: `docs/legal/dependency-notice-overrides.json` now records required source URL, license ID, usage, target, and release-review metadata for Firebase, Play services, ML Kit subject segmentation, NewPipeExtractor, youtubedl-android, yt-dlp, Python, QuickJS, FFmpeg, ProfileInstaller, and ZXing.
+  - Evidence: `tools/dependency_overlay_check.py`, `docs/legal/dependency-notice-overrides.json`, `.github/workflows/verify.yml`, `.github/workflows/release.yml`, `docs/distribution/supply-chain.md`.
+  - Verification: `python -m py_compile tools\dependency_overlay_check.py`; `python tools\dependency_overlay_check.py --overlay docs\legal\dependency-notice-overrides.json`.
+  - Remaining risk: exact FFmpeg configure/source correspondence remains release-owner review work because the resolved AAR still does not encode it.
+
+- [ ] 🤖 🔬 **P1 — Release compliance artifact dry-run validation**
+  - Why: the release workflow now generates and attaches `THIRD-PARTY-NOTICES.md`, `NATIVE-COMPLIANCE.md`, `SHA256SUMS.txt`, and release notes, but the full GitHub Actions packaging path still needs a non-tag dry-run proof after the lock/overlay gates landed.
+  - Evidence: `.github/workflows/release.yml`, `docs/distribution/supply-chain.md`, `docs/legal/dependency-notices.lock.json`, `docs/legal/native-compliance.lock.json`, `docs/legal/dependency-notice-overrides.json`.
+  - Touches: release workflow, dry-run docs, release artifact checklist, optional workflow-dispatch artifact naming.
+  - Acceptance: workflow-dispatch or local CI-equivalent dry run proves notices, native packet, checksums, release notes, and APK packaging are produced together; failures leave actionable diagnostics.
+  - Verify: dry-run release lane completes without creating a public tag/release, or an equivalent documented local packaging script proves the same artifact set.
 
 ---
 
@@ -2618,22 +2635,29 @@ Stars/dates as of research pass 2026-05-16.
 - Native compliance lock implementation — `tools/native_compliance_inventory.py`, `docs/legal/native-compliance.lock.json`, `.github/workflows/verify.yml`, `.github/workflows/release.yml`, `docs/distribution/supply-chain.md`.
 - Verification outputs — `python tools\native_compliance_inventory.py --mode write-lock`, `python tools\native_compliance_inventory.py --mode check-lock`, `python tools\native_compliance_inventory.py --output docs\legal\native-compliance.md`, and Python compile checks for all release-compliance tools.
 
+## Appendix AD — Cycle 26 Sources
+
+- Cycle 26 implementation record — [docs/research/cycle-26-2026-06-06.md](docs/research/cycle-26-2026-06-06.md).
+- Dependency overlay implementation — `tools/dependency_overlay_check.py`, `docs/legal/dependency-notice-overrides.json`, `.github/workflows/verify.yml`, `.github/workflows/release.yml`, `docs/distribution/supply-chain.md`.
+- Primary source references — [youtubedl-android](https://github.com/yausername/youtubedl-android), [yt-dlp 2025.11.12](https://github.com/yt-dlp/yt-dlp/tree/2025.11.12), [Python 3.12 license](https://docs.python.org/3.12/license.html), [QuickJS](https://bellard.org/quickjs/), [FFmpeg legal guidance](https://ffmpeg.org/legal.html), [NewPipeExtractor v0.24.8](https://github.com/TeamNewPipe/NewPipeExtractor/tree/v0.24.8), [Firebase Android SDK](https://github.com/firebase/firebase-android-sdk), [Google Play services](https://developers.google.com/android/guides/overview), [ML Kit subject segmentation](https://developers.google.com/ml-kit/vision/subject-segmentation/android), [AndroidX ProfileInstaller](https://github.com/androidx/androidx/tree/androidx-main/profileinstaller), [ZXing](https://github.com/zxing/zxing).
+- Verification outputs — `python -m py_compile tools\dependency_overlay_check.py`, `python tools\dependency_overlay_check.py --overlay docs\legal\dependency-notice-overrides.json`, release-compliance Python compile checks, dependency notice lock check, and native compliance lock check.
+
 ## Continuation State
 
 ### Last Completed Cycle
 
-Cycle 25: native compliance lockfile, PR/main verification freshness gate, and release workflow freshness gate.
+Cycle 26: curated high-risk dependency overlay, PR/main verification gate, and release workflow gate.
 
 ### Current Focus
 
-Start Cycle 26 with the curated high-risk dependency overlay. Commit and push completed work when the active project contract allows it.
+Start Cycle 27 with release compliance artifact dry-run validation. Commit and push completed work when the active project contract allows it.
 
 ### Important Findings So Far
 
-- `ROADMAP.md` has Cycle 18 through Cycle 25 research/implementation items; `docs/research/cycle-18-2026-06-06.md` through `docs/research/cycle-25-2026-06-06.md` have the source-backed analysis.
+- `ROADMAP.md` has Cycle 18 through Cycle 26 research/implementation items; `docs/research/cycle-18-2026-06-06.md` through `docs/research/cycle-26-2026-06-06.md` have the source-backed analysis.
 - `LicensesScreen.kt` still has manual dependency rows; content sources are already code-backed by `ProviderDisclosure.kt`.
 - `.github/workflows/release.yml` now publishes `THIRD-PARTY-NOTICES.md` and `NATIVE-COMPLIANCE.md` with the APK and includes both files in `SHA256SUMS.txt`; SBOM artifacts remain open.
-- `.github/workflows/verify.yml` and `.github/workflows/release.yml` now run `tools/dependency_notice_lock.py --mode check` and `tools/native_compliance_inventory.py --mode check-lock` after `:app:releaseOssLicensesTask`.
+- `.github/workflows/verify.yml` and `.github/workflows/release.yml` now run `tools/dependency_notice_lock.py --mode check`, `tools/native_compliance_inventory.py --mode check-lock`, and `tools/dependency_overlay_check.py` after `:app:releaseOssLicensesTask`.
 - `docs/distribution/supply-chain.md` defers SBOM work until N-1, but Cycle 18 split out a smaller current-toolchain notice/drift lane that should not wait on the AGP/Kotlin migration.
 - AboutLibraries 15.x is not a current-toolchain fit because its release notes make AGP 8.13 the minimum; Aura is currently on AGP 8.7.3 / Gradle 8.12. Test AboutLibraries 14.2.1 if using it before N-1.
 - Google OSS notices now have the required `settings.gradle.kts` plugin resolution mapping and root/app Gradle wiring in the real repo.
@@ -2647,17 +2671,18 @@ Start Cycle 26 with the curated high-risk dependency overlay. Commit and push co
 - The dependency notice lockfile gates generated dependency/notice drift, but it still does not provide curated source URLs or license IDs per dependency coordinate.
 - `docs/legal/native-compliance.lock.json` records 8 native/copyleft coordinates, 23 artifact records, and 36 payload entries from youtubedl-android and NewPipeExtractor artifacts.
 - The native lockfile gates artifact hash and payload fact drift, but it still does not prove FFmpeg configure/source correspondence.
+- `docs/legal/dependency-notice-overrides.json` records curated high-risk dependency and native-payload review metadata; `tools/dependency_overlay_check.py` fails stale, missing, or orphaned overlay entries against the dependency/native locks.
 - AboutLibraries 14.2.1 configures but the default release export was incomplete for Aura and logged Windows path errors during compliance export.
 - `ProviderDisclosureTest` now passes in the real repo with `JAVA_HOME` set to Android Studio JBR and `ANDROID_HOME` set to the local Android SDK.
 - Recent history was checked with `rtk git log -10 --oneline --decorate` for this pass.
 
 ### Next Best Actions
 
-1. Add a curated high-risk dependency overlay with source URLs/license IDs for youtubedl-android, NewPipeExtractor, Firebase, Play services ML Kit, ZXing, ProfileInstaller, and native payloads.
-2. Add a check that fails when a high-risk dependency or native payload lacks a reviewed overlay entry.
-3. Add stale/orphan overlay detection against `dependency-notices.lock.json` and `native-compliance.lock.json`.
-4. Add a future in-app generated dependency notice viewer or Settings link after the release artifact path is stable.
-5. Add release workflow dry-run validation on GitHub Actions or a CI-equivalent environment to prove notices and native packets are checksummed and uploaded with the APK.
+1. Add release workflow dry-run validation on GitHub Actions or a CI-equivalent environment to prove notices and native packets are checksummed and uploaded with the APK.
+2. Add a future in-app generated dependency notice viewer or Settings link after the release artifact path is stable.
+3. Decide whether the release workflow should also upload raw `dependencies.json` for machine diffing.
+4. Investigate exact FFmpeg configure line and matching source package for the resolved youtubedl-android ffmpeg 0.18.1 AAR.
+5. Evaluate whether `licensee` can enforce Aura's desired policy from `releaseRuntimeClasspath` or needs a custom JSON comparison.
 
 ### Unprocessed Leads
 
