@@ -59,7 +59,9 @@ Reporter UIDs are not public catalog data.
   the backend rollout pass before public production reliance.
 - Owner-delete storage handles are tracked in
   [`docs/community-upload-deletion.md`](../community-upload-deletion.md), but
-  visible delete actions, admin rights-confirmed takedown, and public takedown
-  request copy remain open.
+  admin rights-confirmed takedown and public takedown request copy remain open.
+- Cycle 58 adds Realtime Database emulator coverage for authenticated report
+  creation, reporter UID validation, admin-only reads, admin status updates, and
+  admin-only resolution receipts.
 - Add report tabs or filters for closed reports if admins need historical
   review beyond the current open queue.

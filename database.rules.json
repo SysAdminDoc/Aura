@@ -1,7 +1,4 @@
 {
-  "_comment": "Aura RTDB Security Rules. Roadmap N-2. Deploy via `firebase deploy --only database`.",
-  "_comment2": "Source of truth for community moderation authorization. Mirrors the client-side VoteRepository.isAdmin check but is the actual enforcement layer (client checks are spoofable on rooted devices).",
-  "_comment3": "All admin actions are gated on `auth.token.admin === true` — a Custom Claim set via Firebase Admin SDK from a trusted backend (Cloud Function, Cloud Run, or one-off script). Grant a UID with `admin.auth().setCustomUserClaims(uid, { admin: true })`.",
   "rules": {
     "votes": {
       "$contentId": {
@@ -18,7 +15,6 @@
       }
     },
     "voters": {
-      "_comment": "Legacy path kept for backward compatibility with installs that read it directly.",
       "$contentId": {
         ".read": true,
         "$voterId": {
@@ -30,7 +26,6 @@
     "moderation": {
       ".read": true,
       "$contentId": {
-        "_comment": "Only Custom-Claim admins can globally hide a piece of content.",
         ".write": "auth != null && auth.token.admin === true",
         ".validate": "newData.val() === true"
       }
@@ -40,16 +35,16 @@
       "$uploadId": {
         ".write": "auth != null && (!data.exists() || data.child('uploaderUid').val() === auth.uid || auth.token.admin === true)",
         "name": { ".validate": "newData.isString() && newData.val().length <= 80" },
-        "category": { ".validate": "newData.isString() && newData.val().matches(/^(ringtone|notification|alarm)$/)" },
+        "category": { ".validate": "newData.val() === 'ringtone' || newData.val() === 'notification' || newData.val() === 'alarm'" },
         "tags": {
           "$idx": { ".validate": "newData.isString() && newData.val().length <= 24" }
         },
         "uploaderUid": { ".validate": "newData.isString() && (newData.val() === auth.uid || auth.token.admin === true)" },
-        "storagePath": { ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 512 && newData.val().matches(/^sounds\\/[^\\s]+$/)" },
-        "license": { ".validate": "newData.isString() && newData.val().matches(/^(CC0|CC BY|CC BY-NC)$/)" },
+        "storagePath": { ".validate": "newData.isString() && newData.val().length > 7 && newData.val().length <= 512 && newData.val().beginsWith('sounds/')" },
+        "license": { ".validate": "newData.val() === 'CC0' || newData.val() === 'CC BY' || newData.val() === 'CC BY-NC'" },
         "rightsAttested": { ".validate": "newData.val() === true" },
         "rightsAttestedAt": { ".validate": "newData.isNumber() && newData.val() > 0" },
-        "sourceUrl": { ".validate": "newData.isString() && newData.val().length <= 2048 && newData.val().matches(/^$|^https:\\/\\/[^\\s]+$/)" }
+        "sourceUrl": { ".validate": "newData.isString() && newData.val().length <= 2048 && (newData.val() === '' || newData.val().beginsWith('https://'))" }
       }
     },
     "community_wallpapers": {
@@ -57,27 +52,26 @@
       "$uploadId": {
         ".write": "auth != null && (!data.exists() || data.child('uploaderUid').val() === auth.uid || auth.token.admin === true)",
         "name": { ".validate": "newData.isString() && newData.val().length <= 80" },
-        "category": { ".validate": "newData.isString() && newData.val().matches(/^(abstract|amoled|nature|minimal|city|space|other)$/)" },
+        "category": { ".validate": "newData.val() === 'abstract' || newData.val() === 'amoled' || newData.val() === 'nature' || newData.val() === 'minimal' || newData.val() === 'city' || newData.val() === 'space' || newData.val() === 'other'" },
         "uploaderUid": { ".validate": "newData.isString() && (newData.val() === auth.uid || auth.token.admin === true)" },
-        "storagePath": { ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 512 && newData.val().matches(/^wallpapers\\/[^\\s]+$/)" },
-        "license": { ".validate": "newData.isString() && newData.val().matches(/^(CC0|CC BY|CC BY-NC)$/)" },
+        "storagePath": { ".validate": "newData.isString() && newData.val().length > 11 && newData.val().length <= 512 && newData.val().beginsWith('wallpapers/')" },
+        "license": { ".validate": "newData.val() === 'CC0' || newData.val() === 'CC BY' || newData.val() === 'CC BY-NC'" },
         "rightsAttested": { ".validate": "newData.val() === true" },
         "rightsAttestedAt": { ".validate": "newData.isNumber() && newData.val() > 0" },
-        "sourceUrl": { ".validate": "newData.isString() && newData.val().length <= 2048 && newData.val().matches(/^$|^https:\\/\\/[^\\s]+$/)" }
+        "sourceUrl": { ".validate": "newData.isString() && newData.val().length <= 2048 && (newData.val() === '' || newData.val().beginsWith('https://'))" }
       }
     },
     "owner_uploads": {
-      "_comment": "Private per-owner upload deletion index for new community uploads. Public feeds stay under community_sounds/community_wallpapers.",
       "$uid": {
         ".read": "auth != null && (auth.uid === $uid || auth.token.admin === true)",
         ".write": "auth != null && (auth.uid === $uid || auth.token.admin === true)",
         "sounds": {
           "$uploadId": {
             "uploadId": { ".validate": "newData.isString() && newData.val() === $uploadId" },
-            "publicId": { ".validate": "newData.isString() && newData.val().matches(/^cu_[A-Za-z0-9_-]+$/)" },
+            "publicId": { ".validate": "newData.isString() && newData.val().length > 3 && newData.val().beginsWith('cu_')" },
             "contentType": { ".validate": "newData.val() === 'SOUND'" },
             "metadataPath": { ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 280" },
-            "storagePath": { ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 512 && newData.val().matches(/^sounds\\/[^\\s]+$/)" },
+            "storagePath": { ".validate": "newData.isString() && newData.val().length > 7 && newData.val().length <= 512 && newData.val().beginsWith('sounds/')" },
             "title": { ".validate": "newData.isString() && newData.val().length <= 80" },
             "createdAt": { ".validate": "newData.isNumber() && newData.val() > 0" }
           }
@@ -85,10 +79,10 @@
         "wallpapers": {
           "$uploadId": {
             "uploadId": { ".validate": "newData.isString() && newData.val() === $uploadId" },
-            "publicId": { ".validate": "newData.isString() && newData.val().matches(/^cw_[A-Za-z0-9_-]+$/)" },
+            "publicId": { ".validate": "newData.isString() && newData.val().length > 3 && newData.val().beginsWith('cw_')" },
             "contentType": { ".validate": "newData.val() === 'WALLPAPER'" },
             "metadataPath": { ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 280" },
-            "storagePath": { ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 512 && newData.val().matches(/^wallpapers\\/[^\\s]+$/)" },
+            "storagePath": { ".validate": "newData.isString() && newData.val().length > 11 && newData.val().length <= 512 && newData.val().beginsWith('wallpapers/')" },
             "title": { ".validate": "newData.isString() && newData.val().length <= 80" },
             "createdAt": { ".validate": "newData.isNumber() && newData.val() > 0" }
           }
@@ -102,16 +96,16 @@
         ".write": "auth != null && (!data.exists() || auth.token.admin === true)",
         "contentId": { ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 240" },
         "contentKey": { ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 240" },
-        "contentType": { ".validate": "newData.isString() && newData.val().matches(/^[A-Z_]{3,40}$/)" },
-        "contentSource": { ".validate": "newData.isString() && newData.val().matches(/^[A-Z_]{3,40}$/)" },
-        "reason": { ".validate": "newData.isString() && newData.val().matches(/^(RIGHTS|SOURCE_REMOVED|SAFETY|SPAM|OTHER)$/)" },
+        "contentType": { ".validate": "newData.isString() && newData.val().length >= 3 && newData.val().length <= 40 && newData.val() === newData.val().toUpperCase()" },
+        "contentSource": { ".validate": "newData.isString() && newData.val().length >= 3 && newData.val().length <= 40 && newData.val() === newData.val().toUpperCase()" },
+        "reason": { ".validate": "newData.val() === 'RIGHTS' || newData.val() === 'SOURCE_REMOVED' || newData.val() === 'SAFETY' || newData.val() === 'SPAM' || newData.val() === 'OTHER'" },
         "note": { ".validate": "newData.isString() && newData.val().length <= 500" },
-        "sourceUrl": { ".validate": "newData.isString() && newData.val().length <= 2048 && newData.val().matches(/^$|^https:\\/\\/[^\\s]+$/)" },
+        "sourceUrl": { ".validate": "newData.isString() && newData.val().length <= 2048 && (newData.val() === '' || newData.val().beginsWith('https://'))" },
         "license": { ".validate": "newData.isString() && newData.val().length <= 120" },
         "uploaderName": { ".validate": "newData.isString() && newData.val().length <= 120" },
         "reporterUid": { ".validate": "newData.isString() && (newData.val() === auth.uid || auth.token.admin === true)" },
         "reportedAt": { ".validate": "newData.isNumber() && newData.val() > 0" },
-        "status": { ".validate": "newData.isString() && newData.val().matches(/^(OPEN|HIDDEN|DISMISSED|RESTORED)$/)" },
+        "status": { ".validate": "newData.val() === 'OPEN' || newData.val() === 'HIDDEN' || newData.val() === 'DISMISSED' || newData.val() === 'RESTORED'" },
         "resolverUid": { ".validate": "newData.isString() && auth.token.admin === true" },
         "resolvedAt": { ".validate": "newData.isNumber() && newData.val() > 0 && auth.token.admin === true" },
         "resolutionNote": { ".validate": "newData.isString() && newData.val().length <= 500 && auth.token.admin === true" }
@@ -122,14 +116,13 @@
       "$reportId": {
         ".write": "auth != null && auth.token.admin === true",
         "reportId": { ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 240" },
-        "status": { ".validate": "newData.isString() && newData.val().matches(/^(HIDDEN|DISMISSED|RESTORED)$/)" },
+        "status": { ".validate": "newData.val() === 'HIDDEN' || newData.val() === 'DISMISSED' || newData.val() === 'RESTORED'" },
         "resolverUid": { ".validate": "newData.isString() && newData.val() === auth.uid" },
         "resolvedAt": { ".validate": "newData.isNumber() && newData.val() > 0" },
         "note": { ".validate": "newData.isString() && newData.val().length <= 500" }
       }
     },
     "community_write_quotas": {
-      "_comment": "Reserved for App-Checked callable backend quota counters. Regular clients cannot write counters because client-owned quota ledgers are spoofable.",
       ".read": "auth != null && auth.token.admin === true",
       "$uid": {
         ".write": "auth != null && auth.token.admin === true",
@@ -145,7 +138,6 @@
       }
     },
     "community_write_dedupe": {
-      "_comment": "Reserved for App-Checked callable backend duplicate-action markers such as report/content, vote/content, follow/creator, profile, and upload storage path keys.",
       ".read": "auth != null && auth.token.admin === true",
       "$uid": {
         ".write": "auth != null && auth.token.admin === true",
@@ -170,11 +162,17 @@
         ".write": "auth != null && auth.uid === $followerUid"
       }
     },
-    "collection_shares": {
-      "_comment": "Shareable-collection JSON payloads exposed via aura://collection/import/{token}.",
+    "shared_collections": {
       "$token": {
         ".read": true,
-        ".write": "auth != null && (!data.exists() || data.child('createdByUid').val() === auth.uid || auth.token.admin === true)"
+        ".write": "auth != null && ((!data.exists() && (newData.child('createdByUid').val() === auth.uid || auth.token.admin === true)) || (data.exists() && (data.child('createdByUid').val() === auth.uid || auth.token.admin === true)))",
+        ".validate": "newData.hasChildren(['version', 'payload', 'collectionName', 'itemCount', 'createdAt', 'createdByUid'])",
+        "version": { ".validate": "newData.isNumber() && newData.val() === 1" },
+        "payload": { ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 524288" },
+        "collectionName": { ".validate": "newData.isString() && newData.val().length <= 80" },
+        "itemCount": { ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 250" },
+        "createdAt": { ".validate": "newData.isNumber() && newData.val() > 0 && newData.val() <= now" },
+        "createdByUid": { ".validate": "newData.isString() && (newData.val() === auth.uid || auth.token.admin === true)" }
       }
     }
   }

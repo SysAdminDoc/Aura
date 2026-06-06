@@ -49,6 +49,7 @@ class CollectionExporter @Inject constructor(
     @ApplicationContext private val context: Context,
     private val collectionDao: CollectionDao,
     private val moshi: Moshi,
+    private val identityProvider: CommunityIdentityProvider,
 ) {
     private val adapter = moshi.adapter(CollectionExportFile::class.java).indent("  ")
     private val database by lazy {
@@ -185,6 +186,7 @@ class CollectionExporter @Inject constructor(
 
     private suspend fun publishPayload(json: String, collectionName: String, itemCount: Int): String {
         val db = database ?: throw IllegalStateException("Firebase Database not available")
+        val creatorUid = identityProvider.ensureSignedIn()
         val token = UUID.randomUUID().toString().replace("-", "")
         db.child("shared_collections")
             .child(token)
@@ -195,6 +197,7 @@ class CollectionExporter @Inject constructor(
                     "collectionName" to collectionName,
                     "itemCount" to itemCount,
                     "createdAt" to System.currentTimeMillis(),
+                    "createdByUid" to creatorUid,
                 ),
             )
             .await()

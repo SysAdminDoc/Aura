@@ -3,6 +3,7 @@
 All notable changes to Aura will be documented in this file.
 
 ## Unreleased
+- **RTDB rules harness (Cycle 58)**: added Realtime Database emulator config and tests for community upload metadata, owner upload indexes, reports, report resolutions, quota/dedupe ledgers, and collection shares; aligned collection share rules to `shared_collections` with `createdByUid`; and made `database.rules.json` emulator/deploy-compatible.
 - **Storage rules harness (Cycle 57)**: added tracked Firebase Storage rules, Firebase emulator config, a local npm rules-unit-testing harness, and Storage emulator tests for owner-only community upload writes/deletes, MIME/size ceilings, public reads, and unmanaged path denial.
 - **Visible community owner deletes (Cycle 56)**: owner-owned community sound and wallpaper detail surfaces now show delete actions only when Firebase metadata proves the signed-in owner and a `storagePath` deletion handle; confirmations call the existing blob and metadata delete paths.
 - **Community upload deletion handles (Cycle 55)**: new community sound and wallpaper uploads now store canonical Storage paths, write private owner indexes, and expose repository owner-delete methods that remove Storage blobs plus public metadata/index rows for new uploads.

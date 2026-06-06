@@ -3,7 +3,7 @@
 > Open-source Android personalization: wallpapers, video wallpapers, ringtones, sounds.
 > Stay the OSS alternative to Zedge: no ads, no surprise charges, no dark patterns.
 
-**Version:** 2026-06-06-cycle57-roadmap (added Storage rules and emulator harness).
+**Version:** 2026-06-06-cycle58-roadmap (added RTDB rules emulator coverage).
 **Code version at write:** v6.31.1 / versionCode 112 (per `app/build.gradle.kts`; release/lint Gradle runs are memory-heavy on this Windows workstation, so rerun APK compilation only when explicitly needed).
 **Charter:** personalization, AMOLED-first, free-by-default, multi-source content aggregation, community-fed catalog, polite live wallpapers (battery-aware, pause-on-invisible).
 
@@ -116,7 +116,7 @@ Append-only Cycle 1 handoff. Every item below is source-backed in `docs/research
   - Touches: N-2 follow-up; `gradle/libs.versions.toml`, `app/build.gradle.kts`, `FreeVibeApp.kt`, Firebase console setup, `docs/firebase-admin-claims.md`, new App Check rollout doc.
   - Acceptance: debug provider works for emulator/dev builds; release builds send Play Integrity App Check tokens; Firebase metrics are monitored before enforcement; RTDB/Storage enforcement can be enabled without locking out legitimate users.
   - Verify: debug-provider upload/vote on emulator; release-device upload/vote; Firebase App Check request metrics; RTDB/Storage rules still reject unauthenticated writes.
-  - Progress 2026-06-06: Cycle 53 added debug/release App Check provider installers, Firebase BoM-managed App Check dependencies, startup installation before Firebase-backed community warm-up, dependency verification metadata, generated notice lock refresh, and `docs/community-app-check-rollout.md`. Cycle 54 added `CommunityQuotaPolicies`, protected admin-only quota/dedupe ledger namespaces, and `docs/community-quota-rate-limits.md`. Cycle 57 added tracked Storage rules plus local Emulator Suite coverage for community upload blobs. Remaining work: Firebase Console registration, debug-token registration, metrics burn-in, callable quota enforcement, RTDB rules tests, and RTDB/Storage App Check enforcement.
+  - Progress 2026-06-06: Cycle 53 added debug/release App Check provider installers, Firebase BoM-managed App Check dependencies, startup installation before Firebase-backed community warm-up, dependency verification metadata, generated notice lock refresh, and `docs/community-app-check-rollout.md`. Cycle 54 added `CommunityQuotaPolicies`, protected admin-only quota/dedupe ledger namespaces, and `docs/community-quota-rate-limits.md`. Cycle 57 added tracked Storage rules plus local Emulator Suite coverage for community upload blobs. Cycle 58 added RTDB Emulator Suite coverage for upload metadata, owner indexes, reports, quota ledgers, dedupe ledgers, and collection shares. Remaining work: Firebase Console registration, debug-token registration, metrics burn-in, callable quota enforcement, and RTDB/Storage App Check enforcement.
 
 - [~] 🤖 🔬 **P1 — Baseline Profile + Macrobenchmark gate for startup and grid jank** — harness shipped 2026-06-04; physical-device generation/metrics pending because no adb target is attached.
   - Why: Aura claims instant startup and L-8 targets <1.5 s cold start, but there is no benchmark/profile module to prove startup, first-scroll, or dense-grid smoothness.
@@ -260,7 +260,7 @@ Append-only Cycle 4 handoff. Every item below is source-backed in `docs/research
   - Touches: upload dialogs, RTDB rules, Storage metadata, creator profile repository, report queue, `docs/privacy/community-data.md`.
   - Acceptance: upload flow says content and metadata become public; metadata excludes unnecessary original filenames or clearly justifies them; owner field names are consistent; users can delete their uploads or request removal; admin moderation hides public catalog entries and has retention notes.
   - Verify: Firebase rules tests for owner delete/admin hide/public read; upload/delete manual pass; public catalog no longer exposes unneeded metadata; removal path documented in privacy policy.
-  - Progress 2026-06-06: Cycle 55 added `storagePath` metadata for new sound/wallpaper uploads, private `/owner_uploads/{uid}` indexes, owner repository delete methods, RTDB owner-index rules, and `docs/community-upload-deletion.md`. Cycle 56 added owner-visible detail delete actions. Cycle 57 added tracked Storage rules plus emulator tests for owner-only blob create/delete, public reads, MIME/size ceilings, and unmanaged-path denial. Remaining work: admin takedown receipts, public request copy, legacy backfill, and RTDB rules tests.
+  - Progress 2026-06-06: Cycle 55 added `storagePath` metadata for new sound/wallpaper uploads, private `/owner_uploads/{uid}` indexes, owner repository delete methods, RTDB owner-index rules, and `docs/community-upload-deletion.md`. Cycle 56 added owner-visible detail delete actions. Cycle 57 added tracked Storage rules plus emulator tests for owner-only blob create/delete, public reads, MIME/size ceilings, and unmanaged-path denial. Cycle 58 added RTDB emulator tests for public metadata reads, owner creates/deletes, owner-index privacy, report authorization, quota ledgers, and collection shares. Remaining work: admin takedown receipts, public request copy, and legacy backfill.
 
 - [ ] 🤖 🔬 **P1 — Android 17 Contact Picker and contacts-permission minimization**
   - Why: Per-contact ringtone assignment requests broad contacts read/write permissions immediately on screen entry. Android 17 provides a picker that gives selected-contact read access without broad address-book access.
@@ -494,7 +494,7 @@ Append-only Cycle 9 handoff. Every item below is source-backed in `docs/research
   - Touches: `firebase.json`, `.firebaserc` or documented project alias policy, `database.rules.json`, new `storage.rules`, rules tests, CI/release checklist, `docs/firebase-admin-claims.md`.
   - Acceptance: emulator-backed tests cover public read, authenticated write, owner update/delete, admin moderation, votes/voters, reports, creator profiles, and collection shares; deploy and rollback commands are documented; CI or a release preflight runs the rules suite.
   - Verify: rules tests fail on unauthenticated writes and non-owner updates; admin Custom Claim tests pass; `firebase emulators:exec` or equivalent command exits cleanly before deploy.
-  - Progress 2026-06-06: Cycle 57 added `firebase.json`, `storage.rules`, local npm rules-unit-testing scripts, `docs/firebase-rules-harness.md`, and Storage emulator tests for owner-only community upload blobs. Remaining work: RTDB emulator tests, deploy/rollback dry-run docs, and CI wiring.
+  - Progress 2026-06-06: Cycle 57 added `firebase.json`, `storage.rules`, local npm rules-unit-testing scripts, `docs/firebase-rules-harness.md`, and Storage emulator tests for owner-only community upload blobs. Cycle 58 added the Database emulator config, RTDB rules tests, a combined `test:firebase-rules` script, deploy-compatible `database.rules.json` cleanup, and app-matched `shared_collections` rules. Remaining work: deploy/rollback dry-run docs and CI wiring.
 
 - [ ] 🤖 🔬 **P0 — Community owner field normalization and delete/takedown flow**
   - Why: RTDB rules authorize owners through `uploaderUid`, while upload repositories write `uploaderId`; Aura cannot safely promise self-service delete/edit or owner-only metadata writes until this is consistent.
@@ -502,7 +502,7 @@ Append-only Cycle 9 handoff. Every item below is source-backed in `docs/research
   - Touches: upload metadata schema, migration/backfill plan, RTDB rules, Storage delete path, upload detail actions, privacy/community-data docs.
   - Acceptance: one canonical owner field is used for sounds and wallpapers; existing metadata is migrated or dual-read safely; owners can delete their metadata and Storage object; admins can takedown content; failed blob/metadata deletes leave auditable retry state.
   - Verify: owner delete removes feed item and Storage object; non-owner delete fails in rules tests; admin takedown hides/removes as designed; orphan retry path is exercised.
-  - Progress 2026-06-06: Cycle 55 kept `uploaderUid` as the rules-authoritative owner field for new upload delete methods, stored `storagePath`, wrote private owner indexes, and added owner-only repository deletes for new rows with deletion handles. Cycle 56 added visible owner actions. Cycle 57 added Storage rules tests for owner/admin blob deletion and cross-owner rejection. Remaining work: legacy backfill, admin takedown with receipts, RTDB rules tests, and deletion retry/audit handling.
+  - Progress 2026-06-06: Cycle 55 kept `uploaderUid` as the rules-authoritative owner field for new upload delete methods, stored `storagePath`, wrote private owner indexes, and added owner-only repository deletes for new rows with deletion handles. Cycle 56 added visible owner actions. Cycle 57 added Storage rules tests for owner/admin blob deletion and cross-owner rejection. Cycle 58 added RTDB rules tests for owner metadata delete, admin metadata delete, owner-index privacy, and cross-owner rejection. Remaining work: legacy backfill, admin takedown with receipts, and deletion retry/audit handling.
 
 - [~] 🤖 🔬 **P1 — Storage rules and orphan lifecycle cleanup**
   - Why: Upload size/type/path checks currently live in app code, but Storage needs server-side enforcement and cleanup for orphaned blobs or removed content.
@@ -518,7 +518,7 @@ Append-only Cycle 9 handoff. Every item below is source-backed in `docs/research
   - Touches: App Check initialization, debug-provider docs, Firebase console enforcement runbook, upload/vote/report quota design, backend counters or Cloud Functions if needed, release checklist.
   - Acceptance: App Check is installed with Play Integrity plus debug/dev instructions; request metrics are monitored before enforcement; RTDB and Storage enforcement dates are recorded; abuse quotas exist for uploads, reports, votes, follows, and profile edits.
   - Verify: debug build works with debug token; release build obtains valid token; monitor-mode metrics are reviewed; after enforcement, unauthenticated/unverified scripted requests fail while normal app flows pass.
-  - Progress 2026-06-06: Cycle 53 installed debug and Play Integrity providers, added the rollout runbook, compiled debug and release variants, refreshed dependency verification metadata, and refreshed generated notice locks. Cycle 54 added a typed quota policy for reports, sound uploads, wallpaper uploads, votes, follows, and profile edits, plus protected admin-only quota/dedupe ledgers in RTDB rules. Cycle 57 added Storage rules and Storage emulator tests. Remaining work: callable backend enforcement, RTDB Emulator Suite rules tests, console metrics/enforcement evidence, and Android repository migration to callable endpoints.
+  - Progress 2026-06-06: Cycle 53 installed debug and Play Integrity providers, added the rollout runbook, compiled debug and release variants, refreshed dependency verification metadata, and refreshed generated notice locks. Cycle 54 added a typed quota policy for reports, sound uploads, wallpaper uploads, votes, follows, and profile edits, plus protected admin-only quota/dedupe ledgers in RTDB rules. Cycle 57 added Storage rules and Storage emulator tests. Cycle 58 added RTDB emulator tests for admin-only quota and dedupe ledgers. Remaining work: callable backend enforcement, console metrics/enforcement evidence, and Android repository migration to callable endpoints.
 
 - [~] 🤖 🔬 **P1 — Moderation report queue and audit trail**
   - Why: The current `/moderation/{contentId}=true` boolean hides content but does not capture report reason, reporter privacy, resolver, timestamp, status, appeal/restore, or block semantics required for public UGC operations.
@@ -526,7 +526,7 @@ Append-only Cycle 9 handoff. Every item below is source-backed in `docs/research
   - Touches: report models/repository, report actions in content detail screens, RTDB rules, admin moderation UI, privacy/report docs, Play app-content packet.
   - Acceptance: users can report community content with categories; reports are App-Checked/authenticated and rate-limited; admins can resolve/hide/unhide with reason and timestamp; audit entries record resolver UID without exposing reporter identity publicly; block-user behavior is defined or deferred with an owner decision.
   - Verify: report create/read/admin-resolve rules tests; manual report -> admin hide -> feed removal -> unhide flow; reporter data is not public; Play UGC checklist row is complete.
-  - Progress 2026-06-06: Cycle 51 added report reasons, private report intake, admin-only read/update rules, resolution metadata records, and detail-screen report submission. Cycle 52 added admin Settings access, open-report subscription, report cards, status-indexed RTDB rules, Hide/Dismiss/Restore actions, and moderation hide/unhide wiring. Cycle 53 installed App Check providers and the rollout runbook. Cycle 54 defined the quota policy and reserved admin-only report quota/dedupe ledgers. Remaining work: callable quota enforcement, block-user policy, and delete/takedown resolution flows.
+  - Progress 2026-06-06: Cycle 51 added report reasons, private report intake, admin-only read/update rules, resolution metadata records, and detail-screen report submission. Cycle 52 added admin Settings access, open-report subscription, report cards, status-indexed RTDB rules, Hide/Dismiss/Restore actions, and moderation hide/unhide wiring. Cycle 53 installed App Check providers and the rollout runbook. Cycle 54 defined the quota policy and reserved admin-only report quota/dedupe ledgers. Cycle 58 added RTDB emulator tests for authenticated report creation, reporter UID validation, admin-only reads, admin status updates, and admin-only resolution receipts. Remaining work: callable quota enforcement, block-user policy, and delete/takedown resolution flows.
 
 - [ ] 🤖 🔬 **P2 — Community backend operations runbook**
   - Why: Community backend changes can break public reads/writes independently from APK builds, and Aura has no single release artifact tying rules, App Check, Storage cleanup, moderation, and deletion evidence together.
@@ -662,7 +662,7 @@ Append-only Cycle 12 handoff. Every item below is source-backed in `docs/researc
   - Why: Upload metadata stores public download URLs but not a canonical `storagePath` or per-owner upload index, making owner deletion and admin web deletion dependent on broad scans and brittle URL parsing.
   - Evidence: `UploadRepository.uploadSound()` Storage path and RTDB metadata; `WallpaperUploadRepository.uploadWallpaper()` Storage path and RTDB metadata; `database.rules.json`; Firebase RTDB/Storage delete docs.
   - Touches: upload metadata schema, RTDB rules, new owner index (`owner_uploads/{uid}` or equivalent), Storage rules, migration/backfill script, community backend runbook.
-  - Progress 2026-06-06: Cycle 55 added `CommunityUploadOwnership.kt`, `storagePath` metadata, `/owner_uploads/{uid}/sounds|wallpapers/{uploadId}` writes, owner delete update builders, repository delete methods, and RTDB rules for owner/admin index access. Cycle 56 added owner-visible app deletes. Cycle 57 added Storage rules and emulator tests for upload blob authorization. Remaining work: legacy backfill, RTDB Emulator Suite tests, and admin web deletion tooling.
+  - Progress 2026-06-06: Cycle 55 added `CommunityUploadOwnership.kt`, `storagePath` metadata, `/owner_uploads/{uid}/sounds|wallpapers/{uploadId}` writes, owner delete update builders, repository delete methods, and RTDB rules for owner/admin index access. Cycle 56 added owner-visible app deletes. Cycle 57 added Storage rules and emulator tests for upload blob authorization. Cycle 58 added RTDB emulator tests for upload metadata and owner-index authorization. Remaining work: legacy backfill and admin web deletion tooling.
   - Acceptance: new uploads store `storagePath`, owner UID, content type, and upload ID in both public metadata and an owner-scoped index; rules allow owners/admins to delete their own records; legacy uploads are backfilled or marked "admin-only deletion until migrated."
   - Verify: upload sound/wallpaper, inspect metadata/index, delete by owner from app and by admin script, confirm Storage object deletion and public feed removal; rules tests reject cross-owner deletes.
 
@@ -834,12 +834,13 @@ Append-only Cycle 15 handoff. Every item below is source-backed in `docs/researc
 
 Append-only Cycle 16 handoff. Every item below is source-backed in `docs/research/cycle-16-2026-06-04.md`; merge into the existing Now/Next/Later item named in `Touches` when implementation starts.
 
-- [ ] 🤖 🔬 **P0 — Collection share-token backend path and rules alignment**
+- [x] 🤖 🔬 **P0 — Collection share-token backend path and rules alignment**
   - Why: `CollectionExporter` publishes and imports `shared_collections/{token}/payload`, while `database.rules.json` grants collection-share access under `collection_shares/{token}`. RTDB access is denied by default without a matching rule.
   - Evidence: `CollectionExporter.kt`; `database.rules.json`; Firebase RTDB core rules docs; Cycle 9/12 community backend findings.
   - Touches: collection sharing, RTDB rules, Firebase emulator tests, collection import UI, privacy/community data docs.
   - Acceptance: code and rules use one canonical share-token path; rules validate payload shape, version, item count, payload length, creator UID, createdAt, owner overwrite/delete, and admin cleanup.
   - Verify: emulator tests cover publish, public read-by-token, owner/admin overwrite/delete, unauthenticated write denial, malformed payload denial, and oversized payload denial; app share/import succeeds against emulator rules.
+  - Progress 2026-06-06: Cycle 58 switched tracked rules to `shared_collections/{token}`, added `createdByUid` to published shares, bounded version/payload/name/item-count/created-at fields, allowed owner/admin cleanup, blocked non-owner overwrites, kept public token reads, denied the old `collection_shares` path, and added emulator coverage.
 
 - [ ] 🤖 🔬 **P0 — Whole-graph Room migration test and schema history gate**
   - Why: Room is v14 with migrations from 1 through 14, but exported schemas exist only for v9-v14 and the tracked migration test validates only a manually built 8 -> 9 case.
@@ -2964,19 +2965,27 @@ Stars/dates as of research pass 2026-05-16.
 - Storage rules implementation — `firebase.json`, `storage.rules`, `package.json`, `package-lock.json`, and `test/firebase/storage.rules.test.mjs`.
 - Verification outputs — `npm run test:storage-rules` passed; `npm audit --audit-level=moderate` documented a current `firebase-tools` dev dependency advisory.
 
+## Appendix BH — Cycle 58 Sources
+
+- Cycle 58 implementation record — [docs/research/cycle-58-2026-06-06.md](docs/research/cycle-58-2026-06-06.md).
+- Firebase rules harness runbook — [docs/firebase-rules-harness.md](docs/firebase-rules-harness.md).
+- Official Firebase sources — [Realtime Database Security Rules](https://firebase.google.com/docs/database/security), [Realtime Database rules API](https://firebase.google.com/docs/reference/security/database), [Realtime Database regex reference](https://firebase.google.com/docs/reference/security/database/regex), [Security Rules unit tests](https://firebase.google.com/docs/rules/unit-tests), and [rules-unit-testing reference](https://firebase.google.com/docs/reference/emulator-suite/rules-unit-testing/rules-unit-testing).
+- RTDB rules implementation — `CollectionExporter.kt`, `database.rules.json`, `firebase.json`, `package.json`, and `test/firebase/database.rules.test.mjs`.
+- Verification outputs — `npm run test:database-rules`, `npm run test:storage-rules`, and `npm run test:firebase-rules` passed.
+
 ## Continuation State
 
 ### Last Completed Cycle
 
-Cycle 57: tracked Storage rules and local emulator coverage for community upload blobs.
+Cycle 58: tracked Realtime Database emulator coverage for community metadata, reports, quotas, and collection shares.
 
 ### Current Focus
 
-Start Cycle 58 with RTDB Emulator Suite coverage for upload metadata/index/report/quota rules or admin rights-confirmed takedown receipts, then continue backend enforcement work for callable quotas and App Check rollout evidence. Commit and push completed work when the active project contract allows it.
+Start Cycle 59 with admin rights-confirmed takedown receipts, Firebase rules CI wiring, callable quota enforcement design, or App Check console evidence. Continue backend enforcement work until community uploads, reports, and shares have deployable rules, test coverage, and operational runbooks. Commit and push completed work when the active project contract allows it.
 
 ### Important Findings So Far
 
-- `ROADMAP.md` has Cycle 18 through Cycle 57 research/implementation items; `docs/research/cycle-18-2026-06-06.md` through `docs/research/cycle-57-2026-06-06.md` have the source-backed analysis.
+- `ROADMAP.md` has Cycle 18 through Cycle 58 research/implementation items; `docs/research/cycle-18-2026-06-06.md` through `docs/research/cycle-58-2026-06-06.md` have the source-backed analysis.
 - `LicensesScreen.kt` still has manual dependency rows; content sources are already code-backed by `ProviderDisclosure.kt`.
 - `.github/workflows/release.yml` now publishes `THIRD-PARTY-NOTICES.md` and `NATIVE-COMPLIANCE.md` with the APK and includes both files in `SHA256SUMS.txt`; SBOM artifacts remain open.
 - `.github/workflows/verify.yml` and `.github/workflows/release.yml` now run `tools/dependency_notice_lock.py --mode check`, `tools/dependency_notice_lock.py --mode check-metadata`, `tools/native_compliance_inventory.py --mode check-lock`, `tools/dependency_overlay_check.py`, and `tools/dependency_license_policy.py` after `:app:releaseOssLicensesTask`.
@@ -3017,16 +3026,16 @@ Start Cycle 58 with RTDB Emulator Suite coverage for upload metadata/index/repor
 - Wallpaper and sound apply/download paths now classify explicit 404/410/gone/removed/deleted provider failures and mark saved favorites unavailable with provider-specific reasons; `DownloadManager` also marks matching download-history rows unavailable on failed re-downloads.
 - Sounds now have item-level license capability gates: YouTube apply/download requires confirmation, SoundCloud is link-only until reviewed, CC BY-NC requires confirmation, no-derivatives disables editing, missing remote licenses disable live-source actions, saved sound favorites preserve license metadata through Room v16 and favorites import/export, and share text includes source/uploader/license provenance.
 - Community uploads now require selected CC0/CC BY/CC BY-NC metadata, rights attestation, authenticated uploader UID, attestation timestamp, and optional HTTPS source URL before public sound/wallpaper upload metadata is written. New uploads also store `storagePath` and private owner-index rows so owner delete methods can remove blobs plus metadata without parsing public download URLs. Legacy community sound rows without selected license metadata keep the `User Upload` fallback.
-- Community reporting now has private report intake, admin review, moderation hide/unhide actions, and admin resolution metadata paths with rights/source-removed/safety/spam/other reasons. Detail screens submit reports with source/license/uploader context. App Check client providers are installed. Community write quotas now have typed policy rows and protected admin-only ledger namespaces. New community uploads now have owner-visible delete actions when owner metadata and `storagePath` prove they are deletable. Storage rules and local emulator tests now cover community upload blobs, while callable enforcement, App Check console evidence, RTDB rules tests, closed-report filters, and admin takedown receipts remain open.
+- Community reporting now has private report intake, admin review, moderation hide/unhide actions, and admin resolution metadata paths with rights/source-removed/safety/spam/other reasons. Detail screens submit reports with source/license/uploader context. App Check client providers are installed. Community write quotas now have typed policy rows and protected admin-only ledger namespaces. New community uploads now have owner-visible delete actions when owner metadata and `storagePath` prove they are deletable. Collection shares now write `createdByUid` and use owner/admin RTDB rules under `shared_collections`. Storage rules and local emulator tests now cover community upload blobs. RTDB rules and local emulator tests now cover upload metadata/index authorization, report intake/admin resolution, quota/dedupe ledgers, and app-matched collection shares. Callable enforcement, App Check console evidence, closed-report filters, admin takedown receipts, and Firebase rules CI wiring remain open.
 - Recent history was checked with `rtk git log -10 --oneline --decorate` for this pass.
 
 ### Next Best Actions
 
-1. Add RTDB Emulator Suite tests for upload metadata/index/report/quota rules, or add admin rights-confirmed takedown receipts that use the new deletion handles.
-2. Run a real GitHub Actions manual release dry run after secrets are confirmed available and archive the run URL in the release docs.
-3. Add deeper UI verification for the licenses screen on an emulator or screenshot lane when a device/runtime is available.
-4. Preserve exact Termux package commit/build-log evidence for FFmpeg if the release owner can obtain it from upstream or a reproducible rebuild.
-5. Revisit CycloneDX or SPDX SBOM generation after the N-1 toolchain upgrade.
+1. Add admin rights-confirmed takedown receipts that use the new deletion handles, or wire CI to run `npm ci` and `npm run test:firebase-rules` on Firebase rules changes.
+2. Start callable quota enforcement design for reports, uploads, votes, follows, and profile edits.
+3. Run a real GitHub Actions manual release dry run after secrets are confirmed available and archive the run URL in the release docs.
+4. Add deeper UI verification for the licenses screen on an emulator or screenshot lane when a device/runtime is available.
+5. Preserve exact Termux package commit/build-log evidence for FFmpeg if the release owner can obtain it from upstream or a reproducible rebuild.
 
 ### Unprocessed Leads
 

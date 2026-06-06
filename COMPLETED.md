@@ -176,6 +176,12 @@ next pass can resume quickly.
   `firebase.json`, `storage.rules`, local npm Firebase rules dependencies, and
   Storage emulator tests for owner-only community upload writes/deletes,
   MIME/size ceilings, public reads, and closed unmanaged paths.
+- Completed Cycle 58 Realtime Database rules harness: added Database emulator
+  config, `test:database-rules` and `test:firebase-rules` scripts, RTDB
+  emulator tests for upload metadata, owner indexes, reports, report
+  resolutions, quota/dedupe ledgers, and collection shares, aligned tracked
+  collection-share rules to `shared_collections`, added `createdByUid` to
+  published shares, and made `database.rules.json` emulator/deploy-compatible.
 
 ## 2026-06-05
 

@@ -64,9 +64,9 @@ Admin SDK job should own ledger updates.
 ## Verification Plan
 
 - Unit test `CommunityQuotaPolicies` for required surface coverage.
-- Parse `database.rules.json` after every rules edit.
-- Add Emulator Suite tests before enforcement that cover anonymous user,
-  modified-client, and custom-claim admin personas.
+- Run `npm run test:database-rules` after every RTDB rules edit; Cycle 58 covers
+  anonymous user, regular user, owner, and custom-claim admin personas for the
+  protected quota and dedupe namespaces.
 - For each callable, test accepted writes, duplicate writes, cooldown rejections,
   daily-limit rejections, and admin override behavior.
 - Manually smoke test debug-provider and release-device flows before toggling
@@ -74,7 +74,6 @@ Admin SDK job should own ledger updates.
 
 ## Remaining Implementation Work
 
-- Add `firebase.json`, tracked Storage rules, and a rules test harness.
 - Add the callable backend project and wire Android repositories to it.
 - Define quota reset timezone in code and backend deployment config.
 - Decide whether blocked quota attempts should create private moderation events.

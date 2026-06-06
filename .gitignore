@@ -12,6 +12,10 @@ local.properties
 /app/build
 /baselineprofile/build
 /node_modules
+/database-debug.log
+/firebase-debug.log
+/storage-debug.log
+/ui-debug.log
 /app/release
 *.apk
 *.aab

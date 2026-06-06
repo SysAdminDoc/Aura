@@ -6,6 +6,9 @@
     "rules": "storage.rules"
   },
   "emulators": {
+    "database": {
+      "port": 9000
+    },
     "storage": {
       "port": 9199
     },

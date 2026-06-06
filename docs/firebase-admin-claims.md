@@ -89,15 +89,15 @@ CI verification (optional): add a step that runs
 `firebase deploy --only database:rules --project=verify --dry-run` on
 every PR that touches `database.rules.json`.
 
-Cycle 57 adds local Storage emulator tests. Run them before deploying
-`storage.rules`:
+Cycles 57 and 58 add local Storage and Realtime Database emulator tests. Run
+them before deploying either Firebase rules file:
 
 ```bash
 npm ci
-npm run test:storage-rules
+npm run test:firebase-rules
 ```
 
-See `docs/firebase-rules-harness.md` for the tracked Storage policy and the
+See `docs/firebase-rules-harness.md` for the tracked RTDB/Storage policy and the
 current dev-tool audit note.
 
 ## Protected quota namespaces
