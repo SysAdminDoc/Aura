@@ -127,6 +127,10 @@ next pass can resume quickly.
   database to v15, preserved provider source names in new download records,
   surfaced "Source unavailable" badges in Favorites/Downloads/detail screens,
   and kept local saved wallpaper paths usable when upstream content is removed.
+- Completed Cycle 47 Pexels enhancement guardrails: Discover and video-wallpaper
+  discovery now drop Pexels-only batches unless non-Pexels base inventory is
+  present, disabled-Pexels Discover still returns Wallhaven/Pixabay fallback
+  inventory, and Pexels photo rows keep creator/source-page attribution fields.
 
 ## 2026-06-05
 

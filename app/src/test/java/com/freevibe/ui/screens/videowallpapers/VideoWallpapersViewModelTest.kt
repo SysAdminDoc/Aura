@@ -61,6 +61,44 @@ class VideoWallpapersViewModelTest {
     }
 
     @Test
+    fun `keepPexelsVideosAsEnhancement drops pexels-only batches`() {
+        val items = keepPexelsVideosAsEnhancement(
+            listOf(
+                VideoWallpaperItem(
+                    id = "px_1",
+                    title = "by Mira",
+                    thumbnailUrl = "https://example.com/px.jpg",
+                    source = "Pexels",
+                ),
+            ),
+        )
+
+        assertTrue(items.isEmpty())
+    }
+
+    @Test
+    fun `keepPexelsVideosAsEnhancement keeps pexels when fallback sources are present`() {
+        val items = keepPexelsVideosAsEnhancement(
+            listOf(
+                VideoWallpaperItem(
+                    id = "px_1",
+                    title = "by Mira",
+                    thumbnailUrl = "https://example.com/px.jpg",
+                    source = "Pexels",
+                ),
+                VideoWallpaperItem(
+                    id = "pbv_1",
+                    title = "Aurora loop",
+                    thumbnailUrl = "https://example.com/pb.jpg",
+                    source = "Pixabay",
+                ),
+            ),
+        )
+
+        assertEquals(listOf("Pexels", "Pixabay"), items.map { it.source })
+    }
+
+    @Test
     fun `resolvePixabayVideoFetchSpec uses animation catalog when no search query exists`() {
         assertEquals(
             PixabayVideoFetchSpec(query = "abstract loop", videoType = "animation", page = 2),

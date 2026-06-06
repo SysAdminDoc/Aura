@@ -61,6 +61,29 @@ internal fun mergeDiscoverResults(
     )
 }
 
+internal fun keepPexelsAsDiscoverEnhancement(
+    results: List<SearchResult<Wallpaper>?>,
+): List<SearchResult<Wallpaper>> {
+    val loadedResults = results.filterNotNull()
+    val hasBaseInventory = loadedResults.any { result ->
+        result.items.any { it.source != ContentSource.PEXELS }
+    }
+    if (hasBaseInventory) return loadedResults
+
+    return loadedResults.map { result ->
+        val nonPexelsItems = result.items.filter { it.source != ContentSource.PEXELS }
+        if (nonPexelsItems.size == result.items.size) {
+            result
+        } else {
+            result.copy(
+                items = nonPexelsItems,
+                totalCount = nonPexelsItems.size,
+                hasMore = false,
+            )
+        }
+    }
+}
+
 internal fun shouldRetryBingHost(error: Throwable): Boolean = when (error) {
     is UnknownHostException,
     is ConnectException,
@@ -473,7 +496,7 @@ class WallpaperRepository @Inject constructor(
                     secondarySources.awaitAll()
                 } ?: emptyList()
                 val merged = mergeDiscoverResults(
-                    results = primaryResults + secondaryResults,
+                    results = keepPexelsAsDiscoverEnhancement(primaryResults + secondaryResults),
                     page = page,
                     maxItems = DISCOVER_PAGE_SIZE,
                 )

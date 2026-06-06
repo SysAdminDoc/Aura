@@ -21,7 +21,7 @@ runtime-control row.
 | ccMixter | Covered | No active browsing tab uses ccMixter. | New feeds do not request ccMixter; saved legacy rows can remain visible. | None. |
 | Local device media | Not applicable | User action and Android permission/picker grants. | No remote provider is contacted; user can cancel picker flows or delete local copies. | None. |
 | YouTube | Covered | Settings exposes a YouTube provider-enabled flag in addition to query customization and blocked words. | Disabled mode hides YouTube browsing, skips top hits and video discovery, falls back to bundled sounds, and blocks stream resolution before cache or downloader use. | Carry the flag into channel-specific distribution defaults when store profiles are added. |
-| Pexels | Covered | Settings exposes a Pexels provider-enabled flag in addition to the optional API key. | Disabled mode hides Pexels wallpaper browsing, skips Discover/search/style-biased/video API calls, and records disabled diagnostics before reading bundled keys. | Carry the flag into channel-specific distribution defaults when store profiles are added. |
+| Pexels | Covered | Settings exposes a Pexels provider-enabled flag in addition to the optional API key, and mixed feeds enforce Pexels as enhancement inventory only. | Disabled mode hides Pexels wallpaper browsing, skips Discover/search/style-biased/video API calls, and records disabled diagnostics before reading bundled keys. When enabled, Discover/video batches drop Pexels-only results unless non-Pexels base inventory is present. | Carry the flag into channel-specific distribution defaults when store profiles are added. |
 | Pixabay | Covered | Settings exposes a Pixabay provider-enabled flag in addition to the optional API key; photo and video metadata requests use 24-hour fresh-cache paths and 429 backoff. | Disabled mode hides Pixabay wallpaper browsing, removes it from rotation pickers, skips wallpaper/video API calls, and records disabled diagnostics before reading bundled keys. | None. |
 | Klipy | Covered | Removed active feed. | New feeds do not request Klipy; saved legacy rows can remain visible. | None. |
 | SoundCloud | Covered | No active browsing tab uses SoundCloud. | New feeds do not request SoundCloud; saved legacy rows can remain visible. | None. |
@@ -43,8 +43,11 @@ runtime-control row.
 - Bing Daily now has a default-on provider flag covering Discover secondary
   daily-image calls and auto-wallpaper rotation choices.
 - Pexels and Pixabay now have default-on provider flags covering wallpaper and
-  video API calls before bundled keys are read. Pixabay photo requests and video
-  metadata requests now use 24-hour fresh-cache paths and 429 backoff.
+  video API calls before bundled keys are read. Pexels wallpaper Discover and
+  video-wallpaper discovery keep Pexels as enhancement-only inventory by
+  dropping Pexels-only batches unless a non-Pexels base source is present.
+  Pixabay photo requests and video metadata requests now use 24-hour fresh-cache
+  paths and 429 backoff.
 - Community now has a default-on source flag covering startup identity warm-up,
   sound/wallpaper community feeds, uploads, vote actions, creator profile
   navigation, and creator follow/unfollow calls. Data lifecycle, deletion,
@@ -57,6 +60,8 @@ runtime-control row.
 
 - Pexels API wallpaper guidance:
   https://help.pexels.com/hc/en-us/articles/4405588861721-Can-I-use-the-API-as-a-wallpaper-app
+- Pexels API documentation:
+  https://www.pexels.com/api/documentation/
 - Pixabay API documentation:
   https://pixabay.com/api/docs/
 - Reddit Data API Terms:

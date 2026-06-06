@@ -116,6 +116,13 @@ internal fun isPixabayVideoCacheFresh(cachedAtMs: Long, nowMs: Long): Boolean =
 internal fun pixabayVideoRateLimitBackoffMillis(error: Throwable): Long? =
     pixabayRateLimitBackoffMillis(error)
 
+internal fun keepPexelsVideosAsEnhancement(
+    items: List<VideoWallpaperItem>,
+): List<VideoWallpaperItem> {
+    val hasBaseInventory = items.any { !it.source.equals("Pexels", ignoreCase = true) }
+    return if (hasBaseInventory) items else items.filterNot { it.source.equals("Pexels", ignoreCase = true) }
+}
+
 internal fun mapPixabayVideosToMetadata(
     videos: List<PixabayVideo>,
 ): PixabayVideoMetadataResult {
@@ -669,10 +676,11 @@ class VideoWallpapersViewModel @Inject constructor(
             }
 
             // Filter by orientation (items with known dimensions are filtered; unknown pass through)
+            val enhancementSafeItems = keepPexelsVideosAsEnhancement(newItems)
             val orientedItems = when (s.orientation) {
-                OrientationFilter.ALL -> newItems
-                OrientationFilter.PORTRAIT -> newItems.filter { !it.hasDimensions || it.isPortrait }
-                OrientationFilter.LANDSCAPE -> newItems.filter { !it.hasDimensions || it.isLandscape }
+                OrientationFilter.ALL -> enhancementSafeItems
+                OrientationFilter.PORTRAIT -> enhancementSafeItems.filter { !it.hasDimensions || it.isPortrait }
+                OrientationFilter.LANDSCAPE -> enhancementSafeItems.filter { !it.hasDimensions || it.isLandscape }
             }
 
             // Deduplicate against existing items, then rank by fit / loop / battery heuristics.

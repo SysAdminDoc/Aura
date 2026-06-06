@@ -201,12 +201,13 @@ Append-only Cycle 3 handoff. Every item below is source-backed in `docs/research
   - Verify: provider policy unit tests; Settings can disable each remote provider; disabled providers vanish from search/default feeds; existing favorites retain source-deleted/unavailable state without crashing.
   - Progress 2026-06-05: central `ProviderDisclosure` rows now cover every `ContentSource`, `docs/legal/provider-policy.md` mirrors the matrix, and `ProviderDisclosureTest` fails when a source lacks policy coverage. Cycle 36 added checked runtime-control rows in `ProviderDisclosure.kt` and `docs/legal/provider-runtime-controls.md`; Cycles 37-42 added default-on runtime switches for YouTube, Reddit, Wallhaven, Pexels, Pixabay, Community, and Bing Daily. Cycles 43-44 added 24-hour fresh-cache paths plus 429 backoff for Pixabay photo and video metadata requests. Cycle 45 added a default-on generated-wallpapers source switch that hides generation entry points and blocks Stability requests when disabled. Cycle 46 added persisted unavailable-source states for saved favorites/downloads. Remaining policy gaps include Pexels first-run guardrails and action-level sound license capabilities.
 
-- [ ] 🤖 🔬 **P1 — Pexels usage guardrail and fallback plan**
+- [x] 🤖 🔬 **P1 — Pexels usage guardrail and fallback plan**
   - Why: Pexels specifically rejects standalone wallpaper/gallery API replication. Aura must prove Pexels is an enhancement source, not the product's core inventory.
   - Evidence: Pexels API wallpaper-app guidance; Aura uses Pexels in wallpaper/video discovery and style-biased feeds.
   - Touches: wallpaper/video source weights, onboarding defaults, provider copy, source detail attribution, fallback source selection.
   - Acceptance: Pexels is not the sole or default required source for any first-run flow; Pexels results always show source/creator context in search/detail; provider can be disabled remotely/configurably without breaking feeds; docs explain the allowed enhancement use case.
   - Verify: turn off Pexels and run Wallpapers/Videos first-run; source badges/links visible; no auto-rotation defaults depend only on Pexels.
+  - Completed 2026-06-06: Cycle 47 added Discover and video-wallpaper enhancement guards so Pexels-only batches are dropped unless non-Pexels base inventory is present. Focused tests prove disabled-Pexels Discover still returns Wallhaven/Pixabay, Pexels API calls are skipped, Pexels photo rows keep creator/source-page metadata, and video batches keep Pexels only when Pixabay/Reddit/YouTube-style fallback inventory is present. `docs/research/cycle-47-2026-06-06.md` records the checked Pexels policy source.
 
 - [ ] 🤖 🔬 **P1 — Provider cache and rate-limit policy engine**
   - Why: Pixabay and Freesound have explicit cache/rate-limit expectations, but Aura's rate-limit handling is currently host-specific and policy-free.
@@ -2885,15 +2886,15 @@ Stars/dates as of research pass 2026-05-16.
 
 ### Last Completed Cycle
 
-Cycle 46: Saved-source availability states.
+Cycle 47: Pexels enhancement-only guardrails and provider-off fallback proof.
 
 ### Current Focus
 
-Start Cycle 47 with the Pexels usage guardrail and fallback plan so Pexels remains an enhancement source and provider-off first-run flows stay useful. Commit and push completed work when the active project contract allows it.
+Start Cycle 48 with provider-specific reload reconciliation that marks saved items unavailable when upstream deletion/removal is detected. Commit and push completed work when the active project contract allows it.
 
 ### Important Findings So Far
 
-- `ROADMAP.md` has Cycle 18 through Cycle 46 research/implementation items; `docs/research/cycle-18-2026-06-06.md` through `docs/research/cycle-46-2026-06-06.md` have the source-backed analysis.
+- `ROADMAP.md` has Cycle 18 through Cycle 47 research/implementation items; `docs/research/cycle-18-2026-06-06.md` through `docs/research/cycle-47-2026-06-06.md` have the source-backed analysis.
 - `LicensesScreen.kt` still has manual dependency rows; content sources are already code-backed by `ProviderDisclosure.kt`.
 - `.github/workflows/release.yml` now publishes `THIRD-PARTY-NOTICES.md` and `NATIVE-COMPLIANCE.md` with the APK and includes both files in `SHA256SUMS.txt`; SBOM artifacts remain open.
 - `.github/workflows/verify.yml` and `.github/workflows/release.yml` now run `tools/dependency_notice_lock.py --mode check`, `tools/dependency_notice_lock.py --mode check-metadata`, `tools/native_compliance_inventory.py --mode check-lock`, `tools/dependency_overlay_check.py`, and `tools/dependency_license_policy.py` after `:app:releaseOssLicensesTask`.
@@ -2930,16 +2931,16 @@ Start Cycle 47 with the Pexels usage guardrail and fallback plan so Pexels remai
 - Pixabay photo requests now use `WallpaperCacheManager.TTL_PIXABAY` for a 24-hour fresh-cache hit before API calls; Pixabay video metadata now uses app-private 24-hour metadata caching with cached stream URLs; 429 responses parse `Retry-After` or `X-RateLimit-Reset` into backoff windows.
 - Generated wallpapers now have a default-on `generated_content_provider_enabled` preference plus Settings switch that hides generation entry points and blocks Stability requests before prompt/key validation when disabled. Saved generated wallpapers remain visible as local user content.
 - Favorites and download history now have persisted `SOURCE_UNAVAILABLE` state with reason metadata so saved local copies can remain navigable without presenting upstream-removed provider content as live source content.
+- Pexels now has enhancement-only guardrails in wallpaper Discover and video-wallpaper discovery: Pexels rows can enrich mixed feeds, but Pexels-only batches are dropped. Focused tests prove provider-off Discover still serves Wallhaven/Pixabay base inventory and Pexels photo rows retain creator/source-page context.
 - Recent history was checked with `rtk git log -10 --oneline --decorate` for this pass.
 
 ### Next Best Actions
 
-1. Add Pexels usage guardrail and fallback proof for provider-off first-run flows.
-2. Add provider-specific reload reconciliation that marks saved items `SOURCE_UNAVAILABLE` when upstream deletion/removal is detected.
-3. Run a real GitHub Actions manual release dry run after secrets are confirmed available and archive the run URL in the release docs.
-4. Add deeper UI verification for the licenses screen on an emulator or screenshot lane when a device/runtime is available.
-5. Preserve exact Termux package commit/build-log evidence for FFmpeg if the release owner can obtain it from upstream or a reproducible rebuild.
-6. Revisit CycloneDX or SPDX SBOM generation after the N-1 toolchain upgrade.
+1. Add provider-specific reload reconciliation that marks saved items `SOURCE_UNAVAILABLE` when upstream deletion/removal is detected.
+2. Run a real GitHub Actions manual release dry run after secrets are confirmed available and archive the run URL in the release docs.
+3. Add deeper UI verification for the licenses screen on an emulator or screenshot lane when a device/runtime is available.
+4. Preserve exact Termux package commit/build-log evidence for FFmpeg if the release owner can obtain it from upstream or a reproducible rebuild.
+5. Revisit CycloneDX or SPDX SBOM generation after the N-1 toolchain upgrade.
 
 ### Unprocessed Leads
 
