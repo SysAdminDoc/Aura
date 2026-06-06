@@ -63,6 +63,10 @@ next pass can resume quickly.
   `GOOGLE-OSS-RAW-INPUTS.zip` as a permanent tagged public release asset,
   clarified dry-run/release signing docs, and kept release bundle validation
   enforcing the archive in files, checksums, and notes.
+- Completed Cycle 33 custom in-app generated dependency notice viewer: added
+  a parser for generated Google OSS raw resources, listed generated dependency
+  notices in Settings > Open source licenses, and opened full generated notice
+  text without adding the stock Play services OSS licenses runtime dependency.
 
 ## 2026-06-05
 

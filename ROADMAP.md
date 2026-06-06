@@ -1246,12 +1246,19 @@ Append-only Cycle 31 implementation record. The completed item is source-backed 
   - Acceptance: release-owner retention decision is documented; workflow and bundle validator behavior matches that decision; release verification steps tell owners where to find raw Google OSS inputs.
   - Verify: local release-bundle smoke test or focused validator test proves the selected raw-archive expectation is enforced.
 
-- [ ] 🤖 🔬 **P1 — Custom in-app dependency notice viewer**
+- [x] 🤖 🔬 **P1 — Custom in-app dependency notice viewer**
   - Why: Settings links to generated release artifacts, but the app still relies on manual dependency rows and cannot browse the generated dependency notice corpus in-app.
   - Evidence: `app/src/main/java/com/freevibe/ui/screens/licenses/LicensesScreen.kt`, `tools/google_oss_to_markdown.py`, generated Google OSS raw resources, `docs/legal/dependency-notices.lock.json`.
   - Touches: licenses screen models/UI/tests, generated notice parsing strategy, release notice docs, roadmap/state files.
   - Acceptance: Aura has a feasible current-toolchain path for browsing generated dependency notices in-app without adding the risky stock Google runtime dependency; implementation is either shipped or a precise blocker-backed plan is recorded.
   - Verify: focused licenses-screen unit tests or parser tests cover generated notice mapping and manual/provider disclosure preservation.
+
+- [ ] 🤖 🔬 **P1 — Generated notice search and high-risk alignment**
+  - Why: the in-app generated notice viewer now lists generated entries, but a 288-entry notice corpus needs search/filtering and better alignment with curated high-risk overlay entries before it is comfortable for repeated owner review.
+  - Evidence: `GeneratedDependencyNotices.kt`, `LicensesScreen.kt`, `docs/legal/dependency-notice-overrides.json`, `docs/legal/dependency-license-policy.json`.
+  - Touches: licenses screen UI/tests, generated notice models, curated high-risk labels, roadmap/state files.
+  - Acceptance: generated notices can be filtered by dependency name or license label; high-risk overlay surfaces are easy to find without scrolling the whole generated list.
+  - Verify: focused parser/UI model tests cover filtering and high-risk matching.
 
 ---
 
@@ -2763,19 +2770,26 @@ Stars/dates as of research pass 2026-05-16.
 - Primary source references — [GitHub workflow artifacts](https://docs.github.com/en/actions/tutorials/store-and-share-data), [GitHub releases and release assets](https://docs.github.com/en/repositories/releasing-projects-on-github/about-releases), [actions/upload-artifact](https://github.com/actions/upload-artifact), [softprops/action-gh-release](https://github.com/softprops/action-gh-release).
 - Verification outputs — `python -m py_compile tools\release_artifact_bundle_check.py`, dependency notice lock check, native compliance lock check, dependency overlay check, dependency license policy check, passing release-bundle smoke test with `GOOGLE-OSS-RAW-INPUTS.zip`, failing release-bundle smoke test without `GOOGLE-OSS-RAW-INPUTS.zip`, `git diff --check`, and changed-line attribution scan.
 
+## Appendix AK — Cycle 33 Sources
+
+- Cycle 33 implementation record — [docs/research/cycle-33-2026-06-06.md](docs/research/cycle-33-2026-06-06.md).
+- In-app generated notice implementation — `app/src/main/java/com/freevibe/ui/screens/licenses/GeneratedDependencyNotices.kt`, `app/src/main/java/com/freevibe/ui/screens/licenses/LicensesScreen.kt`, `app/src/test/java/com/freevibe/ui/screens/licenses/LicensesScreenTest.kt`.
+- Primary source references — [Google Play services open source notices](https://developers.google.com/android/guides/opensource), [Google Play services OSS licenses API reference](https://developers.google.com/android/reference/com/google/android/gms/oss/licenses/package-summary).
+- Verification outputs — focused `:app:testDebugUnitTest --tests com.freevibe.ui.screens.licenses.LicensesScreenTest`, release-compliance Python compile checks, dependency notice lock check, native compliance lock check, dependency overlay check, dependency license policy check, `git diff --check`, and changed-line attribution scan.
+
 ## Continuation State
 
 ### Last Completed Cycle
 
-Cycle 32: raw Google OSS archive retention policy.
+Cycle 33: custom in-app generated dependency notice viewer.
 
 ### Current Focus
 
-Start Cycle 33 with a custom in-app dependency notice viewer feasibility pass. Commit and push completed work when the active project contract allows it.
+Start Cycle 34 with generated notice search and high-risk alignment. Commit and push completed work when the active project contract allows it.
 
 ### Important Findings So Far
 
-- `ROADMAP.md` has Cycle 18 through Cycle 32 research/implementation items; `docs/research/cycle-18-2026-06-06.md` through `docs/research/cycle-32-2026-06-06.md` have the source-backed analysis.
+- `ROADMAP.md` has Cycle 18 through Cycle 33 research/implementation items; `docs/research/cycle-18-2026-06-06.md` through `docs/research/cycle-33-2026-06-06.md` have the source-backed analysis.
 - `LicensesScreen.kt` still has manual dependency rows; content sources are already code-backed by `ProviderDisclosure.kt`.
 - `.github/workflows/release.yml` now publishes `THIRD-PARTY-NOTICES.md` and `NATIVE-COMPLIANCE.md` with the APK and includes both files in `SHA256SUMS.txt`; SBOM artifacts remain open.
 - `.github/workflows/verify.yml` and `.github/workflows/release.yml` now run `tools/dependency_notice_lock.py --mode check`, `tools/native_compliance_inventory.py --mode check-lock`, `tools/dependency_overlay_check.py`, and `tools/dependency_license_policy.py` after `:app:releaseOssLicensesTask`.
@@ -2797,14 +2811,15 @@ Start Cycle 33 with a custom in-app dependency notice viewer feasibility pass. C
 - `tools/release_artifact_bundle_check.py` now validates manual dry-run and tag-release bundles for required artifacts, checksums, release-note evidence, signing digest output, and non-debuggable `aapt` evidence.
 - `tools/google_oss_raw_archive.py` now publishes `GOOGLE-OSS-RAW-INPUTS.zip` with a manifest for raw generated Google OSS notice inputs.
 - `docs/distribution/raw-oss-input-retention.md` now states that `GOOGLE-OSS-RAW-INPUTS.zip` remains attached to every tagged public release that publishes generated notices; the release bundle validator continues to enforce that archive.
-- `LicensesScreen.kt` now exposes generated release notice artifacts before the manual library and content-source disclosure rows.
+- `LicensesScreen.kt` now exposes generated release notice artifacts and generated raw-resource dependency notice rows before the manual library and content-source disclosure rows.
+- `GeneratedDependencyNotices.kt` reads `R.raw.third_party_license_metadata` and `R.raw.third_party_licenses` directly, avoiding the stock Google notice runtime dependency while keeping a current-toolchain in-app viewer.
 - AboutLibraries 14.2.1 configures but the default release export was incomplete for Aura and logged Windows path errors during compliance export.
 - `ProviderDisclosureTest` now passes in the real repo with `JAVA_HOME` set to Android Studio JBR and `ANDROID_HOME` set to the local Android SDK.
 - Recent history was checked with `rtk git log -10 --oneline --decorate` for this pass.
 
 ### Next Best Actions
 
-1. Add a custom Compose in-app dependency notice viewer after release artifact behavior stabilizes.
+1. Add search/filtering and high-risk overlay alignment to the generated dependency notice viewer.
 2. Run a real GitHub Actions manual release dry run after secrets are confirmed available and archive the run URL in the release docs.
 3. Add deeper UI verification for the licenses screen on an emulator or screenshot lane when a device/runtime is available.
 4. Preserve exact Termux package commit/build-log evidence for FFmpeg if the release owner can obtain it from upstream or a reproducible rebuild.
@@ -2813,7 +2828,6 @@ Start Cycle 33 with a custom in-app dependency notice viewer feasibility pass. C
 ### Unprocessed Leads
 
 - Exact Termux package commit, patches, dependency source set, and build logs for the resolved youtubedl-android ffmpeg 0.18.1 AAR.
-- Whether Aura should parse generated raw resources for a custom Compose in-app dependency notice viewer after the markdown artifact is stable.
 - Whether the stock Google `OssLicensesMenuActivity` is ever worth adding after a dependency convergence audit.
 - Whether CycloneDX should be immediate or delayed until N-1.
 - Whether AboutLibraries can be configured to include the full release runtime graph; default 14.2.1 output only showed three Kotlin BOM rows in this spike.

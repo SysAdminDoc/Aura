@@ -3,6 +3,7 @@
 All notable changes to Aura will be documented in this file.
 
 ## Unreleased
+- **In-app generated dependency notices (Cycle 33)**: Settings > Open source licenses now reads generated Google OSS raw resources directly, lists generated dependency notices in-app, and opens full notice text without adding the stock Play services OSS licenses runtime dependency.
 - **Raw Google OSS input retention (Cycle 32)**: documented that `GOOGLE-OSS-RAW-INPUTS.zip` stays attached to every tagged public release, clarified release/dry-run docs, and kept the bundle validator enforcing the archive in release files, checksums, and notes.
 - **Dependency license policy gate (Cycle 31)**: added `docs/legal/dependency-license-policy.json` and `tools/dependency_license_policy.py`, then wired PR/main verification and release builds to fail unknown, disallowed, or unreviewed curated license IDs before publishing release artifacts.
 - **FFmpeg source-correspondence evidence (Cycle 30)**: native compliance now extracts embedded FFmpeg 7.1.1 configure lines and license-mode flags from the resolved youtubedl-android FFmpeg payload, locks those facts for drift review, and adds `docs/legal/ffmpeg-source-correspondence.md` as the release-owner checklist for remaining Termux source/build-log evidence.

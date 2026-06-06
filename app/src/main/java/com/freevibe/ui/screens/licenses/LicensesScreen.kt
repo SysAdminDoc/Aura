@@ -2,6 +2,9 @@ package com.freevibe.ui.screens.licenses
 
 import android.content.Intent
 import android.net.Uri
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.text.selection.SelectionContainer
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -87,6 +90,21 @@ private val contentSources = providerDisclosures.map { disclosure ->
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LicensesScreen(onBack: () -> Unit) {
+    val context = LocalContext.current
+    val generatedNotices = remember(context) {
+        GoogleOssNoticeReader.load(context.resources)
+    }
+    var selectedGeneratedNotice by remember {
+        mutableStateOf<GeneratedDependencyNotice?>(null)
+    }
+
+    selectedGeneratedNotice?.let { notice ->
+        GeneratedNoticeDialog(
+            notice = notice,
+            onDismiss = { selectedGeneratedNotice = null },
+        )
+    }
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -114,30 +132,56 @@ fun LicensesScreen(onBack: () -> Unit) {
             items(releaseNoticeLinks) { lic ->
                 LicenseCard(lic)
             }
+            if (generatedNotices.isNotEmpty()) {
+                item {
+                    Spacer(Modifier.height(8.dp))
+                    SectionHeader(
+                        title = "Generated Dependencies",
+                        detail = "${generatedNotices.size} notices",
+                    )
+                }
+                items(generatedNotices) { notice ->
+                    GeneratedNoticeCard(
+                        notice = notice,
+                        onClick = { selectedGeneratedNotice = notice },
+                    )
+                }
+            }
             item {
                 Spacer(Modifier.height(8.dp))
-                Text(
-                    "Libraries",
-                    style = MaterialTheme.typography.labelLarge,
-                    color = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.padding(vertical = 8.dp),
-                )
+                SectionHeader(title = "Libraries")
             }
             items(licenses) { lic ->
                 LicenseCard(lic)
             }
             item {
                 Spacer(Modifier.height(8.dp))
-                Text(
-                    "Content Sources",
-                    style = MaterialTheme.typography.labelLarge,
-                    color = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.padding(vertical = 8.dp),
-                )
+                SectionHeader(title = "Content Sources")
             }
             items(contentSources) { lic ->
                 LicenseCard(lic)
             }
+        }
+    }
+}
+
+@Composable
+private fun SectionHeader(title: String, detail: String? = null) {
+    Row(
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        modifier = Modifier.padding(vertical = 8.dp),
+    ) {
+        Text(
+            title,
+            style = MaterialTheme.typography.labelLarge,
+            color = MaterialTheme.colorScheme.primary,
+        )
+        if (detail != null) {
+            Text(
+                detail,
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
         }
     }
 }
@@ -166,4 +210,64 @@ private fun LicenseCard(lic: OssLicense) {
             Icon(Icons.AutoMirrored.Filled.OpenInNew, null, Modifier.size(16.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant)
         }
     }
+}
+
+@Composable
+private fun GeneratedNoticeCard(
+    notice: GeneratedDependencyNotice,
+    onClick: () -> Unit,
+) {
+    Surface(
+        onClick = onClick,
+        color = MaterialTheme.colorScheme.surfaceContainer,
+        shape = RoundedCornerShape(8.dp),
+    ) {
+        Column(
+            Modifier.fillMaxWidth().padding(14.dp),
+            verticalArrangement = Arrangement.spacedBy(4.dp),
+        ) {
+            Text(notice.name, style = MaterialTheme.typography.titleSmall)
+            Text(
+                notice.licenseLabel,
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.primary,
+            )
+        }
+    }
+}
+
+@Composable
+private fun GeneratedNoticeDialog(
+    notice: GeneratedDependencyNotice,
+    onDismiss: () -> Unit,
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        confirmButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Done")
+            }
+        },
+        title = {
+            Text(notice.name)
+        },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text(
+                    notice.licenseLabel,
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.primary,
+                )
+                SelectionContainer {
+                    Text(
+                        notice.licenseText,
+                        modifier = Modifier
+                            .heightIn(max = 360.dp)
+                            .verticalScroll(rememberScrollState()),
+                        style = MaterialTheme.typography.bodySmall,
+                    )
+                }
+            }
+        },
+    )
 }
