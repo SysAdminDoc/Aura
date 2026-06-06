@@ -33,8 +33,9 @@ Do not commit `freevibe.jks`, `local.properties`, copied APKs, or generated base
 6. Fails if `aapt dump badging` reports `application-debuggable`.
 7. Creates a GitHub artifact attestation for the checksum file.
 8. Publishes `SHA256SUMS.txt` and release notes containing versionName, versionCode, APK SHA-256, signing certificate SHA-256, artifact attestation URL, and Android developer verification status.
+9. Runs `tools/release_artifact_bundle_check.py` against the final `release/` directory before upload or publication.
 
-Manual `workflow_dispatch` runs upload the same files as workflow artifacts for dry-run inspection. Tag runs also attach the APK and checksum file to the GitHub Release.
+Manual `workflow_dispatch` runs upload the same files as workflow artifacts for dry-run inspection. Tag runs also attach the APK and checksum file to the GitHub Release. The dry-run procedure lives in [release-dry-run.md](release-dry-run.md).
 
 ## Local release check
 

@@ -7,6 +7,7 @@ Aura is side-loaded through GitHub Releases and Obtainium, so release artifacts 
 | Control | Location | Purpose |
 | --- | --- | --- |
 | Signed release APK | `.github/workflows/release.yml` | Builds the release variant, verifies the signature, rejects debuggable APKs, and publishes checksums. |
+| Release bundle validator | `tools/release_artifact_bundle_check.py`, `.github/workflows/release.yml` | Fails manual dry runs and tag releases when the final APK/notices/native/checksum/release-note bundle is incomplete or internally inconsistent. |
 | Third-party notices | `tools/google_oss_to_markdown.py`, `.github/workflows/release.yml` | Runs the Google OSS Licenses Gradle task for the release variant and publishes `THIRD-PARTY-NOTICES.md` next to the APK. |
 | Dependency notice lockfile | `tools/dependency_notice_lock.py`, `docs/legal/dependency-notices.lock.json` | Fails PR/main/release checks when generated release dependency notices drift without review. |
 | Dependency notice overlay | `tools/dependency_overlay_check.py`, `docs/legal/dependency-notice-overrides.json` | Requires curated source, license, usage, and release-review metadata for high-risk generated dependencies and native payloads. |
@@ -30,8 +31,15 @@ For each `v*` release:
 6. Spot-check `THIRD-PARTY-NOTICES.md` for high-risk dependencies such as NewPipeExtractor, youtubedl-android, Firebase, Play services ML Kit, ZXing, Palette, and ProfileInstaller.
 7. Spot-check `docs/legal/dependency-notice-overrides.json` when any high-risk dependency or payload changed intentionally.
 8. Spot-check `NATIVE-COMPLIANCE.md` for youtubedl-android library, youtubedl-android ffmpeg, yt-dlp, Python, QuickJS, FFmpeg, and NewPipeExtractor evidence.
-9. Verify the APK locally with `apksigner verify --verbose --print-certs`.
-10. Compare the local SHA-256 values to `SHA256SUMS.txt`.
+9. Confirm the release workflow ran `tools/release_artifact_bundle_check.py` before uploading artifacts.
+10. Verify the APK locally with `apksigner verify --verbose --print-certs`.
+11. Compare the local SHA-256 values to `SHA256SUMS.txt`.
+
+## Release dry runs
+
+Manual `workflow_dispatch` runs on `main` are Aura's release dry-run lane. They build the signed release APK, generate third-party notices, generate the native compliance packet, run the lock/overlay gates, produce checksums/release notes, validate the final bundle, and upload the result as a workflow artifact without creating a GitHub Release.
+
+Procedure: [release-dry-run.md](release-dry-run.md).
 
 ## Third-party notices
 

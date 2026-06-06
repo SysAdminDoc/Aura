@@ -199,6 +199,14 @@ jobs:
             printf 'GitHub Releases and Obtainium should install the signed release APK. Debug APKs are development-only and are not published by this workflow.\n'
           } > "$RELEASE_DIR/RELEASE_NOTES.md"
 
+      - name: Validate release artifact bundle
+        run: |
+          python3 tools/release_artifact_bundle_check.py \
+            --release-dir "$RELEASE_DIR" \
+            --apk-name "${{ steps.package.outputs.apk_name }}" \
+            --version-name "${{ steps.package.outputs.version_name }}" \
+            --version-code "${{ steps.package.outputs.version_code }}"
+
       - name: Upload release artifacts
         uses: actions/upload-artifact@v4
         with:

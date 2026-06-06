@@ -3,7 +3,7 @@
 > Open-source Android personalization: wallpapers, video wallpapers, ringtones, sounds.
 > Stay the OSS alternative to Zedge: no ads, no surprise charges, no dark patterns.
 
-**Version:** 2026-06-06-cycle26-roadmap (implemented curated dependency overlay and CI freshness gate).
+**Version:** 2026-06-06-cycle27-roadmap (implemented release artifact bundle dry-run validation).
 **Code version at write:** v6.31.1 / versionCode 112 (per `app/build.gradle.kts`; release/lint Gradle runs are memory-heavy on this Windows workstation, so rerun APK compilation only when explicitly needed).
 **Charter:** personalization, AMOLED-first, free-by-default, multi-source content aggregation, community-fed catalog, polite live wallpapers (battery-aware, pause-on-invisible).
 
@@ -1167,12 +1167,29 @@ Append-only Cycle 26 implementation record. The completed item is source-backed 
   - Verification: `python -m py_compile tools\dependency_overlay_check.py`; `python tools\dependency_overlay_check.py --overlay docs\legal\dependency-notice-overrides.json`.
   - Remaining risk: exact FFmpeg configure/source correspondence remains release-owner review work because the resolved AAR still does not encode it.
 
-- [ ] 🤖 🔬 **P1 — Release compliance artifact dry-run validation**
+- [x] 🤖 🔬 **P1 — Release compliance artifact dry-run validation** — shipped 2026-06-06.
   - Why: the release workflow now generates and attaches `THIRD-PARTY-NOTICES.md`, `NATIVE-COMPLIANCE.md`, `SHA256SUMS.txt`, and release notes, but the full GitHub Actions packaging path still needs a non-tag dry-run proof after the lock/overlay gates landed.
   - Evidence: `.github/workflows/release.yml`, `docs/distribution/supply-chain.md`, `docs/legal/dependency-notices.lock.json`, `docs/legal/native-compliance.lock.json`, `docs/legal/dependency-notice-overrides.json`.
   - Touches: release workflow, dry-run docs, release artifact checklist, optional workflow-dispatch artifact naming.
   - Acceptance: workflow-dispatch or local CI-equivalent dry run proves notices, native packet, checksums, release notes, and APK packaging are produced together; failures leave actionable diagnostics.
   - Verify: dry-run release lane completes without creating a public tag/release, or an equivalent documented local packaging script proves the same artifact set.
+
+## 🔬 Researcher Queue (Cycle 27 — 2026-06-06)
+
+Append-only Cycle 27 implementation record. The completed item is source-backed in `docs/research/cycle-27-2026-06-06.md`; use the open item as the next implementation entry point.
+
+- [x] 🤖 🔬 **P1 — Release compliance artifact dry-run validation shipped**
+  - Result: manual release workflow runs now validate the final release bundle before workflow-artifact upload, while tag releases validate the same bundle before GitHub Release upload.
+  - Evidence: `tools/release_artifact_bundle_check.py`, `.github/workflows/release.yml`, `docs/distribution/release-dry-run.md`, `docs/distribution/release-signing.md`, `docs/distribution/supply-chain.md`.
+  - Verification: `python -m py_compile tools\release_artifact_bundle_check.py`; local temporary bundle smoke test; release-compliance Python compile and lock checks.
+  - Remaining risk: the full signed APK workflow still needs an actual GitHub Actions manual run with repository secrets, which cannot be executed from the local workspace.
+
+- [ ] 🤖 🔬 **P1 — Preserve raw release notice inputs as workflow artifacts**
+  - Why: `THIRD-PARTY-NOTICES.md` is reviewer-friendly, but raw Google OSS inputs are still useful when investigating dependency drift or a license-section hash change after the fact.
+  - Evidence: `app/build/generated/third_party_licenses/release/res/raw/dependencies.json`, generated `third_party_license_metadata`, generated `third_party_licenses`, `tools/google_oss_to_markdown.py`, `docs/legal/dependency-notices.lock.json`.
+  - Touches: release workflow, supply-chain docs, optional archive/checksum script.
+  - Acceptance: manual and tag release runs upload raw Google OSS input files or a small archive beside the markdown notice packet without changing the public APK install path.
+  - Verify: workflow artifact contains raw notice inputs; checksums or an archive manifest prove the raw files match the markdown and lockfile inputs.
 
 ---
 
@@ -2642,19 +2659,26 @@ Stars/dates as of research pass 2026-05-16.
 - Primary source references — [youtubedl-android](https://github.com/yausername/youtubedl-android), [yt-dlp 2025.11.12](https://github.com/yt-dlp/yt-dlp/tree/2025.11.12), [Python 3.12 license](https://docs.python.org/3.12/license.html), [QuickJS](https://bellard.org/quickjs/), [FFmpeg legal guidance](https://ffmpeg.org/legal.html), [NewPipeExtractor v0.24.8](https://github.com/TeamNewPipe/NewPipeExtractor/tree/v0.24.8), [Firebase Android SDK](https://github.com/firebase/firebase-android-sdk), [Google Play services](https://developers.google.com/android/guides/overview), [ML Kit subject segmentation](https://developers.google.com/ml-kit/vision/subject-segmentation/android), [AndroidX ProfileInstaller](https://github.com/androidx/androidx/tree/androidx-main/profileinstaller), [ZXing](https://github.com/zxing/zxing).
 - Verification outputs — `python -m py_compile tools\dependency_overlay_check.py`, `python tools\dependency_overlay_check.py --overlay docs\legal\dependency-notice-overrides.json`, release-compliance Python compile checks, dependency notice lock check, and native compliance lock check.
 
+## Appendix AE — Cycle 27 Sources
+
+- Cycle 27 implementation record — [docs/research/cycle-27-2026-06-06.md](docs/research/cycle-27-2026-06-06.md).
+- Release dry-run implementation — `tools/release_artifact_bundle_check.py`, `.github/workflows/release.yml`, `docs/distribution/release-dry-run.md`, `docs/distribution/release-signing.md`, `docs/distribution/supply-chain.md`.
+- Primary source references — [GitHub manual workflow runs](https://docs.github.com/en/actions/how-tos/manage-workflow-runs/manually-run-a-workflow), [workflow dispatch event](https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows), [workflow artifacts](https://docs.github.com/en/actions/using-workflows/storing-workflow-data-as-artifacts).
+- Verification outputs — `python -m py_compile tools\release_artifact_bundle_check.py`, local temporary bundle smoke test, release-compliance Python compile checks, dependency notice lock check, native compliance lock check, and dependency overlay check.
+
 ## Continuation State
 
 ### Last Completed Cycle
 
-Cycle 26: curated high-risk dependency overlay, PR/main verification gate, and release workflow gate.
+Cycle 27: release artifact bundle validator and manual dry-run runbook.
 
 ### Current Focus
 
-Start Cycle 27 with release compliance artifact dry-run validation. Commit and push completed work when the active project contract allows it.
+Start Cycle 28 with raw release notice input preservation. Commit and push completed work when the active project contract allows it.
 
 ### Important Findings So Far
 
-- `ROADMAP.md` has Cycle 18 through Cycle 26 research/implementation items; `docs/research/cycle-18-2026-06-06.md` through `docs/research/cycle-26-2026-06-06.md` have the source-backed analysis.
+- `ROADMAP.md` has Cycle 18 through Cycle 27 research/implementation items; `docs/research/cycle-18-2026-06-06.md` through `docs/research/cycle-27-2026-06-06.md` have the source-backed analysis.
 - `LicensesScreen.kt` still has manual dependency rows; content sources are already code-backed by `ProviderDisclosure.kt`.
 - `.github/workflows/release.yml` now publishes `THIRD-PARTY-NOTICES.md` and `NATIVE-COMPLIANCE.md` with the APK and includes both files in `SHA256SUMS.txt`; SBOM artifacts remain open.
 - `.github/workflows/verify.yml` and `.github/workflows/release.yml` now run `tools/dependency_notice_lock.py --mode check`, `tools/native_compliance_inventory.py --mode check-lock`, and `tools/dependency_overlay_check.py` after `:app:releaseOssLicensesTask`.
@@ -2672,22 +2696,23 @@ Start Cycle 27 with release compliance artifact dry-run validation. Commit and p
 - `docs/legal/native-compliance.lock.json` records 8 native/copyleft coordinates, 23 artifact records, and 36 payload entries from youtubedl-android and NewPipeExtractor artifacts.
 - The native lockfile gates artifact hash and payload fact drift, but it still does not prove FFmpeg configure/source correspondence.
 - `docs/legal/dependency-notice-overrides.json` records curated high-risk dependency and native-payload review metadata; `tools/dependency_overlay_check.py` fails stale, missing, or orphaned overlay entries against the dependency/native locks.
+- `tools/release_artifact_bundle_check.py` now validates manual dry-run and tag-release bundles for required artifacts, checksums, release-note evidence, signing digest output, and non-debuggable `aapt` evidence.
 - AboutLibraries 14.2.1 configures but the default release export was incomplete for Aura and logged Windows path errors during compliance export.
 - `ProviderDisclosureTest` now passes in the real repo with `JAVA_HOME` set to Android Studio JBR and `ANDROID_HOME` set to the local Android SDK.
 - Recent history was checked with `rtk git log -10 --oneline --decorate` for this pass.
 
 ### Next Best Actions
 
-1. Add release workflow dry-run validation on GitHub Actions or a CI-equivalent environment to prove notices and native packets are checksummed and uploaded with the APK.
+1. Preserve raw release notice inputs (`dependencies.json`, `third_party_license_metadata`, `third_party_licenses`) as workflow artifacts or an archived evidence packet.
 2. Add a future in-app generated dependency notice viewer or Settings link after the release artifact path is stable.
-3. Decide whether the release workflow should also upload raw `dependencies.json` for machine diffing.
-4. Investigate exact FFmpeg configure line and matching source package for the resolved youtubedl-android ffmpeg 0.18.1 AAR.
-5. Evaluate whether `licensee` can enforce Aura's desired policy from `releaseRuntimeClasspath` or needs a custom JSON comparison.
+3. Investigate exact FFmpeg configure line and matching source package for the resolved youtubedl-android ffmpeg 0.18.1 AAR.
+4. Evaluate whether `licensee` can enforce Aura's desired policy from `releaseRuntimeClasspath` or needs a custom JSON comparison.
+5. Run a real GitHub Actions manual release dry run after secrets are confirmed available and archive the run URL in the release docs.
 
 ### Unprocessed Leads
 
 - Exact FFmpeg configure line and matching source package for the resolved youtubedl-android ffmpeg 0.18.1 AAR.
-- Whether the release workflow notices step should also upload raw `dependencies.json` for machine diffing.
+- How large the raw Google OSS notice inputs are after compression and whether they should be attached to public releases or only workflow artifacts.
 - Whether Aura should parse generated raw resources for a custom Compose in-app dependency notice viewer after the markdown artifact is stable.
 - Whether the stock Google `OssLicensesMenuActivity` is ever worth adding after a dependency convergence audit.
 - Whether `licensee` can enforce Aura's desired policy from `releaseRuntimeClasspath` or needs a custom JSON comparison.

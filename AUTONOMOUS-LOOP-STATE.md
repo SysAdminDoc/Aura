@@ -1,8 +1,8 @@
 # Autonomous Loop State
 
 **Assigned project:** `C:\Users\--\repos\Aura`
-**Current pass:** 2026-06-06 Cycle 26 curated dependency overlay implementation pass
-**Last commit before pass:** `10984b7` (`feat(ci): gate native compliance drift`)
+**Current pass:** 2026-06-06 Cycle 27 release artifact dry-run validation pass
+**Last commit before pass:** `13fbf1c` (`feat(ci): gate dependency overlay review`)
 
 ## 2026-06-05 Result
 
@@ -53,13 +53,19 @@
 - Wired `.github/workflows/verify.yml` and `.github/workflows/release.yml` to run the overlay check after generated notice/native lock checks.
 - Updated `docs/distribution/supply-chain.md`, `ROADMAP.md`, `CHANGELOG.md`, and `COMPLETED.md` for the overlay gate.
 - Cycle 26 verification: `python -m py_compile tools\dependency_notice_lock.py tools\dependency_overlay_check.py tools\google_oss_to_markdown.py tools\native_compliance_inventory.py`; `python tools\dependency_notice_lock.py --mode check --lockfile docs\legal\dependency-notices.lock.json`; `python tools\native_compliance_inventory.py --mode check-lock --lockfile docs\legal\native-compliance.lock.json`; `python tools\dependency_overlay_check.py --overlay docs\legal\dependency-notice-overrides.json`.
+- Completed Cycle 27 release compliance artifact dry-run validation.
+- Added `tools/release_artifact_bundle_check.py` to validate required release files, APK naming, checksum entries, checksum digest matches, release-note evidence, signing digest output, and non-debuggable `aapt` evidence.
+- Wired `.github/workflows/release.yml` to run the bundle validator after release notes are generated and before workflow artifact upload or tag-release publication.
+- Added `docs/distribution/release-dry-run.md` with GitHub UI, GitHub CLI, workflow artifact, and local smoke-test instructions.
+- Updated `docs/distribution/release-signing.md`, `docs/distribution/supply-chain.md`, `ROADMAP.md`, `CHANGELOG.md`, and `COMPLETED.md` for release dry-run validation.
+- Cycle 27 verification: `python -m py_compile tools\release_artifact_bundle_check.py`; local temporary bundle smoke test; `python -m py_compile tools\dependency_notice_lock.py tools\dependency_overlay_check.py tools\google_oss_to_markdown.py tools\native_compliance_inventory.py tools\release_artifact_bundle_check.py`; dependency notice lock check; native compliance lock check; dependency overlay check.
 
 ## Still Open
 
 - FFmpeg exact configure line and matching source package review for the resolved youtubedl-android ffmpeg 0.18.1 AAR.
-- Release compliance artifact dry-run validation.
+- Raw release notice input preservation.
 - Runtime provider kill switches and disabled-provider behavior.
 
 ## Next Cycle
 
-Continue this same assigned project, Aura. Start Cycle 27 from the `ROADMAP.md` Continuation State and `docs/research/cycle-26-2026-06-06.md`. The Google OSS notices plugin-only path is implemented; `tools/google_oss_to_markdown.py` generates `THIRD-PARTY-NOTICES.md`; `tools/native_compliance_inventory.py` generates `NATIVE-COMPLIANCE.md` and gates native evidence drift; `tools/dependency_notice_lock.py` gates generated release notice drift; `tools/dependency_overlay_check.py` gates curated high-risk dependency/native-payload review metadata. Next validate the release compliance artifact packaging path with a workflow-dispatch dry run or CI-equivalent local packaging script. Keep AboutLibraries secondary: 14.2.1 configures, but default exports were incomplete and the compliance export logged Windows path errors; do not use AboutLibraries 15.x until N-1 upgrades AGP because v15 requires AGP 8.13. Commit and push completed work when the active project contract allows it.
+Continue this same assigned project, Aura. Start Cycle 28 from the `ROADMAP.md` Continuation State and `docs/research/cycle-27-2026-06-06.md`. The Google OSS notices plugin-only path is implemented; `tools/google_oss_to_markdown.py` generates `THIRD-PARTY-NOTICES.md`; `tools/native_compliance_inventory.py` generates `NATIVE-COMPLIANCE.md` and gates native evidence drift; `tools/dependency_notice_lock.py` gates generated release notice drift; `tools/dependency_overlay_check.py` gates curated high-risk dependency/native-payload review metadata; `tools/release_artifact_bundle_check.py` gates final release bundle consistency. Next preserve raw release notice inputs as workflow artifacts or a small evidence archive. Keep AboutLibraries secondary: 14.2.1 configures, but default exports were incomplete and the compliance export logged Windows path errors; do not use AboutLibraries 15.x until N-1 upgrades AGP because v15 requires AGP 8.13. Commit and push completed work when the active project contract allows it.

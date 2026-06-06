@@ -38,6 +38,10 @@ next pass can resume quickly.
   `tools/dependency_overlay_check.py`, and wired PR/main verification plus
   release builds to fail on missing, stale, or orphaned high-risk dependency and
   native-payload review metadata.
+- Completed Cycle 27 release compliance artifact dry-run validation: added
+  `tools/release_artifact_bundle_check.py`, wired release workflow bundle
+  validation before artifact upload/publication, and documented the manual
+  `workflow_dispatch` dry-run procedure.
 
 ## 2026-06-05
 

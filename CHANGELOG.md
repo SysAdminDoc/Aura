@@ -3,6 +3,7 @@
 All notable changes to Aura will be documented in this file.
 
 ## Unreleased
+- **Release artifact dry-run validation (Cycle 27)**: added `tools/release_artifact_bundle_check.py` and a release dry-run runbook so manual release workflow runs and tag releases fail when the final APK/notices/native/checksum/release-note bundle is incomplete or internally inconsistent.
 - **Curated dependency overlay gate (Cycle 26)**: added `docs/legal/dependency-notice-overrides.json` and `tools/dependency_overlay_check.py` so PR/main verification and release builds require reviewed source URLs, license IDs, usage notes, and release-review notes for high-risk dependencies and native payloads.
 - **Native compliance drift gate (Cycle 25)**: `tools/native_compliance_inventory.py` now writes/checks `docs/legal/native-compliance.lock.json`, and PR/main verification plus release builds fail when native/copyleft artifact hashes or extracted payload facts drift without review.
 - **Dependency notice drift gate (Cycle 24)**: added `tools/dependency_notice_lock.py` and `docs/legal/dependency-notices.lock.json` so PR/main verification and release builds fail when generated release dependency notices drift without review.
