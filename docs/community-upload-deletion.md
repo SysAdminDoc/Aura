@@ -2,8 +2,9 @@
 
 Cycle 55 made new community uploads deletable without parsing public download
 URLs. Cycle 56 adds owner-visible delete actions for new sound and wallpaper
-uploads that have those handles. Legacy backfill, Storage rules, and admin
-takedown UX remain follow-up work.
+uploads that have those handles. Cycle 57 adds tracked Storage rules and
+emulator coverage for owner-only blob writes/deletes. Legacy backfill, lifecycle
+cleanup, and admin takedown UX remain follow-up work.
 
 ## New Metadata
 
@@ -57,8 +58,8 @@ cannot be read all fail closed and do not show the delete action.
   reason before deleting or hiding public content.
 - Add a backfill/admin script for older upload rows that lack `storagePath` and
   `/owner_uploads` entries.
-- Add tracked Storage rules and Emulator Suite tests for owner-only blob
-  deletion and cross-owner rejection.
+- Add Realtime Database Emulator Suite tests for metadata/index deletion and
+  cross-owner rejection.
 - Decide whether votes, report records, and moderation audit rows are deleted,
   retained, or tombstoned when an upload is removed.
 

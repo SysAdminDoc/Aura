@@ -1,0 +1,51 @@
+rules_version = '2';
+
+service firebase.storage {
+  match /b/{bucket}/o {
+    function signedIn() {
+      return request.auth != null && request.auth.uid != null;
+    }
+
+    function isAdmin() {
+      return signedIn()
+        && 'admin' in request.auth.token
+        && request.auth.token.admin == true;
+    }
+
+    function isOwner(uid) {
+      return signedIn() && request.auth.uid == uid;
+    }
+
+    function isValidSoundUpload() {
+      return request.resource != null
+        && request.resource.size > 0
+        && request.resource.size <= 20 * 1024 * 1024
+        && request.resource.contentType.matches('audio/(mpeg|mp3|mp4|x-m4a|m4a|aac|ogg|wav|x-wav|flac|webm)');
+    }
+
+    function isValidWallpaperUpload() {
+      return request.resource != null
+        && request.resource.size > 0
+        && request.resource.size <= 4 * 1024 * 1024
+        && request.resource.contentType == 'image/jpeg';
+    }
+
+    match /sounds/{uid}/{fileName} {
+      allow read: if true;
+      allow create: if isOwner(uid) && isValidSoundUpload();
+      allow update: if false;
+      allow delete: if isOwner(uid) || isAdmin();
+    }
+
+    match /wallpapers/{uid}/{fileName} {
+      allow read: if true;
+      allow create: if isOwner(uid) && isValidWallpaperUpload();
+      allow update: if false;
+      allow delete: if isOwner(uid) || isAdmin();
+    }
+
+    match /{path=**} {
+      allow read, write: if false;
+    }
+  }
+}

@@ -11,6 +11,7 @@
 local.properties
 /app/build
 /baselineprofile/build
+/node_modules
 /app/release
 *.apk
 *.aab

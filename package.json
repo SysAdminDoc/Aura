@@ -1,0 +1,13 @@
+{
+  "name": "aura-firebase-rules",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test:storage-rules": "firebase emulators:exec --only storage --project aura-rules-test \"node --test test/firebase/storage.rules.test.mjs\""
+  },
+  "devDependencies": {
+    "@firebase/rules-unit-testing": "5.0.1",
+    "firebase": "12.14.0",
+    "firebase-tools": "15.19.1"
+  }
+}

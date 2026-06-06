@@ -172,6 +172,10 @@ next pass can resume quickly.
   expose owner-and-`storagePath` availability probes, sound and wallpaper
   ViewModels expose delete entry points, and detail surfaces show confirmed
   owner-only delete actions for new community uploads.
+- Completed Cycle 57 Storage rules and emulator harness: added tracked
+  `firebase.json`, `storage.rules`, local npm Firebase rules dependencies, and
+  Storage emulator tests for owner-only community upload writes/deletes,
+  MIME/size ceilings, public reads, and closed unmanaged paths.
 
 ## 2026-06-05
 

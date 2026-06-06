@@ -82,11 +82,23 @@ manually whenever they change:
 firebase login                                  # one-time
 firebase use freevibe-aura                     # project id; verify with `firebase projects:list`
 firebase deploy --only database                # uploads database.rules.json
+firebase deploy --only storage                 # uploads storage.rules
 ```
 
 CI verification (optional): add a step that runs
 `firebase deploy --only database:rules --project=verify --dry-run` on
 every PR that touches `database.rules.json`.
+
+Cycle 57 adds local Storage emulator tests. Run them before deploying
+`storage.rules`:
+
+```bash
+npm ci
+npm run test:storage-rules
+```
+
+See `docs/firebase-rules-harness.md` for the tracked Storage policy and the
+current dev-tool audit note.
 
 ## Protected quota namespaces
 
