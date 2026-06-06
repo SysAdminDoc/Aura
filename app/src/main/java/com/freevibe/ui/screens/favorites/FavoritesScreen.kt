@@ -28,6 +28,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.compose.AsyncImage
 import com.freevibe.data.model.FavoriteEntity
+import com.freevibe.data.model.isSourceUnavailable
 import com.freevibe.data.model.stableKey
 import com.freevibe.ui.components.AuraStateCard
 import kotlinx.coroutines.launch
@@ -274,6 +275,7 @@ fun FavoritesScreen(
                             items(sortedWallpapers, key = { it.stableKey() }, contentType = { "favorite_card" }) { fav ->
                                 val key = fav.stableKey()
                                 val isSelected = key in selectedKeys
+                                val sourceUnavailable = fav.isSourceUnavailable()
                                 Card(
                                     modifier = Modifier
                                         .fillMaxWidth()
@@ -310,6 +312,13 @@ fun FavoritesScreen(
                                             contentScale = ContentScale.Crop,
                                             modifier = Modifier.fillMaxWidth().aspectRatio(0.67f),
                                         )
+                                        if (sourceUnavailable) {
+                                            SourceUnavailableBadge(
+                                                modifier = Modifier
+                                                    .align(Alignment.BottomStart)
+                                                    .padding(8.dp),
+                                            )
+                                        }
                                         if (selectionMode) {
                                             // Dim unselected cards to emphasize the selection.
                                             if (!isSelected) {
@@ -361,6 +370,7 @@ fun FavoritesScreen(
                             verticalArrangement = Arrangement.spacedBy(4.dp),
                         ) {
                             items(sortedSounds, key = { it.stableKey() }, contentType = { "favorite_card" }) { fav ->
+                                val sourceUnavailable = fav.isSourceUnavailable()
                                 val dismissState = rememberSwipeToDismissBoxState(
                                     confirmValueChange = { value ->
                                         if (value != SwipeToDismissBoxValue.Settled) {
@@ -415,8 +425,23 @@ fun FavoritesScreen(
                                             Icon(Icons.Default.MusicNote, null, tint = MaterialTheme.colorScheme.primary)
                                             Column(modifier = Modifier.weight(1f)) {
                                                 Text(fav.name, style = MaterialTheme.typography.titleMedium, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                                                if (fav.duration > 0) {
-                                                    Text("${fav.duration.toInt()}s", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                                if (fav.duration > 0 || sourceUnavailable) {
+                                                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                                        if (fav.duration > 0) {
+                                                            Text(
+                                                                "${fav.duration.toInt()}s",
+                                                                style = MaterialTheme.typography.labelSmall,
+                                                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                                            )
+                                                        }
+                                                        if (sourceUnavailable) {
+                                                            Text(
+                                                                "Source unavailable",
+                                                                style = MaterialTheme.typography.labelSmall,
+                                                                color = MaterialTheme.colorScheme.error,
+                                                            )
+                                                        }
+                                                    }
                                                 }
                                             }
                                             Icon(Icons.Default.ChevronRight, null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
@@ -428,6 +453,25 @@ fun FavoritesScreen(
                     }
                 }
             }
+        }
+    }
+}
+
+@Composable
+private fun SourceUnavailableBadge(modifier: Modifier = Modifier) {
+    Surface(
+        color = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.92f),
+        contentColor = MaterialTheme.colorScheme.onErrorContainer,
+        shape = RoundedCornerShape(8.dp),
+        modifier = modifier,
+    ) {
+        Row(
+            modifier = Modifier.padding(horizontal = 8.dp, vertical = 5.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(5.dp),
+        ) {
+            Icon(Icons.Default.Warning, contentDescription = null, modifier = Modifier.size(14.dp))
+            Text("Source unavailable", style = MaterialTheme.typography.labelSmall)
         }
     }
 }

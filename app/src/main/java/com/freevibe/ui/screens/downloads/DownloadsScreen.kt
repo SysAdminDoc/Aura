@@ -20,6 +20,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.freevibe.data.model.DownloadEntity
+import com.freevibe.data.model.isSourceUnavailable
 import com.freevibe.service.DownloadProgress
 import com.freevibe.ui.components.AuraStateCard
 import kotlinx.coroutines.launch
@@ -111,6 +112,7 @@ fun DownloadsScreen(
                         DownloadHistoryCard(
                             download = download,
                             broken = download.id in brokenIds,
+                            sourceUnavailable = download.isSourceUnavailable(),
                             onOpen = {
                                 try {
                                     val path = download.localPath
@@ -180,6 +182,7 @@ private fun ActiveDownloadCard(dl: DownloadProgress, onDismiss: () -> Unit) {
 private fun DownloadHistoryCard(
     download: DownloadEntity,
     broken: Boolean = false,
+    sourceUnavailable: Boolean = false,
     onOpen: () -> Unit,
     onDelete: () -> Unit,
 ) {
@@ -196,10 +199,10 @@ private fun DownloadHistoryCard(
             horizontalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             Icon(
-                if (broken) Icons.Default.Warning
+                if (broken || sourceUnavailable) Icons.Default.Warning
                 else if (download.type == "WALLPAPER") Icons.Default.Image else Icons.Default.MusicNote,
                 null, Modifier.size(24.dp),
-                tint = if (broken) MaterialTheme.colorScheme.error.copy(alpha = 0.8f)
+                tint = if (broken || sourceUnavailable) MaterialTheme.colorScheme.error.copy(alpha = 0.8f)
                        else MaterialTheme.colorScheme.primary,
             )
             Column(Modifier.weight(1f)) {
@@ -215,6 +218,8 @@ private fun DownloadHistoryCard(
                     Text(dateFormat.format(Date(download.downloadedAt)), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     if (broken) {
                         Text("File missing", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.error.copy(alpha = 0.8f))
+                    } else if (sourceUnavailable) {
+                        Text("Source unavailable", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.error.copy(alpha = 0.8f))
                     } else {
                         Text(
                             if (download.type == "WALLPAPER") "Wallpaper" else "Sound",

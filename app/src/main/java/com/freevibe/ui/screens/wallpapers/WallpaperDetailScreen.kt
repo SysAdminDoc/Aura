@@ -38,6 +38,7 @@ import com.freevibe.data.model.ContentSource
 import com.freevibe.data.model.Wallpaper
 import com.freevibe.data.model.WallpaperCollectionEntity
 import com.freevibe.data.model.WallpaperTarget
+import com.freevibe.data.model.isSourceUnavailable
 import com.freevibe.data.model.stableKey
 import com.freevibe.service.ParallaxWallpaperService
 import com.freevibe.ui.LiveWallpaperLaunchMode
@@ -201,6 +202,7 @@ fun WallpaperDetailScreen(
 
     // Use pager's current wallpaper for UI (not the reactive wp which causes reorder)
     val wp = currentWp
+    val sourceUnavailable = wp.isSourceUnavailable()
     val hints = remember(wp) { wp.qualityHints() }
 
     val isFavorite by viewModel.isFavorite(wp).collectAsStateWithLifecycle(initialValue = false)
@@ -352,6 +354,13 @@ fun WallpaperDetailScreen(
                                 verticalAlignment = Alignment.CenterVertically,
                             ) {
                                 SourceBadge(wp.source.name)
+                                if (sourceUnavailable) {
+                                    HighlightPill(
+                                        label = "Source unavailable",
+                                        icon = Icons.Default.Warning,
+                                        tint = MaterialTheme.colorScheme.error,
+                                    )
+                                }
                                 if (voteCount > 0) {
                                     HighlightPill(
                                         label = "${formatCompactCount(voteCount)} likes",
@@ -545,18 +554,20 @@ fun WallpaperDetailScreen(
                                 tint = MaterialTheme.colorScheme.primary,
                                 onClick = { viewModel.downloadWallpaper(wp) },
                             )
-                            DetailActionPill(
-                                icon = Icons.Default.ImageSearch,
-                                label = "Similar",
-                                tint = MaterialTheme.colorScheme.secondary,
-                                onClick = { onFindSimilar(wp) },
-                            )
+                            if (!sourceUnavailable) {
+                                DetailActionPill(
+                                    icon = Icons.Default.ImageSearch,
+                                    label = "Similar",
+                                    tint = MaterialTheme.colorScheme.secondary,
+                                    onClick = { onFindSimilar(wp) },
+                                )
+                            }
                             DetailActionPill(
                                 icon = Icons.Default.Share,
                                 label = "Share",
                                 tint = MaterialTheme.colorScheme.primary,
                                 onClick = {
-                                    val shareUrl = wp.sourcePageUrl.ifEmpty { wp.fullUrl }
+                                    val shareUrl = if (sourceUnavailable) wp.fullUrl else wp.sourcePageUrl.ifEmpty { wp.fullUrl }
                                     if (shareUrl.isBlank()) return@DetailActionPill
                                     val intent = Intent(Intent.ACTION_SEND).apply {
                                         type = "text/plain"
@@ -567,7 +578,7 @@ fun WallpaperDetailScreen(
                                     } catch (_: Exception) {}
                                 },
                             )
-                            if (wp.sourcePageUrl.isNotBlank()) {
+                            if (wp.sourcePageUrl.isNotBlank() && !sourceUnavailable) {
                                 DetailActionPill(
                                     icon = Icons.Default.Link,
                                     label = "Source",
@@ -616,7 +627,7 @@ fun WallpaperDetailScreen(
                             onDownload = { viewModel.downloadWallpaper(wp) },
                             onFindSimilar = { onFindSimilar(wp) },
                             onShare = {
-                                val shareUrl = wp.sourcePageUrl.ifEmpty { wp.fullUrl }
+                                val shareUrl = if (sourceUnavailable) wp.fullUrl else wp.sourcePageUrl.ifEmpty { wp.fullUrl }
                                 if (shareUrl.isBlank()) return@CompactWallpaperOverlayCard
                                 val intent = Intent(Intent.ACTION_SEND).apply {
                                     type = "text/plain"
@@ -841,12 +852,14 @@ private fun CompactWallpaperOverlayCard(
                 tint = MaterialTheme.colorScheme.primary,
                 onClick = onDownload,
             )
-            DetailActionPill(
-                icon = Icons.Default.ImageSearch,
-                label = "Similar",
-                tint = MaterialTheme.colorScheme.secondary,
-                onClick = onFindSimilar,
-            )
+            if (!wallpaper.isSourceUnavailable()) {
+                DetailActionPill(
+                    icon = Icons.Default.ImageSearch,
+                    label = "Similar",
+                    tint = MaterialTheme.colorScheme.secondary,
+                    onClick = onFindSimilar,
+                )
+            }
             DetailActionPill(
                 icon = Icons.Default.Share,
                 label = "Share",
@@ -1155,6 +1168,11 @@ internal fun wallpaperDetailTitle(wallpaper: Wallpaper): String =
 internal fun wallpaperDetailSubtitle(wallpaper: Wallpaper): String {
     val sourceLabel = sourceDisplayName(wallpaper.source)
     return when {
+        wallpaper.isSourceUnavailable() ->
+            listOfNotNull(
+                "Saved from $sourceLabel; source is unavailable",
+                wallpaper.sourceAvailabilityReason.takeIf { it.isNotBlank() },
+            ).joinToString(": ")
         wallpaper.uploaderName.isNotBlank() ->
             "By ${wallpaper.uploaderName} on $sourceLabel"
         wallpaper.sourcePageUrl.isNotBlank() ->

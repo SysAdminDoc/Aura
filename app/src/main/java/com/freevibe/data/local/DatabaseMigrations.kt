@@ -206,6 +206,16 @@ object DatabaseMigrations {
         }
     }
 
+    // v14->15: Persist source availability for saved local copies whose remote provider item disappears
+    val MIGRATION_14_15 = object : Migration(14, 15) {
+        override fun migrate(db: SupportSQLiteDatabase) {
+            db.execSQL("ALTER TABLE `favorites` ADD COLUMN `sourceAvailability` TEXT NOT NULL DEFAULT 'AVAILABLE'")
+            db.execSQL("ALTER TABLE `favorites` ADD COLUMN `sourceAvailabilityReason` TEXT DEFAULT NULL")
+            db.execSQL("ALTER TABLE `downloads` ADD COLUMN `sourceAvailability` TEXT NOT NULL DEFAULT 'AVAILABLE'")
+            db.execSQL("ALTER TABLE `downloads` ADD COLUMN `sourceAvailabilityReason` TEXT DEFAULT NULL")
+        }
+    }
+
     val ALL_MIGRATIONS = arrayOf(
         MIGRATION_1_2,
         MIGRATION_2_3,
@@ -220,5 +230,6 @@ object DatabaseMigrations {
         MIGRATION_11_12,
         MIGRATION_12_13,
         MIGRATION_13_14,
+        MIGRATION_14_15,
     )
 }

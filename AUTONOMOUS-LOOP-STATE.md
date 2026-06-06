@@ -1,8 +1,8 @@
 # Autonomous Loop State
 
 **Assigned project:** `C:\Users\--\repos\Aura`
-**Current pass:** 2026-06-06 Cycle 45 generated wallpaper source switch
-**Last commit before pass:** `01e227e` (`feat(policy): add pixabay video request backoff`)
+**Current pass:** 2026-06-06 Cycle 46 saved-source availability states
+**Last commit before pass:** `2c54288` (`feat(settings): add generated wallpaper switch`)
 
 ## 2026-06-05 Result
 
@@ -174,12 +174,20 @@
 - Updated the AI wallpaper screen and ViewModel so disabled mode hides the key surface, disables the request button, and blocks generation before prompt/key validation or Stability repository calls.
 - Marked AI-generated runtime controls covered while keeping saved local generated wallpapers visible.
 - Updated `ProviderDisclosure.kt`, `docs/legal/provider-runtime-controls.md`, `docs/research/cycle-45-2026-06-06.md`, `ROADMAP.md`, `CHANGELOG.md`, and `COMPLETED.md` for the generated-content source switch.
+- Completed Cycle 46 saved-source availability states.
+- Added `sourceAvailability` and `sourceAvailabilityReason` metadata to favorites and download history with a v14-to-v15 Room migration and schema snapshot.
+- Added repository/ViewModel hooks to mark or clear unavailable source state for saved favorites/download records.
+- Updated favorite/domain mapping and favorite export/import so unavailable source state survives backups and restored wallpaper favorites prefer their offline path when available.
+- Updated new download records to preserve provider source names instead of collapsing source to `WALLPAPER` or `SOUND`.
+- Surfaced "Source unavailable" in Favorites, Downloads, wallpaper detail, and sound detail; unavailable saved items no longer show live-source link/similar/share affordances as normal provider content.
+- Updated `docs/research/cycle-46-2026-06-06.md`, `ROADMAP.md`, `CHANGELOG.md`, and `COMPLETED.md` for the saved-source availability slice.
 
 ## Still Open
 
 - Exact Termux package commit, FFmpeg package patches, dependency source set, and build logs for the resolved youtubedl-android ffmpeg 0.18.1 AAR.
-- Unavailable-source states for saved favorites/downloads when remote providers remove content.
+- Pexels usage guardrail and fallback proof for first-run/provider-off flows.
+- Action-level sound license capability gates for Freesound/SoundCloud-style restrictions.
 
 ## Next Cycle
 
-Continue this same assigned project, Aura. Start Cycle 46 from the `ROADMAP.md` Continuation State and `docs/research/cycle-45-2026-06-06.md`. The Google OSS notices plugin-only path is implemented; `tools/google_oss_to_markdown.py` generates `THIRD-PARTY-NOTICES.md`; `tools/google_oss_raw_archive.py` archives raw Google OSS inputs and the repo now keeps `GOOGLE-OSS-RAW-INPUTS.zip` attached to tagged public releases; `GeneratedDependencyNotices.kt` parses generated raw resources for an in-app notice viewer with search and review markers; `tools/native_compliance_inventory.py` generates `NATIVE-COMPLIANCE.md`, extracts embedded FFmpeg configure evidence, and gates native evidence drift; `tools/dependency_notice_lock.py` gates generated release notice drift and raw metadata parity; `tools/dependency_overlay_check.py` gates curated high-risk dependency/native-payload review metadata; `tools/dependency_license_policy.py` gates allowed, review-required, disallowed, and unknown curated license IDs; `tools/release_artifact_bundle_check.py` gates final release bundle consistency; `ProviderDisclosure.kt` now has checked runtime-control rows for every content source; YouTube, Reddit, Wallhaven, Pexels, Pixabay, Community, Bing Daily, and generated wallpapers now have runtime provider/source switches that block active fetch/resolver/upload/action paths before remote calls or bundled key reads where applicable; Pixabay photo and video metadata now have 24-hour request caches and 429 backoff. Next add unavailable-source states for saved favorites/downloads when remote providers remove content. Keep AboutLibraries secondary: 14.2.1 configures, but default exports were incomplete and the compliance export logged Windows path errors; do not use AboutLibraries 15.x until N-1 upgrades AGP because v15 requires AGP 8.13. Commit and push completed work when the active project contract allows it.
+Continue this same assigned project, Aura. Start Cycle 47 from the `ROADMAP.md` Continuation State and `docs/research/cycle-46-2026-06-06.md`. The Google OSS notices plugin-only path is implemented; `tools/google_oss_to_markdown.py` generates `THIRD-PARTY-NOTICES.md`; `tools/google_oss_raw_archive.py` archives raw Google OSS inputs and the repo now keeps `GOOGLE-OSS-RAW-INPUTS.zip` attached to tagged public releases; `GeneratedDependencyNotices.kt` parses generated raw resources for an in-app notice viewer with search and review markers; `tools/native_compliance_inventory.py` generates `NATIVE-COMPLIANCE.md`, extracts embedded FFmpeg configure evidence, and gates native evidence drift; `tools/dependency_notice_lock.py` gates generated release notice drift and raw metadata parity; `tools/dependency_overlay_check.py` gates curated high-risk dependency/native-payload review metadata; `tools/dependency_license_policy.py` gates allowed, review-required, disallowed, and unknown curated license IDs; `tools/release_artifact_bundle_check.py` gates final release bundle consistency; `ProviderDisclosure.kt` now has checked runtime-control rows for every content source; YouTube, Reddit, Wallhaven, Pexels, Pixabay, Community, Bing Daily, and generated wallpapers now have runtime provider/source switches that block active fetch/resolver/upload/action paths before remote calls or bundled key reads where applicable; Pixabay photo and video metadata now have 24-hour request caches and 429 backoff; favorites/download history now have persisted unavailable-source states for saved local copies. Next add the Pexels usage guardrail/fallback proof so Pexels remains an enhancement source and provider-off first-run flows stay useful. Keep AboutLibraries secondary: 14.2.1 configures, but default exports were incomplete and the compliance export logged Windows path errors; do not use AboutLibraries 15.x until N-1 upgrades AGP because v15 requires AGP 8.13. Commit and push completed work when the active project contract allows it.

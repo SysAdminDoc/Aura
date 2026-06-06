@@ -12,6 +12,19 @@ enum class ContentSource { WALLHAVEN, PICSUM, BING, WIKIMEDIA, INTERNET_ARCHIVE,
 enum class ContentType { WALLPAPER, LIVE_WALLPAPER, RINGTONE, NOTIFICATION, ALARM }
 enum class WallpaperTarget { HOME, LOCK, BOTH }
 
+const val SOURCE_AVAILABILITY_AVAILABLE = "AVAILABLE"
+const val SOURCE_AVAILABILITY_UNAVAILABLE = "SOURCE_UNAVAILABLE"
+
+fun normalizeSourceAvailability(value: String?): String =
+    if (value.equals(SOURCE_AVAILABILITY_UNAVAILABLE, ignoreCase = true)) {
+        SOURCE_AVAILABILITY_UNAVAILABLE
+    } else {
+        SOURCE_AVAILABILITY_AVAILABLE
+    }
+
+fun isSourceUnavailable(value: String?): Boolean =
+    normalizeSourceAvailability(value) == SOURCE_AVAILABILITY_UNAVAILABLE
+
 // -- Wallpaper --
 
 @Immutable
@@ -31,6 +44,8 @@ data class Wallpaper(
     val uploaderName: String = "",
     val views: Int = 0,
     val favorites: Int = 0,
+    val sourceAvailability: String = SOURCE_AVAILABILITY_AVAILABLE,
+    val sourceAvailabilityReason: String = "",
 )
 
 // -- Sound --
@@ -51,6 +66,8 @@ data class Sound(
     val license: String = "",
     val uploaderName: String = "",
     val sourcePageUrl: String = "",
+    val sourceAvailability: String = SOURCE_AVAILABILITY_AVAILABLE,
+    val sourceAvailabilityReason: String = "",
 )
 
 @Immutable
@@ -91,6 +108,8 @@ data class FavoriteEntity(
     val fileType: String? = null,
     val views: Long? = null,
     val favoritesCount: Long? = null,
+    val sourceAvailability: String = SOURCE_AVAILABILITY_AVAILABLE,
+    val sourceAvailabilityReason: String? = null,
 )
 
 fun Wallpaper.favoriteIdentity() = FavoriteIdentity(
@@ -127,7 +146,17 @@ data class DownloadEntity(
     val localPath: String,
     val name: String = "",
     val downloadedAt: Long = System.currentTimeMillis(),
+    val sourceAvailability: String = SOURCE_AVAILABILITY_AVAILABLE,
+    val sourceAvailabilityReason: String? = null,
 )
+
+fun Wallpaper.isSourceUnavailable(): Boolean = isSourceUnavailable(sourceAvailability)
+
+fun Sound.isSourceUnavailable(): Boolean = isSourceUnavailable(sourceAvailability)
+
+fun FavoriteEntity.isSourceUnavailable(): Boolean = isSourceUnavailable(sourceAvailability)
+
+fun DownloadEntity.isSourceUnavailable(): Boolean = isSourceUnavailable(sourceAvailability)
 
 // -- Search results wrapper --
 

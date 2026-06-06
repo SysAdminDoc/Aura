@@ -3,6 +3,7 @@
 All notable changes to Aura will be documented in this file.
 
 ## Unreleased
+- **Saved-source availability states (Cycle 46)**: favorites and download history now persist a source-availability state; marked items show "Source unavailable" in saved surfaces and detail screens, hide live-source affordances, and keep local saved wallpaper paths usable.
 - **Generated wallpaper source switch (Cycle 45)**: Settings now has a default-on generated-wallpapers source switch; disabled mode hides generation entry points, blocks Stability requests before prompt or key validation, and keeps saved generated local wallpapers visible.
 - **Pixabay video request-cache and backoff (Cycle 44)**: Pixabay video metadata now uses an app-private 24-hour fresh-cache path before API calls, persists 429 backoff from `Retry-After` or `X-RateLimit-Reset`, and falls back to stale cached video rows during active backoff.
 - **Pixabay photo request-cache and backoff (Cycle 43)**: Pixabay photo results now use a 24-hour fresh-cache path before API calls and 429 responses set an in-session backoff from `Retry-After` or `X-RateLimit-Reset`; video metadata policy handling followed in Cycle 44.

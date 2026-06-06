@@ -80,6 +80,8 @@ fun Wallpaper.toFavoriteEntity() = FavoriteEntity(
     fileType = fileType.takeIf { it.isNotEmpty() },
     views = views.toLong().takeIf { it > 0 },
     favoritesCount = favorites.toLong().takeIf { it > 0 },
+    sourceAvailability = normalizeSourceAvailability(sourceAvailability),
+    sourceAvailabilityReason = sourceAvailabilityReason.takeIf { it.isNotBlank() },
 )
 
 fun Sound.toFavoriteEntity() = FavoriteEntity(
@@ -99,6 +101,8 @@ fun Sound.toFavoriteEntity() = FavoriteEntity(
     sourcePageUrl = sourcePageUrl.takeIf { it.isNotEmpty() },
     fileSize = fileSize.takeIf { it > 0 },
     fileType = fileType.takeIf { it.isNotEmpty() },
+    sourceAvailability = normalizeSourceAvailability(sourceAvailability),
+    sourceAvailabilityReason = sourceAvailabilityReason.takeIf { it.isNotBlank() },
 )
 
 // -- FavoriteEntity -> Domain --
@@ -107,7 +111,7 @@ fun FavoriteEntity.toWallpaper() = Wallpaper(
     id = id,
     source = try { ContentSource.valueOf(source) } catch (_: Exception) { ContentSource.WALLHAVEN },
     thumbnailUrl = thumbnailUrl,
-    fullUrl = fullUrl,
+    fullUrl = offlinePath.ifBlank { fullUrl },
     width = width,
     height = height,
     tags = tags?.split(" ||| ")?.filter { it.isNotEmpty() } ?: emptyList(),
@@ -119,6 +123,8 @@ fun FavoriteEntity.toWallpaper() = Wallpaper(
     fileType = fileType ?: "",
     views = views?.toInt() ?: 0,
     favorites = favoritesCount?.toInt() ?: 0,
+    sourceAvailability = normalizeSourceAvailability(sourceAvailability),
+    sourceAvailabilityReason = sourceAvailabilityReason ?: "",
 )
 
 fun FavoriteEntity.toSound(): Sound {
@@ -146,6 +152,8 @@ fun FavoriteEntity.toSound(): Sound {
         sourcePageUrl = restoredSourcePageUrl ?: "",
         fileSize = fileSize ?: 0L,
         fileType = fileType ?: "",
+        sourceAvailability = normalizeSourceAvailability(sourceAvailability),
+        sourceAvailabilityReason = sourceAvailabilityReason ?: "",
     )
 }
 

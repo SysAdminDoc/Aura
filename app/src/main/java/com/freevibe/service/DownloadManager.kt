@@ -49,6 +49,7 @@ class DownloadManager @Inject constructor(
         id: String,
         url: String,
         fileName: String,
+        source: String = "WALLPAPER",
     ): Result<Uri> = withContext(Dispatchers.IO) {
         val contentType = "WALLPAPER"
         downloadFile(
@@ -60,6 +61,7 @@ class DownloadManager @Inject constructor(
             relativePath = Environment.DIRECTORY_PICTURES + "/Aura",
             collection = MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
             contentType = contentType,
+            contentSource = source,
             maxBytes = MAX_IMAGE_DOWNLOAD_BYTES,
         )
     }
@@ -70,6 +72,7 @@ class DownloadManager @Inject constructor(
         url: String,
         fileName: String,
         type: ContentType,
+        source: String = "SOUND",
     ): Result<Uri> = withContext(Dispatchers.IO) {
         val contentType = "SOUND"
         val relativePath = when (type) {
@@ -88,6 +91,7 @@ class DownloadManager @Inject constructor(
             relativePath = relativePath,
             collection = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
             contentType = contentType,
+            contentSource = source,
             maxBytes = MAX_AUDIO_DOWNLOAD_BYTES,
         )
     }
@@ -101,6 +105,7 @@ class DownloadManager @Inject constructor(
         relativePath: String,
         collection: Uri,
         contentType: String,
+        contentSource: String,
         maxBytes: Long,
     ): Result<Uri> = try {
         updateProgress(historyId, DownloadProgress(historyId, fileName, 0f, 0, 0))
@@ -186,7 +191,7 @@ class DownloadManager @Inject constructor(
                 downloadDao.insert(
                     DownloadEntity(
                         id = historyId,
-                        source = contentType,
+                        source = contentSource,
                         type = contentType,
                         localPath = uri.toString(),
                         name = fileName,

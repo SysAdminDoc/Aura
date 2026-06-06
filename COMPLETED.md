@@ -122,6 +122,11 @@ next pass can resume quickly.
   Generate chip when disabled, blocked the AI wallpaper ViewModel before prompt
   or key validation, and marked AI-generated runtime controls covered while
   keeping saved local generated wallpapers visible.
+- Completed Cycle 46 saved-source availability states: added Room-backed source
+  availability metadata for favorites and download history, migrated the
+  database to v15, preserved provider source names in new download records,
+  surfaced "Source unavailable" badges in Favorites/Downloads/detail screens,
+  and kept local saved wallpaper paths usable when upstream content is removed.
 
 ## 2026-06-05
 

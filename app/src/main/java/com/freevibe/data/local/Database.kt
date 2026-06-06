@@ -23,7 +23,7 @@ import kotlinx.coroutines.flow.Flow
         WallpaperCollectionEntity::class,
         WallpaperCollectionItemEntity::class,
     ],
-    version = 14,
+    version = 15,
     exportSchema = true,
 )
 abstract class FreeVibeDatabase : RoomDatabase() {
@@ -74,6 +74,15 @@ interface FavoriteDao {
     @Query("UPDATE favorites SET offlinePath = :path WHERE id = :id AND source = :source AND type = :type")
     suspend fun updateOfflinePath(id: String, source: String, type: String, path: String)
 
+    @Query("UPDATE favorites SET sourceAvailability = :availability, sourceAvailabilityReason = :reason WHERE id = :id AND source = :source AND type = :type")
+    suspend fun updateSourceAvailability(
+        id: String,
+        source: String,
+        type: String,
+        availability: String,
+        reason: String?,
+    )
+
     @Query("SELECT id, source, type FROM favorites")
     fun allIdentities(): Flow<List<FavoriteIdentity>>
 
@@ -103,6 +112,9 @@ interface DownloadDao {
 
     @Query("DELETE FROM downloads WHERE id = :id")
     suspend fun deleteById(id: String)
+
+    @Query("UPDATE downloads SET sourceAvailability = :availability, sourceAvailabilityReason = :reason WHERE id = :id")
+    suspend fun updateSourceAvailability(id: String, availability: String, reason: String?)
 }
 
 // -- Search History DAO --

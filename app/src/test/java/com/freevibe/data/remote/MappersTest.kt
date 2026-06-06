@@ -53,6 +53,7 @@ class MappersTest {
         assertEquals(500_000L, entity.fileSize)
         assertEquals(100L, entity.views)
         assertEquals(50L, entity.favoritesCount)
+        assertEquals(SOURCE_AVAILABILITY_AVAILABLE, entity.sourceAvailability)
     }
 
     @Test
@@ -129,6 +130,26 @@ class MappersTest {
         assertEquals(emptyList<String>(), entity.toWallpaper().tags)
     }
 
+    @Test
+    fun `FavoriteEntity toWallpaper carries source unavailable state and offline path`() {
+        val entity = FavoriteEntity(
+            id = "rd_missing",
+            source = "REDDIT",
+            type = "WALLPAPER",
+            thumbnailUrl = "https://example.com/thumb.jpg",
+            fullUrl = "https://i.redd.it/missing.jpg",
+            offlinePath = "file:///data/user/0/com.freevibe/files/favorites/rd_missing.jpg",
+            sourceAvailability = SOURCE_AVAILABILITY_UNAVAILABLE,
+            sourceAvailabilityReason = "Post was removed",
+        )
+
+        val restored = entity.toWallpaper()
+
+        assertEquals("file:///data/user/0/com.freevibe/files/favorites/rd_missing.jpg", restored.fullUrl)
+        assertTrue(restored.isSourceUnavailable())
+        assertEquals("Post was removed", restored.sourceAvailabilityReason)
+    }
+
     // ── Sound.toFavoriteEntity + FavoriteEntity.toSound ──
 
     @Test
@@ -149,6 +170,7 @@ class MappersTest {
         assertEquals(original.duration, restored.duration, 0.001)
         assertEquals(original.tags, restored.tags)
         assertEquals(original.uploaderName, restored.uploaderName)
+        assertEquals(SOURCE_AVAILABILITY_AVAILABLE, restored.sourceAvailability)
     }
 
     @Test

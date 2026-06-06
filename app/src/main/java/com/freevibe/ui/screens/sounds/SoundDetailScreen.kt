@@ -38,6 +38,7 @@ import com.freevibe.ui.components.ShimmerBox
 import com.freevibe.data.model.ContentSource
 import com.freevibe.data.model.ContentType
 import com.freevibe.data.model.Sound
+import com.freevibe.data.model.isSourceUnavailable
 import com.freevibe.data.model.stableKey
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
@@ -124,8 +125,9 @@ fun SoundDetailScreen(
         !(s.source == ContentSource.BUNDLED && s.uploaderName == "Aura Picks")
     val detailBadges = remember(s, state.selectedTab) { soundBadges(s, state.selectedTab) }
     val (sourceLabel, sourceColor) = soundSourceTone(s.source)
-    val shareBody = remember(s.sourcePageUrl, s.downloadUrl) {
-        s.sourcePageUrl.ifEmpty { s.downloadUrl }
+    val sourceUnavailable = s.isSourceUnavailable()
+    val shareBody = remember(s.sourcePageUrl, s.downloadUrl, sourceUnavailable) {
+        if (sourceUnavailable) "" else s.sourcePageUrl.ifEmpty { s.downloadUrl }
     }
     val canShareSound = shareBody.isNotBlank()
 
@@ -239,6 +241,30 @@ fun SoundDetailScreen(
                 }
             }
 
+            if (sourceUnavailable) {
+                Surface(
+                    color = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.58f),
+                    contentColor = MaterialTheme.colorScheme.onErrorContainer,
+                    shape = RoundedCornerShape(12.dp),
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.error.copy(alpha = 0.18f)),
+                ) {
+                    Row(
+                        Modifier.fillMaxWidth().padding(14.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    ) {
+                        Icon(Icons.Default.Warning, contentDescription = null, tint = MaterialTheme.colorScheme.error)
+                        Column(Modifier.weight(1f)) {
+                            Text("Source unavailable", style = MaterialTheme.typography.labelLarge)
+                            Text(
+                                s.sourceAvailabilityReason.ifBlank { "This saved sound is no longer represented as live provider content." },
+                                style = MaterialTheme.typography.bodySmall,
+                            )
+                        }
+                    }
+                }
+            }
+
             // Tags
             if (s.tags.isNotEmpty()) {
                 FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
@@ -295,7 +321,7 @@ fun SoundDetailScreen(
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 SecondarySoundAction("Trim", Icons.Default.ContentCut, Modifier.weight(1f)) { onEdit(s) }
                 SecondarySoundAction("Contact", Icons.Default.Contacts, Modifier.weight(1f)) { onContactPicker(s) }
-                SecondarySoundAction("Save", Icons.Default.Download, Modifier.weight(1f)) { viewModel.downloadSound(s) }
+                SecondarySoundAction("Save", Icons.Default.Download, Modifier.weight(1f), enabled = !sourceUnavailable) { viewModel.downloadSound(s) }
                 SecondarySoundAction("Share", Icons.Default.Share, Modifier.weight(1f), enabled = canShareSound) {
                     val intent = Intent(Intent.ACTION_SEND).apply { type = "text/plain"; putExtra(Intent.EXTRA_TEXT, shareBody); putExtra(Intent.EXTRA_SUBJECT, s.name) }
                     try { context.startActivity(Intent.createChooser(intent, "Share sound")) } catch (_: Exception) {}
@@ -304,15 +330,17 @@ fun SoundDetailScreen(
 
             // More Like This
             Spacer(Modifier.height(4.dp))
-            SimilarSoundsSection(
-                sound = s,
-                similarSounds = similarSounds,
-                isLoading = similarLoading,
-                currentPlayingId = state.playingId,
-                viewModel = viewModel,
-            ) { similar ->
-                viewModel.selectSound(similar)
-                onOpenSound(similar)
+            if (!sourceUnavailable) {
+                SimilarSoundsSection(
+                    sound = s,
+                    similarSounds = similarSounds,
+                    isLoading = similarLoading,
+                    currentPlayingId = state.playingId,
+                    viewModel = viewModel,
+                ) { similar ->
+                    viewModel.selectSound(similar)
+                    onOpenSound(similar)
+                }
             }
 
             Spacer(Modifier.height(80.dp)) // bottom padding for nav bar

@@ -245,7 +245,7 @@ class SoundsViewModelTest {
 
         assertEquals("Could not resolve audio stream URL", viewModel.state.value.error)
         coVerify(exactly = 0) { youtubeRepo.getAudioStreamUrl(any()) }
-        coVerify(exactly = 0) { downloadManager.downloadSound(any(), any(), any(), any()) }
+        coVerify(exactly = 0) { downloadManager.downloadSound(any(), any(), any(), any(), any()) }
     }
 
     @Test
@@ -676,6 +676,7 @@ class SoundsViewModelTest {
                 url = "https://example.com/fresh-focus-download.mp3",
                 fileName = any(),
                 type = ContentType.RINGTONE,
+                source = ContentSource.YOUTUBE.name,
             )
         } returns Result.success(mockk(relaxed = true))
 
@@ -704,6 +705,7 @@ class SoundsViewModelTest {
                 url = "https://example.com/fresh-focus-download.mp3",
                 fileName = match { it == "Aura_youtube_yt_focus12345_Focus Loop.mp3" },
                 type = ContentType.RINGTONE,
+                source = ContentSource.YOUTUBE.name,
             )
         }
     }

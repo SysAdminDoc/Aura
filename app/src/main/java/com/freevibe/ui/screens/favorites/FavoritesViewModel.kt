@@ -36,6 +36,12 @@ class FavoritesViewModel @Inject constructor(
 
     fun removeFavorite(entity: FavoriteEntity) = viewModelScope.launch { favoritesRepo.remove(entity.favoriteIdentity()) }
     fun restoreFavorite(entity: FavoriteEntity) = viewModelScope.launch { favoritesRepo.add(entity) }
+    fun markSourceUnavailable(entity: FavoriteEntity, reason: String? = null) = viewModelScope.launch {
+        favoritesRepo.markSourceUnavailable(entity.favoriteIdentity(), reason)
+    }
+    fun clearSourceUnavailable(entity: FavoriteEntity) = viewModelScope.launch {
+        favoritesRepo.clearSourceUnavailable(entity.favoriteIdentity())
+    }
 
     /** Convert FavoriteEntity to domain Wallpaper and populate shared holder with the visible list */
     fun selectWallpaper(fav: FavoriteEntity, visibleWallpapers: List<FavoriteEntity>) {

@@ -397,6 +397,7 @@ class WallpapersViewModelTest {
                 id = wallpaper.stableKey(),
                 url = wallpaper.fullUrl,
                 fileName = match { it == "Aura_pexels_shared_42.png" },
+                source = ContentSource.PEXELS.name,
             )
         } returns Result.success(mockk(relaxed = true))
 
@@ -414,6 +415,7 @@ class WallpapersViewModelTest {
                 id = wallpaper.stableKey(),
                 url = wallpaper.fullUrl,
                 fileName = "Aura_pexels_shared_42.png",
+                source = ContentSource.PEXELS.name,
             )
         }
     }

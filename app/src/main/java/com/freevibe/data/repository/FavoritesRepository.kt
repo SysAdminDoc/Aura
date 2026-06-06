@@ -3,6 +3,8 @@ package com.freevibe.data.repository
 import com.freevibe.data.local.FavoriteDao
 import com.freevibe.data.model.FavoriteEntity
 import com.freevibe.data.model.FavoriteIdentity
+import com.freevibe.data.model.SOURCE_AVAILABILITY_AVAILABLE
+import com.freevibe.data.model.SOURCE_AVAILABILITY_UNAVAILABLE
 import com.freevibe.data.model.favoriteIdentity
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
@@ -28,6 +30,23 @@ class FavoritesRepository @Inject constructor(
 
     suspend fun add(favorite: FavoriteEntity) = dao.insert(favorite)
     suspend fun remove(identity: FavoriteIdentity) = dao.deleteByIdentity(identity.id, identity.source, identity.type)
+    suspend fun markSourceUnavailable(identity: FavoriteIdentity, reason: String? = null) =
+        dao.updateSourceAvailability(
+            identity.id,
+            identity.source,
+            identity.type,
+            SOURCE_AVAILABILITY_UNAVAILABLE,
+            reason?.takeIf { it.isNotBlank() },
+        )
+
+    suspend fun clearSourceUnavailable(identity: FavoriteIdentity) =
+        dao.updateSourceAvailability(
+            identity.id,
+            identity.source,
+            identity.type,
+            SOURCE_AVAILABILITY_AVAILABLE,
+            null,
+        )
 
     suspend fun toggle(favorite: FavoriteEntity, isFav: Boolean) {
         if (isFav) {

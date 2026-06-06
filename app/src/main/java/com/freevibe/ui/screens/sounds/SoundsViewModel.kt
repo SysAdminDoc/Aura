@@ -736,6 +736,7 @@ class SoundsViewModel @Inject constructor(
                 id = sound.stableKey(), url = dlUrl,
                 fileName = buildSoundDownloadFileName(sound, ext),
                 type = currentDownloadType(),
+                source = sound.source.name,
             )
             _state.update { it.copy(applySuccess = "Download started") }
         }

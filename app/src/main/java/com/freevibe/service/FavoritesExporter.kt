@@ -5,6 +5,7 @@ import android.net.Uri
 import com.freevibe.data.local.FavoriteDao
 import com.freevibe.data.model.FavoriteEntity
 import com.freevibe.data.model.favoriteIdentity
+import com.freevibe.data.model.normalizeSourceAvailability
 import com.squareup.moshi.JsonClass
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.Types
@@ -158,6 +159,8 @@ data class FavoriteExportItem(
     val views: Long? = null,
     val favoritesCount: Long? = null,
     val addedAt: Long? = null,
+    val sourceAvailability: String? = null,
+    val sourceAvailabilityReason: String? = null,
 )
 
 private fun FavoriteEntity.toExportItem() = FavoriteExportItem(
@@ -166,6 +169,8 @@ private fun FavoriteEntity.toExportItem() = FavoriteExportItem(
     tags = tags, colors = colors, category = category, uploaderName = uploaderName,
     sourcePageUrl = sourcePageUrl, fileSize = fileSize, fileType = fileType,
     views = views, favoritesCount = favoritesCount, addedAt = addedAt,
+    sourceAvailability = sourceAvailability,
+    sourceAvailabilityReason = sourceAvailabilityReason,
 )
 
 internal fun isAllowedImportedFavoriteUrl(
@@ -198,6 +203,9 @@ internal fun FavoriteExportItem.toValidatedEntity(): FavoriteEntity? {
     val normalizedThumbnailUrl = thumbnailUrl.trim().take(MAX_URL_LENGTH)
     val normalizedFullUrl = fullUrl.trim().take(MAX_URL_LENGTH)
     val normalizedSourcePageUrl = sourcePageUrl?.trim()?.take(MAX_URL_LENGTH)?.takeIf { it.isNotBlank() }
+    val normalizedSourceAvailability = normalizeSourceAvailability(sourceAvailability)
+    val normalizedSourceAvailabilityReason =
+        sourceAvailabilityReason?.trim()?.take(MAX_TEXT_LENGTH)?.takeIf { it.isNotBlank() }
 
     if (normalizedType == "WALLPAPER" && (normalizedThumbnailUrl.isBlank() || normalizedFullUrl.isBlank())) {
         return null
@@ -231,5 +239,7 @@ internal fun FavoriteExportItem.toValidatedEntity(): FavoriteEntity? {
         views = views?.coerceAtLeast(0L),
         favoritesCount = favoritesCount?.coerceAtLeast(0L),
         addedAt = (addedAt ?: System.currentTimeMillis()).coerceAtLeast(0L),
+        sourceAvailability = normalizedSourceAvailability,
+        sourceAvailabilityReason = normalizedSourceAvailabilityReason,
     )
 }

@@ -3,6 +3,8 @@ package com.freevibe.ui.screens.downloads
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.freevibe.data.local.DownloadDao
+import com.freevibe.data.model.SOURCE_AVAILABILITY_AVAILABLE
+import com.freevibe.data.model.SOURCE_AVAILABILITY_UNAVAILABLE
 import com.freevibe.service.DownloadManager
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.SharingStarted
@@ -22,4 +24,14 @@ class DownloadsViewModel @Inject constructor(
 
     fun deleteDownload(id: String) = viewModelScope.launch { downloadManager.deleteDownload(id) }
     fun dismissActive(id: String) = downloadManager.clearCompleted(id)
+    fun markSourceUnavailable(id: String, reason: String? = null) = viewModelScope.launch {
+        downloadDao.updateSourceAvailability(
+            id,
+            SOURCE_AVAILABILITY_UNAVAILABLE,
+            reason?.takeIf { it.isNotBlank() },
+        )
+    }
+    fun clearSourceUnavailable(id: String) = viewModelScope.launch {
+        downloadDao.updateSourceAvailability(id, SOURCE_AVAILABILITY_AVAILABLE, null)
+    }
 }

@@ -513,6 +513,7 @@ class WallpapersViewModel @Inject constructor(
                 id = wallpaper.stableKey(),
                 url = wallpaper.fullUrl,
                 fileName = buildWallpaperDownloadFileName(wallpaper, ext),
+                source = wallpaper.source.name,
             )
         }
     }
