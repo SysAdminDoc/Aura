@@ -69,6 +69,7 @@ fun SettingsScreen(
     onHistoryClick: () -> Unit = {},
     onCollectionsClick: () -> Unit = {},
     onCreatorProfileClick: () -> Unit = {},
+    onCommunityReportsClick: () -> Unit = {},
     viewModel: SettingsViewModel = hiltViewModel(),
 ) {
     val context = LocalContext.current
@@ -489,6 +490,14 @@ fun SettingsScreen(
                     subtitle = "Uploads, votes, follows, and leaderboard",
                     onClick = onCreatorProfileClick,
                 )
+                if (viewModel.isAdmin) {
+                    SettingsItem(
+                        icon = Icons.Default.Report,
+                        title = "Community reports",
+                        subtitle = "Review open rights, source, and safety reports",
+                        onClick = onCommunityReportsClick,
+                    )
+                }
             }
             // #2: Wallpaper history — opens browsable grid
             if (wallpaperHistory.isNotEmpty()) {

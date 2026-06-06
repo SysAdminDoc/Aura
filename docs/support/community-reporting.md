@@ -1,8 +1,9 @@
 # Community Reporting
 
-Cycle 51 adds the first private report queue for Aura community and mirrored
-provider content. Reports are separate from local hide/downvote behavior and
-from the existing admin moderation hide list.
+Cycles 51 and 52 add the first private report queue for Aura community and
+mirrored provider content. Reports are separate from local hide/downvote
+behavior and feed admin hide/restore actions through the existing moderation
+hide list.
 
 ## Report Reasons
 
@@ -35,14 +36,20 @@ Reporter UIDs are not public catalog data.
   the queue uses the same Firebase-backed community surface.
 - ViewModels submit the current source, license, uploader, and HTTPS source URL
   context with each report.
-- Admin resolution writes can mark reports hidden, dismissed, or restored with
-  resolver UID, timestamp, and note metadata.
+- Custom-claim admins see Settings > Community reports, which lists open
+  reports with reason, content key, source, license, uploader, source URL, and
+  reporter suffix context.
+- Admin actions can hide reported content by writing `/moderation/{contentId}`,
+  dismiss a report without moderation changes, or restore hidden content by
+  removing the moderation entry.
+- Resolution writes mark reports hidden, dismissed, or restored with resolver
+  UID, timestamp, and note metadata.
 
 ## Remaining Follow-Up
 
-- Add an admin review surface that lists open reports, opens source/detail
-  context, and performs hide/delete/restore actions.
 - Add App Check and quota/rate-limit enforcement before public production
   reliance.
-- Wire report resolution to the current `/moderation/{contentId}` hide/unhide
-  path and any future owner-delete/takedown flow.
+- Add owner-delete/takedown flows for rights-confirmed removals and public
+  takedown request copy.
+- Add report tabs or filters for closed reports if admins need historical
+  review beyond the current open queue.

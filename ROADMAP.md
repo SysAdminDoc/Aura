@@ -3,7 +3,7 @@
 > Open-source Android personalization: wallpapers, video wallpapers, ringtones, sounds.
 > Stay the OSS alternative to Zedge: no ads, no surprise charges, no dark patterns.
 
-**Version:** 2026-06-06-cycle29-roadmap (added user-facing generated notice access).
+**Version:** 2026-06-06-cycle52-roadmap (added admin report review).
 **Code version at write:** v6.31.1 / versionCode 112 (per `app/build.gradle.kts`; release/lint Gradle runs are memory-heavy on this Windows workstation, so rerun APK compilation only when explicitly needed).
 **Charter:** personalization, AMOLED-first, free-by-default, multi-source content aggregation, community-fed catalog, polite live wallpapers (battery-aware, pause-on-invisible).
 
@@ -145,7 +145,7 @@ Append-only Cycle 1 handoff. Every item below is source-backed in `docs/research
   - Touches: T-E / N-2; models/entities, `WallpaperDetailScreen.kt`, `SoundDetailScreen.kt`, RTDB moderation/report queue, rules, licenses screen.
   - Acceptance: every detail screen has compact source/provenance affordance; community entries have a report action; reports are App-Checked/authenticated; admins can resolve/hide/unhide through Custom Claim rules.
   - Verify: manual detail-screen pass by source (Pexels/Pixabay/Reddit/YouTube/community/bundled); Firebase rules tests for report/create/read and admin resolution.
-  - Progress 2026-06-06: Cycle 51 added private report payload validation, `CommunityReportRepository`, `/community_reports` and `/community_report_resolutions` rules, sound/wallpaper detail report dialogs, ViewModel report submission with source/license/uploader context, and `docs/support/community-reporting.md`. Remaining work: admin review UI, App Check/rate limits, and hide/unhide/delete resolution wiring.
+  - Progress 2026-06-06: Cycle 51 added private report payload validation, `CommunityReportRepository`, `/community_reports` and `/community_report_resolutions` rules, sound/wallpaper detail report dialogs, ViewModel report submission with source/license/uploader context, and `docs/support/community-reporting.md`. Cycle 52 added the admin-only open report queue, Settings navigation, report status index, and Hide/Dismiss/Restore actions wired to `/moderation/{contentId}` plus resolution metadata. Remaining work: App Check/rate limits, delete/takedown flows, and closed-report review filters.
 
 - [ ] 🤖 🔬 **P2 — Video wallpaper playlists and per-video behavior profiles**
   - Why: Aura has local video import, Fit/Fill, crop, thumbnails, Smart Crop, and battery dashboard, but users with multiple clips still apply one video at a time. Focused FOSS video-wallpaper competitors now expose playlists, shuffle/loop, smart start times, and one-shot behavior.
@@ -518,9 +518,9 @@ Append-only Cycle 9 handoff. Every item below is source-backed in `docs/research
   - Why: The current `/moderation/{contentId}=true` boolean hides content but does not capture report reason, reporter privacy, resolver, timestamp, status, appeal/restore, or block semantics required for public UGC operations.
   - Evidence: `VoteRepository.moderateHide()` and `moderateUnhide()`; `database.rules.json` moderation path; Cycle 1 report queue item; Cycle 8 Play UGC policy review.
   - Touches: report models/repository, report actions in content detail screens, RTDB rules, admin moderation UI, privacy/report docs, Play app-content packet.
-  - Acceptance: users can report community content with categories; reports are App-Checked/authenticated and rate-limited; admins can resolve/hide/unhide with reason and timestamp; audit entries record resolver UID without exposing reporter identity publicly; block-user behavior is defined or explicitly out of scope.
+  - Acceptance: users can report community content with categories; reports are App-Checked/authenticated and rate-limited; admins can resolve/hide/unhide with reason and timestamp; audit entries record resolver UID without exposing reporter identity publicly; block-user behavior is defined or deferred with an owner decision.
   - Verify: report create/read/admin-resolve rules tests; manual report -> admin hide -> feed removal -> unhide flow; reporter data is not public; Play UGC checklist row is complete.
-  - Progress 2026-06-06: Cycle 51 added report reasons, private report intake, admin-only read/update rules, resolution metadata records, and detail-screen report submission. Remaining work: admin review UI, report-to-moderation hide/unhide wiring, App Check/quota enforcement, and block-user policy.
+  - Progress 2026-06-06: Cycle 51 added report reasons, private report intake, admin-only read/update rules, resolution metadata records, and detail-screen report submission. Cycle 52 added admin Settings access, open-report subscription, report cards, status-indexed RTDB rules, Hide/Dismiss/Restore actions, and moderation hide/unhide wiring. Remaining work: App Check/quota enforcement, block-user policy, and delete/takedown resolution flows.
 
 - [ ] 🤖 🔬 **P2 — Community backend operations runbook**
   - Why: Community backend changes can break public reads/writes independently from APK builds, and Aura has no single release artifact tying rules, App Check, Storage cleanup, moderation, and deletion evidence together.
@@ -693,6 +693,7 @@ Append-only Cycle 13 handoff. Every item below is source-backed in `docs/researc
   - Touches: report repository/model, RTDB rules, admin moderation UI, detail-screen report actions, privacy/support docs, community backend runbook.
   - Acceptance: users and rights holders can report community uploads with IP/license/safety/source-removed reasons; admins can hide/delete/restore with timestamp/reason; third-party mirrored entries can be marked source-deleted/unavailable; takedown status is not exposed in a way that leaks reporter identity.
   - Verify: report -> admin hide/delete -> public feed removal -> restore flow; rights-holder report from detail/source screen; source-deleted Reddit/Pexels/Pixabay fixture stops appearing as live catalog content; rules tests block non-admin resolution.
+  - Progress 2026-06-06: Cycle 51 added private rights/source/safety/spam report intake from sound and wallpaper details. Cycle 52 added admin review, hide, dismiss, restore, and moderation wiring. Remaining work: owner-delete/takedown request copy, rights-confirmed delete paths, and report quotas.
 
 - [ ] 🤖 🔬 **P1 — YouTube store-risk containment profile**
   - Why: Aura's Play-facing listing currently promotes YouTube-first ringtone discovery and video wallpapers, while Play IP policy and YouTube developer policies are restrictive around unauthorized downloads, cached audiovisual content, offline playback, and infringement encouragement.
@@ -707,7 +708,7 @@ Append-only Cycle 13 handoff. Every item below is source-backed in `docs/researc
   - Touches: upload dialogs, metadata schema, RTDB rules, community cards/detail screens, privacy/policy docs, deletion/takedown runbook.
   - Acceptance: uploader must attest they own or have rights to share the media, choose a license/usage label, optionally provide source URL/credit, acknowledge public visibility and takedown rules, and understand that infringing content may be removed; metadata stores that evidence.
   - Verify: upload blocked until attestation complete; uploaded metadata includes license/source/rights fields; detail and report flows show license/takedown context; admin can remove content by rights reason.
-  - Progress 2026-06-06: Cycle 50 added `CommunityUploadRights.kt`, sound/wallpaper upload dialog license chips, rights confirmation, optional HTTPS source URL capture, upload-path validation before media upload, stored license/rights/source fields, RTDB rule validation, community sound selected-license action gates, wallpaper license mapping, detail display, and `docs/legal/community-upload-rights.md`. Remaining work: public takedown copy, report/detail actions, and admin hide/delete/restore by rights reason.
+  - Progress 2026-06-06: Cycle 50 added `CommunityUploadRights.kt`, sound/wallpaper upload dialog license chips, rights confirmation, optional HTTPS source URL capture, upload-path validation before media upload, stored license/rights/source fields, RTDB rule validation, community sound selected-license action gates, wallpaper license mapping, detail display, and `docs/legal/community-upload-rights.md`. Cycles 51-52 added report/detail actions plus admin hide/restore resolution. Remaining work: public takedown copy, rights-confirmed delete paths, and owner deletion integration.
 
 - [ ] 🤖 🔬 **P1 — Aura Originals provenance gate**
   - Why: The curation guide correctly requires CC0, source URL, and sha256, but the release gate does not yet prove every bundled sound has reviewed provenance and a retroactive removal path.
@@ -1600,7 +1601,7 @@ Thirteen items. All scored 18–25. Pull from the top of this list when Now clos
 
 ### U-6. AGSL shader playground (mini-KLWP for live wallpapers)
 - **Source(s):** [ShaderEditor](https://github.com/markusfisch/ShaderEditor); [AGSL Compose patterns](https://medium.com/androiddevelopers/agsl-made-in-the-shade-r-7d06d14fe02a); [lwp-shaders curated library](https://github.com/cipold/lwp-shaders).
-- **Open question:** Could ship a curated shader gallery (5–10 presets: plasma, lava, particles, water) without exposing an editor. Editor is out of scope; gallery is in scope. Decide when L-6 reaches Now.
+- **Open question:** Could ship a curated shader gallery (5–10 presets: plasma, lava, particles, water) without exposing an editor. Editor remains deferred; gallery can proceed. Decide when L-6 reaches Now.
 
 ### U-7. Health Connect-driven wallpapers
 - **Source(s):** [Health Connect granular permissions](https://developer.android.com/health-and-fitness/guides/health-connect); KLWP step count integration as reference.
@@ -2909,19 +2910,26 @@ Stars/dates as of research pass 2026-05-16.
 - Community report implementation — `CommunityReport.kt`, `CommunityReportRepository.kt`, `CommunityReportDialog.kt`, `SoundDetailScreen.kt`, `WallpaperDetailScreen.kt`, `SoundsViewModel.kt`, `WallpapersViewModel.kt`, and `database.rules.json`.
 - Verification outputs — focused CommunityReport, SoundsViewModel, and WallpapersViewModel unit tests.
 
+## Appendix BB — Cycle 52 Sources
+
+- Cycle 52 implementation record — [docs/research/cycle-52-2026-06-06.md](docs/research/cycle-52-2026-06-06.md).
+- Community reporting support note — [docs/support/community-reporting.md](docs/support/community-reporting.md).
+- Admin report review implementation — `CommunityReportsScreen.kt`, `CommunityReportRepository.kt`, `CommunityReport.kt`, `SettingsScreen.kt`, `SettingsViewModel.kt`, `Screen.kt`, `FreeVibeRoot.kt`, and `database.rules.json`.
+- Verification outputs — focused CommunityReportsViewModel, CommunityReport, SettingsViewModel, SoundsViewModel, and WallpapersViewModel unit tests.
+
 ## Continuation State
 
 ### Last Completed Cycle
 
-Cycle 51: Community report queue intake and admin resolution metadata.
+Cycle 52: Admin report review and report-to-moderation hide/unhide wiring.
 
 ### Current Focus
 
-Start Cycle 52 with admin report review and report-to-moderation hide/unhide wiring. Commit and push completed work when the active project contract allows it.
+Start Cycle 53 with Firebase App Check and report quota/rate-limit planning for community writes and reports, then continue into owner-delete/takedown flows. Commit and push completed work when the active project contract allows it.
 
 ### Important Findings So Far
 
-- `ROADMAP.md` has Cycle 18 through Cycle 51 research/implementation items; `docs/research/cycle-18-2026-06-06.md` through `docs/research/cycle-51-2026-06-06.md` have the source-backed analysis.
+- `ROADMAP.md` has Cycle 18 through Cycle 52 research/implementation items; `docs/research/cycle-18-2026-06-06.md` through `docs/research/cycle-52-2026-06-06.md` have the source-backed analysis.
 - `LicensesScreen.kt` still has manual dependency rows; content sources are already code-backed by `ProviderDisclosure.kt`.
 - `.github/workflows/release.yml` now publishes `THIRD-PARTY-NOTICES.md` and `NATIVE-COMPLIANCE.md` with the APK and includes both files in `SHA256SUMS.txt`; SBOM artifacts remain open.
 - `.github/workflows/verify.yml` and `.github/workflows/release.yml` now run `tools/dependency_notice_lock.py --mode check`, `tools/dependency_notice_lock.py --mode check-metadata`, `tools/native_compliance_inventory.py --mode check-lock`, `tools/dependency_overlay_check.py`, and `tools/dependency_license_policy.py` after `:app:releaseOssLicensesTask`.
@@ -2962,12 +2970,12 @@ Start Cycle 52 with admin report review and report-to-moderation hide/unhide wir
 - Wallpaper and sound apply/download paths now classify explicit 404/410/gone/removed/deleted provider failures and mark saved favorites unavailable with provider-specific reasons; `DownloadManager` also marks matching download-history rows unavailable on failed re-downloads.
 - Sounds now have item-level license capability gates: YouTube apply/download requires confirmation, SoundCloud is link-only until reviewed, CC BY-NC requires confirmation, no-derivatives disables editing, missing remote licenses disable live-source actions, saved sound favorites preserve license metadata through Room v16 and favorites import/export, and share text includes source/uploader/license provenance.
 - Community uploads now require selected CC0/CC BY/CC BY-NC metadata, rights attestation, authenticated uploader UID, attestation timestamp, and optional HTTPS source URL before public sound/wallpaper upload metadata is written. Legacy community sound rows without selected license metadata keep the `User Upload` fallback.
-- Community reporting now has private report intake and admin resolution metadata paths with rights/source-removed/safety/spam/other reasons. Detail screens can submit reports with source/license/uploader context, but admin review UI and report-to-moderation hide/unhide wiring remain open.
+- Community reporting now has private report intake, admin review, moderation hide/unhide actions, and admin resolution metadata paths with rights/source-removed/safety/spam/other reasons. Detail screens submit reports with source/license/uploader context; App Check, quotas, closed-report filters, and owner-delete/takedown flows remain open.
 - Recent history was checked with `rtk git log -10 --oneline --decorate` for this pass.
 
 ### Next Best Actions
 
-1. Add admin report review and report-to-moderation hide/unhide wiring.
+1. Add Firebase App Check and report quota/rate-limit planning for community writes and reports.
 2. Run a real GitHub Actions manual release dry run after secrets are confirmed available and archive the run URL in the release docs.
 3. Add deeper UI verification for the licenses screen on an emulator or screenshot lane when a device/runtime is available.
 4. Preserve exact Termux package commit/build-log evidence for FFmpeg if the release owner can obtain it from upstream or a reproducible rebuild.

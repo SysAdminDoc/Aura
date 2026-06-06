@@ -4,6 +4,7 @@ import android.content.Context
 import android.net.Uri
 import com.freevibe.data.local.PreferencesManager
 import com.freevibe.data.local.WallpaperCacheManager
+import com.freevibe.data.repository.VoteRepository
 import com.freevibe.service.CrashDiagnosticsCollector
 import com.freevibe.service.OfflineFavoritesManager
 import com.freevibe.service.VideoWallpaperSelectionResult
@@ -143,6 +144,16 @@ class SettingsViewModelTest {
         assertEquals("Selected file is empty or invalid", failure.message)
     }
 
+    @Test
+    fun `isAdmin exposes community moderation access`() = runTest(dispatcher) {
+        val viewModel = createViewModel(
+            cacheDir = createTempDirectory("settings-admin").toFile().also(tempDirs::add),
+            isAdmin = true,
+        )
+
+        assertTrue(viewModel.isAdmin)
+    }
+
     private fun createViewModel(
         cacheDir: File,
         offlineFavoritesSize: Long = 0L,
@@ -150,6 +161,7 @@ class SettingsViewModelTest {
         offlineFavoritesOverride: OfflineFavoritesManager? = null,
         wallpaperCacheManagerOverride: WallpaperCacheManager? = null,
         videoWallpaperStorageOverride: VideoWallpaperStorage? = null,
+        isAdmin: Boolean = false,
     ): SettingsViewModel {
         val context = mockk<Context>(relaxed = true).also {
             every { it.cacheDir } returns cacheDir
@@ -173,6 +185,9 @@ class SettingsViewModelTest {
         }
         val wallpaperApplier = mockk<com.freevibe.service.WallpaperApplier>(relaxed = true)
         val videoWallpaperStorage = videoWallpaperStorageOverride ?: mockk(relaxed = true)
+        val voteRepo = mockk<VoteRepository>(relaxed = true).also {
+            every { it.isAdmin } returns isAdmin
+        }
         return SettingsViewModel(
             context = context,
             prefs = prefs,
@@ -188,6 +203,7 @@ class SettingsViewModelTest {
                 prefs = prefs,
                 sourceMetrics = com.freevibe.service.SourceMetrics(),
             ),
+            voteRepo = voteRepo,
             ioDispatcher = dispatcher,
         )
     }

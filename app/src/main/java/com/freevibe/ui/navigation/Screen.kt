@@ -86,6 +86,12 @@ sealed class Screen(
         icon = Icons.Outlined.Person,
         selectedIcon = Icons.Filled.Person,
     )
+    data object CommunityReports : Screen(
+        route = "community_reports",
+        title = "Community Reports",
+        icon = Icons.Outlined.Report,
+        selectedIcon = Icons.Filled.Report,
+    )
 
     // ── Wallpaper detail + editor ─────────────────────────────────
     data object WallpaperDetail : Screen(

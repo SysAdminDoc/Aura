@@ -28,6 +28,7 @@ import com.freevibe.data.model.Wallpaper
 import com.freevibe.data.remote.toSound
 import com.freevibe.data.remote.toWallpaper
 import com.freevibe.ui.navigation.Screen
+import com.freevibe.ui.screens.community.CommunityReportsScreen
 import com.freevibe.ui.screens.categories.CategoriesScreen
 import com.freevibe.ui.screens.collections.CollectionsScreen
 import com.freevibe.ui.screens.community.CreatorProfileScreen
@@ -388,6 +389,7 @@ fun FreeVibeRoot(
                     onHistoryClick = { navController.navigate(Screen.WallpaperHistory.route) { launchSingleTop = true } },
                     onCollectionsClick = { navController.navigate(Screen.Collections.route) { launchSingleTop = true } },
                     onCreatorProfileClick = { navController.navigate(Screen.CreatorProfile.route) { launchSingleTop = true } },
+                    onCommunityReportsClick = { navController.navigate(Screen.CommunityReports.route) { launchSingleTop = true } },
                 )
             }
 
@@ -912,6 +914,13 @@ fun FreeVibeRoot(
             // ── Creator Profile ─────────────────────────────────
             composable(Screen.CreatorProfile.route) {
                 CreatorProfileScreen(
+                    onBack = { navController.popBackStack() },
+                )
+            }
+
+            // ── Community Reports ───────────────────────────────
+            composable(Screen.CommunityReports.route) {
+                CommunityReportsScreen(
                     onBack = { navController.popBackStack() },
                 )
             }

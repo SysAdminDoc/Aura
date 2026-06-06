@@ -18,6 +18,24 @@ enum class CommunityReportResolutionStatus(val storageValue: String) {
     RESTORED("RESTORED"),
 }
 
+data class CommunityReportRecord(
+    val id: String,
+    val contentId: String,
+    val contentKey: String,
+    val contentType: String,
+    val contentSource: String,
+    val reason: CommunityReportReason,
+    val note: String,
+    val sourceUrl: String,
+    val license: String,
+    val uploaderName: String,
+    val reporterUid: String,
+    val reportedAt: Long,
+    val status: CommunityReportResolutionStatus,
+    val resolverUid: String = "",
+    val resolvedAt: Long = 0L,
+)
+
 data class CommunityReportInput(
     val contentId: String,
     val contentType: String,
@@ -39,6 +57,13 @@ private const val MAX_REPORT_SHORT_TEXT = 120
 
 fun sanitizeCommunityReportKey(value: String): String =
     value.trim().replace(REPORT_KEY_REGEX, "_").take(MAX_REPORT_CONTENT_ID)
+
+fun communityReportReasonFromStorage(value: String?): CommunityReportReason =
+    CommunityReportReason.entries.firstOrNull { it.storageValue == value } ?: CommunityReportReason.OTHER
+
+fun communityReportStatusFromStorage(value: String?): CommunityReportResolutionStatus =
+    CommunityReportResolutionStatus.entries.firstOrNull { it.storageValue == value }
+        ?: CommunityReportResolutionStatus.OPEN
 
 fun normalizeCommunityReportText(value: String, maxLength: Int = MAX_REPORT_NOTE): String =
     value

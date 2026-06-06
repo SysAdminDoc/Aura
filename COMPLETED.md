@@ -150,6 +150,10 @@ next pass can resume quickly.
   rules for authenticated report creation and admin-only review/resolution,
   sound/wallpaper detail report actions, ViewModel report submission, and
   support docs for the reporting workflow.
+- Completed Cycle 52 admin report review: added an admin-only open report
+  screen, Settings navigation, RTDB report status indexing, hide/dismiss/restore
+  actions, moderation hide/unhide wiring, report resolution feedback, and
+  focused ViewModel coverage for moderation and non-admin gating.
 
 ## 2026-06-05
 

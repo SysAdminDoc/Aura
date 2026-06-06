@@ -6,6 +6,7 @@ import com.freevibe.data.local.PreferencesManager
 import com.freevibe.data.local.WallpaperCacheManager
 import com.freevibe.data.model.WallpaperCollectionEntity
 import com.freevibe.data.repository.CollectionRepository
+import com.freevibe.data.repository.VoteRepository
 import com.freevibe.di.IoDispatcher
 import com.freevibe.service.AutoWallpaperWorker
 import com.freevibe.service.CrashDiagnosticsCollector
@@ -47,6 +48,7 @@ class SettingsViewModel @Inject constructor(
     private val videoWallpaperStorage: VideoWallpaperStorage,
     private val sourceMetrics: SourceMetrics,
     private val crashDiagnosticsCollector: CrashDiagnosticsCollector,
+    private val voteRepo: VoteRepository,
     @IoDispatcher private val ioDispatcher: CoroutineDispatcher,
 ) : ViewModel() {
 
@@ -136,6 +138,7 @@ class SettingsViewModel @Inject constructor(
     val communityProviderEnabled = prefs.communityProviderEnabled.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), true)
     val showSketchyContent = prefs.showSketchyContent.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
     val showNsfwContent = prefs.showNsfwContent.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
+    val isAdmin: Boolean get() = voteRepo.isAdmin
 
     fun setShowSketchy(show: Boolean) = viewModelScope.launch { prefs.setShowSketchy(show) }
     fun setShowNsfw(show: Boolean) = viewModelScope.launch { prefs.setShowNsfw(show) }

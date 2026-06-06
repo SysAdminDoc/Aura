@@ -65,6 +65,7 @@
       }
     },
     "community_reports": {
+      ".indexOn": ["status"],
       ".read": "auth != null && auth.token.admin === true",
       "$reportId": {
         ".write": "auth != null && (!data.exists() || auth.token.admin === true)",

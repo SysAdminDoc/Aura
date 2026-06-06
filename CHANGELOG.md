@@ -3,6 +3,7 @@
 All notable changes to Aura will be documented in this file.
 
 ## Unreleased
+- **Admin report review (Cycle 52)**: custom-claim admins can open Settings > Community reports, review open reports, hide reported content through the global moderation list, dismiss reports, or restore hidden content with resolution metadata.
 - **Community report queue intake (Cycle 51)**: sound and wallpaper detail screens now submit private reports with rights/source-removed/safety/spam/other reasons, source/license/uploader context, RTDB report and resolution rules, and admin resolution metadata.
 - **Community upload rights metadata (Cycle 50)**: community sound and wallpaper uploads now require rights attestation, selected CC0/CC BY/CC BY-NC metadata, optional HTTPS source URLs, RTDB rule validation, community sound license gates, and wallpaper license detail display.
 - **Sound license capability gates (Cycle 49)**: sounds now derive action capabilities from source/license/provenance metadata; YouTube apply/download requires confirmation, SoundCloud is link-only until reviewed, missing remote licenses disable live-source actions, saved sound favorites preserve license metadata, and sound shares include source/uploader/license provenance.
