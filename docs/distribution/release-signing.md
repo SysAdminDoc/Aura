@@ -29,11 +29,12 @@ Do not commit `freevibe.jks`, `local.properties`, copied APKs, or generated base
 2. Writes a temporary `local.properties` with signing paths and blank optional provider keys.
 3. Runs `./gradlew :app:assembleRelease --stacktrace --no-daemon`.
 4. Copies the signed universal APK to `release/Aura-vX.Y.Z-versionCode-N-universal-release.apk`.
-5. Runs `apksigner verify --verbose --print-certs`.
-6. Fails if `aapt dump badging` reports `application-debuggable`.
-7. Creates a GitHub artifact attestation for the checksum file.
-8. Publishes `SHA256SUMS.txt` and release notes containing versionName, versionCode, APK SHA-256, signing certificate SHA-256, artifact attestation URL, and Android developer verification status.
-9. Runs `tools/release_artifact_bundle_check.py` against the final `release/` directory before upload or publication.
+5. Generates `THIRD-PARTY-NOTICES.md`, `GOOGLE-OSS-RAW-INPUTS.zip`, and `NATIVE-COMPLIANCE.md`.
+6. Runs `apksigner verify --verbose --print-certs`.
+7. Fails if `aapt dump badging` reports `application-debuggable`.
+8. Creates a GitHub artifact attestation for the checksum file.
+9. Publishes `SHA256SUMS.txt` and release notes containing versionName, versionCode, APK SHA-256, signing certificate SHA-256, artifact attestation URL, and Android developer verification status.
+10. Runs `tools/release_artifact_bundle_check.py` against the final `release/` directory before upload or publication.
 
 Manual `workflow_dispatch` runs upload the same files as workflow artifacts for dry-run inspection. Tag runs also attach the APK and checksum file to the GitHub Release. The dry-run procedure lives in [release-dry-run.md](release-dry-run.md).
 

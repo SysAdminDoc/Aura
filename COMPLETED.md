@@ -42,6 +42,10 @@ next pass can resume quickly.
   `tools/release_artifact_bundle_check.py`, wired release workflow bundle
   validation before artifact upload/publication, and documented the manual
   `workflow_dispatch` dry-run procedure.
+- Completed Cycle 28 raw release notice input preservation: added
+  `tools/google_oss_raw_archive.py`, wired `GOOGLE-OSS-RAW-INPUTS.zip` into
+  release checksums, notes, workflow artifacts, tagged release assets, and the
+  bundle validator.
 
 ## 2026-06-05
 

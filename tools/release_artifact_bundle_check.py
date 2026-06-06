@@ -13,6 +13,7 @@ from pathlib import Path
 
 REQUIRED_STATIC_FILES = {
     "THIRD-PARTY-NOTICES.md",
+    "GOOGLE-OSS-RAW-INPUTS.zip",
     "NATIVE-COMPLIANCE.md",
     "SHA256SUMS.txt",
     "RELEASE_NOTES.md",
@@ -104,6 +105,7 @@ def validate_bundle(
         expected_checksum_files = {
             apk_name,
             "THIRD-PARTY-NOTICES.md",
+            "GOOGLE-OSS-RAW-INPUTS.zip",
             "NATIVE-COMPLIANCE.md",
         }
         missing = sorted(expected_checksum_files - set(checksums))
@@ -130,6 +132,7 @@ def validate_bundle(
             apk_name,
             "APK SHA-256:",
             "THIRD-PARTY-NOTICES.md",
+            "GOOGLE-OSS-RAW-INPUTS.zip",
             "NATIVE-COMPLIANCE.md",
             "Signing certificate SHA-256:",
             "GitHub artifact attestation:",

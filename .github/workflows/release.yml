@@ -133,6 +133,8 @@ jobs:
           python3 tools/dependency_overlay_check.py --overlay docs/legal/dependency-notice-overrides.json
           python3 tools/google_oss_to_markdown.py --variant release --output "$RELEASE_DIR/THIRD-PARTY-NOTICES.md"
           test -s "$RELEASE_DIR/THIRD-PARTY-NOTICES.md"
+          python3 tools/google_oss_raw_archive.py --variant release --output "$RELEASE_DIR/GOOGLE-OSS-RAW-INPUTS.zip"
+          test -s "$RELEASE_DIR/GOOGLE-OSS-RAW-INPUTS.zip"
           python3 tools/native_compliance_inventory.py --apk "${{ steps.package.outputs.apk_path }}" --output "$RELEASE_DIR/NATIVE-COMPLIANCE.md"
           test -s "$RELEASE_DIR/NATIVE-COMPLIANCE.md"
 
@@ -167,7 +169,7 @@ jobs:
         run: |
           (
             cd "$RELEASE_DIR"
-            sha256sum "${{ steps.package.outputs.apk_name }}" THIRD-PARTY-NOTICES.md NATIVE-COMPLIANCE.md > SHA256SUMS.txt
+            sha256sum "${{ steps.package.outputs.apk_name }}" THIRD-PARTY-NOTICES.md GOOGLE-OSS-RAW-INPUTS.zip NATIVE-COMPLIANCE.md > SHA256SUMS.txt
           )
 
       - name: Attest release artifacts
@@ -188,6 +190,7 @@ jobs:
             printf -- '- APK: %s\n' '${{ steps.package.outputs.apk_name }}'
             printf -- '- APK SHA-256: %s\n' "$APK_SHA256"
             printf -- '- Third-party notices: THIRD-PARTY-NOTICES.md\n'
+            printf -- '- Raw Google OSS inputs: GOOGLE-OSS-RAW-INPUTS.zip\n'
             printf -- '- Native compliance packet: NATIVE-COMPLIANCE.md\n'
             printf -- '- Signing certificate SHA-256: %s\n' '${{ steps.verify_apk.outputs.cert_sha256 }}'
             printf -- '- GitHub artifact attestation: %s\n' '${{ steps.attest.outputs.attestation-url }}'
@@ -214,6 +217,7 @@ jobs:
           path: |
             release/*.apk
             release/THIRD-PARTY-NOTICES.md
+            release/GOOGLE-OSS-RAW-INPUTS.zip
             release/NATIVE-COMPLIANCE.md
             release/SHA256SUMS.txt
             release/RELEASE_NOTES.md
@@ -230,6 +234,7 @@ jobs:
           files: |
             release/*.apk
             release/THIRD-PARTY-NOTICES.md
+            release/GOOGLE-OSS-RAW-INPUTS.zip
             release/NATIVE-COMPLIANCE.md
             release/SHA256SUMS.txt
           fail_on_unmatched_files: true

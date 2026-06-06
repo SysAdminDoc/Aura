@@ -1,8 +1,8 @@
 # Autonomous Loop State
 
 **Assigned project:** `C:\Users\--\repos\Aura`
-**Current pass:** 2026-06-06 Cycle 27 release artifact dry-run validation pass
-**Last commit before pass:** `13fbf1c` (`feat(ci): gate dependency overlay review`)
+**Current pass:** 2026-06-06 Cycle 28 raw release notice input preservation pass
+**Last commit before pass:** `f2c1087` (`feat(release): validate dry-run artifact bundle`)
 
 ## 2026-06-05 Result
 
@@ -59,13 +59,19 @@
 - Added `docs/distribution/release-dry-run.md` with GitHub UI, GitHub CLI, workflow artifact, and local smoke-test instructions.
 - Updated `docs/distribution/release-signing.md`, `docs/distribution/supply-chain.md`, `ROADMAP.md`, `CHANGELOG.md`, and `COMPLETED.md` for release dry-run validation.
 - Cycle 27 verification: `python -m py_compile tools\release_artifact_bundle_check.py`; local temporary bundle smoke test; `python -m py_compile tools\dependency_notice_lock.py tools\dependency_overlay_check.py tools\google_oss_to_markdown.py tools\native_compliance_inventory.py tools\release_artifact_bundle_check.py`; dependency notice lock check; native compliance lock check; dependency overlay check.
+- Completed Cycle 28 raw release notice input preservation.
+- Added `tools/google_oss_raw_archive.py` to create deterministic `GOOGLE-OSS-RAW-INPUTS.zip` archives containing `dependencies.json`, `third_party_license_metadata`, `third_party_licenses`, and `MANIFEST.json`.
+- Wired `.github/workflows/release.yml` to generate the raw input archive after `THIRD-PARTY-NOTICES.md`, include it in `SHA256SUMS.txt`, mention it in release notes, upload it as a workflow artifact, and attach it to tagged GitHub Releases.
+- Updated `tools/release_artifact_bundle_check.py` to require the raw input archive in release files, checksums, and release notes.
+- Updated `docs/distribution/release-dry-run.md`, `docs/distribution/release-signing.md`, `docs/distribution/supply-chain.md`, `ROADMAP.md`, `CHANGELOG.md`, and `COMPLETED.md` for raw notice input preservation.
+- Cycle 28 verification: `python -m py_compile tools\google_oss_raw_archive.py`; local generated-root archive smoke test; local release bundle smoke test; release-compliance Python compile and lock checks; dependency overlay check.
 
 ## Still Open
 
 - FFmpeg exact configure line and matching source package review for the resolved youtubedl-android ffmpeg 0.18.1 AAR.
-- Raw release notice input preservation.
+- User-facing dependency notice access path.
 - Runtime provider kill switches and disabled-provider behavior.
 
 ## Next Cycle
 
-Continue this same assigned project, Aura. Start Cycle 28 from the `ROADMAP.md` Continuation State and `docs/research/cycle-27-2026-06-06.md`. The Google OSS notices plugin-only path is implemented; `tools/google_oss_to_markdown.py` generates `THIRD-PARTY-NOTICES.md`; `tools/native_compliance_inventory.py` generates `NATIVE-COMPLIANCE.md` and gates native evidence drift; `tools/dependency_notice_lock.py` gates generated release notice drift; `tools/dependency_overlay_check.py` gates curated high-risk dependency/native-payload review metadata; `tools/release_artifact_bundle_check.py` gates final release bundle consistency. Next preserve raw release notice inputs as workflow artifacts or a small evidence archive. Keep AboutLibraries secondary: 14.2.1 configures, but default exports were incomplete and the compliance export logged Windows path errors; do not use AboutLibraries 15.x until N-1 upgrades AGP because v15 requires AGP 8.13. Commit and push completed work when the active project contract allows it.
+Continue this same assigned project, Aura. Start Cycle 29 from the `ROADMAP.md` Continuation State and `docs/research/cycle-28-2026-06-06.md`. The Google OSS notices plugin-only path is implemented; `tools/google_oss_to_markdown.py` generates `THIRD-PARTY-NOTICES.md`; `tools/google_oss_raw_archive.py` archives raw Google OSS inputs; `tools/native_compliance_inventory.py` generates `NATIVE-COMPLIANCE.md` and gates native evidence drift; `tools/dependency_notice_lock.py` gates generated release notice drift; `tools/dependency_overlay_check.py` gates curated high-risk dependency/native-payload review metadata; `tools/release_artifact_bundle_check.py` gates final release bundle consistency. Next add a user-facing dependency notice access path in Settings without adding the stock Google OSS notice runtime dependency. Keep AboutLibraries secondary: 14.2.1 configures, but default exports were incomplete and the compliance export logged Windows path errors; do not use AboutLibraries 15.x until N-1 upgrades AGP because v15 requires AGP 8.13. Commit and push completed work when the active project contract allows it.

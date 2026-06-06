@@ -9,6 +9,7 @@ Aura is side-loaded through GitHub Releases and Obtainium, so release artifacts 
 | Signed release APK | `.github/workflows/release.yml` | Builds the release variant, verifies the signature, rejects debuggable APKs, and publishes checksums. |
 | Release bundle validator | `tools/release_artifact_bundle_check.py`, `.github/workflows/release.yml` | Fails manual dry runs and tag releases when the final APK/notices/native/checksum/release-note bundle is incomplete or internally inconsistent. |
 | Third-party notices | `tools/google_oss_to_markdown.py`, `.github/workflows/release.yml` | Runs the Google OSS Licenses Gradle task for the release variant and publishes `THIRD-PARTY-NOTICES.md` next to the APK. |
+| Raw Google OSS inputs | `tools/google_oss_raw_archive.py`, `.github/workflows/release.yml` | Archives generated `dependencies.json`, license metadata, and raw license text inputs for drift review. |
 | Dependency notice lockfile | `tools/dependency_notice_lock.py`, `docs/legal/dependency-notices.lock.json` | Fails PR/main/release checks when generated release dependency notices drift without review. |
 | Dependency notice overlay | `tools/dependency_overlay_check.py`, `docs/legal/dependency-notice-overrides.json` | Requires curated source, license, usage, and release-review metadata for high-risk generated dependencies and native payloads. |
 | Native compliance packet | `tools/native_compliance_inventory.py`, `.github/workflows/release.yml` | Inventories youtubedl-android, yt-dlp/Python, FFmpeg, QuickJS, and NewPipeExtractor payload evidence and publishes `NATIVE-COMPLIANCE.md` next to the APK. |
@@ -25,19 +26,21 @@ For each `v*` release:
 
 1. Confirm the GitHub Release contains `Aura-vX.Y.Z-versionCode-N-universal-release.apk`.
 2. Confirm the GitHub Release contains `THIRD-PARTY-NOTICES.md`.
-3. Confirm the GitHub Release contains `NATIVE-COMPLIANCE.md`.
-4. Confirm `SHA256SUMS.txt` includes the APK, `THIRD-PARTY-NOTICES.md`, and `NATIVE-COMPLIANCE.md`.
-5. Confirm the generated release notes include the APK SHA-256, third-party notices entry, native compliance packet entry, signing certificate SHA-256, and artifact attestation URL.
-6. Spot-check `THIRD-PARTY-NOTICES.md` for high-risk dependencies such as NewPipeExtractor, youtubedl-android, Firebase, Play services ML Kit, ZXing, Palette, and ProfileInstaller.
-7. Spot-check `docs/legal/dependency-notice-overrides.json` when any high-risk dependency or payload changed intentionally.
-8. Spot-check `NATIVE-COMPLIANCE.md` for youtubedl-android library, youtubedl-android ffmpeg, yt-dlp, Python, QuickJS, FFmpeg, and NewPipeExtractor evidence.
-9. Confirm the release workflow ran `tools/release_artifact_bundle_check.py` before uploading artifacts.
-10. Verify the APK locally with `apksigner verify --verbose --print-certs`.
-11. Compare the local SHA-256 values to `SHA256SUMS.txt`.
+3. Confirm the GitHub Release contains `GOOGLE-OSS-RAW-INPUTS.zip`.
+4. Confirm the GitHub Release contains `NATIVE-COMPLIANCE.md`.
+5. Confirm `SHA256SUMS.txt` includes the APK, `THIRD-PARTY-NOTICES.md`, `GOOGLE-OSS-RAW-INPUTS.zip`, and `NATIVE-COMPLIANCE.md`.
+6. Confirm the generated release notes include the APK SHA-256, third-party notices entry, raw Google OSS input archive entry, native compliance packet entry, signing certificate SHA-256, and artifact attestation URL.
+7. Spot-check `THIRD-PARTY-NOTICES.md` for high-risk dependencies such as NewPipeExtractor, youtubedl-android, Firebase, Play services ML Kit, ZXing, Palette, and ProfileInstaller.
+8. Spot-check `GOOGLE-OSS-RAW-INPUTS.zip` for `dependencies.json`, `third_party_license_metadata`, `third_party_licenses`, and `MANIFEST.json`.
+9. Spot-check `docs/legal/dependency-notice-overrides.json` when any high-risk dependency or payload changed intentionally.
+10. Spot-check `NATIVE-COMPLIANCE.md` for youtubedl-android library, youtubedl-android ffmpeg, yt-dlp, Python, QuickJS, FFmpeg, and NewPipeExtractor evidence.
+11. Confirm the release workflow ran `tools/release_artifact_bundle_check.py` before uploading artifacts.
+12. Verify the APK locally with `apksigner verify --verbose --print-certs`.
+13. Compare the local SHA-256 values to `SHA256SUMS.txt`.
 
 ## Release dry runs
 
-Manual `workflow_dispatch` runs on `main` are Aura's release dry-run lane. They build the signed release APK, generate third-party notices, generate the native compliance packet, run the lock/overlay gates, produce checksums/release notes, validate the final bundle, and upload the result as a workflow artifact without creating a GitHub Release.
+Manual `workflow_dispatch` runs on `main` are Aura's release dry-run lane. They build the signed release APK, generate third-party notices, archive the raw Google OSS inputs, generate the native compliance packet, run the lock/overlay gates, produce checksums/release notes, validate the final bundle, and upload the result as a workflow artifact without creating a GitHub Release.
 
 Procedure: [release-dry-run.md](release-dry-run.md).
 
@@ -52,9 +55,21 @@ Generate notices locally after the release notice task has run:
 python tools\dependency_notice_lock.py --mode check --lockfile docs\legal\dependency-notices.lock.json
 python tools\dependency_overlay_check.py --overlay docs\legal\dependency-notice-overrides.json
 python tools\google_oss_to_markdown.py --variant release --output build\reports\THIRD-PARTY-NOTICES.md
+python tools\google_oss_raw_archive.py --variant release --output build\reports\GOOGLE-OSS-RAW-INPUTS.zip
 ```
 
 Generated dependency notices do not replace Aura's content-source disclosures. `ProviderDisclosure.kt` remains the source of truth for provider policy rows such as YouTube, Reddit, Pexels, Pixabay, community uploads, bundled media, and AI-generated content.
+
+## Raw Google OSS inputs
+
+`GOOGLE-OSS-RAW-INPUTS.zip` preserves the exact generated files used by the markdown converter and dependency notice lock:
+
+- `dependencies.json`
+- `third_party_license_metadata`
+- `third_party_licenses`
+- `MANIFEST.json`
+
+The manifest records source paths, file sizes, and SHA-256 digests for each raw input. Keep this archive beside `THIRD-PARTY-NOTICES.md` in workflow artifacts and tagged GitHub Releases so future drift reviews can inspect the raw Google OSS output without rerunning Gradle.
 
 ## Dependency notice lockfile
 

@@ -10,6 +10,7 @@ Manual branch runs:
 
 - Build the signed release APK with the same release signing secrets as a tag release.
 - Generate `THIRD-PARTY-NOTICES.md`.
+- Archive raw Google OSS inputs as `GOOGLE-OSS-RAW-INPUTS.zip`.
 - Generate `NATIVE-COMPLIANCE.md`.
 - Check dependency notice, native compliance, and curated overlay drift gates.
 - Generate `SHA256SUMS.txt` and `RELEASE_NOTES.md`.
@@ -26,7 +27,7 @@ Run from GitHub UI:
 5. Set `android_developer_verification_status` to the current owner-confirmed state, usually `owner-confirmation-required`.
 6. Start the run.
 7. Download the `aura-release-*` workflow artifact.
-8. Confirm it contains the APK, `THIRD-PARTY-NOTICES.md`, `NATIVE-COMPLIANCE.md`, `SHA256SUMS.txt`, `RELEASE_NOTES.md`, `apksigner.txt`, and `aapt-badging.txt`.
+8. Confirm it contains the APK, `THIRD-PARTY-NOTICES.md`, `GOOGLE-OSS-RAW-INPUTS.zip`, `NATIVE-COMPLIANCE.md`, `SHA256SUMS.txt`, `RELEASE_NOTES.md`, `apksigner.txt`, and `aapt-badging.txt`.
 
 Run from GitHub CLI:
 
@@ -50,7 +51,7 @@ The check fails when:
 
 - A required artifact is missing or empty.
 - The APK name does not match the version name and version code.
-- `SHA256SUMS.txt` is missing the APK, third-party notice, or native-compliance digest.
+- `SHA256SUMS.txt` is missing the APK, third-party notice, raw Google OSS input archive, or native-compliance digest.
 - A recorded checksum does not match the file bytes.
 - `RELEASE_NOTES.md` lacks the APK digest, notice/native-compliance entries, signing certificate, attestation line, build type, or package ID.
 - `apksigner.txt` lacks the signing certificate SHA-256 digest.
@@ -67,15 +68,18 @@ New-Item -ItemType Directory -Path $tmp | Out-Null
 $apk = "Aura-v6.31.1-versionCode-112-universal-release.apk"
 "apk" | Set-Content -Encoding ascii (Join-Path $tmp $apk)
 "third-party" | Set-Content -Encoding ascii (Join-Path $tmp "THIRD-PARTY-NOTICES.md")
+"raw" | Set-Content -Encoding ascii (Join-Path $tmp "GOOGLE-OSS-RAW-INPUTS.zip")
 "native" | Set-Content -Encoding ascii (Join-Path $tmp "NATIVE-COMPLIANCE.md")
 "Signer #1 certificate SHA-256 digest: test" | Set-Content -Encoding ascii (Join-Path $tmp "apksigner.txt")
 "package: name='com.freevibe'" | Set-Content -Encoding ascii (Join-Path $tmp "aapt-badging.txt")
 $apkHash = (Get-FileHash (Join-Path $tmp $apk) -Algorithm SHA256).Hash.ToLower()
 $thirdHash = (Get-FileHash (Join-Path $tmp "THIRD-PARTY-NOTICES.md") -Algorithm SHA256).Hash.ToLower()
+$rawHash = (Get-FileHash (Join-Path $tmp "GOOGLE-OSS-RAW-INPUTS.zip") -Algorithm SHA256).Hash.ToLower()
 $nativeHash = (Get-FileHash (Join-Path $tmp "NATIVE-COMPLIANCE.md") -Algorithm SHA256).Hash.ToLower()
 @"
 $apkHash  $apk
 $thirdHash  THIRD-PARTY-NOTICES.md
+$rawHash  GOOGLE-OSS-RAW-INPUTS.zip
 $nativeHash  NATIVE-COMPLIANCE.md
 "@ | Set-Content -Encoding ascii (Join-Path $tmp "SHA256SUMS.txt")
 @"
@@ -85,6 +89,7 @@ Signed release artifact:
 - APK: $apk
 - APK SHA-256: $apkHash
 - Third-party notices: THIRD-PARTY-NOTICES.md
+- Raw Google OSS inputs: GOOGLE-OSS-RAW-INPUTS.zip
 - Native compliance packet: NATIVE-COMPLIANCE.md
 - Signing certificate SHA-256: test
 - GitHub artifact attestation: test
