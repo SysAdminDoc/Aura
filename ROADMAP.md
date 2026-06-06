@@ -3,7 +3,7 @@
 > Open-source Android personalization: wallpapers, video wallpapers, ringtones, sounds.
 > Stay the OSS alternative to Zedge: no ads, no surprise charges, no dark patterns.
 
-**Version:** 2026-06-04-cycle2-impl6 (implemented release-integrity, full-vs-foss decision/preflight, supply-chain workflow/checksum lanes, local crash diagnostics export, supply-chain CI follow-up, and developer-verification/Izzy prep).
+**Version:** 2026-06-06-cycle22-roadmap (implemented plugin-only Google OSS notice generation and release THIRD-PARTY-NOTICES.md artifact wiring).
 **Code version at write:** v6.31.1 / versionCode 112 (per `app/build.gradle.kts`; release/lint Gradle runs are memory-heavy on this Windows workstation, so rerun APK compilation only when explicitly needed).
 **Charter:** personalization, AMOLED-first, free-by-default, multi-source content aggregation, community-fed catalog, polite live wallpapers (battery-aware, pause-on-invisible).
 
@@ -908,6 +908,199 @@ Append-only Cycle 17 handoff. Every item below is source-backed in `docs/researc
   - Touches: Aura Originals/bundled manifest, curation review docs, sound detail provenance, release notices.
   - Acceptance: bundled content metadata records upstream creator, source asset URL, source license, curation date, review result, and whether Aura can redistribute/bundle it; UI can show concise Aura Picks branding without hiding upstream attribution.
   - Verify: bundled manifest fixture validates every item has source/license/creator fields; Sound detail exposes a source/provenance affordance; generated notices include bundled third-party assets.
+
+## 🔬 Researcher Queue (Cycle 18 — 2026-06-06)
+
+Append-only Cycle 18 handoff. Every item below is source-backed in `docs/research/cycle-18-2026-06-06.md`; merge into the Cycle 17 generated-notices/native-compliance items when implementation starts.
+
+- [ ] 🤖 🔬 **P0 — Generated release-runtime notice pipeline**
+  - Why: `LicensesScreen.kt` now has broader hand-maintained rows, but there is still no build task that derives notices from `releaseRuntimeClasspath`, no generated notice asset, and no proof that the in-app list matches the APK dependency graph.
+  - Evidence: `app/build.gradle.kts`; `LicensesScreen.kt`; `ProviderDisclosure.kt`; `docs/research/cycle-18-2026-06-06.md`; Google Play services OSS notices docs; AboutLibraries plugin docs.
+  - Touches: Gradle plugin config, Settings > Open source licenses, `docs/legal/third-party-notices.md`, release workflow, release artifact upload list.
+  - Acceptance: a local command generates dependency notice data for the release variant; Settings can display generated dependency notices or link to the generated notice surface; direct runtime dependency additions update the notice artifact rather than requiring manual Kotlin edits.
+  - Verify: add a sentinel runtime dependency in a temporary branch, regenerate notices, confirm the notice diff appears, and confirm Settings still renders dependency and content-source sections.
+
+- [ ] 🤖 🔬 **P0 — Dependency license drift gate for release runtime**
+  - Why: Manual rows cannot block an unreviewed dependency or license change. Aura already commits Gradle checksum metadata and runs Dependency Review, so license-policy drift should become a parallel preflight.
+  - Evidence: `gradle/verification-metadata.xml`; `.github/workflows/dependency-review.yml`; `.github/workflows/release.yml`; `docs/distribution/supply-chain.md`; Licensee/CycloneDX/SPDX research in Cycle 18.
+  - Touches: CI, release workflow, `docs/distribution/supply-chain.md`, `docs/legal/dependency-notice-overrides.json` or equivalent curated overlay.
+  - Acceptance: CI fails when release-runtime dependencies introduce unknown, missing, or unapproved license metadata; approved exceptions are documented with artifact coordinate, version, source URL, license ID, and reason.
+  - Verify: run a fixture/sentinel dependency test that fails before allowlist review and passes after the reviewed notice/exception file updates.
+
+- [ ] 🤖 🔬 **P0 — Native/copyleft artifact inspection packet**
+  - Why: `io.github.junkfood02.youtubedl-android:library:0.18.1` bundles yt-dlp and Python, and `:ffmpeg:0.18.1` supplies FFmpeg binaries. Generic Maven notice tools will not prove exact payload versions, FFmpeg build mode, ABI files, or source-offer links.
+  - Evidence: `app/build.gradle.kts`; `AudioTrimmer.kt`; `VideoCropScreen.kt`; youtubedl-android README; FFmpeg legal guidance; NewPipeExtractor GPL-3.0 license.
+  - Touches: `tools/`, release workflow, `docs/legal/native-compliance.md`, `docs/distribution/supply-chain.md`, release notes, uploaded release artifacts.
+  - Acceptance: a script or Gradle task unzips the release APK and resolved youtubedl/FFmpeg AARs, lists shipped native/assets/payload files, records upstream source URLs and license IDs, and writes a factual packet without exposing local secrets.
+  - Verify: release artifact bundle includes the native/copyleft packet; dependency version changes fail until the packet is regenerated and reviewed.
+
+- [ ] 🤖 🔬 **P1 — Release workflow publishes notice/SBOM artifacts**
+  - Why: GitHub/Obtainium users can currently inspect APK checksums and attestations, but not third-party notices or dependency/license inventory before installing the app.
+  - Evidence: `.github/workflows/release.yml` uploads APK, `SHA256SUMS.txt`, release notes, apksigner output, and aapt badging only; Cycle 18 found no notice/SBOM upload.
+  - Touches: `.github/workflows/release.yml`, release notes, `docs/distribution/release-signing.md`, `docs/distribution/supply-chain.md`.
+  - Acceptance: release artifacts include `THIRD-PARTY-NOTICES.md`, dependency license JSON, optional CycloneDX/SPDX SBOM, and native/copyleft packet; release notes link to each artifact.
+  - Verify: workflow dry run uploads all expected files with `if-no-files-found: error`; tag release attachment list includes notices next to the APK and checksum.
+
+- [ ] 🤖 🔬 **P1 — Curated dependency notice overlay**
+  - Why: Generated notices should own artifact identity/license/version, but Aura still needs user-friendly descriptions such as "YouTube extraction", "QR code support", or "ML Kit subject segmentation" and risk notes such as "native/copyleft packet required".
+  - Evidence: hand-maintained `licenses` descriptions in `LicensesScreen.kt`; generated notice tooling capabilities from Google/AboutLibraries/CycloneDX/SPDX.
+  - Touches: dependency notice data model, Settings licenses UI, `docs/legal/dependency-notice-overrides.json`, unit/static tests.
+  - Acceptance: curated overlay augments generated dependencies with Aura-specific usage descriptions, native-payload caveats, provider-disclosure links, and legal-mode notes without duplicating dependency identity as Kotlin constants.
+  - Verify: removing a direct dependency removes or flags its overlay entry; adding an overlay without a matching dependency fails unless marked documentation-only.
+
+## 🔬 Researcher Queue (Cycle 19 — 2026-06-06)
+
+Append-only Cycle 19 handoff. Every item below is source-backed in `docs/research/cycle-19-2026-06-06.md`; use it to choose the first implementation spike for the generated-notices lane.
+
+- [ ] 🤖 🔬 **P0 — Current-toolchain Google OSS notices spike**
+  - Why: Google's OSS notice tooling is the lowest-risk first experiment because Aura already uses Google/Firebase/Play-services artifacts and the docs currently show Kotlin DSL setup for `oss-licenses-plugin:0.12.0` plus `play-services-oss-licenses:17.5.1`.
+  - Evidence: `settings.gradle.kts` lacks the documented plugin `resolutionStrategy`; `build.gradle.kts` lacks the plugin; `LicensesScreen.kt` is manual; Google OSS notices docs.
+  - Touches: `settings.gradle.kts`, root/app Gradle files, `LicensesScreen.kt` or Settings row, `AndroidManifest.xml` if theming the stock activity.
+  - Acceptance: a branch/mirror proves whether the Google plugin loads on AGP 8.7.3 / Gradle 8.12, generates notice assets, and can be reached from Settings without breaking the existing content-source section.
+  - Verify: run lightweight Gradle task loading first; if successful, inspect generated assets and launch or document `OssLicensesMenuActivity` wiring.
+
+- [ ] 🤖 🔬 **P0 — AboutLibraries 14.2.1 compatibility spike; defer 15.x until N-1**
+  - Why: AboutLibraries latest 15.x now requires AGP 8.13, while Aura is pinned to AGP 8.7.3. AboutLibraries 14.2.1 is the plausible current-toolchain candidate for generated resources that Aura can render in a custom Compose UI.
+  - Evidence: `gradle/libs.versions.toml`; `gradle/wrapper/gradle-wrapper.properties`; AboutLibraries plugin portal; AboutLibraries release notes.
+  - Touches: version catalog, app Gradle plugin config, Settings licenses UI, generated resource loading.
+  - Acceptance: current-toolchain spike uses 14.2.1 only; roadmap keeps 15.x adoption tied to N-1; no notice pass is allowed to silently force AGP 8.13+.
+  - Verify: Gradle configuration task passes with 14.2.1; generated library data is inspectable; 15.x is documented as blocked until AGP upgrade.
+
+- [ ] 🤖 🔬 **P0 — Stable dependency notice lockfile and custom drift check**
+  - Why: Aura needs a reliable gate more than it needs a perfect plugin stack on day one. A stable generated JSON snapshot can compare release-runtime dependency identity/license data to a curated overlay and fail on drift.
+  - Evidence: `.github/workflows/dependency-review.yml` checks vulnerabilities only; `docs/distribution/supply-chain.md` has checksum verification but no license notice lockfile.
+  - Touches: `tools/`, `docs/legal/dependency-notices.lock.json`, `docs/legal/dependency-notice-overrides.json`, release workflow, PR checks.
+  - Acceptance: adding/removing/changing a direct release-runtime dependency changes the generated lockfile; unknown license/source metadata fails until reviewed; curated descriptions stay separate from generated identity fields.
+  - Verify: sentinel dependency fixture changes lockfile and fails before review; reviewed overlay update restores green status.
+
+- [ ] 🤖 🔬 **P0 — Tool-independent native AAR/APK payload inspector**
+  - Why: youtubedl-android and FFmpeg compliance depends on shipped payload files, ABI binaries, and source/build-mode evidence that Maven notice plugins cannot infer.
+  - Evidence: `app/build.gradle.kts`; `AudioTrimmer.kt`; `VideoCropScreen.kt`; youtubedl-android README; FFmpeg legal guidance.
+  - Touches: `tools/native_compliance_inventory.py` or equivalent, `docs/legal/native-compliance.md`, release workflow, release artifact upload list.
+  - Acceptance: local mode inspects resolved AARs without a full APK build where possible; CI mode inspects the final release APK; output lists payload paths, artifact coordinates, versions where discoverable, license IDs, and source/build references.
+  - Verify: report includes youtubedl-android library, youtubedl-android ffmpeg, yt-dlp/Python payload notes, FFmpeg ABI files, and NewPipeExtractor GPL evidence.
+
+- [ ] 🤖 🔬 **P1 — Notice artifacts become part of release checksums**
+  - Why: The release workflow currently checksums only the APK. If third-party notices and native compliance packets are release evidence, users should be able to verify those artifacts too.
+  - Evidence: `.github/workflows/release.yml`; Cycle 19 release workflow insertion-point analysis.
+  - Touches: release workflow steps between APK verification, checksum generation, release notes, artifact upload, and tag attachment.
+  - Acceptance: notice/SBOM/native packet files are generated before `SHA256SUMS.txt`, included in checksums, uploaded in workflow artifacts, and attached or linked on tag releases.
+  - Verify: manual workflow dry run shows checksum rows for APK plus notice artifacts and release notes mention each artifact.
+
+## 🔬 Researcher Queue (Cycle 20 — 2026-06-06)
+
+Append-only Cycle 20 handoff. Every item below is source-backed in `docs/research/cycle-20-2026-06-06.md`; use it to turn the generated-notices lane from planning into implementation.
+
+- [~] 🤖 🔬 **P0 — Current-toolchain Google OSS notices spike**
+  - Result: Confirmed viable in isolated clone `work/aura-oss-notice-spike` on AGP 8.7.3 / Gradle 8.12 after dependency verification metadata was refreshed in the clone.
+  - Evidence: temporary wiring in clone; `:app:tasks` exposed `releaseOssDependencyTask` and `releaseOssLicensesTask`; `:app:releaseOssLicensesTask` passed without APK assembly; generated raw notice resources and `dependencies.json`.
+  - Generated artifacts: `third_party_licenses` (809,363 bytes), `third_party_license_metadata` (3,297 bytes), `dependencies.json` (33,918 bytes, 284 dependency records), and `dependencies.pb`.
+  - Coverage: generated dependency JSON included Firebase, Play services, ML Kit, ZXing, Palette, ProfileInstaller, NewPipeExtractor, and youtubedl-android `common`/`library`/`ffmpeg`.
+  - Remaining implementation: apply the wiring in the real repo only when ready, update `gradle/verification-metadata.xml` with a tightly reviewed diff, and preserve the existing `ProviderDisclosure` content-source section.
+
+- [ ] 🤖 🔬 **P0 — Reviewed Gradle verification metadata update for notice plugins**
+  - Why: Both Google OSS notices and AboutLibraries were blocked first by Aura's committed Gradle dependency verification metadata. That is expected and desirable; the notice feature must include reviewed checksum metadata, not a suppressed gate.
+  - Evidence: Google spike blocked `com.google.android.gms:oss-licenses-plugin:0.12.0` jar/module; AboutLibraries spike blocked `com.mikepenz.aboutlibraries.plugin.android` 14.2.1 plugin marker POM; metadata refresh in the Google clone generated a very broad diff when run naively.
+  - Touches: `gradle/verification-metadata.xml`, `docs/distribution/supply-chain.md`, implementation runbook.
+  - Acceptance: real implementation documents the exact metadata-refresh command, reviews the checksum diff, and avoids accidental dependency version churn.
+  - Verify: clean checkout with verification enabled resolves the notice plugin/runtime dependency and fails if metadata is stale; no CI path uses `--dependency-verification=off`.
+
+- [ ] 🤖 🔬 **P0 — Settings Licenses handoff to generated dependency notices**
+  - Why: `LicensesScreen.kt` still owns dependency rows manually. Google OSS notices can own generated dependency notices, while `ProviderDisclosure.kt` should continue to own content-source policy rows.
+  - Evidence: Google-generated resources under `app/build/generated/res/releaseOssLicensesTask/raw/`; existing `LicensesScreen.kt` manual `licenses` list; `ProviderDisclosure.kt`.
+  - Touches: `LicensesScreen.kt`, `SettingsScreen.kt`, optional `AndroidManifest.xml` theme/activity metadata, generated notice resource access.
+  - Acceptance: Settings exposes generated library notices and content-source disclosures in one coherent flow; users can still see Aura-specific descriptions for high-risk dependencies through a curated overlay or explanatory rows.
+  - Verify: local run generates notice resources; Settings route opens/generated notices path works; content-source section still covers every `ContentSource`.
+
+- [ ] 🤖 🔬 **P1 — Human-readable release notice artifact from Google outputs**
+  - Why: Google's raw resources are app-friendly, but GitHub/Obtainium users need inspectable release artifacts before installing. `dependencies.json` has coordinates but not a policy-reviewed narrative.
+  - Evidence: Google spike generated raw resources plus coordinate JSON, not a polished `THIRD-PARTY-NOTICES.md`.
+  - Touches: `tools/`, release workflow, `docs/legal/third-party-notices.md`, release artifact upload list.
+  - Acceptance: a script converts generated resources and curated overlays into `release/THIRD-PARTY-NOTICES.md` and optional `dependency-notices.json`.
+  - Verify: release workflow includes the generated notice artifact in `SHA256SUMS.txt` and upload/attachment lists.
+
+- [~] 🤖 🔬 **P1 — AboutLibraries 14.2.1 compatibility spike**
+  - Result: Configures on AGP 8.7.3 / Gradle 8.12 after verification metadata refresh, so Cycle 19's "14.2.1 before N-1, 15.x after N-1" gating is valid.
+  - Caveat: Default release export in `work/aura-aboutlibraries-spike` only emitted three Kotlin BOM rows and `exportComplianceLibrariesRelease` logged Windows `InvalidPathException` errors for colon-containing dependency coordinates while still exiting successful.
+  - Recommendation: keep AboutLibraries secondary. Do not choose it as the first notice lane unless a follow-up config pass proves complete release-runtime coverage and resolves/avoids the Windows compliance export issue.
+  - Verify before adoption: `aboutlibraries.json` must include Aura's actual release runtime graph, not only BOMs; compliance exports must be stable on Windows or run only in Linux CI.
+
+## 🔬 Researcher Queue (Cycle 21 — 2026-06-06)
+
+Append-only Cycle 21 handoff. Every item below is source-backed in `docs/research/cycle-21-2026-06-06.md`; use it to implement generated notices without forcing unreviewed UI dependency convergence.
+
+- [ ] 🤖 🔬 **P0 — Plugin-only Google OSS notice generation**
+  - Why: Cycle 21 proved the Google Gradle plugin can still run `:app:releaseOssLicensesTask` and generate release notice outputs after removing `play-services-oss-licenses:17.5.1`. That keeps the notice lane on Aura's current AGP 8.7.3 / Gradle 8.12 stack without importing a large stock-activity runtime graph.
+  - Evidence: `work/aura-oss-notice-spike` with only the Google OSS licenses Gradle plugin generated `third_party_licenses` (809,363 bytes), `third_party_license_metadata` (3,252 bytes), and `dependencies.json` (29,451 bytes, 251 dependency records).
+  - Touches: `settings.gradle.kts`, root `build.gradle.kts`, `app/build.gradle.kts`, `gradle/verification-metadata.xml`, `docs/distribution/supply-chain.md`.
+  - Acceptance: real repo applies the Google plugin, keeps `play-services-oss-licenses` runtime absent, runs `:app:releaseOssLicensesTask`, and produces generated notice resources plus `dependencies.json` from the release runtime graph.
+  - Verify: dependency graph contains existing Activity Compose 1.9.3 / Compose 1.7.6 / Material3 1.3.1 and no notice-driven Activity Compose 1.12.1, Compose 1.11.0-beta02, or Material Components 1.13.0 drift.
+
+- [ ] 🤖 🔬 **P0 — Human-readable THIRD-PARTY-NOTICES.md converter**
+  - Why: Google outputs are app-friendly raw resources and coordinate JSON; GitHub/Obtainium/users need an inspectable release artifact before installing.
+  - Evidence: prototype `tools/prototype_google_oss_to_markdown.ps1` in the spike clone generated `build/prototype/THIRD-PARTY-NOTICES.md` (1,352,770 bytes, 20,414 lines, 251 dependency records, 87 notice sections) from Google outputs.
+  - Touches: `tools/google_oss_to_markdown.*`, release workflow, `docs/legal/third-party-notices.md` or generated release artifact directory, `SHA256SUMS.txt` generation.
+  - Acceptance: repo-owned script parses `dependencies.json`, `third_party_license_metadata`, and `third_party_licenses`; output has dependency coordinates, notice section index, notice text, generator command, and timestamp/build variant metadata.
+  - Verify: release workflow generates `THIRD-PARTY-NOTICES.md`, uploads it, and includes it in checksums; a local rerun produces deterministic content aside from declared timestamp fields.
+
+- [ ] 🤖 🔬 **P0 — Defer `play-services-oss-licenses` runtime until dependency convergence audit**
+  - Why: The stock Google notice runtime is not a small dependency in Aura's current graph. It pulled Activity Compose 1.12.1, Compose 1.11.0-beta02 artifacts, AppCompat 1.7.1, Material Components 1.13.0, credentials, and other transitive UI/runtime changes in the isolated clone.
+  - Evidence: Cycle 21 release runtime graph check with runtime dependency present versus absent in `work/aura-oss-notice-spike`.
+  - Touches: `app/build.gradle.kts`, Settings Licenses UX, `AndroidManifest.xml` only if the stock activity is later adopted.
+  - Acceptance: current notice implementation does not add `implementation("com.google.android.gms:play-services-oss-licenses:17.5.1")`; any future stock-activity adoption includes a dependency convergence diff, UI regression check, and explicit acceptance of transitive upgrades.
+  - Verify: `:app:dependencies --configuration releaseRuntimeClasspath` has no `play-services-oss-licenses`, no Compose 1.11.0-beta02, and no Activity Compose 1.12.1 introduced by the notice feature.
+
+- [ ] 🤖 🔬 **P0 — Preserve ProviderDisclosure content-source coverage during generated-notice handoff**
+  - Why: Maven/Google dependency notices cannot replace Aura's provider policy matrix. `ProviderDisclosure.kt` owns content-source status, terms, cache policy, user actions, and store disclosure for sources such as Reddit, YouTube, Pexels, Pixabay, community uploads, bundled media, and AI-generated content.
+  - Evidence: `LicensesScreen.kt` maps `providerDisclosures` into the "Content Sources" section; `ProviderDisclosureTest.kt` asserts every `ContentSource` has exactly one row with user-visible policy fields.
+  - Touches: `LicensesScreen.kt`, `ProviderDisclosure.kt`, `ProviderDisclosureTest.kt`, generated notices entry point.
+  - Acceptance: generated dependency notices replace or supplement only the hand-maintained library rows; content-source rows remain code-backed and complete; Settings copy clearly distinguishes dependency notices from provider/content-source disclosures.
+  - Verify: `ProviderDisclosureTest` remains green; manual Licenses screen review shows both generated dependency notices and all content-source disclosures.
+
+- [ ] 🤖 🔬 **P1 — AboutLibraries remains a secondary custom-Compose option**
+  - Why: AboutLibraries 14.2.1 configured on Aura's current toolchain, but default exports were incomplete and Windows compliance export logged path errors. It should not displace the working plugin-only Google path unless a follow-up config pass proves complete coverage.
+  - Evidence: Cycle 20 AboutLibraries spike; Cycle 21 plugin-only Google notice success.
+  - Touches: version catalog, app Gradle plugin config, Licenses UI only if Google resources/custom markdown are insufficient.
+  - Acceptance: no AboutLibraries adoption before a documented config pass includes Aura's actual release runtime graph; AboutLibraries 15.x remains blocked until the N-1 AGP upgrade because v15 requires AGP 8.13.
+  - Verify: if revisited, `aboutlibraries.json` must include NewPipeExtractor, youtubedl-android, Firebase, Play services ML Kit, ZXing, Palette, and ProfileInstaller.
+
+## 🔬 Researcher Queue (Cycle 22 — 2026-06-06)
+
+Append-only Cycle 22 handoff. Every item below is source-backed in `docs/research/cycle-22-2026-06-06.md`; use it to finish hardening the new generated-notice lane and continue into native/copyleft payload evidence.
+
+- [~] 🤖 🔬 **P0 — Plugin-only Google OSS notice generation implemented**
+  - Result: The real repo now applies `com.google.android.gms.oss-licenses-plugin` 0.12.0 through a `settings.gradle.kts` plugin resolution mapping, root plugin declaration, and app plugin application.
+  - Evidence: `settings.gradle.kts`, `build.gradle.kts`, `app/build.gradle.kts`, `gradle/verification-metadata.xml`; `:app:releaseOssLicensesTask` passed via `gradlew -p` on the real repo.
+  - Verification metadata: additions cover the Google OSS licenses plugin, plugin-classpath protobuf 4.34.1 artifacts, and POM checksums read by the release/debug OSS tasks.
+  - Guardrail: the implementation intentionally does not add `implementation("com.google.android.gms:play-services-oss-licenses:17.5.1")`.
+  - Verify: real-repo `:app:releaseOssLicensesTask` passed after refreshing POM checksum metadata; release runtime graph still showed Activity Compose 1.9.3, Compose 1.7.6, and Material3 1.3.1 with no `play-services-oss-licenses`, Activity Compose 1.12.1, or Compose 1.11.0-beta02.
+
+- [~] 🤖 🔬 **P0 — THIRD-PARTY-NOTICES.md release artifact generator implemented**
+  - Result: `tools/google_oss_to_markdown.py` converts Google `dependencies.json`, `third_party_license_metadata`, and `third_party_licenses` into markdown.
+  - Evidence: local run wrote `build/reports/THIRD-PARTY-NOTICES.md` with 251 dependency records, 288 notice sections, 1,367,502 bytes, and 25,336 lines; `python -m py_compile tools/google_oss_to_markdown.py` passed.
+  - Touches: `tools/google_oss_to_markdown.py`, `.github/workflows/release.yml`, `docs/distribution/supply-chain.md`.
+  - Acceptance remaining: run the full release workflow on GitHub or a CI-equivalent environment to prove `release/THIRD-PARTY-NOTICES.md` is uploaded, checksummed, and attached next to the APK.
+  - Verify: local converter output includes NewPipeExtractor, youtubedl-android `common`/`library`/`ffmpeg`, Firebase, Play services ML Kit, ZXing, Palette, and ProfileInstaller.
+
+- [~] 🤖 🔬 **P1 — Release workflow packages notices with checksums**
+  - Result: `.github/workflows/release.yml` now runs `:app:releaseOssLicensesTask`, writes `release/THIRD-PARTY-NOTICES.md`, includes it in `SHA256SUMS.txt`, uploads it as a workflow artifact, and attaches it to tagged GitHub Releases.
+  - Evidence: workflow diff plus `docs/distribution/supply-chain.md` release verification updates.
+  - Risk: the full `assembleRelease` workflow was not run locally because `CLAUDE.md` warns repeated APK/lint builds can exhaust this workstation; GitHub Actions remains the real validation environment.
+  - Verify: next tagged or manual release workflow should show checksum rows for both APK and `THIRD-PARTY-NOTICES.md`; release notes should mention the notices artifact.
+
+- [x] 🤖 🔬 **P0 — Restore ProviderDisclosure unit-test execution in real repo environment** — shipped 2026-06-06.
+  - Result: the code-backed provider policy guard now runs in the real repo with the local Android SDK path and Android Studio JBR.
+  - Evidence: `:app:testDebugUnitTest --tests com.freevibe.data.legal.ProviderDisclosureTest` passed after debug OSS task POM checksums were added to `gradle/verification-metadata.xml`.
+  - Touches: local developer setup docs, CI/unit-test runbook, not production code.
+  - Acceptance: focused `ProviderDisclosureTest` passes after generated-notice changes.
+  - Verify: focused unit-test command passes and the Licenses screen still has complete "Content Sources" rows from `ProviderDisclosure.kt`.
+
+- [ ] 🤖 🔬 **P0 — Native/copyleft payload inspector for youtubedl-android and FFmpeg**
+  - Why: the generated Google notices cover Maven dependency coordinates and license texts, but they still do not inspect shipped AAR payload files, FFmpeg build mode, yt-dlp/Python payload versions, or GPL/LGPL source-offer evidence.
+  - Evidence: Cycle 18 native/copyleft packet item; Cycle 22 generated-notice implementation gap.
+  - Touches: `tools/native_compliance_inventory.*`, `docs/legal/native-compliance.md`, release workflow artifact list, youtubedl-android AAR cache paths.
+  - Acceptance: local tool inspects resolved youtubedl-android library/ffmpeg AARs without full APK assembly, lists payload paths and licenses, and identifies the source/build references Aura must publish.
+  - Verify: report names youtubedl-android library, youtubedl-android ffmpeg, yt-dlp/Python payload notes, FFmpeg binary paths, and NewPipeExtractor GPL evidence.
 
 ---
 
@@ -2315,3 +2508,103 @@ Stars/dates as of research pass 2026-05-16.
 - Notice generation and SBOMs — [Google Play services OSS notices](https://developers.google.com/android/guides/opensource), [SPDX overview](https://spdx.dev/about/overview/).
 - Copyleft/native artifact guidance — [FFmpeg legal guidance](https://ffmpeg.org/legal.html), [NewPipeExtractor repository](https://github.com/TeamNewPipe/NewPipeExtractor), [youtubedl-android repository](https://github.com/yausername/youtubedl-android).
 - Store/repository disclosure policy — [F-Droid anti-features](https://f-droid.org/en/docs/Anti-Features/), [Google Play intellectual-property policy](https://support.google.com/googleplay/android-developer/answer/9888072).
+
+## Appendix V — Cycle 18 Sources
+
+- Cycle 18 planning record — [docs/research/cycle-18-2026-06-06.md](docs/research/cycle-18-2026-06-06.md).
+- Generated Android notices — [Google Play services OSS notices](https://developers.google.com/android/guides/opensource), [AboutLibraries](https://github.com/mikepenz/AboutLibraries).
+- License/SBOM gates — [CycloneDX Gradle plugin](https://github.com/CycloneDX/cyclonedx-gradle-plugin), [Gradle Plugin Portal `org.cyclonedx.bom`](https://plugins.gradle.org/plugin/org.cyclonedx.bom), [SPDX overview](https://spdx.dev/about/overview/).
+- Native/copyleft packet inputs — [FFmpeg legal guidance](https://ffmpeg.org/legal.html), [youtubedl-android repository](https://github.com/yausername/youtubedl-android), [NewPipeExtractor repository](https://github.com/TeamNewPipe/NewPipeExtractor).
+
+## Appendix W — Cycle 19 Sources
+
+- Cycle 19 planning record — [docs/research/cycle-19-2026-06-06.md](docs/research/cycle-19-2026-06-06.md).
+- Current-toolchain notice candidates — [Google Play services OSS notices](https://developers.google.com/android/guides/opensource), [AboutLibraries](https://github.com/mikepenz/AboutLibraries), [AboutLibraries Android plugin portal](https://plugins.gradle.org/plugin/com.mikepenz.aboutlibraries.plugin.android), [AboutLibraries releases](https://github.com/mikepenz/AboutLibraries/releases).
+- Release/SBOM follow-up — [CycloneDX Gradle plugin portal](https://plugins.gradle.org/plugin/org.cyclonedx.bom).
+
+## Appendix X — Cycle 20 Sources
+
+- Cycle 20 planning record — [docs/research/cycle-20-2026-06-06.md](docs/research/cycle-20-2026-06-06.md).
+- Google OSS notices spike outputs — `work/aura-oss-notice-spike` local clone, `:app:releaseOssLicensesTask`, generated `third_party_licenses`, `third_party_license_metadata`, and `dependencies.json`.
+- AboutLibraries 14.2.1 spike outputs — `work/aura-aboutlibraries-spike` local clone, `:app:exportLibraryDefinitionsRelease`, `:app:exportLibrariesRelease`, `:app:exportComplianceLibrariesRelease`.
+- Tooling docs — [Google Play services OSS notices](https://developers.google.com/android/guides/opensource), [AboutLibraries](https://github.com/mikepenz/AboutLibraries), [AboutLibraries Android plugin portal](https://plugins.gradle.org/plugin/com.mikepenz.aboutlibraries.plugin.android).
+
+## Appendix Y — Cycle 21 Sources
+
+- Cycle 21 planning record — [docs/research/cycle-21-2026-06-06.md](docs/research/cycle-21-2026-06-06.md).
+- Plugin-only Google OSS notices spike outputs — `work/aura-oss-notice-spike`, `:app:releaseOssLicensesTask` after removing `play-services-oss-licenses:17.5.1`, generated `third_party_licenses`, `third_party_license_metadata`, and `dependencies.json`.
+- Prototype markdown converter — `work/aura-oss-notice-spike/tools/prototype_google_oss_to_markdown.ps1`, output `work/aura-oss-notice-spike/build/prototype/THIRD-PARTY-NOTICES.md`.
+- Runtime convergence evidence — `work/aura-oss-notice-spike` release runtime dependency graph checks with and without `play-services-oss-licenses:17.5.1`.
+- Provider disclosure preservation evidence — `app/src/main/java/com/freevibe/data/legal/ProviderDisclosure.kt`, `app/src/test/java/com/freevibe/data/legal/ProviderDisclosureTest.kt`, `app/src/main/java/com/freevibe/ui/screens/licenses/LicensesScreen.kt`.
+
+## Appendix Z — Cycle 22 Sources
+
+- Cycle 22 implementation record — [docs/research/cycle-22-2026-06-06.md](docs/research/cycle-22-2026-06-06.md).
+- Real-repo generated notices implementation — `settings.gradle.kts`, `build.gradle.kts`, `app/build.gradle.kts`, `gradle/verification-metadata.xml`, `tools/google_oss_to_markdown.py`.
+- Release artifact wiring — `.github/workflows/release.yml`, `docs/distribution/supply-chain.md`.
+- Verification outputs — real-repo `:app:releaseOssLicensesTask`, `tools/google_oss_to_markdown.py --variant release`, release runtime dependency graph filter, and passing `ProviderDisclosureTest`.
+
+## Continuation State
+
+### Last Completed Cycle
+
+Cycle 22: real-repo plugin-only Google OSS notice implementation, markdown converter, release artifact wiring, and focused verification.
+
+### Current Focus
+
+Continue from Cycle 22 P0: start the native/copyleft payload inspector for youtubedl-android library/ffmpeg AARs and NewPipeExtractor source-offer evidence. Commit and push completed work when the active project contract allows it.
+
+### Important Findings So Far
+
+- `ROADMAP.md` has Cycle 18, Cycle 19, Cycle 20, Cycle 21, and Cycle 22 research items; `docs/research/cycle-18-2026-06-06.md`, `docs/research/cycle-19-2026-06-06.md`, `docs/research/cycle-20-2026-06-06.md`, `docs/research/cycle-21-2026-06-06.md`, and `docs/research/cycle-22-2026-06-06.md` have the source-backed analysis.
+- `LicensesScreen.kt` still has manual dependency rows; content sources are already code-backed by `ProviderDisclosure.kt`.
+- `.github/workflows/release.yml` now publishes `THIRD-PARTY-NOTICES.md` with the APK and includes it in `SHA256SUMS.txt`; dependency-license lock JSON, SBOM, and native/copyleft packet artifacts remain open.
+- `docs/distribution/supply-chain.md` defers SBOM work until N-1, but Cycle 18 split out a smaller current-toolchain notice/drift lane that should not wait on the AGP/Kotlin migration.
+- AboutLibraries 15.x is not a current-toolchain fit because its release notes make AGP 8.13 the minimum; Aura is currently on AGP 8.7.3 / Gradle 8.12. Test AboutLibraries 14.2.1 if using it before N-1.
+- Google OSS notices now have the required `settings.gradle.kts` plugin resolution mapping and root/app Gradle wiring in the real repo.
+- Real-repo `:app:releaseOssLicensesTask` passed after refreshing POM checksum metadata, generating 251 dependency records and including NewPipeExtractor, youtubedl-android library/common/ffmpeg, Firebase, Play services ML Kit, ZXing, Palette, and ProfileInstaller.
+- Adding `play-services-oss-licenses:17.5.1` pulled risky release-runtime UI upgrades in the spike clone, including Activity Compose 1.12.1, Compose 1.11.0-beta02 artifacts, AppCompat 1.7.1, Material Components 1.13.0, and credential dependencies.
+- The real implementation does not add `play-services-oss-licenses:17.5.1`; a release runtime graph check showed no notice-driven Activity Compose 1.12.1, Compose 1.11.0-beta02, or Material Components 1.13.0 drift.
+- `tools/google_oss_to_markdown.py` generated `build/reports/THIRD-PARTY-NOTICES.md` from real-repo Google outputs; the output was 1,367,502 bytes, 25,336 lines, 251 dependency records, and 288 notice sections.
+- Google outputs plus the converter are not a native payload inventory or policy-reviewed lockfile; youtubedl-android/FFmpeg source/build-mode evidence still needs a separate compliance packet.
+- AboutLibraries 14.2.1 configures but the default release export was incomplete for Aura and logged Windows path errors during compliance export.
+- `ProviderDisclosureTest` now passes in the real repo with `JAVA_HOME` set to Android Studio JBR and `ANDROID_HOME` set to the local Android SDK.
+- Recent history was checked with `rtk git log -10 --oneline --decorate` for this pass.
+
+### Next Best Actions
+
+1. Build a native/copyleft payload inspector that reads resolved youtubedl-android library/ffmpeg AARs without requiring a full APK build.
+2. Generate `docs/legal/native-compliance.md` or a build report listing payload paths, versions, license IDs, and source/build references for youtubedl-android, yt-dlp/Python payloads, FFmpeg, and NewPipeExtractor.
+3. Add a debug/release OSS notice metadata refresh note to future dependency-update reviews so POM checksum drift is caught before release.
+4. Add a future in-app generated dependency notice viewer or Settings link after the release artifact path is stable.
+5. Add release workflow dry-run validation on GitHub Actions or a CI-equivalent environment to prove notices are checksummed and uploaded with the APK.
+
+### Unprocessed Leads
+
+- Exact youtubedl-android AAR payload inventory and FFmpeg configure/license mode.
+- Exact source-offer/source-code links for youtubedl-android, yt-dlp/Python payloads, FFmpeg, and NewPipeExtractor.
+- Whether the release workflow notices step should also upload raw `dependencies.json` for machine diffing.
+- Whether Aura should parse generated raw resources for a custom Compose in-app dependency notice viewer after the markdown artifact is stable.
+- Whether the stock Google `OssLicensesMenuActivity` is ever worth adding after a dependency convergence audit.
+- Whether `licensee` can enforce Aura's desired policy from `releaseRuntimeClasspath` or needs a custom JSON comparison.
+- Whether CycloneDX should be immediate or delayed until N-1.
+- Whether AboutLibraries can be configured to include the full release runtime graph; default 14.2.1 output only showed three Kotlin BOM rows in this spike.
+
+### Files Still To Inspect
+
+- Gradle cache/resolved AARs for `io.github.junkfood02.youtubedl-android:library:0.18.1` and `io.github.junkfood02.youtubedl-android:ffmpeg:0.18.1`
+- Resolved NewPipeExtractor artifacts and upstream source/license references for `v0.24.8`
+- `AudioTrimmer.kt` and `VideoCropScreen.kt` call paths that depend on FFmpeg/youtubedl payloads
+- `.github/workflows/release.yml`
+- `.github/workflows/dependency-review.yml`
+- `.github/workflows/scorecard.yml`
+- `app/src/main/AndroidManifest.xml`
+
+### Searches Still To Run
+
+- `CashApp Licensee Gradle releaseRuntimeClasspath Android example`
+- `CycloneDX Gradle Android releaseRuntimeClasspath configuration`
+- `youtubedl-android 0.18.1 ffmpeg license build config source`
+- `youtubedl-android 0.18.1 yt-dlp Python payload location`
+- `NewPipeExtractor v0.24.8 GPL source offer distribution Android app`
+- `AboutLibraries 14.2.1 exportLibrariesRelease only BOM dependencies`

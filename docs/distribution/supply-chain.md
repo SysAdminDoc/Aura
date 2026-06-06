@@ -7,7 +7,8 @@ Aura is side-loaded through GitHub Releases and Obtainium, so release artifacts 
 | Control | Location | Purpose |
 | --- | --- | --- |
 | Signed release APK | `.github/workflows/release.yml` | Builds the release variant, verifies the signature, rejects debuggable APKs, and publishes checksums. |
-| Artifact attestation | `.github/workflows/release.yml` | Uses `actions/attest@v4` against `release/SHA256SUMS.txt` so the APK digest is bound to the GitHub Actions build. |
+| Third-party notices | `tools/google_oss_to_markdown.py`, `.github/workflows/release.yml` | Runs the Google OSS Licenses Gradle task for the release variant and publishes `THIRD-PARTY-NOTICES.md` next to the APK. |
+| Artifact attestation | `.github/workflows/release.yml` | Uses `actions/attest@v4` against `release/SHA256SUMS.txt` so release artifact digests are bound to the GitHub Actions build. |
 | Gradle dependency verification | `gradle/verification-metadata.xml` | Records SHA-256 checksums for resolved Gradle plugins and app dependencies. |
 | Dependency Review | `.github/workflows/dependency-review.yml` | Runs on pull requests and fails high/critical vulnerable dependency additions. |
 | OpenSSF Scorecard | `.github/workflows/scorecard.yml` | Runs on main pushes, branch-protection changes, weekly schedule, and manual dispatch; keeps public result publishing disabled and uploads SARIF to code scanning. |
@@ -18,10 +19,25 @@ Aura is side-loaded through GitHub Releases and Obtainium, so release artifacts 
 For each `v*` release:
 
 1. Confirm the GitHub Release contains `Aura-vX.Y.Z-versionCode-N-universal-release.apk`.
-2. Confirm `SHA256SUMS.txt` includes that APK.
-3. Confirm the generated release notes include the APK SHA-256, signing certificate SHA-256, and artifact attestation URL.
-4. Verify the APK locally with `apksigner verify --verbose --print-certs`.
-5. Compare the local SHA-256 to `SHA256SUMS.txt`.
+2. Confirm the GitHub Release contains `THIRD-PARTY-NOTICES.md`.
+3. Confirm `SHA256SUMS.txt` includes both the APK and `THIRD-PARTY-NOTICES.md`.
+4. Confirm the generated release notes include the APK SHA-256, third-party notices entry, signing certificate SHA-256, and artifact attestation URL.
+5. Spot-check `THIRD-PARTY-NOTICES.md` for high-risk dependencies such as NewPipeExtractor, youtubedl-android, Firebase, Play services ML Kit, ZXing, Palette, and ProfileInstaller.
+6. Verify the APK locally with `apksigner verify --verbose --print-certs`.
+7. Compare the local SHA-256 values to `SHA256SUMS.txt`.
+
+## Third-party notices
+
+The release workflow uses Google's OSS Licenses Gradle plugin only. It intentionally does not add the `play-services-oss-licenses` runtime dependency or stock Google notice activity, because that runtime path was found to pull broad UI dependency upgrades on the current AGP 8.7.3 / Gradle 8.12 stack.
+
+Generate notices locally after the release notice task has run:
+
+```powershell
+.\gradlew.bat :app:releaseOssLicensesTask --stacktrace --no-daemon
+python tools\google_oss_to_markdown.py --variant release --output build\reports\THIRD-PARTY-NOTICES.md
+```
+
+Generated dependency notices do not replace Aura's content-source disclosures. `ProviderDisclosure.kt` remains the source of truth for provider policy rows such as YouTube, Reddit, Pexels, Pixabay, community uploads, bundled media, and AI-generated content.
 
 ## Gradle dependency verification
 

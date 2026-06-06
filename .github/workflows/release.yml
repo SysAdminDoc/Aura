@@ -125,6 +125,12 @@ jobs:
             echo "release_label=$RELEASE_LABEL"
           } >> "$GITHUB_OUTPUT"
 
+      - name: Generate third-party notices
+        run: |
+          ./gradlew :app:releaseOssLicensesTask --stacktrace --no-daemon
+          python3 tools/google_oss_to_markdown.py --variant release --output "$RELEASE_DIR/THIRD-PARTY-NOTICES.md"
+          test -s "$RELEASE_DIR/THIRD-PARTY-NOTICES.md"
+
       - name: Verify release APK
         id: verify_apk
         run: |
@@ -156,7 +162,7 @@ jobs:
         run: |
           (
             cd "$RELEASE_DIR"
-            sha256sum "${{ steps.package.outputs.apk_name }}" > SHA256SUMS.txt
+            sha256sum "${{ steps.package.outputs.apk_name }}" THIRD-PARTY-NOTICES.md > SHA256SUMS.txt
           )
 
       - name: Attest release artifacts
@@ -176,6 +182,7 @@ jobs:
             printf 'Signed release artifact:\n'
             printf -- '- APK: %s\n' '${{ steps.package.outputs.apk_name }}'
             printf -- '- APK SHA-256: %s\n' "$APK_SHA256"
+            printf -- '- Third-party notices: THIRD-PARTY-NOTICES.md\n'
             printf -- '- Signing certificate SHA-256: %s\n' '${{ steps.verify_apk.outputs.cert_sha256 }}'
             printf -- '- GitHub artifact attestation: %s\n' '${{ steps.attest.outputs.attestation-url }}'
             printf -- '- Build type: release, android:debuggable=false\n\n'
@@ -192,6 +199,7 @@ jobs:
           name: aura-release-${{ steps.package.outputs.version_name }}-${{ github.run_number }}
           path: |
             release/*.apk
+            release/THIRD-PARTY-NOTICES.md
             release/SHA256SUMS.txt
             release/RELEASE_NOTES.md
             release/apksigner.txt
@@ -206,5 +214,6 @@ jobs:
           body_path: release/RELEASE_NOTES.md
           files: |
             release/*.apk
+            release/THIRD-PARTY-NOTICES.md
             release/SHA256SUMS.txt
           fail_on_unmatched_files: true

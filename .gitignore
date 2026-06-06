@@ -20,3 +20,5 @@ CODEX_CHANGELOG.md
 .claude/
 .factory/
 *.bak
+__pycache__/
+*.pyc
