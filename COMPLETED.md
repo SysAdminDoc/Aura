@@ -89,6 +89,11 @@ next pass can resume quickly.
   provider preference and Settings switch, hid Reddit wallpaper browsing when
   disabled, skipped daily picks/background rotations/repository calls/video
   discovery, and recorded disabled source diagnostics separately from outages.
+- Completed Cycle 39 Pexels and Pixabay source switches: added default-on
+  provider preferences and Settings switches, hid disabled provider tabs, skipped
+  Discover/search/style-biased/video API calls before bundled keys are read,
+  removed disabled Pixabay from rotation pickers, and left Pixabay TTL/rate-limit
+  enforcement as the next policy gap.
 
 ## 2026-06-05
 

@@ -1,8 +1,8 @@
 # Autonomous Loop State
 
 **Assigned project:** `C:\Users\--\repos\Aura`
-**Current pass:** 2026-06-06 Cycle 38 Reddit provider source switch
-**Last commit before pass:** `1d32bff` (`feat(settings): add youtube provider switch`)
+**Current pass:** 2026-06-06 Cycle 39 Pexels and Pixabay source switches
+**Last commit before pass:** `aa65f68` (`feat(settings): add reddit source switch`)
 
 ## 2026-06-05 Result
 
@@ -124,12 +124,20 @@
 - Updated Video Wallpapers, Daily Wallpaper, and Auto Wallpaper workers to skip Reddit fetch paths when the source is disabled.
 - Updated `ProviderDisclosure.kt`, `docs/legal/provider-runtime-controls.md`, `docs/research/cycle-38-2026-06-06.md`, `ROADMAP.md`, `CHANGELOG.md`, and `COMPLETED.md` for the covered Reddit runtime control.
 - Cycle 38 verification: focused Wallpapers, Settings, video wallpaper helper, source metrics, and provider disclosure unit tests; release-compliance Python compile checks; dependency notice lock check; generated notice metadata parity check; native compliance lock check; dependency overlay check; dependency license policy check; `git diff --check`; changed-line attribution scan.
+- Completed Cycle 39 Pexels and Pixabay source switches.
+- Added default-on `pexels_provider_enabled` and `pixabay_provider_enabled` preferences plus Settings switches.
+- Gated `WallpaperRepository` Pexels/Pixabay photo calls before key reads, covering Discover, search, style-biased Discover, and source-tab loads.
+- Updated Wallpapers so disabled Pexels/Pixabay tabs hide and stale selections redirect to Discover.
+- Updated Video Wallpapers to skip disabled Pexels/Pixabay video jobs before key reads.
+- Updated auto-rotation source pickers and workers so disabled Pixabay is not offered for new rotation choices and does not retry indefinitely when already selected.
+- Updated `ProviderDisclosure.kt`, `docs/legal/provider-runtime-controls.md`, `docs/research/cycle-39-2026-06-06.md`, `ROADMAP.md`, `CHANGELOG.md`, and `COMPLETED.md` for the covered Pexels switch and partial Pixabay runtime/policy state.
+- Cycle 39 verification: focused Wallpapers, Settings, video wallpaper helper, source metrics, and provider disclosure unit tests; release-compliance Python compile checks; dependency notice lock check; generated notice metadata parity check; native compliance lock check; dependency overlay check; dependency license policy check; `git diff --check`; changed-line attribution scan.
 
 ## Still Open
 
 - Exact Termux package commit, FFmpeg package patches, dependency source set, and build logs for the resolved youtubedl-android ffmpeg 0.18.1 AAR.
-- Reddit/Bing/community/Pexels/Pixabay/Wallhaven/generated-content source disable flags.
+- Bing/community/Wallhaven/generated-content source disable flags and Pixabay TTL/rate-limit enforcement.
 
 ## Next Cycle
 
-Continue this same assigned project, Aura. Start Cycle 38 from the `ROADMAP.md` Continuation State and `docs/research/cycle-37-2026-06-06.md`. The Google OSS notices plugin-only path is implemented; `tools/google_oss_to_markdown.py` generates `THIRD-PARTY-NOTICES.md`; `tools/google_oss_raw_archive.py` archives raw Google OSS inputs and the repo now keeps `GOOGLE-OSS-RAW-INPUTS.zip` attached to tagged public releases; `GeneratedDependencyNotices.kt` parses generated raw resources for an in-app notice viewer with search and review markers; `tools/native_compliance_inventory.py` generates `NATIVE-COMPLIANCE.md`, extracts embedded FFmpeg configure evidence, and gates native evidence drift; `tools/dependency_notice_lock.py` gates generated release notice drift and raw metadata parity; `tools/dependency_overlay_check.py` gates curated high-risk dependency/native-payload review metadata; `tools/dependency_license_policy.py` gates allowed, review-required, disallowed, and unknown curated license IDs; `tools/release_artifact_bundle_check.py` gates final release bundle consistency; `ProviderDisclosure.kt` now has checked runtime-control rows for every content source; `docs/legal/provider-runtime-controls.md` records current missing/partial source disablement; YouTube now has a runtime provider switch that blocks sound/video resolver paths and falls back to bundled sounds when disabled. Next implement a Reddit source-enabled flag that removes Reddit from wallpaper/video entry points and records disabled diagnostics separately from outages. Keep AboutLibraries secondary: 14.2.1 configures, but default exports were incomplete and the compliance export logged Windows path errors; do not use AboutLibraries 15.x until N-1 upgrades AGP because v15 requires AGP 8.13. Commit and push completed work when the active project contract allows it.
+Continue this same assigned project, Aura. Start Cycle 40 from the `ROADMAP.md` Continuation State and `docs/research/cycle-39-2026-06-06.md`. The Google OSS notices plugin-only path is implemented; `tools/google_oss_to_markdown.py` generates `THIRD-PARTY-NOTICES.md`; `tools/google_oss_raw_archive.py` archives raw Google OSS inputs and the repo now keeps `GOOGLE-OSS-RAW-INPUTS.zip` attached to tagged public releases; `GeneratedDependencyNotices.kt` parses generated raw resources for an in-app notice viewer with search and review markers; `tools/native_compliance_inventory.py` generates `NATIVE-COMPLIANCE.md`, extracts embedded FFmpeg configure evidence, and gates native evidence drift; `tools/dependency_notice_lock.py` gates generated release notice drift and raw metadata parity; `tools/dependency_overlay_check.py` gates curated high-risk dependency/native-payload review metadata; `tools/dependency_license_policy.py` gates allowed, review-required, disallowed, and unknown curated license IDs; `tools/release_artifact_bundle_check.py` gates final release bundle consistency; `ProviderDisclosure.kt` now has checked runtime-control rows for every content source; YouTube, Reddit, Pexels, and Pixabay now have runtime provider switches that block their active fetch/resolver paths before remote calls or bundled key reads. Next implement a community-enabled flag that hides upload/actions and reports disabled diagnostics separately from Firebase outages. Keep AboutLibraries secondary: 14.2.1 configures, but default exports were incomplete and the compliance export logged Windows path errors; do not use AboutLibraries 15.x until N-1 upgrades AGP because v15 requires AGP 8.13. Commit and push completed work when the active project contract allows it.

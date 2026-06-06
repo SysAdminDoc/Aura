@@ -2826,19 +2826,26 @@ Stars/dates as of research pass 2026-05-16.
 - Primary source references — [Reddit Data API Terms](https://redditinc.com/policies/data-api-terms), [Reddit Developer Terms](https://redditinc.com/policies/developer-terms).
 - Verification outputs — focused Wallpapers, Settings, video wallpaper helper, source metrics, and provider disclosure unit tests; release-compliance Python compile checks; dependency notice lock check; generated notice metadata parity check; native compliance lock check; dependency overlay check; dependency license policy check; `git diff --check`; and changed-line attribution scan.
 
+## Appendix AQ — Cycle 39 Sources
+
+- Cycle 39 implementation record — [docs/research/cycle-39-2026-06-06.md](docs/research/cycle-39-2026-06-06.md).
+- Pexels/Pixabay source switch implementation — `PreferencesManager.kt`, `SettingsScreen.kt`, `SettingsViewModel.kt`, `WallpaperRepository.kt`, `WallpapersViewModel.kt`, `WallpapersScreen.kt`, `VideoWallpapersViewModel.kt`, `AutoWallpaperWorker.kt`, `ProviderDisclosure.kt`, and `docs/legal/provider-runtime-controls.md`.
+- Primary source references — [Pexels wallpaper-app API guidance](https://help.pexels.com/hc/en-us/articles/4405588861721-Can-I-use-the-API-as-a-wallpaper-app), [Pexels API documentation](https://www.pexels.com/api/documentation/), [Pixabay API documentation](https://pixabay.com/api/docs/).
+- Verification outputs — focused Wallpapers, Settings, video wallpaper helper, source metrics, and provider disclosure unit tests; release-compliance Python compile checks; dependency notice lock check; generated notice metadata parity check; native compliance lock check; dependency overlay check; dependency license policy check; `git diff --check`; and changed-line attribution scan.
+
 ## Continuation State
 
 ### Last Completed Cycle
 
-Cycle 38: Reddit provider source switch.
+Cycle 39: Pexels and Pixabay source switches.
 
 ### Current Focus
 
-Start Cycle 39 with explicit Pexels and Pixabay source-enabled flags so distribution profiles can disable those providers even when bundled API keys are present. Commit and push completed work when the active project contract allows it.
+Start Cycle 40 with the remaining community source disable flag from the runtime provider-control matrix. Commit and push completed work when the active project contract allows it.
 
 ### Important Findings So Far
 
-- `ROADMAP.md` has Cycle 18 through Cycle 38 research/implementation items; `docs/research/cycle-18-2026-06-06.md` through `docs/research/cycle-38-2026-06-06.md` have the source-backed analysis.
+- `ROADMAP.md` has Cycle 18 through Cycle 39 research/implementation items; `docs/research/cycle-18-2026-06-06.md` through `docs/research/cycle-39-2026-06-06.md` have the source-backed analysis.
 - `LicensesScreen.kt` still has manual dependency rows; content sources are already code-backed by `ProviderDisclosure.kt`.
 - `.github/workflows/release.yml` now publishes `THIRD-PARTY-NOTICES.md` and `NATIVE-COMPLIANCE.md` with the APK and includes both files in `SHA256SUMS.txt`; SBOM artifacts remain open.
 - `.github/workflows/verify.yml` and `.github/workflows/release.yml` now run `tools/dependency_notice_lock.py --mode check`, `tools/dependency_notice_lock.py --mode check-metadata`, `tools/native_compliance_inventory.py --mode check-lock`, `tools/dependency_overlay_check.py`, and `tools/dependency_license_policy.py` after `:app:releaseOssLicensesTask`.
@@ -2868,11 +2875,12 @@ Start Cycle 39 with explicit Pexels and Pixabay source-enabled flags so distribu
 - `ProviderDisclosure.kt` now includes a checked runtime-control matrix for every `ContentSource`; `docs/legal/provider-runtime-controls.md` records disabled behavior and follow-up gaps for Reddit, Pexels, Pixabay, Bing, community, Wallhaven, and generated-content controls.
 - YouTube now has a default-on `youtube_provider_enabled` preference plus Settings switch that hides YouTube browsing, falls back to bundled Sounds content, skips video discovery, blocks stream resolution before cache/downloader use, and records disabled source diagnostics separately from failures.
 - Reddit now has a default-on `reddit_provider_enabled` preference plus Settings switch that hides Reddit wallpaper browsing, skips daily picks, background rotations, repository calls, and video wallpaper discovery, and records disabled source diagnostics separately from failures.
+- Pexels and Pixabay now have default-on provider switches that hide disabled wallpaper tabs, skip Discover/search/style-biased/video API calls before bundled keys are read, remove disabled Pixabay from rotation pickers, and record disabled diagnostics separately from failures; Pixabay TTL/rate-limit enforcement remains open.
 - Recent history was checked with `rtk git log -10 --oneline --decorate` for this pass.
 
 ### Next Best Actions
 
-1. Add explicit Pexels and Pixabay source-enabled flags that bypass wallpaper/video entry points and report disabled diagnostics even when bundled API keys are present.
+1. Add a community-enabled flag that hides upload/actions and reports disabled diagnostics separately from Firebase outages.
 2. Run a real GitHub Actions manual release dry run after secrets are confirmed available and archive the run URL in the release docs.
 3. Add deeper UI verification for the licenses screen on an emulator or screenshot lane when a device/runtime is available.
 4. Preserve exact Termux package commit/build-log evidence for FFmpeg if the release owner can obtain it from upstream or a reproducible rebuild.

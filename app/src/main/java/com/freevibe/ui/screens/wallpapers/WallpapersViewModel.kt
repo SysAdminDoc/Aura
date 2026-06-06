@@ -110,6 +110,8 @@ class WallpapersViewModel @Inject constructor(
     // #9: Grid columns preference
     val gridColumns = prefs.wallpaperGridColumns.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 2)
     val redditProviderEnabled = prefs.redditProviderEnabled.stateIn(viewModelScope, SharingStarted.Eagerly, true)
+    val pexelsProviderEnabled = prefs.pexelsProviderEnabled.stateIn(viewModelScope, SharingStarted.Eagerly, true)
+    val pixabayProviderEnabled = prefs.pixabayProviderEnabled.stateIn(viewModelScope, SharingStarted.Eagerly, true)
 
     val recentSearches = searchHistoryRepo.getRecentWallpaperSearches(8)
         .map { list -> list.map { it.query } }
@@ -243,11 +245,7 @@ class WallpapersViewModel @Inject constructor(
     }
 
     fun selectTab(tab: WallpaperTab) {
-        val targetTab = if (tab == WallpaperTab.REDDIT && !redditProviderEnabled.value) {
-            WallpaperTab.DISCOVER
-        } else {
-            tab
-        }
+        val targetTab = if (isProviderDisabledTab(tab)) WallpaperTab.DISCOVER else tab
         if (targetTab == WallpaperTab.REDDIT) redditRepo.resetPagination()
         _state.update {
             it.copy(
@@ -344,11 +342,7 @@ class WallpapersViewModel @Inject constructor(
     }
 
     fun clearActiveFilter() {
-        val returnTab = if (_state.value.browseTab == WallpaperTab.REDDIT && !redditProviderEnabled.value) {
-            WallpaperTab.DISCOVER
-        } else {
-            _state.value.browseTab
-        }
+        val returnTab = if (isProviderDisabledTab(_state.value.browseTab)) WallpaperTab.DISCOVER else _state.value.browseTab
         if (returnTab == WallpaperTab.REDDIT) redditRepo.resetPagination()
         _state.update {
             it.copy(
@@ -371,7 +365,7 @@ class WallpapersViewModel @Inject constructor(
     // #4: Pull-to-refresh
     fun refresh() {
         val tab = _state.value.selectedTab
-        if (tab == WallpaperTab.REDDIT && !redditProviderEnabled.value) {
+        if (isProviderDisabledTab(tab)) {
             selectTab(WallpaperTab.DISCOVER)
             return
         }
@@ -714,6 +708,21 @@ class WallpapersViewModel @Inject constructor(
                     }
                     return@launch
                 }
+                if (isProviderDisabledTab(currentTab)) {
+                    recordDisabledProvider(currentTab, currentPage)
+                    _state.update {
+                        it.copy(
+                            wallpapers = emptyList(),
+                            isLoading = false,
+                            isLoadingMore = false,
+                            isRefreshing = false,
+                            hasMore = false,
+                            error = providerDisabledMessage(currentTab),
+                            errorSource = currentTab.name,
+                        )
+                    }
+                    return@launch
+                }
                 val result = when (currentTab) {
                     WallpaperTab.DISCOVER -> wallpaperRepo.getDiscover(
                         page = currentPage,
@@ -976,7 +985,28 @@ class WallpapersViewModel @Inject constructor(
 
     private suspend fun isRedditProviderEnabled(): Boolean = prefs.redditProviderEnabled.first()
 
+    private fun isProviderDisabledTab(tab: WallpaperTab): Boolean = when (tab) {
+        WallpaperTab.REDDIT -> !redditProviderEnabled.value
+        WallpaperTab.PEXELS -> !pexelsProviderEnabled.value
+        WallpaperTab.PIXABAY -> !pixabayProviderEnabled.value
+        else -> false
+    }
+
+    private suspend fun recordDisabledProvider(tab: WallpaperTab, page: Int) {
+        when (tab) {
+            WallpaperTab.PEXELS -> wallpaperRepo.getPexelsCurated(page)
+            WallpaperTab.PIXABAY -> wallpaperRepo.getPixabay(page)
+            else -> Unit
+        }
+    }
+
     private fun redditDisabledMessage(): String = "Reddit source is disabled in Settings"
+
+    private fun providerDisabledMessage(tab: WallpaperTab): String = when (tab) {
+        WallpaperTab.PEXELS -> "Pexels source is disabled in Settings"
+        WallpaperTab.PIXABAY -> "Pixabay source is disabled in Settings"
+        else -> redditDisabledMessage()
+    }
 }
 
 internal fun matchesWallpaperIdentity(

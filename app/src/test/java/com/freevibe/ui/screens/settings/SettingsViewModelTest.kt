@@ -224,6 +224,8 @@ class SettingsViewModelTest {
             every { prefs.wallhavenApiKey } returns flowOf("")
             every { prefs.pexelsApiKey } returns flowOf("")
             every { prefs.pixabayApiKey } returns flowOf("")
+            every { prefs.pexelsProviderEnabled } returns flowOf(true)
+            every { prefs.pixabayProviderEnabled } returns flowOf(true)
             every { prefs.freesoundApiKey } returns flowOf("")
             every { prefs.schedulerCollectionId } returns flowOf(-1L)
             every { prefs.showSketchyContent } returns flowOf(false)

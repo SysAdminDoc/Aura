@@ -278,6 +278,36 @@ class WallpapersViewModelTest {
     }
 
     @Test
+    fun `disabled pexels and pixabay tabs redirect to discover`() = runTest(dispatcher) {
+        val wallpaperRepo = mockk<WallpaperRepository>()
+        val redditRepo = mockk<RedditRepository>()
+
+        stubCommonDependencies(
+            wallpaperRepo = wallpaperRepo,
+            redditRepo = redditRepo,
+        )
+
+        val viewModel = createViewModel(
+            wallpaperRepo = wallpaperRepo,
+            redditRepo = redditRepo,
+            pexelsProviderEnabled = false,
+            pixabayProviderEnabled = false,
+        )
+
+        advanceUntilIdle()
+
+        viewModel.selectTab(WallpaperTab.PEXELS)
+        advanceUntilIdle()
+        assertEquals(WallpaperTab.DISCOVER, viewModel.state.value.selectedTab)
+        coVerify(exactly = 0) { wallpaperRepo.getPexelsCurated(any()) }
+
+        viewModel.selectTab(WallpaperTab.PIXABAY)
+        advanceUntilIdle()
+        assertEquals(WallpaperTab.DISCOVER, viewModel.state.value.selectedTab)
+        coVerify(exactly = 0) { wallpaperRepo.getPixabay(any(), any()) }
+    }
+
+    @Test
     fun `downloadWallpaper scopes download identity by source`() = runTest(dispatcher) {
         val wallpaperRepo = mockk<WallpaperRepository>()
         val redditRepo = mockk<RedditRepository>()
@@ -466,6 +496,8 @@ class WallpapersViewModelTest {
         cacheManagerOverride: WallpaperCacheManager? = null,
         favoritesRepoOverride: FavoritesRepository? = null,
         redditProviderEnabled: Boolean = true,
+        pexelsProviderEnabled: Boolean = true,
+        pixabayProviderEnabled: Boolean = true,
     ): WallpapersViewModel {
         val favoritesRepo = favoritesRepoOverride ?: mockk<FavoritesRepository>()
         every { favoritesRepo.allIdentities() } returns flowOf(emptySet<FavoriteIdentity>())
@@ -485,6 +517,8 @@ class WallpapersViewModelTest {
         val prefs = mockk<PreferencesManager>()
         every { prefs.wallpaperGridColumns } returns flowOf(2)
         every { prefs.redditProviderEnabled } returns flowOf(redditProviderEnabled)
+        every { prefs.pexelsProviderEnabled } returns flowOf(pexelsProviderEnabled)
+        every { prefs.pixabayProviderEnabled } returns flowOf(pixabayProviderEnabled)
         every { prefs.preferredResolution } returns flowOf("1080x1920")
         every { prefs.userStyles } returns flowOf("minimal,nature")
 

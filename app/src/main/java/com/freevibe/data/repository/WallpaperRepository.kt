@@ -116,6 +116,8 @@ class WallpaperRepository @Inject constructor(
     private suspend fun wallhavenApiKey(): String = prefs.wallhavenApiKey.first()
     private suspend fun pixabayApiKey(): String = prefs.pixabayApiKey.first()
     private suspend fun pexelsApiKey(): String = prefs.pexelsApiKey.first()
+    private suspend fun pixabayProviderEnabled(): Boolean = prefs.pixabayProviderEnabled.first()
+    private suspend fun pexelsProviderEnabled(): Boolean = prefs.pexelsProviderEnabled.first()
 
     private suspend fun wallhavenPurity(): String =
         computeWallhavenPurity(
@@ -284,8 +286,12 @@ class WallpaperRepository @Inject constructor(
     // -- Pixabay --
 
     suspend fun getPixabay(page: Int = 1, query: String = ""): SearchResult<Wallpaper> {
+        if (!pixabayProviderEnabled()) {
+            sourceMetrics.recordDisabled(SOURCE_PIXABAY)
+            return emptySourceResult(page)
+        }
         val key = pixabayApiKey()
-        if (key.isBlank()) return SearchResult(emptyList(), 0, 1, false)
+        if (key.isBlank()) return emptySourceResult(page)
         return withCacheFallback("pixabay_${query.hashCode()}_$page", ContentSource.PIXABAY) {
             sourceMetrics.measure(SOURCE_PIXABAY) {
                 val response = pixabayApi.searchPhotos(
@@ -310,8 +316,12 @@ class WallpaperRepository @Inject constructor(
     // -- Pexels curated photos --
 
     suspend fun getPexelsCurated(page: Int = 1): SearchResult<Wallpaper> {
+        if (!pexelsProviderEnabled()) {
+            sourceMetrics.recordDisabled(SOURCE_PEXELS)
+            return emptySourceResult(page)
+        }
         val key = pexelsApiKey()
-        if (key.isBlank()) return SearchResult(emptyList(), 0, 1, false)
+        if (key.isBlank()) return emptySourceResult(page)
         return withCacheFallback("pexels_curated_$page", ContentSource.PEXELS) {
             sourceMetrics.measure(SOURCE_PEXELS) {
                 val response = pexelsApi.curatedPhotos(apiKey = key, page = page)
@@ -337,8 +347,12 @@ class WallpaperRepository @Inject constructor(
     }
 
     suspend fun getPexels(page: Int = 1, query: String = ""): SearchResult<Wallpaper> {
+        if (!pexelsProviderEnabled()) {
+            sourceMetrics.recordDisabled(SOURCE_PEXELS)
+            return emptySourceResult(page)
+        }
         val key = pexelsApiKey()
-        if (key.isBlank()) return SearchResult(emptyList(), 0, 1, false)
+        if (key.isBlank()) return emptySourceResult(page)
         return withCacheFallback("pexels_${query.hashCode()}_$page", ContentSource.PEXELS) {
             sourceMetrics.measure(SOURCE_PEXELS) {
                 val response = pexelsApi.searchPhotos(
@@ -474,6 +488,13 @@ class WallpaperRepository @Inject constructor(
             null
         }
     }
+
+    private fun emptySourceResult(page: Int) = SearchResult<Wallpaper>(
+        items = emptyList(),
+        totalCount = 0,
+        currentPage = page,
+        hasMore = false,
+    )
 
     private suspend fun fetchBingImages(idx: Int, market: String): com.freevibe.data.remote.bing.BingImageResponse {
         var lastRetryableError: Exception? = null

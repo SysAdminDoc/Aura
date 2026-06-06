@@ -111,6 +111,8 @@ fun SettingsScreen(
     val pexelsApiKey by viewModel.pexelsApiKey.collectAsStateWithLifecycle()
     val pixabayApiKey by viewModel.pixabayApiKey.collectAsStateWithLifecycle()
     val stabilityAiKey by viewModel.stabilityAiKey.collectAsStateWithLifecycle()
+    val pexelsProviderEnabled by viewModel.pexelsProviderEnabled.collectAsStateWithLifecycle()
+    val pixabayProviderEnabled by viewModel.pixabayProviderEnabled.collectAsStateWithLifecycle()
     val showSketchyContent by viewModel.showSketchyContent.collectAsStateWithLifecycle()
     val showNsfwContent by viewModel.showNsfwContent.collectAsStateWithLifecycle()
     val videoFpsOverlayEnabled by viewModel.videoFpsOverlayEnabled.collectAsStateWithLifecycle()
@@ -565,7 +567,7 @@ fun SettingsScreen(
                     "discover" to "Discover (mixed)", "favorites" to "My Favorites",
                     "wallhaven" to "Wallhaven", "pixabay" to "Pixabay", "reddit" to "Reddit",
                     "bing" to "Bing Daily", "collection" to "A collection…",
-                )
+                ).filter { (key, _) -> key != "pixabay" || pixabayProviderEnabled || schedulerSource == "pixabay" }
                 AlertDialog(
                     onDismissRequest = { showSchedulerSource = false },
                     title = { Text("Wallpaper source") },
@@ -1089,6 +1091,17 @@ fun SettingsScreen(
                 onCheckedChange = { viewModel.setShowNsfw(it) },
             )
             var showPexelsKey by remember { mutableStateOf(false) }
+            SettingsToggle(
+                icon = Icons.Default.PhotoLibrary,
+                title = "Enable Pexels source",
+                subtitle = if (pexelsProviderEnabled) {
+                    "Shows Pexels photos and video wallpapers when a key is available"
+                } else {
+                    "Hides Pexels browsing and skips Pexels API calls"
+                },
+                checked = pexelsProviderEnabled,
+                onCheckedChange = { viewModel.setPexelsProviderEnabled(it) },
+            )
             SettingsItem(
                 icon = Icons.Default.Key,
                 title = "Pexels API Key",
@@ -1124,6 +1137,17 @@ fun SettingsScreen(
                 )
             }
             var showPixabayKey by remember { mutableStateOf(false) }
+            SettingsToggle(
+                icon = Icons.Default.Collections,
+                title = "Enable Pixabay source",
+                subtitle = if (pixabayProviderEnabled) {
+                    "Shows Pixabay photos, widget shuffles, rotations, and video loops"
+                } else {
+                    "Hides Pixabay browsing and skips Pixabay API calls"
+                },
+                checked = pixabayProviderEnabled,
+                onCheckedChange = { viewModel.setPixabayProviderEnabled(it) },
+            )
             SettingsItem(
                 icon = Icons.Default.Key,
                 title = "Pixabay API Key",
@@ -1401,6 +1425,7 @@ fun SettingsScreen(
     if (showSourcePicker) {
         SourcePickerDialog(
             currentSource = autoWpSource,
+            pixabayProviderEnabled = pixabayProviderEnabled,
             onDismiss = { showSourcePicker = false },
             onSelect = { source ->
                 viewModel.setAutoWpSource(source)
@@ -2508,6 +2533,7 @@ private fun WallpaperSlotPickerDialog(
 @Composable
 private fun SourcePickerDialog(
     currentSource: String,
+    pixabayProviderEnabled: Boolean,
     onDismiss: () -> Unit,
     onSelect: (String) -> Unit,
 ) {
@@ -2518,7 +2544,7 @@ private fun SourcePickerDialog(
         "wallhaven" to "Wallhaven",
         "pixabay" to "Pixabay",
         "bing" to "Bing Daily",
-    )
+    ).filter { (key, _) -> key != "pixabay" || pixabayProviderEnabled || currentSource == "pixabay" }
 
     AlertDialog(
         onDismissRequest = onDismiss,

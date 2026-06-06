@@ -21,8 +21,8 @@ runtime-control row.
 | ccMixter | Covered | No active browsing tab uses ccMixter. | New feeds do not request ccMixter; saved legacy rows can remain visible. | None. |
 | Local device media | Not applicable | User action and Android permission/picker grants. | No remote provider is contacted; user can cancel picker flows or delete local copies. | None. |
 | YouTube | Covered | Settings exposes a YouTube provider-enabled flag in addition to query customization and blocked words. | Disabled mode hides YouTube browsing, skips top hits and video discovery, falls back to bundled sounds, and blocks stream resolution before cache or downloader use. | Carry the flag into channel-specific distribution defaults when store profiles are added. |
-| Pexels | Partial | Blank API key returns empty results for Pexels calls; default BuildConfig key can still enable it. | When the effective key is blank, Pexels wallpaper and video calls short-circuit to empty results. | Add an explicit source-enabled flag so distribution profiles can disable Pexels even when a key is bundled. |
-| Pixabay | Partial | Blank API key returns empty results for Pixabay calls; default BuildConfig key can still enable it. | When the effective key is blank, Pixabay wallpaper and video calls short-circuit to empty results. | Add an explicit source-enabled flag and provider TTL guard before claiming policy-complete disablement. |
+| Pexels | Covered | Settings exposes a Pexels provider-enabled flag in addition to the optional API key. | Disabled mode hides Pexels wallpaper browsing, skips Discover/search/style-biased/video API calls, and records disabled diagnostics before reading bundled keys. | Carry the flag into channel-specific distribution defaults when store profiles are added. |
+| Pixabay | Partial | Settings exposes a Pixabay provider-enabled flag in addition to the optional API key. | Disabled mode hides Pixabay wallpaper browsing, removes it from rotation pickers, skips wallpaper/video API calls, and records disabled diagnostics before reading bundled keys. | Add provider TTL and rate-limit guards before claiming broader Pixabay policy-complete behavior. |
 | Klipy | Covered | Removed active feed. | New feeds do not request Klipy; saved legacy rows can remain visible. | None. |
 | SoundCloud | Covered | No active browsing tab uses SoundCloud. | New feeds do not request SoundCloud; saved legacy rows can remain visible. | None. |
 | Aura Community | Missing | Firebase configuration availability and auth/rules failures only; no runtime community-off flag. | No source-disabled state; Firebase failures surface through upload/feed errors and cached local state. | Add a community-enabled flag that hides upload/actions and reports disabled diagnostics separately from outages. |
@@ -38,8 +38,9 @@ runtime-control row.
 - Reddit now has a default-on provider flag covering wallpaper browse, daily
   pick/background jobs, scheduled rotations, repository calls, and video
   wallpaper discovery. Video wallpaper subreddit curation remains hardcoded.
-- Pexels and Pixabay currently short-circuit when their effective API key is
-  blank, but a bundled default key means that is not a reliable disable control.
+- Pexels and Pixabay now have default-on provider flags covering wallpaper and
+  video API calls before bundled keys are read. Pixabay still needs provider TTL
+  and rate-limit guards for broader policy completeness.
 - Community features depend on Firebase availability and rules, but operator
   disablement should be distinct from outages so the UI can hide upload/vote
   actions deliberately.

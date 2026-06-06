@@ -103,6 +103,8 @@ fun WallpapersScreen(
     val topVoted by viewModel.topVoted.collectAsStateWithLifecycle()
     val hiddenIds by viewModel.hiddenIds.collectAsStateWithLifecycle()
     val redditProviderEnabled by viewModel.redditProviderEnabled.collectAsStateWithLifecycle()
+    val pexelsProviderEnabled by viewModel.pexelsProviderEnabled.collectAsStateWithLifecycle()
+    val pixabayProviderEnabled by viewModel.pixabayProviderEnabled.collectAsStateWithLifecycle()
     val visibleSections = remember(state.wallpapers, hiddenIds, topVoted, dailyPick, state.selectedTab) {
         computeVisibleWallpaperSections(
             wallpapers = state.wallpapers,
@@ -135,8 +137,14 @@ fun WallpapersScreen(
     var showWallpaperUploadDialog by remember { mutableStateOf(false) }
     var selectedWallpaperUploadUri by remember { mutableStateOf<Uri?>(null) }
     var awaitingWallpaperUploadResult by remember { mutableStateOf(false) }
-    LaunchedEffect(redditProviderEnabled, state.selectedTab) {
-        if (!redditProviderEnabled && state.selectedTab == WallpaperTab.REDDIT) {
+    LaunchedEffect(redditProviderEnabled, pexelsProviderEnabled, pixabayProviderEnabled, state.selectedTab) {
+        val disabledTab = when (state.selectedTab) {
+            WallpaperTab.REDDIT -> !redditProviderEnabled
+            WallpaperTab.PEXELS -> !pexelsProviderEnabled
+            WallpaperTab.PIXABAY -> !pixabayProviderEnabled
+            else -> false
+        }
+        if (disabledTab) {
             viewModel.selectTab(WallpaperTab.DISCOVER)
         }
     }
@@ -255,11 +263,15 @@ fun WallpapersScreen(
 
     Box(modifier = Modifier.fillMaxSize()) {
         Column(modifier = Modifier.fillMaxSize()) {
-            val visibleTabs = remember(state.selectedTab, redditProviderEnabled) {
+            val visibleTabs = remember(state.selectedTab, redditProviderEnabled, pexelsProviderEnabled, pixabayProviderEnabled) {
                 WallpaperTab.entries.filter {
                     it != WallpaperTab.SEARCH || state.selectedTab == WallpaperTab.SEARCH
                 }.filter {
                     it != WallpaperTab.COLOR || state.selectedTab == WallpaperTab.COLOR
+                }.filter {
+                    it != WallpaperTab.PEXELS || pexelsProviderEnabled || state.selectedTab == WallpaperTab.PEXELS
+                }.filter {
+                    it != WallpaperTab.PIXABAY || pixabayProviderEnabled || state.selectedTab == WallpaperTab.PIXABAY
                 }.filter {
                     it != WallpaperTab.REDDIT || redditProviderEnabled || state.selectedTab == WallpaperTab.REDDIT
                 }

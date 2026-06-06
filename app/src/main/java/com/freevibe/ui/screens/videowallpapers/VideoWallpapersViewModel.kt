@@ -339,10 +339,16 @@ class VideoWallpapersViewModel @Inject constructor(
             val failedSources = java.util.Collections.synchronizedSet(mutableSetOf<String>())
             val youtubeEnabled = prefs.youtubeProviderEnabled.first()
             val redditEnabled = prefs.redditProviderEnabled.first()
+            val pexelsEnabled = prefs.pexelsProviderEnabled.first()
+            val pixabayEnabled = prefs.pixabayProviderEnabled.first()
 
             kotlinx.coroutines.supervisorScope {
                 // 1. Pexels
                 val pexelsJob = async(Dispatchers.IO) {
+                    if (!pexelsEnabled) {
+                        sourceMetrics.recordDisabled("pexels")
+                        return@async emptyList<VideoWallpaperItem>()
+                    }
                     try {
                         val key = prefs.pexelsApiKey.first()
                         if (key.isBlank()) return@async emptyList()
@@ -483,6 +489,10 @@ class VideoWallpapersViewModel @Inject constructor(
 
                 // 4. Pixabay Videos (animated loops + short videos)
                 val pixabayJob = async(Dispatchers.IO) {
+                    if (!pixabayEnabled) {
+                        sourceMetrics.recordDisabled("pixabay")
+                        return@async emptyList<VideoWallpaperItem>()
+                    }
                     try {
                         val pbKey = prefs.pixabayApiKey.first()
                         if (pbKey.isBlank()) return@async emptyList<VideoWallpaperItem>()
