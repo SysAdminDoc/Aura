@@ -145,8 +145,12 @@ fun SoundDetailScreen(
     val canDownloadSound = !sourceUnavailable && licenseCapabilities.canUse(SoundAction.DOWNLOAD)
     val canEditSound = !sourceUnavailable && licenseCapabilities.canUse(SoundAction.EDIT)
     val canReportSound = s.source != ContentSource.LOCAL && s.source != ContentSource.BUNDLED
+    val canDeleteUpload by produceState(false, s.stableKey()) {
+        value = viewModel.canDeleteCommunitySound(s)
+    }
     val policyMessages = remember(licenseCapabilities) { soundPolicyMessages(licenseCapabilities) }
     var showReportDialog by remember(s.stableKey()) { mutableStateOf(false) }
+    var showDeleteUploadDialog by remember(s.stableKey()) { mutableStateOf(false) }
 
     val currentSoundKey = s.stableKey()
     val similarSounds = remember(currentSoundKey) { mutableStateOf<List<Sound>>(emptyList()) }
@@ -191,6 +195,31 @@ fun SoundDetailScreen(
             title = "Report sound",
             onDismiss = { showReportDialog = false },
             onSubmit = { reason, note -> viewModel.reportSound(s, reason, note) },
+        )
+    }
+
+    if (showDeleteUploadDialog) {
+        AlertDialog(
+            onDismissRequest = { showDeleteUploadDialog = false },
+            title = { Text("Delete upload?") },
+            text = { Text("This removes your community sound and its uploaded audio file.") },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        showDeleteUploadDialog = false
+                        viewModel.deleteCommunitySound(s)
+                        onBack()
+                    },
+                    colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error),
+                ) {
+                    Text("Delete")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDeleteUploadDialog = false }) {
+                    Text("Cancel")
+                }
+            },
         )
     }
 
@@ -433,6 +462,18 @@ fun SoundDetailScreen(
                     Icon(Icons.Default.Report, contentDescription = null, modifier = Modifier.size(18.dp))
                     Spacer(Modifier.width(8.dp))
                     Text("Report content")
+                }
+            }
+            if (canDeleteUpload) {
+                OutlinedButton(
+                    onClick = { showDeleteUploadDialog = true },
+                    modifier = Modifier.fillMaxWidth().height(44.dp),
+                    shape = RoundedCornerShape(10.dp),
+                    colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.error),
+                ) {
+                    Icon(Icons.Default.Delete, contentDescription = null, modifier = Modifier.size(18.dp))
+                    Spacer(Modifier.width(8.dp))
+                    Text("Delete upload")
                 }
             }
 

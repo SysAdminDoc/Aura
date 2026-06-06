@@ -221,6 +221,26 @@ class UploadRepository @Inject constructor(
         Result.failure(e)
     }
 
+    suspend fun canDeleteSoundUpload(uploadId: String): Boolean {
+        return try {
+            val uploadsRefInstance = uploadsRef ?: return false
+            val ownerUid = identityProvider.ensureSignedIn()
+            val safeUploadId = sanitizeCommunityUploadKey(uploadId)
+            if (safeUploadId.isBlank()) return false
+
+            val snapshot = uploadsRefInstance.child(safeUploadId).get().await()
+            if (!snapshot.exists()) return false
+            val uploaderUid = snapshot.child("uploaderUid").getValue(String::class.java)
+                ?: snapshot.child("uploaderId").getValue(String::class.java)
+                ?: ""
+            val storagePath = snapshot.child("storagePath").getValue(String::class.java).orEmpty()
+            uploaderUid == ownerUid && storagePath.isNotBlank()
+        } catch (e: Exception) {
+            e.rethrowIfCancelled()
+            false
+        }
+    }
+
     /**
      * Get community-uploaded sounds, sorted by votes descending (client-side).
      */

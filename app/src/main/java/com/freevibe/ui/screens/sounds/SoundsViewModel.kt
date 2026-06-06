@@ -1456,6 +1456,32 @@ class SoundsViewModel @Inject constructor(
         }
     }
 
+    suspend fun canDeleteCommunitySound(sound: Sound): Boolean {
+        if (sound.source != ContentSource.COMMUNITY || !communityProviderEnabled.value) return false
+        return uploadRepo.canDeleteSoundUpload(sound.id)
+    }
+
+    fun deleteCommunitySound(sound: Sound) {
+        if (communityActionBlocked()) return
+        viewModelScope.launch {
+            uploadRepo.deleteSoundUpload(sound.id)
+                .onSuccess {
+                    val key = sound.stableKey()
+                    stopIfPlaying(sound)
+                    _topHits.update { hits -> hits.filterNot { it.stableKey() == key } }
+                    _state.update { state ->
+                        state.copy(
+                            sounds = state.sounds.filterNot { it.stableKey() == key },
+                            applySuccess = "Upload deleted",
+                        )
+                    }
+                }
+                .onFailure { error ->
+                    _state.update { it.copy(error = "Delete failed: ${error.message ?: "try again"}") }
+                }
+        }
+    }
+
     fun reportSound(sound: Sound, reason: CommunityReportReason, note: String = "") {
         if (communityActionBlocked()) return
         viewModelScope.launch {

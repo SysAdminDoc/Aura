@@ -168,6 +168,10 @@ next pass can resume quickly.
   repositories expose owner delete methods for new rows, RTDB rules protect the
   owner index, and the deletion runbook documents remaining UI/admin/backfill
   work.
+- Completed Cycle 56 visible community owner delete actions: repositories now
+  expose owner-and-`storagePath` availability probes, sound and wallpaper
+  ViewModels expose delete entry points, and detail surfaces show confirmed
+  owner-only delete actions for new community uploads.
 
 ## 2026-06-05
 

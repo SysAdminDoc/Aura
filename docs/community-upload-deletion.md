@@ -1,8 +1,9 @@
 # Community Upload Deletion Handles
 
-Cycle 55 makes new community uploads deletable without parsing public download
-URLs. This is the data-handle slice; visible delete buttons, legacy backfill,
-and admin takedown UX remain follow-up work.
+Cycle 55 made new community uploads deletable without parsing public download
+URLs. Cycle 56 adds owner-visible delete actions for new sound and wallpaper
+uploads that have those handles. Legacy backfill, Storage rules, and admin
+takedown UX remain follow-up work.
 
 ## New Metadata
 
@@ -36,10 +37,22 @@ private to the uploader and custom-claim admins.
 This prevents new owner deletes from depending on public download URLs or broad
 database scans.
 
+## Visible Owner Actions
+
+`UploadRepository.canDeleteSoundUpload(uploadId)` and
+`WallpaperUploadRepository.canDeleteWallpaperUpload(uploadId)` now check the
+current owner and require a nonblank `storagePath`. Detail screens only show
+delete actions when these probes return true.
+
+Sound details show an owner-only `Delete upload` button below the report action.
+Wallpaper details show an owner-only `Delete upload` action in the More sheet.
+Both actions require confirmation before calling the repository delete method.
+
+Rows without Cycle 55 deletion handles, rows owned by another UID, and rows that
+cannot be read all fail closed and do not show the delete action.
+
 ## Remaining Work
 
-- Add user-visible delete actions on sound and wallpaper community upload
-  detail surfaces.
 - Add admin rights-confirmed takedown actions that write a private resolution
   reason before deleting or hiding public content.
 - Add a backfill/admin script for older upload rows that lack `storagePath` and

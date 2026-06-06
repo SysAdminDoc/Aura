@@ -384,6 +384,79 @@ class SoundsViewModelTest {
     }
 
     @Test
+    fun `canDeleteCommunitySound delegates owner availability to upload repository`() = runTest(dispatcher) {
+        val youtubeRepo = mockk<YouTubeRepository>()
+        val freesoundRepo = mockk<FreesoundRepository>()
+        val freesoundV2Repo = mockk<FreesoundV2Repository>()
+        val audiusRepo = mockk<AudiusRepository>()
+        val ccMixterRepo = mockk<CcMixterRepository>()
+        val soundCloudRepo = mockk<SoundCloudRepository>()
+        val uploadRepo = mockk<UploadRepository>(relaxed = true)
+
+        stubCommonDependencies(
+            youtubeRepo = youtubeRepo,
+            freesoundRepo = freesoundRepo,
+            freesoundV2Repo = freesoundV2Repo,
+            audiusRepo = audiusRepo,
+            ccMixterRepo = ccMixterRepo,
+            soundCloudRepo = soundCloudRepo,
+        )
+        coEvery { uploadRepo.canDeleteSoundUpload("cu_owner_sound") } returns true
+
+        val viewModel = createViewModel(
+            youtubeRepo = youtubeRepo,
+            freesoundRepo = freesoundRepo,
+            freesoundV2Repo = freesoundV2Repo,
+            audiusRepo = audiusRepo,
+            ccMixterRepo = ccMixterRepo,
+            soundCloudRepo = soundCloudRepo,
+            uploadRepoOverride = uploadRepo,
+        )
+
+        assertTrue(viewModel.canDeleteCommunitySound(testSound("cu_owner_sound", ContentSource.COMMUNITY, "Owner tone")))
+        coVerify(exactly = 1) { uploadRepo.canDeleteSoundUpload("cu_owner_sound") }
+        assertFalse(viewModel.canDeleteCommunitySound(testSound("yt_owner_sound", ContentSource.YOUTUBE, "Remote tone")))
+    }
+
+    @Test
+    fun `deleteCommunitySound deletes through upload repository and reports success`() = runTest(dispatcher) {
+        val youtubeRepo = mockk<YouTubeRepository>()
+        val freesoundRepo = mockk<FreesoundRepository>()
+        val freesoundV2Repo = mockk<FreesoundV2Repository>()
+        val audiusRepo = mockk<AudiusRepository>()
+        val ccMixterRepo = mockk<CcMixterRepository>()
+        val soundCloudRepo = mockk<SoundCloudRepository>()
+        val uploadRepo = mockk<UploadRepository>(relaxed = true)
+        val sound = testSound("cu_owner_sound", ContentSource.COMMUNITY, "Owner tone")
+
+        stubCommonDependencies(
+            youtubeRepo = youtubeRepo,
+            freesoundRepo = freesoundRepo,
+            freesoundV2Repo = freesoundV2Repo,
+            audiusRepo = audiusRepo,
+            ccMixterRepo = ccMixterRepo,
+            soundCloudRepo = soundCloudRepo,
+        )
+        coEvery { uploadRepo.deleteSoundUpload(sound.id) } returns Result.success(Unit)
+
+        val viewModel = createViewModel(
+            youtubeRepo = youtubeRepo,
+            freesoundRepo = freesoundRepo,
+            freesoundV2Repo = freesoundV2Repo,
+            audiusRepo = audiusRepo,
+            ccMixterRepo = ccMixterRepo,
+            soundCloudRepo = soundCloudRepo,
+            uploadRepoOverride = uploadRepo,
+        )
+
+        viewModel.deleteCommunitySound(sound)
+        advanceUntilIdle()
+
+        coVerify(exactly = 1) { uploadRepo.deleteSoundUpload(sound.id) }
+        assertEquals("Upload deleted", viewModel.state.value.applySuccess)
+    }
+
+    @Test
     fun `initial load prebuffers first five provider preview urls`() = runTest(dispatcher) {
         val youtubeRepo = mockk<YouTubeRepository>()
         val freesoundRepo = mockk<FreesoundRepository>()
@@ -1209,6 +1282,7 @@ class SoundsViewModelTest {
         downloadManagerOverride: DownloadManager? = null,
         favoritesRepoOverride: FavoritesRepository? = null,
         reportRepoOverride: CommunityReportRepository? = null,
+        uploadRepoOverride: UploadRepository? = null,
         youtubeProviderEnabled: Boolean = true,
         communityProviderEnabled: Boolean = true,
     ): SoundsViewModel {
@@ -1267,7 +1341,7 @@ class SoundsViewModelTest {
             bundledContent = bundledContent,
             audioPlaybackManager = audioPlaybackManager,
             audioPreviewCache = audioPreviewCache,
-            uploadRepo = mockk<UploadRepository>(relaxed = true),
+            uploadRepo = uploadRepoOverride ?: mockk<UploadRepository>(relaxed = true),
             soundUrlResolver = soundUrlResolver,
             seasonalContentManager = SeasonalContentManager(),
             communityAudioRecorder = mockk<com.freevibe.service.CommunityAudioRecorder>(relaxed = true),

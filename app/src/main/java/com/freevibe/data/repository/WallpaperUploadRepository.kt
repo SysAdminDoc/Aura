@@ -252,6 +252,26 @@ class WallpaperUploadRepository @Inject constructor(
         }
     }
 
+    suspend fun canDeleteWallpaperUpload(uploadId: String): Boolean = withContext(Dispatchers.IO) {
+        try {
+            val wallpapersRefInstance = wallpapersRef ?: return@withContext false
+            val ownerUid = identityProvider.ensureSignedIn()
+            val safeUploadId = sanitizeCommunityUploadKey(uploadId)
+            if (safeUploadId.isBlank()) return@withContext false
+
+            val snapshot = wallpapersRefInstance.child(safeUploadId).get().await()
+            if (!snapshot.exists()) return@withContext false
+            val uploaderUid = snapshot.child("uploaderUid").getValue(String::class.java)
+                ?: snapshot.child("uploaderId").getValue(String::class.java)
+                ?: ""
+            val storagePath = snapshot.child("storagePath").getValue(String::class.java).orEmpty()
+            uploaderUid == ownerUid && storagePath.isNotBlank()
+        } catch (e: Exception) {
+            e.rethrowIfCancelled()
+            false
+        }
+    }
+
     suspend fun getCommunityWallpapers(limit: Int = 60): SearchResult<Wallpaper> = withContext(Dispatchers.IO) {
         if (!isCommunityProviderEnabled()) {
             sourceMetrics.recordDisabled(SOURCE_COMMUNITY)

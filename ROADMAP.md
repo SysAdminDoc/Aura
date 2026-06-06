@@ -3,7 +3,7 @@
 > Open-source Android personalization: wallpapers, video wallpapers, ringtones, sounds.
 > Stay the OSS alternative to Zedge: no ads, no surprise charges, no dark patterns.
 
-**Version:** 2026-06-06-cycle55-roadmap (added community upload deletion handles).
+**Version:** 2026-06-06-cycle56-roadmap (added visible community owner delete actions).
 **Code version at write:** v6.31.1 / versionCode 112 (per `app/build.gradle.kts`; release/lint Gradle runs are memory-heavy on this Windows workstation, so rerun APK compilation only when explicitly needed).
 **Charter:** personalization, AMOLED-first, free-by-default, multi-source content aggregation, community-fed catalog, polite live wallpapers (battery-aware, pause-on-invisible).
 
@@ -146,7 +146,7 @@ Append-only Cycle 1 handoff. Every item below is source-backed in `docs/research
   - Touches: T-E / N-2; models/entities, `WallpaperDetailScreen.kt`, `SoundDetailScreen.kt`, RTDB moderation/report queue, rules, licenses screen.
   - Acceptance: every detail screen has compact source/provenance affordance; community entries have a report action; reports are App-Checked/authenticated; admins can resolve/hide/unhide through Custom Claim rules.
   - Verify: manual detail-screen pass by source (Pexels/Pixabay/Reddit/YouTube/community/bundled); Firebase rules tests for report/create/read and admin resolution.
-  - Progress 2026-06-06: Cycle 51 added private report payload validation, `CommunityReportRepository`, `/community_reports` and `/community_report_resolutions` rules, sound/wallpaper detail report dialogs, ViewModel report submission with source/license/uploader context, and `docs/support/community-reporting.md`. Cycle 52 added the admin-only open report queue, Settings navigation, report status index, and Hide/Dismiss/Restore actions wired to `/moderation/{contentId}` plus resolution metadata. Cycle 53 installed App Check providers client-side and documented the monitor-before-enforcement path. Cycle 54 defined the report quota policy and protected backend ledger namespaces. Remaining work: callable quota enforcement, delete/takedown flows, and closed-report review filters.
+  - Progress 2026-06-06: Cycle 51 added private report payload validation, `CommunityReportRepository`, `/community_reports` and `/community_report_resolutions` rules, sound/wallpaper detail report dialogs, ViewModel report submission with source/license/uploader context, and `docs/support/community-reporting.md`. Cycle 52 added the admin-only open report queue, Settings navigation, report status index, and Hide/Dismiss/Restore actions wired to `/moderation/{contentId}` plus resolution metadata. Cycle 53 installed App Check providers client-side and documented the monitor-before-enforcement path. Cycle 54 defined the report quota policy and protected backend ledger namespaces. Cycle 56 added owner-gated visible delete actions for new community sound and wallpaper uploads that have Cycle 55 deletion handles. Remaining work: callable quota enforcement, admin rights-confirmed takedown receipts, and closed-report review filters.
 
 - [ ] 🤖 🔬 **P2 — Video wallpaper playlists and per-video behavior profiles**
   - Why: Aura has local video import, Fit/Fill, crop, thumbnails, Smart Crop, and battery dashboard, but users with multiple clips still apply one video at a time. Focused FOSS video-wallpaper competitors now expose playlists, shuffle/loop, smart start times, and one-shot behavior.
@@ -2946,19 +2946,27 @@ Stars/dates as of research pass 2026-05-16.
 - Deletion-handle implementation — `CommunityUploadOwnership.kt`, `CommunityUploadDeletionHelpers.kt`, `UploadRepository.kt`, `WallpaperUploadRepository.kt`, `CommunityUploadOwnershipTest.kt`, and `database.rules.json`.
 - Verification outputs — focused CommunityUploadOwnership, UploadRepositoryValidation, and WallpaperUploadRepositoryValidation unit tests plus RTDB rules JSON parse.
 
+## Appendix BF — Cycle 56 Sources
+
+- Cycle 56 implementation record — [docs/research/cycle-56-2026-06-06.md](docs/research/cycle-56-2026-06-06.md).
+- Community upload deletion runbook — [docs/community-upload-deletion.md](docs/community-upload-deletion.md).
+- Official sources — [Google Play account deletion requirements](https://support.google.com/googleplay/android-developer/answer/13327111), [Firebase Realtime Database Android delete data](https://firebase.google.com/docs/database/android/read-and-write), [Firebase DatabaseReference API](https://firebase.google.com/docs/reference/android/com/google/firebase/database/DatabaseReference), and [Firebase Storage Android delete files](https://firebase.google.com/docs/storage/android/delete-files).
+- Owner-delete UI implementation — `UploadRepository.kt`, `WallpaperUploadRepository.kt`, `SoundsViewModel.kt`, `WallpapersViewModel.kt`, `SoundDetailScreen.kt`, and `WallpaperDetailScreen.kt`.
+- Verification outputs — focused `SoundsViewModelTest` and `WallpapersViewModelTest` unit tests.
+
 ## Continuation State
 
 ### Last Completed Cycle
 
-Cycle 55: community upload deletion handles and owner indexes for new uploads.
+Cycle 56: visible owner delete actions for new community sound and wallpaper uploads.
 
 ### Current Focus
 
-Start Cycle 56 with visible owner delete actions or admin rights-confirmed takedown receipts for community uploads, then continue backend enforcement work for Storage rules, Emulator Suite tests, callable quotas, and App Check rollout evidence. Commit and push completed work when the active project contract allows it.
+Start Cycle 57 with admin rights-confirmed takedown receipts or Storage rules/Emulator Suite coverage for community upload deletion, then continue backend enforcement work for callable quotas and App Check rollout evidence. Commit and push completed work when the active project contract allows it.
 
 ### Important Findings So Far
 
-- `ROADMAP.md` has Cycle 18 through Cycle 55 research/implementation items; `docs/research/cycle-18-2026-06-06.md` through `docs/research/cycle-55-2026-06-06.md` have the source-backed analysis.
+- `ROADMAP.md` has Cycle 18 through Cycle 56 research/implementation items; `docs/research/cycle-18-2026-06-06.md` through `docs/research/cycle-56-2026-06-06.md` have the source-backed analysis.
 - `LicensesScreen.kt` still has manual dependency rows; content sources are already code-backed by `ProviderDisclosure.kt`.
 - `.github/workflows/release.yml` now publishes `THIRD-PARTY-NOTICES.md` and `NATIVE-COMPLIANCE.md` with the APK and includes both files in `SHA256SUMS.txt`; SBOM artifacts remain open.
 - `.github/workflows/verify.yml` and `.github/workflows/release.yml` now run `tools/dependency_notice_lock.py --mode check`, `tools/dependency_notice_lock.py --mode check-metadata`, `tools/native_compliance_inventory.py --mode check-lock`, `tools/dependency_overlay_check.py`, and `tools/dependency_license_policy.py` after `:app:releaseOssLicensesTask`.
@@ -2999,12 +3007,12 @@ Start Cycle 56 with visible owner delete actions or admin rights-confirmed taked
 - Wallpaper and sound apply/download paths now classify explicit 404/410/gone/removed/deleted provider failures and mark saved favorites unavailable with provider-specific reasons; `DownloadManager` also marks matching download-history rows unavailable on failed re-downloads.
 - Sounds now have item-level license capability gates: YouTube apply/download requires confirmation, SoundCloud is link-only until reviewed, CC BY-NC requires confirmation, no-derivatives disables editing, missing remote licenses disable live-source actions, saved sound favorites preserve license metadata through Room v16 and favorites import/export, and share text includes source/uploader/license provenance.
 - Community uploads now require selected CC0/CC BY/CC BY-NC metadata, rights attestation, authenticated uploader UID, attestation timestamp, and optional HTTPS source URL before public sound/wallpaper upload metadata is written. New uploads also store `storagePath` and private owner-index rows so owner delete methods can remove blobs plus metadata without parsing public download URLs. Legacy community sound rows without selected license metadata keep the `User Upload` fallback.
-- Community reporting now has private report intake, admin review, moderation hide/unhide actions, and admin resolution metadata paths with rights/source-removed/safety/spam/other reasons. Detail screens submit reports with source/license/uploader context. App Check client providers are installed. Community write quotas now have typed policy rows and protected admin-only ledger namespaces, while callable enforcement, App Check console evidence, closed-report filters, and owner-delete/takedown flows remain open.
+- Community reporting now has private report intake, admin review, moderation hide/unhide actions, and admin resolution metadata paths with rights/source-removed/safety/spam/other reasons. Detail screens submit reports with source/license/uploader context. App Check client providers are installed. Community write quotas now have typed policy rows and protected admin-only ledger namespaces. New community uploads now have owner-visible delete actions when owner metadata and `storagePath` prove they are deletable, while callable enforcement, App Check console evidence, closed-report filters, admin takedown receipts, and Storage rules remain open.
 - Recent history was checked with `rtk git log -10 --oneline --decorate` for this pass.
 
 ### Next Best Actions
 
-1. Add visible owner delete actions for community sound and wallpaper uploads, or add admin rights-confirmed takedown receipts that use the new deletion handles.
+1. Add admin rights-confirmed takedown receipts that use the new deletion handles, or add Storage rules and Emulator Suite coverage for owner-only blob deletion.
 2. Run a real GitHub Actions manual release dry run after secrets are confirmed available and archive the run URL in the release docs.
 3. Add deeper UI verification for the licenses screen on an emulator or screenshot lane when a device/runtime is available.
 4. Preserve exact Termux package commit/build-log evidence for FFmpeg if the release owner can obtain it from upstream or a reproducible rebuild.

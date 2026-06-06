@@ -19,6 +19,7 @@ import com.freevibe.data.repository.RedditRepository
 import com.freevibe.data.repository.SearchHistoryRepository
 import com.freevibe.data.repository.VoteRepository
 import com.freevibe.data.repository.WallpaperRepository
+import com.freevibe.data.repository.WallpaperUploadRepository
 import com.freevibe.service.DownloadManager
 import com.freevibe.service.DualWallpaperService
 import com.freevibe.service.OfflineFavoritesManager
@@ -409,6 +410,57 @@ class WallpapersViewModelTest {
     }
 
     @Test
+    fun `canDeleteCommunityWallpaper delegates owner availability to upload repository`() = runTest(dispatcher) {
+        val wallpaperRepo = mockk<WallpaperRepository>()
+        val redditRepo = mockk<RedditRepository>()
+        val uploadRepo = mockk<WallpaperUploadRepository>(relaxed = true)
+
+        stubCommonDependencies(wallpaperRepo, redditRepo)
+        coEvery { uploadRepo.canDeleteWallpaperUpload("cw_owner_wallpaper") } returns true
+
+        val viewModel = createViewModel(
+            wallpaperRepo = wallpaperRepo,
+            redditRepo = redditRepo,
+            wallpaperUploadRepoOverride = uploadRepo,
+        )
+
+        assertTrue(
+            viewModel.canDeleteCommunityWallpaper(
+                wallpaper("cw_owner_wallpaper", color = "#112233", source = ContentSource.COMMUNITY),
+            ),
+        )
+        coVerify(exactly = 1) { uploadRepo.canDeleteWallpaperUpload("cw_owner_wallpaper") }
+        assertTrue(
+            !viewModel.canDeleteCommunityWallpaper(
+                wallpaper("wh_owner_wallpaper", color = "#112233", source = ContentSource.WALLHAVEN),
+            ),
+        )
+    }
+
+    @Test
+    fun `deleteCommunityWallpaper deletes through upload repository and reports success`() = runTest(dispatcher) {
+        val wallpaperRepo = mockk<WallpaperRepository>()
+        val redditRepo = mockk<RedditRepository>()
+        val uploadRepo = mockk<WallpaperUploadRepository>(relaxed = true)
+        val ownerWallpaper = wallpaper("cw_owner_wallpaper", color = "#112233", source = ContentSource.COMMUNITY)
+
+        stubCommonDependencies(wallpaperRepo, redditRepo)
+        coEvery { uploadRepo.deleteWallpaperUpload(ownerWallpaper.id) } returns Result.success(Unit)
+
+        val viewModel = createViewModel(
+            wallpaperRepo = wallpaperRepo,
+            redditRepo = redditRepo,
+            wallpaperUploadRepoOverride = uploadRepo,
+        )
+
+        viewModel.deleteCommunityWallpaper(ownerWallpaper)
+        advanceUntilIdle()
+
+        coVerify(exactly = 1) { uploadRepo.deleteWallpaperUpload(ownerWallpaper.id) }
+        assertEquals("Upload deleted", viewModel.state.value.applySuccess)
+    }
+
+    @Test
     fun `downloadWallpaper scopes download identity by source`() = runTest(dispatcher) {
         val wallpaperRepo = mockk<WallpaperRepository>()
         val redditRepo = mockk<RedditRepository>()
@@ -640,6 +692,7 @@ class WallpapersViewModelTest {
         cacheManagerOverride: WallpaperCacheManager? = null,
         favoritesRepoOverride: FavoritesRepository? = null,
         reportRepoOverride: CommunityReportRepository? = null,
+        wallpaperUploadRepoOverride: WallpaperUploadRepository? = null,
         wallhavenProviderEnabled: Boolean = true,
         redditProviderEnabled: Boolean = true,
         pexelsProviderEnabled: Boolean = true,
@@ -711,7 +764,7 @@ class WallpapersViewModelTest {
             voteRepo = voteRepo,
             reportRepo = reportRepoOverride ?: mockk<CommunityReportRepository>(relaxed = true),
             seasonalContentManager = SeasonalContentManager(),
-            wallpaperUploadRepo = mockk(relaxed = true),
+            wallpaperUploadRepo = wallpaperUploadRepoOverride ?: mockk(relaxed = true),
             sourceMetrics = com.freevibe.service.SourceMetrics(),
         )
     }

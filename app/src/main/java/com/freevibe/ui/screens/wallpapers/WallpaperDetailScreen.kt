@@ -218,8 +218,12 @@ fun WallpaperDetailScreen(
     var showMoreMenu by remember { mutableStateOf(false) }
     var showCollectionPicker by remember { mutableStateOf(false) }
     var showReportDialog by remember(wp.stableKey()) { mutableStateOf(false) }
+    var showDeleteUploadDialog by remember(wp.stableKey()) { mutableStateOf(false) }
     var showDetailsPanel by remember { mutableStateOf(false) }
     val canReportWallpaper = wp.source != ContentSource.LOCAL
+    val canDeleteUpload by produceState(false, wp.stableKey(), communityProviderEnabled) {
+        value = if (communityProviderEnabled) viewModel.canDeleteCommunityWallpaper(wp) else false
+    }
     LaunchedEffect(wp.stableKey()) {
         showDetailsPanel = false
     }
@@ -691,6 +695,10 @@ fun WallpaperDetailScreen(
                         showMoreMenu = false
                         showReportDialog = true
                     }) else null,
+                    onDeleteUpload = if (canDeleteUpload) ({
+                        showMoreMenu = false
+                        showDeleteUploadDialog = true
+                    }) else null,
                     uploaderName = wp.uploaderName,
                     license = wp.license,
                 )
@@ -701,6 +709,31 @@ fun WallpaperDetailScreen(
                     title = "Report wallpaper",
                     onDismiss = { showReportDialog = false },
                     onSubmit = { reason, note -> viewModel.reportWallpaper(wp, reason, note) },
+                )
+            }
+
+            if (showDeleteUploadDialog) {
+                AlertDialog(
+                    onDismissRequest = { showDeleteUploadDialog = false },
+                    title = { Text("Delete upload?") },
+                    text = { Text("This removes your community wallpaper and its uploaded image file.") },
+                    confirmButton = {
+                        TextButton(
+                            onClick = {
+                                showDeleteUploadDialog = false
+                                viewModel.deleteCommunityWallpaper(wp)
+                                onBack()
+                            },
+                            colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error),
+                        ) {
+                            Text("Delete")
+                        }
+                    },
+                    dismissButton = {
+                        TextButton(onClick = { showDeleteUploadDialog = false }) {
+                            Text("Cancel")
+                        }
+                    },
                 )
             }
 
@@ -1041,6 +1074,7 @@ private fun MoreActionsSheet(
     onCollection: () -> Unit,
     onFindSimilar: (() -> Unit)?,
     onReport: (() -> Unit)?,
+    onDeleteUpload: (() -> Unit)?,
     uploaderName: String = "",
     license: String = "",
 ) {
@@ -1083,6 +1117,14 @@ private fun MoreActionsSheet(
             if (onReport != null) {
                 SheetOption(Icons.Default.Report, "Report content", "Send this source and license context for review") { onReport() }
             }
+            if (onDeleteUpload != null) {
+                SheetOption(
+                    Icons.Default.Delete,
+                    "Delete upload",
+                    "Remove your community wallpaper and its uploaded file",
+                    tint = MaterialTheme.colorScheme.error,
+                ) { onDeleteUpload() }
+            }
         }
     }
 }
@@ -1092,6 +1134,7 @@ private fun SheetOption(
     icon: androidx.compose.ui.graphics.vector.ImageVector,
     title: String,
     subtitle: String? = null,
+    tint: Color = MaterialTheme.colorScheme.primary,
     onClick: () -> Unit,
 ) {
     Surface(
@@ -1108,12 +1151,12 @@ private fun SheetOption(
         ) {
             Surface(
                 shape = RoundedCornerShape(10.dp),
-                color = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f),
+                color = tint.copy(alpha = 0.12f),
             ) {
                 Icon(
                     icon,
                     null,
-                    tint = MaterialTheme.colorScheme.primary,
+                    tint = tint,
                     modifier = Modifier
                         .padding(10.dp)
                         .size(18.dp),

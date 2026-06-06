@@ -636,6 +636,34 @@ class WallpapersViewModel @Inject constructor(
         }
     }
 
+    suspend fun canDeleteCommunityWallpaper(wallpaper: Wallpaper): Boolean {
+        if (wallpaper.source != ContentSource.COMMUNITY || !communityProviderEnabled.value) return false
+        return wallpaperUploadRepo.canDeleteWallpaperUpload(wallpaper.id)
+    }
+
+    fun deleteCommunityWallpaper(wallpaper: Wallpaper) {
+        if (!communityProviderEnabled.value) {
+            sourceMetrics.recordDisabled(SOURCE_COMMUNITY)
+            _state.update { it.copy(error = communityDisabledMessage()) }
+            return
+        }
+        viewModelScope.launch {
+            wallpaperUploadRepo.deleteWallpaperUpload(wallpaper.id)
+                .onSuccess {
+                    val key = wallpaper.stableKey()
+                    _state.update { state ->
+                        state.copy(
+                            wallpapers = state.wallpapers.filterNot { it.stableKey() == key },
+                            applySuccess = "Upload deleted",
+                        )
+                    }
+                }
+                .onFailure { error ->
+                    _state.update { it.copy(error = "Delete failed: ${error.message ?: "try again"}") }
+                }
+        }
+    }
+
     fun uploadCommunityWallpaper(
         localUri: Uri,
         name: String,
