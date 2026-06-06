@@ -100,6 +100,10 @@ npm run test:firebase-rules
 See `docs/firebase-rules-harness.md` for the tracked RTDB/Storage policy and the
 current dev-tool audit note.
 
+The main `verify` workflow also runs `npm ci` and
+`npm run test:firebase-rules` when Firebase rules, config, tests, or this
+runbook change. Manual workflow runs always execute the rules suite.
+
 ## Protected quota namespaces
 
 Cycle 54 reserves `/community_write_quotas` and `/community_write_dedupe` for

@@ -40,6 +40,19 @@ These commands start local Firebase emulators through the project-local
 login is not required for local emulator execution; the CLI may still print an
 unauthenticated warning.
 
+## CI Verification
+
+`.github/workflows/verify.yml` includes a `firebase-rules` job. It detects
+changes to Firebase rules, emulator config, npm lockfiles, rules tests, this
+runbook, the admin-claims runbook, or the workflow itself. When those files
+change, the job installs the pinned npm dependencies with `npm ci` and runs:
+
+```bash
+npm run test:firebase-rules
+```
+
+Manual `workflow_dispatch` runs always execute the Firebase rules suite.
+
 ## Current Realtime Database Policy
 
 Tracked `database.rules.json` now loads in the Realtime Database emulator and
@@ -89,6 +102,5 @@ risk until the upstream CLI dependency graph publishes a non-downgrade fix.
 ## Remaining Work
 
 - Add admin takedown receipt tests once that flow is implemented.
-- Add CI wiring for `npm ci` and `npm run test:firebase-rules` on rules changes.
 - Define Cloud Storage lifecycle/orphan cleanup policy for abandoned upload
   objects.

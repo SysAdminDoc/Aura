@@ -182,6 +182,10 @@ next pass can resume quickly.
   resolutions, quota/dedupe ledgers, and collection shares, aligned tracked
   collection-share rules to `shared_collections`, added `createdByUid` to
   published shares, and made `database.rules.json` emulator/deploy-compatible.
+- Completed Cycle 59 Firebase rules CI gate: added a path-gated
+  `firebase-rules` job to `.github/workflows/verify.yml` that installs Java 17,
+  Node 20, pinned npm dependencies, and runs `npm run test:firebase-rules` when
+  Firebase rules, config, tests, runbooks, or the workflow change.
 
 ## 2026-06-05
 

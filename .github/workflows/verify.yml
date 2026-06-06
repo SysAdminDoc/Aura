@@ -12,6 +12,74 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  firebase-rules:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Detect Firebase rules changes
+        id: firebase_rules_changes
+        shell: bash
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            base="${{ github.event.pull_request.base.sha }}"
+          else
+            base="${{ github.event.before }}"
+          fi
+
+          if [ -z "$base" ] || [[ "$base" =~ ^0+$ ]]; then
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          if git diff --name-only "$base" "$GITHUB_SHA" -- \
+            database.rules.json \
+            storage.rules \
+            firebase.json \
+            package.json \
+            package-lock.json \
+            test/firebase \
+            docs/firebase-rules-harness.md \
+            docs/firebase-admin-claims.md \
+            .github/workflows/verify.yml | grep -q .; then
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Set up JDK 17
+        if: steps.firebase_rules_changes.outputs.changed == 'true'
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Set up Node.js
+        if: steps.firebase_rules_changes.outputs.changed == 'true'
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+
+      - name: Install Firebase rules dependencies
+        if: steps.firebase_rules_changes.outputs.changed == 'true'
+        run: npm ci
+
+      - name: Firebase rules tests
+        if: steps.firebase_rules_changes.outputs.changed == 'true'
+        run: npm run test:firebase-rules
+
   verify:
     runs-on: ubuntu-latest
     permissions:
