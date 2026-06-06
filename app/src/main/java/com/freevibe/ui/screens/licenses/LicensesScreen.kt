@@ -12,12 +12,14 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.OpenInNew
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import com.freevibe.data.legal.providerDisclosures
+import com.freevibe.ui.components.CompactSearchField
 
 data class OssLicense(
     val name: String,
@@ -94,6 +96,22 @@ fun LicensesScreen(onBack: () -> Unit) {
     val generatedNotices = remember(context) {
         GoogleOssNoticeReader.load(context.resources)
     }
+    var generatedNoticeQuery by remember {
+        mutableStateOf("")
+    }
+    val reviewNotices = remember(generatedNotices, generatedNoticeQuery) {
+        GoogleOssNoticeReader.filter(
+            notices = generatedNotices,
+            query = generatedNoticeQuery,
+            reviewOnly = true,
+        )
+    }
+    val visibleGeneratedNotices = remember(generatedNotices, generatedNoticeQuery) {
+        GoogleOssNoticeReader.filter(
+            notices = generatedNotices,
+            query = generatedNoticeQuery,
+        )
+    }
     var selectedGeneratedNotice by remember {
         mutableStateOf<GeneratedDependencyNotice?>(null)
     }
@@ -137,14 +155,52 @@ fun LicensesScreen(onBack: () -> Unit) {
                     Spacer(Modifier.height(8.dp))
                     SectionHeader(
                         title = "Generated Dependencies",
-                        detail = "${generatedNotices.size} notices",
+                        detail = "${visibleGeneratedNotices.size} of ${generatedNotices.size}",
                     )
                 }
-                items(generatedNotices) { notice ->
-                    GeneratedNoticeCard(
-                        notice = notice,
-                        onClick = { selectedGeneratedNotice = notice },
+                item {
+                    CompactSearchField(
+                        value = generatedNoticeQuery,
+                        onValueChange = { generatedNoticeQuery = it },
+                        placeholder = "Filter generated notices",
+                        modifier = Modifier.fillMaxWidth(),
+                        leadingIcon = Icons.Default.Search,
+                        onClear = { generatedNoticeQuery = "" },
                     )
+                }
+                if (reviewNotices.isNotEmpty()) {
+                    item {
+                        SectionHeader(
+                            title = "Review Watchlist",
+                            detail = "${reviewNotices.size}",
+                        )
+                    }
+                    items(reviewNotices) { notice ->
+                        GeneratedNoticeCard(
+                            notice = notice,
+                            onClick = { selectedGeneratedNotice = notice },
+                        )
+                    }
+                }
+                item {
+                    SectionHeader(title = "All Generated Notices")
+                }
+                if (visibleGeneratedNotices.isEmpty()) {
+                    item {
+                        Text(
+                            "No generated notices match",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.padding(horizontal = 4.dp, vertical = 8.dp),
+                        )
+                    }
+                } else {
+                    items(visibleGeneratedNotices) { notice ->
+                        GeneratedNoticeCard(
+                            notice = notice,
+                            onClick = { selectedGeneratedNotice = notice },
+                        )
+                    }
                 }
             }
             item {
@@ -232,7 +288,25 @@ private fun GeneratedNoticeCard(
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.primary,
             )
+            notice.reviewLabel?.let { label ->
+                ReviewLabel(label)
+            }
         }
+    }
+}
+
+@Composable
+private fun ReviewLabel(label: String) {
+    Surface(
+        color = MaterialTheme.colorScheme.tertiaryContainer,
+        contentColor = MaterialTheme.colorScheme.onTertiaryContainer,
+        shape = RoundedCornerShape(6.dp),
+    ) {
+        Text(
+            text = label,
+            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
+            style = MaterialTheme.typography.labelSmall,
+        )
     }
 }
 

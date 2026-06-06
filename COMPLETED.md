@@ -67,6 +67,10 @@ next pass can resume quickly.
   a parser for generated Google OSS raw resources, listed generated dependency
   notices in Settings > Open source licenses, and opened full generated notice
   text without adding the stock Play services OSS licenses runtime dependency.
+- Completed Cycle 34 generated notice search and high-risk alignment: added
+  filtering for generated notice names/license labels and review markers for
+  generated rows that map to curated Firebase, Play services, ML Kit,
+  NewPipeExtractor, youtubedl-android, ProfileInstaller, and ZXing surfaces.
 
 ## 2026-06-05
 

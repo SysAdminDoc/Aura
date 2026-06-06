@@ -1253,12 +1253,19 @@ Append-only Cycle 31 implementation record. The completed item is source-backed 
   - Acceptance: Aura has a feasible current-toolchain path for browsing generated dependency notices in-app without adding the risky stock Google runtime dependency; implementation is either shipped or a precise blocker-backed plan is recorded.
   - Verify: focused licenses-screen unit tests or parser tests cover generated notice mapping and manual/provider disclosure preservation.
 
-- [ ] 🤖 🔬 **P1 — Generated notice search and high-risk alignment**
+- [x] 🤖 🔬 **P1 — Generated notice search and high-risk alignment**
   - Why: the in-app generated notice viewer now lists generated entries, but a 288-entry notice corpus needs search/filtering and better alignment with curated high-risk overlay entries before it is comfortable for repeated owner review.
   - Evidence: `GeneratedDependencyNotices.kt`, `LicensesScreen.kt`, `docs/legal/dependency-notice-overrides.json`, `docs/legal/dependency-license-policy.json`.
   - Touches: licenses screen UI/tests, generated notice models, curated high-risk labels, roadmap/state files.
   - Acceptance: generated notices can be filtered by dependency name or license label; high-risk overlay surfaces are easy to find without scrolling the whole generated list.
   - Verify: focused parser/UI model tests cover filtering and high-risk matching.
+
+- [ ] 🤖 🔬 **P1 — Generated notice metadata parity guard**
+  - Why: the in-app viewer parses `third_party_license_metadata` at runtime, but CI only locks generated notice sections through the Python lockfile. A lightweight parity check should prove the raw metadata count and parser assumptions stay aligned with the lock.
+  - Evidence: `GeneratedDependencyNotices.kt`, `tools/dependency_notice_lock.py`, `docs/legal/dependency-notices.lock.json`, generated Google OSS raw resources.
+  - Touches: release-compliance tools/tests, docs/legal lock docs, roadmap/state files.
+  - Acceptance: a deterministic check fails when generated raw metadata rows diverge from the locked notice-section count or contain malformed ranges.
+  - Verify: focused Python fixture or temporary generated-root smoke test proves malformed metadata fails and current generated outputs pass.
 
 ---
 
@@ -2777,19 +2784,26 @@ Stars/dates as of research pass 2026-05-16.
 - Primary source references — [Google Play services open source notices](https://developers.google.com/android/guides/opensource), [Google Play services OSS licenses API reference](https://developers.google.com/android/reference/com/google/android/gms/oss/licenses/package-summary).
 - Verification outputs — focused `:app:testDebugUnitTest --tests com.freevibe.ui.screens.licenses.LicensesScreenTest`, release-compliance Python compile checks, dependency notice lock check, native compliance lock check, dependency overlay check, dependency license policy check, `git diff --check`, and changed-line attribution scan.
 
+## Appendix AL — Cycle 34 Sources
+
+- Cycle 34 implementation record — [docs/research/cycle-34-2026-06-06.md](docs/research/cycle-34-2026-06-06.md).
+- Generated notice search implementation — `app/src/main/java/com/freevibe/ui/screens/licenses/GeneratedDependencyNotices.kt`, `app/src/main/java/com/freevibe/ui/screens/licenses/LicensesScreen.kt`, `app/src/test/java/com/freevibe/ui/screens/licenses/LicensesScreenTest.kt`.
+- Local source references — `docs/legal/dependency-notice-overrides.json`, `docs/legal/dependency-license-policy.json`, generated Google OSS metadata.
+- Verification outputs — focused `:app:testDebugUnitTest --tests com.freevibe.ui.screens.licenses.LicensesScreenTest`, release-compliance Python compile checks, dependency notice lock check, native compliance lock check, dependency overlay check, dependency license policy check, `git diff --check`, and changed-line attribution scan.
+
 ## Continuation State
 
 ### Last Completed Cycle
 
-Cycle 33: custom in-app generated dependency notice viewer.
+Cycle 34: generated notice search and high-risk alignment.
 
 ### Current Focus
 
-Start Cycle 34 with generated notice search and high-risk alignment. Commit and push completed work when the active project contract allows it.
+Start Cycle 35 with a generated notice metadata parity guard. Commit and push completed work when the active project contract allows it.
 
 ### Important Findings So Far
 
-- `ROADMAP.md` has Cycle 18 through Cycle 33 research/implementation items; `docs/research/cycle-18-2026-06-06.md` through `docs/research/cycle-33-2026-06-06.md` have the source-backed analysis.
+- `ROADMAP.md` has Cycle 18 through Cycle 34 research/implementation items; `docs/research/cycle-18-2026-06-06.md` through `docs/research/cycle-34-2026-06-06.md` have the source-backed analysis.
 - `LicensesScreen.kt` still has manual dependency rows; content sources are already code-backed by `ProviderDisclosure.kt`.
 - `.github/workflows/release.yml` now publishes `THIRD-PARTY-NOTICES.md` and `NATIVE-COMPLIANCE.md` with the APK and includes both files in `SHA256SUMS.txt`; SBOM artifacts remain open.
 - `.github/workflows/verify.yml` and `.github/workflows/release.yml` now run `tools/dependency_notice_lock.py --mode check`, `tools/native_compliance_inventory.py --mode check-lock`, `tools/dependency_overlay_check.py`, and `tools/dependency_license_policy.py` after `:app:releaseOssLicensesTask`.
@@ -2813,13 +2827,14 @@ Start Cycle 34 with generated notice search and high-risk alignment. Commit and 
 - `docs/distribution/raw-oss-input-retention.md` now states that `GOOGLE-OSS-RAW-INPUTS.zip` remains attached to every tagged public release that publishes generated notices; the release bundle validator continues to enforce that archive.
 - `LicensesScreen.kt` now exposes generated release notice artifacts and generated raw-resource dependency notice rows before the manual library and content-source disclosure rows.
 - `GeneratedDependencyNotices.kt` reads `R.raw.third_party_license_metadata` and `R.raw.third_party_licenses` directly, avoiding the stock Google notice runtime dependency while keeping a current-toolchain in-app viewer.
+- The generated notice viewer now has name/license filtering plus a review watchlist for generated rows that match curated Firebase, Play services, ML Kit, NewPipeExtractor, youtubedl-android, ProfileInstaller, and ZXing surfaces.
 - AboutLibraries 14.2.1 configures but the default release export was incomplete for Aura and logged Windows path errors during compliance export.
 - `ProviderDisclosureTest` now passes in the real repo with `JAVA_HOME` set to Android Studio JBR and `ANDROID_HOME` set to the local Android SDK.
 - Recent history was checked with `rtk git log -10 --oneline --decorate` for this pass.
 
 ### Next Best Actions
 
-1. Add search/filtering and high-risk overlay alignment to the generated dependency notice viewer.
+1. Add a generated notice metadata parity guard between raw Google OSS metadata and `docs/legal/dependency-notices.lock.json`.
 2. Run a real GitHub Actions manual release dry run after secrets are confirmed available and archive the run URL in the release docs.
 3. Add deeper UI verification for the licenses screen on an emulator or screenshot lane when a device/runtime is available.
 4. Preserve exact Termux package commit/build-log evidence for FFmpeg if the release owner can obtain it from upstream or a reproducible rebuild.

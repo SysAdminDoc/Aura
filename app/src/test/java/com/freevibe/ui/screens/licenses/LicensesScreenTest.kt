@@ -50,4 +50,39 @@ class LicensesScreenTest {
         assertEquals("MIT", notices[1].licenseLabel)
         assertEquals(mit.trim(), notices[1].licenseText)
     }
+
+    @Test
+    fun googleOssNoticeReaderFiltersAndMarksReviewNotices() {
+        val apache = "http://www.apache.org/licenses/LICENSE-2.0.txt\n"
+        val mit = "MIT License\nPermission is hereby granted.\n"
+        val bytes = (apache + mit).toByteArray(Charsets.UTF_8)
+        val apacheBytes = apache.toByteArray(Charsets.UTF_8)
+        val mitBytes = mit.toByteArray(Charsets.UTF_8)
+        val metadata = """
+            0:${apacheBytes.size} firebase-auth
+            0:${apacheBytes.size} TeamNewPipe/NewPipeExtractor
+            ${apacheBytes.size}:${mitBytes.size} Moshi
+        """.trimIndent()
+
+        val notices = GoogleOssNoticeReader.parse(
+            metadataText = metadata,
+            licenseBytes = bytes,
+        )
+
+        assertEquals("Review: Firebase", notices[0].reviewLabel)
+        assertEquals("Review: NewPipeExtractor", notices[1].reviewLabel)
+        assertEquals(null, notices[2].reviewLabel)
+        assertEquals(
+            listOf("firebase-auth"),
+            GoogleOssNoticeReader.filter(notices, "firebase").map { it.name },
+        )
+        assertEquals(
+            listOf("Moshi"),
+            GoogleOssNoticeReader.filter(notices, "MIT").map { it.name },
+        )
+        assertEquals(
+            listOf("firebase-auth", "TeamNewPipe/NewPipeExtractor"),
+            GoogleOssNoticeReader.filter(notices, "", reviewOnly = true).map { it.name },
+        )
+    }
 }

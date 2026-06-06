@@ -8,6 +8,7 @@ data class GeneratedDependencyNotice(
     val name: String,
     val licenseLabel: String,
     val licenseText: String,
+    val reviewLabel: String? = null,
 )
 
 internal object GoogleOssNoticeReader {
@@ -38,10 +39,28 @@ internal object GoogleOssNoticeReader {
                         name = entry.name,
                         licenseLabel = summarizeLicense(licenseText),
                         licenseText = licenseText,
+                        reviewLabel = reviewLabelFor(entry.name),
                     )
                 }
             }
             .toList()
+
+    fun filter(
+        notices: List<GeneratedDependencyNotice>,
+        query: String,
+        reviewOnly: Boolean = false,
+    ): List<GeneratedDependencyNotice> {
+        val terms = query
+            .lowercase(Locale.ROOT)
+            .splitToSequence(' ')
+            .map { it.trim() }
+            .filter { it.isNotEmpty() }
+            .toList()
+        return notices.filter { notice ->
+            (!reviewOnly || notice.reviewLabel != null) &&
+                terms.all { term -> term in notice.searchText }
+        }
+    }
 
     private fun parseMetadataLine(line: String): MetadataEntry? {
         val trimmed = line.trim()
@@ -83,10 +102,58 @@ internal object GoogleOssNoticeReader {
             else -> "Generated notice"
         }
     }
+
+    private fun reviewLabelFor(name: String): String? {
+        val normalized = name.lowercase(Locale.ROOT)
+        return reviewRules.firstOrNull { rule ->
+            rule.matchers.any { matcher -> matcher in normalized }
+        }?.label
+    }
+
+    private val GeneratedDependencyNotice.searchText: String
+        get() = listOfNotNull(name, licenseLabel, reviewLabel)
+            .joinToString(separator = " ")
+            .lowercase(Locale.ROOT)
 }
 
 private data class MetadataEntry(
     val offset: Int,
     val length: Int,
     val name: String,
+)
+
+private data class ReviewRule(
+    val label: String,
+    val matchers: List<String>,
+)
+
+private val reviewRules = listOf(
+    ReviewRule(
+        label = "Review: Firebase",
+        matchers = listOf("firebase"),
+    ),
+    ReviewRule(
+        label = "Review: Play services",
+        matchers = listOf("play services", "play-services", "com.google.android.gms"),
+    ),
+    ReviewRule(
+        label = "Review: ML Kit",
+        matchers = listOf("ml kit", "mlkit", "subject segmentation"),
+    ),
+    ReviewRule(
+        label = "Review: NewPipeExtractor",
+        matchers = listOf("newpipe"),
+    ),
+    ReviewRule(
+        label = "Review: youtubedl-android",
+        matchers = listOf("youtubedl"),
+    ),
+    ReviewRule(
+        label = "Review: ProfileInstaller",
+        matchers = listOf("profileinstaller", "profile installer"),
+    ),
+    ReviewRule(
+        label = "Review: ZXing",
+        matchers = listOf("zxing"),
+    ),
 )
