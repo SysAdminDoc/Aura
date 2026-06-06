@@ -3,6 +3,7 @@
 All notable changes to Aura will be documented in this file.
 
 ## Unreleased
+- **Community quota policy (Cycle 54)**: added typed quota/rate-limit rows for reports, sound uploads, wallpaper uploads, votes, follows, and profile edits, reserved admin-only RTDB quota/dedupe ledgers, and documented the App-Checked callable migration path.
 - **Firebase App Check client rollout (Cycle 53)**: debug builds now install the Firebase App Check debug provider, release builds install the Play Integrity provider before Firebase-backed community startup work, and the rollout runbook covers debug tokens, side-loaded distribution settings, metrics burn-in, and enforcement gates.
 - **Admin report review (Cycle 52)**: custom-claim admins can open Settings > Community reports, review open reports, hide reported content through the global moderation list, dismiss reports, or restore hidden content with resolution metadata.
 - **Community report queue intake (Cycle 51)**: sound and wallpaper detail screens now submit private reports with rights/source-removed/safety/spam/other reasons, source/license/uploader context, RTDB report and resolution rules, and admin resolution metadata.

@@ -88,6 +88,14 @@ CI verification (optional): add a step that runs
 `firebase deploy --only database:rules --project=verify --dry-run` on
 every PR that touches `database.rules.json`.
 
+## Protected quota namespaces
+
+Cycle 54 reserves `/community_write_quotas` and `/community_write_dedupe` for
+backend-owned quota counters and duplicate-action markers. Rules allow only
+custom-claim admins to read or write those namespaces until an App-Checked
+callable backend owns the updates. Regular clients must not maintain quota
+counters directly.
+
 ## One-cycle device-ID fallback
 
 `VoteRepository.adminDeviceIdHashes` (SHA-256-hashed Settings.Secure.ANDROID_ID

@@ -57,4 +57,6 @@ Do not enable enforcement until all of these are true:
 App Check proves a request came from an authorized app install. It does not
 limit a legitimate client from submitting too many reports, votes, uploads,
 follows, or profile edits. The next backend slice still needs quota counters or
-trusted server mediation for those write paths.
+trusted server mediation for those write paths. The current quota policy,
+protected ledger namespaces, and callable migration order are tracked in
+[`docs/community-quota-rate-limits.md`](community-quota-rate-limits.md).

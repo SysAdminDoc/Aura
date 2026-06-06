@@ -159,6 +159,10 @@ next pass can resume quickly.
   community startup work, documented debug token and Play Integrity rollout
   steps, refreshed Gradle dependency verification metadata, and updated the
   generated dependency notice lock for App Check artifacts.
+- Completed Cycle 54 community quota/rate-limit design: added typed quota
+  policy rows for reports, uploads, votes, follows, and profile edits, reserved
+  admin-only RTDB quota and dedupe ledgers, documented the App-Checked callable
+  migration plan, and linked the policy from community support/admin runbooks.
 
 ## 2026-06-05
 

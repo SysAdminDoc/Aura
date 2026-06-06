@@ -97,6 +97,36 @@
         "note": { ".validate": "newData.isString() && newData.val().length <= 500" }
       }
     },
+    "community_write_quotas": {
+      "_comment": "Reserved for App-Checked callable backend quota counters. Regular clients cannot write counters because client-owned quota ledgers are spoofable.",
+      ".read": "auth != null && auth.token.admin === true",
+      "$uid": {
+        ".write": "auth != null && auth.token.admin === true",
+        "$day": {
+          "$surface": {
+            "count": { ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 10000" },
+            "firstAt": { ".validate": "newData.isNumber() && newData.val() > 0 && newData.val() <= now" },
+            "lastAt": { ".validate": "newData.isNumber() && newData.val() > 0 && newData.val() <= now" },
+            "blockedCount": { ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 10000" },
+            "lastBlockedAt": { ".validate": "newData.isNumber() && newData.val() > 0 && newData.val() <= now" }
+          }
+        }
+      }
+    },
+    "community_write_dedupe": {
+      "_comment": "Reserved for App-Checked callable backend duplicate-action markers such as report/content, vote/content, follow/creator, profile, and upload storage path keys.",
+      ".read": "auth != null && auth.token.admin === true",
+      "$uid": {
+        ".write": "auth != null && auth.token.admin === true",
+        "$surface": {
+          "$dedupeKey": {
+            "createdAt": { ".validate": "newData.isNumber() && newData.val() > 0 && newData.val() <= now" },
+            "expiresAt": { ".validate": "newData.isNumber() && newData.val() > now" },
+            "target": { ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 240" }
+          }
+        }
+      }
+    },
     "creator_profiles": {
       ".read": true,
       "$uid": {
