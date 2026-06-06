@@ -136,15 +136,40 @@ class WallpaperRepositoryTest {
         coVerify(exactly = 0) { bingApi.getImages(any(), any(), any(), any(), any()) }
     }
 
+    @Test
+    fun `getWallhaven disabled records disabled source and skips api`() = runTest {
+        val wallhavenApi = mockk<WallhavenApi>()
+        val sourceMetrics = SourceMetrics()
+        val repo = wallpaperRepository(
+            wallhavenApi = wallhavenApi,
+            sourceMetrics = sourceMetrics,
+            wallhavenProviderEnabled = false,
+        )
+
+        val result = repo.getWallhaven(page = 3)
+
+        assertTrue(result.items.isEmpty())
+        assertEquals(0, result.totalCount)
+        assertEquals(3, result.currentPage)
+        assertFalse(result.hasMore)
+        assertEquals(1L, sourceMetrics.snapshot("wallhaven")?.disabledCount)
+        coVerify(exactly = 0) {
+            wallhavenApi.search(any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), any())
+        }
+    }
+
     private fun wallpaperRepository(
+        wallhavenApi: WallhavenApi = mockk(),
         bingApi: BingDailyApi = mockk(),
         sourceMetrics: SourceMetrics = SourceMetrics(),
+        wallhavenProviderEnabled: Boolean = true,
         bingProviderEnabled: Boolean = true,
     ): WallpaperRepository {
         val prefs = mockk<PreferencesManager>()
+        every { prefs.wallhavenProviderEnabled } returns flowOf(wallhavenProviderEnabled)
         every { prefs.bingProviderEnabled } returns flowOf(bingProviderEnabled)
         return WallpaperRepository(
-            wallhavenApi = mockk<WallhavenApi>(),
+            wallhavenApi = wallhavenApi,
             bingApi = bingApi,
             pixabayApi = mockk<PixabayApi>(),
             pexelsApi = mockk<PexelsApi>(),

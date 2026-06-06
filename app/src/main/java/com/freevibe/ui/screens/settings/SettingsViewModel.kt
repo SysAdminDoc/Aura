@@ -124,6 +124,7 @@ class SettingsViewModel @Inject constructor(
     val pixabayApiKey = prefs.pixabayApiKey.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), "")
     val freesoundApiKey = prefs.freesoundApiKey.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), "")
     val stabilityAiKey = prefs.stabilityAiKey.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), "")
+    val wallhavenProviderEnabled = prefs.wallhavenProviderEnabled.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), true)
     val bingProviderEnabled = prefs.bingProviderEnabled.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), true)
     val pexelsProviderEnabled = prefs.pexelsProviderEnabled.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), true)
     val pixabayProviderEnabled = prefs.pixabayProviderEnabled.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), true)
@@ -267,6 +268,10 @@ class SettingsViewModel @Inject constructor(
 
     fun setPixabayKey(key: String) = viewModelScope.launch {
         prefs.setPixabayKey(key)
+    }
+
+    fun setWallhavenProviderEnabled(enabled: Boolean) = viewModelScope.launch {
+        prefs.setWallhavenProviderEnabled(enabled)
     }
 
     fun setBingProviderEnabled(enabled: Boolean) = viewModelScope.launch {

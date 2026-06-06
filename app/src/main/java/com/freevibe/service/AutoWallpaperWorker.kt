@@ -72,6 +72,10 @@ class AutoWallpaperWorker @AssistedInject constructor(
             redditRepo.getMultiSubreddit()
             return Result.success()
         }
+        if (source == "wallhaven" && !prefs.wallhavenProviderEnabled.first()) {
+            wallpaperRepo.getWallhaven()
+            return Result.success()
+        }
         if (source == "pixabay" && !prefs.pixabayProviderEnabled.first()) {
             wallpaperRepo.getPixabay()
             return Result.success()
@@ -107,6 +111,10 @@ class AutoWallpaperWorker @AssistedInject constructor(
 
         if (source == "reddit" && !prefs.redditProviderEnabled.first()) {
             redditRepo.getMultiSubreddit()
+            return Result.success()
+        }
+        if (source == "wallhaven" && !prefs.wallhavenProviderEnabled.first()) {
+            wallpaperRepo.getWallhaven()
             return Result.success()
         }
         if (source == "pixabay" && !prefs.pixabayProviderEnabled.first()) {

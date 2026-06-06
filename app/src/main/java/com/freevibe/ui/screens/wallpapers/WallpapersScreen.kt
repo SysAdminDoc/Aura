@@ -102,6 +102,7 @@ fun WallpapersScreen(
     val dailyPick by viewModel.dailyPick.collectAsStateWithLifecycle()
     val topVoted by viewModel.topVoted.collectAsStateWithLifecycle()
     val hiddenIds by viewModel.hiddenIds.collectAsStateWithLifecycle()
+    val wallhavenProviderEnabled by viewModel.wallhavenProviderEnabled.collectAsStateWithLifecycle()
     val redditProviderEnabled by viewModel.redditProviderEnabled.collectAsStateWithLifecycle()
     val pexelsProviderEnabled by viewModel.pexelsProviderEnabled.collectAsStateWithLifecycle()
     val pixabayProviderEnabled by viewModel.pixabayProviderEnabled.collectAsStateWithLifecycle()
@@ -140,8 +141,9 @@ fun WallpapersScreen(
     var showWallpaperUploadDialog by remember { mutableStateOf(false) }
     var selectedWallpaperUploadUri by remember { mutableStateOf<Uri?>(null) }
     var awaitingWallpaperUploadResult by remember { mutableStateOf(false) }
-    LaunchedEffect(redditProviderEnabled, pexelsProviderEnabled, pixabayProviderEnabled, communityProviderEnabled, state.selectedTab) {
+    LaunchedEffect(wallhavenProviderEnabled, redditProviderEnabled, pexelsProviderEnabled, pixabayProviderEnabled, communityProviderEnabled, state.selectedTab) {
         val disabledTab = when (state.selectedTab) {
+            WallpaperTab.WALLHAVEN -> !wallhavenProviderEnabled
             WallpaperTab.REDDIT -> !redditProviderEnabled
             WallpaperTab.PEXELS -> !pexelsProviderEnabled
             WallpaperTab.PIXABAY -> !pixabayProviderEnabled
@@ -272,6 +274,8 @@ fun WallpapersScreen(
                     it != WallpaperTab.SEARCH || state.selectedTab == WallpaperTab.SEARCH
                 }.filter {
                     it != WallpaperTab.COLOR || state.selectedTab == WallpaperTab.COLOR
+                }.filter {
+                    it != WallpaperTab.WALLHAVEN || wallhavenProviderEnabled || state.selectedTab == WallpaperTab.WALLHAVEN
                 }.filter {
                     it != WallpaperTab.PEXELS || pexelsProviderEnabled || state.selectedTab == WallpaperTab.PEXELS
                 }.filter {
@@ -645,8 +649,9 @@ fun WallpapersScreen(
                 .align(Alignment.BottomEnd)
                 .padding(end = 16.dp, bottom = 80.dp),
             showUpload = communityProviderEnabled && state.selectedTab == WallpaperTab.COMMUNITY,
-            showThemeMatch = state.selectedTab == WallpaperTab.DISCOVER,
-            showEyeDropper = eyeDropperAvailable && state.selectedTab == WallpaperTab.DISCOVER,
+            showThemeMatch = wallhavenProviderEnabled && state.selectedTab == WallpaperTab.DISCOVER,
+            showEyeDropper = wallhavenProviderEnabled && eyeDropperAvailable && state.selectedTab == WallpaperTab.DISCOVER,
+            showSurprise = wallhavenProviderEnabled,
             onUpload = { wallpaperUploadLauncher.launch(wallpaperUploadPickerRequest) },
             onThemeMatch = { viewModel.matchMyTheme() },
             onEyeDropper = {
@@ -1540,6 +1545,7 @@ private fun FloatingActionTray(
     showUpload: Boolean,
     showThemeMatch: Boolean,
     showEyeDropper: Boolean,
+    showSurprise: Boolean,
     onUpload: () -> Unit,
     onThemeMatch: () -> Unit,
     onEyeDropper: () -> Unit,
@@ -1575,12 +1581,14 @@ private fun FloatingActionTray(
                 onClick = onEyeDropper,
             )
         }
-        FloatingActionRow(
-            icon = Icons.Default.Shuffle,
-            label = "Surprise me",
-            tint = MaterialTheme.colorScheme.primary,
-            onClick = onSurpriseMe,
-        )
+        if (showSurprise) {
+            FloatingActionRow(
+                icon = Icons.Default.Shuffle,
+                label = "Surprise me",
+                tint = MaterialTheme.colorScheme.primary,
+                onClick = onSurpriseMe,
+            )
+        }
     }
 }
 

@@ -289,10 +289,10 @@ val providerRuntimeControls = listOf(
     ProviderRuntimeControl(
         source = ContentSource.WALLHAVEN,
         surfaces = "Wallpaper featured, search, similar, random, color, Discover.",
-        status = ProviderRuntimeControlStatus.PARTIAL,
-        currentControl = "Optional API key plus sketchy/NSFW toggles; no full source disable flag.",
-        disabledBehavior = "Blank API key still allows public SFW Wallhaven calls; unsafe tiers coerce to SFW.",
-        followUp = "Add a source-enabled flag before publishing distribution profiles that must remove Wallhaven entirely.",
+        status = ProviderRuntimeControlStatus.COVERED,
+        currentControl = "Settings exposes a Wallhaven provider-enabled flag in addition to the optional API key and sketchy/NSFW toggles.",
+        disabledBehavior = "Disabled mode hides Wallhaven browsing, color/random/similar actions, rotation picker entries, and skips Wallhaven API calls while recording disabled diagnostics.",
+        followUp = "None.",
     ),
     ProviderRuntimeControl(
         source = ContentSource.PICSUM,

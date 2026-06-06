@@ -116,6 +116,7 @@ class WallpaperRepository @Inject constructor(
     private suspend fun wallhavenApiKey(): String = prefs.wallhavenApiKey.first()
     private suspend fun pixabayApiKey(): String = prefs.pixabayApiKey.first()
     private suspend fun pexelsApiKey(): String = prefs.pexelsApiKey.first()
+    private suspend fun wallhavenProviderEnabled(): Boolean = prefs.wallhavenProviderEnabled.first()
     private suspend fun bingProviderEnabled(): Boolean = prefs.bingProviderEnabled.first()
     private suspend fun pixabayProviderEnabled(): Boolean = prefs.pixabayProviderEnabled.first()
     private suspend fun pexelsProviderEnabled(): Boolean = prefs.pexelsProviderEnabled.first()
@@ -136,6 +137,10 @@ class WallpaperRepository @Inject constructor(
         page: Int = 1,
         topRange: String = "1M",
     ): SearchResult<Wallpaper> {
+        if (!wallhavenProviderEnabled()) {
+            sourceMetrics.recordDisabled(SOURCE_WALLHAVEN)
+            return emptySourceResult(page)
+        }
         val cacheKey = if (query.isBlank()) "wallhaven_toplist_${topRange}_$page" else "wallhaven_search_${query.hashCode()}_$page"
         return withCacheFallback(cacheKey, ContentSource.WALLHAVEN) {
             sourceMetrics.measure(SOURCE_WALLHAVEN) {
@@ -169,21 +174,27 @@ class WallpaperRepository @Inject constructor(
         getWallhaven(query = "like:$wallhavenId", page = page)
 
     /** Get random wallpapers from Wallhaven */
-    suspend fun getRandomWallhaven(): SearchResult<Wallpaper> = sourceMetrics.measure(SOURCE_WALLHAVEN) {
-        val apiKey = wallhavenApiKey()
-        val response = wallhavenApi.search(
-            sorting = "random",
-            categories = "111",
-            purity = wallhavenPurity(),
-            minResolution = wallhavenMinRes(),
-            apiKey = apiKey,
-        )
-        SearchResult(
-            items = response.data.map { it.toWallpaper() },
-            totalCount = response.meta.total,
-            currentPage = 1,
-            hasMore = true,
-        )
+    suspend fun getRandomWallhaven(): SearchResult<Wallpaper> {
+        if (!wallhavenProviderEnabled()) {
+            sourceMetrics.recordDisabled(SOURCE_WALLHAVEN)
+            return emptySourceResult(1)
+        }
+        return sourceMetrics.measure(SOURCE_WALLHAVEN) {
+            val apiKey = wallhavenApiKey()
+            val response = wallhavenApi.search(
+                sorting = "random",
+                categories = "111",
+                purity = wallhavenPurity(),
+                minResolution = wallhavenMinRes(),
+                apiKey = apiKey,
+            )
+            SearchResult(
+                items = response.data.map { it.toWallpaper() },
+                totalCount = response.meta.total,
+                currentPage = 1,
+                hasMore = true,
+            )
+        }
     }
 
     /** Search across all sources simultaneously */
@@ -240,6 +251,10 @@ class WallpaperRepository @Inject constructor(
     }
 
     suspend fun searchByColor(color: String, page: Int = 1): SearchResult<Wallpaper> {
+        if (!wallhavenProviderEnabled()) {
+            sourceMetrics.recordDisabled(SOURCE_WALLHAVEN)
+            return emptySourceResult(page)
+        }
         val mapped = nearestWallhavenColor(color)
         return withCacheFallback("wallhaven_color_${mapped}_$page", ContentSource.WALLHAVEN) {
             sourceMetrics.measure(SOURCE_WALLHAVEN) {

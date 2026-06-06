@@ -111,6 +111,7 @@ class WallpapersViewModel @Inject constructor(
 
     // #9: Grid columns preference
     val gridColumns = prefs.wallpaperGridColumns.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 2)
+    val wallhavenProviderEnabled = prefs.wallhavenProviderEnabled.stateIn(viewModelScope, SharingStarted.Eagerly, true)
     val redditProviderEnabled = prefs.redditProviderEnabled.stateIn(viewModelScope, SharingStarted.Eagerly, true)
     val pexelsProviderEnabled = prefs.pexelsProviderEnabled.stateIn(viewModelScope, SharingStarted.Eagerly, true)
     val pixabayProviderEnabled = prefs.pixabayProviderEnabled.stateIn(viewModelScope, SharingStarted.Eagerly, true)
@@ -330,6 +331,16 @@ class WallpapersViewModel @Inject constructor(
     fun searchByColor(color: String) {
         if (color.isBlank()) {
             clearActiveFilter()
+            return
+        }
+        if (!wallhavenProviderEnabled.value) {
+            sourceMetrics.recordDisabled(SOURCE_WALLHAVEN)
+            _state.update {
+                it.copy(
+                    error = wallhavenDisabledMessage(),
+                    errorSource = WallpaperTab.COLOR.name,
+                )
+            }
             return
         }
         val returnTab = _state.value.selectedTab
@@ -699,11 +710,14 @@ class WallpapersViewModel @Inject constructor(
             // Instant cache hit for Discover — show cached results immediately while refreshing
             if (s.selectedTab == WallpaperTab.DISCOVER && !loadMore && !isRefresh) {
                 val cached = wallpaperRepo.getCachedDiscover(s.currentPage)
-                if (!cached.isNullOrEmpty()) {
+                val visibleCached = cached
+                    ?.filter { it.source != ContentSource.WALLHAVEN || wallhavenProviderEnabled.value }
+                    .orEmpty()
+                if (visibleCached.isNotEmpty()) {
                     val preferredResolution = prefs.preferredResolution.first()
                     val userStyles = loadUserStyles()
                     val rankedCached = rankWallpapers(
-                        wallpapers = cached,
+                        wallpapers = visibleCached,
                         filter = _state.value.discoverFilter,
                         preferredResolution = preferredResolution,
                         userStyles = userStyles,
@@ -819,6 +833,17 @@ class WallpapersViewModel @Inject constructor(
 
     /** Find similar wallpapers via Wallhaven like: query + color search */
     fun findSimilar(wallpaper: Wallpaper) {
+        if (!wallhavenProviderEnabled.value) {
+            sourceMetrics.recordDisabled(SOURCE_WALLHAVEN)
+            _state.update {
+                it.copy(
+                    error = wallhavenDisabledMessage(),
+                    errorSource = WallpaperTab.SEARCH.name,
+                    isLoading = false,
+                )
+            }
+            return
+        }
         val returnTab = _state.value.selectedTab
             .takeIf { it != WallpaperTab.SEARCH && it != WallpaperTab.COLOR }
             ?: _state.value.browseTab
@@ -881,6 +906,17 @@ class WallpapersViewModel @Inject constructor(
 
     /** Load random wallpapers from Wallhaven */
     fun loadRandom() {
+        if (!wallhavenProviderEnabled.value) {
+            sourceMetrics.recordDisabled(SOURCE_WALLHAVEN)
+            _state.update {
+                it.copy(
+                    error = wallhavenDisabledMessage(),
+                    errorSource = WallpaperTab.SEARCH.name,
+                    isLoading = false,
+                )
+            }
+            return
+        }
         viewModelScope.launch {
             _state.update { it.copy(selectedTab = WallpaperTab.SEARCH, query = "Random", wallpapers = emptyList(), isLoading = true, currentPage = 1) }
             try {
@@ -1016,6 +1052,7 @@ class WallpapersViewModel @Inject constructor(
     private suspend fun isCommunityProviderEnabled(): Boolean = prefs.communityProviderEnabled.first()
 
     private fun isProviderDisabledTab(tab: WallpaperTab): Boolean = when (tab) {
+        WallpaperTab.WALLHAVEN -> !wallhavenProviderEnabled.value
         WallpaperTab.REDDIT -> !redditProviderEnabled.value
         WallpaperTab.PEXELS -> !pexelsProviderEnabled.value
         WallpaperTab.PIXABAY -> !pixabayProviderEnabled.value
@@ -1025,6 +1062,7 @@ class WallpapersViewModel @Inject constructor(
 
     private suspend fun recordDisabledProvider(tab: WallpaperTab, page: Int) {
         when (tab) {
+            WallpaperTab.WALLHAVEN -> wallpaperRepo.getWallhaven(page = page)
             WallpaperTab.PEXELS -> wallpaperRepo.getPexelsCurated(page)
             WallpaperTab.PIXABAY -> wallpaperRepo.getPixabay(page)
             WallpaperTab.COMMUNITY -> wallpaperUploadRepo.getCommunityWallpapers()
@@ -1035,15 +1073,19 @@ class WallpapersViewModel @Inject constructor(
     private fun redditDisabledMessage(): String = "Reddit source is disabled in Settings"
 
     private fun providerDisabledMessage(tab: WallpaperTab): String = when (tab) {
+        WallpaperTab.WALLHAVEN -> wallhavenDisabledMessage()
         WallpaperTab.PEXELS -> "Pexels source is disabled in Settings"
         WallpaperTab.PIXABAY -> "Pixabay source is disabled in Settings"
         WallpaperTab.COMMUNITY -> communityDisabledMessage()
         else -> redditDisabledMessage()
     }
 
+    private fun wallhavenDisabledMessage(): String = "Wallhaven source is disabled in Settings"
+
     private fun communityDisabledMessage(): String = "Community source is disabled in Settings"
 
     private companion object {
+        const val SOURCE_WALLHAVEN = "wallhaven"
         const val SOURCE_COMMUNITY = "community"
     }
 }

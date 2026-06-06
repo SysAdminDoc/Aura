@@ -103,6 +103,11 @@ next pass can resume quickly.
   provider preference and Settings switch, skipped Bing daily-image API calls
   before cache fallback or Retrofit use, hid Bing from rotation pickers when
   disabled, and recorded disabled diagnostics separately from outages.
+- Completed Cycle 42 Wallhaven source switch: added a default-on Wallhaven
+  provider preference and Settings switch, hid Wallhaven browsing plus
+  color/random/similar actions when disabled, removed disabled Wallhaven from
+  rotation pickers, skipped Wallhaven API calls before key reads/cache fallback,
+  and recorded disabled diagnostics separately from outages.
 
 ## 2026-06-05
 

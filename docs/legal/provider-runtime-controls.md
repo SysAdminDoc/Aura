@@ -8,7 +8,7 @@ runtime-control row.
 
 | Source | Status | Current control | Disabled behavior | Follow-up |
 | --- | --- | --- | --- | --- |
-| Wallhaven | Partial | Optional API key plus sketchy/NSFW toggles; no full source disable flag. | Blank API key still allows public SFW Wallhaven calls; unsafe tiers coerce to SFW. | Add a source-enabled flag before publishing distribution profiles that must remove Wallhaven entirely. |
+| Wallhaven | Covered | Settings exposes a Wallhaven provider-enabled flag in addition to the optional API key and sketchy/NSFW toggles. | Disabled mode hides Wallhaven browsing, color/random/similar actions, rotation picker entries, and skips Wallhaven API calls while recording disabled diagnostics. | None. |
 | Lorem Picsum | Covered | No active repository path. | New feeds do not request Lorem Picsum; saved legacy rows can remain visible. | None. |
 | Bing Image of the Day | Covered | Settings exposes a Bing Daily provider-enabled flag. | Disabled mode skips Bing daily-image API calls, returns empty source results, records disabled diagnostics, and hides Bing from rotation pickers unless already selected. | None. |
 | Wikimedia Commons | Covered | No active repository path. | New feeds do not request Wikimedia; saved legacy rows can remain visible. | None. |
@@ -31,6 +31,8 @@ runtime-control row.
 
 ## Current Runtime-Control Notes
 
+- Wallhaven now has a default-on provider flag covering featured/search, color,
+  random, similar, Discover, and auto-wallpaper rotation source paths.
 - YouTube now has a runtime legal-mode flag covering sound browsing, explicit
   search/import, similar-sound lookup, top-hit prefetch, video discovery, and
   stream resolution. Distribution profiles still need channel-specific defaults

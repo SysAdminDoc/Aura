@@ -3,6 +3,7 @@
 All notable changes to Aura will be documented in this file.
 
 ## Unreleased
+- **Wallhaven source switch (Cycle 42)**: Settings now has a default-on Wallhaven source switch; disabled mode hides Wallhaven browsing and color/random/similar actions, removes Wallhaven from rotation pickers, skips Wallhaven API calls before key reads/cache fallback, and records disabled diagnostics separately from outages.
 - **Bing Daily source switch (Cycle 41)**: Settings now has a default-on Bing Daily source switch; disabled mode skips daily-image API calls before cache fallback or Retrofit use, hides Bing from rotation pickers, and records disabled diagnostics separately from outages.
 - **Community source switch (Cycle 40)**: Settings now has a default-on Community source switch; disabled mode skips startup identity warm-up, hides community tabs/uploads/votes/creator profile entry points, blocks feed/upload/follow Firebase calls, and records disabled diagnostics separately from Firebase outages.
 - **Pexels and Pixabay source switches (Cycle 39)**: Settings now has default-on Pexels and Pixabay source switches; disabled mode hides their wallpaper tabs, skips Discover/search/style-biased/video API calls before bundled keys are read, removes disabled Pixabay from rotation pickers, and records disabled source diagnostics separately from outages.

@@ -111,6 +111,7 @@ fun SettingsScreen(
     val pexelsApiKey by viewModel.pexelsApiKey.collectAsStateWithLifecycle()
     val pixabayApiKey by viewModel.pixabayApiKey.collectAsStateWithLifecycle()
     val stabilityAiKey by viewModel.stabilityAiKey.collectAsStateWithLifecycle()
+    val wallhavenProviderEnabled by viewModel.wallhavenProviderEnabled.collectAsStateWithLifecycle()
     val bingProviderEnabled by viewModel.bingProviderEnabled.collectAsStateWithLifecycle()
     val pexelsProviderEnabled by viewModel.pexelsProviderEnabled.collectAsStateWithLifecycle()
     val pixabayProviderEnabled by viewModel.pixabayProviderEnabled.collectAsStateWithLifecycle()
@@ -595,6 +596,7 @@ fun SettingsScreen(
                     "bing" to "Bing Daily", "collection" to "A collection…",
                 ).filter { (key, _) ->
                     when (key) {
+                        "wallhaven" -> wallhavenProviderEnabled || schedulerSource == "wallhaven"
                         "pixabay" -> pixabayProviderEnabled || schedulerSource == "pixabay"
                         "bing" -> bingProviderEnabled || schedulerSource == "bing"
                         else -> true
@@ -1083,6 +1085,17 @@ fun SettingsScreen(
                 subtitle = "Optional: higher limits + NSFW (wallhaven.cc/settings)",
                 onClick = { showWallhavenKey = true },
             )
+            SettingsToggle(
+                icon = Icons.Default.ImageSearch,
+                title = "Enable Wallhaven source",
+                subtitle = if (wallhavenProviderEnabled) {
+                    "Shows Wallhaven featured, color, similar, random, and Discover results"
+                } else {
+                    "Hides Wallhaven browsing and skips Wallhaven API calls"
+                },
+                checked = wallhavenProviderEnabled,
+                onCheckedChange = { viewModel.setWallhavenProviderEnabled(it) },
+            )
             if (showWallhavenKey) {
                 var keyText by remember { mutableStateOf(wallhavenApiKey) }
                 AlertDialog(
@@ -1457,6 +1470,7 @@ fun SettingsScreen(
     if (showSourcePicker) {
         SourcePickerDialog(
             currentSource = autoWpSource,
+            wallhavenProviderEnabled = wallhavenProviderEnabled,
             bingProviderEnabled = bingProviderEnabled,
             pixabayProviderEnabled = pixabayProviderEnabled,
             onDismiss = { showSourcePicker = false },
@@ -2566,6 +2580,7 @@ private fun WallpaperSlotPickerDialog(
 @Composable
 private fun SourcePickerDialog(
     currentSource: String,
+    wallhavenProviderEnabled: Boolean,
     bingProviderEnabled: Boolean,
     pixabayProviderEnabled: Boolean,
     onDismiss: () -> Unit,
@@ -2580,6 +2595,7 @@ private fun SourcePickerDialog(
         "bing" to "Bing Daily",
     ).filter { (key, _) ->
         when (key) {
+            "wallhaven" -> wallhavenProviderEnabled || currentSource == "wallhaven"
             "pixabay" -> pixabayProviderEnabled || currentSource == "pixabay"
             "bing" -> bingProviderEnabled || currentSource == "bing"
             else -> true

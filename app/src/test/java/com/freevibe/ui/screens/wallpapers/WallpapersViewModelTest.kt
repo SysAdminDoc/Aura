@@ -308,6 +308,40 @@ class WallpapersViewModelTest {
     }
 
     @Test
+    fun `wallhaven disabled redirects tab and blocks wallhaven only actions`() = runTest(dispatcher) {
+        val wallpaperRepo = mockk<WallpaperRepository>()
+        val redditRepo = mockk<RedditRepository>()
+
+        stubCommonDependencies(
+            wallpaperRepo = wallpaperRepo,
+            redditRepo = redditRepo,
+        )
+
+        val viewModel = createViewModel(
+            wallpaperRepo = wallpaperRepo,
+            redditRepo = redditRepo,
+            wallhavenProviderEnabled = false,
+        )
+
+        advanceUntilIdle()
+
+        viewModel.selectTab(WallpaperTab.WALLHAVEN)
+        advanceUntilIdle()
+        assertEquals(WallpaperTab.DISCOVER, viewModel.state.value.selectedTab)
+        coVerify(exactly = 0) { wallpaperRepo.getWallhaven(any(), any(), any()) }
+
+        viewModel.searchByColor("112233")
+        advanceUntilIdle()
+        assertEquals("Wallhaven source is disabled in Settings", viewModel.state.value.error)
+        coVerify(exactly = 0) { wallpaperRepo.searchByColor(any(), any()) }
+
+        viewModel.loadRandom()
+        advanceUntilIdle()
+        assertEquals("Wallhaven source is disabled in Settings", viewModel.state.value.error)
+        coVerify(exactly = 0) { wallpaperRepo.getRandomWallhaven() }
+    }
+
+    @Test
     fun `community disabled skips top votes and redirects community tab to discover`() = runTest(dispatcher) {
         val wallpaperRepo = mockk<WallpaperRepository>()
         val redditRepo = mockk<RedditRepository>()
@@ -529,6 +563,7 @@ class WallpapersViewModelTest {
         voteRepoOverride: VoteRepository? = null,
         cacheManagerOverride: WallpaperCacheManager? = null,
         favoritesRepoOverride: FavoritesRepository? = null,
+        wallhavenProviderEnabled: Boolean = true,
         redditProviderEnabled: Boolean = true,
         pexelsProviderEnabled: Boolean = true,
         pixabayProviderEnabled: Boolean = true,
@@ -551,6 +586,7 @@ class WallpapersViewModelTest {
 
         val prefs = mockk<PreferencesManager>()
         every { prefs.wallpaperGridColumns } returns flowOf(2)
+        every { prefs.wallhavenProviderEnabled } returns flowOf(wallhavenProviderEnabled)
         every { prefs.redditProviderEnabled } returns flowOf(redditProviderEnabled)
         every { prefs.pexelsProviderEnabled } returns flowOf(pexelsProviderEnabled)
         every { prefs.pixabayProviderEnabled } returns flowOf(pixabayProviderEnabled)
