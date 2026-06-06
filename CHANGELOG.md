@@ -3,6 +3,7 @@
 All notable changes to Aura will be documented in this file.
 
 ## Unreleased
+- **Firebase App Check client rollout (Cycle 53)**: debug builds now install the Firebase App Check debug provider, release builds install the Play Integrity provider before Firebase-backed community startup work, and the rollout runbook covers debug tokens, side-loaded distribution settings, metrics burn-in, and enforcement gates.
 - **Admin report review (Cycle 52)**: custom-claim admins can open Settings > Community reports, review open reports, hide reported content through the global moderation list, dismiss reports, or restore hidden content with resolution metadata.
 - **Community report queue intake (Cycle 51)**: sound and wallpaper detail screens now submit private reports with rights/source-removed/safety/spam/other reasons, source/license/uploader context, RTDB report and resolution rules, and admin resolution metadata.
 - **Community upload rights metadata (Cycle 50)**: community sound and wallpaper uploads now require rights attestation, selected CC0/CC BY/CC BY-NC metadata, optional HTTPS source URLs, RTDB rule validation, community sound license gates, and wallpaper license detail display.

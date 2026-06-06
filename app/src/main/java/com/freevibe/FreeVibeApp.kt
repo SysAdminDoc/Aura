@@ -13,6 +13,7 @@ import coil.memory.MemoryCache
 import com.freevibe.data.local.WallpaperCacheManager
 import com.freevibe.service.CrashDiagnosticsCollector
 import com.freevibe.service.CrashDiagnosticsText
+import com.freevibe.service.AppCheckInstaller
 import com.freevibe.service.CommunityIdentityProvider
 import com.freevibe.service.OfflineFavoritesManager
 import com.freevibe.service.SourceMetrics
@@ -82,6 +83,7 @@ class FreeVibeApp : Application(), Configuration.Provider, ImageLoaderFactory {
     override fun onCreate() {
         super.onCreate()
         setupCrashLogging()
+        installAppCheck()
         createMediaNotificationChannel()
         evictStaleCaches()
         warmCommunityIdentity()
@@ -89,6 +91,14 @@ class FreeVibeApp : Application(), Configuration.Provider, ImageLoaderFactory {
         initYtDlp()
         enqueueAuraOriginalsDownload()
         reconcileRotationTriggers()
+    }
+
+    private fun installAppCheck() {
+        try {
+            AppCheckInstaller.install(this)
+        } catch (e: Exception) {
+            if (BuildConfig.DEBUG) Log.w("FreeVibeApp", "App Check init failed: ${e.message}")
+        }
     }
 
     /**

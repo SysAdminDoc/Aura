@@ -1,7 +1,7 @@
 {
   "counts": {
-    "dependencyRecords": 251,
-    "noticeSections": 288
+    "dependencyRecords": 252,
+    "noticeSections": 289
   },
   "dependencies": [
     {
@@ -1091,16 +1091,16 @@
       "version": "1.0.0-beta1"
     },
     {
-      "coordinate": "com.google.android.play:core-common:2.0.3",
+      "coordinate": "com.google.android.play:core-common:2.0.4",
       "group": "com.google.android.play",
       "name": "core-common",
-      "version": "2.0.3"
+      "version": "2.0.4"
     },
     {
-      "coordinate": "com.google.android.play:integrity:1.3.0",
+      "coordinate": "com.google.android.play:integrity:1.4.0",
       "group": "com.google.android.play",
       "name": "integrity",
-      "version": "1.3.0"
+      "version": "1.4.0"
     },
     {
       "coordinate": "com.google.android.recaptcha:recaptcha:18.6.1",
@@ -1161,6 +1161,12 @@
       "group": "com.google.firebase",
       "name": "firebase-appcheck-interop",
       "version": "17.1.0"
+    },
+    {
+      "coordinate": "com.google.firebase:firebase-appcheck-playintegrity:19.0.2",
+      "group": "com.google.firebase",
+      "name": "firebase-appcheck-playintegrity",
+      "version": "19.0.2"
     },
     {
       "coordinate": "com.google.firebase:firebase-auth:24.1.0",
@@ -1517,9 +1523,9 @@
     "licenseText": "app/build/generated/res/releaseOssLicensesTask/raw/third_party_licenses"
   },
   "inputSha256": {
-    "dependencies": "a37e81527ce3bcb7449b4bc3e7d562dd0644f03e50dd7cb630555ac9b2d1bdfb",
-    "licenseMetadata": "7832edbd2504b45d3511a6e86c7deb04b625da8436390f07c42546d2081f82cc",
-    "licenseText": "005caa467c0ea518329fabd74961d00d04e0823434450819db5fedfe9c3ce069"
+    "dependencies": "4eb3dab5591ab5d7cd6811ec45c833789a531a7582d9239598148bf9d2c32c66",
+    "licenseMetadata": "604e4291b1cfaa26ca9259554ef29100c05c5fc456b2bc177c385ac528f4b3ac",
+    "licenseText": "ae1d623fca6a5eb286f29dac4633b5f3a17d7d7f7371fd1c6ed592f7a74db48b"
   },
   "noticeSections": [
     {
@@ -2813,34 +2819,40 @@
       "offset": 429265
     },
     {
+      "length": 11357,
+      "name": "Jakarta Inject",
+      "noticeSha256": "58d1e17ffe5109a7ae296caafcadfdbe6a7d176f0bc4ab01e12a689b0499d8bd",
+      "offset": 429319
+    },
+    {
       "length": 1360,
       "name": "Play Core Software Development Kit",
       "noticeSha256": "62eefe4377b4ed9a123f2ec95399acaf9ac1edf99b38c74c471d5db38632464d",
-      "offset": 429319
+      "offset": 440678
     },
     {
       "length": 12521,
       "name": "archive_patcher",
       "noticeSha256": "9e69074ca08973d9129cfd12658e6bc6cc502edb3bb99824db836726cb11a86f",
-      "offset": 430681
+      "offset": 442040
     },
     {
       "length": 64,
       "name": "integrity",
       "noticeSha256": "3127f64803ff1f427c69006e1186c2ba7279db728de152690b8df8ae97da08a1",
-      "offset": 443204
+      "offset": 454563
     },
     {
       "length": 1384,
       "name": "Play Integrity API Terms of Service",
       "noticeSha256": "af887da609cd24660f3ffca8b186d7a6ea8687632a0f7dba8b9acd626e9bd0d6",
-      "offset": 443270
+      "offset": 454629
     },
     {
       "length": 9217,
       "name": "p2putils",
       "noticeSha256": "299d8188dce0db22d8e31cb86dc3c15e4263bf870a1cf99ecce37fe91415498d",
-      "offset": 444656
+      "offset": 456015
     },
     {
       "length": 47,
@@ -2888,13 +2900,7 @@
       "length": 11359,
       "name": "HighwayHash",
       "noticeSha256": "8c6db340475136df3c1201d458fa5755698eace76e510471ecc9d857d6083dac",
-      "offset": 453875
-    },
-    {
-      "length": 11357,
-      "name": "Jakarta Inject",
-      "noticeSha256": "58d1e17ffe5109a7ae296caafcadfdbe6a7d176f0bc4ab01e12a689b0499d8bd",
-      "offset": 465236
+      "offset": 465234
     },
     {
       "length": 11358,
@@ -2957,6 +2963,12 @@
       "offset": 0
     },
     {
+      "length": 46,
+      "name": "com.google.firebase:firebase-appcheck-playintegrity",
+      "noticeSha256": "0dec6aeec4006c044352a33f0825bf879bcd810e5e38e2b3230e4475916cdd2f",
+      "offset": 0
+    },
+    {
       "length": 47,
       "name": "firebase-auth",
       "noticeSha256": "e3f505f692c1334ec5b11a95faaaa72477e4c4bc1e0ea10830a5ffdb04bd27d7",
@@ -2996,7 +3008,7 @@
       "length": 11357,
       "name": "mobiledatadownload",
       "noticeSha256": "58d1e17ffe5109a7ae296caafcadfdbe6a7d176f0bc4ab01e12a689b0499d8bd",
-      "offset": 465236
+      "offset": 429319
     },
     {
       "length": 47,

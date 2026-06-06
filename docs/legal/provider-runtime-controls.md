@@ -25,7 +25,7 @@ runtime-control row.
 | Pixabay | Covered | Settings exposes a Pixabay provider-enabled flag in addition to the optional API key; photo and video metadata requests use 24-hour fresh-cache paths and 429 backoff. | Disabled mode hides Pixabay wallpaper browsing, removes it from rotation pickers, skips wallpaper/video API calls, and records disabled diagnostics before reading bundled keys. | None. |
 | Klipy | Covered | Removed active feed. | New feeds do not request Klipy; saved legacy rows can remain visible. | None. |
 | SoundCloud | Covered | No active browsing tab uses SoundCloud. | New feeds do not request SoundCloud; saved legacy rows can remain visible. | None. |
-| Aura Community | Covered | Settings exposes a Community source-enabled flag in addition to Firebase availability. | Disabled mode skips startup identity warm-up, hides community tabs/uploads/votes/creator profile entry points, blocks feed/upload/follow repository calls, and records disabled diagnostics separately from Firebase outages. | None for runtime disablement; keep separate public-data deletion, takedown, and App Check hardening work tracked in `ROADMAP.md`. |
+| Aura Community | Covered | Settings exposes a Community source-enabled flag in addition to Firebase availability and installed App Check providers. | Disabled mode skips startup identity warm-up, hides community tabs/uploads/votes/creator profile entry points, blocks feed/upload/follow repository calls, and records disabled diagnostics separately from Firebase outages. | None for runtime disablement; keep separate public-data deletion, takedown, App Check enforcement, and quota work tracked in `ROADMAP.md`. |
 | Aura Picks | Covered | Ships with app assets and curated metadata. | No remote provider is contacted; removal requires changing bundled content metadata or assets. | None. |
 | AI-generated | Covered | Settings exposes a generated-wallpapers source flag in addition to the provider key. | Disabled mode hides generation entry points and blocks Stability requests before provider-key validation while saved generated outputs can remain visible. | Carry the flag into channel-specific distribution defaults when store profiles are added. |
 
@@ -51,7 +51,8 @@ runtime-control row.
 - Community now has a default-on source flag covering startup identity warm-up,
   sound/wallpaper community feeds, uploads, vote actions, creator profile
   navigation, and creator follow/unfollow calls. Data lifecycle, deletion,
-  takedown, and App Check hardening remain separate community compliance items.
+  takedown, App Check enforcement, and quota hardening remain separate
+  community compliance items.
   New community uploads require selected license, rights attestation, uploader
   UID, timestamp, and optional HTTPS source URL metadata; see
   [community-upload-rights.md](community-upload-rights.md).

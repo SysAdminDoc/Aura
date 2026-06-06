@@ -47,8 +47,9 @@ Reporter UIDs are not public catalog data.
 
 ## Remaining Follow-Up
 
-- Add App Check and quota/rate-limit enforcement before public production
-  reliance.
+- App Check client providers are installed, but Firebase console enforcement and
+  report quota/rate-limit controls still need the backend rollout pass before
+  public production reliance.
 - Add owner-delete/takedown flows for rights-confirmed removals and public
   takedown request copy.
 - Add report tabs or filters for closed reports if admins need historical

@@ -212,6 +212,8 @@ dependencies {
     implementation("com.google.firebase:firebase-auth")
     implementation("com.google.firebase:firebase-database")
     implementation("com.google.firebase:firebase-storage")
+    implementation(libs.firebase.appcheck.playintegrity)
+    debugImplementation(libs.firebase.appcheck.debug)
 
     // NewPipe Extractor (YouTube search without API key)
     // PIN: NewPipe ships YouTube-extractor patches monthly. Bumping versions can

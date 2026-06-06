@@ -3,7 +3,7 @@
 > Open-source Android personalization: wallpapers, video wallpapers, ringtones, sounds.
 > Stay the OSS alternative to Zedge: no ads, no surprise charges, no dark patterns.
 
-**Version:** 2026-06-06-cycle52-roadmap (added admin report review).
+**Version:** 2026-06-06-cycle53-roadmap (installed App Check client providers).
 **Code version at write:** v6.31.1 / versionCode 112 (per `app/build.gradle.kts`; release/lint Gradle runs are memory-heavy on this Windows workstation, so rerun APK compilation only when explicitly needed).
 **Charter:** personalization, AMOLED-first, free-by-default, multi-source content aggregation, community-fed catalog, polite live wallpapers (battery-aware, pause-on-invisible).
 
@@ -110,12 +110,13 @@ Preserved verbatim from prior passes; do not edit unless a regression occurred.
 
 Append-only Cycle 1 handoff. Every item below is source-backed in `docs/research/cycle-1-2026-06-04.md`; merge into the existing Now/Next/Later item named in `Touches` when implementation starts instead of creating a second parallel feature.
 
-- [ ] 🤖 🔬 **P0 — Add Firebase App Check for community writes**
+- [~] 🤖 🔬 **P0 — Add Firebase App Check for community writes**
   - Why: Anonymous Firebase Auth proves a user session, not that writes originate from Aura. Community uploads/votes now have server-side admin Custom Claims, but RTDB/Storage writes are still cheap for non-Aura clients to automate.
   - Evidence: `database.rules.json:9`, `database.rules.json:41`, `database.rules.json:52`, `app/build.gradle.kts:201-204`; Firebase App Check docs support Realtime Database and Cloud Storage and recommend monitoring metrics before enforcement.
   - Touches: N-2 follow-up; `gradle/libs.versions.toml`, `app/build.gradle.kts`, `FreeVibeApp.kt`, Firebase console setup, `docs/firebase-admin-claims.md`, new App Check rollout doc.
   - Acceptance: debug provider works for emulator/dev builds; release builds send Play Integrity App Check tokens; Firebase metrics are monitored before enforcement; RTDB/Storage enforcement can be enabled without locking out legitimate users.
   - Verify: debug-provider upload/vote on emulator; release-device upload/vote; Firebase App Check request metrics; RTDB/Storage rules still reject unauthenticated writes.
+  - Progress 2026-06-06: Cycle 53 added debug/release App Check provider installers, Firebase BoM-managed App Check dependencies, startup installation before Firebase-backed community warm-up, dependency verification metadata, generated notice lock refresh, and `docs/community-app-check-rollout.md`. Remaining work: Firebase Console registration, debug-token registration, metrics burn-in, enforcement, and per-write quotas.
 
 - [~] 🤖 🔬 **P1 — Baseline Profile + Macrobenchmark gate for startup and grid jank** — harness shipped 2026-06-04; physical-device generation/metrics pending because no adb target is attached.
   - Why: Aura claims instant startup and L-8 targets <1.5 s cold start, but there is no benchmark/profile module to prove startup, first-scroll, or dense-grid smoothness.
@@ -145,7 +146,7 @@ Append-only Cycle 1 handoff. Every item below is source-backed in `docs/research
   - Touches: T-E / N-2; models/entities, `WallpaperDetailScreen.kt`, `SoundDetailScreen.kt`, RTDB moderation/report queue, rules, licenses screen.
   - Acceptance: every detail screen has compact source/provenance affordance; community entries have a report action; reports are App-Checked/authenticated; admins can resolve/hide/unhide through Custom Claim rules.
   - Verify: manual detail-screen pass by source (Pexels/Pixabay/Reddit/YouTube/community/bundled); Firebase rules tests for report/create/read and admin resolution.
-  - Progress 2026-06-06: Cycle 51 added private report payload validation, `CommunityReportRepository`, `/community_reports` and `/community_report_resolutions` rules, sound/wallpaper detail report dialogs, ViewModel report submission with source/license/uploader context, and `docs/support/community-reporting.md`. Cycle 52 added the admin-only open report queue, Settings navigation, report status index, and Hide/Dismiss/Restore actions wired to `/moderation/{contentId}` plus resolution metadata. Remaining work: App Check/rate limits, delete/takedown flows, and closed-report review filters.
+  - Progress 2026-06-06: Cycle 51 added private report payload validation, `CommunityReportRepository`, `/community_reports` and `/community_report_resolutions` rules, sound/wallpaper detail report dialogs, ViewModel report submission with source/license/uploader context, and `docs/support/community-reporting.md`. Cycle 52 added the admin-only open report queue, Settings navigation, report status index, and Hide/Dismiss/Restore actions wired to `/moderation/{contentId}` plus resolution metadata. Cycle 53 installed App Check providers client-side and documented the monitor-before-enforcement path. Remaining work: report quotas, delete/takedown flows, and closed-report review filters.
 
 - [ ] 🤖 🔬 **P2 — Video wallpaper playlists and per-video behavior profiles**
   - Why: Aura has local video import, Fit/Fill, crop, thumbnails, Smart Crop, and battery dashboard, but users with multiple clips still apply one video at a time. Focused FOSS video-wallpaper competitors now expose playlists, shuffle/loop, smart start times, and one-shot behavior.
@@ -507,12 +508,13 @@ Append-only Cycle 9 handoff. Every item below is source-backed in `docs/research
   - Acceptance: Storage rules restrict writes to authenticated owner paths, enforce sound/image MIME and size ceilings, define read behavior, and block cross-user overwrite/delete; lifecycle or cleanup process handles abandoned temp/orphan objects without deleting valid public uploads.
   - Verify: emulator tests reject oversize/wrong-type/cross-owner uploads; metadata-save failure cleanup still works; orphan cleanup dry run reports expected objects before delete.
 
-- [ ] 🤖 🔬 **P1 — App Check and community abuse throttling**
+- [~] 🤖 🔬 **P1 — App Check and community abuse throttling**
   - Why: Anonymous Auth and vote markers do not prove requests come from Aura or prevent scripted uploads, votes, reports, follows, and profile writes at scale.
   - Evidence: `CommunityIdentityProvider.ensureSignedIn()` anonymous/fallback identity; `VoteRepository.upvote()` voter marker; no App Check init/runbook found; Firebase App Check docs for RTDB and Storage.
   - Touches: App Check initialization, debug-provider docs, Firebase console enforcement runbook, upload/vote/report quota design, backend counters or Cloud Functions if needed, release checklist.
   - Acceptance: App Check is installed with Play Integrity plus debug/dev instructions; request metrics are monitored before enforcement; RTDB and Storage enforcement dates are recorded; abuse quotas exist for uploads, reports, votes, follows, and profile edits.
   - Verify: debug build works with debug token; release build obtains valid token; monitor-mode metrics are reviewed; after enforcement, unauthenticated/unverified scripted requests fail while normal app flows pass.
+  - Progress 2026-06-06: Cycle 53 installed debug and Play Integrity providers, added the rollout runbook, compiled debug and release variants, refreshed dependency verification metadata, and refreshed generated notice locks. Remaining work: console metrics/enforcement evidence and backend quotas for uploads, reports, votes, follows, and profile edits.
 
 - [~] 🤖 🔬 **P1 — Moderation report queue and audit trail**
   - Why: The current `/moderation/{contentId}=true` boolean hides content but does not capture report reason, reporter privacy, resolver, timestamp, status, appeal/restore, or block semantics required for public UGC operations.
@@ -520,7 +522,7 @@ Append-only Cycle 9 handoff. Every item below is source-backed in `docs/research
   - Touches: report models/repository, report actions in content detail screens, RTDB rules, admin moderation UI, privacy/report docs, Play app-content packet.
   - Acceptance: users can report community content with categories; reports are App-Checked/authenticated and rate-limited; admins can resolve/hide/unhide with reason and timestamp; audit entries record resolver UID without exposing reporter identity publicly; block-user behavior is defined or deferred with an owner decision.
   - Verify: report create/read/admin-resolve rules tests; manual report -> admin hide -> feed removal -> unhide flow; reporter data is not public; Play UGC checklist row is complete.
-  - Progress 2026-06-06: Cycle 51 added report reasons, private report intake, admin-only read/update rules, resolution metadata records, and detail-screen report submission. Cycle 52 added admin Settings access, open-report subscription, report cards, status-indexed RTDB rules, Hide/Dismiss/Restore actions, and moderation hide/unhide wiring. Remaining work: App Check/quota enforcement, block-user policy, and delete/takedown resolution flows.
+  - Progress 2026-06-06: Cycle 51 added report reasons, private report intake, admin-only read/update rules, resolution metadata records, and detail-screen report submission. Cycle 52 added admin Settings access, open-report subscription, report cards, status-indexed RTDB rules, Hide/Dismiss/Restore actions, and moderation hide/unhide wiring. Cycle 53 installed App Check providers and the rollout runbook. Remaining work: quota enforcement, block-user policy, and delete/takedown resolution flows.
 
 - [ ] 🤖 🔬 **P2 — Community backend operations runbook**
   - Why: Community backend changes can break public reads/writes independently from APK builds, and Aura has no single release artifact tying rules, App Check, Storage cleanup, moderation, and deletion evidence together.
@@ -2917,32 +2919,40 @@ Stars/dates as of research pass 2026-05-16.
 - Admin report review implementation — `CommunityReportsScreen.kt`, `CommunityReportRepository.kt`, `CommunityReport.kt`, `SettingsScreen.kt`, `SettingsViewModel.kt`, `Screen.kt`, `FreeVibeRoot.kt`, and `database.rules.json`.
 - Verification outputs — focused CommunityReportsViewModel, CommunityReport, SettingsViewModel, SoundsViewModel, and WallpapersViewModel unit tests.
 
+## Appendix BC — Cycle 53 Sources
+
+- Cycle 53 implementation record — [docs/research/cycle-53-2026-06-06.md](docs/research/cycle-53-2026-06-06.md).
+- Community App Check rollout runbook — [docs/community-app-check-rollout.md](docs/community-app-check-rollout.md).
+- Official Firebase sources — [App Check overview](https://firebase.google.com/docs/app-check), [Android Play Integrity provider](https://firebase.google.com/docs/app-check/android/play-integrity-provider), [Android debug provider](https://firebase.google.com/docs/app-check/android/debug-provider), and [App Check enforcement](https://firebase.google.com/docs/app-check/enable-enforcement).
+- App Check implementation — `FreeVibeApp.kt`, debug/release `AppCheckInstaller.kt`, `app/build.gradle.kts`, `gradle/libs.versions.toml`, `gradle/verification-metadata.xml`, and `docs/legal/dependency-notices.lock.json`.
+- Verification outputs — debug Kotlin compile with dependency-verification metadata refresh, release Kotlin compile, generated dependency notice lock and metadata parity checks, native compliance lock check, dependency overlay check, and dependency license policy check.
+
 ## Continuation State
 
 ### Last Completed Cycle
 
-Cycle 52: Admin report review and report-to-moderation hide/unhide wiring.
+Cycle 53: Firebase App Check client providers and rollout runbook.
 
 ### Current Focus
 
-Start Cycle 53 with Firebase App Check and report quota/rate-limit planning for community writes and reports, then continue into owner-delete/takedown flows. Commit and push completed work when the active project contract allows it.
+Start Cycle 54 with quota/rate-limit enforcement design for reports, uploads, votes, follows, and profile edits, then continue into owner-delete/takedown flows. Commit and push completed work when the active project contract allows it.
 
 ### Important Findings So Far
 
-- `ROADMAP.md` has Cycle 18 through Cycle 52 research/implementation items; `docs/research/cycle-18-2026-06-06.md` through `docs/research/cycle-52-2026-06-06.md` have the source-backed analysis.
+- `ROADMAP.md` has Cycle 18 through Cycle 53 research/implementation items; `docs/research/cycle-18-2026-06-06.md` through `docs/research/cycle-53-2026-06-06.md` have the source-backed analysis.
 - `LicensesScreen.kt` still has manual dependency rows; content sources are already code-backed by `ProviderDisclosure.kt`.
 - `.github/workflows/release.yml` now publishes `THIRD-PARTY-NOTICES.md` and `NATIVE-COMPLIANCE.md` with the APK and includes both files in `SHA256SUMS.txt`; SBOM artifacts remain open.
 - `.github/workflows/verify.yml` and `.github/workflows/release.yml` now run `tools/dependency_notice_lock.py --mode check`, `tools/dependency_notice_lock.py --mode check-metadata`, `tools/native_compliance_inventory.py --mode check-lock`, `tools/dependency_overlay_check.py`, and `tools/dependency_license_policy.py` after `:app:releaseOssLicensesTask`.
 - `docs/distribution/supply-chain.md` defers SBOM work until N-1, but Cycle 18 split out a smaller current-toolchain notice/drift lane that should not wait on the AGP/Kotlin migration.
 - AboutLibraries 15.x is not a current-toolchain fit because its release notes make AGP 8.13 the minimum; Aura is currently on AGP 8.7.3 / Gradle 8.12. Test AboutLibraries 14.2.1 if using it before N-1.
 - Google OSS notices now have the required `settings.gradle.kts` plugin resolution mapping and root/app Gradle wiring in the real repo.
-- Real-repo `:app:releaseOssLicensesTask` passed after refreshing POM checksum metadata, generating 251 dependency records and including NewPipeExtractor, youtubedl-android library/common/ffmpeg, Firebase, Play services ML Kit, ZXing, Palette, and ProfileInstaller.
+- Real-repo `:app:releaseOssLicensesTask` passed after refreshing POM checksum metadata. After Cycle 53, generated notices cover 252 dependency records and 289 notice sections, including NewPipeExtractor, youtubedl-android library/common/ffmpeg, Firebase, App Check Play Integrity, Play services ML Kit, ZXing, Palette, and ProfileInstaller.
 - Adding `play-services-oss-licenses:17.5.1` pulled risky release-runtime UI upgrades in the spike clone, including Activity Compose 1.12.1, Compose 1.11.0-beta02 artifacts, AppCompat 1.7.1, Material Components 1.13.0, and credential dependencies.
 - The real implementation does not add `play-services-oss-licenses:17.5.1`; a release runtime graph check showed no notice-driven Activity Compose 1.12.1, Compose 1.11.0-beta02, or Material Components 1.13.0 drift.
 - `tools/google_oss_to_markdown.py` generated `build/reports/THIRD-PARTY-NOTICES.md` from real-repo Google outputs; the output was 1,367,502 bytes, 25,336 lines, 251 dependency records, and 288 notice sections.
 - `tools/native_compliance_inventory.py` generated `docs/legal/native-compliance.md` with youtubedl-android common/library/ffmpeg AAR hashes, NewPipeExtractor JAR hashes, yt-dlp 2025.11.12 git-head facts, python3.12 payload facts, QuickJS entries, FFmpeg ABI payload paths, and embedded FFmpeg 7.1.1 configure evidence.
 - `docs/legal/ffmpeg-source-correspondence.md` records the resolved FFmpeg AAR hash, nested payload hashes, embedded configure lines, FFmpeg source candidate, and remaining Termux source/build-log owner actions.
-- `docs/legal/dependency-notices.lock.json` records 251 release dependency coordinates and 288 notice section hashes from Google OSS outputs.
+- `docs/legal/dependency-notices.lock.json` records 252 release dependency coordinates and 289 notice section hashes from Google OSS outputs.
 - The dependency notice lockfile gates generated dependency/notice drift, and `tools/dependency_notice_lock.py --mode check-metadata` now separately proves raw metadata row parity with the reviewed notice sections.
 - `docs/legal/native-compliance.lock.json` records 8 native/copyleft coordinates, 23 artifact records, and 36 payload entries from youtubedl-android and NewPipeExtractor artifacts.
 - The native lockfile now gates artifact hash, payload fact, and embedded FFmpeg configure drift, but it still does not prove the exact Termux package commit, patches, dependency source set, or build logs.
@@ -2970,12 +2980,12 @@ Start Cycle 53 with Firebase App Check and report quota/rate-limit planning for 
 - Wallpaper and sound apply/download paths now classify explicit 404/410/gone/removed/deleted provider failures and mark saved favorites unavailable with provider-specific reasons; `DownloadManager` also marks matching download-history rows unavailable on failed re-downloads.
 - Sounds now have item-level license capability gates: YouTube apply/download requires confirmation, SoundCloud is link-only until reviewed, CC BY-NC requires confirmation, no-derivatives disables editing, missing remote licenses disable live-source actions, saved sound favorites preserve license metadata through Room v16 and favorites import/export, and share text includes source/uploader/license provenance.
 - Community uploads now require selected CC0/CC BY/CC BY-NC metadata, rights attestation, authenticated uploader UID, attestation timestamp, and optional HTTPS source URL before public sound/wallpaper upload metadata is written. Legacy community sound rows without selected license metadata keep the `User Upload` fallback.
-- Community reporting now has private report intake, admin review, moderation hide/unhide actions, and admin resolution metadata paths with rights/source-removed/safety/spam/other reasons. Detail screens submit reports with source/license/uploader context; App Check, quotas, closed-report filters, and owner-delete/takedown flows remain open.
+- Community reporting now has private report intake, admin review, moderation hide/unhide actions, and admin resolution metadata paths with rights/source-removed/safety/spam/other reasons. Detail screens submit reports with source/license/uploader context. App Check client providers are installed, while quotas, enforcement evidence, closed-report filters, and owner-delete/takedown flows remain open.
 - Recent history was checked with `rtk git log -10 --oneline --decorate` for this pass.
 
 ### Next Best Actions
 
-1. Add Firebase App Check and report quota/rate-limit planning for community writes and reports.
+1. Add quota/rate-limit enforcement design for community reports, uploads, votes, follows, and profile edits.
 2. Run a real GitHub Actions manual release dry run after secrets are confirmed available and archive the run URL in the release docs.
 3. Add deeper UI verification for the licenses screen on an emulator or screenshot lane when a device/runtime is available.
 4. Preserve exact Termux package commit/build-log evidence for FFmpeg if the release owner can obtain it from upstream or a reproducible rebuild.

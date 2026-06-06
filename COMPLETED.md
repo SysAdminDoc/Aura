@@ -154,6 +154,11 @@ next pass can resume quickly.
   screen, Settings navigation, RTDB report status indexing, hide/dismiss/restore
   actions, moderation hide/unhide wiring, report resolution feedback, and
   focused ViewModel coverage for moderation and non-admin gating.
+- Completed Cycle 53 Firebase App Check client rollout: added debug and release
+  App Check provider installers, installed App Check before Firebase-backed
+  community startup work, documented debug token and Play Integrity rollout
+  steps, refreshed Gradle dependency verification metadata, and updated the
+  generated dependency notice lock for App Check artifacts.
 
 ## 2026-06-05
 

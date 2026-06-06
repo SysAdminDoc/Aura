@@ -15,7 +15,7 @@ Aura is a full-feature GitHub/Obtainium/IzzyOnDroid app for now. Do not open an 
 
 | Surface | `full` build today | Future `foss` requirement |
 | --- | --- | --- |
-| Community uploads/votes/moderation | Firebase Auth, Realtime Database, Storage, admin Custom Claims, future App Check | Disable community surfaces or replace with a self-hostable backend contract using FOSS dependencies. |
+| Community uploads/votes/moderation | Firebase Auth, Realtime Database, Storage, admin Custom Claims, App Check client providers | Disable community surfaces or replace with a self-hostable backend contract using FOSS dependencies. |
 | Subject segmentation/parallax | Google Play Services ML Kit subject segmentation plus ModuleInstallClient | Use a bundled/open model, MediaPipe task dependency acceptable to F-Droid, or disable subject-aware parallax/smart crop for FOSS. |
 | Google Services plugin | Applied at app level for `google-services.json` | Move the plugin and `google-services.json` behind a full-only build path or remove it. |
 | YouTube/NewPipe/yt-dlp | Kept | Review F-Droid source-build expectations for native/FFmpeg/Python payloads before submission. |
