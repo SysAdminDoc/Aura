@@ -139,12 +139,13 @@ Append-only Cycle 1 handoff. Every item below is source-backed in `docs/research
   - Acceptance: service runs only while user-enabled triggers are active; notification copy explains the active trigger; Play declaration text exists; exact-alarm alternative is scoped without silently adding a restricted permission.
   - Verify: toggle unlock/screen-off triggers on/off; inspect foreground notification; Android 14+ background/doze manual pass; Play policy declaration reviewed by owner before submission.
 
-- [ ] 🤖 🔬 **P1 — Source provenance panel + community report queue**
+- [~] 🤖 🔬 **P1 — Source provenance panel + community report queue**
   - Why: Aura aggregates third-party content and hosts community uploads. It already stores source URLs/uploader/license fields, but users need consistent provenance, and moderators need a report intake that does not rely on public comments or ad hoc downvotes.
   - Evidence: `Mappers.kt` maps `sourcePageUrl`/`uploaderName`, `WallpaperDetailScreen.kt` and `SoundDetailScreen.kt` show source fields; Pexels/Pixabay expose creator/source metadata; YouTube branding guidance calls for clear source attribution in mixed-source apps; Zedge requires account + metadata for uploads.
   - Touches: T-E / N-2; models/entities, `WallpaperDetailScreen.kt`, `SoundDetailScreen.kt`, RTDB moderation/report queue, rules, licenses screen.
   - Acceptance: every detail screen has compact source/provenance affordance; community entries have a report action; reports are App-Checked/authenticated; admins can resolve/hide/unhide through Custom Claim rules.
   - Verify: manual detail-screen pass by source (Pexels/Pixabay/Reddit/YouTube/community/bundled); Firebase rules tests for report/create/read and admin resolution.
+  - Progress 2026-06-06: Cycle 51 added private report payload validation, `CommunityReportRepository`, `/community_reports` and `/community_report_resolutions` rules, sound/wallpaper detail report dialogs, ViewModel report submission with source/license/uploader context, and `docs/support/community-reporting.md`. Remaining work: admin review UI, App Check/rate limits, and hide/unhide/delete resolution wiring.
 
 - [ ] 🤖 🔬 **P2 — Video wallpaper playlists and per-video behavior profiles**
   - Why: Aura has local video import, Fit/Fill, crop, thumbnails, Smart Crop, and battery dashboard, but users with multiple clips still apply one video at a time. Focused FOSS video-wallpaper competitors now expose playlists, shuffle/loop, smart start times, and one-shot behavior.
@@ -513,12 +514,13 @@ Append-only Cycle 9 handoff. Every item below is source-backed in `docs/research
   - Acceptance: App Check is installed with Play Integrity plus debug/dev instructions; request metrics are monitored before enforcement; RTDB and Storage enforcement dates are recorded; abuse quotas exist for uploads, reports, votes, follows, and profile edits.
   - Verify: debug build works with debug token; release build obtains valid token; monitor-mode metrics are reviewed; after enforcement, unauthenticated/unverified scripted requests fail while normal app flows pass.
 
-- [ ] 🤖 🔬 **P1 — Moderation report queue and audit trail**
+- [~] 🤖 🔬 **P1 — Moderation report queue and audit trail**
   - Why: The current `/moderation/{contentId}=true` boolean hides content but does not capture report reason, reporter privacy, resolver, timestamp, status, appeal/restore, or block semantics required for public UGC operations.
   - Evidence: `VoteRepository.moderateHide()` and `moderateUnhide()`; `database.rules.json` moderation path; Cycle 1 report queue item; Cycle 8 Play UGC policy review.
   - Touches: report models/repository, report actions in content detail screens, RTDB rules, admin moderation UI, privacy/report docs, Play app-content packet.
   - Acceptance: users can report community content with categories; reports are App-Checked/authenticated and rate-limited; admins can resolve/hide/unhide with reason and timestamp; audit entries record resolver UID without exposing reporter identity publicly; block-user behavior is defined or explicitly out of scope.
   - Verify: report create/read/admin-resolve rules tests; manual report -> admin hide -> feed removal -> unhide flow; reporter data is not public; Play UGC checklist row is complete.
+  - Progress 2026-06-06: Cycle 51 added report reasons, private report intake, admin-only read/update rules, resolution metadata records, and detail-screen report submission. Remaining work: admin review UI, report-to-moderation hide/unhide wiring, App Check/quota enforcement, and block-user policy.
 
 - [ ] 🤖 🔬 **P2 — Community backend operations runbook**
   - Why: Community backend changes can break public reads/writes independently from APK builds, and Aura has no single release artifact tying rules, App Check, Storage cleanup, moderation, and deletion evidence together.
@@ -2900,19 +2902,26 @@ Stars/dates as of research pass 2026-05-16.
 - Community upload rights implementation — `CommunityUploadRights.kt`, `UploadRepository.kt`, `WallpaperUploadRepository.kt`, `SoundsScreen.kt`, `WallpapersScreen.kt`, `SoundLicensePolicy.kt`, `WallpaperDetailScreen.kt`, `Mappers.kt`, and `database.rules.json`.
 - Verification outputs — focused CommunityUploadRights, SoundLicensePolicy, UploadRepositoryValidation, WallpaperUploadRepositoryValidation, SoundsViewModel, WallpapersViewModel, and Mappers unit tests.
 
+## Appendix BA — Cycle 51 Sources
+
+- Cycle 51 implementation record — [docs/research/cycle-51-2026-06-06.md](docs/research/cycle-51-2026-06-06.md).
+- Community reporting support note — [docs/support/community-reporting.md](docs/support/community-reporting.md).
+- Community report implementation — `CommunityReport.kt`, `CommunityReportRepository.kt`, `CommunityReportDialog.kt`, `SoundDetailScreen.kt`, `WallpaperDetailScreen.kt`, `SoundsViewModel.kt`, `WallpapersViewModel.kt`, and `database.rules.json`.
+- Verification outputs — focused CommunityReport, SoundsViewModel, and WallpapersViewModel unit tests.
+
 ## Continuation State
 
 ### Last Completed Cycle
 
-Cycle 50: Community upload rights attestation and selected license metadata.
+Cycle 51: Community report queue intake and admin resolution metadata.
 
 ### Current Focus
 
-Start Cycle 51 with community moderation/report queue integration for rights, source-removed, and safety reports. Commit and push completed work when the active project contract allows it.
+Start Cycle 52 with admin report review and report-to-moderation hide/unhide wiring. Commit and push completed work when the active project contract allows it.
 
 ### Important Findings So Far
 
-- `ROADMAP.md` has Cycle 18 through Cycle 49 research/implementation items; `docs/research/cycle-18-2026-06-06.md` through `docs/research/cycle-49-2026-06-06.md` have the source-backed analysis.
+- `ROADMAP.md` has Cycle 18 through Cycle 51 research/implementation items; `docs/research/cycle-18-2026-06-06.md` through `docs/research/cycle-51-2026-06-06.md` have the source-backed analysis.
 - `LicensesScreen.kt` still has manual dependency rows; content sources are already code-backed by `ProviderDisclosure.kt`.
 - `.github/workflows/release.yml` now publishes `THIRD-PARTY-NOTICES.md` and `NATIVE-COMPLIANCE.md` with the APK and includes both files in `SHA256SUMS.txt`; SBOM artifacts remain open.
 - `.github/workflows/verify.yml` and `.github/workflows/release.yml` now run `tools/dependency_notice_lock.py --mode check`, `tools/dependency_notice_lock.py --mode check-metadata`, `tools/native_compliance_inventory.py --mode check-lock`, `tools/dependency_overlay_check.py`, and `tools/dependency_license_policy.py` after `:app:releaseOssLicensesTask`.
@@ -2953,11 +2962,12 @@ Start Cycle 51 with community moderation/report queue integration for rights, so
 - Wallpaper and sound apply/download paths now classify explicit 404/410/gone/removed/deleted provider failures and mark saved favorites unavailable with provider-specific reasons; `DownloadManager` also marks matching download-history rows unavailable on failed re-downloads.
 - Sounds now have item-level license capability gates: YouTube apply/download requires confirmation, SoundCloud is link-only until reviewed, CC BY-NC requires confirmation, no-derivatives disables editing, missing remote licenses disable live-source actions, saved sound favorites preserve license metadata through Room v16 and favorites import/export, and share text includes source/uploader/license provenance.
 - Community uploads now require selected CC0/CC BY/CC BY-NC metadata, rights attestation, authenticated uploader UID, attestation timestamp, and optional HTTPS source URL before public sound/wallpaper upload metadata is written. Legacy community sound rows without selected license metadata keep the `User Upload` fallback.
+- Community reporting now has private report intake and admin resolution metadata paths with rights/source-removed/safety/spam/other reasons. Detail screens can submit reports with source/license/uploader context, but admin review UI and report-to-moderation hide/unhide wiring remain open.
 - Recent history was checked with `rtk git log -10 --oneline --decorate` for this pass.
 
 ### Next Best Actions
 
-1. Add community moderation/report queue integration for rights, source-removed, and safety reports.
+1. Add admin report review and report-to-moderation hide/unhide wiring.
 2. Run a real GitHub Actions manual release dry run after secrets are confirmed available and archive the run URL in the release docs.
 3. Add deeper UI verification for the licenses screen on an emulator or screenshot lane when a device/runtime is available.
 4. Preserve exact Termux package commit/build-log evidence for FFmpeg if the release owner can obtain it from upstream or a reproducible rebuild.

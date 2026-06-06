@@ -64,6 +64,38 @@
         "sourceUrl": { ".validate": "newData.isString() && newData.val().length <= 2048 && newData.val().matches(/^$|^https:\\/\\/[^\\s]+$/)" }
       }
     },
+    "community_reports": {
+      ".read": "auth != null && auth.token.admin === true",
+      "$reportId": {
+        ".write": "auth != null && (!data.exists() || auth.token.admin === true)",
+        "contentId": { ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 240" },
+        "contentKey": { ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 240" },
+        "contentType": { ".validate": "newData.isString() && newData.val().matches(/^[A-Z_]{3,40}$/)" },
+        "contentSource": { ".validate": "newData.isString() && newData.val().matches(/^[A-Z_]{3,40}$/)" },
+        "reason": { ".validate": "newData.isString() && newData.val().matches(/^(RIGHTS|SOURCE_REMOVED|SAFETY|SPAM|OTHER)$/)" },
+        "note": { ".validate": "newData.isString() && newData.val().length <= 500" },
+        "sourceUrl": { ".validate": "newData.isString() && newData.val().length <= 2048 && newData.val().matches(/^$|^https:\\/\\/[^\\s]+$/)" },
+        "license": { ".validate": "newData.isString() && newData.val().length <= 120" },
+        "uploaderName": { ".validate": "newData.isString() && newData.val().length <= 120" },
+        "reporterUid": { ".validate": "newData.isString() && (newData.val() === auth.uid || auth.token.admin === true)" },
+        "reportedAt": { ".validate": "newData.isNumber() && newData.val() > 0" },
+        "status": { ".validate": "newData.isString() && newData.val().matches(/^(OPEN|HIDDEN|DISMISSED|RESTORED)$/)" },
+        "resolverUid": { ".validate": "newData.isString() && auth.token.admin === true" },
+        "resolvedAt": { ".validate": "newData.isNumber() && newData.val() > 0 && auth.token.admin === true" },
+        "resolutionNote": { ".validate": "newData.isString() && newData.val().length <= 500 && auth.token.admin === true" }
+      }
+    },
+    "community_report_resolutions": {
+      ".read": "auth != null && auth.token.admin === true",
+      "$reportId": {
+        ".write": "auth != null && auth.token.admin === true",
+        "reportId": { ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 240" },
+        "status": { ".validate": "newData.isString() && newData.val().matches(/^(HIDDEN|DISMISSED|RESTORED)$/)" },
+        "resolverUid": { ".validate": "newData.isString() && newData.val() === auth.uid" },
+        "resolvedAt": { ".validate": "newData.isNumber() && newData.val() > 0" },
+        "note": { ".validate": "newData.isString() && newData.val().length <= 500" }
+      }
+    },
     "creator_profiles": {
       ".read": true,
       "$uid": {

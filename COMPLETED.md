@@ -145,6 +145,11 @@ next pass can resume quickly.
   attestation, store uploader UID/attestation/source fields, validate them in
   RTDB rules, feed selected community sound licenses into action gates, and show
   wallpaper license metadata on detail surfaces.
+- Completed Cycle 51 community report queue intake: added private report
+  payload validation, Firebase report and resolution repository paths, RTDB
+  rules for authenticated report creation and admin-only review/resolution,
+  sound/wallpaper detail report actions, ViewModel report submission, and
+  support docs for the reporting workflow.
 
 ## 2026-06-05
 

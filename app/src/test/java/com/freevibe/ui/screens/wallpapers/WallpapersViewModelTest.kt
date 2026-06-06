@@ -3,6 +3,7 @@ package com.freevibe.ui.screens.wallpapers
 import android.content.Context
 import com.freevibe.data.local.PreferencesManager
 import com.freevibe.data.local.WallpaperCacheManager
+import com.freevibe.data.model.CommunityReportReason
 import com.freevibe.data.model.ContentSource
 import com.freevibe.data.model.FavoriteIdentity
 import com.freevibe.data.model.SearchResult
@@ -12,6 +13,7 @@ import com.freevibe.data.model.WallpaperCollectionEntity
 import com.freevibe.data.model.favoriteIdentity
 import com.freevibe.data.model.stableKey
 import com.freevibe.data.repository.CollectionRepository
+import com.freevibe.data.repository.CommunityReportRepository
 import com.freevibe.data.repository.FavoritesRepository
 import com.freevibe.data.repository.RedditRepository
 import com.freevibe.data.repository.SearchHistoryRepository
@@ -377,6 +379,36 @@ class WallpapersViewModelTest {
     }
 
     @Test
+    fun `reportWallpaper submits report metadata`() = runTest(dispatcher) {
+        val wallpaperRepo = mockk<WallpaperRepository>()
+        val redditRepo = mockk<RedditRepository>()
+        val reportRepo = mockk<CommunityReportRepository>()
+        stubCommonDependencies(wallpaperRepo, redditRepo)
+        coEvery { reportRepo.submitReport(any()) } returns Result.success("report-1")
+
+        val viewModel = createViewModel(
+            wallpaperRepo = wallpaperRepo,
+            redditRepo = redditRepo,
+            reportRepoOverride = reportRepo,
+        )
+        val wallpaper = wallpaper(id = "cw_1", source = ContentSource.COMMUNITY, color = "#223344")
+
+        viewModel.reportWallpaper(wallpaper, CommunityReportReason.SOURCE_REMOVED, "gone upstream")
+        advanceUntilIdle()
+
+        assertEquals("Report submitted", viewModel.state.value.applySuccess)
+        coVerify {
+            reportRepo.submitReport(
+                match {
+                    it.contentId == wallpaper.stableKey() &&
+                        it.contentType == "WALLPAPER" &&
+                        it.reason == CommunityReportReason.SOURCE_REMOVED
+                },
+            )
+        }
+    }
+
+    @Test
     fun `downloadWallpaper scopes download identity by source`() = runTest(dispatcher) {
         val wallpaperRepo = mockk<WallpaperRepository>()
         val redditRepo = mockk<RedditRepository>()
@@ -607,6 +639,7 @@ class WallpapersViewModelTest {
         voteRepoOverride: VoteRepository? = null,
         cacheManagerOverride: WallpaperCacheManager? = null,
         favoritesRepoOverride: FavoritesRepository? = null,
+        reportRepoOverride: CommunityReportRepository? = null,
         wallhavenProviderEnabled: Boolean = true,
         redditProviderEnabled: Boolean = true,
         pexelsProviderEnabled: Boolean = true,
@@ -676,6 +709,7 @@ class WallpapersViewModelTest {
             cacheManager = cacheManager,
             applyFeedbackBus = mockk(relaxed = true),
             voteRepo = voteRepo,
+            reportRepo = reportRepoOverride ?: mockk<CommunityReportRepository>(relaxed = true),
             seasonalContentManager = SeasonalContentManager(),
             wallpaperUploadRepo = mockk(relaxed = true),
             sourceMetrics = com.freevibe.service.SourceMetrics(),

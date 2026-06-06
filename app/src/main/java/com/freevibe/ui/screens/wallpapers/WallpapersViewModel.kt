@@ -5,6 +5,8 @@ import androidx.lifecycle.viewModelScope
 import android.content.Context
 import android.net.Uri
 import com.freevibe.data.local.PreferencesManager
+import com.freevibe.data.model.CommunityReportInput
+import com.freevibe.data.model.CommunityReportReason
 import com.freevibe.data.model.CommunityUploadRights
 import com.freevibe.data.model.ContentSource
 import com.freevibe.data.model.FavoriteIdentity
@@ -14,6 +16,7 @@ import com.freevibe.data.model.favoriteIdentity
 import com.freevibe.data.model.sourceUnavailableReasonForFailure
 import com.freevibe.data.model.stableKey
 import com.freevibe.data.repository.CollectionRepository
+import com.freevibe.data.repository.CommunityReportRepository
 import com.freevibe.data.repository.FavoritesRepository
 import com.freevibe.data.repository.RedditRepository
 import com.freevibe.data.repository.SearchHistoryRepository
@@ -86,6 +89,7 @@ class WallpapersViewModel @Inject constructor(
     private val cacheManager: com.freevibe.data.local.WallpaperCacheManager,
     private val applyFeedbackBus: ApplyFeedbackBus,
     val voteRepo: VoteRepository,
+    private val reportRepo: CommunityReportRepository,
     private val seasonalContentManager: SeasonalContentManager,
     private val wallpaperUploadRepo: WallpaperUploadRepository,
     private val sourceMetrics: SourceMetrics,
@@ -606,6 +610,32 @@ class WallpapersViewModel @Inject constructor(
         }
     }
 
+    fun reportWallpaper(wallpaper: Wallpaper, reason: CommunityReportReason, note: String = "") {
+        if (!communityProviderEnabled.value) {
+            sourceMetrics.recordDisabled(SOURCE_COMMUNITY)
+            _state.update { it.copy(error = communityDisabledMessage()) }
+            return
+        }
+        viewModelScope.launch {
+            reportRepo.submitReport(
+                CommunityReportInput(
+                    contentId = wallpaper.stableKey(),
+                    contentType = "WALLPAPER",
+                    contentSource = wallpaper.source,
+                    reason = reason,
+                    note = note,
+                    sourceUrl = reportSourceUrl(wallpaper.sourcePageUrl, wallpaper.fullUrl),
+                    license = wallpaper.license,
+                    uploaderName = wallpaper.uploaderName,
+                ),
+            ).onSuccess {
+                _state.update { it.copy(applySuccess = "Report submitted") }
+            }.onFailure { error ->
+                _state.update { it.copy(error = "Report failed: ${error.message ?: "try again"}") }
+            }
+        }
+    }
+
     fun uploadCommunityWallpaper(
         localUri: Uri,
         name: String,
@@ -1106,6 +1136,11 @@ class WallpapersViewModel @Inject constructor(
         const val SOURCE_COMMUNITY = "community"
     }
 }
+
+private fun reportSourceUrl(primary: String, fallback: String): String =
+    listOf(primary, fallback)
+        .firstOrNull { it.startsWith("https://", ignoreCase = true) }
+        .orEmpty()
 
 internal fun matchesWallpaperIdentity(
     wallpaper: Wallpaper,

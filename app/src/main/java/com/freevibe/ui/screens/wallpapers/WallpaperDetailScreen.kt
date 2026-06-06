@@ -42,6 +42,7 @@ import com.freevibe.data.model.isSourceUnavailable
 import com.freevibe.data.model.stableKey
 import com.freevibe.service.ParallaxWallpaperService
 import com.freevibe.ui.LiveWallpaperLaunchMode
+import com.freevibe.ui.components.CommunityReportDialog
 import com.freevibe.ui.components.GlassCard
 import com.freevibe.ui.components.HighlightPill
 import com.freevibe.ui.components.SourceBadge
@@ -216,7 +217,9 @@ fun WallpaperDetailScreen(
     var showApplyOptions by remember { mutableStateOf(false) }
     var showMoreMenu by remember { mutableStateOf(false) }
     var showCollectionPicker by remember { mutableStateOf(false) }
+    var showReportDialog by remember(wp.stableKey()) { mutableStateOf(false) }
     var showDetailsPanel by remember { mutableStateOf(false) }
+    val canReportWallpaper = wp.source != ContentSource.LOCAL
     LaunchedEffect(wp.stableKey()) {
         showDetailsPanel = false
     }
@@ -607,6 +610,14 @@ fun WallpaperDetailScreen(
                                     onClick = { viewModel.downvote(wp.stableKey()) },
                                 )
                             }
+                            if (canReportWallpaper) {
+                                DetailActionPill(
+                                    icon = Icons.Default.Report,
+                                    label = "Report",
+                                    tint = MaterialTheme.colorScheme.error,
+                                    onClick = { showReportDialog = true },
+                                )
+                            }
                             DetailActionPill(
                                 icon = Icons.Default.MoreHoriz,
                                 label = "More",
@@ -676,8 +687,20 @@ fun WallpaperDetailScreen(
                         showMoreMenu = false
                         onFindSimilar(wp)
                     },
+                    onReport = if (canReportWallpaper) ({
+                        showMoreMenu = false
+                        showReportDialog = true
+                    }) else null,
                     uploaderName = wp.uploaderName,
                     license = wp.license,
+                )
+            }
+
+            if (showReportDialog) {
+                CommunityReportDialog(
+                    title = "Report wallpaper",
+                    onDismiss = { showReportDialog = false },
+                    onSubmit = { reason, note -> viewModel.reportWallpaper(wp, reason, note) },
                 )
             }
 
@@ -1017,6 +1040,7 @@ private fun MoreActionsSheet(
     onPreview: () -> Unit,
     onCollection: () -> Unit,
     onFindSimilar: (() -> Unit)?,
+    onReport: (() -> Unit)?,
     uploaderName: String = "",
     license: String = "",
 ) {
@@ -1055,6 +1079,9 @@ private fun MoreActionsSheet(
             SheetOption(Icons.Default.CreateNewFolder, "Save to collection", "Keep this wallpaper in one of your curated sets") { onCollection() }
             if (onFindSimilar != null) {
                 SheetOption(Icons.Default.ColorLens, "Find similar wallpapers", "Search for wallpapers with a related mood or composition") { onFindSimilar() }
+            }
+            if (onReport != null) {
+                SheetOption(Icons.Default.Report, "Report content", "Send this source and license context for review") { onReport() }
             }
         }
     }

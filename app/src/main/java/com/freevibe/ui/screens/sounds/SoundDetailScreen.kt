@@ -44,6 +44,7 @@ import com.freevibe.data.model.SoundLicenseCapabilities
 import com.freevibe.data.model.isSourceUnavailable
 import com.freevibe.data.model.soundLicenseCapabilities
 import com.freevibe.data.model.stableKey
+import com.freevibe.ui.components.CommunityReportDialog
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
@@ -143,7 +144,9 @@ fun SoundDetailScreen(
     val canApplySound = !sourceUnavailable && licenseCapabilities.canUse(SoundAction.APPLY)
     val canDownloadSound = !sourceUnavailable && licenseCapabilities.canUse(SoundAction.DOWNLOAD)
     val canEditSound = !sourceUnavailable && licenseCapabilities.canUse(SoundAction.EDIT)
+    val canReportSound = s.source != ContentSource.LOCAL && s.source != ContentSource.BUNDLED
     val policyMessages = remember(licenseCapabilities) { soundPolicyMessages(licenseCapabilities) }
+    var showReportDialog by remember(s.stableKey()) { mutableStateOf(false) }
 
     val currentSoundKey = s.stableKey()
     val similarSounds = remember(currentSoundKey) { mutableStateOf<List<Sound>>(emptyList()) }
@@ -180,6 +183,14 @@ fun SoundDetailScreen(
                     Text("Cancel")
                 }
             },
+        )
+    }
+
+    if (showReportDialog) {
+        CommunityReportDialog(
+            title = "Report sound",
+            onDismiss = { showReportDialog = false },
+            onSubmit = { reason, note -> viewModel.reportSound(s, reason, note) },
         )
     }
 
@@ -411,6 +422,17 @@ fun SoundDetailScreen(
                         val intent = Intent(Intent.ACTION_SEND).apply { type = "text/plain"; putExtra(Intent.EXTRA_TEXT, shareBody); putExtra(Intent.EXTRA_SUBJECT, s.name) }
                         try { context.startActivity(Intent.createChooser(intent, "Share sound")) } catch (_: Exception) {}
                     }
+                }
+            }
+            if (canReportSound) {
+                OutlinedButton(
+                    onClick = { showReportDialog = true },
+                    modifier = Modifier.fillMaxWidth().height(44.dp),
+                    shape = RoundedCornerShape(10.dp),
+                ) {
+                    Icon(Icons.Default.Report, contentDescription = null, modifier = Modifier.size(18.dp))
+                    Spacer(Modifier.width(8.dp))
+                    Text("Report content")
                 }
             }
 

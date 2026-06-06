@@ -2,6 +2,7 @@ package com.freevibe.ui.screens.sounds
 
 import android.content.Context
 import com.freevibe.data.local.PreferencesManager
+import com.freevibe.data.model.CommunityReportReason
 import com.freevibe.data.model.CommunityUploadRights
 import com.freevibe.data.model.ContentType
 import com.freevibe.data.model.ContentSource
@@ -13,6 +14,7 @@ import com.freevibe.data.model.favoriteIdentity
 import com.freevibe.data.model.stableKey
 import com.freevibe.data.repository.AudiusRepository
 import com.freevibe.data.repository.CcMixterRepository
+import com.freevibe.data.repository.CommunityReportRepository
 import com.freevibe.data.repository.FavoritesRepository
 import com.freevibe.data.repository.FreesoundRepository
 import com.freevibe.data.repository.FreesoundV2Repository
@@ -332,6 +334,53 @@ class SoundsViewModelTest {
         advanceUntilIdle()
 
         assertEquals("Community source is disabled in Settings", viewModel.state.value.error)
+    }
+
+    @Test
+    fun `reportSound submits report metadata`() = runTest(dispatcher) {
+        val youtubeRepo = mockk<YouTubeRepository>()
+        val freesoundRepo = mockk<FreesoundRepository>()
+        val freesoundV2Repo = mockk<FreesoundV2Repository>()
+        val audiusRepo = mockk<AudiusRepository>()
+        val ccMixterRepo = mockk<CcMixterRepository>()
+        val soundCloudRepo = mockk<SoundCloudRepository>()
+        val reportRepo = mockk<CommunityReportRepository>()
+
+        stubCommonDependencies(
+            youtubeRepo = youtubeRepo,
+            freesoundRepo = freesoundRepo,
+            freesoundV2Repo = freesoundV2Repo,
+            audiusRepo = audiusRepo,
+            ccMixterRepo = ccMixterRepo,
+            soundCloudRepo = soundCloudRepo,
+        )
+        coEvery { reportRepo.submitReport(any()) } returns Result.success("report-1")
+
+        val viewModel = createViewModel(
+            youtubeRepo = youtubeRepo,
+            freesoundRepo = freesoundRepo,
+            freesoundV2Repo = freesoundV2Repo,
+            audiusRepo = audiusRepo,
+            ccMixterRepo = ccMixterRepo,
+            soundCloudRepo = soundCloudRepo,
+            reportRepoOverride = reportRepo,
+        )
+        val sound = testSound("cu_1", ContentSource.COMMUNITY, "Community Tone")
+
+        viewModel.reportSound(sound, CommunityReportReason.RIGHTS, "wrong license")
+        advanceUntilIdle()
+
+        assertEquals("Report submitted", viewModel.state.value.applySuccess)
+        coVerify {
+            reportRepo.submitReport(
+                match {
+                    it.contentId == sound.stableKey() &&
+                        it.contentType == "SOUND" &&
+                        it.reason == CommunityReportReason.RIGHTS &&
+                        it.license == "CC0"
+                },
+            )
+        }
     }
 
     @Test
@@ -1159,6 +1208,7 @@ class SoundsViewModelTest {
         audioPreviewCacheOverride: AudioPreviewCache? = null,
         downloadManagerOverride: DownloadManager? = null,
         favoritesRepoOverride: FavoritesRepository? = null,
+        reportRepoOverride: CommunityReportRepository? = null,
         youtubeProviderEnabled: Boolean = true,
         communityProviderEnabled: Boolean = true,
     ): SoundsViewModel {
@@ -1213,6 +1263,7 @@ class SoundsViewModelTest {
             audioTrimmer = mockk<com.freevibe.service.AudioTrimmer>(relaxed = true),
             prefs = prefs,
             voteRepo = mockk<VoteRepository>(relaxed = true),
+            reportRepo = reportRepoOverride ?: mockk<CommunityReportRepository>(relaxed = true),
             bundledContent = bundledContent,
             audioPlaybackManager = audioPlaybackManager,
             audioPreviewCache = audioPreviewCache,

@@ -3,6 +3,7 @@
 All notable changes to Aura will be documented in this file.
 
 ## Unreleased
+- **Community report queue intake (Cycle 51)**: sound and wallpaper detail screens now submit private reports with rights/source-removed/safety/spam/other reasons, source/license/uploader context, RTDB report and resolution rules, and admin resolution metadata.
 - **Community upload rights metadata (Cycle 50)**: community sound and wallpaper uploads now require rights attestation, selected CC0/CC BY/CC BY-NC metadata, optional HTTPS source URLs, RTDB rule validation, community sound license gates, and wallpaper license detail display.
 - **Sound license capability gates (Cycle 49)**: sounds now derive action capabilities from source/license/provenance metadata; YouTube apply/download requires confirmation, SoundCloud is link-only until reviewed, missing remote licenses disable live-source actions, saved sound favorites preserve license metadata, and sound shares include source/uploader/license provenance.
 - **Provider removal reconciliation (Cycle 48)**: explicit 404/410/gone/removed/deleted provider failures now mark saved wallpaper/sound favorites and matching download-history rows as source-unavailable during apply/download paths.

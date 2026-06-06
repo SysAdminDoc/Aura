@@ -4,9 +4,11 @@ import android.content.Context
 import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.freevibe.data.model.CommunityReportInput
+import com.freevibe.data.model.CommunityReportReason
+import com.freevibe.data.model.CommunityUploadRights
 import com.freevibe.data.model.ContentSource
 import com.freevibe.data.model.ContentType
-import com.freevibe.data.model.CommunityUploadRights
 import com.freevibe.data.model.FavoriteIdentity
 import com.freevibe.data.model.SoundAction
 import com.freevibe.data.model.SoundActionDecision
@@ -16,6 +18,7 @@ import com.freevibe.data.model.favoriteIdentity
 import com.freevibe.data.model.sourceUnavailableReasonForFailure
 import com.freevibe.data.model.soundLicenseCapabilities
 import com.freevibe.data.model.stableKey
+import com.freevibe.data.repository.CommunityReportRepository
 import com.freevibe.data.repository.FavoritesRepository
 import com.freevibe.data.repository.SearchHistoryRepository
 import com.freevibe.data.repository.UploadRepository
@@ -89,6 +92,7 @@ class SoundsViewModel @Inject constructor(
     private val audioTrimmer: com.freevibe.service.AudioTrimmer,
     private val prefs: PreferencesManager,
     val voteRepo: VoteRepository,
+    private val reportRepo: CommunityReportRepository,
     private val bundledContent: BundledContentProvider,
     private val audioPlaybackManager: AudioPlaybackManager,
     private val audioPreviewCache: AudioPreviewCache,
@@ -1452,6 +1456,28 @@ class SoundsViewModel @Inject constructor(
         }
     }
 
+    fun reportSound(sound: Sound, reason: CommunityReportReason, note: String = "") {
+        if (communityActionBlocked()) return
+        viewModelScope.launch {
+            reportRepo.submitReport(
+                CommunityReportInput(
+                    contentId = sound.stableKey(),
+                    contentType = "SOUND",
+                    contentSource = sound.source,
+                    reason = reason,
+                    note = note,
+                    sourceUrl = reportSourceUrl(sound.sourcePageUrl, sound.downloadUrl),
+                    license = sound.license,
+                    uploaderName = sound.uploaderName,
+                ),
+            ).onSuccess {
+                _state.update { it.copy(applySuccess = "Report submitted") }
+            }.onFailure { error ->
+                _state.update { it.copy(error = "Report failed: ${error.message ?: "try again"}") }
+            }
+        }
+    }
+
     private companion object {
         const val FIRST_VISIBLE_PREVIEW_COUNT = 5
         const val SOURCE_YOUTUBE = "youtube"
@@ -1462,6 +1488,11 @@ class SoundsViewModel @Inject constructor(
         )
     }
 }
+
+private fun reportSourceUrl(primary: String, fallback: String): String =
+    listOf(primary, fallback)
+        .firstOrNull { it.startsWith("https://", ignoreCase = true) }
+        .orEmpty()
 
 internal fun Throwable.rethrowIfCancelled() {
     if (this is CancellationException) throw this
