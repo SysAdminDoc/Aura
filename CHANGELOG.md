@@ -3,6 +3,7 @@
 All notable changes to Aura will be documented in this file.
 
 ## Unreleased
+- **Community upload deletion handles (Cycle 55)**: new community sound and wallpaper uploads now store canonical Storage paths, write private owner indexes, and expose repository owner-delete methods that remove Storage blobs plus public metadata/index rows for new uploads.
 - **Community quota policy (Cycle 54)**: added typed quota/rate-limit rows for reports, sound uploads, wallpaper uploads, votes, follows, and profile edits, reserved admin-only RTDB quota/dedupe ledgers, and documented the App-Checked callable migration path.
 - **Firebase App Check client rollout (Cycle 53)**: debug builds now install the Firebase App Check debug provider, release builds install the Play Integrity provider before Firebase-backed community startup work, and the rollout runbook covers debug tokens, side-loaded distribution settings, metrics burn-in, and enforcement gates.
 - **Admin report review (Cycle 52)**: custom-claim admins can open Settings > Community reports, review open reports, hide reported content through the global moderation list, dismiss reports, or restore hidden content with resolution metadata.

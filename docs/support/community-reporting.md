@@ -57,7 +57,9 @@ Reporter UIDs are not public catalog data.
 - App Check client providers and the report quota policy are tracked, but
   Firebase console enforcement and callable backend quota enforcement still need
   the backend rollout pass before public production reliance.
-- Add owner-delete/takedown flows for rights-confirmed removals and public
-  takedown request copy.
+- Owner-delete storage handles are tracked in
+  [`docs/community-upload-deletion.md`](../community-upload-deletion.md), but
+  visible delete actions, admin rights-confirmed takedown, and public takedown
+  request copy remain open.
 - Add report tabs or filters for closed reports if admins need historical
   review beyond the current open queue.

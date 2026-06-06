@@ -78,7 +78,8 @@ Admin SDK job should own ledger updates.
 - Add the callable backend project and wire Android repositories to it.
 - Define quota reset timezone in code and backend deployment config.
 - Decide whether blocked quota attempts should create private moderation events.
-- Add owner-delete and rights-confirmed takedown flows after quota enforcement.
+- Continue owner-delete and rights-confirmed takedown flows after Cycle 55's
+  new-upload deletion handles and owner indexes.
 
 ## Sources
 

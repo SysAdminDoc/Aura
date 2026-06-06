@@ -5,9 +5,14 @@ import android.net.Uri
 import android.provider.OpenableColumns
 import android.webkit.MimeTypeMap
 import com.freevibe.data.local.PreferencesManager
+import com.freevibe.data.model.CommunityUploadKind
 import com.freevibe.data.model.CommunityUploadRights
 import com.freevibe.data.model.ContentSource
 import com.freevibe.data.model.Sound
+import com.freevibe.data.model.buildCommunityOwnerUploadIndexPayload
+import com.freevibe.data.model.buildCommunityUploadDeleteUpdates
+import com.freevibe.data.model.communityOwnerUploadIndexPath
+import com.freevibe.data.model.sanitizeCommunityUploadKey
 import com.freevibe.data.model.validateCommunityUploadRights
 import com.freevibe.service.CommunityIdentityProvider
 import com.freevibe.service.SourceMetrics
@@ -88,6 +93,7 @@ class UploadRepository @Inject constructor(
         }
         val storageInstance = storage ?: throw IllegalStateException("Firebase Storage not available")
         val uploadsRefInstance = uploadsRef ?: throw IllegalStateException("Firebase Database not available")
+        val databaseRoot = database?.reference ?: throw IllegalStateException("Firebase Database not available")
 
         // Validate name length
         val sanitizedName = name.trim().take(100)
@@ -138,11 +144,13 @@ class UploadRepository @Inject constructor(
 
             // Write metadata to RTDB
             val pushRef = uploadsRefInstance.push()
+            val uploadKey = pushRef.key ?: throw IllegalStateException("Could not create sound upload record")
             val metadata = mapOf(
                 "name" to sanitizedName,
                 "category" to normalizedCategory,
                 "tags" to normalizedTags,
                 "downloadUrl" to downloadUrl,
+                "storagePath" to storagePath,
                 "fileType" to normalizedMimeType,
                 "originalFileName" to uploadInfo.originalFileName,
                 "uploadedAt" to timestamp,
@@ -155,7 +163,19 @@ class UploadRepository @Inject constructor(
                 "sourceUrl" to validatedRights.sourceUrl,
                 "votes" to 0,
             )
-            pushRef.setValue(metadata).await()
+            val ownerIndex = buildCommunityOwnerUploadIndexPayload(
+                kind = CommunityUploadKind.SOUND,
+                uploadId = uploadKey,
+                storagePath = storagePath,
+                title = sanitizedName,
+                createdAt = timestamp,
+            )
+            databaseRoot.updateChildren(
+                mapOf(
+                    "/community_sounds/$uploadKey" to metadata,
+                    communityOwnerUploadIndexPath(CommunityUploadKind.SOUND, uploaderId, uploadKey) to ownerIndex,
+                ),
+            ).await()
             metadataSaved = true
 
             Result.success(downloadUrl)
@@ -164,6 +184,38 @@ class UploadRepository @Inject constructor(
                 runCatching { storageRef.delete().await() }
             }
         }
+    } catch (e: Exception) {
+        e.rethrowIfCancelled()
+        Result.failure(e)
+    }
+
+    suspend fun deleteSoundUpload(uploadId: String): Result<Unit> = try {
+        val storageInstance = storage ?: throw IllegalStateException("Firebase Storage not available")
+        val uploadsRefInstance = uploadsRef ?: throw IllegalStateException("Firebase Database not available")
+        val databaseRoot = database?.reference ?: throw IllegalStateException("Firebase Database not available")
+        val ownerUid = identityProvider.ensureSignedIn()
+        val safeUploadId = sanitizeCommunityUploadKey(uploadId)
+        require(safeUploadId.isNotBlank()) { "Sound upload ID is required" }
+
+        val snapshot = uploadsRefInstance.child(safeUploadId).get().await()
+        if (snapshot.exists()) {
+            val uploaderUid = snapshot.child("uploaderUid").getValue(String::class.java)
+                ?: snapshot.child("uploaderId").getValue(String::class.java)
+                ?: ""
+            require(uploaderUid == ownerUid) { "Only the uploader can delete this sound" }
+            val storagePath = snapshot.child("storagePath").getValue(String::class.java).orEmpty()
+            require(storagePath.isNotBlank()) { "Sound upload is missing a deletion handle" }
+
+            storageInstance.deleteCommunityStoragePathIfPresent(storagePath)
+            databaseRoot.updateChildren(
+                buildCommunityUploadDeleteUpdates(
+                    kind = CommunityUploadKind.SOUND,
+                    ownerUid = ownerUid,
+                    uploadId = safeUploadId,
+                ),
+            ).await()
+        }
+        Result.success(Unit)
     } catch (e: Exception) {
         e.rethrowIfCancelled()
         Result.failure(e)

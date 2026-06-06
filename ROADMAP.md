@@ -3,7 +3,7 @@
 > Open-source Android personalization: wallpapers, video wallpapers, ringtones, sounds.
 > Stay the OSS alternative to Zedge: no ads, no surprise charges, no dark patterns.
 
-**Version:** 2026-06-06-cycle54-roadmap (defined community quota policy).
+**Version:** 2026-06-06-cycle55-roadmap (added community upload deletion handles).
 **Code version at write:** v6.31.1 / versionCode 112 (per `app/build.gradle.kts`; release/lint Gradle runs are memory-heavy on this Windows workstation, so rerun APK compilation only when explicitly needed).
 **Charter:** personalization, AMOLED-first, free-by-default, multi-source content aggregation, community-fed catalog, polite live wallpapers (battery-aware, pause-on-invisible).
 
@@ -260,6 +260,7 @@ Append-only Cycle 4 handoff. Every item below is source-backed in `docs/research
   - Touches: upload dialogs, RTDB rules, Storage metadata, creator profile repository, report queue, `docs/privacy/community-data.md`.
   - Acceptance: upload flow says content and metadata become public; metadata excludes unnecessary original filenames or clearly justifies them; owner field names are consistent; users can delete their uploads or request removal; admin moderation hides public catalog entries and has retention notes.
   - Verify: Firebase rules tests for owner delete/admin hide/public read; upload/delete manual pass; public catalog no longer exposes unneeded metadata; removal path documented in privacy policy.
+  - Progress 2026-06-06: Cycle 55 added `storagePath` metadata for new sound/wallpaper uploads, private `/owner_uploads/{uid}` indexes, owner repository delete methods, RTDB owner-index rules, and `docs/community-upload-deletion.md`. Remaining work: visible delete UI, admin takedown receipts, public request copy, legacy backfill, and Storage rules tests.
 
 - [ ] 🤖 🔬 **P1 — Android 17 Contact Picker and contacts-permission minimization**
   - Why: Per-contact ringtone assignment requests broad contacts read/write permissions immediately on screen entry. Android 17 provides a picker that gives selected-contact read access without broad address-book access.
@@ -500,6 +501,7 @@ Append-only Cycle 9 handoff. Every item below is source-backed in `docs/research
   - Touches: upload metadata schema, migration/backfill plan, RTDB rules, Storage delete path, upload detail actions, privacy/community-data docs.
   - Acceptance: one canonical owner field is used for sounds and wallpapers; existing metadata is migrated or dual-read safely; owners can delete their metadata and Storage object; admins can takedown content; failed blob/metadata deletes leave auditable retry state.
   - Verify: owner delete removes feed item and Storage object; non-owner delete fails in rules tests; admin takedown hides/removes as designed; orphan retry path is exercised.
+  - Progress 2026-06-06: Cycle 55 kept `uploaderUid` as the rules-authoritative owner field for new upload delete methods, stored `storagePath`, wrote private owner indexes, and added owner-only repository deletes for new rows with deletion handles. Remaining work: legacy backfill, visible owner actions, admin takedown with receipts, and deletion retry/audit handling.
 
 - [ ] 🤖 🔬 **P1 — Storage rules and orphan lifecycle cleanup**
   - Why: Upload size/type/path checks currently live in app code, but Storage needs server-side enforcement and cleanup for orphaned blobs or removed content.
@@ -658,6 +660,7 @@ Append-only Cycle 12 handoff. Every item below is source-backed in `docs/researc
   - Why: Upload metadata stores public download URLs but not a canonical `storagePath` or per-owner upload index, making owner deletion and admin web deletion dependent on broad scans and brittle URL parsing.
   - Evidence: `UploadRepository.uploadSound()` Storage path and RTDB metadata; `WallpaperUploadRepository.uploadWallpaper()` Storage path and RTDB metadata; `database.rules.json`; Firebase RTDB/Storage delete docs.
   - Touches: upload metadata schema, RTDB rules, new owner index (`owner_uploads/{uid}` or equivalent), Storage rules, migration/backfill script, community backend runbook.
+  - Progress 2026-06-06: Cycle 55 added `CommunityUploadOwnership.kt`, `storagePath` metadata, `/owner_uploads/{uid}/sounds|wallpapers/{uploadId}` writes, owner delete update builders, repository delete methods, and RTDB rules for owner/admin index access. Remaining work: legacy backfill, Storage rules, Emulator Suite tests, and admin web deletion tooling.
   - Acceptance: new uploads store `storagePath`, owner UID, content type, and upload ID in both public metadata and an owner-scoped index; rules allow owners/admins to delete their own records; legacy uploads are backfilled or marked "admin-only deletion until migrated."
   - Verify: upload sound/wallpaper, inspect metadata/index, delete by owner from app and by admin script, confirm Storage object deletion and public feed removal; rules tests reject cross-owner deletes.
 
@@ -2935,19 +2938,27 @@ Stars/dates as of research pass 2026-05-16.
 - Quota policy implementation — `CommunityQuotaPolicy.kt`, `CommunityQuotaPolicyTest.kt`, `database.rules.json`, `docs/community-app-check-rollout.md`, `docs/support/community-reporting.md`, and `docs/firebase-admin-claims.md`.
 - Verification outputs — focused CommunityQuotaPolicy unit test, RTDB rules JSON parse, release-compliance Python compile checks, generated dependency notice lock and metadata parity checks, native compliance lock check, dependency overlay check, and dependency license policy check.
 
+## Appendix BE — Cycle 55 Sources
+
+- Cycle 55 implementation record — [docs/research/cycle-55-2026-06-06.md](docs/research/cycle-55-2026-06-06.md).
+- Community upload deletion runbook — [docs/community-upload-deletion.md](docs/community-upload-deletion.md).
+- Official sources — [Google Play account deletion requirements](https://support.google.com/googleplay/android-developer/answer/13327111), [Firebase Realtime Database Android delete data](https://firebase.google.com/docs/database/android/read-and-write), [Firebase DatabaseReference API](https://firebase.google.com/docs/reference/android/com/google/firebase/database/DatabaseReference), and [Firebase Storage Android delete files](https://firebase.google.com/docs/storage/android/delete-files).
+- Deletion-handle implementation — `CommunityUploadOwnership.kt`, `CommunityUploadDeletionHelpers.kt`, `UploadRepository.kt`, `WallpaperUploadRepository.kt`, `CommunityUploadOwnershipTest.kt`, and `database.rules.json`.
+- Verification outputs — focused CommunityUploadOwnership, UploadRepositoryValidation, and WallpaperUploadRepositoryValidation unit tests plus RTDB rules JSON parse.
+
 ## Continuation State
 
 ### Last Completed Cycle
 
-Cycle 54: community quota/rate-limit policy and protected backend ledgers.
+Cycle 55: community upload deletion handles and owner indexes for new uploads.
 
 ### Current Focus
 
-Start Cycle 55 with owner-delete/takedown flows for community uploads and continue backend enforcement work for callable quotas, Storage rules, and App Check rollout evidence. Commit and push completed work when the active project contract allows it.
+Start Cycle 56 with visible owner delete actions or admin rights-confirmed takedown receipts for community uploads, then continue backend enforcement work for Storage rules, Emulator Suite tests, callable quotas, and App Check rollout evidence. Commit and push completed work when the active project contract allows it.
 
 ### Important Findings So Far
 
-- `ROADMAP.md` has Cycle 18 through Cycle 54 research/implementation items; `docs/research/cycle-18-2026-06-06.md` through `docs/research/cycle-54-2026-06-06.md` have the source-backed analysis.
+- `ROADMAP.md` has Cycle 18 through Cycle 55 research/implementation items; `docs/research/cycle-18-2026-06-06.md` through `docs/research/cycle-55-2026-06-06.md` have the source-backed analysis.
 - `LicensesScreen.kt` still has manual dependency rows; content sources are already code-backed by `ProviderDisclosure.kt`.
 - `.github/workflows/release.yml` now publishes `THIRD-PARTY-NOTICES.md` and `NATIVE-COMPLIANCE.md` with the APK and includes both files in `SHA256SUMS.txt`; SBOM artifacts remain open.
 - `.github/workflows/verify.yml` and `.github/workflows/release.yml` now run `tools/dependency_notice_lock.py --mode check`, `tools/dependency_notice_lock.py --mode check-metadata`, `tools/native_compliance_inventory.py --mode check-lock`, `tools/dependency_overlay_check.py`, and `tools/dependency_license_policy.py` after `:app:releaseOssLicensesTask`.
@@ -2987,13 +2998,13 @@ Start Cycle 55 with owner-delete/takedown flows for community uploads and contin
 - Pexels now has enhancement-only guardrails in wallpaper Discover and video-wallpaper discovery: Pexels rows can enrich mixed feeds, but Pexels-only batches are dropped. Focused tests prove provider-off Discover still serves Wallhaven/Pixabay base inventory and Pexels photo rows retain creator/source-page context.
 - Wallpaper and sound apply/download paths now classify explicit 404/410/gone/removed/deleted provider failures and mark saved favorites unavailable with provider-specific reasons; `DownloadManager` also marks matching download-history rows unavailable on failed re-downloads.
 - Sounds now have item-level license capability gates: YouTube apply/download requires confirmation, SoundCloud is link-only until reviewed, CC BY-NC requires confirmation, no-derivatives disables editing, missing remote licenses disable live-source actions, saved sound favorites preserve license metadata through Room v16 and favorites import/export, and share text includes source/uploader/license provenance.
-- Community uploads now require selected CC0/CC BY/CC BY-NC metadata, rights attestation, authenticated uploader UID, attestation timestamp, and optional HTTPS source URL before public sound/wallpaper upload metadata is written. Legacy community sound rows without selected license metadata keep the `User Upload` fallback.
+- Community uploads now require selected CC0/CC BY/CC BY-NC metadata, rights attestation, authenticated uploader UID, attestation timestamp, and optional HTTPS source URL before public sound/wallpaper upload metadata is written. New uploads also store `storagePath` and private owner-index rows so owner delete methods can remove blobs plus metadata without parsing public download URLs. Legacy community sound rows without selected license metadata keep the `User Upload` fallback.
 - Community reporting now has private report intake, admin review, moderation hide/unhide actions, and admin resolution metadata paths with rights/source-removed/safety/spam/other reasons. Detail screens submit reports with source/license/uploader context. App Check client providers are installed. Community write quotas now have typed policy rows and protected admin-only ledger namespaces, while callable enforcement, App Check console evidence, closed-report filters, and owner-delete/takedown flows remain open.
 - Recent history was checked with `rtk git log -10 --oneline --decorate` for this pass.
 
 ### Next Best Actions
 
-1. Add owner-delete/takedown flows for community sound and wallpaper uploads, including canonical owner indexes and Storage deletion handles.
+1. Add visible owner delete actions for community sound and wallpaper uploads, or add admin rights-confirmed takedown receipts that use the new deletion handles.
 2. Run a real GitHub Actions manual release dry run after secrets are confirmed available and archive the run URL in the release docs.
 3. Add deeper UI verification for the licenses screen on an emulator or screenshot lane when a device/runtime is available.
 4. Preserve exact Termux package commit/build-log evidence for FFmpeg if the release owner can obtain it from upstream or a reproducible rebuild.

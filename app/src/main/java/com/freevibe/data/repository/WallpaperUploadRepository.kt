@@ -8,10 +8,15 @@ import android.net.Uri
 import android.provider.OpenableColumns
 import android.webkit.MimeTypeMap
 import com.freevibe.data.local.PreferencesManager
+import com.freevibe.data.model.CommunityUploadKind
 import com.freevibe.data.model.CommunityUploadRights
 import com.freevibe.data.model.ContentSource
 import com.freevibe.data.model.SearchResult
 import com.freevibe.data.model.Wallpaper
+import com.freevibe.data.model.buildCommunityOwnerUploadIndexPayload
+import com.freevibe.data.model.buildCommunityUploadDeleteUpdates
+import com.freevibe.data.model.communityOwnerUploadIndexPath
+import com.freevibe.data.model.sanitizeCommunityUploadKey
 import com.freevibe.data.model.validateCommunityUploadRights
 import com.freevibe.service.ColorExtractor
 import com.freevibe.service.CommunityIdentityProvider
@@ -103,6 +108,7 @@ class WallpaperUploadRepository @Inject constructor(
             }
             val storageInstance = storage ?: throw IllegalStateException("Firebase Storage not available")
             val wallpapersRefInstance = wallpapersRef ?: throw IllegalStateException("Firebase Database not available")
+            val databaseRoot = database?.reference ?: throw IllegalStateException("Firebase Database not available")
             val sanitizedName = name.trim().take(100)
             if (sanitizedName.isBlank()) throw IllegalArgumentException("Wallpaper name cannot be empty")
             val validatedRights = validateCommunityUploadRights(
@@ -154,6 +160,7 @@ class WallpaperUploadRepository @Inject constructor(
                     "thumbnailUrl" to downloadUrl,
                     "fullUrl" to downloadUrl,
                     "downloadUrl" to downloadUrl,
+                    "storagePath" to storagePath,
                     "width" to prepared.width,
                     "height" to prepared.height,
                     "fileSize" to prepared.bytes.size,
@@ -169,7 +176,19 @@ class WallpaperUploadRepository @Inject constructor(
                     "sourceUrl" to validatedRights.sourceUrl,
                     "votes" to 0,
                 )
-                pushRef.setValue(metadata).await()
+                val ownerIndex = buildCommunityOwnerUploadIndexPayload(
+                    kind = CommunityUploadKind.WALLPAPER,
+                    uploadId = key,
+                    storagePath = storagePath,
+                    title = sanitizedName,
+                    createdAt = timestamp,
+                )
+                databaseRoot.updateChildren(
+                    mapOf(
+                        "/community_wallpapers/$key" to metadata,
+                        communityOwnerUploadIndexPath(CommunityUploadKind.WALLPAPER, uploaderId, key) to ownerIndex,
+                    ),
+                ).await()
                 metadataSaved = true
 
                 Result.success(
@@ -193,6 +212,40 @@ class WallpaperUploadRepository @Inject constructor(
             } finally {
                 if (!metadataSaved) runCatching { storageRef.delete().await() }
             }
+        } catch (e: Exception) {
+            e.rethrowIfCancelled()
+            Result.failure(e)
+        }
+    }
+
+    suspend fun deleteWallpaperUpload(uploadId: String): Result<Unit> = withContext(Dispatchers.IO) {
+        try {
+            val storageInstance = storage ?: throw IllegalStateException("Firebase Storage not available")
+            val wallpapersRefInstance = wallpapersRef ?: throw IllegalStateException("Firebase Database not available")
+            val databaseRoot = database?.reference ?: throw IllegalStateException("Firebase Database not available")
+            val ownerUid = identityProvider.ensureSignedIn()
+            val safeUploadId = sanitizeCommunityUploadKey(uploadId)
+            require(safeUploadId.isNotBlank()) { "Wallpaper upload ID is required" }
+
+            val snapshot = wallpapersRefInstance.child(safeUploadId).get().await()
+            if (snapshot.exists()) {
+                val uploaderUid = snapshot.child("uploaderUid").getValue(String::class.java)
+                    ?: snapshot.child("uploaderId").getValue(String::class.java)
+                    ?: ""
+                require(uploaderUid == ownerUid) { "Only the uploader can delete this wallpaper" }
+                val storagePath = snapshot.child("storagePath").getValue(String::class.java).orEmpty()
+                require(storagePath.isNotBlank()) { "Wallpaper upload is missing a deletion handle" }
+
+                storageInstance.deleteCommunityStoragePathIfPresent(storagePath)
+                databaseRoot.updateChildren(
+                    buildCommunityUploadDeleteUpdates(
+                        kind = CommunityUploadKind.WALLPAPER,
+                        ownerUid = ownerUid,
+                        uploadId = safeUploadId,
+                    ),
+                ).await()
+            }
+            Result.success(Unit)
         } catch (e: Exception) {
             e.rethrowIfCancelled()
             Result.failure(e)

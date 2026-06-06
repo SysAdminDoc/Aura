@@ -163,6 +163,11 @@ next pass can resume quickly.
   policy rows for reports, uploads, votes, follows, and profile edits, reserved
   admin-only RTDB quota and dedupe ledgers, documented the App-Checked callable
   migration plan, and linked the policy from community support/admin runbooks.
+- Completed Cycle 55 community upload deletion handles: new sound and wallpaper
+  uploads now store canonical Storage paths and private owner-index rows,
+  repositories expose owner delete methods for new rows, RTDB rules protect the
+  owner index, and the deletion runbook documents remaining UI/admin/backfill
+  work.
 
 ## 2026-06-05
 

@@ -45,6 +45,7 @@
           "$idx": { ".validate": "newData.isString() && newData.val().length <= 24" }
         },
         "uploaderUid": { ".validate": "newData.isString() && (newData.val() === auth.uid || auth.token.admin === true)" },
+        "storagePath": { ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 512 && newData.val().matches(/^sounds\\/[^\\s]+$/)" },
         "license": { ".validate": "newData.isString() && newData.val().matches(/^(CC0|CC BY|CC BY-NC)$/)" },
         "rightsAttested": { ".validate": "newData.val() === true" },
         "rightsAttestedAt": { ".validate": "newData.isNumber() && newData.val() > 0" },
@@ -58,10 +59,40 @@
         "name": { ".validate": "newData.isString() && newData.val().length <= 80" },
         "category": { ".validate": "newData.isString() && newData.val().matches(/^(abstract|amoled|nature|minimal|city|space|other)$/)" },
         "uploaderUid": { ".validate": "newData.isString() && (newData.val() === auth.uid || auth.token.admin === true)" },
+        "storagePath": { ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 512 && newData.val().matches(/^wallpapers\\/[^\\s]+$/)" },
         "license": { ".validate": "newData.isString() && newData.val().matches(/^(CC0|CC BY|CC BY-NC)$/)" },
         "rightsAttested": { ".validate": "newData.val() === true" },
         "rightsAttestedAt": { ".validate": "newData.isNumber() && newData.val() > 0" },
         "sourceUrl": { ".validate": "newData.isString() && newData.val().length <= 2048 && newData.val().matches(/^$|^https:\\/\\/[^\\s]+$/)" }
+      }
+    },
+    "owner_uploads": {
+      "_comment": "Private per-owner upload deletion index for new community uploads. Public feeds stay under community_sounds/community_wallpapers.",
+      "$uid": {
+        ".read": "auth != null && (auth.uid === $uid || auth.token.admin === true)",
+        ".write": "auth != null && (auth.uid === $uid || auth.token.admin === true)",
+        "sounds": {
+          "$uploadId": {
+            "uploadId": { ".validate": "newData.isString() && newData.val() === $uploadId" },
+            "publicId": { ".validate": "newData.isString() && newData.val().matches(/^cu_[A-Za-z0-9_-]+$/)" },
+            "contentType": { ".validate": "newData.val() === 'SOUND'" },
+            "metadataPath": { ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 280" },
+            "storagePath": { ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 512 && newData.val().matches(/^sounds\\/[^\\s]+$/)" },
+            "title": { ".validate": "newData.isString() && newData.val().length <= 80" },
+            "createdAt": { ".validate": "newData.isNumber() && newData.val() > 0" }
+          }
+        },
+        "wallpapers": {
+          "$uploadId": {
+            "uploadId": { ".validate": "newData.isString() && newData.val() === $uploadId" },
+            "publicId": { ".validate": "newData.isString() && newData.val().matches(/^cw_[A-Za-z0-9_-]+$/)" },
+            "contentType": { ".validate": "newData.val() === 'WALLPAPER'" },
+            "metadataPath": { ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 280" },
+            "storagePath": { ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 512 && newData.val().matches(/^wallpapers\\/[^\\s]+$/)" },
+            "title": { ".validate": "newData.isString() && newData.val().length <= 80" },
+            "createdAt": { ".validate": "newData.isNumber() && newData.val() > 0" }
+          }
+        }
       }
     },
     "community_reports": {
