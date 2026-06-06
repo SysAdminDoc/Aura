@@ -48,6 +48,7 @@ import com.freevibe.ui.launchLiveWallpaperPicker
 import coil.compose.AsyncImagePainter
 import coil.compose.SubcomposeAsyncImage
 import coil.compose.SubcomposeAsyncImageContent
+import kotlinx.coroutines.flow.flowOf
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
@@ -204,7 +205,11 @@ fun WallpaperDetailScreen(
 
     val isFavorite by viewModel.isFavorite(wp).collectAsStateWithLifecycle(initialValue = false)
     val collections by viewModel.collections.collectAsStateWithLifecycle()
-    val voteCount by viewModel.getVoteCount(wp.stableKey()).collectAsStateWithLifecycle(initialValue = 0)
+    val communityProviderEnabled by viewModel.communityProviderEnabled.collectAsStateWithLifecycle()
+    val voteCountFlow = remember(wp.stableKey(), communityProviderEnabled) {
+        if (communityProviderEnabled) viewModel.getVoteCount(wp.stableKey()) else flowOf(0)
+    }
+    val voteCount by voteCountFlow.collectAsStateWithLifecycle(initialValue = 0)
 
     var showApplyOptions by remember { mutableStateOf(false) }
     var showMoreMenu by remember { mutableStateOf(false) }
@@ -576,18 +581,20 @@ fun WallpaperDetailScreen(
                                     },
                                 )
                             }
-                            DetailActionPill(
-                                icon = Icons.Default.ThumbUp,
-                                label = "Like",
-                                tint = MaterialTheme.colorScheme.secondary,
-                                onClick = { viewModel.upvote(wp.stableKey()) },
-                            )
-                            DetailActionPill(
-                                icon = Icons.Default.ThumbDown,
-                                label = "Hide",
-                                tint = MaterialTheme.colorScheme.error,
-                                onClick = { viewModel.downvote(wp.stableKey()) },
-                            )
+                            if (communityProviderEnabled) {
+                                DetailActionPill(
+                                    icon = Icons.Default.ThumbUp,
+                                    label = "Like",
+                                    tint = MaterialTheme.colorScheme.secondary,
+                                    onClick = { viewModel.upvote(wp.stableKey()) },
+                                )
+                                DetailActionPill(
+                                    icon = Icons.Default.ThumbDown,
+                                    label = "Hide",
+                                    tint = MaterialTheme.colorScheme.error,
+                                    onClick = { viewModel.downvote(wp.stableKey()) },
+                                )
+                            }
                             DetailActionPill(
                                 icon = Icons.Default.MoreHoriz,
                                 label = "More",
@@ -619,7 +626,7 @@ fun WallpaperDetailScreen(
                                     context.startActivity(Intent.createChooser(intent, "Share wallpaper"))
                                 } catch (_: Exception) {}
                             },
-                            onHide = { viewModel.downvote(wp.stableKey()) },
+                            onHide = if (communityProviderEnabled) ({ viewModel.downvote(wp.stableKey()) }) else null,
                             onMore = { showMoreMenu = true },
                         )
                     }
@@ -720,7 +727,7 @@ private fun CompactWallpaperOverlayCard(
     onDownload: () -> Unit,
     onFindSimilar: () -> Unit,
     onShare: () -> Unit,
-    onHide: () -> Unit,
+    onHide: (() -> Unit)?,
     onMore: () -> Unit,
 ) {
     val actionsScroll = rememberScrollState()
@@ -846,12 +853,14 @@ private fun CompactWallpaperOverlayCard(
                 tint = MaterialTheme.colorScheme.primary,
                 onClick = onShare,
             )
-            DetailActionPill(
-                icon = Icons.Default.ThumbDown,
-                label = "Hide",
-                tint = MaterialTheme.colorScheme.error,
-                onClick = onHide,
-            )
+            if (onHide != null) {
+                DetailActionPill(
+                    icon = Icons.Default.ThumbDown,
+                    label = "Hide",
+                    tint = MaterialTheme.colorScheme.error,
+                    onClick = onHide,
+                )
+            }
         }
     }
 }

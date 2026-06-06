@@ -308,6 +308,40 @@ class WallpapersViewModelTest {
     }
 
     @Test
+    fun `community disabled skips top votes and redirects community tab to discover`() = runTest(dispatcher) {
+        val wallpaperRepo = mockk<WallpaperRepository>()
+        val redditRepo = mockk<RedditRepository>()
+        val voteRepo = mockk<VoteRepository>().also {
+            every { it.hiddenIds } returns flowOf(emptySet())
+            every { it.sanitizeKey(any()) } answers {
+                firstArg<String>().replace(Regex("[.#$\\[\\]/]"), "_")
+            }
+            coEvery { it.getTopVotedIds(any()) } returns listOf("WALLPAPER::COMMUNITY::cw_one" to 4)
+        }
+
+        stubCommonDependencies(
+            wallpaperRepo = wallpaperRepo,
+            redditRepo = redditRepo,
+        )
+
+        val viewModel = createViewModel(
+            wallpaperRepo = wallpaperRepo,
+            redditRepo = redditRepo,
+            voteRepoOverride = voteRepo,
+            communityProviderEnabled = false,
+        )
+
+        advanceUntilIdle()
+        assertTrue(viewModel.topVoted.value.isEmpty())
+        coVerify(exactly = 0) { voteRepo.getTopVotedIds(any()) }
+
+        viewModel.selectTab(WallpaperTab.COMMUNITY)
+        advanceUntilIdle()
+
+        assertEquals(WallpaperTab.DISCOVER, viewModel.state.value.selectedTab)
+    }
+
+    @Test
     fun `downloadWallpaper scopes download identity by source`() = runTest(dispatcher) {
         val wallpaperRepo = mockk<WallpaperRepository>()
         val redditRepo = mockk<RedditRepository>()
@@ -498,6 +532,7 @@ class WallpapersViewModelTest {
         redditProviderEnabled: Boolean = true,
         pexelsProviderEnabled: Boolean = true,
         pixabayProviderEnabled: Boolean = true,
+        communityProviderEnabled: Boolean = true,
     ): WallpapersViewModel {
         val favoritesRepo = favoritesRepoOverride ?: mockk<FavoritesRepository>()
         every { favoritesRepo.allIdentities() } returns flowOf(emptySet<FavoriteIdentity>())
@@ -519,6 +554,7 @@ class WallpapersViewModelTest {
         every { prefs.redditProviderEnabled } returns flowOf(redditProviderEnabled)
         every { prefs.pexelsProviderEnabled } returns flowOf(pexelsProviderEnabled)
         every { prefs.pixabayProviderEnabled } returns flowOf(pixabayProviderEnabled)
+        every { prefs.communityProviderEnabled } returns flowOf(communityProviderEnabled)
         every { prefs.preferredResolution } returns flowOf("1080x1920")
         every { prefs.userStyles } returns flowOf("minimal,nature")
 
@@ -560,6 +596,7 @@ class WallpapersViewModelTest {
             voteRepo = voteRepo,
             seasonalContentManager = SeasonalContentManager(),
             wallpaperUploadRepo = mockk(relaxed = true),
+            sourceMetrics = com.freevibe.service.SourceMetrics(),
         )
     }
 

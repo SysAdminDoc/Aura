@@ -7,11 +7,13 @@ import android.graphics.Rect
 import android.net.Uri
 import android.provider.OpenableColumns
 import android.webkit.MimeTypeMap
+import com.freevibe.data.local.PreferencesManager
 import com.freevibe.data.model.ContentSource
 import com.freevibe.data.model.SearchResult
 import com.freevibe.data.model.Wallpaper
 import com.freevibe.service.ColorExtractor
 import com.freevibe.service.CommunityIdentityProvider
+import com.freevibe.service.SourceMetrics
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.storage.FirebaseStorage
@@ -25,6 +27,7 @@ import kotlin.math.min
 import kotlin.math.roundToInt
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
 
@@ -52,12 +55,15 @@ private const val MAX_WALLPAPER_LONG_EDGE = 2560
 private const val MAX_WALLPAPER_TAGS = 8
 private const val MAX_WALLPAPER_TAG_LENGTH = 24
 private const val FALLBACK_PHONE_ASPECT = 9f / 16f
+private const val SOURCE_COMMUNITY = "community"
 
 @Singleton
 class WallpaperUploadRepository @Inject constructor(
     @ApplicationContext private val context: Context,
     private val identityProvider: CommunityIdentityProvider,
     private val colorExtractor: ColorExtractor,
+    private val prefs: PreferencesManager,
+    private val sourceMetrics: SourceMetrics,
 ) {
     private data class WallpaperUploadInfo(
         val baseName: String,
@@ -88,6 +94,10 @@ class WallpaperUploadRepository @Inject constructor(
         onProgress: (Float) -> Unit = {},
     ): Result<Wallpaper> = withContext(Dispatchers.IO) {
         try {
+            if (!isCommunityProviderEnabled()) {
+                sourceMetrics.recordDisabled(SOURCE_COMMUNITY)
+                throw IllegalStateException(communityDisabledMessage())
+            }
             val storageInstance = storage ?: throw IllegalStateException("Firebase Storage not available")
             val wallpapersRefInstance = wallpapersRef ?: throw IllegalStateException("Firebase Database not available")
             val sanitizedName = name.trim().take(100)
@@ -175,6 +185,10 @@ class WallpaperUploadRepository @Inject constructor(
     }
 
     suspend fun getCommunityWallpapers(limit: Int = 60): SearchResult<Wallpaper> = withContext(Dispatchers.IO) {
+        if (!isCommunityProviderEnabled()) {
+            sourceMetrics.recordDisabled(SOURCE_COMMUNITY)
+            return@withContext SearchResult(emptyList(), 0, 1, false)
+        }
         val ref = wallpapersRef ?: return@withContext SearchResult(emptyList(), 0, 1, false)
         val snapshot = ref.orderByChild("uploadedAt").limitToLast(limit).get().await()
         val wallpapers = snapshot.children.mapNotNull(::snapshotToWallpaper)
@@ -192,6 +206,10 @@ class WallpaperUploadRepository @Inject constructor(
             hasMore = false,
         )
     }
+
+    private suspend fun isCommunityProviderEnabled(): Boolean = prefs.communityProviderEnabled.first()
+
+    private fun communityDisabledMessage(): String = "Community source is disabled in Settings"
 
     private fun snapshotToWallpaper(child: DataSnapshot): Wallpaper? {
         val key = child.key ?: return null

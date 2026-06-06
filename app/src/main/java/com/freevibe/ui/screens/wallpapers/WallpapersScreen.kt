@@ -105,18 +105,21 @@ fun WallpapersScreen(
     val redditProviderEnabled by viewModel.redditProviderEnabled.collectAsStateWithLifecycle()
     val pexelsProviderEnabled by viewModel.pexelsProviderEnabled.collectAsStateWithLifecycle()
     val pixabayProviderEnabled by viewModel.pixabayProviderEnabled.collectAsStateWithLifecycle()
-    val visibleSections = remember(state.wallpapers, hiddenIds, topVoted, dailyPick, state.selectedTab) {
+    val communityProviderEnabled by viewModel.communityProviderEnabled.collectAsStateWithLifecycle()
+    val visibleSections = remember(state.wallpapers, hiddenIds, topVoted, dailyPick, state.selectedTab, communityProviderEnabled) {
         computeVisibleWallpaperSections(
             wallpapers = state.wallpapers,
             hiddenIds = hiddenIds,
-            topVoted = topVoted,
+            topVoted = if (communityProviderEnabled) topVoted else emptyList(),
             dailyPick = dailyPick,
             isDiscoverTab = state.selectedTab == WallpaperTab.DISCOVER,
         )
     }
 
     // Vote counts for visible wallpapers — use derivedStateOf to avoid recomputing on referential inequality
-    val wallpaperIds by remember { derivedStateOf { state.wallpapers.map { it.stableKey() } } }
+    val wallpaperIds = remember(state.wallpapers, communityProviderEnabled) {
+        if (communityProviderEnabled) state.wallpapers.map { it.stableKey() } else emptyList()
+    }
     val voteCountsFlow = remember(wallpaperIds) {
         if (wallpaperIds.isNotEmpty()) {
             viewModel.voteRepo.getVoteCounts(wallpaperIds)
@@ -137,11 +140,12 @@ fun WallpapersScreen(
     var showWallpaperUploadDialog by remember { mutableStateOf(false) }
     var selectedWallpaperUploadUri by remember { mutableStateOf<Uri?>(null) }
     var awaitingWallpaperUploadResult by remember { mutableStateOf(false) }
-    LaunchedEffect(redditProviderEnabled, pexelsProviderEnabled, pixabayProviderEnabled, state.selectedTab) {
+    LaunchedEffect(redditProviderEnabled, pexelsProviderEnabled, pixabayProviderEnabled, communityProviderEnabled, state.selectedTab) {
         val disabledTab = when (state.selectedTab) {
             WallpaperTab.REDDIT -> !redditProviderEnabled
             WallpaperTab.PEXELS -> !pexelsProviderEnabled
             WallpaperTab.PIXABAY -> !pixabayProviderEnabled
+            WallpaperTab.COMMUNITY -> !communityProviderEnabled
             else -> false
         }
         if (disabledTab) {
@@ -155,7 +159,7 @@ fun WallpapersScreen(
     val wallpaperUploadLauncher = rememberLauncherForActivityResult(
         com.freevibe.service.AuraPickVisualMedia()
     ) { uri ->
-        if (uri != null) {
+        if (communityProviderEnabled && uri != null) {
             selectedWallpaperUploadUri = uri
             showWallpaperUploadDialog = true
         }
@@ -227,7 +231,7 @@ fun WallpapersScreen(
             }
         }
     }
-    if (showWallpaperUploadDialog && selectedWallpaperUploadUri != null) {
+    if (communityProviderEnabled && showWallpaperUploadDialog && selectedWallpaperUploadUri != null) {
         WallpaperUploadDialog(
             isUploading = state.isUploadingWallpaper,
             uploadProgress = state.wallpaperUploadProgress,
@@ -263,7 +267,7 @@ fun WallpapersScreen(
 
     Box(modifier = Modifier.fillMaxSize()) {
         Column(modifier = Modifier.fillMaxSize()) {
-            val visibleTabs = remember(state.selectedTab, redditProviderEnabled, pexelsProviderEnabled, pixabayProviderEnabled) {
+            val visibleTabs = remember(state.selectedTab, redditProviderEnabled, pexelsProviderEnabled, pixabayProviderEnabled, communityProviderEnabled) {
                 WallpaperTab.entries.filter {
                     it != WallpaperTab.SEARCH || state.selectedTab == WallpaperTab.SEARCH
                 }.filter {
@@ -274,6 +278,8 @@ fun WallpapersScreen(
                     it != WallpaperTab.PIXABAY || pixabayProviderEnabled || state.selectedTab == WallpaperTab.PIXABAY
                 }.filter {
                     it != WallpaperTab.REDDIT || redditProviderEnabled || state.selectedTab == WallpaperTab.REDDIT
+                }.filter {
+                    it != WallpaperTab.COMMUNITY || communityProviderEnabled || state.selectedTab == WallpaperTab.COMMUNITY
                 }
             }
             GlassCard(
@@ -561,7 +567,9 @@ fun WallpapersScreen(
                                     else ->
                                         "Refresh the feed or switch sources to keep browsing."
                                 },
-                                primaryAction = WallpaperStateAction(
+                                primaryAction = if (state.selectedTab == WallpaperTab.COMMUNITY && !communityProviderEnabled) {
+                                    null
+                                } else WallpaperStateAction(
                                     label = if (state.selectedTab == WallpaperTab.COMMUNITY) {
                                         "Upload wallpaper"
                                     } else if (state.selectedColor != null || state.selectedTab != WallpaperTab.DISCOVER) {
@@ -610,8 +618,8 @@ fun WallpapersScreen(
                                 },
                                 favoriteIdentities = favoriteIdentities,
                                 hiddenIds = hiddenIds,
-                                onUpvote = { id -> viewModel.upvote(id) },
-                                onDownvote = { id -> viewModel.downvote(id) },
+                                onUpvote = if (communityProviderEnabled) ({ id -> viewModel.upvote(id) }) else null,
+                                onDownvote = if (communityProviderEnabled) ({ id -> viewModel.downvote(id) }) else null,
                                 voteCounts = voteCounts,
                                 onLoadMore = { viewModel.loadMore() },
                                 onSearch = { query -> viewModel.search(query) },
@@ -636,7 +644,7 @@ fun WallpapersScreen(
             modifier = Modifier
                 .align(Alignment.BottomEnd)
                 .padding(end = 16.dp, bottom = 80.dp),
-            showUpload = state.selectedTab == WallpaperTab.COMMUNITY,
+            showUpload = communityProviderEnabled && state.selectedTab == WallpaperTab.COMMUNITY,
             showThemeMatch = state.selectedTab == WallpaperTab.DISCOVER,
             showEyeDropper = eyeDropperAvailable && state.selectedTab == WallpaperTab.DISCOVER,
             onUpload = { wallpaperUploadLauncher.launch(wallpaperUploadPickerRequest) },

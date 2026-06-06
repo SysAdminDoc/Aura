@@ -1,10 +1,12 @@
 package com.freevibe.data.repository
 
+import com.freevibe.data.local.PreferencesManager
 import com.freevibe.data.model.ContentSource
 import com.freevibe.data.model.Sound
 import com.freevibe.data.model.Wallpaper
 import com.freevibe.data.model.stableKey
 import com.freevibe.service.CommunityIdentityProvider
+import com.freevibe.service.SourceMetrics
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.FirebaseDatabase
 import kotlinx.coroutines.CancellationException
@@ -56,12 +58,15 @@ class CreatorProfileRepository @Inject constructor(
     private val identityProvider: CommunityIdentityProvider,
     private val voteRepo: VoteRepository,
     private val favoritesRepo: FavoritesRepository,
+    private val prefs: PreferencesManager,
+    private val sourceMetrics: SourceMetrics,
 ) {
     private val database by lazy {
         try { FirebaseDatabase.getInstance().reference } catch (_: Exception) { null }
     }
 
     suspend fun getDashboard(limit: Int = 80): CreatorProfileDashboard = withContext(Dispatchers.IO) {
+        ensureCommunityEnabled()
         val currentUserId = identityProvider.ensureSignedIn()
         val knownIds = identityProvider.knownIdentityIds().toSet() + currentUserId
         val followed = getFollowedCreatorIds()
@@ -104,6 +109,7 @@ class CreatorProfileRepository @Inject constructor(
 
     suspend fun followCreator(creatorId: String, label: String): Result<Unit> = withContext(Dispatchers.IO) {
         runCatching {
+            ensureCommunityEnabled()
             val db = database ?: throw IllegalStateException("Firebase Database not available")
             val currentUserId = voteRepo.sanitizeKey(identityProvider.ensureSignedIn())
             val safeCreatorId = voteRepo.sanitizeKey(creatorId)
@@ -124,6 +130,7 @@ class CreatorProfileRepository @Inject constructor(
 
     suspend fun unfollowCreator(creatorId: String): Result<Unit> = withContext(Dispatchers.IO) {
         runCatching {
+            ensureCommunityEnabled()
             val db = database ?: throw IllegalStateException("Firebase Database not available")
             val currentUserId = voteRepo.sanitizeKey(identityProvider.ensureSignedIn())
             val safeCreatorId = voteRepo.sanitizeKey(creatorId)
@@ -146,6 +153,13 @@ class CreatorProfileRepository @Inject constructor(
         } catch (e: Exception) {
             e.rethrowIfCancelled()
             emptySet()
+        }
+    }
+
+    private suspend fun ensureCommunityEnabled() {
+        if (!prefs.communityProviderEnabled.first()) {
+            sourceMetrics.recordDisabled("community")
+            throw IllegalStateException("Community source is disabled in Settings")
         }
     }
 

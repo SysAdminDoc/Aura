@@ -74,9 +74,10 @@ fun SoundsScreen(
     val topHits by viewModel.topHits.collectAsStateWithLifecycle()
     val playbackProgress by viewModel.playbackProgress.collectAsStateWithLifecycle()
     val youtubeProviderEnabled by viewModel.youtubeProviderEnabled.collectAsStateWithLifecycle()
+    val communityProviderEnabled by viewModel.communityProviderEnabled.collectAsStateWithLifecycle()
     val hiddenIds by viewModel.hiddenIds.collectAsStateWithLifecycle(initialValue = emptySet())
-    val communityVoteIds = remember(state.sounds, state.selectedTab) {
-        if (state.selectedTab == SoundTab.COMMUNITY) {
+    val communityVoteIds = remember(state.sounds, state.selectedTab, communityProviderEnabled) {
+        if (communityProviderEnabled && state.selectedTab == SoundTab.COMMUNITY) {
             state.sounds.map { it.stableKey() }.distinct()
         } else {
             emptyList()
@@ -86,8 +87,8 @@ fun SoundsScreen(
         if (communityVoteIds.isEmpty()) flowOf(emptyMap<String, Int>()) else viewModel.voteRepo.getVoteCounts(communityVoteIds)
     }
     val voteCounts by communityVoteFlow.collectAsStateWithLifecycle(initialValue = emptyMap())
-    val displaySounds = remember(state.sounds, state.selectedTab, hiddenIds, voteCounts) {
-        if (state.selectedTab == SoundTab.COMMUNITY) {
+    val displaySounds = remember(state.sounds, state.selectedTab, hiddenIds, voteCounts, communityProviderEnabled) {
+        if (communityProviderEnabled && state.selectedTab == SoundTab.COMMUNITY) {
             state.sounds
                 .filter { !matchesHiddenIds(hiddenIds, it.stableKey(), it.id) }
                 .sortedByDescending { voteCounts[it.stableKey()] ?: 0 }
@@ -95,12 +96,12 @@ fun SoundsScreen(
             state.sounds
         }
     }
-    val displayTopHits = remember(topHits, displaySounds, voteCounts, state.selectedTab, state.query, state.qualityFilter) {
+    val displayTopHits = remember(topHits, displaySounds, voteCounts, state.selectedTab, state.query, state.qualityFilter, communityProviderEnabled) {
         when {
             state.selectedTab == SoundTab.RINGTONES && state.query.isBlank() -> {
                 rankSounds(topHits, SoundTab.RINGTONES, state.qualityFilter).take(5)
             }
-            state.selectedTab == SoundTab.COMMUNITY && state.query.isBlank() -> {
+            communityProviderEnabled && state.selectedTab == SoundTab.COMMUNITY && state.query.isBlank() -> {
                 displaySounds
                     .filter { (voteCounts[it.stableKey()] ?: 0) > 0 }
                     .take(5)
@@ -110,8 +111,11 @@ fun SoundsScreen(
     }
     var searchQuery by remember { mutableStateOf("") }
     LaunchedEffect(state.query) { searchQuery = state.query }
-    LaunchedEffect(youtubeProviderEnabled, state.selectedTab) {
+    LaunchedEffect(youtubeProviderEnabled, communityProviderEnabled, state.selectedTab) {
         if (!youtubeProviderEnabled && state.selectedTab == SoundTab.YOUTUBE) {
+            viewModel.selectTab(SoundTab.RINGTONES)
+        }
+        if (!communityProviderEnabled && state.selectedTab == SoundTab.COMMUNITY) {
             viewModel.selectTab(SoundTab.RINGTONES)
         }
     }
@@ -138,7 +142,7 @@ fun SoundsScreen(
     var awaitingUploadResult by remember { mutableStateOf(false) }
     val uploadAudioPickerLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.GetContent()
-    ) { uri -> if (uri != null) { selectedAudioUri = uri; showUploadDialog = true } }
+    ) { uri -> if (communityProviderEnabled && uri != null) { selectedAudioUri = uri; showUploadDialog = true } }
     val createAudioPickerLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.GetContent()
     ) { uri -> uri?.let(onCreateRingtone) }
@@ -149,7 +153,9 @@ fun SoundsScreen(
         else viewModel.reportRecordingPermissionDenied()
     }
     val startRecording: () -> Unit = {
-        if (ContextCompat.checkSelfPermission(context, Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED) {
+        if (!communityProviderEnabled) {
+            viewModel.startCommunityRecording()
+        } else if (ContextCompat.checkSelfPermission(context, Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED) {
             viewModel.startCommunityRecording()
         } else {
             recordPermissionLauncher.launch(Manifest.permission.RECORD_AUDIO)
@@ -174,7 +180,7 @@ fun SoundsScreen(
 
     // Upload dialog
     val uploadUri = selectedAudioUri
-    if (showUploadDialog && uploadUri != null) {
+    if (communityProviderEnabled && showUploadDialog && uploadUri != null) {
         UploadDialog(
             isUploading = state.isUploading,
             uploadProgress = state.uploadProgress,
@@ -259,7 +265,7 @@ fun SoundsScreen(
                 horizontalAlignment = Alignment.End,
                 verticalArrangement = Arrangement.spacedBy(10.dp),
             ) {
-                if (state.selectedTab == SoundTab.COMMUNITY) {
+                if (communityProviderEnabled && state.selectedTab == SoundTab.COMMUNITY) {
                     SmallFloatingActionButton(
                         onClick = startRecording,
                         containerColor = MaterialTheme.colorScheme.secondaryContainer,
@@ -267,11 +273,13 @@ fun SoundsScreen(
                         Icon(Icons.Default.Mic, "Record community sound", modifier = Modifier.size(20.dp))
                     }
                 }
-                SmallFloatingActionButton(
-                    onClick = { uploadAudioPickerLauncher.launch("audio/*") },
-                    containerColor = MaterialTheme.colorScheme.tertiaryContainer,
-                ) {
-                    Icon(Icons.Default.Upload, "Upload community sound", modifier = Modifier.size(20.dp))
+                if (communityProviderEnabled) {
+                    SmallFloatingActionButton(
+                        onClick = { uploadAudioPickerLauncher.launch("audio/*") },
+                        containerColor = MaterialTheme.colorScheme.tertiaryContainer,
+                    ) {
+                        Icon(Icons.Default.Upload, "Upload community sound", modifier = Modifier.size(20.dp))
+                    }
                 }
                 SmallFloatingActionButton(
                     onClick = { createAudioPickerLauncher.launch("audio/*") },
@@ -361,6 +369,7 @@ fun SoundsScreen(
                 SoundModeBar(
                     selectedTab = state.selectedTab,
                     youtubeProviderEnabled = youtubeProviderEnabled,
+                    communityProviderEnabled = communityProviderEnabled,
                     onSelectTab = viewModel::selectTab,
                 )
             }
@@ -419,10 +428,10 @@ fun SoundsScreen(
                                 }
                             } else emptyList(),
                             onCollectionClick = { collection -> viewModel.search(collection.query) },
-                            onUploadClick = { uploadAudioPickerLauncher.launch("audio/*") },
-                            onRecordClick = startRecording,
-                            onUpvote = { sound -> viewModel.upvote(sound.stableKey()) },
-                            onDownvote = { sound -> viewModel.downvote(sound.stableKey()) },
+                            onUploadClick = if (communityProviderEnabled) ({ uploadAudioPickerLauncher.launch("audio/*") }) else null,
+                            onRecordClick = if (communityProviderEnabled) startRecording else null,
+                            onUpvote = if (communityProviderEnabled) ({ sound -> viewModel.upvote(sound.stableKey()) }) else null,
+                            onDownvote = if (communityProviderEnabled) ({ sound -> viewModel.downvote(sound.stableKey()) }) else null,
                         )
                     }
                 }
@@ -460,9 +469,13 @@ internal val coreSoundTabs: List<SoundTab> = listOf(
     SoundTab.ALARMS,
 )
 
-internal fun secondarySoundTabs(selectedTab: SoundTab, youtubeProviderEnabled: Boolean = true): List<SoundTab> = buildList {
+internal fun secondarySoundTabs(
+    selectedTab: SoundTab,
+    youtubeProviderEnabled: Boolean = true,
+    communityProviderEnabled: Boolean = true,
+): List<SoundTab> = buildList {
     if (youtubeProviderEnabled || selectedTab == SoundTab.YOUTUBE) add(SoundTab.YOUTUBE)
-    add(SoundTab.COMMUNITY)
+    if (communityProviderEnabled || selectedTab == SoundTab.COMMUNITY) add(SoundTab.COMMUNITY)
     if (selectedTab == SoundTab.SEARCH) add(SoundTab.SEARCH)
 }
 
@@ -509,11 +522,16 @@ private fun SoundFilterButton(
 private fun SoundModeBar(
     selectedTab: SoundTab,
     youtubeProviderEnabled: Boolean,
+    communityProviderEnabled: Boolean,
     onSelectTab: (SoundTab) -> Unit,
 ) {
     var showMoreMenu by remember { mutableStateOf(false) }
-    val secondaryTabs = remember(selectedTab, youtubeProviderEnabled) {
-        secondarySoundTabs(selectedTab, youtubeProviderEnabled)
+    val secondaryTabs = remember(selectedTab, youtubeProviderEnabled, communityProviderEnabled) {
+        secondarySoundTabs(
+            selectedTab = selectedTab,
+            youtubeProviderEnabled = youtubeProviderEnabled,
+            communityProviderEnabled = communityProviderEnabled,
+        )
     }
     val secondarySelected = selectedTab in secondaryTabs
 
@@ -532,44 +550,45 @@ private fun SoundModeBar(
             )
         }
 
-        Box {
-            FilterChip(
-                selected = secondarySelected,
-                onClick = { showMoreMenu = true },
-                label = {
-                    Text(
-                        if (secondarySelected) soundTabLabel(selectedTab) else "More",
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                    )
-                },
-                trailingIcon = {
-                    Icon(Icons.Default.ArrowDropDown, contentDescription = null, modifier = Modifier.size(16.dp))
-                },
-            )
-            DropdownMenu(
-                expanded = showMoreMenu,
-                onDismissRequest = { showMoreMenu = false },
-            ) {
-                secondaryTabs.forEach { tab ->
-                    DropdownMenuItem(
-                        text = { Text(soundTabLabel(tab)) },
-                        onClick = {
-                            showMoreMenu = false
-                            onSelectTab(tab)
-                        },
-                        leadingIcon = {
-                            Icon(
-                                if (selectedTab == tab) Icons.Default.Check else soundTabIcon(tab),
-                                contentDescription = null,
-                                modifier = Modifier.size(16.dp),
-                            )
-                        },
-                    )
+        if (secondaryTabs.isNotEmpty()) {
+            Box {
+                FilterChip(
+                    selected = secondarySelected,
+                    onClick = { showMoreMenu = true },
+                    label = {
+                        Text(
+                            if (secondarySelected) soundTabLabel(selectedTab) else "More",
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                        )
+                    },
+                    trailingIcon = {
+                        Icon(Icons.Default.ArrowDropDown, contentDescription = null, modifier = Modifier.size(16.dp))
+                    },
+                )
+                DropdownMenu(
+                    expanded = showMoreMenu,
+                    onDismissRequest = { showMoreMenu = false },
+                ) {
+                    secondaryTabs.forEach { tab ->
+                        DropdownMenuItem(
+                            text = { Text(soundTabLabel(tab)) },
+                            onClick = {
+                                showMoreMenu = false
+                                onSelectTab(tab)
+                            },
+                            leadingIcon = {
+                                Icon(
+                                    if (selectedTab == tab) Icons.Default.Check else soundTabIcon(tab),
+                                    contentDescription = null,
+                                    modifier = Modifier.size(16.dp),
+                                )
+                            },
+                        )
+                    }
                 }
             }
         }
-
     }
 }
 

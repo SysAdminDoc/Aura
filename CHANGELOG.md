@@ -3,6 +3,7 @@
 All notable changes to Aura will be documented in this file.
 
 ## Unreleased
+- **Community source switch (Cycle 40)**: Settings now has a default-on Community source switch; disabled mode skips startup identity warm-up, hides community tabs/uploads/votes/creator profile entry points, blocks feed/upload/follow Firebase calls, and records disabled diagnostics separately from Firebase outages.
 - **Pexels and Pixabay source switches (Cycle 39)**: Settings now has default-on Pexels and Pixabay source switches; disabled mode hides their wallpaper tabs, skips Discover/search/style-biased/video API calls before bundled keys are read, removes disabled Pixabay from rotation pickers, and records disabled source diagnostics separately from outages.
 - **Reddit source switch (Cycle 38)**: Settings now has a default-on Reddit feature switch; disabled mode hides Reddit wallpaper browsing, skips daily picks, background rotations, repository calls, and video wallpaper discovery, and records disabled source diagnostics separately from outages.
 - **YouTube legal-mode switch (Cycle 37)**: Settings now has a default-on YouTube feature switch; disabled mode hides YouTube sound browsing, falls back to bundled sounds, skips YouTube video wallpaper discovery, blocks stream resolution before cache/downloader use, and records disabled source diagnostics separately from outages.

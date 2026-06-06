@@ -28,6 +28,7 @@ import com.freevibe.service.DownloadManager
 import com.freevibe.service.OfflineFavoritesManager
 import com.freevibe.service.SeasonalContentManager
 import com.freevibe.service.SelectedContentHolder
+import com.freevibe.service.SourceMetrics
 import com.freevibe.service.WallpaperApplier
 import com.freevibe.service.WallpaperHistoryManager
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -85,6 +86,7 @@ class WallpapersViewModel @Inject constructor(
     val voteRepo: VoteRepository,
     private val seasonalContentManager: SeasonalContentManager,
     private val wallpaperUploadRepo: WallpaperUploadRepository,
+    private val sourceMetrics: SourceMetrics,
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(WallpapersUiState())
@@ -112,6 +114,7 @@ class WallpapersViewModel @Inject constructor(
     val redditProviderEnabled = prefs.redditProviderEnabled.stateIn(viewModelScope, SharingStarted.Eagerly, true)
     val pexelsProviderEnabled = prefs.pexelsProviderEnabled.stateIn(viewModelScope, SharingStarted.Eagerly, true)
     val pixabayProviderEnabled = prefs.pixabayProviderEnabled.stateIn(viewModelScope, SharingStarted.Eagerly, true)
+    val communityProviderEnabled = prefs.communityProviderEnabled.stateIn(viewModelScope, SharingStarted.Eagerly, true)
 
     val recentSearches = searchHistoryRepo.getRecentWallpaperSearches(8)
         .map { list -> list.map { it.query } }
@@ -136,6 +139,11 @@ class WallpapersViewModel @Inject constructor(
     private fun fetchTopVoted(seedWallpapers: List<Wallpaper> = emptyList()) {
         viewModelScope.launch {
             try {
+                if (!isCommunityProviderEnabled()) {
+                    sourceMetrics.recordDisabled(SOURCE_COMMUNITY)
+                    _topVoted.value = emptyList()
+                    return@launch
+                }
                 val topIds = withTimeoutOrNull(5000L) { voteRepo.getTopVotedIds(50) } ?: return@launch
                 if (com.freevibe.BuildConfig.DEBUG) android.util.Log.d("WallpapersVM", "Top voted IDs from Firebase: ${topIds.size} entries, first=${topIds.firstOrNull()}")
                 if (topIds.isEmpty()) return@launch
@@ -545,9 +553,15 @@ class WallpapersViewModel @Inject constructor(
     val hiddenIds = voteRepo.hiddenIds
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptySet())
 
-    fun getVoteCount(contentId: String) = voteRepo.getVoteCount(contentId)
+    fun getVoteCount(contentId: String) =
+        if (communityProviderEnabled.value) voteRepo.getVoteCount(contentId) else flowOf(0)
 
     fun upvote(contentId: String) {
+        if (!communityProviderEnabled.value) {
+            sourceMetrics.recordDisabled(SOURCE_COMMUNITY)
+            _state.update { it.copy(error = communityDisabledMessage()) }
+            return
+        }
         viewModelScope.launch {
             val success = voteRepo.upvote(contentId)
             if (!success) _state.update { it.copy(applySuccess = "Already voted") }
@@ -555,6 +569,11 @@ class WallpapersViewModel @Inject constructor(
     }
 
     fun downvote(contentId: String) {
+        if (!communityProviderEnabled.value) {
+            sourceMetrics.recordDisabled(SOURCE_COMMUNITY)
+            _state.update { it.copy(error = communityDisabledMessage()) }
+            return
+        }
         viewModelScope.launch {
             voteRepo.downvote(contentId)
             _state.update { it.copy(applySuccess = if (voteRepo.isAdmin) "Moderated (hidden for all)" else "Hidden") }
@@ -568,6 +587,16 @@ class WallpapersViewModel @Inject constructor(
         tags: List<String>,
     ) {
         if (_state.value.isUploadingWallpaper) return
+        if (!communityProviderEnabled.value) {
+            sourceMetrics.recordDisabled(SOURCE_COMMUNITY)
+            _state.update {
+                it.copy(
+                    error = communityDisabledMessage(),
+                    errorSource = WallpaperTab.COMMUNITY.name,
+                )
+            }
+            return
+        }
         viewModelScope.launch {
             _state.update {
                 it.copy(
@@ -984,11 +1013,13 @@ class WallpapersViewModel @Inject constructor(
             .filter { it.isNotBlank() }
 
     private suspend fun isRedditProviderEnabled(): Boolean = prefs.redditProviderEnabled.first()
+    private suspend fun isCommunityProviderEnabled(): Boolean = prefs.communityProviderEnabled.first()
 
     private fun isProviderDisabledTab(tab: WallpaperTab): Boolean = when (tab) {
         WallpaperTab.REDDIT -> !redditProviderEnabled.value
         WallpaperTab.PEXELS -> !pexelsProviderEnabled.value
         WallpaperTab.PIXABAY -> !pixabayProviderEnabled.value
+        WallpaperTab.COMMUNITY -> !communityProviderEnabled.value
         else -> false
     }
 
@@ -996,6 +1027,7 @@ class WallpapersViewModel @Inject constructor(
         when (tab) {
             WallpaperTab.PEXELS -> wallpaperRepo.getPexelsCurated(page)
             WallpaperTab.PIXABAY -> wallpaperRepo.getPixabay(page)
+            WallpaperTab.COMMUNITY -> wallpaperUploadRepo.getCommunityWallpapers()
             else -> Unit
         }
     }
@@ -1005,7 +1037,14 @@ class WallpapersViewModel @Inject constructor(
     private fun providerDisabledMessage(tab: WallpaperTab): String = when (tab) {
         WallpaperTab.PEXELS -> "Pexels source is disabled in Settings"
         WallpaperTab.PIXABAY -> "Pixabay source is disabled in Settings"
+        WallpaperTab.COMMUNITY -> communityDisabledMessage()
         else -> redditDisabledMessage()
+    }
+
+    private fun communityDisabledMessage(): String = "Community source is disabled in Settings"
+
+    private companion object {
+        const val SOURCE_COMMUNITY = "community"
     }
 }
 

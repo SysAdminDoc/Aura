@@ -249,6 +249,48 @@ class SoundsViewModelTest {
     }
 
     @Test
+    fun `community disabled redirects community tab and blocks community actions`() = runTest(dispatcher) {
+        val youtubeRepo = mockk<YouTubeRepository>()
+        val freesoundRepo = mockk<FreesoundRepository>()
+        val freesoundV2Repo = mockk<FreesoundV2Repository>()
+        val audiusRepo = mockk<AudiusRepository>()
+        val ccMixterRepo = mockk<CcMixterRepository>()
+        val soundCloudRepo = mockk<SoundCloudRepository>()
+
+        stubCommonDependencies(
+            youtubeRepo = youtubeRepo,
+            freesoundRepo = freesoundRepo,
+            freesoundV2Repo = freesoundV2Repo,
+            audiusRepo = audiusRepo,
+            ccMixterRepo = ccMixterRepo,
+            soundCloudRepo = soundCloudRepo,
+        )
+
+        val viewModel = createViewModel(
+            youtubeRepo = youtubeRepo,
+            freesoundRepo = freesoundRepo,
+            freesoundV2Repo = freesoundV2Repo,
+            audiusRepo = audiusRepo,
+            ccMixterRepo = ccMixterRepo,
+            soundCloudRepo = soundCloudRepo,
+            communityProviderEnabled = false,
+        )
+
+        advanceUntilIdle()
+
+        viewModel.selectTab(SoundTab.COMMUNITY)
+        advanceUntilIdle()
+        assertEquals(SoundTab.RINGTONES, viewModel.state.value.selectedTab)
+
+        viewModel.startCommunityRecording()
+        viewModel.uploadSound(mockk(), "Tone", "ringtone")
+        viewModel.upvote("SOUND::COMMUNITY::cu_one")
+        advanceUntilIdle()
+
+        assertEquals("Community source is disabled in Settings", viewModel.state.value.error)
+    }
+
+    @Test
     fun `initial load prebuffers first five provider preview urls`() = runTest(dispatcher) {
         val youtubeRepo = mockk<YouTubeRepository>()
         val freesoundRepo = mockk<FreesoundRepository>()
@@ -1021,6 +1063,7 @@ class SoundsViewModelTest {
         downloadManagerOverride: DownloadManager? = null,
         favoritesRepoOverride: FavoritesRepository? = null,
         youtubeProviderEnabled: Boolean = true,
+        communityProviderEnabled: Boolean = true,
     ): SoundsViewModel {
         val prefs = mockk<PreferencesManager>()
         every { prefs.autoPreviewSounds } returns flowOf(true)
@@ -1030,6 +1073,7 @@ class SoundsViewModelTest {
         every { prefs.ytSoundQueryAlarms } returns flowOf("Alarms")
         every { prefs.ytSoundBlockedWords } returns flowOf("mix,podcast")
         every { prefs.youtubeProviderEnabled } returns flowOf(youtubeProviderEnabled)
+        every { prefs.communityProviderEnabled } returns flowOf(communityProviderEnabled)
 
         val searchHistoryRepo = mockk<SearchHistoryRepository>()
         every { searchHistoryRepo.getRecentSoundSearches(any()) } returns flowOf(emptyList<SearchHistoryEntity>())
@@ -1079,6 +1123,7 @@ class SoundsViewModelTest {
             soundUrlResolver = soundUrlResolver,
             seasonalContentManager = SeasonalContentManager(),
             communityAudioRecorder = mockk<com.freevibe.service.CommunityAudioRecorder>(relaxed = true),
+            sourceMetrics = com.freevibe.service.SourceMetrics(),
         )
     }
 

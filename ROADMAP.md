@@ -199,7 +199,7 @@ Append-only Cycle 3 handoff. Every item below is source-backed in `docs/research
   - Touches: provider repositories, `SourceMetrics`, Settings provider toggles, detail screens, downloader/apply flows, `docs/legal/provider-policy.md`.
   - Acceptance: every provider has a policy row covering attribution, source link, API cache TTL, media cache TTL, hotlinking, download/apply/share allowances, rate-limit handling, deletion behavior, and kill-switch default.
   - Verify: provider policy unit tests; Settings can disable each remote provider; disabled providers vanish from search/default feeds; existing favorites retain source-deleted/unavailable state without crashing.
-  - Progress 2026-06-05: central `ProviderDisclosure` rows now cover every `ContentSource`, `docs/legal/provider-policy.md` mirrors the matrix, and `ProviderDisclosureTest` fails when a source lacks policy coverage. Cycle 36 added checked runtime-control rows in `ProviderDisclosure.kt` and `docs/legal/provider-runtime-controls.md`; actual source disable flags, rate-limit enforcement, and unavailable-source states remain open.
+  - Progress 2026-06-05: central `ProviderDisclosure` rows now cover every `ContentSource`, `docs/legal/provider-policy.md` mirrors the matrix, and `ProviderDisclosureTest` fails when a source lacks policy coverage. Cycle 36 added checked runtime-control rows in `ProviderDisclosure.kt` and `docs/legal/provider-runtime-controls.md`; Cycles 37-40 added default-on runtime switches for YouTube, Reddit, Pexels, Pixabay, and Community. Remaining runtime-control/policy gaps include Bing disablement, Wallhaven full source disablement, Pixabay TTL/rate-limit enforcement, generated-content disablement, and unavailable-source states.
 
 - [ ] 🤖 🔬 **P1 — Pexels usage guardrail and fallback plan**
   - Why: Pexels specifically rejects standalone wallpaper/gallery API replication. Aura must prove Pexels is an enhancement source, not the product's core inventory.
@@ -2833,19 +2833,26 @@ Stars/dates as of research pass 2026-05-16.
 - Primary source references — [Pexels wallpaper-app API guidance](https://help.pexels.com/hc/en-us/articles/4405588861721-Can-I-use-the-API-as-a-wallpaper-app), [Pexels API documentation](https://www.pexels.com/api/documentation/), [Pixabay API documentation](https://pixabay.com/api/docs/).
 - Verification outputs — focused Wallpapers, Settings, video wallpaper helper, source metrics, and provider disclosure unit tests; release-compliance Python compile checks; dependency notice lock check; generated notice metadata parity check; native compliance lock check; dependency overlay check; dependency license policy check; `git diff --check`; and changed-line attribution scan.
 
+## Appendix AR — Cycle 40 Sources
+
+- Cycle 40 implementation record — [docs/research/cycle-40-2026-06-06.md](docs/research/cycle-40-2026-06-06.md).
+- Community source switch implementation — `PreferencesManager.kt`, `FreeVibeApp.kt`, `SettingsScreen.kt`, `SettingsViewModel.kt`, `UploadRepository.kt`, `WallpaperUploadRepository.kt`, `CreatorProfileRepository.kt`, `SoundsViewModel.kt`, `SoundsScreen.kt`, `WallpapersViewModel.kt`, `WallpapersScreen.kt`, `WallpaperDetailScreen.kt`, `ProviderDisclosure.kt`, and `docs/legal/provider-runtime-controls.md`.
+- Local source references — provider runtime-control matrix, Firebase-backed community repository paths, startup community identity warm-up, and community vote-count/detail UI paths.
+- Verification outputs — focused Sounds, sound-tab helper, Wallpapers, Settings, source metrics, and provider disclosure unit tests; release-compliance Python compile checks; dependency notice lock check; generated notice metadata parity check; native compliance lock check; dependency overlay check; dependency license policy check; `git diff --check`; and changed-line attribution scan.
+
 ## Continuation State
 
 ### Last Completed Cycle
 
-Cycle 39: Pexels and Pixabay source switches.
+Cycle 40: Community source switch.
 
 ### Current Focus
 
-Start Cycle 40 with the remaining community source disable flag from the runtime provider-control matrix. Commit and push completed work when the active project contract allows it.
+Start Cycle 41 with the remaining missing runtime-control row: add a Bing Image of the Day source-enabled flag or distribution profile guard so Discover can skip Bing deliberately instead of treating it as an unavoidable fallback. Commit and push completed work when the active project contract allows it.
 
 ### Important Findings So Far
 
-- `ROADMAP.md` has Cycle 18 through Cycle 39 research/implementation items; `docs/research/cycle-18-2026-06-06.md` through `docs/research/cycle-39-2026-06-06.md` have the source-backed analysis.
+- `ROADMAP.md` has Cycle 18 through Cycle 40 research/implementation items; `docs/research/cycle-18-2026-06-06.md` through `docs/research/cycle-40-2026-06-06.md` have the source-backed analysis.
 - `LicensesScreen.kt` still has manual dependency rows; content sources are already code-backed by `ProviderDisclosure.kt`.
 - `.github/workflows/release.yml` now publishes `THIRD-PARTY-NOTICES.md` and `NATIVE-COMPLIANCE.md` with the APK and includes both files in `SHA256SUMS.txt`; SBOM artifacts remain open.
 - `.github/workflows/verify.yml` and `.github/workflows/release.yml` now run `tools/dependency_notice_lock.py --mode check`, `tools/dependency_notice_lock.py --mode check-metadata`, `tools/native_compliance_inventory.py --mode check-lock`, `tools/dependency_overlay_check.py`, and `tools/dependency_license_policy.py` after `:app:releaseOssLicensesTask`.
@@ -2872,19 +2879,22 @@ Start Cycle 40 with the remaining community source disable flag from the runtime
 - The generated notice viewer now has name/license filtering plus a review watchlist for generated rows that match curated Firebase, Play services, ML Kit, NewPipeExtractor, youtubedl-android, ProfileInstaller, and ZXing surfaces.
 - AboutLibraries 14.2.1 configures but the default release export was incomplete for Aura and logged Windows path errors during compliance export.
 - `ProviderDisclosureTest` now passes in the real repo with `JAVA_HOME` set to Android Studio JBR and `ANDROID_HOME` set to the local Android SDK.
-- `ProviderDisclosure.kt` now includes a checked runtime-control matrix for every `ContentSource`; `docs/legal/provider-runtime-controls.md` records disabled behavior and follow-up gaps for Reddit, Pexels, Pixabay, Bing, community, Wallhaven, and generated-content controls.
+- `ProviderDisclosure.kt` now includes a checked runtime-control matrix for every `ContentSource`; `docs/legal/provider-runtime-controls.md` records disabled behavior and follow-up gaps for Bing, Wallhaven, Pixabay TTL/rate-limit handling, and generated-content controls.
 - YouTube now has a default-on `youtube_provider_enabled` preference plus Settings switch that hides YouTube browsing, falls back to bundled Sounds content, skips video discovery, blocks stream resolution before cache/downloader use, and records disabled source diagnostics separately from failures.
 - Reddit now has a default-on `reddit_provider_enabled` preference plus Settings switch that hides Reddit wallpaper browsing, skips daily picks, background rotations, repository calls, and video wallpaper discovery, and records disabled source diagnostics separately from failures.
 - Pexels and Pixabay now have default-on provider switches that hide disabled wallpaper tabs, skip Discover/search/style-biased/video API calls before bundled keys are read, remove disabled Pixabay from rotation pickers, and record disabled diagnostics separately from failures; Pixabay TTL/rate-limit enforcement remains open.
+- Community now has a default-on `community_provider_enabled` preference plus Settings switch that skips startup identity warm-up, hides community tabs/uploads/votes/creator profile entry points, blocks feed/upload/follow repository calls, and records disabled diagnostics separately from Firebase outages.
 - Recent history was checked with `rtk git log -10 --oneline --decorate` for this pass.
 
 ### Next Best Actions
 
-1. Add a community-enabled flag that hides upload/actions and reports disabled diagnostics separately from Firebase outages.
-2. Run a real GitHub Actions manual release dry run after secrets are confirmed available and archive the run URL in the release docs.
-3. Add deeper UI verification for the licenses screen on an emulator or screenshot lane when a device/runtime is available.
-4. Preserve exact Termux package commit/build-log evidence for FFmpeg if the release owner can obtain it from upstream or a reproducible rebuild.
-5. Revisit CycloneDX or SPDX SBOM generation after the N-1 toolchain upgrade.
+1. Add a Bing Image of the Day source-enabled flag or distribution profile guard so Discover can skip Bing deliberately and record disabled diagnostics separately from outages.
+2. Add Wallhaven full source disablement if a distribution profile must remove Wallhaven entirely.
+3. Add provider TTL and rate-limit guards for Pixabay before claiming broader Pixabay policy-complete behavior.
+4. Run a real GitHub Actions manual release dry run after secrets are confirmed available and archive the run URL in the release docs.
+5. Add deeper UI verification for the licenses screen on an emulator or screenshot lane when a device/runtime is available.
+6. Preserve exact Termux package commit/build-log evidence for FFmpeg if the release owner can obtain it from upstream or a reproducible rebuild.
+7. Revisit CycloneDX or SPDX SBOM generation after the N-1 toolchain upgrade.
 
 ### Unprocessed Leads
 

@@ -4,9 +4,11 @@ import android.content.Context
 import android.net.Uri
 import android.provider.OpenableColumns
 import android.webkit.MimeTypeMap
+import com.freevibe.data.local.PreferencesManager
 import com.freevibe.data.model.ContentSource
 import com.freevibe.data.model.Sound
 import com.freevibe.service.CommunityIdentityProvider
+import com.freevibe.service.SourceMetrics
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.FirebaseDatabase
@@ -17,6 +19,7 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -41,11 +44,14 @@ private val ALLOWED_UPLOAD_CATEGORIES = setOf("ringtone", "notification", "alarm
 private const val MAX_AUDIO_UPLOAD_BYTES = 20L * 1024L * 1024L
 private const val MAX_UPLOAD_TAGS = 8
 private const val MAX_UPLOAD_TAG_LENGTH = 24
+private const val SOURCE_COMMUNITY = "community"
 
 @Singleton
 class UploadRepository @Inject constructor(
     @ApplicationContext private val context: Context,
     private val identityProvider: CommunityIdentityProvider,
+    private val prefs: PreferencesManager,
+    private val sourceMetrics: SourceMetrics,
 ) {
     private data class UploadFileInfo(
         val baseName: String,
@@ -73,6 +79,10 @@ class UploadRepository @Inject constructor(
         tags: List<String>,
         onProgress: (Float) -> Unit = {},
     ): Result<String> = try {
+        if (!isCommunityProviderEnabled()) {
+            sourceMetrics.recordDisabled(SOURCE_COMMUNITY)
+            throw IllegalStateException(communityDisabledMessage())
+        }
         val storageInstance = storage ?: throw IllegalStateException("Firebase Storage not available")
         val uploadsRefInstance = uploadsRef ?: throw IllegalStateException("Firebase Database not available")
 
@@ -150,6 +160,12 @@ class UploadRepository @Inject constructor(
      * Get community-uploaded sounds, sorted by votes descending (client-side).
      */
     fun getCommunityUploads(category: String? = null, limit: Int = 30): Flow<List<Sound>> = callbackFlow {
+        if (!isCommunityProviderEnabled()) {
+            sourceMetrics.recordDisabled(SOURCE_COMMUNITY)
+            trySend(emptyList())
+            awaitClose {}
+            return@callbackFlow
+        }
         val uploadsRefInstance = uploadsRef
         if (uploadsRefInstance == null) {
             trySend(emptyList())
@@ -209,6 +225,10 @@ class UploadRepository @Inject constructor(
         ref.addValueEventListener(listener)
         awaitClose { ref.removeEventListener(listener) }
     }
+
+    private suspend fun isCommunityProviderEnabled(): Boolean = prefs.communityProviderEnabled.first()
+
+    private fun communityDisabledMessage(): String = "Community source is disabled in Settings"
 
     private fun resolveUploadFileInfo(localUri: Uri, fallbackName: String): UploadFileInfo {
         val resolver = context.contentResolver

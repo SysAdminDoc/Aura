@@ -27,6 +27,7 @@ import com.freevibe.service.SeasonalContentManager
 import com.freevibe.service.SelectedContentHolder
 import com.freevibe.service.SoundApplier
 import com.freevibe.service.SoundUrlResolver
+import com.freevibe.service.SourceMetrics
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
@@ -90,6 +91,7 @@ class SoundsViewModel @Inject constructor(
     private val soundUrlResolver: SoundUrlResolver,
     private val seasonalContentManager: SeasonalContentManager,
     private val communityAudioRecorder: CommunityAudioRecorder,
+    private val sourceMetrics: SourceMetrics,
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(SoundsUiState())
@@ -103,6 +105,7 @@ class SoundsViewModel @Inject constructor(
     val autoPreview = prefs.autoPreviewSounds.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), true)
     val previewVolume = prefs.soundPreviewVolume.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0.7f)
     val youtubeProviderEnabled = prefs.youtubeProviderEnabled.stateIn(viewModelScope, SharingStarted.Eagerly, true)
+    val communityProviderEnabled = prefs.communityProviderEnabled.stateIn(viewModelScope, SharingStarted.Eagerly, true)
 
     private val _previewReadyIds = MutableStateFlow<Set<String>>(emptySet())
     val previewReadyIds = _previewReadyIds.asStateFlow()
@@ -254,15 +257,13 @@ class SoundsViewModel @Inject constructor(
         stopPlayback()
         communityJob?.cancel()
         if (tab == SoundTab.YOUTUBE && !youtubeProviderEnabled.value) {
-            _state.update {
-                it.copy(
-                    selectedTab = SoundTab.RINGTONES, query = "", sounds = emptyList(),
-                    currentPage = 1, hasMore = true, error = null, filterKey = nextFilterKey(),
-                    isRefreshing = false,
-                    searchReturnTab = SoundTab.RINGTONES,
-                )
-            }
-            loadSounds()
+            sourceMetrics.recordDisabled(SOURCE_YOUTUBE)
+            redirectToRingtones()
+            return
+        }
+        if (tab == SoundTab.COMMUNITY && !communityProviderEnabled.value) {
+            sourceMetrics.recordDisabled(SOURCE_COMMUNITY)
+            redirectToRingtones()
             return
         }
         _state.update {
@@ -279,6 +280,48 @@ class SoundsViewModel @Inject constructor(
             else -> loadSounds()
         }
     }
+
+    private fun redirectToRingtones() {
+        communityJob?.cancel()
+        loadJob?.cancel()
+        _state.update {
+            it.copy(
+                selectedTab = SoundTab.RINGTONES, query = "", sounds = emptyList(),
+                currentPage = 1, hasMore = true, error = null, filterKey = nextFilterKey(),
+                isRefreshing = false,
+                searchReturnTab = SoundTab.RINGTONES,
+            )
+        }
+        loadSounds()
+    }
+
+    private fun showCommunityDisabledError() {
+        sourceMetrics.recordDisabled(SOURCE_COMMUNITY)
+        _state.update { it.copy(error = communityDisabledMessage()) }
+    }
+
+    private fun showCommunityDisabledContent() {
+        sourceMetrics.recordDisabled(SOURCE_COMMUNITY)
+        _state.update {
+            it.copy(
+                sounds = emptyList(),
+                isLoading = false,
+                isLoadingMore = false,
+                isRefreshing = false,
+                hasMore = false,
+                error = communityDisabledMessage(),
+            )
+        }
+    }
+
+    private fun communityActionBlocked(): Boolean {
+        if (communityProviderEnabled.value) return false
+        showCommunityDisabledError()
+        return true
+    }
+
+    private fun isCommunityVoteId(id: String): Boolean =
+        id.contains("::COMMUNITY::") || id.startsWith("cu_")
 
     fun search(query: String) {
         if (query.isBlank()) return
@@ -384,7 +427,11 @@ class SoundsViewModel @Inject constructor(
 
     fun clearSearchMode() {
         stopPlayback()
-        val returnTab = _state.value.searchReturnTab
+        val returnTab = when (val tab = _state.value.searchReturnTab) {
+            SoundTab.YOUTUBE -> if (youtubeProviderEnabled.value) tab else SoundTab.RINGTONES
+            SoundTab.COMMUNITY -> if (communityProviderEnabled.value) tab else SoundTab.RINGTONES
+            else -> tab
+        }
         communityJob?.cancel()
         _state.update {
             it.copy(
@@ -397,6 +444,7 @@ class SoundsViewModel @Inject constructor(
                 isLoading = false,
                 isLoadingMore = false,
                 isRefreshing = false,
+                searchReturnTab = returnTab,
                 filterKey = nextFilterKey(),
             )
         }
@@ -423,6 +471,10 @@ class SoundsViewModel @Inject constructor(
         stopPlayback()
         when (val tab = _state.value.selectedTab) {
             SoundTab.COMMUNITY -> {
+                if (!communityProviderEnabled.value) {
+                    selectTab(SoundTab.RINGTONES)
+                    return
+                }
                 _state.update { it.copy(isRefreshing = true, error = null) }
                 loadCommunityTab(isRefresh = true)
             }
@@ -761,6 +813,10 @@ class SoundsViewModel @Inject constructor(
     fun clearSuccess() = _state.update { it.copy(applySuccess = null) }
 
     fun upvote(id: String) {
+        if (!communityProviderEnabled.value && isCommunityVoteId(id)) {
+            showCommunityDisabledError()
+            return
+        }
         viewModelScope.launch {
             try { voteRepo.upvote(id) }
             catch (e: Exception) {
@@ -770,6 +826,10 @@ class SoundsViewModel @Inject constructor(
         }
     }
     fun downvote(id: String) {
+        if (!communityProviderEnabled.value && isCommunityVoteId(id)) {
+            showCommunityDisabledError()
+            return
+        }
         viewModelScope.launch {
             try { voteRepo.downvote(id) }
             catch (e: Exception) {
@@ -781,6 +841,7 @@ class SoundsViewModel @Inject constructor(
 
     fun startCommunityRecording() {
         if (_state.value.isRecordingUpload) return
+        if (communityActionBlocked()) return
         communityAudioRecorder.start()
             .onSuccess {
                 _state.update {
@@ -839,6 +900,10 @@ class SoundsViewModel @Inject constructor(
     }
 
     fun reportRecordingPermissionDenied() {
+        if (!communityProviderEnabled.value) {
+            showCommunityDisabledError()
+            return
+        }
         _state.update { it.copy(error = "Microphone permission is required to record a community sound") }
     }
 
@@ -1134,6 +1199,10 @@ class SoundsViewModel @Inject constructor(
 
     private fun loadCommunityTab(isRefresh: Boolean = false) {
         communityJob?.cancel()
+        if (!communityProviderEnabled.value) {
+            showCommunityDisabledContent()
+            return
+        }
         _state.update {
             if (isRefresh) it.copy(isRefreshing = true, error = null)
             else it.copy(isLoading = true, error = null)
@@ -1316,6 +1385,8 @@ class SoundsViewModel @Inject constructor(
 
     private fun youtubeDisabledMessage(): String = "YouTube features are disabled in Settings"
 
+    private fun communityDisabledMessage(): String = "Community source is disabled in Settings"
+
     fun uploadSound(
         localUri: android.net.Uri,
         name: String,
@@ -1323,6 +1394,7 @@ class SoundsViewModel @Inject constructor(
         tags: List<String> = emptyList(),
     ) {
         if (_state.value.isUploading) return
+        if (communityActionBlocked()) return
         viewModelScope.launch {
             _state.update { it.copy(isUploading = true, uploadProgress = 0f) }
             uploadRepo.uploadSound(
@@ -1343,6 +1415,8 @@ class SoundsViewModel @Inject constructor(
 
     private companion object {
         const val FIRST_VISIBLE_PREVIEW_COUNT = 5
+        const val SOURCE_YOUTUBE = "youtube"
+        const val SOURCE_COMMUNITY = "community"
         val ACTIVE_SOUND_SOURCES = setOf(
             ContentSource.YOUTUBE,
             ContentSource.BUNDLED,

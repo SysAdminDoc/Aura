@@ -15,6 +15,7 @@ import com.freevibe.service.CrashDiagnosticsCollector
 import com.freevibe.service.CrashDiagnosticsText
 import com.freevibe.service.CommunityIdentityProvider
 import com.freevibe.service.OfflineFavoritesManager
+import com.freevibe.service.SourceMetrics
 import dagger.hilt.android.HiltAndroidApp
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -51,6 +52,9 @@ class FreeVibeApp : Application(), Configuration.Provider, ImageLoaderFactory {
 
     @Inject
     lateinit var systemThemeListener: com.freevibe.service.SystemThemeListener
+
+    @Inject
+    lateinit var sourceMetrics: SourceMetrics
 
     private val appScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
@@ -196,6 +200,11 @@ class FreeVibeApp : Application(), Configuration.Provider, ImageLoaderFactory {
     private fun warmCommunityIdentity() {
         appScope.launch {
             try {
+                val prefs = com.freevibe.data.local.PreferencesManager(this@FreeVibeApp)
+                if (!prefs.communityProviderEnabled.first()) {
+                    sourceMetrics.recordDisabled("community")
+                    return@launch
+                }
                 communityIdentityProvider.ensureSignedIn()
                 // Refresh admin Custom Claim once the user is signed in. This is the
                 // server-side source of truth for moderation privileges (the legacy

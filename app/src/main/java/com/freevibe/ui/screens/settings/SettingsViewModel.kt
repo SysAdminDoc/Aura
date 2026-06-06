@@ -126,6 +126,7 @@ class SettingsViewModel @Inject constructor(
     val stabilityAiKey = prefs.stabilityAiKey.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), "")
     val pexelsProviderEnabled = prefs.pexelsProviderEnabled.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), true)
     val pixabayProviderEnabled = prefs.pixabayProviderEnabled.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), true)
+    val communityProviderEnabled = prefs.communityProviderEnabled.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), true)
     val showSketchyContent = prefs.showSketchyContent.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
     val showNsfwContent = prefs.showNsfwContent.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
 
@@ -273,6 +274,10 @@ class SettingsViewModel @Inject constructor(
 
     fun setPixabayProviderEnabled(enabled: Boolean) = viewModelScope.launch {
         prefs.setPixabayProviderEnabled(enabled)
+    }
+
+    fun setCommunityProviderEnabled(enabled: Boolean) = viewModelScope.launch {
+        prefs.setCommunityProviderEnabled(enabled)
     }
 
     fun setFreesoundKey(key: String) = viewModelScope.launch {

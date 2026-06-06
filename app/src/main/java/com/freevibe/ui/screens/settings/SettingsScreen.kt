@@ -113,6 +113,7 @@ fun SettingsScreen(
     val stabilityAiKey by viewModel.stabilityAiKey.collectAsStateWithLifecycle()
     val pexelsProviderEnabled by viewModel.pexelsProviderEnabled.collectAsStateWithLifecycle()
     val pixabayProviderEnabled by viewModel.pixabayProviderEnabled.collectAsStateWithLifecycle()
+    val communityProviderEnabled by viewModel.communityProviderEnabled.collectAsStateWithLifecycle()
     val showSketchyContent by viewModel.showSketchyContent.collectAsStateWithLifecycle()
     val showNsfwContent by viewModel.showNsfwContent.collectAsStateWithLifecycle()
     val videoFpsOverlayEnabled by viewModel.videoFpsOverlayEnabled.collectAsStateWithLifecycle()
@@ -456,12 +457,25 @@ fun SettingsScreen(
                 subtitle = "Organize wallpapers into folders",
                 onClick = onCollectionsClick,
             )
-            SettingsItem(
-                icon = Icons.Default.Person,
-                title = "Creator profile",
-                subtitle = "Uploads, votes, follows, and leaderboard",
-                onClick = onCreatorProfileClick,
+            SettingsToggle(
+                icon = Icons.Default.Groups,
+                title = "Enable Community source",
+                subtitle = if (communityProviderEnabled) {
+                    "Shows community feeds, uploads, votes, and creator surfaces"
+                } else {
+                    "Hides community tabs and blocks Firebase-backed actions"
+                },
+                checked = communityProviderEnabled,
+                onCheckedChange = { viewModel.setCommunityProviderEnabled(it) },
             )
+            if (communityProviderEnabled) {
+                SettingsItem(
+                    icon = Icons.Default.Person,
+                    title = "Creator profile",
+                    subtitle = "Uploads, votes, follows, and leaderboard",
+                    onClick = onCreatorProfileClick,
+                )
+            }
             // #2: Wallpaper history — opens browsable grid
             if (wallpaperHistory.isNotEmpty()) {
                 SettingsItem(

@@ -51,6 +51,7 @@ class PreferencesManager @Inject constructor(
     val stabilityAiKey: Flow<String> = get(Keys.STABILITY_KEY, com.freevibe.BuildConfig.STABILITY_AI_KEY)
     val pexelsProviderEnabled: Flow<Boolean> = get(Keys.PEXELS_PROVIDER_ENABLED, true)
     val pixabayProviderEnabled: Flow<Boolean> = get(Keys.PIXABAY_PROVIDER_ENABLED, true)
+    val communityProviderEnabled: Flow<Boolean> = get(Keys.COMMUNITY_PROVIDER_ENABLED, true)
 
     // Sanitize API keys: strip surrounding whitespace and reject any control chars (including CR/LF
     // which OkHttp would throw on when placed in a request header — prefer to drop them here with
@@ -65,6 +66,7 @@ class PreferencesManager @Inject constructor(
     suspend fun setStabilityKey(key: String) = set(Keys.STABILITY_KEY, sanitizeApiKey(key))
     suspend fun setPexelsProviderEnabled(enabled: Boolean) = set(Keys.PEXELS_PROVIDER_ENABLED, enabled)
     suspend fun setPixabayProviderEnabled(enabled: Boolean) = set(Keys.PIXABAY_PROVIDER_ENABLED, enabled)
+    suspend fun setCommunityProviderEnabled(enabled: Boolean) = set(Keys.COMMUNITY_PROVIDER_ENABLED, enabled)
 
     // ── Auto-wallpaper ────────────────────────────────────────────
 
@@ -236,6 +238,7 @@ class PreferencesManager @Inject constructor(
         val STABILITY_KEY = stringPreferencesKey("stability_ai_key")
         val PEXELS_PROVIDER_ENABLED = booleanPreferencesKey("pexels_provider_enabled")
         val PIXABAY_PROVIDER_ENABLED = booleanPreferencesKey("pixabay_provider_enabled")
+        val COMMUNITY_PROVIDER_ENABLED = booleanPreferencesKey("community_provider_enabled")
         val AUTO_WP_ENABLED = booleanPreferencesKey("auto_wp_enabled")
         val AUTO_WP_INTERVAL = longPreferencesKey("auto_wp_interval")
         val AUTO_WP_SOURCE = stringPreferencesKey("auto_wp_source")

@@ -94,6 +94,11 @@ next pass can resume quickly.
   Discover/search/style-biased/video API calls before bundled keys are read,
   removed disabled Pixabay from rotation pickers, and left Pixabay TTL/rate-limit
   enforcement as the next policy gap.
+- Completed Cycle 40 Community source switch: added a default-on Community
+  provider preference and Settings switch, skipped startup identity warm-up when
+  disabled, hid community tabs/uploads/votes/creator profile entry points,
+  blocked sound/wallpaper/creator repository Firebase calls, and recorded
+  disabled diagnostics separately from Firebase outages.
 
 ## 2026-06-05
 

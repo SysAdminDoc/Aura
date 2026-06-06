@@ -425,10 +425,10 @@ val providerRuntimeControls = listOf(
     ProviderRuntimeControl(
         source = ContentSource.COMMUNITY,
         surfaces = "Community sound feed, uploads, votes, moderation, creator surfaces, community wallpaper uploads.",
-        status = ProviderRuntimeControlStatus.MISSING,
-        currentControl = "Firebase configuration availability and auth/rules failures only; no runtime community-off flag.",
-        disabledBehavior = "No source-disabled state; Firebase failures surface through upload/feed errors and cached local state.",
-        followUp = "Add a community-enabled flag that hides upload/actions and reports disabled diagnostics separately from outages.",
+        status = ProviderRuntimeControlStatus.COVERED,
+        currentControl = "Settings exposes a Community source-enabled flag in addition to Firebase availability.",
+        disabledBehavior = "Disabled mode skips startup identity warm-up, hides community tabs/uploads/votes/creator profile entry points, blocks feed/upload/follow repository calls, and records disabled diagnostics separately from Firebase outages.",
+        followUp = "None for runtime disablement; keep separate public-data deletion, takedown, and App Check hardening work tracked in ROADMAP.md.",
     ),
     ProviderRuntimeControl(
         source = ContentSource.BUNDLED,
