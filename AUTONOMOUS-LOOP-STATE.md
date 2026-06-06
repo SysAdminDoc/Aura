@@ -1,8 +1,8 @@
 # Autonomous Loop State
 
 **Assigned project:** `C:\Users\--\repos\Aura`
-**Current pass:** 2026-06-06 Cycle 48 provider removal failure reconciliation
-**Last commit before pass:** `3e68291` (`feat(policy): keep pexels as enhancement source`)
+**Current pass:** 2026-06-06 Cycle 49 sound license capability gates
+**Last commit before pass:** `1ac25c0` (`feat(favorites): reconcile removed provider content`)
 
 ## 2026-06-05 Result
 
@@ -192,13 +192,21 @@
 - Updated `DownloadManager` to mark matching download-history rows unavailable when re-downloads fail with explicit removed/gone statuses.
 - Added focused tests for the classifier plus wallpaper/sound download reconciliation.
 - Updated `docs/research/cycle-48-2026-06-06.md`, `ROADMAP.md`, `CHANGELOG.md`, and `COMPLETED.md` for the reconciliation slice.
+- Completed Cycle 49 sound license capability gates.
+- Added `SoundLicensePolicy.kt` with normalized sound action capabilities for apply, download, share, edit/trim, and Aura Originals use.
+- Added Room v16 favorite-license persistence plus favorite export/import preservation so saved sounds keep license metadata.
+- Updated `SoundsViewModel`, `SoundDetailScreen`, quick apply, and contact assignment so restricted actions are disabled or require confirmation before stream resolution/download/apply work starts.
+- Updated sound share text to include name, creator, source, normalized license, and source link.
+- Added focused tests for the license matrix, favorite license round trips, export/import preservation, and unconfirmed YouTube download blocking.
+- Updated `docs/legal/sound-license-capabilities.md`, `docs/research/cycle-49-2026-06-06.md`, `ROADMAP.md`, `CHANGELOG.md`, and `COMPLETED.md` for the sound license capability slice.
 
 ## Still Open
 
 - Exact Termux package commit, FFmpeg package patches, dependency source set, and build logs for the resolved youtubedl-android ffmpeg 0.18.1 AAR.
-- Action-level sound license capability gates for Freesound/SoundCloud-style restrictions.
+- Community upload rights attestation and selected license metadata for community sounds/wallpapers.
+- Standalone editor policy enforcement if new editor entry points are added outside Sound Detail.
 - Community moderation/report queue integration for source-removed mirrors.
 
 ## Next Cycle
 
-Continue this same assigned project, Aura. Start Cycle 49 from the `ROADMAP.md` Continuation State and `docs/research/cycle-48-2026-06-06.md`. The Google OSS notices plugin-only path is implemented; `tools/google_oss_to_markdown.py` generates `THIRD-PARTY-NOTICES.md`; `tools/google_oss_raw_archive.py` archives raw Google OSS inputs and the repo now keeps `GOOGLE-OSS-RAW-INPUTS.zip` attached to tagged public releases; `GeneratedDependencyNotices.kt` parses generated raw resources for an in-app notice viewer with search and review markers; `tools/native_compliance_inventory.py` generates `NATIVE-COMPLIANCE.md`, extracts embedded FFmpeg configure evidence, and gates native evidence drift; `tools/dependency_notice_lock.py` gates generated release notice drift and raw metadata parity; `tools/dependency_overlay_check.py` gates curated high-risk dependency/native-payload review metadata; `tools/dependency_license_policy.py` gates allowed, review-required, disallowed, and unknown curated license IDs; `tools/release_artifact_bundle_check.py` gates final release bundle consistency; `ProviderDisclosure.kt` now has checked runtime-control rows for every content source; YouTube, Reddit, Wallhaven, Pexels, Pixabay, Community, Bing Daily, and generated wallpapers now have runtime provider/source switches that block active fetch/resolver/upload/action paths before remote calls or bundled key reads where applicable; Pixabay photo and video metadata now have 24-hour request caches and 429 backoff; favorites/download history now have persisted unavailable-source states for saved local copies; Pexels is now enhancement-only in wallpaper Discover and video-wallpaper discovery; explicit removed/gone provider failures now reconcile saved favorite and download-history source states. Next add sound license capability gates for source-specific apply/download/share/edit restrictions. Keep AboutLibraries secondary: 14.2.1 configures, but default exports were incomplete and the compliance export logged Windows path errors; do not use AboutLibraries 15.x until N-1 upgrades AGP because v15 requires AGP 8.13. Commit and push completed work when the active project contract allows it.
+Continue this same assigned project, Aura. Start Cycle 50 from the `ROADMAP.md` Continuation State and `docs/research/cycle-49-2026-06-06.md`. The Google OSS notices plugin-only path is implemented; `tools/google_oss_to_markdown.py` generates `THIRD-PARTY-NOTICES.md`; `tools/google_oss_raw_archive.py` archives raw Google OSS inputs and the repo now keeps `GOOGLE-OSS-RAW-INPUTS.zip` attached to tagged public releases; `GeneratedDependencyNotices.kt` parses generated raw resources for an in-app notice viewer with search and review markers; `tools/native_compliance_inventory.py` generates `NATIVE-COMPLIANCE.md`, extracts embedded FFmpeg configure evidence, and gates native evidence drift; `tools/dependency_notice_lock.py` gates generated release notice drift and raw metadata parity; `tools/dependency_overlay_check.py` gates curated high-risk dependency/native-payload review metadata; `tools/dependency_license_policy.py` gates allowed, review-required, disallowed, and unknown curated license IDs; `tools/release_artifact_bundle_check.py` gates final release bundle consistency; `ProviderDisclosure.kt` now has checked runtime-control rows for every content source; YouTube, Reddit, Wallhaven, Pexels, Pixabay, Community, Bing Daily, and generated wallpapers now have runtime provider/source switches that block active fetch/resolver/upload/action paths before remote calls or bundled key reads where applicable; Pixabay photo and video metadata now have 24-hour request caches and 429 backoff; favorites/download history now have persisted unavailable-source states for saved local copies; Pexels is now enhancement-only in wallpaper Discover and video-wallpaper discovery; explicit removed/gone provider failures now reconcile saved favorite and download-history source states; sounds now have normalized license action gates and saved favorite license preservation. Next add community upload rights attestation and selected license metadata for community sounds/wallpapers. Keep AboutLibraries secondary: 14.2.1 configures, but default exports were incomplete and the compliance export logged Windows path errors; do not use AboutLibraries 15.x until N-1 upgrades AGP because v15 requires AGP 8.13. Commit and push completed work when the active project contract allows it.

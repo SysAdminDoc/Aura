@@ -154,6 +154,7 @@ data class FavoriteExportItem(
     val category: String? = null,
     val uploaderName: String? = null,
     val sourcePageUrl: String? = null,
+    val license: String? = null,
     val fileSize: Long? = null,
     val fileType: String? = null,
     val views: Long? = null,
@@ -167,7 +168,7 @@ private fun FavoriteEntity.toExportItem() = FavoriteExportItem(
     id = id, source = source, type = type, thumbnailUrl = thumbnailUrl,
     fullUrl = fullUrl, name = name, width = width, height = height, duration = duration,
     tags = tags, colors = colors, category = category, uploaderName = uploaderName,
-    sourcePageUrl = sourcePageUrl, fileSize = fileSize, fileType = fileType,
+    sourcePageUrl = sourcePageUrl, license = license, fileSize = fileSize, fileType = fileType,
     views = views, favoritesCount = favoritesCount, addedAt = addedAt,
     sourceAvailability = sourceAvailability,
     sourceAvailabilityReason = sourceAvailabilityReason,
@@ -203,6 +204,7 @@ internal fun FavoriteExportItem.toValidatedEntity(): FavoriteEntity? {
     val normalizedThumbnailUrl = thumbnailUrl.trim().take(MAX_URL_LENGTH)
     val normalizedFullUrl = fullUrl.trim().take(MAX_URL_LENGTH)
     val normalizedSourcePageUrl = sourcePageUrl?.trim()?.take(MAX_URL_LENGTH)?.takeIf { it.isNotBlank() }
+    val normalizedLicense = license?.trim()?.take(MAX_TEXT_LENGTH)?.takeIf { it.isNotBlank() }
     val normalizedSourceAvailability = normalizeSourceAvailability(sourceAvailability)
     val normalizedSourceAvailabilityReason =
         sourceAvailabilityReason?.trim()?.take(MAX_TEXT_LENGTH)?.takeIf { it.isNotBlank() }
@@ -234,6 +236,7 @@ internal fun FavoriteExportItem.toValidatedEntity(): FavoriteEntity? {
         category = category?.trim()?.take(MAX_TEXT_LENGTH)?.takeIf { it.isNotBlank() },
         uploaderName = uploaderName?.trim()?.take(MAX_TEXT_LENGTH)?.takeIf { it.isNotBlank() },
         sourcePageUrl = normalizedSourcePageUrl,
+        license = normalizedLicense,
         fileSize = fileSize?.coerceAtLeast(0L),
         fileType = fileType?.trim()?.take(MAX_TEXT_LENGTH)?.takeIf { it.isNotBlank() },
         views = views?.coerceAtLeast(0L),

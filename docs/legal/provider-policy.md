@@ -30,4 +30,5 @@ fail when a `ContentSource` enum value lacks a disclosure row.
 Runtime disablement and unavailable-source behavior are tracked separately in
 [provider-runtime-controls.md](provider-runtime-controls.md). Release-runtime
 dependency notice generation, native/copyleft packets, and item-level license
-persistence remain tracked in `ROADMAP.md`.
+capability gates remain tracked in `ROADMAP.md`. Sound action capabilities are
+documented in [sound-license-capabilities.md](sound-license-capabilities.md).

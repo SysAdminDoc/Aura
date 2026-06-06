@@ -47,6 +47,10 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.freevibe.data.model.ContentSource
 import com.freevibe.data.model.ContentType
 import com.freevibe.data.model.Sound
+import com.freevibe.data.model.SoundAction
+import com.freevibe.data.model.SoundActionDecision
+import com.freevibe.data.model.SoundLicenseCapabilities
+import com.freevibe.data.model.soundLicenseCapabilities
 import com.freevibe.data.model.stableKey
 import com.freevibe.data.repository.matchesHiddenIds
 import com.freevibe.ui.components.AuraStateAction
@@ -217,9 +221,9 @@ fun SoundsScreen(
             onApply = { sound, type ->
                 quickApplyActionInFlight = true
                 quickApplyObservedApplying = false
-                viewModel.applySound(sound, type)
+                viewModel.applySound(sound, type, confirmed = true)
             },
-            onDownload = { viewModel.downloadSound(it); quickApplySound = null },
+            onDownload = { viewModel.downloadSound(it, confirmed = true); quickApplySound = null },
             onGrantPermission = { context.startActivity(viewModel.requestWriteSettings()) },
             onDismiss = {
                 if (!state.isApplying) {
@@ -1202,6 +1206,19 @@ private fun SoundFiltersSheet(
 
 // -- Quick Apply Bottom Sheet --
 
+private data class QuickApplyPendingAction(
+    val title: String,
+    val message: String,
+    val onConfirm: () -> Unit,
+)
+
+private fun quickApplyPolicyMessages(capabilities: SoundLicenseCapabilities): List<String> =
+    SoundAction.entries
+        .map { capabilities.capability(it) }
+        .filter { it.decision == SoundActionDecision.DISABLED && it.reason.isNotBlank() }
+        .map { it.reason }
+        .distinct()
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun QuickApplySheet(
@@ -1213,6 +1230,46 @@ private fun QuickApplySheet(
     onGrantPermission: () -> Unit,
     onDismiss: () -> Unit,
 ) {
+    val licenseCapabilities = remember(sound) { sound.soundLicenseCapabilities() }
+    val canUseApply = canApply && licenseCapabilities.canUse(SoundAction.APPLY)
+    val canUseDownload = licenseCapabilities.canUse(SoundAction.DOWNLOAD)
+    val policyMessages = remember(licenseCapabilities) { quickApplyPolicyMessages(licenseCapabilities) }
+    var pendingAction by remember(sound.stableKey()) { mutableStateOf<QuickApplyPendingAction?>(null) }
+
+    pendingAction?.let { pending ->
+        AlertDialog(
+            onDismissRequest = { pendingAction = null },
+            title = { Text(pending.title) },
+            text = { Text(pending.message) },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        pendingAction = null
+                        pending.onConfirm()
+                    },
+                ) {
+                    Text("Continue")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { pendingAction = null }) {
+                    Text("Cancel")
+                }
+            },
+        )
+    }
+
+    fun runSoundAction(action: SoundAction, title: String, onConfirm: () -> Unit) {
+        val capability = licenseCapabilities.capability(action)
+        when (capability.decision) {
+            SoundActionDecision.ALLOWED -> onConfirm()
+            SoundActionDecision.CONFIRMATION_REQUIRED -> {
+                pendingAction = QuickApplyPendingAction(title, capability.reason, onConfirm)
+            }
+            SoundActionDecision.DISABLED -> Unit
+        }
+    }
+
     ModalBottomSheet(onDismissRequest = onDismiss) {
         Column(
             Modifier.padding(horizontal = 20.dp).padding(bottom = 32.dp),
@@ -1252,11 +1309,42 @@ private fun QuickApplySheet(
                 Spacer(Modifier.height(8.dp))
             }
 
-            QuickApplyRow("Set as Ringtone", Icons.Default.Call, canApply && !isApplying) { onApply(sound, ContentType.RINGTONE) }
-            QuickApplyRow("Set as Notification", Icons.Default.Notifications, canApply && !isApplying) { onApply(sound, ContentType.NOTIFICATION) }
-            QuickApplyRow("Set as Alarm", Icons.Default.Alarm, canApply && !isApplying) { onApply(sound, ContentType.ALARM) }
+            if (policyMessages.isNotEmpty()) {
+                Surface(
+                    color = MaterialTheme.colorScheme.tertiaryContainer.copy(alpha = 0.52f),
+                    shape = RoundedCornerShape(10.dp),
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.tertiary.copy(alpha = 0.18f)),
+                ) {
+                    Row(
+                        Modifier.fillMaxWidth().padding(12.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(10.dp),
+                    ) {
+                        Icon(Icons.Default.Policy, contentDescription = null, tint = MaterialTheme.colorScheme.tertiary)
+                        Text(
+                            policyMessages.joinToString(" "),
+                            modifier = Modifier.weight(1f),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onTertiaryContainer,
+                        )
+                    }
+                }
+                Spacer(Modifier.height(8.dp))
+            }
+
+            QuickApplyRow("Set as Ringtone", Icons.Default.Call, canUseApply && !isApplying) {
+                runSoundAction(SoundAction.APPLY, "Apply sound") { onApply(sound, ContentType.RINGTONE) }
+            }
+            QuickApplyRow("Set as Notification", Icons.Default.Notifications, canUseApply && !isApplying) {
+                runSoundAction(SoundAction.APPLY, "Apply sound") { onApply(sound, ContentType.NOTIFICATION) }
+            }
+            QuickApplyRow("Set as Alarm", Icons.Default.Alarm, canUseApply && !isApplying) {
+                runSoundAction(SoundAction.APPLY, "Apply sound") { onApply(sound, ContentType.ALARM) }
+            }
             HorizontalDivider(Modifier.padding(vertical = 4.dp))
-            QuickApplyRow("Download", Icons.Default.Download, !isApplying) { onDownload(sound) }
+            QuickApplyRow("Download", Icons.Default.Download, canUseDownload && !isApplying) {
+                runSoundAction(SoundAction.DOWNLOAD, "Save sound") { onDownload(sound) }
+            }
 
             if (isApplying) {
                 Spacer(Modifier.height(8.dp))

@@ -7,10 +7,13 @@ import androidx.lifecycle.viewModelScope
 import com.freevibe.data.model.ContentSource
 import com.freevibe.data.model.ContentType
 import com.freevibe.data.model.FavoriteIdentity
+import com.freevibe.data.model.SoundAction
+import com.freevibe.data.model.SoundActionDecision
 import com.freevibe.data.model.Sound
 import com.freevibe.data.local.PreferencesManager
 import com.freevibe.data.model.favoriteIdentity
 import com.freevibe.data.model.sourceUnavailableReasonForFailure
+import com.freevibe.data.model.soundLicenseCapabilities
 import com.freevibe.data.model.stableKey
 import com.freevibe.data.repository.FavoritesRepository
 import com.freevibe.data.repository.SearchHistoryRepository
@@ -704,8 +707,12 @@ class SoundsViewModel @Inject constructor(
 
     // -- Apply & Download --
 
-    fun applySound(sound: Sound, type: ContentType) {
+    fun applySound(sound: Sound, type: ContentType, confirmed: Boolean = false) {
         viewModelScope.launch {
+            soundActionGateMessage(sound, SoundAction.APPLY, confirmed)?.let { message ->
+                _state.update { it.copy(isApplying = false, error = message) }
+                return@launch
+            }
             _state.update { it.copy(isApplying = true, applySuccess = null) }
             val url = resolveDownloadUrl(sound)
                 ?: run {
@@ -729,8 +736,12 @@ class SoundsViewModel @Inject constructor(
         }
     }
 
-    fun downloadSound(sound: Sound) {
+    fun downloadSound(sound: Sound, confirmed: Boolean = false) {
         viewModelScope.launch {
+            soundActionGateMessage(sound, SoundAction.DOWNLOAD, confirmed)?.let { message ->
+                _state.update { it.copy(error = message) }
+                return@launch
+            }
             val dlUrl = resolveDownloadUrl(sound) ?: run {
                 _state.update { it.copy(error = "Could not resolve audio stream URL") }
                 return@launch
@@ -767,6 +778,15 @@ class SoundsViewModel @Inject constructor(
         "Aura_${sound.source.name.lowercase(java.util.Locale.ROOT)}_${sound.id}_${sound.name.take(24)}.$extension"
 
     fun isFavorite(sound: Sound): Flow<Boolean> = favoritesRepo.isFavorite(sound.favoriteIdentity())
+
+    private fun soundActionGateMessage(sound: Sound, action: SoundAction, confirmed: Boolean): String? {
+        val capability = sound.soundLicenseCapabilities().capability(action)
+        return when (capability.decision) {
+            SoundActionDecision.ALLOWED -> null
+            SoundActionDecision.CONFIRMATION_REQUIRED -> capability.reason.takeUnless { confirmed }
+            SoundActionDecision.DISABLED -> capability.reason
+        }
+    }
 
     private suspend fun markSoundSourceUnavailableIfRemoved(sound: Sound, failure: Throwable) {
         sourceUnavailableReasonForFailure(sound.source, failure)?.let { reason ->

@@ -104,6 +104,7 @@ data class FavoriteEntity(
     val category: String? = null,
     val uploaderName: String? = null,
     val sourcePageUrl: String? = null,
+    val license: String? = null,
     val fileSize: Long? = null,
     val fileType: String? = null,
     val views: Long? = null,

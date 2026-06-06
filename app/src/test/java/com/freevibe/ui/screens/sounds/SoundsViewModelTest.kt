@@ -241,10 +241,52 @@ class SoundsViewModelTest {
         advanceUntilIdle()
         val youtubeSound = testSound("yt_abc12345678", ContentSource.YOUTUBE, "Blocked Download")
 
-        viewModel.downloadSound(youtubeSound)
+        viewModel.downloadSound(youtubeSound, confirmed = true)
         advanceUntilIdle()
 
         assertEquals("Could not resolve audio stream URL", viewModel.state.value.error)
+        coVerify(exactly = 0) { youtubeRepo.getAudioStreamUrl(any()) }
+        coVerify(exactly = 0) { downloadManager.downloadSound(any(), any(), any(), any(), any()) }
+    }
+
+    @Test
+    fun `downloadSound requires confirmation before resolving youtube stream`() = runTest(dispatcher) {
+        val youtubeRepo = mockk<YouTubeRepository>()
+        val freesoundRepo = mockk<FreesoundRepository>()
+        val freesoundV2Repo = mockk<FreesoundV2Repository>()
+        val audiusRepo = mockk<AudiusRepository>()
+        val ccMixterRepo = mockk<CcMixterRepository>()
+        val soundCloudRepo = mockk<SoundCloudRepository>()
+        val downloadManager = mockk<DownloadManager>(relaxed = true)
+
+        stubCommonDependencies(
+            youtubeRepo = youtubeRepo,
+            freesoundRepo = freesoundRepo,
+            freesoundV2Repo = freesoundV2Repo,
+            audiusRepo = audiusRepo,
+            ccMixterRepo = ccMixterRepo,
+            soundCloudRepo = soundCloudRepo,
+        )
+
+        val viewModel = createViewModel(
+            youtubeRepo = youtubeRepo,
+            freesoundRepo = freesoundRepo,
+            freesoundV2Repo = freesoundV2Repo,
+            audiusRepo = audiusRepo,
+            ccMixterRepo = ccMixterRepo,
+            soundCloudRepo = soundCloudRepo,
+            downloadManagerOverride = downloadManager,
+        )
+
+        advanceUntilIdle()
+        val youtubeSound = testSound("yt_terms12345", ContentSource.YOUTUBE, "Terms Download").copy(
+            sourcePageUrl = "https://www.youtube.com/watch?v=terms12345",
+        )
+
+        viewModel.downloadSound(youtubeSound)
+        advanceUntilIdle()
+
+        assertEquals("Confirm YouTube source terms before downloading this sound.", viewModel.state.value.error)
         coVerify(exactly = 0) { youtubeRepo.getAudioStreamUrl(any()) }
         coVerify(exactly = 0) { downloadManager.downloadSound(any(), any(), any(), any(), any()) }
     }
@@ -696,7 +738,7 @@ class SoundsViewModelTest {
             downloadUrl = "https://expired.example.com/focus-download.mp3",
         )
 
-        viewModel.downloadSound(staleFavorite)
+        viewModel.downloadSound(staleFavorite, confirmed = true)
         advanceUntilIdle()
 
         coVerify(exactly = 1) { youtubeRepo.getAudioStreamUrl("focus12345") }

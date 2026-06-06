@@ -216,6 +216,13 @@ object DatabaseMigrations {
         }
     }
 
+    // v15->16: Preserve sound license metadata through favorites restore/export paths.
+    val MIGRATION_15_16 = object : Migration(15, 16) {
+        override fun migrate(db: SupportSQLiteDatabase) {
+            db.execSQL("ALTER TABLE `favorites` ADD COLUMN `license` TEXT DEFAULT NULL")
+        }
+    }
+
     val ALL_MIGRATIONS = arrayOf(
         MIGRATION_1_2,
         MIGRATION_2_3,
@@ -231,5 +238,6 @@ object DatabaseMigrations {
         MIGRATION_12_13,
         MIGRATION_13_14,
         MIGRATION_14_15,
+        MIGRATION_15_16,
     )
 }

@@ -38,7 +38,11 @@ import com.freevibe.ui.components.ShimmerBox
 import com.freevibe.data.model.ContentSource
 import com.freevibe.data.model.ContentType
 import com.freevibe.data.model.Sound
+import com.freevibe.data.model.SoundAction
+import com.freevibe.data.model.SoundActionDecision
+import com.freevibe.data.model.SoundLicenseCapabilities
 import com.freevibe.data.model.isSourceUnavailable
+import com.freevibe.data.model.soundLicenseCapabilities
 import com.freevibe.data.model.stableKey
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
@@ -126,10 +130,20 @@ fun SoundDetailScreen(
     val detailBadges = remember(s, state.selectedTab) { soundBadges(s, state.selectedTab) }
     val (sourceLabel, sourceColor) = soundSourceTone(s.source)
     val sourceUnavailable = s.isSourceUnavailable()
-    val shareBody = remember(s.sourcePageUrl, s.downloadUrl, sourceUnavailable) {
-        if (sourceUnavailable) "" else s.sourcePageUrl.ifEmpty { s.downloadUrl }
+    val licenseCapabilities = remember(s) { s.soundLicenseCapabilities() }
+    var pendingSoundAction by remember(s.stableKey()) { mutableStateOf<PendingSoundAction?>(null) }
+    val shareBody = remember(s, sourceUnavailable, licenseCapabilities) {
+        if (sourceUnavailable || !licenseCapabilities.canUse(SoundAction.SHARE)) {
+            ""
+        } else {
+            buildSoundShareBody(s, licenseCapabilities)
+        }
     }
     val canShareSound = shareBody.isNotBlank()
+    val canApplySound = !sourceUnavailable && licenseCapabilities.canUse(SoundAction.APPLY)
+    val canDownloadSound = !sourceUnavailable && licenseCapabilities.canUse(SoundAction.DOWNLOAD)
+    val canEditSound = !sourceUnavailable && licenseCapabilities.canUse(SoundAction.EDIT)
+    val policyMessages = remember(licenseCapabilities) { soundPolicyMessages(licenseCapabilities) }
 
     val currentSoundKey = s.stableKey()
     val similarSounds = remember(currentSoundKey) { mutableStateOf<List<Sound>>(emptyList()) }
@@ -145,6 +159,40 @@ fun SoundDetailScreen(
     val snackbarHostState = remember { SnackbarHostState() }
     LaunchedEffect(state.applySuccess) { state.applySuccess?.let { snackbarHostState.showSnackbar(it); viewModel.clearSuccess() } }
     LaunchedEffect(state.error) { state.error?.let { snackbarHostState.showSnackbar("Error: $it"); viewModel.clearError() } }
+
+    pendingSoundAction?.let { pending ->
+        AlertDialog(
+            onDismissRequest = { pendingSoundAction = null },
+            title = { Text(pending.title) },
+            text = { Text(pending.message) },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        pendingSoundAction = null
+                        pending.onConfirm()
+                    },
+                ) {
+                    Text("Continue")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { pendingSoundAction = null }) {
+                    Text("Cancel")
+                }
+            },
+        )
+    }
+
+    fun runSoundAction(action: SoundAction, title: String, onConfirm: () -> Unit) {
+        val capability = licenseCapabilities.capability(action)
+        when (capability.decision) {
+            SoundActionDecision.ALLOWED -> onConfirm()
+            SoundActionDecision.CONFIRMATION_REQUIRED -> {
+                pendingSoundAction = PendingSoundAction(title, capability.reason, onConfirm)
+            }
+            SoundActionDecision.DISABLED -> Unit
+        }
+    }
 
     Scaffold(
         snackbarHost = { SnackbarHost(snackbarHostState) },
@@ -265,6 +313,30 @@ fun SoundDetailScreen(
                 }
             }
 
+            if (policyMessages.isNotEmpty()) {
+                Surface(
+                    color = MaterialTheme.colorScheme.tertiaryContainer.copy(alpha = 0.52f),
+                    contentColor = MaterialTheme.colorScheme.onTertiaryContainer,
+                    shape = RoundedCornerShape(12.dp),
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.tertiary.copy(alpha = 0.18f)),
+                ) {
+                    Row(
+                        Modifier.fillMaxWidth().padding(14.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    ) {
+                        Icon(Icons.Default.Policy, contentDescription = null, tint = MaterialTheme.colorScheme.tertiary)
+                        Column(Modifier.weight(1f)) {
+                            Text("Source policy", style = MaterialTheme.typography.labelLarge)
+                            Text(
+                                policyMessages.joinToString(" "),
+                                style = MaterialTheme.typography.bodySmall,
+                            )
+                        }
+                    }
+                }
+            }
+
             // Tags
             if (s.tags.isNotEmpty()) {
                 FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
@@ -313,18 +385,32 @@ fun SoundDetailScreen(
 
             // 3 Apply buttons side-by-side
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                ApplyButton("Ringtone", Icons.Default.Call, !state.isApplying && viewModel.canWriteSettings(), state.isApplying, Modifier.weight(1f)) { viewModel.applySound(s, ContentType.RINGTONE) }
-                ApplyButton("Notification", Icons.Default.Notifications, !state.isApplying && viewModel.canWriteSettings(), state.isApplying, Modifier.weight(1f)) { viewModel.applySound(s, ContentType.NOTIFICATION) }
-                ApplyButton("Alarm", Icons.Default.Alarm, !state.isApplying && viewModel.canWriteSettings(), state.isApplying, Modifier.weight(1f)) { viewModel.applySound(s, ContentType.ALARM) }
+                ApplyButton("Ringtone", Icons.Default.Call, !state.isApplying && viewModel.canWriteSettings() && canApplySound, state.isApplying, Modifier.weight(1f)) {
+                    runSoundAction(SoundAction.APPLY, "Apply sound") { viewModel.applySound(s, ContentType.RINGTONE, confirmed = true) }
+                }
+                ApplyButton("Notification", Icons.Default.Notifications, !state.isApplying && viewModel.canWriteSettings() && canApplySound, state.isApplying, Modifier.weight(1f)) {
+                    runSoundAction(SoundAction.APPLY, "Apply sound") { viewModel.applySound(s, ContentType.NOTIFICATION, confirmed = true) }
+                }
+                ApplyButton("Alarm", Icons.Default.Alarm, !state.isApplying && viewModel.canWriteSettings() && canApplySound, state.isApplying, Modifier.weight(1f)) {
+                    runSoundAction(SoundAction.APPLY, "Apply sound") { viewModel.applySound(s, ContentType.ALARM, confirmed = true) }
+                }
             }
 
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                SecondarySoundAction("Trim", Icons.Default.ContentCut, Modifier.weight(1f)) { onEdit(s) }
-                SecondarySoundAction("Contact", Icons.Default.Contacts, Modifier.weight(1f)) { onContactPicker(s) }
-                SecondarySoundAction("Save", Icons.Default.Download, Modifier.weight(1f), enabled = !sourceUnavailable) { viewModel.downloadSound(s) }
+                SecondarySoundAction("Trim", Icons.Default.ContentCut, Modifier.weight(1f), enabled = canEditSound) {
+                    runSoundAction(SoundAction.EDIT, "Edit sound") { onEdit(s) }
+                }
+                SecondarySoundAction("Contact", Icons.Default.Contacts, Modifier.weight(1f), enabled = canApplySound) {
+                    runSoundAction(SoundAction.APPLY, "Apply sound") { onContactPicker(s) }
+                }
+                SecondarySoundAction("Save", Icons.Default.Download, Modifier.weight(1f), enabled = canDownloadSound) {
+                    runSoundAction(SoundAction.DOWNLOAD, "Save sound") { viewModel.downloadSound(s, confirmed = true) }
+                }
                 SecondarySoundAction("Share", Icons.Default.Share, Modifier.weight(1f), enabled = canShareSound) {
-                    val intent = Intent(Intent.ACTION_SEND).apply { type = "text/plain"; putExtra(Intent.EXTRA_TEXT, shareBody); putExtra(Intent.EXTRA_SUBJECT, s.name) }
-                    try { context.startActivity(Intent.createChooser(intent, "Share sound")) } catch (_: Exception) {}
+                    runSoundAction(SoundAction.SHARE, "Share sound") {
+                        val intent = Intent(Intent.ACTION_SEND).apply { type = "text/plain"; putExtra(Intent.EXTRA_TEXT, shareBody); putExtra(Intent.EXTRA_SUBJECT, s.name) }
+                        try { context.startActivity(Intent.createChooser(intent, "Share sound")) } catch (_: Exception) {}
+                    }
                 }
             }
 
@@ -346,6 +432,33 @@ fun SoundDetailScreen(
             Spacer(Modifier.height(80.dp)) // bottom padding for nav bar
         }
     }
+}
+
+private data class PendingSoundAction(
+    val title: String,
+    val message: String,
+    val onConfirm: () -> Unit,
+)
+
+private fun soundPolicyMessages(capabilities: SoundLicenseCapabilities): List<String> =
+    SoundAction.entries
+        .map { capabilities.capability(it) }
+        .filter { it.decision == SoundActionDecision.DISABLED && it.reason.isNotBlank() }
+        .map { it.reason }
+        .distinct()
+
+private fun buildSoundShareBody(sound: Sound, capabilities: SoundLicenseCapabilities): String {
+    val sourceUrl = sound.sourcePageUrl.ifBlank { sound.downloadUrl }
+    if (sourceUrl.isBlank()) return ""
+    return buildList {
+        add(sound.name)
+        if (sound.uploaderName.isNotBlank() && sound.uploaderName != "Unknown") {
+            add("Creator: ${sound.uploaderName}")
+        }
+        add("Source: ${sound.source.name}")
+        add("License: ${capabilities.normalizedLicense}")
+        add("Link: $sourceUrl")
+    }.joinToString("\n")
 }
 
 @Composable

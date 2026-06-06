@@ -135,6 +135,11 @@ next pass can resume quickly.
   404/410/gone/removed/deleted provider failures now mark saved wallpaper/sound
   favorites unavailable during apply/download paths, and failed re-downloads
   mark matching download-history rows unavailable.
+- Completed Cycle 49 sound license capability gates: added normalized sound
+  action policy, favorite license persistence with Room v16 and export/import
+  preservation, confirmation gates for restricted apply/download actions,
+  disabled states for link-only or missing-license content, and provenance-rich
+  sound share text.
 
 ## 2026-06-05
 

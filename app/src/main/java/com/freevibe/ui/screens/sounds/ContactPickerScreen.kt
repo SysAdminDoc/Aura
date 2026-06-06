@@ -51,6 +51,9 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.util.Locale
 import javax.inject.Inject
+import com.freevibe.data.model.SoundAction
+import com.freevibe.data.model.SoundActionDecision
+import com.freevibe.data.model.soundLicenseCapabilities
 
 data class ContactPickerState(
     val contacts: List<ContactInfo> = emptyList(),
@@ -62,6 +65,11 @@ data class ContactPickerState(
     val applyingContactId: Long? = null,
     val success: String? = null,
     val error: String? = null,
+)
+
+private data class PendingContactAction(
+    val contactId: Long,
+    val message: String,
 )
 
 @HiltViewModel
@@ -120,9 +128,13 @@ class ContactPickerViewModel @Inject constructor(
         }
     }
 
-    fun assignToContact(contactId: Long) {
+    fun assignToContact(contactId: Long, confirmed: Boolean = false) {
         val sound = _state.value.selectedSound ?: run {
             _state.update { it.copy(error = "No sound selected. Return to Sounds and choose a valid item.") }
+            return
+        }
+        soundActionGateMessage(sound, confirmed)?.let { message ->
+            _state.update { it.copy(error = message) }
             return
         }
         _state.update { it.copy(isApplying = true, applyingContactId = contactId, error = null, success = null) }
@@ -170,6 +182,15 @@ class ContactPickerViewModel @Inject constructor(
         if (fallbackSound.downloadUrl.isNotBlank() && sound.downloadUrl != fallbackSound.downloadUrl) return false
         return true
     }
+
+    private fun soundActionGateMessage(sound: Sound, confirmed: Boolean): String? {
+        val capability = sound.soundLicenseCapabilities().capability(SoundAction.APPLY)
+        return when (capability.decision) {
+            SoundActionDecision.ALLOWED -> null
+            SoundActionDecision.CONFIRMATION_REQUIRED -> capability.reason.takeUnless { confirmed }
+            SoundActionDecision.DISABLED -> capability.reason
+        }
+    }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -194,6 +215,7 @@ fun ContactPickerScreen(
         ).joinToString("|")
     }
     var soundResolved by remember(soundIdentityKey) { mutableStateOf<Boolean?>(null) }
+    var pendingContactAction by remember(soundIdentityKey) { mutableStateOf<PendingContactAction?>(null) }
 
     LaunchedEffect(soundIdentityKey) {
         soundResolved = viewModel.ensureSelectedSound(soundId, fallbackSound)
@@ -241,6 +263,41 @@ fun ContactPickerScreen(
     }
     LaunchedEffect(state.error) {
         state.error?.let { snackbarHostState.showSnackbar("Error: $it"); viewModel.clearMessages() }
+    }
+
+    pendingContactAction?.let { pending ->
+        AlertDialog(
+            onDismissRequest = { pendingContactAction = null },
+            title = { Text("Apply sound") },
+            text = { Text(pending.message) },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        pendingContactAction = null
+                        viewModel.assignToContact(pending.contactId, confirmed = true)
+                    },
+                ) {
+                    Text("Continue")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { pendingContactAction = null }) {
+                    Text("Cancel")
+                }
+            },
+        )
+    }
+
+    fun assignWithPolicy(contactId: Long) {
+        val sound = state.selectedSound ?: return
+        val capability = sound.soundLicenseCapabilities().capability(SoundAction.APPLY)
+        when (capability.decision) {
+            SoundActionDecision.ALLOWED -> viewModel.assignToContact(contactId, confirmed = true)
+            SoundActionDecision.CONFIRMATION_REQUIRED -> {
+                pendingContactAction = PendingContactAction(contactId, capability.reason)
+            }
+            SoundActionDecision.DISABLED -> Unit
+        }
     }
 
     Scaffold(
@@ -411,12 +468,16 @@ fun ContactPickerScreen(
                     contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
                     verticalArrangement = Arrangement.spacedBy(6.dp),
                 ) {
+                    val canApplySelectedSound = state.selectedSound
+                        ?.soundLicenseCapabilities()
+                        ?.canUse(SoundAction.APPLY)
+                        ?: false
                     items(state.contacts, key = { it.id }) { contact ->
                         ContactRow(
                             contact = contact,
-                            enabled = !state.isApplying,
+                            enabled = !state.isApplying && canApplySelectedSound,
                             isApplying = state.applyingContactId == contact.id,
-                            onClick = { viewModel.assignToContact(contact.id) },
+                            onClick = { assignWithPolicy(contact.id) },
                         )
                     }
                 }

@@ -160,6 +160,7 @@ class MappersTest {
             downloadUrl = "https://download.mp3", duration = 3.5,
             tags = listOf("nature", "bird"), uploaderName = "recorder",
             sourcePageUrl = "https://freesound.org/s/42",
+            license = "CC BY",
             fileSize = 50_000, fileType = "audio/mp3",
         )
         val restored = original.toFavoriteEntity().toSound()
@@ -169,6 +170,7 @@ class MappersTest {
         assertEquals(original.downloadUrl, restored.downloadUrl)
         assertEquals(original.duration, restored.duration, 0.001)
         assertEquals(original.tags, restored.tags)
+        assertEquals(original.license, restored.license)
         assertEquals(original.uploaderName, restored.uploaderName)
         assertEquals(SOURCE_AVAILABILITY_AVAILABLE, restored.sourceAvailability)
     }

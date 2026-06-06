@@ -3,6 +3,7 @@
 All notable changes to Aura will be documented in this file.
 
 ## Unreleased
+- **Sound license capability gates (Cycle 49)**: sounds now derive action capabilities from source/license/provenance metadata; YouTube apply/download requires confirmation, SoundCloud is link-only until reviewed, missing remote licenses disable live-source actions, saved sound favorites preserve license metadata, and sound shares include source/uploader/license provenance.
 - **Provider removal reconciliation (Cycle 48)**: explicit 404/410/gone/removed/deleted provider failures now mark saved wallpaper/sound favorites and matching download-history rows as source-unavailable during apply/download paths.
 - **Pexels enhancement guardrails (Cycle 47)**: Discover and video-wallpaper discovery now treat Pexels as an enhancement source; Pexels-only batches are dropped, disabled-Pexels Discover still returns Wallhaven/Pixabay fallback inventory, and Pexels photo rows keep creator/source-page context.
 - **Saved-source availability states (Cycle 46)**: favorites and download history now persist a source-availability state; marked items show "Source unavailable" in saved surfaces and detail screens, hide live-source affordances, and keep local saved wallpaper paths usable.

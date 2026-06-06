@@ -67,4 +67,22 @@ class FavoritesExporterValidationTest {
         assertTrue(entity?.isSourceUnavailable() == true)
         assertEquals("Post was removed", entity?.sourceAvailabilityReason)
     }
+
+    @Test
+    fun `validated sound favorite preserves license metadata`() {
+        val entity = FavoriteExportItem(
+            id = "fs_42",
+            source = "freesound",
+            type = "sound",
+            thumbnailUrl = "",
+            fullUrl = "https://example.com/sound.mp3",
+            name = "Bird call",
+            license = "CC BY-NC",
+            uploaderName = "recorder",
+            sourcePageUrl = "https://freesound.org/s/42/",
+        ).toValidatedEntity()
+
+        assertNotNull(entity)
+        assertEquals("CC BY-NC", entity?.license)
+    }
 }

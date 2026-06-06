@@ -55,6 +55,10 @@ runtime-control row.
 - Generated wallpapers now have a default-on source flag covering the Wallpapers
   Generate chip, the generator API-key surface, and the ViewModel request gate.
   Saved generated wallpapers stay visible because they are local user content.
+- Sound actions now have item-level license capability gates for apply,
+  download, share, edit/trim, contact assignment, and Aura Originals use. The
+  human-readable matrix lives in
+  [sound-license-capabilities.md](sound-license-capabilities.md).
 
 ## Policy Sources
 

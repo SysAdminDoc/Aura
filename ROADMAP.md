@@ -223,12 +223,13 @@ Append-only Cycle 3 handoff. Every item below is source-backed in `docs/research
   - Acceptance: distributor can disable YouTube features; first-run does not require YouTube; UI clearly labels YouTube as optional; fallback sources remain useful; no YouTube download/cache happens when legal mode disables it.
   - Verify: disable YouTube and run Sounds/Videos; bundled sound and community paths still work; source metrics record disabled state separately from provider outage.
 
-- [ ] 🤖 🔬 **P1 — Sound license capability gates**
+- [~] 🤖 🔬 **P1 — Sound license capability gates**
   - Why: Licenses and provider terms differ by source and action. A badge alone is not enough to decide whether a sound can be trimmed, normalized, downloaded, set as a ringtone, shared, or bundled.
   - Evidence: `SoundDetailScreen.kt` displays license/uploader metadata; Freesound and SoundCloud terms require source-specific credit and usage compliance.
   - Touches: sound models, sound repositories, editor/apply/share flows, Aura Originals curation, licenses screen.
   - Acceptance: each sound has normalized license metadata and action capabilities; restricted actions are disabled or require confirmation; Aura Originals accepts only reviewed CC0/compatible assets; source link/uploader/license appear in every detail/export path.
   - Verify: matrix tests for CC0, CC BY, CC BY-NC, SoundCloud, YouTube, community, bundled; editor/apply/share flows respect capability gates.
+  - Progress 2026-06-06: Cycle 49 added `SoundLicensePolicy.kt` with normalized license/action capabilities, Room v16 favorite-license persistence, favorites export/import preservation, ViewModel gates before apply/download stream resolution, Sound Detail/quick-apply/contact disabled or confirmation-required actions, provenance-rich share text, and `docs/legal/sound-license-capabilities.md`. Remaining work: community upload rights attestation and explicit selected license metadata so community sounds can move beyond the generic confirmation-required `User Upload` policy.
 
 - [~] 🤖 🔬 **P2 — Source deletion and takedown reconciliation**
   - Why: Reddit and other user-generated sources can delete, hide, suspend, or remove content after Aura cached it.
@@ -676,12 +677,13 @@ Append-only Cycle 12 handoff. Every item below is source-backed in `docs/researc
 
 Append-only Cycle 13 handoff. Every item below is source-backed in `docs/research/cycle-13-2026-06-04.md`; merge into the existing Now/Next/Later item named in `Touches` when implementation starts.
 
-- [ ] 🤖 🔬 **P0 — Unified provenance and action-capability model**
+- [~] 🤖 🔬 **P0 — Unified provenance and action-capability model**
   - Why: Sounds carry `license`, wallpapers generally do not, video wallpaper items have a separate metadata shape, and the static licenses screen does not prove whether a specific item can be edited, applied, downloaded, shared, bundled, or kept offline.
   - Evidence: `Models.kt`; `Mappers.kt`; `FreesoundV2Repository.kt`; `CcMixterRepository.kt`; `AudiusRepository.kt`; `SoundCloudRepository.kt`; `WallpaperDetailScreen.kt`; `SoundDetailScreen.kt`; Pexels/Pixabay/Freesound/YouTube/Reddit policy docs.
   - Touches: content models/entities, migrations, remote mappers, favorites/downloads/cache restoration, detail/share/apply/edit flows, provider policy docs, licenses screen.
   - Acceptance: every content item can expose source, source page, creator/uploader, normalized license, provider terms, takedown/report URL, and allowed actions; unsupported or risky actions are disabled or require source-specific confirmation; favorites/downloads preserve provenance.
   - Verify: fixture items for Pexels, Pixabay, Reddit, YouTube, Freesound, ccMixter, Audius, SoundCloud, community, bundled, AI-generated, and local content render provenance consistently across cards, detail screens, share sheets, favorites, downloads, and editors.
+  - Progress 2026-06-06: Cycle 49 implemented the sound-specific action-capability slice: normalized license metadata, favorite-license persistence, detail/share/apply/download/contact gates, and matrix tests. Wallpapers, video wallpapers, provider takedown/report URLs, and community rights attestation remain separate provenance slices.
 
 - [ ] 🤖 🔬 **P0 — IP takedown/report queue for community and mirrored content**
   - Why: Google Play can require evidence of rights to use copyrighted content, and Aura needs one route for community-upload reports plus another for provider/source-deletion reconciliation.
@@ -2883,19 +2885,26 @@ Stars/dates as of research pass 2026-05-16.
 - Saved-source availability implementation — `Models.kt`, `Database.kt`, `DatabaseMigrations.kt`, Room schema v15, `Mappers.kt`, `FavoritesRepository.kt`, `FavoritesExporter.kt`, `DownloadManager.kt`, Favorites/Downloads/detail screens, and focused mapper/export/viewmodel tests.
 - Verification outputs — focused Mappers, FavoritesExporterValidation, DownloadsViewModel, WallpapersViewModel, and SoundsViewModel unit tests; release-compliance Python compile checks; dependency notice lock check; generated notice metadata parity check; native compliance lock check; dependency overlay check; dependency license policy check; `git diff --check`; and changed-line attribution scan.
 
+## Appendix AY — Cycle 49 Sources
+
+- Cycle 49 implementation record — [docs/research/cycle-49-2026-06-06.md](docs/research/cycle-49-2026-06-06.md).
+- Sound action capability matrix — [docs/legal/sound-license-capabilities.md](docs/legal/sound-license-capabilities.md).
+- Sound license implementation — `SoundLicensePolicy.kt`, `Models.kt`, `Database.kt`, `DatabaseMigrations.kt`, Room schema v16, `Mappers.kt`, `FavoritesExporter.kt`, `SoundsViewModel.kt`, `SoundDetailScreen.kt`, `SoundsScreen.kt`, `ContactPickerScreen.kt`, and focused sound policy/mapper/export/viewmodel tests.
+- Verification outputs — focused SoundLicensePolicy, Mappers, FavoritesExporterValidation, SoundsViewModel, and ContactPickerViewModel unit tests.
+
 ## Continuation State
 
 ### Last Completed Cycle
 
-Cycle 48: Provider removal failure reconciliation for saved items.
+Cycle 49: Sound license capability gates and favorite license persistence.
 
 ### Current Focus
 
-Start Cycle 49 with sound license capability gates for source-specific apply/download/share/edit restrictions. Commit and push completed work when the active project contract allows it.
+Start Cycle 50 with community upload rights attestation and selected license metadata for community sounds/wallpapers. Commit and push completed work when the active project contract allows it.
 
 ### Important Findings So Far
 
-- `ROADMAP.md` has Cycle 18 through Cycle 48 research/implementation items; `docs/research/cycle-18-2026-06-06.md` through `docs/research/cycle-48-2026-06-06.md` have the source-backed analysis.
+- `ROADMAP.md` has Cycle 18 through Cycle 49 research/implementation items; `docs/research/cycle-18-2026-06-06.md` through `docs/research/cycle-49-2026-06-06.md` have the source-backed analysis.
 - `LicensesScreen.kt` still has manual dependency rows; content sources are already code-backed by `ProviderDisclosure.kt`.
 - `.github/workflows/release.yml` now publishes `THIRD-PARTY-NOTICES.md` and `NATIVE-COMPLIANCE.md` with the APK and includes both files in `SHA256SUMS.txt`; SBOM artifacts remain open.
 - `.github/workflows/verify.yml` and `.github/workflows/release.yml` now run `tools/dependency_notice_lock.py --mode check`, `tools/dependency_notice_lock.py --mode check-metadata`, `tools/native_compliance_inventory.py --mode check-lock`, `tools/dependency_overlay_check.py`, and `tools/dependency_license_policy.py` after `:app:releaseOssLicensesTask`.
@@ -2934,11 +2943,12 @@ Start Cycle 49 with sound license capability gates for source-specific apply/dow
 - Favorites and download history now have persisted `SOURCE_UNAVAILABLE` state with reason metadata so saved local copies can remain navigable without presenting upstream-removed provider content as live source content.
 - Pexels now has enhancement-only guardrails in wallpaper Discover and video-wallpaper discovery: Pexels rows can enrich mixed feeds, but Pexels-only batches are dropped. Focused tests prove provider-off Discover still serves Wallhaven/Pixabay base inventory and Pexels photo rows retain creator/source-page context.
 - Wallpaper and sound apply/download paths now classify explicit 404/410/gone/removed/deleted provider failures and mark saved favorites unavailable with provider-specific reasons; `DownloadManager` also marks matching download-history rows unavailable on failed re-downloads.
+- Sounds now have item-level license capability gates: YouTube apply/download requires confirmation, SoundCloud is link-only until reviewed, CC BY-NC requires confirmation, no-derivatives disables editing, missing remote licenses disable live-source actions, saved sound favorites preserve license metadata through Room v16 and favorites import/export, and share text includes source/uploader/license provenance.
 - Recent history was checked with `rtk git log -10 --oneline --decorate` for this pass.
 
 ### Next Best Actions
 
-1. Add sound license capability gates for source-specific apply/download/share/edit restrictions.
+1. Add community upload rights attestation and selected license metadata for community sounds/wallpapers.
 2. Run a real GitHub Actions manual release dry run after secrets are confirmed available and archive the run URL in the release docs.
 3. Add deeper UI verification for the licenses screen on an emulator or screenshot lane when a device/runtime is available.
 4. Preserve exact Termux package commit/build-log evidence for FFmpeg if the release owner can obtain it from upstream or a reproducible rebuild.
