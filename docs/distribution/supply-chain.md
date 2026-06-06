@@ -10,7 +10,7 @@ Aura is side-loaded through GitHub Releases and Obtainium, so release artifacts 
 | Release bundle validator | `tools/release_artifact_bundle_check.py`, `.github/workflows/release.yml` | Fails manual dry runs and tag releases when the final APK/notices/native/checksum/release-note bundle is incomplete or internally inconsistent. |
 | Third-party notices | `tools/google_oss_to_markdown.py`, `.github/workflows/release.yml` | Runs the Google OSS Licenses Gradle task for the release variant and publishes `THIRD-PARTY-NOTICES.md` next to the APK. |
 | Raw Google OSS inputs | `tools/google_oss_raw_archive.py`, `.github/workflows/release.yml`, `docs/distribution/raw-oss-input-retention.md` | Archives generated `dependencies.json`, license metadata, and raw license text inputs for drift review, and keeps the archive attached to every tagged public release. |
-| Dependency notice lockfile | `tools/dependency_notice_lock.py`, `docs/legal/dependency-notices.lock.json` | Fails PR/main/release checks when generated release dependency notices drift without review. |
+| Dependency notice lockfile | `tools/dependency_notice_lock.py`, `docs/legal/dependency-notices.lock.json` | Fails PR/main/release checks when generated release dependency notices or raw metadata rows drift without review. |
 | Dependency notice overlay | `tools/dependency_overlay_check.py`, `docs/legal/dependency-notice-overrides.json` | Requires curated source, license, usage, and release-review metadata for high-risk generated dependencies and native payloads. |
 | Dependency license policy | `tools/dependency_license_policy.py`, `docs/legal/dependency-license-policy.json` | Fails PR/main/release checks when curated dependency or native-payload license IDs are disallowed, unknown, or missing required review notes. |
 | Native compliance packet | `tools/native_compliance_inventory.py`, `.github/workflows/release.yml` | Inventories youtubedl-android, yt-dlp/Python, FFmpeg, QuickJS, and NewPipeExtractor payload evidence and publishes `NATIVE-COMPLIANCE.md` next to the APK. |
@@ -57,6 +57,7 @@ Generate notices locally after the release notice task has run:
 ```powershell
 .\gradlew.bat :app:releaseOssLicensesTask --stacktrace --no-daemon
 python tools\dependency_notice_lock.py --mode check --lockfile docs\legal\dependency-notices.lock.json
+python tools\dependency_notice_lock.py --mode check-metadata --lockfile docs\legal\dependency-notices.lock.json
 python tools\dependency_overlay_check.py --overlay docs\legal\dependency-notice-overrides.json
 python tools\dependency_license_policy.py --policy docs\legal\dependency-license-policy.json --overlay docs\legal\dependency-notice-overrides.json
 python tools\google_oss_to_markdown.py --variant release --output build\reports\THIRD-PARTY-NOTICES.md
@@ -85,11 +86,13 @@ Retention decision: `GOOGLE-OSS-RAW-INPUTS.zip` remains attached to every tagged
 - Sorted release dependency coordinates from `dependencies.json`.
 - SHA-256 hashes for the generated dependency, license metadata, and license text inputs.
 - Notice section names, offsets, lengths, and notice-text SHA-256 hashes.
+- A metadata-only parity check that proves the raw Google OSS metadata rows still match the reviewed notice-section count and ranges.
 
 PR/main verification and the release workflow run:
 
 ```bash
 python3 tools/dependency_notice_lock.py --mode check --lockfile docs/legal/dependency-notices.lock.json
+python3 tools/dependency_notice_lock.py --mode check-metadata --lockfile docs/legal/dependency-notices.lock.json
 python3 tools/native_compliance_inventory.py --mode check-lock --lockfile docs/legal/native-compliance.lock.json
 python3 tools/dependency_overlay_check.py --overlay docs/legal/dependency-notice-overrides.json
 python3 tools/dependency_license_policy.py --policy docs/legal/dependency-license-policy.json --overlay docs/legal/dependency-notice-overrides.json

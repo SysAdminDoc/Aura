@@ -1260,12 +1260,19 @@ Append-only Cycle 31 implementation record. The completed item is source-backed 
   - Acceptance: generated notices can be filtered by dependency name or license label; high-risk overlay surfaces are easy to find without scrolling the whole generated list.
   - Verify: focused parser/UI model tests cover filtering and high-risk matching.
 
-- [ ] 🤖 🔬 **P1 — Generated notice metadata parity guard**
+- [x] 🤖 🔬 **P1 — Generated notice metadata parity guard**
   - Why: the in-app viewer parses `third_party_license_metadata` at runtime, but CI only locks generated notice sections through the Python lockfile. A lightweight parity check should prove the raw metadata count and parser assumptions stay aligned with the lock.
   - Evidence: `GeneratedDependencyNotices.kt`, `tools/dependency_notice_lock.py`, `docs/legal/dependency-notices.lock.json`, generated Google OSS raw resources.
   - Touches: release-compliance tools/tests, docs/legal lock docs, roadmap/state files.
   - Acceptance: a deterministic check fails when generated raw metadata rows diverge from the locked notice-section count or contain malformed ranges.
   - Verify: focused Python fixture or temporary generated-root smoke test proves malformed metadata fails and current generated outputs pass.
+
+- [ ] 🤖 🔬 **P1 — Runtime provider kill-switch behavior matrix**
+  - Why: Aura has many provider toggles and legacy/dormant sources, but disabled-provider behavior is still mostly implicit. Users and release owners need predictable behavior when a provider is disabled, missing credentials, or temporarily unavailable.
+  - Evidence: `ProviderDisclosure.kt`, `PreferencesManager.kt`, `SettingsScreen.kt`, repository entry points for YouTube, Reddit, Pexels, Pixabay, community uploads, bundled content, and legacy sound providers.
+  - Touches: provider settings/disclosure docs, focused provider tests, roadmap/state files.
+  - Acceptance: current provider kill-switch and disabled-state behavior is mapped in a checked doc or tests; at least one high-risk implicit path is either fixed or captured with a concrete follow-up.
+  - Verify: focused unit tests or static checks prove disabled/missing provider states do not silently route users into unavailable sources.
 
 ---
 
@@ -2791,22 +2798,29 @@ Stars/dates as of research pass 2026-05-16.
 - Local source references — `docs/legal/dependency-notice-overrides.json`, `docs/legal/dependency-license-policy.json`, generated Google OSS metadata.
 - Verification outputs — focused `:app:testDebugUnitTest --tests com.freevibe.ui.screens.licenses.LicensesScreenTest`, release-compliance Python compile checks, dependency notice lock check, native compliance lock check, dependency overlay check, dependency license policy check, `git diff --check`, and changed-line attribution scan.
 
+## Appendix AM — Cycle 35 Sources
+
+- Cycle 35 implementation record — [docs/research/cycle-35-2026-06-06.md](docs/research/cycle-35-2026-06-06.md).
+- Generated notice metadata parity implementation — `tools/dependency_notice_lock.py`, `.github/workflows/verify.yml`, `.github/workflows/release.yml`, `docs/distribution/supply-chain.md`.
+- Primary source reference — [Google Play services open-source notices guide](https://developers.google.com/android/guides/opensource).
+- Verification outputs — release-compliance Python compile checks, dependency notice lock check, generated notice metadata parity check, malformed-range and missing-row negative fixtures, native compliance lock check, dependency overlay check, dependency license policy check, `git diff --check`, and changed-line attribution scan.
+
 ## Continuation State
 
 ### Last Completed Cycle
 
-Cycle 34: generated notice search and high-risk alignment.
+Cycle 35: generated notice metadata parity guard.
 
 ### Current Focus
 
-Start Cycle 35 with a generated notice metadata parity guard. Commit and push completed work when the active project contract allows it.
+Start Cycle 36 with a runtime provider kill-switch behavior matrix. Commit and push completed work when the active project contract allows it.
 
 ### Important Findings So Far
 
-- `ROADMAP.md` has Cycle 18 through Cycle 34 research/implementation items; `docs/research/cycle-18-2026-06-06.md` through `docs/research/cycle-34-2026-06-06.md` have the source-backed analysis.
+- `ROADMAP.md` has Cycle 18 through Cycle 35 research/implementation items; `docs/research/cycle-18-2026-06-06.md` through `docs/research/cycle-35-2026-06-06.md` have the source-backed analysis.
 - `LicensesScreen.kt` still has manual dependency rows; content sources are already code-backed by `ProviderDisclosure.kt`.
 - `.github/workflows/release.yml` now publishes `THIRD-PARTY-NOTICES.md` and `NATIVE-COMPLIANCE.md` with the APK and includes both files in `SHA256SUMS.txt`; SBOM artifacts remain open.
-- `.github/workflows/verify.yml` and `.github/workflows/release.yml` now run `tools/dependency_notice_lock.py --mode check`, `tools/native_compliance_inventory.py --mode check-lock`, `tools/dependency_overlay_check.py`, and `tools/dependency_license_policy.py` after `:app:releaseOssLicensesTask`.
+- `.github/workflows/verify.yml` and `.github/workflows/release.yml` now run `tools/dependency_notice_lock.py --mode check`, `tools/dependency_notice_lock.py --mode check-metadata`, `tools/native_compliance_inventory.py --mode check-lock`, `tools/dependency_overlay_check.py`, and `tools/dependency_license_policy.py` after `:app:releaseOssLicensesTask`.
 - `docs/distribution/supply-chain.md` defers SBOM work until N-1, but Cycle 18 split out a smaller current-toolchain notice/drift lane that should not wait on the AGP/Kotlin migration.
 - AboutLibraries 15.x is not a current-toolchain fit because its release notes make AGP 8.13 the minimum; Aura is currently on AGP 8.7.3 / Gradle 8.12. Test AboutLibraries 14.2.1 if using it before N-1.
 - Google OSS notices now have the required `settings.gradle.kts` plugin resolution mapping and root/app Gradle wiring in the real repo.
@@ -2817,7 +2831,7 @@ Start Cycle 35 with a generated notice metadata parity guard. Commit and push co
 - `tools/native_compliance_inventory.py` generated `docs/legal/native-compliance.md` with youtubedl-android common/library/ffmpeg AAR hashes, NewPipeExtractor JAR hashes, yt-dlp 2025.11.12 git-head facts, python3.12 payload facts, QuickJS entries, FFmpeg ABI payload paths, and embedded FFmpeg 7.1.1 configure evidence.
 - `docs/legal/ffmpeg-source-correspondence.md` records the resolved FFmpeg AAR hash, nested payload hashes, embedded configure lines, FFmpeg source candidate, and remaining Termux source/build-log owner actions.
 - `docs/legal/dependency-notices.lock.json` records 251 release dependency coordinates and 288 notice section hashes from Google OSS outputs.
-- The dependency notice lockfile gates generated dependency/notice drift, but it still does not provide curated source URLs or license IDs per dependency coordinate.
+- The dependency notice lockfile gates generated dependency/notice drift, and `tools/dependency_notice_lock.py --mode check-metadata` now separately proves raw metadata row parity with the reviewed notice sections.
 - `docs/legal/native-compliance.lock.json` records 8 native/copyleft coordinates, 23 artifact records, and 36 payload entries from youtubedl-android and NewPipeExtractor artifacts.
 - The native lockfile now gates artifact hash, payload fact, and embedded FFmpeg configure drift, but it still does not prove the exact Termux package commit, patches, dependency source set, or build logs.
 - `docs/legal/dependency-notice-overrides.json` records curated high-risk dependency and native-payload review metadata; `tools/dependency_overlay_check.py` fails stale, missing, or orphaned overlay entries against the dependency/native locks.
@@ -2834,7 +2848,7 @@ Start Cycle 35 with a generated notice metadata parity guard. Commit and push co
 
 ### Next Best Actions
 
-1. Add a generated notice metadata parity guard between raw Google OSS metadata and `docs/legal/dependency-notices.lock.json`.
+1. Map runtime provider kill switches and disabled-provider behavior across current content sources.
 2. Run a real GitHub Actions manual release dry run after secrets are confirmed available and archive the run URL in the release docs.
 3. Add deeper UI verification for the licenses screen on an emulator or screenshot lane when a device/runtime is available.
 4. Preserve exact Termux package commit/build-log evidence for FFmpeg if the release owner can obtain it from upstream or a reproducible rebuild.

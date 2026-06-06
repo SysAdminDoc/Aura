@@ -71,6 +71,10 @@ next pass can resume quickly.
   filtering for generated notice names/license labels and review markers for
   generated rows that map to curated Firebase, Play services, ML Kit,
   NewPipeExtractor, youtubedl-android, ProfileInstaller, and ZXing surfaces.
+- Completed Cycle 35 generated notice metadata parity guard: added
+  `tools/dependency_notice_lock.py --mode check-metadata`, wired PR/main and
+  release workflows to run it after the full generated notice lock check, and
+  documented the raw metadata parity command in the supply-chain runbook.
 
 ## 2026-06-05
 

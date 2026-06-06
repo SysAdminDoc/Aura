@@ -28,9 +28,12 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument(
         "--mode",
-        choices=("write", "check"),
+        choices=("write", "check", "check-metadata"),
         default="check",
-        help="write updates the lockfile; check compares generated outputs to the lockfile.",
+        help=(
+            "write updates the lockfile; check compares generated outputs to the "
+            "lockfile; check-metadata compares only generated notice metadata rows."
+        ),
     )
     parser.add_argument(
         "--generated-root",
@@ -279,13 +282,65 @@ def check_lock(lockfile: Path, current: dict[str, object]) -> int:
     return 1
 
 
+def check_metadata(lockfile: Path, current: dict[str, object]) -> int:
+    require_file(lockfile)
+    expected = json.loads(lockfile.read_text(encoding="utf-8"))
+    expected_sections = expected.get("noticeSections", [])
+    current_sections = current.get("noticeSections", [])
+    expected_count = expected.get("counts", {}).get("noticeSections")
+    current_count = current.get("counts", {}).get("noticeSections")
+
+    if not isinstance(expected_sections, list):
+        print("Dependency notice lockfile has invalid noticeSections metadata.", file=sys.stderr)
+        return 1
+    if expected_count != len(expected_sections):
+        print(
+            "Dependency notice lockfile count does not match its noticeSections rows: "
+            f"count {expected_count}, rows {len(expected_sections)}",
+            file=sys.stderr,
+        )
+        return 1
+
+    if expected_count == current_count and expected_sections == current_sections:
+        print(
+            json.dumps(
+                {
+                    "lockfile": str(lockfile),
+                    "status": "ok",
+                    "metadataParity": "ok",
+                    "noticeSections": current_count,
+                },
+                sort_keys=True,
+            )
+        )
+        return 0
+
+    lines = ["Generated dependency notice metadata does not match the reviewed lockfile."]
+    lines.append(f"Expected notice sections: {expected_count}")
+    lines.append(f"Current notice sections: {current_count}")
+    lines.extend(summarize_notice_diff(expected_sections, current_sections))
+    if len(lines) == 3:
+        lines.append("Notice section offsets, lengths, names, or text hashes changed.")
+    lines.append(
+        f"Regenerate intentionally with: python tools/dependency_notice_lock.py --mode write --lockfile {lockfile.as_posix()}"
+    )
+    print("\n".join(lines), file=sys.stderr)
+    return 1
+
+
 def main() -> int:
     args = parse_args()
-    current = build_lock(generated_root=Path(args.generated_root), variant=args.variant)
+    try:
+        current = build_lock(generated_root=Path(args.generated_root), variant=args.variant)
+    except (FileNotFoundError, ValueError, json.JSONDecodeError) as error:
+        print(error, file=sys.stderr)
+        return 1
     lockfile = Path(args.lockfile)
     if args.mode == "write":
         write_lock(lockfile, current)
         return 0
+    if args.mode == "check-metadata":
+        return check_metadata(lockfile, current)
     return check_lock(lockfile, current)
 
 

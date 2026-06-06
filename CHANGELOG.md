@@ -3,6 +3,7 @@
 All notable changes to Aura will be documented in this file.
 
 ## Unreleased
+- **Generated notice metadata parity (Cycle 35)**: `tools/dependency_notice_lock.py` now has a `check-metadata` mode, and PR/main plus release workflows fail when raw Google OSS metadata rows no longer match the reviewed dependency notice lockfile.
 - **Generated notice search and review markers (Cycle 34)**: the in-app generated dependency notice viewer now supports filtering by dependency name or license label and highlights generated rows that map to curated high-risk dependency review surfaces.
 - **In-app generated dependency notices (Cycle 33)**: Settings > Open source licenses now reads generated Google OSS raw resources directly, lists generated dependency notices in-app, and opens full notice text without adding the stock Play services OSS licenses runtime dependency.
 - **Raw Google OSS input retention (Cycle 32)**: documented that `GOOGLE-OSS-RAW-INPUTS.zip` stays attached to every tagged public release, clarified release/dry-run docs, and kept the bundle validator enforcing the archive in release files, checksums, and notes.
