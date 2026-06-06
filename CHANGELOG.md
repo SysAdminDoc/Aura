@@ -3,7 +3,8 @@
 All notable changes to Aura will be documented in this file.
 
 ## Unreleased
-- **Pixabay photo request-cache and backoff (Cycle 43)**: Pixabay photo results now use a 24-hour fresh-cache path before API calls and 429 responses set an in-session backoff from `Retry-After` or `X-RateLimit-Reset`; Pixabay video metadata remains the next policy follow-up.
+- **Pixabay video request-cache and backoff (Cycle 44)**: Pixabay video metadata now uses an app-private 24-hour fresh-cache path before API calls, persists 429 backoff from `Retry-After` or `X-RateLimit-Reset`, and falls back to stale cached video rows during active backoff.
+- **Pixabay photo request-cache and backoff (Cycle 43)**: Pixabay photo results now use a 24-hour fresh-cache path before API calls and 429 responses set an in-session backoff from `Retry-After` or `X-RateLimit-Reset`; video metadata policy handling followed in Cycle 44.
 - **Wallhaven source switch (Cycle 42)**: Settings now has a default-on Wallhaven source switch; disabled mode hides Wallhaven browsing and color/random/similar actions, removes Wallhaven from rotation pickers, skips Wallhaven API calls before key reads/cache fallback, and records disabled diagnostics separately from outages.
 - **Bing Daily source switch (Cycle 41)**: Settings now has a default-on Bing Daily source switch; disabled mode skips daily-image API calls before cache fallback or Retrofit use, hides Bing from rotation pickers, and records disabled diagnostics separately from outages.
 - **Community source switch (Cycle 40)**: Settings now has a default-on Community source switch; disabled mode skips startup identity warm-up, hides community tabs/uploads/votes/creator profile entry points, blocks feed/upload/follow Firebase calls, and records disabled diagnostics separately from Firebase outages.

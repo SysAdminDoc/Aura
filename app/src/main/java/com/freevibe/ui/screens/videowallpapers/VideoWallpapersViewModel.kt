@@ -1,14 +1,17 @@
 package com.freevibe.ui.screens.videowallpapers
 
 import android.content.Context
+import android.content.SharedPreferences
 import android.util.Log
 import android.widget.Toast
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.freevibe.data.local.PreferencesManager
 import com.freevibe.data.remote.pexels.PexelsApi
+import com.freevibe.data.remote.pixabay.PixabayVideo
 import com.freevibe.data.repository.YouTubeRepository
 import com.freevibe.data.repository.VoteRepository
+import com.freevibe.data.repository.pixabayRateLimitBackoffMillis
 import com.freevibe.service.SourceMetrics
 import com.freevibe.service.VIDEO_WALLPAPER_SCALE_MODE_ZOOM
 import com.freevibe.service.VideoWallpaperSelectionResult
@@ -32,11 +35,36 @@ import okhttp3.Request
 import org.schabi.newpipe.extractor.NewPipe
 import org.schabi.newpipe.extractor.ServiceList
 import org.schabi.newpipe.extractor.stream.StreamInfoItem
+import java.io.ByteArrayInputStream
+import java.io.ByteArrayOutputStream
+import java.nio.charset.StandardCharsets
+import java.util.Properties
 import javax.inject.Inject
+
+internal const val PIXABAY_VIDEO_CACHE_TTL_MS = 24 * 60 * 60 * 1000L
+private const val PIXABAY_VIDEO_CACHE_PREFS = "freevibe_pixabay_video_cache"
+private const val PIXABAY_VIDEO_RATE_LIMITED_UNTIL_KEY = "pixabay_video_rate_limited_until_ms"
 
 internal data class VideoLoadProgress(
     val hasMore: Boolean,
     val emptyLoadCount: Int,
+)
+
+internal data class PixabayVideoFetchSpec(
+    val query: String,
+    val videoType: String,
+    val page: Int,
+    val perPage: Int = 15,
+)
+
+internal data class PixabayVideoMetadataResult(
+    val items: List<VideoWallpaperItem>,
+    val streamUrls: Map<String, String>,
+)
+
+internal data class CachedPixabayVideoMetadata(
+    val result: PixabayVideoMetadataResult,
+    val cachedAtMs: Long,
 )
 
 internal fun resolveVideoLoadProgress(
@@ -70,6 +98,121 @@ internal fun resolvePexelsOrientationParam(
     OrientationFilter.ALL -> null
 }
 
+internal fun resolvePixabayVideoFetchSpec(
+    searchQuery: String?,
+    page: Int,
+): PixabayVideoFetchSpec = PixabayVideoFetchSpec(
+    query = searchQuery ?: "abstract loop",
+    videoType = if (searchQuery == null) "animation" else "all",
+    page = page,
+)
+
+internal fun pixabayVideoCacheKey(spec: PixabayVideoFetchSpec): String =
+    "pixabay_video_${spec.query.hashCode()}_${spec.videoType}_${spec.page}_${spec.perPage}"
+
+internal fun isPixabayVideoCacheFresh(cachedAtMs: Long, nowMs: Long): Boolean =
+    cachedAtMs > 0 && nowMs - cachedAtMs <= PIXABAY_VIDEO_CACHE_TTL_MS
+
+internal fun pixabayVideoRateLimitBackoffMillis(error: Throwable): Long? =
+    pixabayRateLimitBackoffMillis(error)
+
+internal fun mapPixabayVideosToMetadata(
+    videos: List<PixabayVideo>,
+): PixabayVideoMetadataResult {
+    val urls = linkedMapOf<String, String>()
+    val items = videos.filter { it.duration in 2..60 }.mapNotNull { video ->
+        val file = (video.videos.medium ?: video.videos.small ?: video.videos.large)
+            ?.takeIf { it.url.isNotBlank() }
+        file?.let {
+            val item = VideoWallpaperItem(
+                id = "pbv_${video.id}",
+                title = video.tags
+                    .split(",")
+                    .take(3)
+                    .joinToString(" ") { tag -> tag.trim() }
+                    .ifBlank { "Pixabay video" },
+                thumbnailUrl = video.thumbnailUrl,
+                source = "Pixabay",
+                duration = video.duration.toLong(),
+                uploaderName = video.user,
+                popularity = video.views.toLong(),
+                videoWidth = it.width,
+                videoHeight = it.height,
+            )
+            urls[item.id] = it.url
+            item
+        }
+    }
+    return PixabayVideoMetadataResult(items = items, streamUrls = urls)
+}
+
+internal fun encodePixabayVideoCache(
+    cached: CachedPixabayVideoMetadata,
+): String {
+    val properties = Properties()
+    properties.setProperty("cachedAtMs", cached.cachedAtMs.toString())
+    properties.setProperty("count", cached.result.items.size.toString())
+    cached.result.items.forEachIndexed { index, item ->
+        val prefix = "item.$index."
+        properties.setProperty("${prefix}id", item.id)
+        properties.setProperty("${prefix}title", item.title)
+        properties.setProperty("${prefix}thumbnailUrl", item.thumbnailUrl)
+        properties.setProperty("${prefix}source", item.source)
+        properties.setProperty("${prefix}duration", item.duration.toString())
+        properties.setProperty("${prefix}uploaderName", item.uploaderName)
+        properties.setProperty("${prefix}videoId", item.videoId)
+        properties.setProperty("${prefix}popularity", item.popularity.toString())
+        properties.setProperty("${prefix}videoWidth", item.videoWidth.toString())
+        properties.setProperty("${prefix}videoHeight", item.videoHeight.toString())
+        properties.setProperty("${prefix}streamUrl", cached.result.streamUrls[item.id].orEmpty())
+    }
+    val output = ByteArrayOutputStream()
+    properties.store(output, null)
+    return output.toString(StandardCharsets.ISO_8859_1.name())
+}
+
+internal fun decodePixabayVideoCache(
+    raw: String?,
+    nowMs: Long,
+    requireFresh: Boolean = true,
+): CachedPixabayVideoMetadata? {
+    if (raw.isNullOrBlank()) return null
+    return runCatching {
+        val properties = Properties()
+        properties.load(ByteArrayInputStream(raw.toByteArray(StandardCharsets.ISO_8859_1)))
+        val cachedAtMs = properties.getProperty("cachedAtMs")?.toLongOrNull() ?: 0L
+        if (requireFresh && !isPixabayVideoCacheFresh(cachedAtMs, nowMs)) return null
+        val count = properties.getProperty("count")?.toIntOrNull()?.coerceAtLeast(0) ?: 0
+        val items = mutableListOf<VideoWallpaperItem>()
+        val urls = linkedMapOf<String, String>()
+        for (i in 0 until count) {
+            val prefix = "item.$i."
+            val id = properties.getProperty("${prefix}id").orEmpty()
+            val streamUrl = properties.getProperty("${prefix}streamUrl").orEmpty()
+            if (id.isBlank() || streamUrl.isBlank()) continue
+            val item = VideoWallpaperItem(
+                id = id,
+                title = properties.getProperty("${prefix}title").orEmpty(),
+                thumbnailUrl = properties.getProperty("${prefix}thumbnailUrl").orEmpty(),
+                source = properties.getProperty("${prefix}source", "Pixabay"),
+                duration = properties.getProperty("${prefix}duration")?.toLongOrNull() ?: 0L,
+                uploaderName = properties.getProperty("${prefix}uploaderName").orEmpty(),
+                videoId = properties.getProperty("${prefix}videoId").orEmpty(),
+                popularity = properties.getProperty("${prefix}popularity")?.toLongOrNull() ?: 0L,
+                videoWidth = properties.getProperty("${prefix}videoWidth")?.toIntOrNull() ?: 0,
+                videoHeight = properties.getProperty("${prefix}videoHeight")?.toIntOrNull() ?: 0,
+            )
+            items += item
+            urls[id] = streamUrl
+        }
+        if (items.isEmpty()) return null
+        CachedPixabayVideoMetadata(
+            result = PixabayVideoMetadataResult(items = items, streamUrls = urls),
+            cachedAtMs = cachedAtMs,
+        )
+    }.getOrNull()
+}
+
 @HiltViewModel
 class VideoWallpapersViewModel @Inject constructor(
     @ApplicationContext private val context: Context,
@@ -87,6 +230,11 @@ class VideoWallpapersViewModel @Inject constructor(
     val state = _state.asStateFlow()
     private val _gallerySelectionResult = MutableStateFlow<VideoWallpaperSelectionResult?>(null)
     val gallerySelectionResult = _gallerySelectionResult.asStateFlow()
+    private val pixabayVideoCachePrefs: SharedPreferences by lazy(LazyThreadSafetyMode.NONE) {
+        context.getSharedPreferences(PIXABAY_VIDEO_CACHE_PREFS, Context.MODE_PRIVATE)
+    }
+    @Volatile
+    private var pixabayVideoRateLimitedUntilMs: Long = 0L
 
     // Cache of resolved video stream URLs
     // Bounded cache — evict oldest when exceeding 200 entries
@@ -497,32 +645,14 @@ class VideoWallpapersViewModel @Inject constructor(
                         val pbKey = prefs.pixabayApiKey.first()
                         if (pbKey.isBlank()) return@async emptyList<VideoWallpaperItem>()
                         attemptedSources += "Pixabay"
-                        val query = searchQ ?: "abstract loop"
-                        val response = pixabayApi.searchVideos(
-                            apiKey = pbKey,
-                            query = query,
-                            videoType = if (searchQ == null) "animation" else "all",
-                            page = s.pixabayPage,
-                            perPage = 15,
-                        )
-                        response.hits.filter { it.duration in 2..60 }.mapNotNull { video ->
-                            val file = video.videos.medium ?: video.videos.small ?: video.videos.large
-                            file?.let {
-                                val item = VideoWallpaperItem(
-                                    id = "pbv_${video.id}",
-                                    title = video.tags.split(",").take(3).joinToString(" ") { it.trim() },
-                                    thumbnailUrl = video.thumbnailUrl,
-                                    source = "Pixabay",
-                                    duration = video.duration.toLong(),
-                                    uploaderName = video.user,
-                                    popularity = video.views.toLong(),
-                                    videoWidth = it.width,
-                                    videoHeight = it.height,
-                                )
-                                streamUrls[item.id] = it.url
-                                _resolvedIds.update { it + item.id }
-                                item
-                            }
+                        val spec = resolvePixabayVideoFetchSpec(searchQuery = searchQ, page = s.pixabayPage)
+                        val result = loadPixabayVideoMetadata(apiKey = pbKey, spec = spec)
+                        if (result == null) {
+                            failedSources += "Pixabay"
+                            emptyList()
+                        } else {
+                            rememberPixabayVideoMetadata(result)
+                            result.items
                         }
                     } catch (e: Throwable) {
                         e.rethrowIfCancelled()
@@ -614,6 +744,88 @@ class VideoWallpapersViewModel @Inject constructor(
                 _state.update { it.copy(isLoading = false, isLoadingMore = false, isRefreshing = false) }
             }
         }
+    }
+
+    private suspend fun loadPixabayVideoMetadata(
+        apiKey: String,
+        spec: PixabayVideoFetchSpec,
+    ): PixabayVideoMetadataResult? {
+        val cacheKey = pixabayVideoCacheKey(spec)
+        readPixabayVideoCache(cacheKey, freshOnly = true)?.let { return it }
+        if (System.currentTimeMillis() < activePixabayVideoRateLimitUntilMs()) {
+            return readPixabayVideoCache(cacheKey, freshOnly = false)
+        }
+        return try {
+            val response = sourceMetrics.measure("pixabay") {
+                pixabayApi.searchVideos(
+                    apiKey = apiKey,
+                    query = spec.query,
+                    videoType = spec.videoType,
+                    page = spec.page,
+                    perPage = spec.perPage,
+                )
+            }
+            mapPixabayVideosToMetadata(response.hits)
+                .also { result ->
+                    if (result.items.isNotEmpty()) writePixabayVideoCache(cacheKey, result)
+                }
+        } catch (e: Throwable) {
+            e.rethrowIfCancelled()
+            pixabayVideoRateLimitBackoffMillis(e)?.let { backoff ->
+                updatePixabayVideoRateLimit(backoff)
+            }
+            readPixabayVideoCache(cacheKey, freshOnly = false) ?: throw e
+        }
+    }
+
+    private fun readPixabayVideoCache(
+        cacheKey: String,
+        freshOnly: Boolean,
+    ): PixabayVideoMetadataResult? {
+        val cached = decodePixabayVideoCache(
+            raw = pixabayVideoCachePrefs.getString(cacheKey, null),
+            nowMs = System.currentTimeMillis(),
+            requireFresh = freshOnly,
+        ) ?: return null
+        return cached.result
+    }
+
+    private fun writePixabayVideoCache(
+        cacheKey: String,
+        result: PixabayVideoMetadataResult,
+    ) {
+        pixabayVideoCachePrefs.edit()
+            .putString(
+                cacheKey,
+                encodePixabayVideoCache(
+                    CachedPixabayVideoMetadata(
+                        result = result,
+                        cachedAtMs = System.currentTimeMillis(),
+                    ),
+                ),
+            )
+            .apply()
+    }
+
+    private fun rememberPixabayVideoMetadata(result: PixabayVideoMetadataResult) {
+        streamUrls.putAll(result.streamUrls)
+        if (result.streamUrls.isNotEmpty()) {
+            _resolvedIds.update { it + result.streamUrls.keys }
+        }
+    }
+
+    private fun activePixabayVideoRateLimitUntilMs(): Long {
+        val persisted = pixabayVideoCachePrefs.getLong(PIXABAY_VIDEO_RATE_LIMITED_UNTIL_KEY, 0L)
+        pixabayVideoRateLimitedUntilMs = maxOf(pixabayVideoRateLimitedUntilMs, persisted)
+        return pixabayVideoRateLimitedUntilMs
+    }
+
+    private fun updatePixabayVideoRateLimit(backoffMs: Long) {
+        val untilMs = System.currentTimeMillis() + backoffMs
+        pixabayVideoRateLimitedUntilMs = maxOf(pixabayVideoRateLimitedUntilMs, untilMs)
+        pixabayVideoCachePrefs.edit()
+            .putLong(PIXABAY_VIDEO_RATE_LIMITED_UNTIL_KEY, pixabayVideoRateLimitedUntilMs)
+            .apply()
     }
 
     companion object {

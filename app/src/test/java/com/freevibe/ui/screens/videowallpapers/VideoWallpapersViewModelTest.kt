@@ -1,14 +1,24 @@
 package com.freevibe.ui.screens.videowallpapers
 
+import com.freevibe.data.remote.pixabay.PixabayVideo
+import com.freevibe.data.remote.pixabay.PixabayVideoFile
+import com.freevibe.data.remote.pixabay.PixabayVideoFiles
 import com.freevibe.data.repository.sanitizeVoteKey
 import kotlinx.coroutines.CancellationException
+import okhttp3.Headers
+import okhttp3.Protocol
+import okhttp3.Request
+import okhttp3.ResponseBody.Companion.toResponseBody
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertSame
 import org.junit.Assert.assertTrue
 import org.junit.Assert.fail
 import org.junit.Test
+import retrofit2.HttpException
+import retrofit2.Response
 
 class VideoWallpapersViewModelTest {
 
@@ -48,6 +58,104 @@ class VideoWallpapersViewModelTest {
         assertNull(resolvePexelsOrientationParam(OrientationFilter.ALL))
         assertEquals("portrait", resolvePexelsOrientationParam(OrientationFilter.PORTRAIT))
         assertEquals("landscape", resolvePexelsOrientationParam(OrientationFilter.LANDSCAPE))
+    }
+
+    @Test
+    fun `resolvePixabayVideoFetchSpec uses animation catalog when no search query exists`() {
+        assertEquals(
+            PixabayVideoFetchSpec(query = "abstract loop", videoType = "animation", page = 2),
+            resolvePixabayVideoFetchSpec(searchQuery = null, page = 2),
+        )
+        assertEquals(
+            PixabayVideoFetchSpec(query = "aurora", videoType = "all", page = 3),
+            resolvePixabayVideoFetchSpec(searchQuery = "aurora", page = 3),
+        )
+    }
+
+    @Test
+    fun `mapPixabayVideosToMetadata filters unsuitable videos and stores stream urls`() {
+        val result = mapPixabayVideosToMetadata(
+            listOf(
+                pixabayVideo(id = 1, duration = 12, mediumUrl = "https://cdn.example.com/one.mp4"),
+                pixabayVideo(id = 2, duration = 90, mediumUrl = "https://cdn.example.com/two.mp4"),
+                pixabayVideo(id = 3, duration = 10, mediumUrl = ""),
+            ),
+        )
+
+        assertEquals(listOf("pbv_1"), result.items.map { it.id })
+        assertEquals("https://cdn.example.com/one.mp4", result.streamUrls["pbv_1"])
+        assertEquals("Pixabay", result.items.first().source)
+        assertEquals(720, result.items.first().videoHeight)
+    }
+
+    @Test
+    fun `pixabay video cache round trips fresh metadata`() {
+        val result = PixabayVideoMetadataResult(
+            items = listOf(
+                VideoWallpaperItem(
+                    id = "pbv_42",
+                    title = "aurora loop",
+                    thumbnailUrl = "https://example.com/thumb.jpg",
+                    source = "Pixabay",
+                    duration = 14,
+                    uploaderName = "maker",
+                    popularity = 99,
+                    videoWidth = 1080,
+                    videoHeight = 1920,
+                ),
+            ),
+            streamUrls = mapOf("pbv_42" to "https://example.com/video.mp4"),
+        )
+        val encoded = encodePixabayVideoCache(
+            CachedPixabayVideoMetadata(
+                result = result,
+                cachedAtMs = 1_000L,
+            ),
+        )
+
+        val decoded = decodePixabayVideoCache(encoded, nowMs = 2_000L)
+
+        assertNotNull(decoded)
+        assertEquals(result.items, decoded!!.result.items)
+        assertEquals(result.streamUrls, decoded.result.streamUrls)
+    }
+
+    @Test
+    fun `pixabay video cache rejects expired fresh reads but allows stale fallback`() {
+        val encoded = encodePixabayVideoCache(
+            CachedPixabayVideoMetadata(
+                result = PixabayVideoMetadataResult(
+                    items = listOf(
+                        VideoWallpaperItem(
+                            id = "pbv_stale",
+                            title = "stale",
+                            thumbnailUrl = "https://example.com/stale.jpg",
+                            source = "Pixabay",
+                        ),
+                    ),
+                    streamUrls = mapOf("pbv_stale" to "https://example.com/stale.mp4"),
+                ),
+                cachedAtMs = 1_000L,
+            ),
+        )
+        val expiredNow = 1_000L + PIXABAY_VIDEO_CACHE_TTL_MS + 1L
+
+        assertNull(decodePixabayVideoCache(encoded, nowMs = expiredNow, requireFresh = true))
+        assertEquals(
+            "pbv_stale",
+            decodePixabayVideoCache(encoded, nowMs = expiredNow, requireFresh = false)
+                ?.result
+                ?.items
+                ?.single()
+                ?.id,
+        )
+    }
+
+    @Test
+    fun `pixabay video rate-limit backoff reads retry headers`() {
+        assertEquals(11_000L, pixabayVideoRateLimitBackoffMillis(http429("Retry-After" to "11")))
+        assertEquals(5_000L, pixabayVideoRateLimitBackoffMillis(http429("X-RateLimit-Reset" to "5")))
+        assertNull(pixabayVideoRateLimitBackoffMillis(IllegalStateException("not rate limited")))
     }
 
     @Test
@@ -127,5 +235,37 @@ class VideoWallpapersViewModelTest {
         )
         assertEquals(emptyList<Long>(), timelineFrameTimes(durationMs = 0L, frameCount = 4))
         assertEquals(6, timelineFrameTimes(durationMs = 60_000L, frameCount = 20).size)
+    }
+
+    private fun pixabayVideo(
+        id: Long,
+        duration: Int,
+        mediumUrl: String,
+    ) = PixabayVideo(
+        id = id,
+        tags = "aurora, loop, amoled",
+        duration = duration,
+        pictureId = "picture$id",
+        videos = PixabayVideoFiles(
+            medium = PixabayVideoFile(
+                url = mediumUrl,
+                width = 1280,
+                height = 720,
+            ),
+        ),
+        views = 123,
+        user = "Pixabay maker",
+    )
+
+    private fun http429(vararg headers: Pair<String, String>): HttpException {
+        val headerPairs = headers.flatMap { listOf(it.first, it.second) }.toTypedArray()
+        val rawResponse = okhttp3.Response.Builder()
+            .request(Request.Builder().url("https://pixabay.com/api/videos/").build())
+            .protocol(Protocol.HTTP_1_1)
+            .code(429)
+            .message("Too Many Requests")
+            .headers(Headers.headersOf(*headerPairs))
+            .build()
+        return HttpException(Response.error<Any>("".toResponseBody(null), rawResponse))
     }
 }

@@ -1,8 +1,8 @@
 # Autonomous Loop State
 
 **Assigned project:** `C:\Users\--\repos\Aura`
-**Current pass:** 2026-06-06 Cycle 39 Pexels and Pixabay source switches
-**Last commit before pass:** `aa65f68` (`feat(settings): add reddit source switch`)
+**Current pass:** 2026-06-06 Cycle 44 Pixabay video request-cache and backoff
+**Last commit before pass:** `95e5509` (`feat(policy): add pixabay photo request backoff`)
 
 ## 2026-06-05 Result
 
@@ -158,15 +158,22 @@
 - Added `WallpaperCacheManager.TTL_PIXABAY` as a 24-hour fresh-cache TTL for Pixabay photo metadata.
 - Updated `WallpaperRepository.getPixabay()` to serve fresh cached photo results before API calls, cache successful non-empty responses, and use stale cache or empty results during active rate-limit backoff.
 - Added 429 backoff parsing for `Retry-After` and `X-RateLimit-Reset` headers.
-- Kept Pixabay runtime-control status partial because `VideoWallpapersViewModel` still calls Pixabay video metadata directly without a durable 24-hour cache/backoff guard.
+- At the Cycle 43 boundary, Pixabay video metadata remained the next policy slice because `VideoWallpapersViewModel` called it directly without a durable 24-hour cache/backoff guard.
 - Updated `ProviderDisclosure.kt`, `docs/legal/provider-runtime-controls.md`, `docs/research/cycle-43-2026-06-06.md`, `ROADMAP.md`, `CHANGELOG.md`, and `COMPLETED.md` for the Pixabay photo policy slice.
 - Cycle 43 verification: focused WallpaperRepository and provider disclosure unit tests; release-compliance Python compile checks; dependency notice lock check; generated notice metadata parity check; native compliance lock check; dependency overlay check; dependency license policy check; `git diff --check`; changed-line attribution scan.
+- Completed Cycle 44 Pixabay video request-cache and backoff.
+- Added persistent app-private 24-hour cache helpers for Pixabay video metadata and resolved stream URLs.
+- Updated `VideoWallpapersViewModel` to serve fresh cached Pixabay video metadata before API calls, use stale cache during active backoff, and mark Pixabay degraded instead of retrying when no stale cache exists.
+- Persisted Pixabay video 429 backoff from `Retry-After` or `X-RateLimit-Reset` headers.
+- Marked Pixabay runtime controls covered because photo and video metadata paths now both enforce provider cache/backoff behavior.
+- Updated `ProviderDisclosure.kt`, `docs/legal/provider-runtime-controls.md`, `docs/research/cycle-44-2026-06-06.md`, `ROADMAP.md`, `CHANGELOG.md`, and `COMPLETED.md` for the Pixabay video policy slice.
+- Cycle 44 verification: focused VideoWallpapersViewModel and provider disclosure unit tests; release-compliance Python compile checks; dependency notice lock check; generated notice metadata parity check; native compliance lock check; dependency overlay check; dependency license policy check; `git diff --check`; changed-line attribution scan.
 
 ## Still Open
 
 - Exact Termux package commit, FFmpeg package patches, dependency source set, and build logs for the resolved youtubedl-android ffmpeg 0.18.1 AAR.
-- Generated-content source disable flag and Pixabay video TTL/rate-limit enforcement.
+- Generated-content source disable flag.
 
 ## Next Cycle
 
-Continue this same assigned project, Aura. Start Cycle 44 from the `ROADMAP.md` Continuation State and `docs/research/cycle-43-2026-06-06.md`. The Google OSS notices plugin-only path is implemented; `tools/google_oss_to_markdown.py` generates `THIRD-PARTY-NOTICES.md`; `tools/google_oss_raw_archive.py` archives raw Google OSS inputs and the repo now keeps `GOOGLE-OSS-RAW-INPUTS.zip` attached to tagged public releases; `GeneratedDependencyNotices.kt` parses generated raw resources for an in-app notice viewer with search and review markers; `tools/native_compliance_inventory.py` generates `NATIVE-COMPLIANCE.md`, extracts embedded FFmpeg configure evidence, and gates native evidence drift; `tools/dependency_notice_lock.py` gates generated release notice drift and raw metadata parity; `tools/dependency_overlay_check.py` gates curated high-risk dependency/native-payload review metadata; `tools/dependency_license_policy.py` gates allowed, review-required, disallowed, and unknown curated license IDs; `tools/release_artifact_bundle_check.py` gates final release bundle consistency; `ProviderDisclosure.kt` now has checked runtime-control rows for every content source; YouTube, Reddit, Wallhaven, Pexels, Pixabay, Community, and Bing Daily now have runtime provider switches that block their active fetch/resolver/upload/action paths before remote calls or bundled key reads; Pixabay photo metadata now has a 24-hour request cache and 429 backoff. Next add the same cache/backoff guard to Pixabay video metadata before claiming broader Pixabay policy-complete behavior. Keep AboutLibraries secondary: 14.2.1 configures, but default exports were incomplete and the compliance export logged Windows path errors; do not use AboutLibraries 15.x until N-1 upgrades AGP because v15 requires AGP 8.13. Commit and push completed work when the active project contract allows it.
+Continue this same assigned project, Aura. Start Cycle 45 from the `ROADMAP.md` Continuation State and `docs/research/cycle-44-2026-06-06.md`. The Google OSS notices plugin-only path is implemented; `tools/google_oss_to_markdown.py` generates `THIRD-PARTY-NOTICES.md`; `tools/google_oss_raw_archive.py` archives raw Google OSS inputs and the repo now keeps `GOOGLE-OSS-RAW-INPUTS.zip` attached to tagged public releases; `GeneratedDependencyNotices.kt` parses generated raw resources for an in-app notice viewer with search and review markers; `tools/native_compliance_inventory.py` generates `NATIVE-COMPLIANCE.md`, extracts embedded FFmpeg configure evidence, and gates native evidence drift; `tools/dependency_notice_lock.py` gates generated release notice drift and raw metadata parity; `tools/dependency_overlay_check.py` gates curated high-risk dependency/native-payload review metadata; `tools/dependency_license_policy.py` gates allowed, review-required, disallowed, and unknown curated license IDs; `tools/release_artifact_bundle_check.py` gates final release bundle consistency; `ProviderDisclosure.kt` now has checked runtime-control rows for every content source; YouTube, Reddit, Wallhaven, Pexels, Pixabay, Community, and Bing Daily now have runtime provider switches that block their active fetch/resolver/upload/action paths before remote calls or bundled key reads; Pixabay photo and video metadata now have 24-hour request caches and 429 backoff. Next add a generated-content source flag if store/distribution profiles need to remove generation entirely. Keep AboutLibraries secondary: 14.2.1 configures, but default exports were incomplete and the compliance export logged Windows path errors; do not use AboutLibraries 15.x until N-1 upgrades AGP because v15 requires AGP 8.13. Commit and push completed work when the active project contract allows it.

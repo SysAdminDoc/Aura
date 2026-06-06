@@ -92,8 +92,8 @@ next pass can resume quickly.
 - Completed Cycle 39 Pexels and Pixabay source switches: added default-on
   provider preferences and Settings switches, hid disabled provider tabs, skipped
   Discover/search/style-biased/video API calls before bundled keys are read,
-  removed disabled Pixabay from rotation pickers, and left Pixabay TTL/rate-limit
-  enforcement as the next policy gap.
+  removed disabled Pixabay from rotation pickers, and queued Pixabay
+  TTL/rate-limit enforcement for the later policy slices.
 - Completed Cycle 40 Community source switch: added a default-on Community
   provider preference and Settings switch, skipped startup identity warm-up when
   disabled, hid community tabs/uploads/votes/creator profile entry points,
@@ -111,8 +111,12 @@ next pass can resume quickly.
 - Completed Cycle 43 Pixabay photo request-cache and backoff: added a
   24-hour Pixabay metadata TTL, served fresh cached Pixabay photo results before
   API calls, parsed `Retry-After`/`X-RateLimit-Reset` from 429 responses into an
-  in-session backoff, and kept Pixabay video metadata caching as the remaining
-  policy follow-up.
+  in-session backoff, and queued Pixabay video metadata caching for the next
+  policy slice.
+- Completed Cycle 44 Pixabay video request-cache and backoff: added persistent
+  app-private 24-hour video metadata caching, restored cached stream URLs with
+  cached rows, persisted 429 backoff from `Retry-After`/`X-RateLimit-Reset`, and
+  marked Pixabay runtime controls covered for photo and video metadata.
 
 ## 2026-06-05
 
