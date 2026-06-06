@@ -3,7 +3,7 @@
 > Open-source Android personalization: wallpapers, video wallpapers, ringtones, sounds.
 > Stay the OSS alternative to Zedge: no ads, no surprise charges, no dark patterns.
 
-**Version:** 2026-06-06-cycle22-roadmap (implemented plugin-only Google OSS notice generation and release THIRD-PARTY-NOTICES.md artifact wiring).
+**Version:** 2026-06-06-cycle23-roadmap (implemented native/copyleft payload inventory and release NATIVE-COMPLIANCE.md artifact wiring).
 **Code version at write:** v6.31.1 / versionCode 112 (per `app/build.gradle.kts`; release/lint Gradle runs are memory-heavy on this Windows workstation, so rerun APK compilation only when explicitly needed).
 **Charter:** personalization, AMOLED-first, free-by-default, multi-source content aggregation, community-fed catalog, polite live wallpapers (battery-aware, pause-on-invisible).
 
@@ -927,12 +927,13 @@ Append-only Cycle 18 handoff. Every item below is source-backed in `docs/researc
   - Acceptance: CI fails when release-runtime dependencies introduce unknown, missing, or unapproved license metadata; approved exceptions are documented with artifact coordinate, version, source URL, license ID, and reason.
   - Verify: run a fixture/sentinel dependency test that fails before allowlist review and passes after the reviewed notice/exception file updates.
 
-- [ ] 🤖 🔬 **P0 — Native/copyleft artifact inspection packet**
+- [~] 🤖 🔬 **P0 — Native/copyleft artifact inspection packet**
   - Why: `io.github.junkfood02.youtubedl-android:library:0.18.1` bundles yt-dlp and Python, and `:ffmpeg:0.18.1` supplies FFmpeg binaries. Generic Maven notice tools will not prove exact payload versions, FFmpeg build mode, ABI files, or source-offer links.
+  - Result: Cycle 23 added `tools/native_compliance_inventory.py`, committed `docs/legal/native-compliance.md`, and wired release CI to publish/checksum `NATIVE-COMPLIANCE.md` with the APK and `THIRD-PARTY-NOTICES.md`.
   - Evidence: `app/build.gradle.kts`; `AudioTrimmer.kt`; `VideoCropScreen.kt`; youtubedl-android README; FFmpeg legal guidance; NewPipeExtractor GPL-3.0 license.
   - Touches: `tools/`, release workflow, `docs/legal/native-compliance.md`, `docs/distribution/supply-chain.md`, release notes, uploaded release artifacts.
-  - Acceptance: a script or Gradle task unzips the release APK and resolved youtubedl/FFmpeg AARs, lists shipped native/assets/payload files, records upstream source URLs and license IDs, and writes a factual packet without exposing local secrets.
-  - Verify: release artifact bundle includes the native/copyleft packet; dependency version changes fail until the packet is regenerated and reviewed.
+  - Acceptance remaining: dependency version changes should fail until the packet is regenerated and reviewed; exact FFmpeg configure/source correspondence remains a release-owner review item.
+  - Verify: release artifact bundle includes the native/copyleft packet; future dependency-drift gate detects stale native packet evidence.
 
 - [ ] 🤖 🔬 **P1 — Release workflow publishes notice/SBOM artifacts**
   - Why: GitHub/Obtainium users can currently inspect APK checksums and attestations, but not third-party notices or dependency/license inventory before installing the app.
@@ -1095,12 +1096,30 @@ Append-only Cycle 22 handoff. Every item below is source-backed in `docs/researc
   - Acceptance: focused `ProviderDisclosureTest` passes after generated-notice changes.
   - Verify: focused unit-test command passes and the Licenses screen still has complete "Content Sources" rows from `ProviderDisclosure.kt`.
 
-- [ ] 🤖 🔬 **P0 — Native/copyleft payload inspector for youtubedl-android and FFmpeg**
+- [x] 🤖 🔬 **P0 — Native/copyleft payload inspector for youtubedl-android and FFmpeg** — shipped 2026-06-06.
   - Why: the generated Google notices cover Maven dependency coordinates and license texts, but they still do not inspect shipped AAR payload files, FFmpeg build mode, yt-dlp/Python payload versions, or GPL/LGPL source-offer evidence.
-  - Evidence: Cycle 18 native/copyleft packet item; Cycle 22 generated-notice implementation gap.
+  - Result: `tools/native_compliance_inventory.py` reads resolved Gradle cache artifacts, optionally inspects a final APK, and writes `NATIVE-COMPLIANCE.md`; release CI now generates, checksums, uploads, and attaches that packet.
+  - Evidence: Cycle 18 native/copyleft packet item; Cycle 22 generated-notice implementation gap; `docs/legal/native-compliance.md`; `docs/research/cycle-23-2026-06-06.md`.
   - Touches: `tools/native_compliance_inventory.*`, `docs/legal/native-compliance.md`, release workflow artifact list, youtubedl-android AAR cache paths.
   - Acceptance: local tool inspects resolved youtubedl-android library/ffmpeg AARs without full APK assembly, lists payload paths and licenses, and identifies the source/build references Aura must publish.
-  - Verify: report names youtubedl-android library, youtubedl-android ffmpeg, yt-dlp/Python payload notes, FFmpeg binary paths, and NewPipeExtractor GPL evidence.
+  - Verify: report names youtubedl-android library, youtubedl-android ffmpeg, yt-dlp/Python payload notes, QuickJS, FFmpeg binary paths, and NewPipeExtractor GPL evidence.
+
+## 🔬 Researcher Queue (Cycle 23 — 2026-06-06)
+
+Append-only Cycle 23 implementation record. The completed item is source-backed in `docs/research/cycle-23-2026-06-06.md`; use the open item as the next implementation entry point.
+
+- [x] 🤖 🔬 **P0 — Native/copyleft release packet shipped**
+  - Result: release artifacts now include `NATIVE-COMPLIANCE.md` with AAR hashes, optional final-APK payload entries, youtubedl-android/yt-dlp/Python/QuickJS/FFmpeg/NewPipeExtractor references, and explicit FFmpeg source-correspondence review notes.
+  - Evidence: `tools/native_compliance_inventory.py`, `docs/legal/native-compliance.md`, `.github/workflows/release.yml`, `docs/distribution/supply-chain.md`.
+  - Verification: `python -m py_compile tools/native_compliance_inventory.py`; `python tools\native_compliance_inventory.py --output docs\legal\native-compliance.md`.
+  - Remaining risk: exact FFmpeg configure line and matching source package are not encoded in the 0.18.1 AAR and remain a release-owner review requirement.
+
+- [ ] 🤖 🔬 **P0 — Release-runtime license drift gate**
+  - Why: Aura now publishes human-readable Google OSS notices and a native packet, but nothing fails a build when release-runtime dependencies or native payload versions drift without reviewed metadata.
+  - Evidence: Cycle 18 dependency license drift item; `gradle/verification-metadata.xml`; `.github/workflows/release.yml`; `docs/distribution/supply-chain.md`; generated `dependencies.json`.
+  - Touches: `tools/`, `docs/legal/dependency-notices.lock.json`, optional curated override JSON, release workflow, CI verification docs.
+  - Acceptance: a deterministic check compares release-runtime dependency identity/license/source metadata to a committed lockfile and fails on unknown, removed, added, or changed dependencies until reviewed.
+  - Verify: fixture or sentinel dependency change produces a failing diff; reviewed lockfile/override updates restore green status.
 
 ---
 
@@ -2544,21 +2563,28 @@ Stars/dates as of research pass 2026-05-16.
 - Release artifact wiring — `.github/workflows/release.yml`, `docs/distribution/supply-chain.md`.
 - Verification outputs — real-repo `:app:releaseOssLicensesTask`, `tools/google_oss_to_markdown.py --variant release`, release runtime dependency graph filter, and passing `ProviderDisclosureTest`.
 
+## Appendix AA — Cycle 23 Sources
+
+- Cycle 23 implementation record — [docs/research/cycle-23-2026-06-06.md](docs/research/cycle-23-2026-06-06.md).
+- Native compliance implementation — `tools/native_compliance_inventory.py`, `docs/legal/native-compliance.md`, `.github/workflows/release.yml`, `docs/distribution/supply-chain.md`.
+- Primary source references — [youtubedl-android](https://github.com/yausername/youtubedl-android), [yt-dlp 2025.11.12](https://github.com/yt-dlp/yt-dlp/releases/tag/2025.11.12), [Python 3.12 license](https://docs.python.org/3.12/license.html), [QuickJS](https://bellard.org/quickjs/), [FFmpeg legal guidance](https://ffmpeg.org/legal.html), [NewPipeExtractor v0.24.8](https://github.com/TeamNewPipe/NewPipeExtractor/tree/v0.24.8).
+- Verification outputs — `python -m py_compile tools/native_compliance_inventory.py` and `python tools\native_compliance_inventory.py --output docs\legal\native-compliance.md`.
+
 ## Continuation State
 
 ### Last Completed Cycle
 
-Cycle 22: real-repo plugin-only Google OSS notice implementation, markdown converter, release artifact wiring, and focused verification.
+Cycle 23: native/copyleft payload inspector, committed `docs/legal/native-compliance.md`, and release `NATIVE-COMPLIANCE.md` artifact wiring.
 
 ### Current Focus
 
-Continue from Cycle 22 P0: start the native/copyleft payload inspector for youtubedl-android library/ffmpeg AARs and NewPipeExtractor source-offer evidence. Commit and push completed work when the active project contract allows it.
+Start Cycle 24 with the release-runtime license drift gate. Commit and push completed work when the active project contract allows it.
 
 ### Important Findings So Far
 
-- `ROADMAP.md` has Cycle 18, Cycle 19, Cycle 20, Cycle 21, and Cycle 22 research items; `docs/research/cycle-18-2026-06-06.md`, `docs/research/cycle-19-2026-06-06.md`, `docs/research/cycle-20-2026-06-06.md`, `docs/research/cycle-21-2026-06-06.md`, and `docs/research/cycle-22-2026-06-06.md` have the source-backed analysis.
+- `ROADMAP.md` has Cycle 18, Cycle 19, Cycle 20, Cycle 21, Cycle 22, and Cycle 23 research/implementation items; `docs/research/cycle-18-2026-06-06.md` through `docs/research/cycle-23-2026-06-06.md` have the source-backed analysis.
 - `LicensesScreen.kt` still has manual dependency rows; content sources are already code-backed by `ProviderDisclosure.kt`.
-- `.github/workflows/release.yml` now publishes `THIRD-PARTY-NOTICES.md` with the APK and includes it in `SHA256SUMS.txt`; dependency-license lock JSON, SBOM, and native/copyleft packet artifacts remain open.
+- `.github/workflows/release.yml` now publishes `THIRD-PARTY-NOTICES.md` and `NATIVE-COMPLIANCE.md` with the APK and includes both files in `SHA256SUMS.txt`; dependency-license lock JSON and SBOM artifacts remain open.
 - `docs/distribution/supply-chain.md` defers SBOM work until N-1, but Cycle 18 split out a smaller current-toolchain notice/drift lane that should not wait on the AGP/Kotlin migration.
 - AboutLibraries 15.x is not a current-toolchain fit because its release notes make AGP 8.13 the minimum; Aura is currently on AGP 8.7.3 / Gradle 8.12. Test AboutLibraries 14.2.1 if using it before N-1.
 - Google OSS notices now have the required `settings.gradle.kts` plugin resolution mapping and root/app Gradle wiring in the real repo.
@@ -2566,23 +2592,25 @@ Continue from Cycle 22 P0: start the native/copyleft payload inspector for youtu
 - Adding `play-services-oss-licenses:17.5.1` pulled risky release-runtime UI upgrades in the spike clone, including Activity Compose 1.12.1, Compose 1.11.0-beta02 artifacts, AppCompat 1.7.1, Material Components 1.13.0, and credential dependencies.
 - The real implementation does not add `play-services-oss-licenses:17.5.1`; a release runtime graph check showed no notice-driven Activity Compose 1.12.1, Compose 1.11.0-beta02, or Material Components 1.13.0 drift.
 - `tools/google_oss_to_markdown.py` generated `build/reports/THIRD-PARTY-NOTICES.md` from real-repo Google outputs; the output was 1,367,502 bytes, 25,336 lines, 251 dependency records, and 288 notice sections.
-- Google outputs plus the converter are not a native payload inventory or policy-reviewed lockfile; youtubedl-android/FFmpeg source/build-mode evidence still needs a separate compliance packet.
+- `tools/native_compliance_inventory.py` generated `docs/legal/native-compliance.md` with youtubedl-android common/library/ffmpeg AAR hashes, NewPipeExtractor JAR hashes, yt-dlp 2025.11.12 git-head facts, python3.12 payload facts, QuickJS entries, and FFmpeg ABI payload paths.
+- The native packet is factual evidence only; exact FFmpeg configure/source correspondence remains a release-owner review requirement because the AAR does not encode the configure line.
+- Google outputs plus the converter are not a policy-reviewed lockfile; release-runtime license drift still needs a deterministic gate.
 - AboutLibraries 14.2.1 configures but the default release export was incomplete for Aura and logged Windows path errors during compliance export.
 - `ProviderDisclosureTest` now passes in the real repo with `JAVA_HOME` set to Android Studio JBR and `ANDROID_HOME` set to the local Android SDK.
 - Recent history was checked with `rtk git log -10 --oneline --decorate` for this pass.
 
 ### Next Best Actions
 
-1. Build a native/copyleft payload inspector that reads resolved youtubedl-android library/ffmpeg AARs without requiring a full APK build.
-2. Generate `docs/legal/native-compliance.md` or a build report listing payload paths, versions, license IDs, and source/build references for youtubedl-android, yt-dlp/Python payloads, FFmpeg, and NewPipeExtractor.
-3. Add a debug/release OSS notice metadata refresh note to future dependency-update reviews so POM checksum drift is caught before release.
+1. Implement a release-runtime dependency notice lockfile from Google `dependencies.json` or a Gradle release-runtime dependency report.
+2. Add a deterministic check that fails on added, removed, or changed dependency/license/source metadata until reviewed.
+3. Add a native packet freshness check for youtubedl-android, NewPipeExtractor, yt-dlp, Python, QuickJS, and FFmpeg version changes.
 4. Add a future in-app generated dependency notice viewer or Settings link after the release artifact path is stable.
-5. Add release workflow dry-run validation on GitHub Actions or a CI-equivalent environment to prove notices are checksummed and uploaded with the APK.
+5. Add release workflow dry-run validation on GitHub Actions or a CI-equivalent environment to prove notices and native packets are checksummed and uploaded with the APK.
 
 ### Unprocessed Leads
 
-- Exact youtubedl-android AAR payload inventory and FFmpeg configure/license mode.
-- Exact source-offer/source-code links for youtubedl-android, yt-dlp/Python payloads, FFmpeg, and NewPipeExtractor.
+- Exact FFmpeg configure line and matching source package for the resolved youtubedl-android ffmpeg 0.18.1 AAR.
+- Whether the dependency lockfile should use Google OSS `dependencies.json`, Gradle `releaseRuntimeClasspath`, or both.
 - Whether the release workflow notices step should also upload raw `dependencies.json` for machine diffing.
 - Whether Aura should parse generated raw resources for a custom Compose in-app dependency notice viewer after the markdown artifact is stable.
 - Whether the stock Google `OssLicensesMenuActivity` is ever worth adding after a dependency convergence audit.
@@ -2592,19 +2620,17 @@ Continue from Cycle 22 P0: start the native/copyleft payload inspector for youtu
 
 ### Files Still To Inspect
 
-- Gradle cache/resolved AARs for `io.github.junkfood02.youtubedl-android:library:0.18.1` and `io.github.junkfood02.youtubedl-android:ffmpeg:0.18.1`
-- Resolved NewPipeExtractor artifacts and upstream source/license references for `v0.24.8`
 - `AudioTrimmer.kt` and `VideoCropScreen.kt` call paths that depend on FFmpeg/youtubedl payloads
 - `.github/workflows/release.yml`
 - `.github/workflows/dependency-review.yml`
 - `.github/workflows/scorecard.yml`
 - `app/src/main/AndroidManifest.xml`
+- Google OSS generated `dependencies.json` structure for lockfile inputs
 
 ### Searches Still To Run
 
 - `CashApp Licensee Gradle releaseRuntimeClasspath Android example`
 - `CycloneDX Gradle Android releaseRuntimeClasspath configuration`
-- `youtubedl-android 0.18.1 ffmpeg license build config source`
-- `youtubedl-android 0.18.1 yt-dlp Python payload location`
-- `NewPipeExtractor v0.24.8 GPL source offer distribution Android app`
+- `Gradle dependencyInsight license metadata releaseRuntimeClasspath`
+- `Google OSS licenses plugin dependencies.json schema`
 - `AboutLibraries 14.2.1 exportLibrariesRelease only BOM dependencies`

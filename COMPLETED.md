@@ -20,6 +20,11 @@ next pass can resume quickly.
   verification.
 - Restored real-repo `ProviderDisclosureTest` execution after adding the POM
   checksum metadata required by the debug OSS notice task.
+- Completed Cycle 23 native/copyleft payload inspection: added
+  `tools/native_compliance_inventory.py`, committed
+  `docs/legal/native-compliance.md`, wired release `NATIVE-COMPLIANCE.md`
+  generation/checksums/uploads, and documented FFmpeg source-correspondence
+  review requirements.
 
 ## 2026-06-05
 

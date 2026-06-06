@@ -8,6 +8,7 @@ Aura is side-loaded through GitHub Releases and Obtainium, so release artifacts 
 | --- | --- | --- |
 | Signed release APK | `.github/workflows/release.yml` | Builds the release variant, verifies the signature, rejects debuggable APKs, and publishes checksums. |
 | Third-party notices | `tools/google_oss_to_markdown.py`, `.github/workflows/release.yml` | Runs the Google OSS Licenses Gradle task for the release variant and publishes `THIRD-PARTY-NOTICES.md` next to the APK. |
+| Native compliance packet | `tools/native_compliance_inventory.py`, `.github/workflows/release.yml` | Inventories youtubedl-android, yt-dlp/Python, FFmpeg, QuickJS, and NewPipeExtractor payload evidence and publishes `NATIVE-COMPLIANCE.md` next to the APK. |
 | Artifact attestation | `.github/workflows/release.yml` | Uses `actions/attest@v4` against `release/SHA256SUMS.txt` so release artifact digests are bound to the GitHub Actions build. |
 | Gradle dependency verification | `gradle/verification-metadata.xml` | Records SHA-256 checksums for resolved Gradle plugins and app dependencies. |
 | Dependency Review | `.github/workflows/dependency-review.yml` | Runs on pull requests and fails high/critical vulnerable dependency additions. |
@@ -20,11 +21,13 @@ For each `v*` release:
 
 1. Confirm the GitHub Release contains `Aura-vX.Y.Z-versionCode-N-universal-release.apk`.
 2. Confirm the GitHub Release contains `THIRD-PARTY-NOTICES.md`.
-3. Confirm `SHA256SUMS.txt` includes both the APK and `THIRD-PARTY-NOTICES.md`.
-4. Confirm the generated release notes include the APK SHA-256, third-party notices entry, signing certificate SHA-256, and artifact attestation URL.
-5. Spot-check `THIRD-PARTY-NOTICES.md` for high-risk dependencies such as NewPipeExtractor, youtubedl-android, Firebase, Play services ML Kit, ZXing, Palette, and ProfileInstaller.
-6. Verify the APK locally with `apksigner verify --verbose --print-certs`.
-7. Compare the local SHA-256 values to `SHA256SUMS.txt`.
+3. Confirm the GitHub Release contains `NATIVE-COMPLIANCE.md`.
+4. Confirm `SHA256SUMS.txt` includes the APK, `THIRD-PARTY-NOTICES.md`, and `NATIVE-COMPLIANCE.md`.
+5. Confirm the generated release notes include the APK SHA-256, third-party notices entry, native compliance packet entry, signing certificate SHA-256, and artifact attestation URL.
+6. Spot-check `THIRD-PARTY-NOTICES.md` for high-risk dependencies such as NewPipeExtractor, youtubedl-android, Firebase, Play services ML Kit, ZXing, Palette, and ProfileInstaller.
+7. Spot-check `NATIVE-COMPLIANCE.md` for youtubedl-android library, youtubedl-android ffmpeg, yt-dlp, Python, QuickJS, FFmpeg, and NewPipeExtractor evidence.
+8. Verify the APK locally with `apksigner verify --verbose --print-certs`.
+9. Compare the local SHA-256 values to `SHA256SUMS.txt`.
 
 ## Third-party notices
 
@@ -38,6 +41,24 @@ python tools\google_oss_to_markdown.py --variant release --output build\reports\
 ```
 
 Generated dependency notices do not replace Aura's content-source disclosures. `ProviderDisclosure.kt` remains the source of truth for provider policy rows such as YouTube, Reddit, Pexels, Pixabay, community uploads, bundled media, and AI-generated content.
+
+## Native compliance packet
+
+`NATIVE-COMPLIANCE.md` is a factual inventory, not legal advice. It reads resolved Gradle cache artifacts and, in release CI, the final signed APK. It records artifact hashes, ABI payload paths, nested yt-dlp/Python facts, FFmpeg payload entries, and upstream source/build references that release owners must review.
+
+Generate the local packet after dependencies have been resolved:
+
+```powershell
+python tools\native_compliance_inventory.py --output docs\legal\native-compliance.md
+```
+
+Release CI adds final APK inspection:
+
+```bash
+python3 tools/native_compliance_inventory.py --apk "$RELEASE_DIR/Aura-vX.Y.Z-versionCode-N-universal-release.apk" --output "$RELEASE_DIR/NATIVE-COMPLIANCE.md"
+```
+
+Treat a youtubedl-android, NewPipeExtractor, yt-dlp, Python, QuickJS, or FFmpeg version change as a required native packet refresh. FFmpeg remains a release-owner review item because the AAR does not encode the exact configure line or source correspondence required by FFmpeg's legal checklist.
 
 ## Gradle dependency verification
 

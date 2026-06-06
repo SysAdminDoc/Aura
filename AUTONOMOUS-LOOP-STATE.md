@@ -1,8 +1,8 @@
 # Autonomous Loop State
 
 **Assigned project:** `C:\Users\--\repos\Aura`
-**Current pass:** 2026-06-06 Cycle 22 roadmap/research/implementation pass
-**Last commit before pass:** `ec90256` (`feat(legal): add provider disclosure matrix`)
+**Current pass:** 2026-06-06 Cycle 23 native-compliance implementation pass
+**Last commit before pass:** `1191752` (`feat(release): publish third-party notices`)
 
 ## 2026-06-05 Result
 
@@ -29,14 +29,21 @@
 - Decision: keep the stock Google runtime/activity behind a dependency convergence audit; next compliance gap is native/copyleft payload inspection.
 - Did not run full Gradle APK/lint builds; Cycle 22 used focused Gradle notice/dependency tasks because `CLAUDE.md` warns repeated APK/lint runs can exhaust this workstation.
 - Recent history was checked with `rtk git log -10 --oneline --decorate` for this pass.
+- Completed Cycle 23 native/copyleft payload inspection.
+- Added `tools/native_compliance_inventory.py` to inspect resolved Gradle cache artifacts and optional final APK payloads.
+- Generated `docs/legal/native-compliance.md` with youtubedl-android common/library/ffmpeg hashes, NewPipeExtractor hashes, yt-dlp 2025.11.12 facts, python3.12 payload facts, QuickJS references, FFmpeg ABI payload entries, and release review notes.
+- Wired release `NATIVE-COMPLIANCE.md` generation into `.github/workflows/release.yml`, including checksums, release notes, workflow artifact upload, and tagged release attachment.
+- Updated `docs/distribution/supply-chain.md`, `ROADMAP.md`, `CHANGELOG.md`, and `COMPLETED.md` for the native packet.
+- Cycle 23 verification: `python -m py_compile tools\native_compliance_inventory.py`; `python tools\native_compliance_inventory.py --output docs\legal\native-compliance.md`.
 
 ## Still Open
 
-- Generated OSS notices and license drift gate.
-- Copyleft/native extractor compliance packet for NewPipe, youtubedl-android, yt-dlp/Python payloads, and FFmpeg.
+- Generated OSS notices and release-runtime license drift gate.
+- Native packet freshness gate for youtubedl-android, NewPipeExtractor, yt-dlp, Python, QuickJS, and FFmpeg version changes.
+- FFmpeg exact configure line and matching source package review for the resolved youtubedl-android ffmpeg 0.18.1 AAR.
 - Generated Gradle runtime dependency inventory comparison and notice-diff gate.
 - Runtime provider kill switches and disabled-provider behavior.
 
 ## Next Cycle
 
-Continue this same assigned project, Aura. Start from Cycle 22. Read `ROADMAP.md` Continuation State and `docs/research/cycle-22-2026-06-06.md` first. The Google OSS notices plugin-only path is now implemented in the real repo without adding `play-services-oss-licenses:17.5.1`; `tools/google_oss_to_markdown.py` generates `THIRD-PARTY-NOTICES.md`; release workflow packages it with checksums. Next start the native/copyleft payload inspector for youtubedl-android library/ffmpeg AARs and NewPipeExtractor source-offer evidence. Keep AboutLibraries secondary: 14.2.1 configures, but default exports were incomplete and the compliance export logged Windows path errors; do not use AboutLibraries 15.x until N-1 upgrades AGP because v15 requires AGP 8.13. Commit and push completed work when the active project contract allows it.
+Continue this same assigned project, Aura. Start Cycle 24 from the `ROADMAP.md` Continuation State and `docs/research/cycle-23-2026-06-06.md`. The Google OSS notices plugin-only path is implemented; `tools/google_oss_to_markdown.py` generates `THIRD-PARTY-NOTICES.md`; `tools/native_compliance_inventory.py` generates `NATIVE-COMPLIANCE.md`; release workflow packages both with checksums. Next implement the release-runtime license drift gate: produce a deterministic dependency notice lockfile and fail on added, removed, or changed release-runtime dependency/license/source metadata until reviewed. Keep AboutLibraries secondary: 14.2.1 configures, but default exports were incomplete and the compliance export logged Windows path errors; do not use AboutLibraries 15.x until N-1 upgrades AGP because v15 requires AGP 8.13. Commit and push completed work when the active project contract allows it.
