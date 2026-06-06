@@ -17,6 +17,7 @@ import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.supervisorScope
 import kotlinx.coroutines.withTimeoutOrNull
+import retrofit2.HttpException
 import java.net.ConnectException
 import java.net.SocketTimeoutException
 import java.net.UnknownHostException
@@ -76,6 +77,7 @@ private fun Throwable.rethrowIfCancelled() {
 private const val DISCOVER_PER_SOURCE_TIMEOUT_MS = 4_500L
 private const val DISCOVER_SECONDARY_SOURCE_BUDGET_MS = 1_200L
 private const val DISCOVER_PAGE_SIZE = 60
+private const val PIXABAY_MAX_BACKOFF_SECONDS = 24 * 60 * 60L
 private const val SOURCE_BING = "bing"
 private const val SOURCE_DISCOVER = "discover"
 private const val SOURCE_PEXELS = "pexels"
@@ -103,6 +105,19 @@ internal fun computeWallhavenPurity(
     }
 }
 
+internal fun pixabayRateLimitBackoffMillis(error: Throwable): Long? {
+    val response = (error as? HttpException)?.response() ?: return null
+    if (response.code() != 429) return null
+    val headers = response.headers()
+    val seconds = headers["Retry-After"]?.toLongOrNull()
+        ?: headers["X-RateLimit-Reset"]?.toLongOrNull()
+        ?: return null
+    return seconds
+        .coerceAtLeast(1L)
+        .coerceAtMost(PIXABAY_MAX_BACKOFF_SECONDS)
+        .times(1_000L)
+}
+
 @Singleton
 class WallpaperRepository @Inject constructor(
     private val wallhavenApi: WallhavenApi,
@@ -113,6 +128,9 @@ class WallpaperRepository @Inject constructor(
     private val prefs: PreferencesManager,
     private val sourceMetrics: SourceMetrics,
 ) {
+    @Volatile
+    private var pixabayRateLimitedUntilMs: Long = 0L
+
     private suspend fun wallhavenApiKey(): String = prefs.wallhavenApiKey.first()
     private suspend fun pixabayApiKey(): String = prefs.pixabayApiKey.first()
     private suspend fun pexelsApiKey(): String = prefs.pexelsApiKey.first()
@@ -313,7 +331,14 @@ class WallpaperRepository @Inject constructor(
         }
         val key = pixabayApiKey()
         if (key.isBlank()) return emptySourceResult(page)
-        return withCacheFallback("pixabay_${query.hashCode()}_$page", ContentSource.PIXABAY) {
+        val cacheKey = "pixabay_${query.hashCode()}_$page"
+        val fresh = cacheManager.getCached(cacheKey, ContentSource.PIXABAY)
+        if (!fresh.isNullOrEmpty()) return cachedSourceResult(fresh, page)
+        if (System.currentTimeMillis() < pixabayRateLimitedUntilMs) {
+            val stale = cacheManager.getStaleCached(cacheKey)
+            return if (!stale.isNullOrEmpty()) cachedSourceResult(stale, page) else emptySourceResult(page)
+        }
+        return try {
             sourceMetrics.measure(SOURCE_PIXABAY) {
                 val response = pixabayApi.searchPhotos(
                     apiKey = key,
@@ -327,7 +352,19 @@ class WallpaperRepository @Inject constructor(
                     currentPage = page,
                     hasMore = page * 30 < response.totalHits,
                 )
+                    .also { result ->
+                        if (result.items.isNotEmpty()) {
+                            cacheManager.cache(cacheKey, result.items)
+                        }
+                    }
             }
+        } catch (e: Exception) {
+            e.rethrowIfCancelled()
+            pixabayRateLimitBackoffMillis(e)?.let { backoff ->
+                pixabayRateLimitedUntilMs = maxOf(pixabayRateLimitedUntilMs, System.currentTimeMillis() + backoff)
+            }
+            val stale = cacheManager.getStaleCached(cacheKey)
+            if (!stale.isNullOrEmpty()) cachedSourceResult(stale, page) else throw e
         }
     }
 
@@ -513,6 +550,13 @@ class WallpaperRepository @Inject constructor(
     private fun emptySourceResult(page: Int) = SearchResult<Wallpaper>(
         items = emptyList(),
         totalCount = 0,
+        currentPage = page,
+        hasMore = false,
+    )
+
+    private fun cachedSourceResult(items: List<Wallpaper>, page: Int) = SearchResult(
+        items = items,
+        totalCount = items.size,
         currentPage = page,
         hasMore = false,
     )

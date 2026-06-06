@@ -402,9 +402,9 @@ val providerRuntimeControls = listOf(
         source = ContentSource.PIXABAY,
         surfaces = "Wallpaper search/Discover, auto-rotation/widget shortcut, and video wallpaper feed.",
         status = ProviderRuntimeControlStatus.PARTIAL,
-        currentControl = "Settings exposes a Pixabay provider-enabled flag in addition to the optional API key.",
+        currentControl = "Settings exposes a Pixabay provider-enabled flag in addition to the optional API key; photo requests use a 24-hour fresh-cache path and 429 backoff.",
         disabledBehavior = "Disabled mode hides Pixabay wallpaper browsing, removes it from rotation pickers, skips wallpaper/video API calls, and records disabled diagnostics before reading bundled keys.",
-        followUp = "Add provider TTL and rate-limit guards before claiming broader Pixabay policy-complete behavior.",
+        followUp = "Extend the same 24-hour request-cache and 429 backoff policy to Pixabay video metadata before claiming broader Pixabay policy-complete behavior.",
     ),
     ProviderRuntimeControl(
         source = ContentSource.KLIPY,

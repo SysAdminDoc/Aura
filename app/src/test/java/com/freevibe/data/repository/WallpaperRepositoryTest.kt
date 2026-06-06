@@ -10,15 +10,23 @@ import com.freevibe.data.remote.pexels.PexelsApi
 import com.freevibe.data.remote.pixabay.PixabayApi
 import com.freevibe.data.remote.wallhaven.WallhavenApi
 import com.freevibe.service.SourceMetrics
+import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
+import okhttp3.Headers
+import okhttp3.Protocol
+import okhttp3.Request
+import okhttp3.ResponseBody.Companion.toResponseBody
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
+import retrofit2.HttpException
+import retrofit2.Response
 import java.net.ConnectException
 import java.net.UnknownHostException
 
@@ -158,25 +166,73 @@ class WallpaperRepositoryTest {
         }
     }
 
+    @Test
+    fun `getPixabay uses fresh cache before api call`() = runTest {
+        val pixabayApi = mockk<PixabayApi>()
+        val cacheManager = mockk<WallpaperCacheManager>()
+        val cached = listOf(wallpaper("pb_cached", source = ContentSource.PIXABAY))
+        coEvery { cacheManager.getCached("pixabay_0_1", ContentSource.PIXABAY) } returns cached
+
+        val repo = wallpaperRepository(
+            pixabayApi = pixabayApi,
+            cacheManager = cacheManager,
+            pixabayApiKey = "pixabay-key",
+        )
+
+        val result = repo.getPixabay(page = 1)
+
+        assertEquals(cached, result.items)
+        assertEquals(1, result.totalCount)
+        assertFalse(result.hasMore)
+        coVerify(exactly = 0) {
+            pixabayApi.searchPhotos(any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), any())
+        }
+    }
+
+    @Test
+    fun `pixabay rate-limit backoff reads retry headers`() {
+        assertEquals(42_000L, pixabayRateLimitBackoffMillis(http429("Retry-After" to "42")))
+        assertEquals(7_000L, pixabayRateLimitBackoffMillis(http429("X-RateLimit-Reset" to "7")))
+        assertNull(pixabayRateLimitBackoffMillis(IllegalStateException("not rate limited")))
+    }
+
     private fun wallpaperRepository(
         wallhavenApi: WallhavenApi = mockk(),
         bingApi: BingDailyApi = mockk(),
+        pixabayApi: PixabayApi = mockk(),
+        cacheManager: WallpaperCacheManager = mockk(relaxed = true),
         sourceMetrics: SourceMetrics = SourceMetrics(),
         wallhavenProviderEnabled: Boolean = true,
         bingProviderEnabled: Boolean = true,
+        pixabayProviderEnabled: Boolean = true,
+        pixabayApiKey: String = "",
     ): WallpaperRepository {
         val prefs = mockk<PreferencesManager>()
         every { prefs.wallhavenProviderEnabled } returns flowOf(wallhavenProviderEnabled)
         every { prefs.bingProviderEnabled } returns flowOf(bingProviderEnabled)
+        every { prefs.pixabayProviderEnabled } returns flowOf(pixabayProviderEnabled)
+        every { prefs.pixabayApiKey } returns flowOf(pixabayApiKey)
         return WallpaperRepository(
             wallhavenApi = wallhavenApi,
             bingApi = bingApi,
-            pixabayApi = mockk<PixabayApi>(),
+            pixabayApi = pixabayApi,
             pexelsApi = mockk<PexelsApi>(),
-            cacheManager = mockk<WallpaperCacheManager>(relaxed = true),
+            cacheManager = cacheManager,
             prefs = prefs,
             sourceMetrics = sourceMetrics,
         )
+    }
+
+    private fun http429(vararg headers: Pair<String, String>): HttpException {
+        val headerPairs = headers.flatMap { listOf(it.first, it.second) }.toTypedArray()
+        val rawResponse = okhttp3.Response.Builder()
+            .request(Request.Builder().url("https://pixabay.com/api/").build())
+            .protocol(Protocol.HTTP_1_1)
+            .code(429)
+            .message("Too Many Requests")
+            .headers(Headers.headersOf(*headerPairs))
+            .build()
+        return HttpException(Response.error<Any>("".toResponseBody(null), rawResponse))
     }
 
     private fun wallpaper(

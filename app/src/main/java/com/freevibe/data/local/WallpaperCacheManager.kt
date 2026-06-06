@@ -16,6 +16,7 @@ class WallpaperCacheManager @Inject constructor(
         const val TTL_DEFAULT = 6 * 60 * 60 * 1000L    // 6 hours
         const val TTL_REDDIT = 2 * 60 * 60 * 1000L     // 2 hours (fast-changing)
         const val TTL_PICSUM = 24 * 60 * 60 * 1000L    // 24 hours (static catalog)
+        const val TTL_PIXABAY = 24 * 60 * 60 * 1000L   // 24 hours (provider request-cache policy)
         const val TTL_BING = 4 * 60 * 60 * 1000L       // 4 hours (daily rotation)
         private const val MAX_ENTRIES_PER_KEY = 180
         private const val MAX_TOTAL_ENTRIES = 1800
@@ -71,6 +72,7 @@ class WallpaperCacheManager @Inject constructor(
 
     private fun getTtl(source: ContentSource): Long = when (source) {
         ContentSource.PICSUM -> TTL_PICSUM
+        ContentSource.PIXABAY -> TTL_PIXABAY
         ContentSource.BING -> TTL_BING
         ContentSource.REDDIT -> TTL_REDDIT
         else -> TTL_DEFAULT

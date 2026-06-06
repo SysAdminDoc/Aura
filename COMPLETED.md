@@ -108,6 +108,11 @@ next pass can resume quickly.
   color/random/similar actions when disabled, removed disabled Wallhaven from
   rotation pickers, skipped Wallhaven API calls before key reads/cache fallback,
   and recorded disabled diagnostics separately from outages.
+- Completed Cycle 43 Pixabay photo request-cache and backoff: added a
+  24-hour Pixabay metadata TTL, served fresh cached Pixabay photo results before
+  API calls, parsed `Retry-After`/`X-RateLimit-Reset` from 429 responses into an
+  in-session backoff, and kept Pixabay video metadata caching as the remaining
+  policy follow-up.
 
 ## 2026-06-05
 

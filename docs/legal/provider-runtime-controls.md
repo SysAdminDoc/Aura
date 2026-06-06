@@ -22,7 +22,7 @@ runtime-control row.
 | Local device media | Not applicable | User action and Android permission/picker grants. | No remote provider is contacted; user can cancel picker flows or delete local copies. | None. |
 | YouTube | Covered | Settings exposes a YouTube provider-enabled flag in addition to query customization and blocked words. | Disabled mode hides YouTube browsing, skips top hits and video discovery, falls back to bundled sounds, and blocks stream resolution before cache or downloader use. | Carry the flag into channel-specific distribution defaults when store profiles are added. |
 | Pexels | Covered | Settings exposes a Pexels provider-enabled flag in addition to the optional API key. | Disabled mode hides Pexels wallpaper browsing, skips Discover/search/style-biased/video API calls, and records disabled diagnostics before reading bundled keys. | Carry the flag into channel-specific distribution defaults when store profiles are added. |
-| Pixabay | Partial | Settings exposes a Pixabay provider-enabled flag in addition to the optional API key. | Disabled mode hides Pixabay wallpaper browsing, removes it from rotation pickers, skips wallpaper/video API calls, and records disabled diagnostics before reading bundled keys. | Add provider TTL and rate-limit guards before claiming broader Pixabay policy-complete behavior. |
+| Pixabay | Partial | Settings exposes a Pixabay provider-enabled flag in addition to the optional API key; photo requests use a 24-hour fresh-cache path and 429 backoff. | Disabled mode hides Pixabay wallpaper browsing, removes it from rotation pickers, skips wallpaper/video API calls, and records disabled diagnostics before reading bundled keys. | Extend the same 24-hour request-cache and 429 backoff policy to Pixabay video metadata before claiming broader Pixabay policy-complete behavior. |
 | Klipy | Covered | Removed active feed. | New feeds do not request Klipy; saved legacy rows can remain visible. | None. |
 | SoundCloud | Covered | No active browsing tab uses SoundCloud. | New feeds do not request SoundCloud; saved legacy rows can remain visible. | None. |
 | Aura Community | Covered | Settings exposes a Community source-enabled flag in addition to Firebase availability. | Disabled mode skips startup identity warm-up, hides community tabs/uploads/votes/creator profile entry points, blocks feed/upload/follow repository calls, and records disabled diagnostics separately from Firebase outages. | None for runtime disablement; keep separate public-data deletion, takedown, and App Check hardening work tracked in `ROADMAP.md`. |
@@ -43,8 +43,9 @@ runtime-control row.
 - Bing Daily now has a default-on provider flag covering Discover secondary
   daily-image calls and auto-wallpaper rotation choices.
 - Pexels and Pixabay now have default-on provider flags covering wallpaper and
-  video API calls before bundled keys are read. Pixabay still needs provider TTL
-  and rate-limit guards for broader policy completeness.
+  video API calls before bundled keys are read. Pixabay photo requests now use a
+  24-hour fresh-cache path and 429 backoff; Pixabay video metadata needs the same
+  guard before broader policy completeness.
 - Community now has a default-on source flag covering startup identity warm-up,
   sound/wallpaper community feeds, uploads, vote actions, creator profile
   navigation, and creator follow/unfollow calls. Data lifecycle, deletion,
