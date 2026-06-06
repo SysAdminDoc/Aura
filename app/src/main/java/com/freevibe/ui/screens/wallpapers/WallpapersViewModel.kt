@@ -109,6 +109,7 @@ class WallpapersViewModel @Inject constructor(
 
     // #9: Grid columns preference
     val gridColumns = prefs.wallpaperGridColumns.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 2)
+    val redditProviderEnabled = prefs.redditProviderEnabled.stateIn(viewModelScope, SharingStarted.Eagerly, true)
 
     val recentSearches = searchHistoryRepo.getRecentWallpaperSearches(8)
         .map { list -> list.map { it.query } }
@@ -170,6 +171,10 @@ class WallpapersViewModel @Inject constructor(
     private fun fetchDailyPick() {
         viewModelScope.launch {
             try {
+                if (!isRedditProviderEnabled()) {
+                    _dailyPick.value = null
+                    return@launch
+                }
                 _dailyPick.value = withTimeoutOrNull(5000L) { redditRepo.getDailyTopWallpaper() }
             } catch (e: Exception) {
                 if (e is kotlinx.coroutines.CancellationException) throw e
@@ -238,11 +243,16 @@ class WallpapersViewModel @Inject constructor(
     }
 
     fun selectTab(tab: WallpaperTab) {
-        redditRepo.resetPagination() // Always reset to avoid stale afterToken
+        val targetTab = if (tab == WallpaperTab.REDDIT && !redditProviderEnabled.value) {
+            WallpaperTab.DISCOVER
+        } else {
+            tab
+        }
+        if (targetTab == WallpaperTab.REDDIT) redditRepo.resetPagination()
         _state.update {
             it.copy(
-                selectedTab = tab,
-                browseTab = if (tab == WallpaperTab.SEARCH || tab == WallpaperTab.COLOR) it.browseTab else tab,
+                selectedTab = targetTab,
+                browseTab = if (targetTab == WallpaperTab.SEARCH || targetTab == WallpaperTab.COLOR) it.browseTab else targetTab,
                 query = "",
                 wallpapers = emptyList(),
                 currentPage = 1,
@@ -334,7 +344,11 @@ class WallpapersViewModel @Inject constructor(
     }
 
     fun clearActiveFilter() {
-        val returnTab = _state.value.browseTab
+        val returnTab = if (_state.value.browseTab == WallpaperTab.REDDIT && !redditProviderEnabled.value) {
+            WallpaperTab.DISCOVER
+        } else {
+            _state.value.browseTab
+        }
         if (returnTab == WallpaperTab.REDDIT) redditRepo.resetPagination()
         _state.update {
             it.copy(
@@ -357,6 +371,10 @@ class WallpapersViewModel @Inject constructor(
     // #4: Pull-to-refresh
     fun refresh() {
         val tab = _state.value.selectedTab
+        if (tab == WallpaperTab.REDDIT && !redditProviderEnabled.value) {
+            selectTab(WallpaperTab.DISCOVER)
+            return
+        }
         _state.update { it.copy(isRefreshing = true, currentPage = 1, error = null, errorSource = null) }
         if (tab == WallpaperTab.REDDIT) redditRepo.resetPagination()
         loadWallpapers(isRefresh = true)
@@ -681,6 +699,21 @@ class WallpapersViewModel @Inject constructor(
             val currentPage = _state.value.currentPage
             try {
                 val userStyles = loadUserStyles()
+                if (currentTab == WallpaperTab.REDDIT && !isRedditProviderEnabled()) {
+                    redditRepo.getMultiSubreddit()
+                    _state.update {
+                        it.copy(
+                            wallpapers = emptyList(),
+                            isLoading = false,
+                            isLoadingMore = false,
+                            isRefreshing = false,
+                            hasMore = false,
+                            error = redditDisabledMessage(),
+                            errorSource = WallpaperTab.REDDIT.name,
+                        )
+                    }
+                    return@launch
+                }
                 val result = when (currentTab) {
                     WallpaperTab.DISCOVER -> wallpaperRepo.getDiscover(
                         page = currentPage,
@@ -940,6 +973,10 @@ class WallpapersViewModel @Inject constructor(
             .split(",")
             .map { it.trim().lowercase(java.util.Locale.ROOT) }
             .filter { it.isNotBlank() }
+
+    private suspend fun isRedditProviderEnabled(): Boolean = prefs.redditProviderEnabled.first()
+
+    private fun redditDisabledMessage(): String = "Reddit source is disabled in Settings"
 }
 
 internal fun matchesWallpaperIdentity(

@@ -338,6 +338,7 @@ class VideoWallpapersViewModel @Inject constructor(
             val attemptedSources = java.util.Collections.synchronizedSet(mutableSetOf<String>())
             val failedSources = java.util.Collections.synchronizedSet(mutableSetOf<String>())
             val youtubeEnabled = prefs.youtubeProviderEnabled.first()
+            val redditEnabled = prefs.redditProviderEnabled.first()
 
             kotlinx.coroutines.supervisorScope {
                 // 1. Pexels
@@ -376,6 +377,10 @@ class VideoWallpapersViewModel @Inject constructor(
 
                 // 2. Reddit — one subreddit per load, rotating, with per-sub pagination
                 val redditJob = async(Dispatchers.IO) {
+                    if (!redditEnabled) {
+                        sourceMetrics.recordDisabled("reddit")
+                        return@async emptyList<VideoWallpaperItem>()
+                    }
                     val items = mutableListOf<VideoWallpaperItem>()
                     attemptedSources += "Reddit"
                     var redditReached = false

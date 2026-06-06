@@ -13,7 +13,7 @@ runtime-control row.
 | Bing Image of the Day | Missing | Always attempted as a Discover secondary source. | No first-class disabled state; failures fall back to other Discover sources. | Add a source-enabled flag or remote distribution profile before claiming Bing can be disabled. |
 | Wikimedia Commons | Covered | No active repository path. | New feeds do not request Wikimedia; saved legacy rows can remain visible. | None. |
 | Internet Archive | Covered | Removed active feed. | New sound feeds do not request Internet Archive; old saved records can still render. | None. |
-| Reddit | Missing | Wallpaper subreddit lists are editable; video subreddits are currently hardcoded in the video ViewModel. | No source-disabled state; empty or failed requests degrade through feed fallback behavior. | Add one runtime flag that removes Reddit from wallpaper and video entry points and records disabled diagnostics. |
+| Reddit | Covered | Settings exposes a Reddit provider-enabled flag in addition to editable wallpaper subreddit lists. | Disabled mode hides Reddit wallpaper browsing, skips daily picks, video wallpaper Reddit jobs, scheduled Reddit rotations, and repository network calls while recording disabled diagnostics. | Move video subreddit lists into Preferences if distribution profiles need source-specific Reddit video curation. |
 | NASA | Covered | No active repository path. | New feeds do not request NASA; saved legacy rows can remain visible. | None. |
 | Freesound | Covered | No active browsing tab uses Freesound; optional key is retained for compatibility. | New sound browsing uses YouTube/community/bundled paths; saved records keep attribution. | None. |
 | Jamendo | Covered | No active repository path. | New feeds do not request Jamendo; saved legacy rows can remain visible. | None. |
@@ -35,9 +35,9 @@ runtime-control row.
   search/import, similar-sound lookup, top-hit prefetch, video discovery, and
   stream resolution. Distribution profiles still need channel-specific defaults
   before store builds can claim YouTube is off by default.
-- Reddit has editable wallpaper subreddit lists but no single off switch, and
-  video wallpaper subreddits are hardcoded. A single provider flag should remove
-  both surfaces.
+- Reddit now has a default-on provider flag covering wallpaper browse, daily
+  pick/background jobs, scheduled rotations, repository calls, and video
+  wallpaper discovery. Video wallpaper subreddit curation remains hardcoded.
 - Pexels and Pixabay currently short-circuit when their effective API key is
   blank, but a bundled default key means that is not a reliable disable control.
 - Community features depend on Firebase availability and rules, but operator

@@ -3,6 +3,7 @@
 All notable changes to Aura will be documented in this file.
 
 ## Unreleased
+- **Reddit source switch (Cycle 38)**: Settings now has a default-on Reddit feature switch; disabled mode hides Reddit wallpaper browsing, skips daily picks, background rotations, repository calls, and video wallpaper discovery, and records disabled source diagnostics separately from outages.
 - **YouTube legal-mode switch (Cycle 37)**: Settings now has a default-on YouTube feature switch; disabled mode hides YouTube sound browsing, falls back to bundled sounds, skips YouTube video wallpaper discovery, blocks stream resolution before cache/downloader use, and records disabled source diagnostics separately from outages.
 - **Provider runtime controls (Cycle 36)**: added a checked runtime-control matrix for every content source, documented current disabled-provider behavior, and identified YouTube as the next legal-mode/offline-risk switch.
 - **Generated notice metadata parity (Cycle 35)**: `tools/dependency_notice_lock.py` now has a `check-metadata` mode, and PR/main plus release workflows fail when raw Google OSS metadata rows no longer match the reviewed dependency notice lockfile.

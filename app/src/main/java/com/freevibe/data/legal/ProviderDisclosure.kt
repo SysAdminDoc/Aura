@@ -329,10 +329,10 @@ val providerRuntimeControls = listOf(
     ProviderRuntimeControl(
         source = ContentSource.REDDIT,
         surfaces = "Wallpaper Discover, wallpaper subreddit feeds, video wallpaper feed.",
-        status = ProviderRuntimeControlStatus.MISSING,
-        currentControl = "Wallpaper subreddit lists are editable; video subreddits are currently hardcoded in the video ViewModel.",
-        disabledBehavior = "No source-disabled state; empty or failed requests degrade through feed fallback behavior.",
-        followUp = "Add one runtime flag that removes Reddit from wallpaper and video entry points and records disabled diagnostics.",
+        status = ProviderRuntimeControlStatus.COVERED,
+        currentControl = "Settings exposes a Reddit provider-enabled flag in addition to editable wallpaper subreddit lists.",
+        disabledBehavior = "Disabled mode hides Reddit wallpaper browsing, skips daily picks, video wallpaper Reddit jobs, scheduled Reddit rotations, and repository network calls while recording disabled diagnostics.",
+        followUp = "Move video subreddit lists into Preferences if distribution profiles need source-specific Reddit video curation.",
     ),
     ProviderRuntimeControl(
         source = ContentSource.NASA,

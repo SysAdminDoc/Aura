@@ -1,5 +1,6 @@
 package com.freevibe.data.repository
 
+import com.freevibe.data.local.PreferencesManager
 import com.freevibe.data.model.SearchResult
 import com.freevibe.data.model.Wallpaper
 import com.freevibe.data.remote.reddit.RedditApi
@@ -8,6 +9,7 @@ import com.freevibe.service.SourceMetrics
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.flow.first
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -17,6 +19,7 @@ private const val SOURCE_REDDIT = "reddit"
 class RedditRepository @Inject constructor(
     private val redditApi: RedditApi,
     private val sourceMetrics: SourceMetrics,
+    private val prefs: PreferencesManager,
 ) {
     // Per-subreddit pagination tokens (thread-safe)
     private val afterTokens = java.util.concurrent.ConcurrentHashMap<String, String>()
@@ -27,6 +30,10 @@ class RedditRepository @Inject constructor(
         timeRange: String = "week",
         after: String? = null,
     ): SearchResult<Wallpaper> {
+        if (!isProviderEnabled()) {
+            sourceMetrics.recordDisabled(SOURCE_REDDIT)
+            return emptyWallpaperResult()
+        }
         val response = sourceMetrics.measure(SOURCE_REDDIT) {
             redditApi.getSubredditPosts(
                 subreddit = subreddit,
@@ -56,6 +63,10 @@ class RedditRepository @Inject constructor(
         query: String,
         after: String? = null,
     ): SearchResult<Wallpaper> {
+        if (!isProviderEnabled()) {
+            sourceMetrics.recordDisabled(SOURCE_REDDIT)
+            return emptyWallpaperResult()
+        }
         val response = sourceMetrics.measure(SOURCE_REDDIT) {
             redditApi.searchSubreddit(
                 subreddit = subreddit,
@@ -86,6 +97,10 @@ class RedditRepository @Inject constructor(
     suspend fun getMultiSubreddit(
         subreddits: List<String> = redditWallpaperSubs,
     ): SearchResult<Wallpaper> = coroutineScope {
+        if (!isProviderEnabled()) {
+            sourceMetrics.recordDisabled(SOURCE_REDDIT)
+            return@coroutineScope emptyWallpaperResult()
+        }
         val results = subreddits.map { sub ->
             async {
                 try {
@@ -107,6 +122,10 @@ class RedditRepository @Inject constructor(
 
     /** Get today's single most-upvoted wallpaper across key subreddits */
     suspend fun getDailyTopWallpaper(): Wallpaper? {
+        if (!isProviderEnabled()) {
+            sourceMetrics.recordDisabled(SOURCE_REDDIT)
+            return null
+        }
         val subs = listOf("wallpapers", "MobileWallpaper")
         return subs.flatMap { sub ->
             try {
@@ -132,4 +151,13 @@ class RedditRepository @Inject constructor(
     fun resetPagination() {
         afterTokens.clear()
     }
+
+    private suspend fun isProviderEnabled(): Boolean = prefs.redditProviderEnabled.first()
+
+    private fun emptyWallpaperResult() = SearchResult<Wallpaper>(
+        items = emptyList(),
+        totalCount = 0,
+        currentPage = 0,
+        hasMore = false,
+    )
 }

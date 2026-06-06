@@ -1,8 +1,8 @@
 # Autonomous Loop State
 
 **Assigned project:** `C:\Users\--\repos\Aura`
-**Current pass:** 2026-06-06 Cycle 37 YouTube provider legal-mode switch
-**Last commit before pass:** `e89421e` (`feat(policy): track provider runtime controls`)
+**Current pass:** 2026-06-06 Cycle 38 Reddit provider source switch
+**Last commit before pass:** `1d32bff` (`feat(settings): add youtube provider switch`)
 
 ## 2026-06-05 Result
 
@@ -117,6 +117,13 @@
 - Extended `SourceMetrics` with disabled-source counters and surfaced disabled counts in Settings diagnostics and crash context.
 - Updated `ProviderDisclosure.kt`, `docs/legal/provider-runtime-controls.md`, `docs/research/cycle-37-2026-06-06.md`, `ROADMAP.md`, `CHANGELOG.md`, and `COMPLETED.md` for the covered YouTube runtime control.
 - Cycle 37 verification: focused Sounds, sound-tab helper, source metrics, and provider disclosure unit tests; release-compliance Python compile checks; dependency notice lock check; generated notice metadata parity check; native compliance lock check; dependency overlay check; dependency license policy check; `git diff --check`; changed-line attribution scan.
+- Completed Cycle 38 Reddit provider source switch.
+- Added a default-on `reddit_provider_enabled` preference and Settings switch for Reddit features.
+- Gated `RedditRepository` before subreddit fetches, subreddit search, multi-subreddit aggregation, and daily-pick lookup.
+- Updated Wallpapers so disabled Reddit mode clears daily picks, redirects the Reddit tab to Discover, hides the Reddit tab, and avoids Reddit loads during refresh/filter transitions.
+- Updated Video Wallpapers, Daily Wallpaper, and Auto Wallpaper workers to skip Reddit fetch paths when the source is disabled.
+- Updated `ProviderDisclosure.kt`, `docs/legal/provider-runtime-controls.md`, `docs/research/cycle-38-2026-06-06.md`, `ROADMAP.md`, `CHANGELOG.md`, and `COMPLETED.md` for the covered Reddit runtime control.
+- Cycle 38 verification: focused Wallpapers, Settings, video wallpaper helper, source metrics, and provider disclosure unit tests; release-compliance Python compile checks; dependency notice lock check; generated notice metadata parity check; native compliance lock check; dependency overlay check; dependency license policy check; `git diff --check`; changed-line attribution scan.
 
 ## Still Open
 

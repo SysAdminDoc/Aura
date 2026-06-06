@@ -118,9 +118,11 @@ class PreferencesManager @Inject constructor(
 
     val redditSubreddits: Flow<String> = get(Keys.REDDIT_SUBS, "wallpapers,MobileWallpaper,wallpaper,WQHD_Wallpaper,MinimalWallpaper,phonewallpapers,iWallpaper")
     val redditVideoSubreddits: Flow<String> = get(Keys.REDDIT_VIDEO_SUBS, "livewallpapers,LiveWallpaper,Cinemagraphs,perfectloops")
+    val redditProviderEnabled: Flow<Boolean> = get(Keys.REDDIT_PROVIDER_ENABLED, true)
 
     suspend fun setRedditSubreddits(subs: String) = set(Keys.REDDIT_SUBS, subs)
     suspend fun setRedditVideoSubreddits(subs: String) = set(Keys.REDDIT_VIDEO_SUBS, subs)
+    suspend fun setRedditProviderEnabled(enabled: Boolean) = set(Keys.REDDIT_PROVIDER_ENABLED, enabled)
 
     // ── YouTube sound search ──────────────────────────────────────
 
@@ -245,6 +247,7 @@ class PreferencesManager @Inject constructor(
         val PREF_RESOLUTION = stringPreferencesKey("pref_resolution")
         val REDDIT_SUBS = stringPreferencesKey("reddit_subreddits")
         val REDDIT_VIDEO_SUBS = stringPreferencesKey("reddit_video_subreddits")
+        val REDDIT_PROVIDER_ENABLED = booleanPreferencesKey("reddit_provider_enabled")
         // YouTube sound search
         val YT_SOUND_RINGTONES = stringPreferencesKey("yt_sound_ringtones")
         val YT_SOUND_NOTIFICATIONS = stringPreferencesKey("yt_sound_notifications")

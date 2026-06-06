@@ -102,6 +102,7 @@ fun WallpapersScreen(
     val dailyPick by viewModel.dailyPick.collectAsStateWithLifecycle()
     val topVoted by viewModel.topVoted.collectAsStateWithLifecycle()
     val hiddenIds by viewModel.hiddenIds.collectAsStateWithLifecycle()
+    val redditProviderEnabled by viewModel.redditProviderEnabled.collectAsStateWithLifecycle()
     val visibleSections = remember(state.wallpapers, hiddenIds, topVoted, dailyPick, state.selectedTab) {
         computeVisibleWallpaperSections(
             wallpapers = state.wallpapers,
@@ -134,6 +135,11 @@ fun WallpapersScreen(
     var showWallpaperUploadDialog by remember { mutableStateOf(false) }
     var selectedWallpaperUploadUri by remember { mutableStateOf<Uri?>(null) }
     var awaitingWallpaperUploadResult by remember { mutableStateOf(false) }
+    LaunchedEffect(redditProviderEnabled, state.selectedTab) {
+        if (!redditProviderEnabled && state.selectedTab == WallpaperTab.REDDIT) {
+            viewModel.selectTab(WallpaperTab.DISCOVER)
+        }
+    }
     // Photo Picker (Android 13+, backported via Google Play services on older versions). No
     // READ_MEDIA_IMAGES permission needed; scoped-storage compliant; better UX than GetContent.
     // NX-11: AuraPickVisualMedia attaches the Android 17 9:16 portrait grid customisation
@@ -249,11 +255,13 @@ fun WallpapersScreen(
 
     Box(modifier = Modifier.fillMaxSize()) {
         Column(modifier = Modifier.fillMaxSize()) {
-            val visibleTabs = remember(state.selectedTab) {
+            val visibleTabs = remember(state.selectedTab, redditProviderEnabled) {
                 WallpaperTab.entries.filter {
                     it != WallpaperTab.SEARCH || state.selectedTab == WallpaperTab.SEARCH
                 }.filter {
                     it != WallpaperTab.COLOR || state.selectedTab == WallpaperTab.COLOR
+                }.filter {
+                    it != WallpaperTab.REDDIT || redditProviderEnabled || state.selectedTab == WallpaperTab.REDDIT
                 }
             }
             GlassCard(

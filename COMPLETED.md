@@ -85,6 +85,10 @@ next pass can resume quickly.
   import, top hits, similar sounds, playback/download/video resolution, and video
   discovery when disabled, added bundled sound fallbacks, and recorded disabled
   source diagnostics separately from outages.
+- Completed Cycle 38 Reddit provider source switch: added a default-on Reddit
+  provider preference and Settings switch, hid Reddit wallpaper browsing when
+  disabled, skipped daily picks/background rotations/repository calls/video
+  discovery, and recorded disabled source diagnostics separately from outages.
 
 ## 2026-06-05
 

@@ -91,6 +91,7 @@ fun SettingsScreen(
     val youtubeProviderEnabled by viewModel.youtubeProviderEnabled.collectAsStateWithLifecycle()
     val previewVolume by viewModel.previewVolume.collectAsStateWithLifecycle()
     val redditSubs by viewModel.redditSubs.collectAsStateWithLifecycle()
+    val redditProviderEnabled by viewModel.redditProviderEnabled.collectAsStateWithLifecycle()
     val preferredRes by viewModel.preferredRes.collectAsStateWithLifecycle()
     val userStyles by viewModel.userStyles.collectAsStateWithLifecycle()
     val schedulerEnabled by viewModel.schedulerEnabled.collectAsStateWithLifecycle()
@@ -429,6 +430,17 @@ fun SettingsScreen(
                 title = "Reddit subreddits",
                 subtitle = "${redditSubs.split(",").size} subreddits",
                 onClick = { showRedditEditor = true },
+            )
+            SettingsToggle(
+                icon = Icons.Default.Forum,
+                title = "Enable Reddit source",
+                subtitle = if (redditProviderEnabled) {
+                    "Shows Reddit wallpapers, daily picks, and video loops"
+                } else {
+                    "Hides Reddit browsing and skips Reddit background fetches"
+                },
+                checked = redditProviderEnabled,
+                onCheckedChange = { viewModel.setRedditProviderEnabled(it) },
             )
             SettingsItem(
                 icon = Icons.Default.Category,

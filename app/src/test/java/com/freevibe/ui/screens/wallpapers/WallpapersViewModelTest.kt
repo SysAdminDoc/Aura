@@ -246,6 +246,38 @@ class WallpapersViewModelTest {
     }
 
     @Test
+    fun `reddit disabled skips daily pick and redirects reddit tab to discover`() = runTest(dispatcher) {
+        val wallpaperRepo = mockk<WallpaperRepository>()
+        val redditRepo = mockk<RedditRepository>()
+
+        stubCommonDependencies(
+            wallpaperRepo = wallpaperRepo,
+            redditRepo = redditRepo,
+        )
+        coEvery { redditRepo.getDailyTopWallpaper() } returns wallpaper(
+            id = "rd_daily",
+            color = "#101820",
+            source = ContentSource.REDDIT,
+        )
+
+        val viewModel = createViewModel(
+            wallpaperRepo = wallpaperRepo,
+            redditRepo = redditRepo,
+            redditProviderEnabled = false,
+        )
+
+        advanceUntilIdle()
+        assertNull(viewModel.dailyPick.value)
+        coVerify(exactly = 0) { redditRepo.getDailyTopWallpaper() }
+
+        viewModel.selectTab(WallpaperTab.REDDIT)
+        advanceUntilIdle()
+
+        assertEquals(WallpaperTab.DISCOVER, viewModel.state.value.selectedTab)
+        coVerify(exactly = 0) { redditRepo.getMultiSubreddit() }
+    }
+
+    @Test
     fun `downloadWallpaper scopes download identity by source`() = runTest(dispatcher) {
         val wallpaperRepo = mockk<WallpaperRepository>()
         val redditRepo = mockk<RedditRepository>()
@@ -433,6 +465,7 @@ class WallpapersViewModelTest {
         voteRepoOverride: VoteRepository? = null,
         cacheManagerOverride: WallpaperCacheManager? = null,
         favoritesRepoOverride: FavoritesRepository? = null,
+        redditProviderEnabled: Boolean = true,
     ): WallpapersViewModel {
         val favoritesRepo = favoritesRepoOverride ?: mockk<FavoritesRepository>()
         every { favoritesRepo.allIdentities() } returns flowOf(emptySet<FavoriteIdentity>())
@@ -451,6 +484,7 @@ class WallpapersViewModelTest {
 
         val prefs = mockk<PreferencesManager>()
         every { prefs.wallpaperGridColumns } returns flowOf(2)
+        every { prefs.redditProviderEnabled } returns flowOf(redditProviderEnabled)
         every { prefs.preferredResolution } returns flowOf("1080x1920")
         every { prefs.userStyles } returns flowOf("minimal,nature")
 

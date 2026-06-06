@@ -16,11 +16,13 @@ import androidx.hilt.work.HiltWorker
 import androidx.work.*
 import com.freevibe.MainActivity
 import com.freevibe.R
+import com.freevibe.data.local.PreferencesManager
 import com.freevibe.data.remote.reddit.RedditApi
 import com.freevibe.data.remote.toWallpaper
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withContext
 import okhttp3.OkHttpClient
 import okhttp3.Request
@@ -38,10 +40,16 @@ class DailyWallpaperWorker @AssistedInject constructor(
     @Assisted workerParams: WorkerParameters,
     private val redditApi: RedditApi,
     private val okHttpClient: OkHttpClient,
+    private val prefs: PreferencesManager,
+    private val sourceMetrics: SourceMetrics,
 ) : CoroutineWorker(appContext, workerParams) {
 
     override suspend fun doWork(): Result {
         return try {
+            if (!prefs.redditProviderEnabled.first()) {
+                sourceMetrics.recordDisabled("reddit")
+                return Result.success()
+            }
             // Fetch today's top image posts from multiple wallpaper subreddits
             val subreddits = listOf("wallpapers", "MobileWallpaper")
             val topPost = subreddits.flatMap { sub ->
