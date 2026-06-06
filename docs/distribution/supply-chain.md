@@ -9,7 +9,7 @@ Aura is side-loaded through GitHub Releases and Obtainium, so release artifacts 
 | Signed release APK | `.github/workflows/release.yml` | Builds the release variant, verifies the signature, rejects debuggable APKs, and publishes checksums. |
 | Release bundle validator | `tools/release_artifact_bundle_check.py`, `.github/workflows/release.yml` | Fails manual dry runs and tag releases when the final APK/notices/native/checksum/release-note bundle is incomplete or internally inconsistent. |
 | Third-party notices | `tools/google_oss_to_markdown.py`, `.github/workflows/release.yml` | Runs the Google OSS Licenses Gradle task for the release variant and publishes `THIRD-PARTY-NOTICES.md` next to the APK. |
-| Raw Google OSS inputs | `tools/google_oss_raw_archive.py`, `.github/workflows/release.yml` | Archives generated `dependencies.json`, license metadata, and raw license text inputs for drift review. |
+| Raw Google OSS inputs | `tools/google_oss_raw_archive.py`, `.github/workflows/release.yml`, `docs/distribution/raw-oss-input-retention.md` | Archives generated `dependencies.json`, license metadata, and raw license text inputs for drift review, and keeps the archive attached to every tagged public release. |
 | Dependency notice lockfile | `tools/dependency_notice_lock.py`, `docs/legal/dependency-notices.lock.json` | Fails PR/main/release checks when generated release dependency notices drift without review. |
 | Dependency notice overlay | `tools/dependency_overlay_check.py`, `docs/legal/dependency-notice-overrides.json` | Requires curated source, license, usage, and release-review metadata for high-risk generated dependencies and native payloads. |
 | Dependency license policy | `tools/dependency_license_policy.py`, `docs/legal/dependency-license-policy.json` | Fails PR/main/release checks when curated dependency or native-payload license IDs are disallowed, unknown, or missing required review notes. |
@@ -28,7 +28,7 @@ For each `v*` release:
 
 1. Confirm the GitHub Release contains `Aura-vX.Y.Z-versionCode-N-universal-release.apk`.
 2. Confirm the GitHub Release contains `THIRD-PARTY-NOTICES.md`.
-3. Confirm the GitHub Release contains `GOOGLE-OSS-RAW-INPUTS.zip`.
+3. Confirm the GitHub Release contains `GOOGLE-OSS-RAW-INPUTS.zip`; this archive is a permanent public release asset under [raw-oss-input-retention.md](raw-oss-input-retention.md).
 4. Confirm the GitHub Release contains `NATIVE-COMPLIANCE.md`.
 5. Confirm `SHA256SUMS.txt` includes the APK, `THIRD-PARTY-NOTICES.md`, `GOOGLE-OSS-RAW-INPUTS.zip`, and `NATIVE-COMPLIANCE.md`.
 6. Confirm the generated release notes include the APK SHA-256, third-party notices entry, raw Google OSS input archive entry, native compliance packet entry, signing certificate SHA-256, and artifact attestation URL.
@@ -75,6 +75,8 @@ Generated dependency notices do not replace Aura's content-source disclosures. `
 - `MANIFEST.json`
 
 The manifest records source paths, file sizes, and SHA-256 digests for each raw input. Keep this archive beside `THIRD-PARTY-NOTICES.md` in workflow artifacts and tagged GitHub Releases so future drift reviews can inspect the raw Google OSS output without rerunning Gradle.
+
+Retention decision: `GOOGLE-OSS-RAW-INPUTS.zip` remains attached to every tagged public GitHub Release that publishes `THIRD-PARTY-NOTICES.md`. Workflow artifacts remain useful for dry-run review, but they are retention-bound and are not the long-term release evidence surface. Full policy: [raw-oss-input-retention.md](raw-oss-input-retention.md).
 
 ## Dependency notice lockfile
 

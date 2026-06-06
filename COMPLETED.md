@@ -59,6 +59,10 @@ next pass can resume quickly.
   `tools/dependency_license_policy.py`, and wired PR/main verification plus
   release builds to fail unknown, disallowed, or unreviewed curated dependency
   and native-payload license IDs.
+- Completed Cycle 32 raw Google OSS archive retention policy: documented
+  `GOOGLE-OSS-RAW-INPUTS.zip` as a permanent tagged public release asset,
+  clarified dry-run/release signing docs, and kept release bundle validation
+  enforcing the archive in files, checksums, and notes.
 
 ## 2026-06-05
 

@@ -232,6 +232,7 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           body_path: release/RELEASE_NOTES.md
+          # Public release retention: keep raw notice inputs attached to tagged releases.
           files: |
             release/*.apk
             release/THIRD-PARTY-NOTICES.md

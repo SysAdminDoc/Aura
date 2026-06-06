@@ -18,6 +18,8 @@ Manual branch runs:
 - Upload the bundle with `actions/upload-artifact`.
 - Do not create or update a GitHub Release, because the public release upload step is tag-only.
 
+Dry-run workflow artifacts use the workflow's configured 30-day retention window. Tagged public releases keep `GOOGLE-OSS-RAW-INPUTS.zip` attached as release evidence under [raw-oss-input-retention.md](raw-oss-input-retention.md).
+
 Run from GitHub UI:
 
 1. Open Actions.
@@ -112,3 +114,4 @@ Expected output:
 - GitHub manual workflow runs: https://docs.github.com/en/actions/how-tos/manage-workflow-runs/manually-run-a-workflow
 - GitHub workflow dispatch event: https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows
 - GitHub workflow artifacts: https://docs.github.com/en/actions/using-workflows/storing-workflow-data-as-artifacts
+- GitHub release assets: https://docs.github.com/en/repositories/releasing-projects-on-github/about-releases

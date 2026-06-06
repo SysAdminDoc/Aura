@@ -1,8 +1,8 @@
 # Autonomous Loop State
 
 **Assigned project:** `C:\Users\--\repos\Aura`
-**Current pass:** 2026-06-06 Cycle 31 release dependency license policy gate
-**Last commit before pass:** `10f6a25` (`docs(release): document ffmpeg source review`)
+**Current pass:** 2026-06-06 Cycle 32 raw Google OSS archive retention policy
+**Last commit before pass:** `182f50f` (`feat(ci): enforce dependency license policy`)
 
 ## 2026-06-05 Result
 
@@ -83,13 +83,19 @@
 - Wired `.github/workflows/verify.yml` and `.github/workflows/release.yml` to run the policy check after the generated notice, native compliance, and overlay checks.
 - Updated `docs/distribution/supply-chain.md`, `ROADMAP.md`, `CHANGELOG.md`, and `COMPLETED.md` for the policy gate.
 - Cycle 31 verification: release-compliance Python compile checks; dependency notice lock check; native compliance lock check; dependency overlay check; dependency license policy check; sentinel disallowed-license failure check; `git diff --check`; changed-line attribution scan.
+- Completed Cycle 32 raw Google OSS archive retention policy.
+- Added `docs/distribution/raw-oss-input-retention.md` to state that `GOOGLE-OSS-RAW-INPUTS.zip` stays attached to every tagged public release that publishes generated notices.
+- Clarified `docs/distribution/supply-chain.md`, `docs/distribution/release-dry-run.md`, and `docs/distribution/release-signing.md` so dry-run artifacts are retention-bound review evidence while tagged release assets are the public retention surface.
+- Kept `.github/workflows/release.yml` behavior aligned with the decision and named the raw archive constant in `tools/release_artifact_bundle_check.py`.
+- Updated `ROADMAP.md`, `CHANGELOG.md`, and `COMPLETED.md` for the retention decision.
+- Cycle 32 verification: release-compliance Python compile checks; dependency notice lock check; native compliance lock check; dependency overlay check; dependency license policy check; release bundle smoke test with raw archive; negative release bundle smoke test without raw archive; `git diff --check`; changed-line attribution scan.
 
 ## Still Open
 
 - Exact Termux package commit, FFmpeg package patches, dependency source set, and build logs for the resolved youtubedl-android ffmpeg 0.18.1 AAR.
 - Runtime provider kill switches and disabled-provider behavior.
-- Raw Google OSS archive public retention policy.
+- Custom in-app dependency notice viewer.
 
 ## Next Cycle
 
-Continue this same assigned project, Aura. Start Cycle 32 from the `ROADMAP.md` Continuation State and `docs/research/cycle-31-2026-06-06.md`. The Google OSS notices plugin-only path is implemented; `tools/google_oss_to_markdown.py` generates `THIRD-PARTY-NOTICES.md`; `tools/google_oss_raw_archive.py` archives raw Google OSS inputs; `tools/native_compliance_inventory.py` generates `NATIVE-COMPLIANCE.md`, extracts embedded FFmpeg configure evidence, and gates native evidence drift; `tools/dependency_notice_lock.py` gates generated release notice drift; `tools/dependency_overlay_check.py` gates curated high-risk dependency/native-payload review metadata; `tools/dependency_license_policy.py` gates allowed, review-required, disallowed, and unknown curated license IDs; `tools/release_artifact_bundle_check.py` gates final release bundle consistency; Settings exposes generated release notice artifacts; `docs/legal/ffmpeg-source-correspondence.md` records the resolved FFmpeg configure/source correspondence evidence and remaining Termux owner action. Next decide and encode the public retention policy for `GOOGLE-OSS-RAW-INPUTS.zip`. Keep AboutLibraries secondary: 14.2.1 configures, but default exports were incomplete and the compliance export logged Windows path errors; do not use AboutLibraries 15.x until N-1 upgrades AGP because v15 requires AGP 8.13. Commit and push completed work when the active project contract allows it.
+Continue this same assigned project, Aura. Start Cycle 33 from the `ROADMAP.md` Continuation State and `docs/research/cycle-32-2026-06-06.md`. The Google OSS notices plugin-only path is implemented; `tools/google_oss_to_markdown.py` generates `THIRD-PARTY-NOTICES.md`; `tools/google_oss_raw_archive.py` archives raw Google OSS inputs and the repo now keeps `GOOGLE-OSS-RAW-INPUTS.zip` attached to tagged public releases; `tools/native_compliance_inventory.py` generates `NATIVE-COMPLIANCE.md`, extracts embedded FFmpeg configure evidence, and gates native evidence drift; `tools/dependency_notice_lock.py` gates generated release notice drift; `tools/dependency_overlay_check.py` gates curated high-risk dependency/native-payload review metadata; `tools/dependency_license_policy.py` gates allowed, review-required, disallowed, and unknown curated license IDs; `tools/release_artifact_bundle_check.py` gates final release bundle consistency; Settings exposes generated release notice artifacts; `docs/legal/ffmpeg-source-correspondence.md` records the resolved FFmpeg configure/source correspondence evidence and remaining Termux owner action. Next evaluate or implement a current-toolchain custom in-app dependency notice viewer while preserving manual provider disclosures. Keep AboutLibraries secondary: 14.2.1 configures, but default exports were incomplete and the compliance export logged Windows path errors; do not use AboutLibraries 15.x until N-1 upgrades AGP because v15 requires AGP 8.13. Commit and push completed work when the active project contract allows it.
