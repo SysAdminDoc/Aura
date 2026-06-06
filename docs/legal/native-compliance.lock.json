@@ -357,7 +357,12 @@
             },
             {
               "entry": "jni/arm64-v8a/libffmpeg.zip.so",
-              "facts": {},
+              "facts": {
+                "FFmpeg configure": "--arch=aarch64 --as=aarch64-linux-android-clang --cc=aarch64-linux-android-clang --cxx=aarch64-linux-android-clang++ --nm=llvm-nm --ar=llvm-ar --ranlib=llvm-ranlib --pkg-config=/home/builder/.termux-build/_cache/android-r28c-api-24-v1/bin/pkg-config --strip=llvm-strip --cross-prefix=aarch64-linux-android- --disable-indevs --disable-outdevs --enable-indev=lavfi --disable-static --disable-symver --enable-cross-compile --enable-gnutls --enable-gpl --enable-version3 --enable-jni --enable-lcms2 --enable-libaom --enable-libass --enable-libbluray --enable-libdav1d --enable-libfontconfig --enable-libfreetype --enable-libfribidi --enable-libgme --enable-libharfbuzz --enable-libmp3lame --enable-libopencore-amrnb --enable-libopencore-amrwb --enable-libopenmpt --enable-libopus --enable-librav1e --enable-librubberband --enable-libsoxr --enable-libsrt --enable-libssh --enable-libsvtav1 --enable-libtheora --enable-libv4l2 --enable-libvidstab --enable-libvmaf --enable-libvo-amrwbenc --enable-libvorbis --enable-libvpx --enable-libwebp --enable-libx264 --enable-libx265 --enable-libxml2 --enable-libxvid --enable-libzimg --enable-libzmq --enable-mediacodec --enable-opencl --enable-shared --prefix=/data/data/com.termux/files/usr --target-os=android --extra-libs=-landroid-glob --disable-vulkan --enable-neon --disable-libfdk-aac",
+                "FFmpeg configure sha256": "203d15374b60141718c798b584c751eccc92e18fa7df4f3564f34ca5ff35c1f0",
+                "FFmpeg license mode": "GPL-3.0-or-later flags present (--enable-gpl --enable-version3); --enable-nonfree not found",
+                "FFmpeg version": "FFmpeg version 7.1.1"
+              },
               "nestedCount": 184,
               "nestedSample": [
                 "usr/lib/",
@@ -416,7 +421,12 @@
             },
             {
               "entry": "jni/armeabi-v7a/libffmpeg.zip.so",
-              "facts": {},
+              "facts": {
+                "FFmpeg configure": "--arch=armeabi-v7a --as=arm-linux-androideabi-clang --cc=arm-linux-androideabi-clang --cxx=arm-linux-androideabi-clang++ --nm=llvm-nm --ar=llvm-ar --ranlib=llvm-ranlib --pkg-config=/home/builder/.termux-build/_cache/android-r28c-api-24-v1/bin/pkg-config --strip=llvm-strip --cross-prefix=arm-linux-androideabi- --disable-indevs --disable-outdevs --enable-indev=lavfi --disable-static --disable-symver --enable-cross-compile --enable-gnutls --enable-gpl --enable-version3 --enable-jni --enable-lcms2 --enable-libaom --enable-libass --enable-libbluray --enable-libdav1d --enable-libfontconfig --enable-libfreetype --enable-libfribidi --enable-libgme --enable-libharfbuzz --enable-libmp3lame --enable-libopencore-amrnb --enable-libopencore-amrwb --enable-libopenmpt --enable-libopus --enable-librav1e --enable-librubberband --enable-libsoxr --enable-libsrt --enable-libssh --enable-libsvtav1 --enable-libtheora --enable-libv4l2 --enable-libvidstab --enable-libvmaf --enable-libvo-amrwbenc --enable-libvorbis --enable-libvpx --enable-libwebp --enable-libx264 --enable-libx265 --enable-libxml2 --enable-libxvid --enable-libzimg --enable-libzmq --enable-mediacodec --enable-opencl --enable-shared --prefix=/data/data/com.termux/files/usr --target-os=android --extra-libs=-landroid-glob --disable-vulkan --enable-neon --disable-libfdk-aac",
+                "FFmpeg configure sha256": "11215245be9ec6e63a9422d2f2a26f8cbfa361c13f5ca079b3cc780565f2bf38",
+                "FFmpeg license mode": "GPL-3.0-or-later flags present (--enable-gpl --enable-version3); --enable-nonfree not found",
+                "FFmpeg version": "FFmpeg version 7.1.1"
+              },
               "nestedCount": 184,
               "nestedSample": [
                 "usr/lib/",
@@ -475,7 +485,12 @@
             },
             {
               "entry": "jni/x86/libffmpeg.zip.so",
-              "facts": {},
+              "facts": {
+                "FFmpeg configure": "--arch=x86 --as=i686-linux-android-clang --cc=i686-linux-android-clang --cxx=i686-linux-android-clang++ --nm=llvm-nm --ar=llvm-ar --ranlib=llvm-ranlib --pkg-config=/home/builder/.termux-build/_cache/android-r28c-api-24-v1/bin/pkg-config --strip=llvm-strip --cross-prefix=i686-linux-android- --disable-indevs --disable-outdevs --enable-indev=lavfi --disable-static --disable-symver --enable-cross-compile --enable-gnutls --enable-gpl --enable-version3 --enable-jni --enable-lcms2 --enable-libaom --enable-libass --enable-libbluray --enable-libdav1d --enable-libfontconfig --enable-libfreetype --enable-libfribidi --enable-libgme --enable-libharfbuzz --enable-libmp3lame --enable-libopencore-amrnb --enable-libopencore-amrwb --enable-libopenmpt --enable-libopus --enable-librav1e --enable-librubberband --enable-libsoxr --enable-libsrt --enable-libssh --enable-libsvtav1 --enable-libtheora --enable-libv4l2 --enable-libvidstab --enable-libvmaf --enable-libvo-amrwbenc --enable-libvorbis --enable-libvpx --enable-libwebp --enable-libx264 --enable-libx265 --enable-libxml2 --enable-libxvid --enable-libzimg --enable-libzmq --enable-mediacodec --enable-opencl --enable-shared --prefix=/data/data/com.termux/files/usr --target-os=android --extra-libs=-landroid-glob --disable-vulkan --disable-asm --disable-libfdk-aac",
+                "FFmpeg configure sha256": "444e99bffd340bb709024bcfeebe1e38d99a8a5b63de7c5f0583258c48a2fa49",
+                "FFmpeg license mode": "GPL-3.0-or-later flags present (--enable-gpl --enable-version3); --enable-nonfree not found",
+                "FFmpeg version": "FFmpeg version 7.1.1"
+              },
               "nestedCount": 184,
               "nestedSample": [
                 "usr/lib/",
@@ -534,7 +549,12 @@
             },
             {
               "entry": "jni/x86_64/libffmpeg.zip.so",
-              "facts": {},
+              "facts": {
+                "FFmpeg configure": "--arch=x86_64 --as=x86_64-linux-android-clang --cc=x86_64-linux-android-clang --cxx=x86_64-linux-android-clang++ --nm=llvm-nm --ar=llvm-ar --ranlib=llvm-ranlib --pkg-config=/home/builder/.termux-build/_cache/android-r28c-api-24-v1/bin/pkg-config --strip=llvm-strip --cross-prefix=x86_64-linux-android- --disable-indevs --disable-outdevs --enable-indev=lavfi --disable-static --disable-symver --enable-cross-compile --enable-gnutls --enable-gpl --enable-version3 --enable-jni --enable-lcms2 --enable-libaom --enable-libass --enable-libbluray --enable-libdav1d --enable-libfontconfig --enable-libfreetype --enable-libfribidi --enable-libgme --enable-libharfbuzz --enable-libmp3lame --enable-libopencore-amrnb --enable-libopencore-amrwb --enable-libopenmpt --enable-libopus --enable-librav1e --enable-librubberband --enable-libsoxr --enable-libsrt --enable-libssh --enable-libsvtav1 --enable-libtheora --enable-libv4l2 --enable-libvidstab --enable-libvmaf --enable-libvo-amrwbenc --enable-libvorbis --enable-libvpx --enable-libwebp --enable-libx264 --enable-libx265 --enable-libxml2 --enable-libxvid --enable-libzimg --enable-libzmq --enable-mediacodec --enable-opencl --enable-shared --prefix=/data/data/com.termux/files/usr --target-os=android --extra-libs=-landroid-glob --disable-vulkan --disable-libfdk-aac",
+                "FFmpeg configure sha256": "0945d7c6158ac48c3cb36d81c0db0321444c37383a6b6ca68fd5e580db11e772",
+                "FFmpeg license mode": "GPL-3.0-or-later flags present (--enable-gpl --enable-version3); --enable-nonfree not found",
+                "FFmpeg version": "FFmpeg version 7.1.1"
+              },
               "nestedCount": 184,
               "nestedSample": [
                 "usr/lib/",

@@ -49,6 +49,11 @@ next pass can resume quickly.
 - Completed Cycle 29 user-facing dependency notice access: added generated
   release notice cards to `LicensesScreen.kt`, updated Settings copy, and added
   focused coverage for the release artifact link data.
+- Completed Cycle 30 FFmpeg source-correspondence evidence: added
+  `docs/legal/ffmpeg-source-correspondence.md`, extracted embedded FFmpeg
+  7.1.1 configure lines and license-mode facts into the native compliance
+  generator/lock, regenerated the native packet, and updated release review
+  docs for the remaining Termux source/build-log owner action.
 
 ## 2026-06-05
 

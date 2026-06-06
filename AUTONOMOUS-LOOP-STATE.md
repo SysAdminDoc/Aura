@@ -1,8 +1,8 @@
 # Autonomous Loop State
 
 **Assigned project:** `C:\Users\--\repos\Aura`
-**Current pass:** 2026-06-06 Cycle 29 user-facing dependency notice access pass
-**Last commit before pass:** `60946b1` (`feat(release): preserve raw notice inputs`)
+**Current pass:** 2026-06-06 Cycle 30 FFmpeg source-correspondence evidence pass
+**Last commit before pass:** `af7d03a` (`feat(settings): surface release notices`)
 
 ## 2026-06-05 Result
 
@@ -71,13 +71,19 @@
 - Added `LicensesScreenTest` coverage for the release artifact link names, URLs, labels, and artifact descriptions.
 - Updated `ROADMAP.md`, `CHANGELOG.md`, and `COMPLETED.md` for generated notice access.
 - Cycle 29 verification: focused `:app:testDebugUnitTest --tests com.freevibe.ui.screens.licenses.LicensesScreenTest` passed; release-compliance Python compile and lock checks; dependency overlay check.
+- Completed Cycle 30 FFmpeg source-correspondence evidence.
+- Added `docs/legal/ffmpeg-source-correspondence.md` with the resolved youtubedl-android FFmpeg AAR hash, nested `libffmpeg.zip.so` hashes, embedded FFmpeg 7.1.1 configure lines for all four ABIs, FFmpeg 7.1.1 source candidate, and release-owner checklist.
+- Extended `tools/native_compliance_inventory.py` to extract embedded FFmpeg version, configure line, configure SHA-256, and license-mode facts from nested FFmpeg shared-library payloads.
+- Regenerated `docs/legal/native-compliance.md` and `docs/legal/native-compliance.lock.json` so FFmpeg configure evidence is part of the native drift gate.
+- Updated `docs/legal/dependency-notice-overrides.json`, `docs/distribution/supply-chain.md`, `ROADMAP.md`, `CHANGELOG.md`, and `COMPLETED.md` for FFmpeg source-correspondence review.
+- Cycle 30 verification: release-compliance Python compile checks; dependency notice lock check; native compliance lock check; native markdown regeneration; dependency overlay check; `git diff --check`; changed-line attribution scan.
 
 ## Still Open
 
-- FFmpeg exact configure line and matching source package review for the resolved youtubedl-android ffmpeg 0.18.1 AAR.
-- FFmpeg source-correspondence evidence.
+- Exact Termux package commit, FFmpeg package patches, dependency source set, and build logs for the resolved youtubedl-android ffmpeg 0.18.1 AAR.
 - Runtime provider kill switches and disabled-provider behavior.
+- Release dependency license policy gate.
 
 ## Next Cycle
 
-Continue this same assigned project, Aura. Start Cycle 30 from the `ROADMAP.md` Continuation State and `docs/research/cycle-29-2026-06-06.md`. The Google OSS notices plugin-only path is implemented; `tools/google_oss_to_markdown.py` generates `THIRD-PARTY-NOTICES.md`; `tools/google_oss_raw_archive.py` archives raw Google OSS inputs; `tools/native_compliance_inventory.py` generates `NATIVE-COMPLIANCE.md` and gates native evidence drift; `tools/dependency_notice_lock.py` gates generated release notice drift; `tools/dependency_overlay_check.py` gates curated high-risk dependency/native-payload review metadata; `tools/release_artifact_bundle_check.py` gates final release bundle consistency; Settings exposes generated release notice artifacts. Next investigate FFmpeg source/configure correspondence for the resolved youtubedl-android FFmpeg payload. Keep AboutLibraries secondary: 14.2.1 configures, but default exports were incomplete and the compliance export logged Windows path errors; do not use AboutLibraries 15.x until N-1 upgrades AGP because v15 requires AGP 8.13. Commit and push completed work when the active project contract allows it.
+Continue this same assigned project, Aura. Start Cycle 31 from the `ROADMAP.md` Continuation State and `docs/research/cycle-30-2026-06-06.md`. The Google OSS notices plugin-only path is implemented; `tools/google_oss_to_markdown.py` generates `THIRD-PARTY-NOTICES.md`; `tools/google_oss_raw_archive.py` archives raw Google OSS inputs; `tools/native_compliance_inventory.py` generates `NATIVE-COMPLIANCE.md`, extracts embedded FFmpeg configure evidence, and gates native evidence drift; `tools/dependency_notice_lock.py` gates generated release notice drift; `tools/dependency_overlay_check.py` gates curated high-risk dependency/native-payload review metadata; `tools/release_artifact_bundle_check.py` gates final release bundle consistency; Settings exposes generated release notice artifacts; `docs/legal/ffmpeg-source-correspondence.md` records the resolved FFmpeg configure/source correspondence evidence and remaining Termux owner action. Next implement the release dependency license policy gate. Keep AboutLibraries secondary: 14.2.1 configures, but default exports were incomplete and the compliance export logged Windows path errors; do not use AboutLibraries 15.x until N-1 upgrades AGP because v15 requires AGP 8.13. Commit and push completed work when the active project contract allows it.

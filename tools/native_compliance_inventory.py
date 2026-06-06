@@ -70,10 +70,10 @@ SOURCE_REFERENCES = {
         review_note="Bundles yt-dlp plus Python/native runtime payloads; exact nested payload source evidence is required for release review.",
     ),
     "io.github.junkfood02.youtubedl-android:ffmpeg:0.18.1": SourceReference(
-        license_id="LGPL-2.1-or-later or GPL-2.0-or-later depending on build flags",
+        license_id="GPL-3.0-or-later for the resolved payload; FFmpeg base licensing depends on build flags",
         source_url="https://github.com/yausername/youtubedl-android/tree/master/ffmpeg",
         license_url="https://www.ffmpeg.org/legal.html",
-        review_note="FFmpeg build mode cannot be inferred from the AAR name; exact configure/source correspondence must be published.",
+        review_note="Embedded libraries expose FFmpeg 7.1.1 configure evidence; exact Termux source, patch, and dependency correspondence still needs release-owner review.",
     ),
     "com.github.teamnewpipe:NewPipeExtractor:v0.24.8": SourceReference(
         license_id="GPL-3.0-or-later",
@@ -129,9 +129,15 @@ PAYLOAD_REFERENCES = (
     ),
     PayloadReference(
         name="FFmpeg payload",
-        license_id="LGPL-2.1-or-later or GPL-2.0-or-later depending on build flags",
+        license_id="GPL-3.0-or-later for the resolved payload; FFmpeg base licensing depends on build flags",
         evidence_url="https://www.ffmpeg.org/legal.html",
-        review_note="FFmpeg legal guidance requires matching source and configure/build evidence for the shipped binaries.",
+        review_note="Embedded configure lines include GPL/version3 flags; FFmpeg legal guidance still requires matching source and build evidence for the shipped binaries.",
+    ),
+    PayloadReference(
+        name="Aura FFmpeg source correspondence checklist",
+        license_id="Release review evidence",
+        evidence_url="docs/legal/ffmpeg-source-correspondence.md",
+        review_note="Records resolved AAR hash, embedded FFmpeg 7.1.1 configure evidence, source candidates, and remaining owner actions.",
     ),
     PayloadReference(
         name="youtubedl-android FFmpeg build notes",
@@ -146,6 +152,58 @@ PAYLOAD_REFERENCES = (
         review_note="Upstream describes a Termux package build path; the resolved AAR contains python3.12 despite older README/build-note examples.",
     ),
 )
+
+
+FFMPEG_CONFIG_RE = re.compile(rb"--arch=[\x20-\x7e]{80,4096}?--disable-libfdk-aac")
+FFMPEG_VERSION_RE = re.compile(rb"FFmpeg version\s+[0-9][0-9A-Za-z.\-+ ]{0,80}")
+
+
+def clean_ascii(value: bytes) -> str:
+    return value.decode("ascii", "replace").replace("\x00", "").strip()
+
+
+def infer_ffmpeg_license_mode(configure_line: str) -> str:
+    if "--enable-nonfree" in configure_line:
+        return "nonfree flags present; do not redistribute without separate review"
+    if "--enable-gpl" in configure_line and "--enable-version3" in configure_line:
+        return "GPL-3.0-or-later flags present (--enable-gpl --enable-version3); --enable-nonfree not found"
+    if "--enable-gpl" in configure_line:
+        return "GPL-2.0-or-later flags present (--enable-gpl); --enable-nonfree not found"
+    return "LGPL-compatible flags inferred; --enable-gpl and --enable-nonfree not found"
+
+
+def extract_ffmpeg_facts(nested: zipfile.ZipFile, names: list[str]) -> dict[str, str]:
+    configs: set[str] = set()
+    versions: set[str] = set()
+    interesting_prefixes = (
+        "usr/lib/libav",
+        "usr/lib/libpostproc",
+        "usr/lib/libswresample",
+        "usr/lib/libswscale",
+    )
+    for name in names:
+        if name.endswith("/") or not name.startswith(interesting_prefixes):
+            continue
+        data = nested.read(name)
+        configs.update(clean_ascii(match.group(0)) for match in FFMPEG_CONFIG_RE.finditer(data))
+        versions.update(clean_ascii(match.group(0)) for match in FFMPEG_VERSION_RE.finditer(data))
+
+    facts: dict[str, str] = {}
+    if versions:
+        facts["FFmpeg version"] = ", ".join(sorted(versions))
+    if configs:
+        normalized = sorted(configs)
+        configure_text = "\n".join(normalized)
+        facts["FFmpeg configure"] = configure_text
+        facts["FFmpeg configure sha256"] = hashlib.sha256(
+            configure_text.encode("utf-8")
+        ).hexdigest()
+        facts["FFmpeg license mode"] = (
+            infer_ffmpeg_license_mode(normalized[0])
+            if len(normalized) == 1
+            else "multiple configure lines detected; inspect the full configure evidence"
+        )
+    return facts
 
 
 def parse_args() -> argparse.Namespace:
@@ -288,6 +346,7 @@ def nested_zip_summary(data: bytes) -> tuple[int | None, list[str], dict[str, st
             )
             if python_dirs:
                 facts["python payload"] = ", ".join(python_dirs)
+            facts.update(extract_ffmpeg_facts(nested, names))
             return len(names), selected, facts
     except zipfile.BadZipFile:
         return None, [], {}
@@ -617,7 +676,8 @@ def build_markdown(
             "## Release Review Notes",
             "",
             "- Confirm exact upstream source and license text for every artifact listed above before public release expansion.",
-            "- FFmpeg payloads require exact binary/source correspondence and build configuration evidence.",
+            "- FFmpeg payloads expose embedded configure evidence in this report; release owners still need exact Termux source, patch, dependency-source, and build-log correspondence before publishing changed FFmpeg payloads.",
+            "- FFmpeg source correspondence checklist: docs/legal/ffmpeg-source-correspondence.md",
             "- youtubedl-android library payloads include yt-dlp and Python assets that need version/source disclosure.",
             "- Generated Google OSS notices cover Maven coordinates but do not inspect these nested native payloads.",
         ]

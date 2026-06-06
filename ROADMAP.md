@@ -1112,7 +1112,7 @@ Append-only Cycle 23 implementation record. The completed item is source-backed 
   - Result: release artifacts now include `NATIVE-COMPLIANCE.md` with AAR hashes, optional final-APK payload entries, youtubedl-android/yt-dlp/Python/QuickJS/FFmpeg/NewPipeExtractor references, and explicit FFmpeg source-correspondence review notes.
   - Evidence: `tools/native_compliance_inventory.py`, `docs/legal/native-compliance.md`, `.github/workflows/release.yml`, `docs/distribution/supply-chain.md`.
   - Verification: `python -m py_compile tools/native_compliance_inventory.py`; `python tools\native_compliance_inventory.py --output docs\legal\native-compliance.md`.
-  - Remaining risk: exact FFmpeg configure line and matching source package are not encoded in the 0.18.1 AAR and remain a release-owner review requirement.
+  - Remaining risk: Cycle 30 later extracted embedded FFmpeg configure lines from the 0.18.1 AAR; exact Termux package commit, patches, dependency source set, and build logs still remain a release-owner review requirement.
 
 - [x] 🤖 🔬 **P0 — Release-runtime license drift gate** — shipped 2026-06-06.
   - Why: Aura now publishes human-readable Google OSS notices and a native packet, but nothing fails a build when release-runtime dependencies or native payload versions drift without reviewed metadata.
@@ -1218,12 +1218,26 @@ Append-only Cycle 29 implementation record. The completed item is source-backed 
   - Verification: focused `:app:testDebugUnitTest --tests com.freevibe.ui.screens.licenses.LicensesScreenTest` passed.
   - Remaining risk: the latest-release links depend on a public GitHub Release existing with the expected artifacts.
 
-- [ ] 🤖 🔬 **P0 — FFmpeg source-correspondence evidence**
-  - Why: native locks and native packets identify FFmpeg payloads, but the resolved youtubedl-android FFmpeg AAR still does not encode the exact configure line or matching source package required for a complete release-owner review.
+- [x] 🤖 🔬 **P0 — FFmpeg source-correspondence evidence shipped**
+  - Why: native locks and native packets identify FFmpeg payloads, but the resolved youtubedl-android FFmpeg AAR still needs a documented configure/source correspondence path for complete release-owner review.
   - Evidence: `docs/legal/native-compliance.md`, `docs/legal/native-compliance.lock.json`, `docs/legal/dependency-notice-overrides.json`, `tools/native_compliance_inventory.py`.
   - Touches: native compliance docs, release checklist, dependency overlay notes, possible source archive/link evidence.
   - Acceptance: release owners have a documented source/configure correspondence path for the resolved youtubedl-android FFmpeg payload or an explicit unresolved-owner-action record with exact missing evidence.
   - Verify: source URL/configure evidence is recorded; native compliance packet and release checklist point to it; unresolved gaps fail a documented manual review checklist.
+  - Result: Cycle 30 added `docs/legal/ffmpeg-source-correspondence.md`, extracted embedded FFmpeg 7.1.1 configure evidence from all four ABI payloads into `tools/native_compliance_inventory.py`, refreshed `docs/legal/native-compliance.md` and `docs/legal/native-compliance.lock.json`, and updated the release checklist/overlay.
+  - Verification: Python compile, native lock check, native markdown regeneration, dependency notice lock check, dependency overlay check, and diff checks passed.
+  - Remaining risk: the exact Termux package commit, patches, dependency source set, and build logs still need owner confirmation before publishing changed FFmpeg payloads.
+
+## 🔬 Researcher Queue (Cycle 30 — 2026-06-06)
+
+Append-only Cycle 30 implementation record. The completed item is source-backed in `docs/research/cycle-30-2026-06-06.md`; use the open item as the next implementation entry point.
+
+- [ ] 🤖 🔬 **P1 — Release dependency license policy gate**
+  - Why: generated notices, native locks, and curated overlays now prove dependency/payload drift, but Aura still lacks an explicit policy check that fails newly introduced disallowed or owner-review-required license IDs before release.
+  - Evidence: `docs/legal/dependency-notice-overrides.json`, `docs/legal/dependency-notices.lock.json`, `docs/legal/native-compliance.lock.json`, `tools/dependency_overlay_check.py`, `tools/dependency_notice_lock.py`.
+  - Touches: release-compliance tools, `docs/legal`, `.github/workflows/verify.yml`, `.github/workflows/release.yml`, `docs/distribution/supply-chain.md`.
+  - Acceptance: high-risk and disallowed license policy is encoded in a deterministic checked file or tool mode; PR/main/release checks fail when generated notices or overlays introduce unreviewed license IDs.
+  - Verify: sentinel overlay/lock fixture or local temporary copy proves an unreviewed license fails and reviewed metadata restores green status.
 
 ---
 
@@ -2714,19 +2728,26 @@ Stars/dates as of research pass 2026-05-16.
 - Release artifact references — `THIRD-PARTY-NOTICES.md`, `GOOGLE-OSS-RAW-INPUTS.zip`, `NATIVE-COMPLIANCE.md`.
 - Verification outputs — focused `:app:testDebugUnitTest --tests com.freevibe.ui.screens.licenses.LicensesScreenTest`, release-compliance Python compile checks, dependency notice lock check, native compliance lock check, and dependency overlay check.
 
+## Appendix AH — Cycle 30 Sources
+
+- Cycle 30 implementation record — [docs/research/cycle-30-2026-06-06.md](docs/research/cycle-30-2026-06-06.md).
+- FFmpeg source correspondence implementation — `docs/legal/ffmpeg-source-correspondence.md`, `tools/native_compliance_inventory.py`, `docs/legal/native-compliance.md`, `docs/legal/native-compliance.lock.json`, `docs/legal/dependency-notice-overrides.json`, `docs/distribution/supply-chain.md`.
+- Primary source references — [FFmpeg legal guidance](https://ffmpeg.org/legal.html), [FFmpeg downloads and verification](https://ffmpeg.org/download.html), [FFmpeg 7.1.1 source tarball](https://ffmpeg.org/releases/ffmpeg-7.1.1.tar.xz), [FFmpeg 7.1.1 PGP signature](https://ffmpeg.org/releases/ffmpeg-7.1.1.tar.xz.asc), [youtubedl-android 0.18.1](https://github.com/yausername/youtubedl-android/tree/0.18.1), [youtubedl-android FFmpeg build note](https://raw.githubusercontent.com/yausername/youtubedl-android/master/BUILD_FFMPEG.md), [Termux FFmpeg package recipe](https://github.com/termux/termux-packages/tree/master/packages/ffmpeg).
+- Verification outputs — `python -m py_compile tools\native_compliance_inventory.py`, `python tools\native_compliance_inventory.py --mode write-lock`, `python tools\native_compliance_inventory.py --mode check-lock`, `python tools\native_compliance_inventory.py --output docs\legal\native-compliance.md`, dependency notice lock check, dependency overlay check, `git diff --check`, and changed-line attribution scan.
+
 ## Continuation State
 
 ### Last Completed Cycle
 
-Cycle 29: Settings release-notice access path and focused coverage.
+Cycle 30: FFmpeg source-correspondence evidence and native configure extraction.
 
 ### Current Focus
 
-Start Cycle 30 with FFmpeg source-correspondence evidence. Commit and push completed work when the active project contract allows it.
+Start Cycle 31 with a release dependency license policy gate. Commit and push completed work when the active project contract allows it.
 
 ### Important Findings So Far
 
-- `ROADMAP.md` has Cycle 18 through Cycle 29 research/implementation items; `docs/research/cycle-18-2026-06-06.md` through `docs/research/cycle-29-2026-06-06.md` have the source-backed analysis.
+- `ROADMAP.md` has Cycle 18 through Cycle 30 research/implementation items; `docs/research/cycle-18-2026-06-06.md` through `docs/research/cycle-30-2026-06-06.md` have the source-backed analysis.
 - `LicensesScreen.kt` still has manual dependency rows; content sources are already code-backed by `ProviderDisclosure.kt`.
 - `.github/workflows/release.yml` now publishes `THIRD-PARTY-NOTICES.md` and `NATIVE-COMPLIANCE.md` with the APK and includes both files in `SHA256SUMS.txt`; SBOM artifacts remain open.
 - `.github/workflows/verify.yml` and `.github/workflows/release.yml` now run `tools/dependency_notice_lock.py --mode check`, `tools/native_compliance_inventory.py --mode check-lock`, and `tools/dependency_overlay_check.py` after `:app:releaseOssLicensesTask`.
@@ -2737,12 +2758,12 @@ Start Cycle 30 with FFmpeg source-correspondence evidence. Commit and push compl
 - Adding `play-services-oss-licenses:17.5.1` pulled risky release-runtime UI upgrades in the spike clone, including Activity Compose 1.12.1, Compose 1.11.0-beta02 artifacts, AppCompat 1.7.1, Material Components 1.13.0, and credential dependencies.
 - The real implementation does not add `play-services-oss-licenses:17.5.1`; a release runtime graph check showed no notice-driven Activity Compose 1.12.1, Compose 1.11.0-beta02, or Material Components 1.13.0 drift.
 - `tools/google_oss_to_markdown.py` generated `build/reports/THIRD-PARTY-NOTICES.md` from real-repo Google outputs; the output was 1,367,502 bytes, 25,336 lines, 251 dependency records, and 288 notice sections.
-- `tools/native_compliance_inventory.py` generated `docs/legal/native-compliance.md` with youtubedl-android common/library/ffmpeg AAR hashes, NewPipeExtractor JAR hashes, yt-dlp 2025.11.12 git-head facts, python3.12 payload facts, QuickJS entries, and FFmpeg ABI payload paths.
-- The native packet is factual evidence only; exact FFmpeg configure/source correspondence remains a release-owner review requirement because the AAR does not encode the configure line.
+- `tools/native_compliance_inventory.py` generated `docs/legal/native-compliance.md` with youtubedl-android common/library/ffmpeg AAR hashes, NewPipeExtractor JAR hashes, yt-dlp 2025.11.12 git-head facts, python3.12 payload facts, QuickJS entries, FFmpeg ABI payload paths, and embedded FFmpeg 7.1.1 configure evidence.
+- `docs/legal/ffmpeg-source-correspondence.md` records the resolved FFmpeg AAR hash, nested payload hashes, embedded configure lines, FFmpeg source candidate, and remaining Termux source/build-log owner actions.
 - `docs/legal/dependency-notices.lock.json` records 251 release dependency coordinates and 288 notice section hashes from Google OSS outputs.
 - The dependency notice lockfile gates generated dependency/notice drift, but it still does not provide curated source URLs or license IDs per dependency coordinate.
 - `docs/legal/native-compliance.lock.json` records 8 native/copyleft coordinates, 23 artifact records, and 36 payload entries from youtubedl-android and NewPipeExtractor artifacts.
-- The native lockfile gates artifact hash and payload fact drift, but it still does not prove FFmpeg configure/source correspondence.
+- The native lockfile now gates artifact hash, payload fact, and embedded FFmpeg configure drift, but it still does not prove the exact Termux package commit, patches, dependency source set, or build logs.
 - `docs/legal/dependency-notice-overrides.json` records curated high-risk dependency and native-payload review metadata; `tools/dependency_overlay_check.py` fails stale, missing, or orphaned overlay entries against the dependency/native locks.
 - `tools/release_artifact_bundle_check.py` now validates manual dry-run and tag-release bundles for required artifacts, checksums, release-note evidence, signing digest output, and non-debuggable `aapt` evidence.
 - `tools/google_oss_raw_archive.py` now publishes `GOOGLE-OSS-RAW-INPUTS.zip` with a manifest for raw generated Google OSS notice inputs.
@@ -2753,15 +2774,15 @@ Start Cycle 30 with FFmpeg source-correspondence evidence. Commit and push compl
 
 ### Next Best Actions
 
-1. Investigate exact FFmpeg configure line and matching source package for the resolved youtubedl-android ffmpeg 0.18.1 AAR.
-2. Evaluate whether `licensee` can enforce Aura's desired policy from `releaseRuntimeClasspath` or needs a custom JSON comparison.
-3. Run a real GitHub Actions manual release dry run after secrets are confirmed available and archive the run URL in the release docs.
-4. Decide whether `GOOGLE-OSS-RAW-INPUTS.zip` should remain public-release attached forever or only workflow-artifact attached after the first validation window.
-5. Add deeper UI verification for the licenses screen on an emulator or screenshot lane when a device/runtime is available.
+1. Evaluate whether `licensee` can enforce Aura's desired policy from `releaseRuntimeClasspath` or whether the existing generated lock/overlay tools should grow a custom license-policy mode.
+2. Run a real GitHub Actions manual release dry run after secrets are confirmed available and archive the run URL in the release docs.
+3. Decide whether `GOOGLE-OSS-RAW-INPUTS.zip` should remain public-release attached forever or only workflow-artifact attached after the first validation window.
+4. Add deeper UI verification for the licenses screen on an emulator or screenshot lane when a device/runtime is available.
+5. Preserve exact Termux package commit/build-log evidence for FFmpeg if the release owner can obtain it from upstream or a reproducible rebuild.
 
 ### Unprocessed Leads
 
-- Exact FFmpeg configure line and matching source package for the resolved youtubedl-android ffmpeg 0.18.1 AAR.
+- Exact Termux package commit, patches, dependency source set, and build logs for the resolved youtubedl-android ffmpeg 0.18.1 AAR.
 - Whether `GOOGLE-OSS-RAW-INPUTS.zip` should be hidden from public releases after the review process proves stable.
 - Whether Aura should parse generated raw resources for a custom Compose in-app dependency notice viewer after the markdown artifact is stable.
 - Whether the stock Google `OssLicensesMenuActivity` is ever worth adding after a dependency convergence audit.

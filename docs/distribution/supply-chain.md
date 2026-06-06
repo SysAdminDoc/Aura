@@ -14,6 +14,7 @@ Aura is side-loaded through GitHub Releases and Obtainium, so release artifacts 
 | Dependency notice overlay | `tools/dependency_overlay_check.py`, `docs/legal/dependency-notice-overrides.json` | Requires curated source, license, usage, and release-review metadata for high-risk generated dependencies and native payloads. |
 | Native compliance packet | `tools/native_compliance_inventory.py`, `.github/workflows/release.yml` | Inventories youtubedl-android, yt-dlp/Python, FFmpeg, QuickJS, and NewPipeExtractor payload evidence and publishes `NATIVE-COMPLIANCE.md` next to the APK. |
 | Native compliance lockfile | `tools/native_compliance_inventory.py`, `docs/legal/native-compliance.lock.json` | Fails PR/main/release checks when native/copyleft artifact hashes or extracted payload facts drift without review. |
+| FFmpeg source correspondence checklist | `docs/legal/ffmpeg-source-correspondence.md` | Records resolved FFmpeg AAR/payload hashes, embedded version/configure evidence, source candidates, and remaining owner actions for source correspondence. |
 | Artifact attestation | `.github/workflows/release.yml` | Uses `actions/attest@v4` against `release/SHA256SUMS.txt` so release artifact digests are bound to the GitHub Actions build. |
 | Gradle dependency verification | `gradle/verification-metadata.xml` | Records SHA-256 checksums for resolved Gradle plugins and app dependencies. |
 | Dependency Review | `.github/workflows/dependency-review.yml` | Runs on pull requests and fails high/critical vulnerable dependency additions. |
@@ -34,9 +35,10 @@ For each `v*` release:
 8. Spot-check `GOOGLE-OSS-RAW-INPUTS.zip` for `dependencies.json`, `third_party_license_metadata`, `third_party_licenses`, and `MANIFEST.json`.
 9. Spot-check `docs/legal/dependency-notice-overrides.json` when any high-risk dependency or payload changed intentionally.
 10. Spot-check `NATIVE-COMPLIANCE.md` for youtubedl-android library, youtubedl-android ffmpeg, yt-dlp, Python, QuickJS, FFmpeg, and NewPipeExtractor evidence.
-11. Confirm the release workflow ran `tools/release_artifact_bundle_check.py` before uploading artifacts.
-12. Verify the APK locally with `apksigner verify --verbose --print-certs`.
-13. Compare the local SHA-256 values to `SHA256SUMS.txt`.
+11. Spot-check `docs/legal/ffmpeg-source-correspondence.md` when any FFmpeg payload hash, version, configure evidence, or youtubedl-android FFmpeg coordinate changes.
+12. Confirm the release workflow ran `tools/release_artifact_bundle_check.py` before uploading artifacts.
+13. Verify the APK locally with `apksigner verify --verbose --print-certs`.
+14. Compare the local SHA-256 values to `SHA256SUMS.txt`.
 
 ## Release dry runs
 
@@ -119,6 +121,8 @@ The check fails when a required high-risk entry is missing, an entry uses an uns
 
 `NATIVE-COMPLIANCE.md` is a factual inventory, not legal advice. It reads resolved Gradle cache artifacts and, in release CI, the final signed APK. It records artifact hashes, ABI payload paths, nested yt-dlp/Python facts, FFmpeg payload entries, and upstream source/build references that release owners must review.
 
+`docs/legal/ffmpeg-source-correspondence.md` is the FFmpeg-specific release review checklist. It records the resolved `ffmpeg-0.18.1.aar` hash, nested `libffmpeg.zip.so` hashes, embedded FFmpeg 7.1.1 configure lines, the FFmpeg source candidate, and the remaining Termux-source/build-log evidence that owners must confirm before publishing changed FFmpeg payloads.
+
 Generate the local packet after dependencies have been resolved:
 
 ```powershell
@@ -132,7 +136,7 @@ Release CI adds final APK inspection:
 python3 tools/native_compliance_inventory.py --apk "$RELEASE_DIR/Aura-vX.Y.Z-versionCode-N-universal-release.apk" --output "$RELEASE_DIR/NATIVE-COMPLIANCE.md"
 ```
 
-Treat a youtubedl-android, NewPipeExtractor, yt-dlp, Python, QuickJS, or FFmpeg version change as a required native packet refresh. FFmpeg remains a release-owner review item because the AAR does not encode the exact configure line or source correspondence required by FFmpeg's legal checklist.
+Treat a youtubedl-android, NewPipeExtractor, yt-dlp, Python, QuickJS, or FFmpeg version change as a required native packet refresh. The resolved FFmpeg AAR now exposes embedded configure lines, but FFmpeg remains a release-owner review item until the exact Termux package commit, patches, dependency source set, and build logs are tied to the shipped binaries.
 
 When a native/copyleft artifact or payload changes intentionally, refresh the lockfile and markdown packet together:
 
@@ -142,6 +146,8 @@ python tools\native_compliance_inventory.py --output docs\legal\native-complianc
 ```
 
 Review the artifact hashes, payload facts, and FFmpeg notes in the same change as the dependency update.
+
+When FFmpeg payload facts change, refresh `docs/legal/ffmpeg-source-correspondence.md` in the same change and keep the unresolved-owner-action section accurate.
 
 ## Gradle dependency verification
 

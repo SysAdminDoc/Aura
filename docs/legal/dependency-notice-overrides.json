@@ -12,9 +12,9 @@
     },
     {
       "id": "ffmpeg-payload",
-      "licenseId": "LGPL-2.1-or-later or GPL-2.0-or-later depending on build flags",
-      "reviewNote": "The resolved AAR exposes FFmpeg shared-library payloads but not the exact configure line. Release owners must confirm matching source and build flags before publishing changed FFmpeg payloads.",
-      "sourceUrl": "https://ffmpeg.org/legal.html",
+      "licenseId": "GPL-3.0-or-later for the resolved payload; FFmpeg base licensing depends on build flags",
+      "reviewNote": "The resolved AAR embeds FFmpeg 7.1.1 configure lines with --enable-gpl and --enable-version3. See docs/legal/ffmpeg-source-correspondence.md; release owners still must confirm the exact Termux source, patches, dependency source set, and build logs before publishing changed FFmpeg payloads.",
+      "sourceUrl": "https://ffmpeg.org/releases/ffmpeg-7.1.1.tar.xz",
       "target": "ffmpeg",
       "targetType": "payload",
       "usage": "Video crop/export and sound trim, fade, normalize, and conversion workflows."
