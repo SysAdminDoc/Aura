@@ -29,6 +29,10 @@ next pass can resume quickly.
   `tools/dependency_notice_lock.py`, committed
   `docs/legal/dependency-notices.lock.json`, and wired PR/main verification plus
   release builds to fail on generated Google OSS notice drift.
+- Completed Cycle 25 native compliance freshness gating: extended
+  `tools/native_compliance_inventory.py`, committed
+  `docs/legal/native-compliance.lock.json`, and wired PR/main verification plus
+  release builds to fail on native/copyleft artifact or extracted payload drift.
 
 ## 2026-06-05
 

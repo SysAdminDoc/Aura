@@ -10,6 +10,7 @@ Aura is side-loaded through GitHub Releases and Obtainium, so release artifacts 
 | Third-party notices | `tools/google_oss_to_markdown.py`, `.github/workflows/release.yml` | Runs the Google OSS Licenses Gradle task for the release variant and publishes `THIRD-PARTY-NOTICES.md` next to the APK. |
 | Dependency notice lockfile | `tools/dependency_notice_lock.py`, `docs/legal/dependency-notices.lock.json` | Fails PR/main/release checks when generated release dependency notices drift without review. |
 | Native compliance packet | `tools/native_compliance_inventory.py`, `.github/workflows/release.yml` | Inventories youtubedl-android, yt-dlp/Python, FFmpeg, QuickJS, and NewPipeExtractor payload evidence and publishes `NATIVE-COMPLIANCE.md` next to the APK. |
+| Native compliance lockfile | `tools/native_compliance_inventory.py`, `docs/legal/native-compliance.lock.json` | Fails PR/main/release checks when native/copyleft artifact hashes or extracted payload facts drift without review. |
 | Artifact attestation | `.github/workflows/release.yml` | Uses `actions/attest@v4` against `release/SHA256SUMS.txt` so release artifact digests are bound to the GitHub Actions build. |
 | Gradle dependency verification | `gradle/verification-metadata.xml` | Records SHA-256 checksums for resolved Gradle plugins and app dependencies. |
 | Dependency Review | `.github/workflows/dependency-review.yml` | Runs on pull requests and fails high/critical vulnerable dependency additions. |
@@ -56,6 +57,7 @@ PR/main verification and the release workflow run:
 
 ```bash
 python3 tools/dependency_notice_lock.py --mode check --lockfile docs/legal/dependency-notices.lock.json
+python3 tools/native_compliance_inventory.py --mode check-lock --lockfile docs/legal/native-compliance.lock.json
 ```
 
 When a dependency, version, or generated notice text changes intentionally, refresh the lockfile after rerunning `:app:releaseOssLicensesTask`:
@@ -73,6 +75,7 @@ Review the lockfile diff in the same change as the dependency update. Do not reg
 Generate the local packet after dependencies have been resolved:
 
 ```powershell
+python tools\native_compliance_inventory.py --mode check-lock --lockfile docs\legal\native-compliance.lock.json
 python tools\native_compliance_inventory.py --output docs\legal\native-compliance.md
 ```
 
@@ -83,6 +86,15 @@ python3 tools/native_compliance_inventory.py --apk "$RELEASE_DIR/Aura-vX.Y.Z-ver
 ```
 
 Treat a youtubedl-android, NewPipeExtractor, yt-dlp, Python, QuickJS, or FFmpeg version change as a required native packet refresh. FFmpeg remains a release-owner review item because the AAR does not encode the exact configure line or source correspondence required by FFmpeg's legal checklist.
+
+When a native/copyleft artifact or payload changes intentionally, refresh the lockfile and markdown packet together:
+
+```powershell
+python tools\native_compliance_inventory.py --mode write-lock --lockfile docs\legal\native-compliance.lock.json
+python tools\native_compliance_inventory.py --output docs\legal\native-compliance.md
+```
+
+Review the artifact hashes, payload facts, and FFmpeg notes in the same change as the dependency update.
 
 ## Gradle dependency verification
 

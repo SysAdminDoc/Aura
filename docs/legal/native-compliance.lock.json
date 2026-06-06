@@ -1,0 +1,738 @@
+{
+  "coordinates": [
+    {
+      "artifacts": [
+        {
+          "fileName": "common-0.18.1.aar",
+          "kind": "aar",
+          "payloadEntries": [],
+          "sha256": "e0c0530bdbdf203e1598e900085d3582e27360731872872f3a67f23a9b24c0b5",
+          "size": 5186
+        },
+        {
+          "fileName": "common-0.18.1.module",
+          "kind": "module",
+          "payloadEntries": [],
+          "sha256": "6e1cd6c75a8f416cbcf1ee36443fc4a7df542a09a56ab51d2220d0a639aa28fe",
+          "size": 3724
+        },
+        {
+          "fileName": "common-0.18.1.pom",
+          "kind": "pom",
+          "payloadEntries": [],
+          "sha256": "de96f5a108c493e464d0e3fe7a73ae21a10d71f98f49024e043650bf22381b78",
+          "size": 2365
+        }
+      ],
+      "coordinate": "io.github.junkfood02.youtubedl-android:common:0.18.1",
+      "missing": false
+    },
+    {
+      "artifacts": [
+        {
+          "fileName": "library-0.18.1.aar",
+          "kind": "aar",
+          "payloadEntries": [
+            {
+              "entry": "jni/",
+              "facts": {},
+              "nestedCount": null,
+              "nestedSample": [],
+              "size": 0
+            },
+            {
+              "entry": "jni/arm64-v8a/",
+              "facts": {},
+              "nestedCount": null,
+              "nestedSample": [],
+              "size": 0
+            },
+            {
+              "entry": "jni/arm64-v8a/libpython.so",
+              "facts": {},
+              "nestedCount": null,
+              "nestedSample": [],
+              "size": 4384
+            },
+            {
+              "entry": "jni/arm64-v8a/libpython.zip.so",
+              "facts": {
+                "python payload": "python3.12"
+              },
+              "nestedCount": 1007,
+              "nestedSample": [
+                "usr/lib/",
+                "usr/lib/libform.so",
+                "usr/lib/libz.so",
+                "usr/lib/libffi.so",
+                "usr/lib/libtermcap.so",
+                "usr/lib/libcurses.so.6.5",
+                "usr/lib/libexpat.so.1.11.1",
+                "usr/lib/libgdbm_compat.so",
+                "usr/lib/libtermcap.so.6.5",
+                "usr/lib/libmenu.so.6",
+                "usr/lib/engines-3/",
+                "usr/lib/engines-3/loader_attic.so",
+                "usr/lib/engines-3/capi.so",
+                "usr/lib/libncurses.so.6",
+                "usr/lib/libtinfo.so.6.5",
+                "usr/lib/libtic.so.6",
+                "usr/lib/liblzma.so.5.8.1",
+                "usr/lib/libncursesw.so.6",
+                "usr/lib/libtic.so",
+                "usr/lib/libpanel.so.6.5",
+                "usr/lib/libcurses.so",
+                "usr/lib/liblzma.so",
+                "usr/lib/libandroid-support.so",
+                "usr/lib/libmenuw.so.6.5",
+                "usr/lib/libsqlite3.so",
+                "usr/lib/libexpat.so",
+                "usr/lib/libandroid-posix-semaphore.so",
+                "usr/lib/libz.so.1.3.1",
+                "usr/lib/libpanelw.so",
+                "usr/lib/libcurses.so.6"
+              ],
+              "size": 14305904
+            },
+            {
+              "entry": "jni/arm64-v8a/libqjs.so",
+              "facts": {},
+              "nestedCount": null,
+              "nestedSample": [],
+              "size": 916104
+            },
+            {
+              "entry": "jni/armeabi-v7a/",
+              "facts": {},
+              "nestedCount": null,
+              "nestedSample": [],
+              "size": 0
+            },
+            {
+              "entry": "jni/armeabi-v7a/libpython.so",
+              "facts": {},
+              "nestedCount": null,
+              "nestedSample": [],
+              "size": 3016
+            },
+            {
+              "entry": "jni/armeabi-v7a/libpython.zip.so",
+              "facts": {
+                "python payload": "python3.12"
+              },
+              "nestedCount": 1007,
+              "nestedSample": [
+                "usr/lib/",
+                "usr/lib/libform.so",
+                "usr/lib/libz.so",
+                "usr/lib/libffi.so",
+                "usr/lib/libtermcap.so",
+                "usr/lib/libcurses.so.6.5",
+                "usr/lib/libexpat.so.1.11.1",
+                "usr/lib/libgdbm_compat.so",
+                "usr/lib/libtermcap.so.6.5",
+                "usr/lib/libmenu.so.6",
+                "usr/lib/engines-3/",
+                "usr/lib/engines-3/loader_attic.so",
+                "usr/lib/engines-3/capi.so",
+                "usr/lib/libncurses.so.6",
+                "usr/lib/libtinfo.so.6.5",
+                "usr/lib/libtic.so.6",
+                "usr/lib/liblzma.so.5.8.1",
+                "usr/lib/libncursesw.so.6",
+                "usr/lib/libtic.so",
+                "usr/lib/libpanel.so.6.5",
+                "usr/lib/libcurses.so",
+                "usr/lib/liblzma.so",
+                "usr/lib/libandroid-support.so",
+                "usr/lib/libmenuw.so.6.5",
+                "usr/lib/libsqlite3.so",
+                "usr/lib/libexpat.so",
+                "usr/lib/libandroid-posix-semaphore.so",
+                "usr/lib/libz.so.1.3.1",
+                "usr/lib/libpanelw.so",
+                "usr/lib/libcurses.so.6"
+              ],
+              "size": 12822487
+            },
+            {
+              "entry": "jni/armeabi-v7a/libqjs.so",
+              "facts": {},
+              "nestedCount": null,
+              "nestedSample": [],
+              "size": 634624
+            },
+            {
+              "entry": "jni/x86/",
+              "facts": {},
+              "nestedCount": null,
+              "nestedSample": [],
+              "size": 0
+            },
+            {
+              "entry": "jni/x86/libpython.so",
+              "facts": {},
+              "nestedCount": null,
+              "nestedSample": [],
+              "size": 3240
+            },
+            {
+              "entry": "jni/x86/libpython.zip.so",
+              "facts": {
+                "python payload": "python3.12"
+              },
+              "nestedCount": 1009,
+              "nestedSample": [
+                "usr/lib/",
+                "usr/lib/libform.so",
+                "usr/lib/libz.so",
+                "usr/lib/libffi.so",
+                "usr/lib/libtermcap.so",
+                "usr/lib/libcurses.so.6.5",
+                "usr/lib/libexpat.so.1.11.1",
+                "usr/lib/libgdbm_compat.so",
+                "usr/lib/libtermcap.so.6.5",
+                "usr/lib/libmenu.so.6",
+                "usr/lib/engines-3/",
+                "usr/lib/engines-3/loader_attic.so",
+                "usr/lib/engines-3/capi.so",
+                "usr/lib/libncurses.so.6",
+                "usr/lib/libtinfo.so.6.5",
+                "usr/lib/libtic.so.6",
+                "usr/lib/liblzma.so.5.8.1",
+                "usr/lib/libncursesw.so.6",
+                "usr/lib/libtic.so",
+                "usr/lib/libpanel.so.6.5",
+                "usr/lib/libcurses.so",
+                "usr/lib/liblzma.so",
+                "usr/lib/libandroid-support.so",
+                "usr/lib/libmenuw.so.6.5",
+                "usr/lib/libsqlite3.so",
+                "usr/lib/libexpat.so",
+                "usr/lib/libandroid-posix-semaphore.so",
+                "usr/lib/libz.so.1.3.1",
+                "usr/lib/libpanelw.so",
+                "usr/lib/libcurses.so.6"
+              ],
+              "size": 13979299
+            },
+            {
+              "entry": "jni/x86/libqjs.so",
+              "facts": {},
+              "nestedCount": null,
+              "nestedSample": [],
+              "size": 949596
+            },
+            {
+              "entry": "jni/x86_64/",
+              "facts": {},
+              "nestedCount": null,
+              "nestedSample": [],
+              "size": 0
+            },
+            {
+              "entry": "jni/x86_64/libpython.so",
+              "facts": {},
+              "nestedCount": null,
+              "nestedSample": [],
+              "size": 4272
+            },
+            {
+              "entry": "jni/x86_64/libpython.zip.so",
+              "facts": {
+                "python payload": "python3.12"
+              },
+              "nestedCount": 1009,
+              "nestedSample": [
+                "usr/lib/",
+                "usr/lib/libform.so",
+                "usr/lib/libz.so",
+                "usr/lib/libffi.so",
+                "usr/lib/libtermcap.so",
+                "usr/lib/libcurses.so.6.5",
+                "usr/lib/libexpat.so.1.11.1",
+                "usr/lib/libgdbm_compat.so",
+                "usr/lib/libtermcap.so.6.5",
+                "usr/lib/libmenu.so.6",
+                "usr/lib/engines-3/",
+                "usr/lib/engines-3/loader_attic.so",
+                "usr/lib/engines-3/capi.so",
+                "usr/lib/libncurses.so.6",
+                "usr/lib/libtinfo.so.6.5",
+                "usr/lib/libtic.so.6",
+                "usr/lib/liblzma.so.5.8.1",
+                "usr/lib/libncursesw.so.6",
+                "usr/lib/libtic.so",
+                "usr/lib/libpanel.so.6.5",
+                "usr/lib/libcurses.so",
+                "usr/lib/liblzma.so",
+                "usr/lib/libandroid-support.so",
+                "usr/lib/libmenuw.so.6.5",
+                "usr/lib/libsqlite3.so",
+                "usr/lib/libexpat.so",
+                "usr/lib/libandroid-posix-semaphore.so",
+                "usr/lib/libz.so.1.3.1",
+                "usr/lib/libpanelw.so",
+                "usr/lib/libcurses.so.6"
+              ],
+              "size": 14302766
+            },
+            {
+              "entry": "jni/x86_64/libqjs.so",
+              "facts": {},
+              "nestedCount": null,
+              "nestedSample": [],
+              "size": 981912
+            },
+            {
+              "entry": "res/raw/",
+              "facts": {},
+              "nestedCount": null,
+              "nestedSample": [],
+              "size": 0
+            },
+            {
+              "entry": "res/raw/ytdlp",
+              "facts": {
+                "yt-dlp git head": "335653be82d5ef999cfc2879d005397402eebec1",
+                "yt-dlp origin": "yt-dlp/yt-dlp",
+                "yt-dlp version": "2025.11.12"
+              },
+              "nestedCount": 1122,
+              "nestedSample": [
+                "yt_dlp/version.py",
+                "yt_dlp/postprocessor/ffmpeg.py",
+                "yt_dlp_ejs/_version.py"
+              ],
+              "size": 3170726
+            }
+          ],
+          "sha256": "579b5fb480892b1abc2b218c2089699d52759cc8d7ba256bf876453f0365faef",
+          "size": 59213110
+        },
+        {
+          "fileName": "library-0.18.1.module",
+          "kind": "module",
+          "payloadEntries": [],
+          "sha256": "3e8ad9aa05cd197bc7ad038c235055b11b2dad74cbb1b4ecc99fbc82a0ff0c9f",
+          "size": 4111
+        },
+        {
+          "fileName": "library-0.18.1.pom",
+          "kind": "pom",
+          "payloadEntries": [],
+          "sha256": "98f5eb540b7ec22ddd73373a7e87149d0c490e0790cfeeb0343285a643d64690",
+          "size": 2773
+        }
+      ],
+      "coordinate": "io.github.junkfood02.youtubedl-android:library:0.18.1",
+      "missing": false
+    },
+    {
+      "artifacts": [
+        {
+          "fileName": "ffmpeg-0.18.1.aar",
+          "kind": "aar",
+          "payloadEntries": [
+            {
+              "entry": "jni/",
+              "facts": {},
+              "nestedCount": null,
+              "nestedSample": [],
+              "size": 0
+            },
+            {
+              "entry": "jni/arm64-v8a/",
+              "facts": {},
+              "nestedCount": null,
+              "nestedSample": [],
+              "size": 0
+            },
+            {
+              "entry": "jni/arm64-v8a/libffmpeg.so",
+              "facts": {},
+              "nestedCount": null,
+              "nestedSample": [],
+              "size": 317120
+            },
+            {
+              "entry": "jni/arm64-v8a/libffmpeg.zip.so",
+              "facts": {},
+              "nestedCount": 184,
+              "nestedSample": [
+                "usr/lib/",
+                "usr/lib/libswscale.so",
+                "usr/lib/libavformat.so",
+                "usr/lib/libass.so",
+                "usr/lib/libz.so",
+                "usr/lib/libffi.so",
+                "usr/lib/libtheoradec.so",
+                "usr/lib/librav1e.so.0",
+                "usr/lib/libx264.so",
+                "usr/lib/libmediandk.so",
+                "usr/lib/libgio-2.0.so.0",
+                "usr/lib/libgthread-2.0.so.0.8600.0",
+                "usr/lib/libxml2.so.16.0.6",
+                "usr/lib/libnettle.so.8.11",
+                "usr/lib/libv4l1.so",
+                "usr/lib/libvo-amrwbenc.so.0",
+                "usr/lib/libavcodec.so.61.19.101",
+                "usr/lib/libgme.so",
+                "usr/lib/libv4l2rds.so",
+                "usr/lib/libgirepository-2.0.so.0.8600.0",
+                "usr/lib/libglib-2.0.so",
+                "usr/lib/liblzma.so.5.8.1",
+                "usr/lib/librav1e.so",
+                "usr/lib/libxvidcore.so",
+                "usr/lib/libvpx.so.11.0.1",
+                "usr/lib/liblzma.so",
+                "usr/lib/libandroid-glob.so",
+                "usr/lib/libout123.so",
+                "usr/lib/libfftw3f_threads.so",
+                "usr/lib/liblcms2.so"
+              ],
+              "size": 35624931
+            },
+            {
+              "entry": "jni/arm64-v8a/libffprobe.so",
+              "facts": {},
+              "nestedCount": null,
+              "nestedSample": [],
+              "size": 233664
+            },
+            {
+              "entry": "jni/armeabi-v7a/",
+              "facts": {},
+              "nestedCount": null,
+              "nestedSample": [],
+              "size": 0
+            },
+            {
+              "entry": "jni/armeabi-v7a/libffmpeg.so",
+              "facts": {},
+              "nestedCount": null,
+              "nestedSample": [],
+              "size": 235228
+            },
+            {
+              "entry": "jni/armeabi-v7a/libffmpeg.zip.so",
+              "facts": {},
+              "nestedCount": 184,
+              "nestedSample": [
+                "usr/lib/",
+                "usr/lib/libswscale.so",
+                "usr/lib/libavformat.so",
+                "usr/lib/libass.so",
+                "usr/lib/libz.so",
+                "usr/lib/libffi.so",
+                "usr/lib/libtheoradec.so",
+                "usr/lib/librav1e.so.0",
+                "usr/lib/libx264.so",
+                "usr/lib/libmediandk.so",
+                "usr/lib/libgio-2.0.so.0",
+                "usr/lib/libgthread-2.0.so.0.8600.0",
+                "usr/lib/libxml2.so.16.0.6",
+                "usr/lib/libnettle.so.8.11",
+                "usr/lib/libv4l1.so",
+                "usr/lib/libvo-amrwbenc.so.0",
+                "usr/lib/libavcodec.so.61.19.101",
+                "usr/lib/libgme.so",
+                "usr/lib/libv4l2rds.so",
+                "usr/lib/libgirepository-2.0.so.0.8600.0",
+                "usr/lib/libglib-2.0.so",
+                "usr/lib/liblzma.so.5.8.1",
+                "usr/lib/librav1e.so",
+                "usr/lib/libxvidcore.so",
+                "usr/lib/libvpx.so.11.0.1",
+                "usr/lib/liblzma.so",
+                "usr/lib/libandroid-glob.so",
+                "usr/lib/libout123.so",
+                "usr/lib/libfftw3f_threads.so",
+                "usr/lib/liblcms2.so"
+              ],
+              "size": 30476956
+            },
+            {
+              "entry": "jni/armeabi-v7a/libffprobe.so",
+              "facts": {},
+              "nestedCount": null,
+              "nestedSample": [],
+              "size": 166580
+            },
+            {
+              "entry": "jni/x86/",
+              "facts": {},
+              "nestedCount": null,
+              "nestedSample": [],
+              "size": 0
+            },
+            {
+              "entry": "jni/x86/libffmpeg.so",
+              "facts": {},
+              "nestedCount": null,
+              "nestedSample": [],
+              "size": 320692
+            },
+            {
+              "entry": "jni/x86/libffmpeg.zip.so",
+              "facts": {},
+              "nestedCount": 184,
+              "nestedSample": [
+                "usr/lib/",
+                "usr/lib/libswscale.so",
+                "usr/lib/libavformat.so",
+                "usr/lib/libass.so",
+                "usr/lib/libz.so",
+                "usr/lib/libffi.so",
+                "usr/lib/libtheoradec.so",
+                "usr/lib/librav1e.so.0",
+                "usr/lib/libx264.so",
+                "usr/lib/libmediandk.so",
+                "usr/lib/libgio-2.0.so.0",
+                "usr/lib/libgthread-2.0.so.0.8600.0",
+                "usr/lib/libxml2.so.16.0.6",
+                "usr/lib/libnettle.so.8.11",
+                "usr/lib/libv4l1.so",
+                "usr/lib/libvo-amrwbenc.so.0",
+                "usr/lib/libavcodec.so.61.19.101",
+                "usr/lib/libgme.so",
+                "usr/lib/libv4l2rds.so",
+                "usr/lib/libgirepository-2.0.so.0.8600.0",
+                "usr/lib/libglib-2.0.so",
+                "usr/lib/liblzma.so.5.8.1",
+                "usr/lib/librav1e.so",
+                "usr/lib/libxvidcore.so",
+                "usr/lib/libvpx.so.11.0.1",
+                "usr/lib/liblzma.so",
+                "usr/lib/libandroid-glob.so",
+                "usr/lib/libout123.so",
+                "usr/lib/libfftw3f_threads.so",
+                "usr/lib/liblcms2.so"
+              ],
+              "size": 34544829
+            },
+            {
+              "entry": "jni/x86/libffprobe.so",
+              "facts": {},
+              "nestedCount": null,
+              "nestedSample": [],
+              "size": 209704
+            },
+            {
+              "entry": "jni/x86_64/",
+              "facts": {},
+              "nestedCount": null,
+              "nestedSample": [],
+              "size": 0
+            },
+            {
+              "entry": "jni/x86_64/libffmpeg.so",
+              "facts": {},
+              "nestedCount": null,
+              "nestedSample": [],
+              "size": 334776
+            },
+            {
+              "entry": "jni/x86_64/libffmpeg.zip.so",
+              "facts": {},
+              "nestedCount": 184,
+              "nestedSample": [
+                "usr/lib/",
+                "usr/lib/libswscale.so",
+                "usr/lib/libavformat.so",
+                "usr/lib/libass.so",
+                "usr/lib/libz.so",
+                "usr/lib/libffi.so",
+                "usr/lib/libtheoradec.so",
+                "usr/lib/librav1e.so.0",
+                "usr/lib/libx264.so",
+                "usr/lib/libmediandk.so",
+                "usr/lib/libgio-2.0.so.0",
+                "usr/lib/libgthread-2.0.so.0.8600.0",
+                "usr/lib/libxml2.so.16.0.6",
+                "usr/lib/libnettle.so.8.11",
+                "usr/lib/libv4l1.so",
+                "usr/lib/libvo-amrwbenc.so.0",
+                "usr/lib/libavcodec.so.61.19.101",
+                "usr/lib/libgme.so",
+                "usr/lib/libv4l2rds.so",
+                "usr/lib/libgirepository-2.0.so.0.8600.0",
+                "usr/lib/libglib-2.0.so",
+                "usr/lib/liblzma.so.5.8.1",
+                "usr/lib/librav1e.so",
+                "usr/lib/libxvidcore.so",
+                "usr/lib/libvpx.so.11.0.1",
+                "usr/lib/liblzma.so",
+                "usr/lib/libandroid-glob.so",
+                "usr/lib/libout123.so",
+                "usr/lib/libfftw3f_threads.so",
+                "usr/lib/liblcms2.so"
+              ],
+              "size": 38595503
+            },
+            {
+              "entry": "jni/x86_64/libffprobe.so",
+              "facts": {},
+              "nestedCount": null,
+              "nestedSample": [],
+              "size": 231304
+            }
+          ],
+          "sha256": "0a87ffa6cf912b0fe76c1a99b9107f543ee2f247935fae2c71f0822eb7bc5f49",
+          "size": 139371444
+        },
+        {
+          "fileName": "ffmpeg-0.18.1.module",
+          "kind": "module",
+          "payloadEntries": [],
+          "sha256": "89d9c9577d0a922396cb1c6dad51d004ed8f67b8981f4b5cdf457ec4c8b8a6f7",
+          "size": 3746
+        },
+        {
+          "fileName": "ffmpeg-0.18.1.pom",
+          "kind": "pom",
+          "payloadEntries": [],
+          "sha256": "5f4f089a20eb3240cfccfb0082235e1bd44c8109f26cdd8da10247709bfa5071",
+          "size": 2377
+        }
+      ],
+      "coordinate": "io.github.junkfood02.youtubedl-android:ffmpeg:0.18.1",
+      "missing": false
+    },
+    {
+      "artifacts": [
+        {
+          "fileName": "NewPipeExtractor-v0.24.8.jar",
+          "kind": "jar",
+          "payloadEntries": [],
+          "sha256": "a5c92c0ec5bd184258e1e412247528fb0ae0c8ff2ee1e96d87656f2bd8d17c5f",
+          "size": 292
+        },
+        {
+          "fileName": "NewPipeExtractor-v0.24.8.pom",
+          "kind": "pom",
+          "payloadEntries": [],
+          "sha256": "ba82f1cf42fad137f5c73b025c1d95993c528742c19d7d47df706360a3d2a48e",
+          "size": 1164
+        }
+      ],
+      "coordinate": "com.github.teamnewpipe:NewPipeExtractor:v0.24.8",
+      "missing": false
+    },
+    {
+      "artifacts": [
+        {
+          "fileName": "NewPipeExtractor-v0.24.8.jar",
+          "kind": "jar",
+          "payloadEntries": [],
+          "sha256": "ae39d0c1c1b6d1424d603c64f5211b175f32d2eb6c188cee5fce76f4a06640d3",
+          "size": 261
+        },
+        {
+          "fileName": "NewPipeExtractor-v0.24.8.module",
+          "kind": "module",
+          "payloadEntries": [],
+          "sha256": "f72b20cd0b3af1e381bb6b931a2e3b723b5ef13323ce14762f6721a6f1f30911",
+          "size": 2363
+        },
+        {
+          "fileName": "NewPipeExtractor-v0.24.8.pom",
+          "kind": "pom",
+          "payloadEntries": [],
+          "sha256": "386d62e59fe80ea47a728df06c844bb03c2b412adc206dc052503be1e89d9b46",
+          "size": 1782
+        }
+      ],
+      "coordinate": "com.github.teamnewpipe.NewPipeExtractor:NewPipeExtractor:v0.24.8",
+      "missing": false
+    },
+    {
+      "artifacts": [
+        {
+          "fileName": "extractor-v0.24.8.jar",
+          "kind": "jar",
+          "payloadEntries": [],
+          "sha256": "847f4a589edddcae2cc8a357e3de496b77103d94a221fc9b41edd5db4467780d",
+          "size": 698238
+        },
+        {
+          "fileName": "extractor-v0.24.8.module",
+          "kind": "module",
+          "payloadEntries": [],
+          "sha256": "fd98c5de69c5adfa1d59ab9b3031f5e4551eb8782d7e277fbff669b2ae8f90b5",
+          "size": 2830
+        },
+        {
+          "fileName": "extractor-v0.24.8.pom",
+          "kind": "pom",
+          "payloadEntries": [],
+          "sha256": "2e6cc7f62332dacc8e445a1b0916ab05a7887bd880c8063fe37a5f50957f45a9",
+          "size": 2676
+        }
+      ],
+      "coordinate": "com.github.teamnewpipe.NewPipeExtractor:extractor:v0.24.8",
+      "missing": false
+    },
+    {
+      "artifacts": [
+        {
+          "fileName": "timeago-generator-v0.24.8.jar",
+          "kind": "jar",
+          "payloadEntries": [],
+          "sha256": "32ea643e7c2227e52b79c82b570fbde60db713a68d70e6f7e7145f8f58be5ea0",
+          "size": 13011
+        },
+        {
+          "fileName": "timeago-generator-v0.24.8.module",
+          "kind": "module",
+          "payloadEntries": [],
+          "sha256": "c9860e3ec918db68679f35a07abc8e573c16eb661d305985f55e0662bf7d8884",
+          "size": 2341
+        },
+        {
+          "fileName": "timeago-generator-v0.24.8.pom",
+          "kind": "pom",
+          "payloadEntries": [],
+          "sha256": "6c0a2994725f36459a3df2b112b54ff822c62843fb9c7944038bf88d18b6ce8b",
+          "size": 1981
+        }
+      ],
+      "coordinate": "com.github.teamnewpipe.NewPipeExtractor:timeago-generator:v0.24.8",
+      "missing": false
+    },
+    {
+      "artifacts": [
+        {
+          "fileName": "timeago-parser-v0.24.8.jar",
+          "kind": "jar",
+          "payloadEntries": [],
+          "sha256": "39e1177d01e9c8b1c6afe4f7e89678eaae3ebfb0e9dc49bfcb58466c800b629f",
+          "size": 80074
+        },
+        {
+          "fileName": "timeago-parser-v0.24.8.module",
+          "kind": "module",
+          "payloadEntries": [],
+          "sha256": "225bdc23569d7f208beb2858bb29754a06c5867c29aaf102b98a0f7eb0599f1e",
+          "size": 1995
+        },
+        {
+          "fileName": "timeago-parser-v0.24.8.pom",
+          "kind": "pom",
+          "payloadEntries": [],
+          "sha256": "155efbe4b0dc323e7d2fb98b8bd42d7097114a357e9e28654db6584a9a132c36",
+          "size": 1552
+        }
+      ],
+      "coordinate": "com.github.teamnewpipe.NewPipeExtractor:timeago-parser:v0.24.8",
+      "missing": false
+    }
+  ],
+  "counts": {
+    "artifactRecords": 23,
+    "coordinates": 8,
+    "payloadEntries": 36
+  },
+  "gradleCache": "~/.gradle/caches/modules-2/files-2.1",
+  "schemaVersion": 1
+}

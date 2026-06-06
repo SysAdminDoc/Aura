@@ -1,8 +1,8 @@
 # Autonomous Loop State
 
 **Assigned project:** `C:\Users\--\repos\Aura`
-**Current pass:** 2026-06-06 Cycle 24 dependency-notice drift-gate implementation pass
-**Last commit before pass:** `1ef0655` (`feat(release): add native compliance packet`)
+**Current pass:** 2026-06-06 Cycle 25 native-compliance freshness-gate implementation pass
+**Last commit before pass:** `ae0e0fc` (`feat(ci): gate dependency notice drift`)
 
 ## 2026-06-05 Result
 
@@ -41,14 +41,19 @@
 - Wired `.github/workflows/verify.yml` and `.github/workflows/release.yml` to run `:app:releaseOssLicensesTask` and check `docs/legal/dependency-notices.lock.json`.
 - Updated `docs/distribution/supply-chain.md`, `ROADMAP.md`, `CHANGELOG.md`, and `COMPLETED.md` for the lockfile gate.
 - Cycle 24 verification: `:app:releaseOssLicensesTask` passed; `python -m py_compile tools\dependency_notice_lock.py tools\google_oss_to_markdown.py tools\native_compliance_inventory.py`; `python tools\dependency_notice_lock.py --mode check --lockfile docs\legal\dependency-notices.lock.json` returned status `ok`.
+- Completed Cycle 25 native compliance freshness gating.
+- Extended `tools/native_compliance_inventory.py` with `write-lock` and `check-lock` modes.
+- Committed `docs/legal/native-compliance.lock.json` with 8 native/copyleft coordinates, 23 artifact records, and 36 payload entries.
+- Wired `.github/workflows/verify.yml` and `.github/workflows/release.yml` to check `docs/legal/native-compliance.lock.json`.
+- Updated `docs/distribution/supply-chain.md`, `ROADMAP.md`, `CHANGELOG.md`, and `COMPLETED.md` for native lockfile review.
+- Cycle 25 verification: `python -m py_compile tools\dependency_notice_lock.py tools\google_oss_to_markdown.py tools\native_compliance_inventory.py`; `python tools\dependency_notice_lock.py --mode check --lockfile docs\legal\dependency-notices.lock.json`; `python tools\native_compliance_inventory.py --mode check-lock --lockfile docs\legal\native-compliance.lock.json`; `python tools\native_compliance_inventory.py --output docs\legal\native-compliance.md`.
 
 ## Still Open
 
-- Native packet freshness gate for youtubedl-android, NewPipeExtractor, yt-dlp, Python, QuickJS, and FFmpeg version changes.
 - FFmpeg exact configure line and matching source package review for the resolved youtubedl-android ffmpeg 0.18.1 AAR.
 - Curated source/license overlay for high-risk dependencies and native payloads.
 - Runtime provider kill switches and disabled-provider behavior.
 
 ## Next Cycle
 
-Continue this same assigned project, Aura. Start Cycle 25 from the `ROADMAP.md` Continuation State and `docs/research/cycle-24-2026-06-06.md`. The Google OSS notices plugin-only path is implemented; `tools/google_oss_to_markdown.py` generates `THIRD-PARTY-NOTICES.md`; `tools/native_compliance_inventory.py` generates `NATIVE-COMPLIANCE.md`; `tools/dependency_notice_lock.py` gates generated release notice drift in PR/main verification and release builds. Next implement the native packet freshness gate for youtubedl-android, NewPipeExtractor, yt-dlp, Python, QuickJS, and FFmpeg evidence. Keep AboutLibraries secondary: 14.2.1 configures, but default exports were incomplete and the compliance export logged Windows path errors; do not use AboutLibraries 15.x until N-1 upgrades AGP because v15 requires AGP 8.13. Commit and push completed work when the active project contract allows it.
+Continue this same assigned project, Aura. Start Cycle 26 from the `ROADMAP.md` Continuation State and `docs/research/cycle-25-2026-06-06.md`. The Google OSS notices plugin-only path is implemented; `tools/google_oss_to_markdown.py` generates `THIRD-PARTY-NOTICES.md`; `tools/native_compliance_inventory.py` generates `NATIVE-COMPLIANCE.md` and gates native evidence drift; `tools/dependency_notice_lock.py` gates generated release notice drift in PR/main verification and release builds. Next implement the curated high-risk dependency overlay for source URLs, license IDs, usage descriptions, and release-review notes. Keep AboutLibraries secondary: 14.2.1 configures, but default exports were incomplete and the compliance export logged Windows path errors; do not use AboutLibraries 15.x until N-1 upgrades AGP because v15 requires AGP 8.13. Commit and push completed work when the active project contract allows it.

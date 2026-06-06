@@ -6,12 +6,16 @@ from __future__ import annotations
 import argparse
 import hashlib
 import io
+import json
 import os
 import re
+import sys
 import zipfile
 from dataclasses import dataclass
 from pathlib import Path
 
+
+DEFAULT_LOCKFILE = "docs/legal/native-compliance.lock.json"
 
 DEFAULT_COORDINATES = (
     "io.github.junkfood02.youtubedl-android:common:0.18.1",
@@ -149,6 +153,12 @@ def parse_args() -> argparse.Namespace:
         description="Create a native/copyleft payload inventory from Gradle cache artifacts."
     )
     parser.add_argument(
+        "--mode",
+        choices=("report", "write-lock", "check-lock"),
+        default="report",
+        help="report writes markdown; write-lock updates the JSON lock; check-lock verifies the JSON lock.",
+    )
+    parser.add_argument(
         "--gradle-cache",
         default=str(Path.home() / ".gradle" / "caches" / "modules-2" / "files-2.1"),
         help="Gradle modules cache root. Defaults to ~/.gradle/caches/modules-2/files-2.1.",
@@ -169,6 +179,11 @@ def parse_args() -> argparse.Namespace:
         default=None,
         help="Optional final APK path to inspect in addition to resolved Gradle cache artifacts.",
     )
+    parser.add_argument(
+        "--lockfile",
+        default=DEFAULT_LOCKFILE,
+        help=f"Native compliance lockfile path. Defaults to {DEFAULT_LOCKFILE}.",
+    )
     return parser.parse_args()
 
 
@@ -185,6 +200,11 @@ def sha256(path: Path) -> str:
         for chunk in iter(lambda: handle.read(1024 * 1024), b""):
             digest.update(chunk)
     return digest.hexdigest()
+
+
+def require_file(path: Path) -> None:
+    if not path.is_file():
+        raise FileNotFoundError(f"Required native compliance lockfile not found: {path}")
 
 
 def markdown_cell(value: object) -> str:
@@ -301,6 +321,134 @@ def inspect_zip_artifact(path: Path) -> list[dict[str, object]]:
     except zipfile.BadZipFile:
         return rows
     return rows
+
+
+def normalize_payload_rows(rows: list[dict[str, object]]) -> list[dict[str, object]]:
+    normalized: list[dict[str, object]] = []
+    for row in sorted(rows, key=lambda item: str(item["entry"])):
+        normalized.append(
+            {
+                "entry": str(row["entry"]),
+                "facts": dict(sorted(row["facts"].items())),
+                "nestedCount": row["nested_count"],
+                "nestedSample": list(row["nested_selected"]),
+                "size": row["size"],
+            }
+        )
+    return normalized
+
+
+def build_lock(cache_root: Path, coordinates: list[Coordinate]) -> dict[str, object]:
+    coordinate_records: list[dict[str, object]] = []
+    artifact_count = 0
+    payload_entry_count = 0
+    for coordinate in coordinates:
+        artifacts = find_artifacts(cache_root, coordinate)
+        artifact_records: list[dict[str, object]] = []
+        for artifact in artifacts:
+            rows: list[dict[str, object]] = []
+            if artifact.suffix.lower() in {".aar", ".jar"}:
+                rows = inspect_zip_artifact(artifact)
+            payload_entries = normalize_payload_rows(rows)
+            payload_entry_count += len(payload_entries)
+            artifact_count += 1
+            artifact_records.append(
+                {
+                    "fileName": artifact.name,
+                    "kind": artifact.suffix.lower().lstrip("."),
+                    "payloadEntries": payload_entries,
+                    "sha256": sha256(artifact),
+                    "size": artifact.stat().st_size,
+                }
+            )
+        coordinate_records.append(
+            {
+                "artifacts": sorted(
+                    artifact_records,
+                    key=lambda item: (str(item["kind"]), str(item["fileName"])),
+                ),
+                "coordinate": coordinate.label,
+                "missing": not bool(artifact_records),
+            }
+        )
+
+    return {
+        "schemaVersion": 1,
+        "gradleCache": display_path(cache_root),
+        "counts": {
+            "artifactRecords": artifact_count,
+            "coordinates": len(coordinate_records),
+            "payloadEntries": payload_entry_count,
+        },
+        "coordinates": coordinate_records,
+    }
+
+
+def write_lock(lockfile: Path, lock: dict[str, object]) -> None:
+    lockfile.parent.mkdir(parents=True, exist_ok=True)
+    lockfile.write_text(json.dumps(lock, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    print(
+        json.dumps(
+            {
+                "artifactRecords": lock["counts"]["artifactRecords"],
+                "coordinates": lock["counts"]["coordinates"],
+                "lockfile": str(lockfile),
+                "payloadEntries": lock["counts"]["payloadEntries"],
+            },
+            sort_keys=True,
+        )
+    )
+
+
+def artifact_keys(lock: dict[str, object]) -> set[str]:
+    keys: set[str] = set()
+    for coordinate in lock.get("coordinates", []):
+        label = str(coordinate.get("coordinate", ""))
+        for artifact in coordinate.get("artifacts", []):
+            keys.add(f"{label}:{artifact.get('fileName', '')}")
+    return keys
+
+
+def check_lock(lockfile: Path, current: dict[str, object]) -> int:
+    require_file(lockfile)
+    expected = json.loads(lockfile.read_text(encoding="utf-8"))
+    if expected == current:
+        print(
+            json.dumps(
+                {
+                    "artifactRecords": current["counts"]["artifactRecords"],
+                    "coordinates": current["counts"]["coordinates"],
+                    "lockfile": str(lockfile),
+                    "payloadEntries": current["counts"]["payloadEntries"],
+                    "status": "ok",
+                },
+                sort_keys=True,
+            )
+        )
+        return 0
+
+    expected_keys = artifact_keys(expected)
+    current_keys = artifact_keys(current)
+    added = sorted(current_keys - expected_keys)
+    removed = sorted(expected_keys - current_keys)
+    lines = ["Native compliance lockfile is stale."]
+    if added:
+        lines.append("Added artifacts:")
+        lines.extend(f"  + {key}" for key in added[:40])
+        if len(added) > 40:
+            lines.append(f"  ... {len(added) - 40} more")
+    if removed:
+        lines.append("Removed artifacts:")
+        lines.extend(f"  - {key}" for key in removed[:40])
+        if len(removed) > 40:
+            lines.append(f"  ... {len(removed) - 40} more")
+    if not added and not removed:
+        lines.append("Artifact hashes, payload facts, or payload entries changed.")
+    lines.append(
+        f"Regenerate intentionally with: python tools/native_compliance_inventory.py --mode write-lock --lockfile {lockfile.as_posix()}"
+    )
+    print("\n".join(lines), file=sys.stderr)
+    return 1
 
 
 def build_markdown(
@@ -477,17 +625,26 @@ def build_markdown(
     return "\n".join(lines).rstrip() + "\n"
 
 
-def main() -> None:
+def main() -> int:
     args = parse_args()
     cache_root = Path(os.path.expanduser(args.gradle_cache)).resolve()
     coordinates = [parse_coordinate(value) for value in (args.coordinates or DEFAULT_COORDINATES)]
+    if args.mode in {"write-lock", "check-lock"}:
+        lock = build_lock(cache_root, coordinates)
+        lockfile = Path(args.lockfile)
+        if args.mode == "write-lock":
+            write_lock(lockfile, lock)
+            return 0
+        return check_lock(lockfile, lock)
+
     apk_path = Path(args.apk).resolve() if args.apk else None
     markdown = build_markdown(cache_root, coordinates, apk_path=apk_path)
     output_path = Path(args.output)
     output_path.parent.mkdir(parents=True, exist_ok=True)
     output_path.write_text(markdown, encoding="utf-8", newline="\n")
     print(f"Wrote {output_path} ({output_path.stat().st_size} bytes)")
+    return 0
 
 
 if __name__ == "__main__":
-    main()
+    raise SystemExit(main())
