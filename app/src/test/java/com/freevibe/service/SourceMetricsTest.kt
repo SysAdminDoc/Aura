@@ -58,6 +58,28 @@ class SourceMetricsTest {
     }
 
     @Test
+    fun `disabled source is tracked separately from outage`() {
+        val m = SourceMetrics()
+        m.recordDisabled("youtube")
+        val s = m.snapshot("youtube")!!
+        assertEquals(1L, s.totalRequests)
+        assertEquals(0L, s.successCount)
+        assertEquals(0L, s.failureCount)
+        assertEquals(1L, s.disabledCount)
+        assertEquals(0L, s.activeRequests)
+        assertEquals(1.0, s.successRatio, 0.001)
+        assertNull(s.lastErrorClass)
+    }
+
+    @Test
+    fun `disabled source names are silently ignored`() {
+        val m = SourceMetrics()
+        m.recordDisabled("")
+        m.recordDisabled("   ")
+        assertTrue(m.snapshotAll().isEmpty())
+    }
+
+    @Test
     fun `latency ring buffer caps at 50 samples`() {
         val m = SourceMetrics()
         repeat(75) { m.recordSuccess("wallhaven", it.toLong()) }

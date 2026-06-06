@@ -114,9 +114,10 @@ class CrashDiagnosticsCollector @Inject constructor(
 
     private fun mostRecentSource(): String? = sourceMetrics.snapshotAll()
         .filter { it.totalRequests > 0L }
-        .maxByOrNull { maxOf(it.lastSuccessAtMs, it.lastFailureAtMs) }
+        .maxByOrNull { maxOf(it.lastSuccessAtMs, it.lastFailureAtMs, it.lastDisabledAtMs) }
         ?.let { stat ->
-            val health = "${stat.successCount}/${stat.totalRequests} successful"
+            val disabled = if (stat.disabledCount > 0L) ", ${stat.disabledCount} disabled" else ""
+            val health = "${stat.successCount}/${stat.activeRequests} successful$disabled"
             if (stat.lastErrorClass != null) {
                 "${stat.source} ($health, last error ${stat.lastErrorClass})"
             } else {

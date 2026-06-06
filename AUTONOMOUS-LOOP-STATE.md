@@ -1,8 +1,8 @@
 # Autonomous Loop State
 
 **Assigned project:** `C:\Users\--\repos\Aura`
-**Current pass:** 2026-06-06 Cycle 36 runtime provider kill-switch behavior matrix
-**Last commit before pass:** `e84e8b3` (`feat(ci): guard generated notice metadata`)
+**Current pass:** 2026-06-06 Cycle 37 YouTube provider legal-mode switch
+**Last commit before pass:** `e89421e` (`feat(policy): track provider runtime controls`)
 
 ## 2026-06-05 Result
 
@@ -109,13 +109,20 @@
 - Extended `ProviderDisclosureTest` so runtime controls cover every source exactly once and partial/missing controls must carry concrete follow-ups.
 - Added `docs/legal/provider-runtime-controls.md`, linked it from `docs/legal/provider-policy.md`, and recorded YouTube as the highest-risk missing provider switch.
 - Cycle 36 verification: focused `:app:testDebugUnitTest --tests com.freevibe.data.legal.ProviderDisclosureTest` passed with Android Studio JBR; release-compliance Python compile checks; dependency notice lock check; generated notice metadata parity check; native compliance lock check; dependency overlay check; dependency license policy check; `git diff --check`; changed-line attribution scan.
+- Completed Cycle 37 YouTube provider legal-mode switch.
+- Added a default-on `youtube_provider_enabled` preference and Settings switch for YouTube features.
+- Gated `YouTubeRepository` before search, cached preview lookup, audio stream resolution, and video stream resolution.
+- Updated Sounds so disabled YouTube mode hides the YouTube secondary tab, blocks direct YouTube search/import/playback/download/similar paths, skips top-hit provider calls, and falls back to bundled ringtone/notification/alarm content.
+- Updated Video Wallpapers so disabled YouTube mode skips discovery, pre-resolve work, and apply/download paths.
+- Extended `SourceMetrics` with disabled-source counters and surfaced disabled counts in Settings diagnostics and crash context.
+- Updated `ProviderDisclosure.kt`, `docs/legal/provider-runtime-controls.md`, `docs/research/cycle-37-2026-06-06.md`, `ROADMAP.md`, `CHANGELOG.md`, and `COMPLETED.md` for the covered YouTube runtime control.
+- Cycle 37 verification: focused Sounds, sound-tab helper, source metrics, and provider disclosure unit tests; release-compliance Python compile checks; dependency notice lock check; generated notice metadata parity check; native compliance lock check; dependency overlay check; dependency license policy check; `git diff --check`; changed-line attribution scan.
 
 ## Still Open
 
 - Exact Termux package commit, FFmpeg package patches, dependency source set, and build logs for the resolved youtubedl-android ffmpeg 0.18.1 AAR.
-- YouTube legal-mode/offline-risk switch.
 - Reddit/Bing/community/Pexels/Pixabay/Wallhaven/generated-content source disable flags.
 
 ## Next Cycle
 
-Continue this same assigned project, Aura. Start Cycle 37 from the `ROADMAP.md` Continuation State and `docs/research/cycle-36-2026-06-06.md`. The Google OSS notices plugin-only path is implemented; `tools/google_oss_to_markdown.py` generates `THIRD-PARTY-NOTICES.md`; `tools/google_oss_raw_archive.py` archives raw Google OSS inputs and the repo now keeps `GOOGLE-OSS-RAW-INPUTS.zip` attached to tagged public releases; `GeneratedDependencyNotices.kt` parses generated raw resources for an in-app notice viewer with search and review markers; `tools/native_compliance_inventory.py` generates `NATIVE-COMPLIANCE.md`, extracts embedded FFmpeg configure evidence, and gates native evidence drift; `tools/dependency_notice_lock.py` gates generated release notice drift and raw metadata parity; `tools/dependency_overlay_check.py` gates curated high-risk dependency/native-payload review metadata; `tools/dependency_license_policy.py` gates allowed, review-required, disallowed, and unknown curated license IDs; `tools/release_artifact_bundle_check.py` gates final release bundle consistency; `ProviderDisclosure.kt` now has checked runtime-control rows for every content source; `docs/legal/provider-runtime-controls.md` records current missing/partial source disablement. Next implement the YouTube legal-mode/offline-risk switch across sound tabs, direct YouTube import/search, similar sounds, top hits, video wallpapers, and stream resolution. Keep AboutLibraries secondary: 14.2.1 configures, but default exports were incomplete and the compliance export logged Windows path errors; do not use AboutLibraries 15.x until N-1 upgrades AGP because v15 requires AGP 8.13. Commit and push completed work when the active project contract allows it.
+Continue this same assigned project, Aura. Start Cycle 38 from the `ROADMAP.md` Continuation State and `docs/research/cycle-37-2026-06-06.md`. The Google OSS notices plugin-only path is implemented; `tools/google_oss_to_markdown.py` generates `THIRD-PARTY-NOTICES.md`; `tools/google_oss_raw_archive.py` archives raw Google OSS inputs and the repo now keeps `GOOGLE-OSS-RAW-INPUTS.zip` attached to tagged public releases; `GeneratedDependencyNotices.kt` parses generated raw resources for an in-app notice viewer with search and review markers; `tools/native_compliance_inventory.py` generates `NATIVE-COMPLIANCE.md`, extracts embedded FFmpeg configure evidence, and gates native evidence drift; `tools/dependency_notice_lock.py` gates generated release notice drift and raw metadata parity; `tools/dependency_overlay_check.py` gates curated high-risk dependency/native-payload review metadata; `tools/dependency_license_policy.py` gates allowed, review-required, disallowed, and unknown curated license IDs; `tools/release_artifact_bundle_check.py` gates final release bundle consistency; `ProviderDisclosure.kt` now has checked runtime-control rows for every content source; `docs/legal/provider-runtime-controls.md` records current missing/partial source disablement; YouTube now has a runtime provider switch that blocks sound/video resolver paths and falls back to bundled sounds when disabled. Next implement a Reddit source-enabled flag that removes Reddit from wallpaper/video entry points and records disabled diagnostics separately from outages. Keep AboutLibraries secondary: 14.2.1 configures, but default exports were incomplete and the compliance export logged Windows path errors; do not use AboutLibraries 15.x until N-1 upgrades AGP because v15 requires AGP 8.13. Commit and push completed work when the active project contract allows it.

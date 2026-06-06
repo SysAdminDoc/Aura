@@ -4,9 +4,11 @@ import com.freevibe.data.model.ContentSource
 import com.freevibe.data.model.SearchResult
 import com.freevibe.data.model.Sound
 import com.freevibe.BuildConfig
+import com.freevibe.data.local.PreferencesManager
 import com.freevibe.service.SourceMetrics
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withContext
 import org.schabi.newpipe.extractor.NewPipe
 import org.schabi.newpipe.extractor.ServiceList
@@ -21,6 +23,7 @@ import javax.inject.Singleton
 @Singleton
 class YouTubeRepository @Inject constructor(
     private val sourceMetrics: SourceMetrics,
+    private val prefs: PreferencesManager,
 ) {
 
     // Cache resolved stream URLs with TTL to avoid stale URLs (YouTube tokens expire)
@@ -69,6 +72,10 @@ class YouTubeRepository @Inject constructor(
         minDuration: Int = 0,
         blockedWords: List<String> = emptyList(),
     ): SearchResult<Sound> = withContext(Dispatchers.IO) {
+        if (!isProviderEnabled()) {
+            sourceMetrics.recordDisabled(sourceName)
+            return@withContext emptySearchResult()
+        }
         try {
             sourceMetrics.measure(sourceName) {
                 if (BuildConfig.DEBUG) android.util.Log.d("YouTubeRepo", "Searching YouTube for: $query")
@@ -106,6 +113,10 @@ class YouTubeRepository @Inject constructor(
 
     /** Fast preview URL — checks cache first, then extracts via yt-dlp with worstaudio for speed */
     suspend fun getAudioPreviewUrl(videoId: String): String? = withContext(Dispatchers.IO) {
+        if (!isProviderEnabled()) {
+            sourceMetrics.recordDisabled(sourceName)
+            return@withContext null
+        }
         streamCache[videoId]?.let { cached ->
             if (System.currentTimeMillis() - cached.cachedAt <= STREAM_TTL_MS) return@withContext cached.url
             streamCache.remove(videoId)
@@ -132,6 +143,10 @@ class YouTubeRepository @Inject constructor(
 
     /** High quality URL for download/apply — uses bestaudio */
     suspend fun getAudioStreamUrl(videoId: String): String? = withContext(Dispatchers.IO) {
+        if (!isProviderEnabled()) {
+            sourceMetrics.recordDisabled(sourceName)
+            return@withContext null
+        }
         try {
             sourceMetrics.measure(sourceName) {
                 val url = "https://www.youtube.com/watch?v=$videoId"
@@ -152,6 +167,10 @@ class YouTubeRepository @Inject constructor(
     }
 
     suspend fun getVideoStreamUrl(videoId: String): String? = withContext(Dispatchers.IO) {
+        if (!isProviderEnabled()) {
+            sourceMetrics.recordDisabled(sourceName)
+            return@withContext null
+        }
         try {
             sourceMetrics.measure(sourceName) {
                 val url = "https://www.youtube.com/watch?v=$videoId"
@@ -166,6 +185,15 @@ class YouTubeRepository @Inject constructor(
             throw e
         } catch (_: Exception) { null }
     }
+
+    private suspend fun isProviderEnabled(): Boolean = prefs.youtubeProviderEnabled.first()
+
+    private fun emptySearchResult() = SearchResult<Sound>(
+        items = emptyList(),
+        totalCount = 0,
+        currentPage = 1,
+        hasMore = false,
+    )
 
     private fun StreamInfoItem.toSound() = Sound(
         id = "yt_${url.substringAfter("v=").substringBefore("&")}",

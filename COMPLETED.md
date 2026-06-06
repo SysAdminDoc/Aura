@@ -80,6 +80,11 @@ next pass can resume quickly.
   provider disclosure tests to require explicit disabled behavior/follow-ups, and
   documented current missing/partial controls in
   `docs/legal/provider-runtime-controls.md`.
+- Completed Cycle 37 YouTube provider legal-mode switch: added a default-on
+  YouTube provider preference and Settings switch, blocked YouTube search,
+  import, top hits, similar sounds, playback/download/video resolution, and video
+  discovery when disabled, added bundled sound fallbacks, and recorded disabled
+  source diagnostics separately from outages.
 
 ## 2026-06-05
 

@@ -215,12 +215,12 @@ Append-only Cycle 3 handoff. Every item below is source-backed in `docs/research
   - Acceptance: provider policies declare request cache TTL, media URL TTL, Retry-After handling, max automatic prefetch, and mass-download guard; Settings source-health view shows quota/cache state where available.
   - Verify: simulated 429 with Retry-After for Pixabay/Freesound; cache hit avoids duplicate request inside TTL; mass-download guard blocks batch prefetch beyond policy.
 
-- [ ] 🤖 🔬 **P1 — YouTube legal-mode/offline-risk switch**
+- [x] 🤖 🔬 **P1 — YouTube legal-mode/offline-risk switch**
   - Why: Aura's YouTube feature set searches, resolves, caches, and downloads audio/video through NewPipe/yt-dlp, while YouTube's official policy is restrictive around undocumented access, downloads, caching, offline playback, and background playback.
   - Evidence: `YouTubeRepository.kt` NewPipe/yt-dlp stream extraction; `VideoWallpapersViewModel.kt` yt-dlp download path; YouTube API developer policies.
   - Touches: YouTube repository abstraction, Sounds YouTube tab, video wallpaper YouTube source, Settings provider toggles, distribution docs, issue templates.
   - Acceptance: distributor can disable YouTube features; first-run does not require YouTube; UI clearly labels YouTube as optional; fallback sources remain useful; no YouTube download/cache happens when legal mode disables it.
-  - Verify: disable YouTube and run Sounds/Videos; Freesound/Audius/ccMixter/community paths still work; source metrics record disabled state separately from provider outage.
+  - Verify: disable YouTube and run Sounds/Videos; bundled sound and community paths still work; source metrics record disabled state separately from provider outage.
 
 - [ ] 🤖 🔬 **P1 — Sound license capability gates**
   - Why: Licenses and provider terms differ by source and action. A badge alone is not enough to decide whether a sound can be trimmed, normalized, downloaded, set as a ringtone, shared, or bundled.
@@ -2812,15 +2812,22 @@ Stars/dates as of research pass 2026-05-16.
 - Primary source references — [Pexels API wallpaper guidance](https://help.pexels.com/hc/en-us/articles/4405588861721-Can-I-use-the-API-as-a-wallpaper-app), [Pixabay API documentation](https://pixabay.com/api/docs/), [Reddit Data API Terms](https://redditinc.com/policies/data-api-terms), [Reddit Developer Terms](https://redditinc.com/policies/developer-terms), [YouTube API Services Developer Policies](https://developers.google.com/youtube/terms/developer-policies).
 - Verification outputs — focused provider disclosure unit test, release-compliance Python compile checks, dependency notice lock check, generated notice metadata parity check, native compliance lock check, dependency overlay check, dependency license policy check, `git diff --check`, and changed-line attribution scan.
 
+## Appendix AO — Cycle 37 Sources
+
+- Cycle 37 implementation record — [docs/research/cycle-37-2026-06-06.md](docs/research/cycle-37-2026-06-06.md).
+- YouTube legal-mode implementation — `PreferencesManager.kt`, `SettingsScreen.kt`, `SettingsViewModel.kt`, `YouTubeRepository.kt`, `SoundsViewModel.kt`, `SoundsScreen.kt`, `VideoWallpapersViewModel.kt`, `SourceMetrics.kt`, `ProviderDisclosure.kt`, and `docs/legal/provider-runtime-controls.md`.
+- Primary source reference — [YouTube API Services Developer Policies](https://developers.google.com/youtube/terms/developer-policies).
+- Verification outputs — focused Sounds, sound-tab helper, source metrics, and provider disclosure unit tests; release-compliance Python compile checks; dependency notice lock check; generated notice metadata parity check; native compliance lock check; dependency overlay check; dependency license policy check; `git diff --check`; and changed-line attribution scan.
+
 ## Continuation State
 
 ### Last Completed Cycle
 
-Cycle 36: runtime provider kill-switch behavior matrix.
+Cycle 37: YouTube provider legal-mode/offline-risk switch.
 
 ### Current Focus
 
-Start Cycle 37 with the existing YouTube legal-mode/offline-risk switch item. Commit and push completed work when the active project contract allows it.
+Start Cycle 38 with the existing Reddit source disable flag gap from the runtime provider-control matrix. Commit and push completed work when the active project contract allows it.
 
 ### Important Findings So Far
 
@@ -2851,13 +2858,13 @@ Start Cycle 37 with the existing YouTube legal-mode/offline-risk switch item. Co
 - The generated notice viewer now has name/license filtering plus a review watchlist for generated rows that match curated Firebase, Play services, ML Kit, NewPipeExtractor, youtubedl-android, ProfileInstaller, and ZXing surfaces.
 - AboutLibraries 14.2.1 configures but the default release export was incomplete for Aura and logged Windows path errors during compliance export.
 - `ProviderDisclosureTest` now passes in the real repo with `JAVA_HOME` set to Android Studio JBR and `ANDROID_HOME` set to the local Android SDK.
-- `ProviderDisclosure.kt` now includes a checked runtime-control matrix for every `ContentSource`; `docs/legal/provider-runtime-controls.md` records disabled behavior and follow-up gaps for YouTube, Reddit, Pexels, Pixabay, Bing, community, Wallhaven, and generated-content controls.
-- YouTube is the highest-risk missing provider kill switch because it spans default sound tabs, explicit YouTube search/import, similar-sound lookup, top-hit prefetch, video wallpaper discovery, and stream resolution.
+- `ProviderDisclosure.kt` now includes a checked runtime-control matrix for every `ContentSource`; `docs/legal/provider-runtime-controls.md` records disabled behavior and follow-up gaps for Reddit, Pexels, Pixabay, Bing, community, Wallhaven, and generated-content controls.
+- YouTube now has a default-on `youtube_provider_enabled` preference plus Settings switch that hides YouTube browsing, falls back to bundled Sounds content, skips video discovery, blocks stream resolution before cache/downloader use, and records disabled source diagnostics separately from failures.
 - Recent history was checked with `rtk git log -10 --oneline --decorate` for this pass.
 
 ### Next Best Actions
 
-1. Implement the YouTube legal-mode/offline-risk switch across sound tabs, YouTube import/search, similar sounds, top hits, video wallpapers, and stream resolution.
+1. Add a Reddit source-enabled flag that removes Reddit from wallpaper and video entry points and records disabled diagnostics separately from outages.
 2. Run a real GitHub Actions manual release dry run after secrets are confirmed available and archive the run URL in the release docs.
 3. Add deeper UI verification for the licenses screen on an emulator or screenshot lane when a device/runtime is available.
 4. Preserve exact Termux package commit/build-log evidence for FFmpeg if the release owner can obtain it from upstream or a reproducible rebuild.

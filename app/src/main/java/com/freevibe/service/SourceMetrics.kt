@@ -30,15 +30,18 @@ class SourceMetrics @Inject constructor() {
         val totalRequests: Long,
         val successCount: Long,
         val failureCount: Long,
+        val disabledCount: Long,
         val lastErrorClass: String?,
         val lastErrorMessage: String?,
         val lastSuccessAtMs: Long,
         val lastFailureAtMs: Long,
+        val lastDisabledAtMs: Long,
         val recentLatenciesMs: List<Long>,
     ) {
-        /** Successes / total. Returns 1.0 when there have been no requests. */
-        val successRatio: Double = if (totalRequests == 0L) 1.0
-            else successCount.toDouble() / totalRequests.toDouble()
+        /** Successes / active provider attempts. Disabled decisions are not outages. */
+        val activeRequests: Long = (totalRequests - disabledCount).coerceAtLeast(0L)
+        val successRatio: Double = if (activeRequests == 0L) 1.0
+            else successCount.toDouble() / activeRequests.toDouble()
 
         /** Median latency over the rolling window, or null if empty. */
         val p50Ms: Long? = recentLatenciesMs.takeIf { it.isNotEmpty() }
@@ -56,10 +59,12 @@ class SourceMetrics @Inject constructor() {
         val total = AtomicLong(0L)
         val success = AtomicLong(0L)
         val failure = AtomicLong(0L)
+        val disabled = AtomicLong(0L)
         @Volatile var lastErrorClass: String? = null
         @Volatile var lastErrorMessage: String? = null
         @Volatile var lastSuccessAtMs: Long = 0L
         @Volatile var lastFailureAtMs: Long = 0L
+        @Volatile var lastDisabledAtMs: Long = 0L
         // Bounded ring buffer for latency samples — keeps memory bounded.
         val latencies = java.util.ArrayDeque<Long>()
         val latencyLock = Any()
@@ -112,6 +117,16 @@ class SourceMetrics @Inject constructor() {
         _version.update { it + 1 }
     }
 
+    /** Record an intentionally disabled source path, separate from provider failures. */
+    fun recordDisabled(source: String) {
+        if (source.isBlank()) return
+        val e = entries.computeIfAbsent(source) { MutableEntry() }
+        e.total.incrementAndGet()
+        e.disabled.incrementAndGet()
+        e.lastDisabledAtMs = System.currentTimeMillis()
+        _version.update { it + 1 }
+    }
+
     /** Atomic-ish snapshot of one source. Returns null if never seen. */
     fun snapshot(source: String): SourceStats? {
         val e = entries[source] ?: return null
@@ -121,10 +136,12 @@ class SourceMetrics @Inject constructor() {
             totalRequests = e.total.get(),
             successCount = e.success.get(),
             failureCount = e.failure.get(),
+            disabledCount = e.disabled.get(),
             lastErrorClass = e.lastErrorClass,
             lastErrorMessage = e.lastErrorMessage,
             lastSuccessAtMs = e.lastSuccessAtMs,
             lastFailureAtMs = e.lastFailureAtMs,
+            lastDisabledAtMs = e.lastDisabledAtMs,
             recentLatenciesMs = latencies,
         )
     }
@@ -134,6 +151,7 @@ class SourceMetrics @Inject constructor() {
         .mapNotNull { snapshot(it) }
         .sortedWith(
             compareByDescending<SourceStats> { it.failureCount }
+                .thenByDescending { it.disabledCount }
                 .thenByDescending { it.totalRequests },
         )
 

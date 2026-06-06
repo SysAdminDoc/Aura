@@ -73,6 +73,7 @@ fun SoundsScreen(
     val previewReadyIds by viewModel.previewReadyIds.collectAsStateWithLifecycle()
     val topHits by viewModel.topHits.collectAsStateWithLifecycle()
     val playbackProgress by viewModel.playbackProgress.collectAsStateWithLifecycle()
+    val youtubeProviderEnabled by viewModel.youtubeProviderEnabled.collectAsStateWithLifecycle()
     val hiddenIds by viewModel.hiddenIds.collectAsStateWithLifecycle(initialValue = emptySet())
     val communityVoteIds = remember(state.sounds, state.selectedTab) {
         if (state.selectedTab == SoundTab.COMMUNITY) {
@@ -109,6 +110,11 @@ fun SoundsScreen(
     }
     var searchQuery by remember { mutableStateOf("") }
     LaunchedEffect(state.query) { searchQuery = state.query }
+    LaunchedEffect(youtubeProviderEnabled, state.selectedTab) {
+        if (!youtubeProviderEnabled && state.selectedTab == SoundTab.YOUTUBE) {
+            viewModel.selectTab(SoundTab.RINGTONES)
+        }
+    }
     LaunchedEffect(initialQuery) {
         if (!initialQuery.isNullOrBlank() && state.query != initialQuery) {
             viewModel.search(initialQuery)
@@ -296,7 +302,11 @@ fun SoundsScreen(
                         CompactSearchField(
                             value = searchQuery,
                             onValueChange = { searchQuery = it; showSearchHistory = it.isEmpty() },
-                            placeholder = if (isYouTubeTab) "Search YouTube or paste URL..." else "Search YouTube sounds",
+                            placeholder = when {
+                                isYouTubeTab -> "Search YouTube or paste URL..."
+                                youtubeProviderEnabled -> "Search YouTube sounds"
+                                else -> "Search sounds"
+                            },
                             leadingIcon = if (isYouTubeTab) Icons.Default.SmartDisplay else Icons.Default.Search,
                             leadingTint = if (isYouTubeTab) Color(0xFFFF6A5B) else MaterialTheme.colorScheme.onSurfaceVariant,
                             modifier = Modifier.weight(1f),
@@ -350,6 +360,7 @@ fun SoundsScreen(
                 Spacer(Modifier.height(6.dp))
                 SoundModeBar(
                     selectedTab = state.selectedTab,
+                    youtubeProviderEnabled = youtubeProviderEnabled,
                     onSelectTab = viewModel::selectTab,
                 )
             }
@@ -360,7 +371,7 @@ fun SoundsScreen(
                     AuraStateCard(
                         icon = Icons.Default.CloudOff,
                         title = "Sounds could not refresh",
-                        description = state.error ?: "Aura could not reach YouTube audio search. Retry, or switch tabs to keep browsing cached picks.",
+                        description = state.error ?: "Aura could not refresh sound sources. Retry, or switch tabs to keep browsing saved picks.",
                         tone = MaterialTheme.colorScheme.error,
                         primaryAction = AuraStateAction(
                             label = "Retry",
@@ -449,8 +460,8 @@ internal val coreSoundTabs: List<SoundTab> = listOf(
     SoundTab.ALARMS,
 )
 
-internal fun secondarySoundTabs(selectedTab: SoundTab): List<SoundTab> = buildList {
-    add(SoundTab.YOUTUBE)
+internal fun secondarySoundTabs(selectedTab: SoundTab, youtubeProviderEnabled: Boolean = true): List<SoundTab> = buildList {
+    if (youtubeProviderEnabled || selectedTab == SoundTab.YOUTUBE) add(SoundTab.YOUTUBE)
     add(SoundTab.COMMUNITY)
     if (selectedTab == SoundTab.SEARCH) add(SoundTab.SEARCH)
 }
@@ -497,10 +508,13 @@ private fun SoundFilterButton(
 @Composable
 private fun SoundModeBar(
     selectedTab: SoundTab,
+    youtubeProviderEnabled: Boolean,
     onSelectTab: (SoundTab) -> Unit,
 ) {
     var showMoreMenu by remember { mutableStateOf(false) }
-    val secondaryTabs = remember(selectedTab) { secondarySoundTabs(selectedTab) }
+    val secondaryTabs = remember(selectedTab, youtubeProviderEnabled) {
+        secondarySoundTabs(selectedTab, youtubeProviderEnabled)
+    }
     val secondarySelected = selectedTab in secondaryTabs
 
     Row(

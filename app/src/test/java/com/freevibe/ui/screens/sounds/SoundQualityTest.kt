@@ -29,6 +29,18 @@ class SoundQualityTest {
     }
 
     @Test
+    fun `secondary sound tabs hide youtube when provider is disabled`() {
+        assertEquals(
+            listOf(SoundTab.COMMUNITY),
+            secondarySoundTabs(SoundTab.RINGTONES, youtubeProviderEnabled = false),
+        )
+        assertEquals(
+            listOf(SoundTab.COMMUNITY, SoundTab.SEARCH),
+            secondarySoundTabs(SoundTab.SEARCH, youtubeProviderEnabled = false),
+        )
+    }
+
+    @Test
     fun `sound collections are only shown for everyday sound tabs`() {
         assertTrue(soundCollectionsFor(SoundTab.RINGTONES).isNotEmpty())
         assertTrue(soundCollectionsFor(SoundTab.NOTIFICATIONS).isNotEmpty())

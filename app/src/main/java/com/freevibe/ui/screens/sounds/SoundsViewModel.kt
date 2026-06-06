@@ -102,6 +102,7 @@ class SoundsViewModel @Inject constructor(
 
     val autoPreview = prefs.autoPreviewSounds.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), true)
     val previewVolume = prefs.soundPreviewVolume.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0.7f)
+    val youtubeProviderEnabled = prefs.youtubeProviderEnabled.stateIn(viewModelScope, SharingStarted.Eagerly, true)
 
     private val _previewReadyIds = MutableStateFlow<Set<String>>(emptySet())
     val previewReadyIds = _previewReadyIds.asStateFlow()
@@ -165,6 +166,16 @@ class SoundsViewModel @Inject constructor(
     private fun fetchTopHits() {
         viewModelScope.launch {
             try {
+                if (!isYouTubeProviderEnabled()) {
+                    val fallbackHits = rankSounds(
+                        sounds = bundledContent.getRingtones(),
+                        tab = SoundTab.RINGTONES,
+                        filter = SoundQualityFilter.BEST,
+                    ).take(5)
+                    _topHits.value = fallbackHits
+                    schedulePreviewPrebuffer(fallbackHits)
+                    return@launch
+                }
                 val blocked = try {
                     prefs.ytSoundBlockedWords.first()
                         .split(",").map { it.trim() }.filter { it.isNotBlank() }
@@ -242,6 +253,18 @@ class SoundsViewModel @Inject constructor(
     fun selectTab(tab: SoundTab) {
         stopPlayback()
         communityJob?.cancel()
+        if (tab == SoundTab.YOUTUBE && !youtubeProviderEnabled.value) {
+            _state.update {
+                it.copy(
+                    selectedTab = SoundTab.RINGTONES, query = "", sounds = emptyList(),
+                    currentPage = 1, hasMore = true, error = null, filterKey = nextFilterKey(),
+                    isRefreshing = false,
+                    searchReturnTab = SoundTab.RINGTONES,
+                )
+            }
+            loadSounds()
+            return
+        }
         _state.update {
             it.copy(
                 selectedTab = tab, query = "", sounds = emptyList(),
@@ -274,6 +297,10 @@ class SoundsViewModel @Inject constructor(
 
     fun searchYouTube(query: String) {
         if (query.isBlank()) return
+        if (!youtubeProviderEnabled.value) {
+            _state.update { it.copy(error = youtubeDisabledMessage()) }
+            return
+        }
         stopPlayback()
         _state.update {
             it.copy(
@@ -289,6 +316,10 @@ class SoundsViewModel @Inject constructor(
     }
 
     fun importYouTubeUrl(url: String) {
+        if (!youtubeProviderEnabled.value) {
+            _state.update { it.copy(error = youtubeDisabledMessage()) }
+            return
+        }
         val videoId = extractYouTubeId(url)
         if (videoId == null) {
             _state.update { it.copy(error = "Not a valid YouTube URL") }
@@ -371,14 +402,14 @@ class SoundsViewModel @Inject constructor(
         }
         when (returnTab) {
             SoundTab.COMMUNITY -> loadCommunityTab()
-            SoundTab.YOUTUBE -> loadDefaultYouTube()
+            SoundTab.YOUTUBE -> if (youtubeProviderEnabled.value) loadDefaultYouTube() else selectTab(SoundTab.RINGTONES)
             else -> loadSounds()
         }
     }
 
     fun clearYouTubeSearch() {
         stopPlayback()
-        loadDefaultYouTube()
+        if (youtubeProviderEnabled.value) loadDefaultYouTube() else selectTab(SoundTab.RINGTONES)
     }
 
     fun loadMore() {
@@ -396,6 +427,10 @@ class SoundsViewModel @Inject constructor(
                 loadCommunityTab(isRefresh = true)
             }
             SoundTab.YOUTUBE -> {
+                if (!youtubeProviderEnabled.value) {
+                    selectTab(SoundTab.RINGTONES)
+                    return
+                }
                 val query = _state.value.query
                 if (query.isBlank()) {
                     loadDefaultYouTube(isRefresh = true)
@@ -468,6 +503,10 @@ class SoundsViewModel @Inject constructor(
 
     fun togglePlayback(sound: Sound) {
         val soundKey = sound.stableKey()
+        if (sound.source == ContentSource.YOUTUBE && !youtubeProviderEnabled.value) {
+            _state.update { it.copy(error = youtubeDisabledMessage()) }
+            return
+        }
         if (_state.value.playingId == soundKey) {
             stopPlayback()
         } else if (soundKey == _state.value.resolvingId) {
@@ -546,6 +585,7 @@ class SoundsViewModel @Inject constructor(
         sounds
             .asSequence()
             .filter { it.previewUrl.isNotBlank() }
+            .filter { it.source != ContentSource.YOUTUBE || youtubeProviderEnabled.value }
             .take(FIRST_VISIBLE_PREVIEW_COUNT)
             .forEach { sound ->
                 val key = sound.stableKey()
@@ -571,6 +611,10 @@ class SoundsViewModel @Inject constructor(
     }
 
     private fun startPlayback(sound: Sound) {
+        if (sound.source == ContentSource.YOUTUBE && !youtubeProviderEnabled.value) {
+            _state.update { it.copy(error = youtubeDisabledMessage()) }
+            return
+        }
         stopPlayback()
         val soundKey = sound.stableKey()
         if (sound.source == ContentSource.YOUTUBE) {
@@ -663,6 +707,7 @@ class SoundsViewModel @Inject constructor(
     fun isFavorite(sound: Sound): Flow<Boolean> = favoritesRepo.isFavorite(sound.favoriteIdentity())
 
     private fun shouldRefreshYouTubePreview(sound: Sound): Boolean {
+        if (!youtubeProviderEnabled.value) return false
         val videoId = sound.youtubeVideoId() ?: return false
         return sound.previewUrl.isBlank() || !youtubeRepo.isCached(videoId)
     }
@@ -670,6 +715,7 @@ class SoundsViewModel @Inject constructor(
     private suspend fun resolveDownloadUrl(sound: Sound): String? {
         val videoId = sound.youtubeVideoId()
         return if (videoId != null) {
+            if (!isYouTubeProviderEnabled()) return null
             youtubeRepo.getAudioStreamUrl(videoId)
         } else {
             soundUrlResolver.resolve(sound)
@@ -677,6 +723,7 @@ class SoundsViewModel @Inject constructor(
     }
 
     suspend fun loadSimilar(sound: Sound): List<Sound> {
+        if (!isYouTubeProviderEnabled()) return emptyList()
         val keywords = sound.name.split(WORD_SPLIT_REGEX)
             .filter { it.length > 2 }.take(4).joinToString(" ")
         if (keywords.isBlank()) return emptyList()
@@ -831,6 +878,35 @@ class SoundsViewModel @Inject constructor(
                 _state.update { it.copy(isLoading = true, error = null) }
             } else if (loadMore) {
                 _state.update { it.copy(isLoadingMore = true) }
+            }
+
+            if (!isYouTubeProviderEnabled()) {
+                if (loadMore) {
+                    _state.update {
+                        it.copy(
+                            isLoadingMore = false,
+                            hasMore = false,
+                        )
+                    }
+                    return@launch
+                }
+                val fallbackSounds = rankSounds(
+                    sounds = bundledSoundsFor(loadTab),
+                    tab = loadTab,
+                    filter = _state.value.qualityFilter,
+                )
+                _state.update {
+                    it.copy(
+                        sounds = fallbackSounds,
+                        isLoading = false,
+                        isLoadingMore = false,
+                        isRefreshing = false,
+                        hasMore = false,
+                        error = if (loadTab == SoundTab.SEARCH) youtubeDisabledMessage() else null,
+                    )
+                }
+                schedulePreviewPrebuffer(fallbackSounds)
+                return@launch
             }
 
             val allResults = mutableListOf<Sound>()
@@ -999,6 +1075,8 @@ class SoundsViewModel @Inject constructor(
     )
 
     private suspend fun buildQueries(s: SoundsUiState): QuerySet {
+        if (!isYouTubeProviderEnabled()) return QuerySet(emptyList())
+
         fun compactQueries(vararg queries: String): List<String> =
             queries.map { it.trim() }
                 .filter { it.isNotBlank() }
@@ -1028,6 +1106,13 @@ class SoundsViewModel @Inject constructor(
                 ytQueries = compactQueries(s.query, "${s.query} sound effect", "${s.query} ringtone"),
             )
         }
+    }
+
+    private fun bundledSoundsFor(tab: SoundTab): List<Sound> = when (tab) {
+        SoundTab.RINGTONES -> bundledContent.getRingtones()
+        SoundTab.NOTIFICATIONS -> bundledContent.getNotifications()
+        SoundTab.ALARMS -> bundledContent.getAlarms()
+        else -> emptyList()
     }
 
     private fun tabDurationRange(s: SoundsUiState): Pair<Int, Int> = when (s.selectedTab) {
@@ -1090,6 +1175,10 @@ class SoundsViewModel @Inject constructor(
     }
 
     private fun loadDefaultYouTube(isRefresh: Boolean = false) {
+        if (!youtubeProviderEnabled.value) {
+            selectTab(SoundTab.RINGTONES)
+            return
+        }
         loadJob?.cancel()
         _state.update {
             it.copy(
@@ -1123,6 +1212,17 @@ class SoundsViewModel @Inject constructor(
             ?: PreferencesManager.defaultRingtoneQuery()
 
     private fun executeYouTubeSearch(query: String) {
+        if (!youtubeProviderEnabled.value) {
+            _state.update {
+                it.copy(
+                    isLoading = false,
+                    isRefreshing = false,
+                    hasMore = false,
+                    error = youtubeDisabledMessage(),
+                )
+            }
+            return
+        }
         loadJob?.cancel()
         loadJob = viewModelScope.launch {
             runYouTubeSearch(query)
@@ -1136,6 +1236,18 @@ class SoundsViewModel @Inject constructor(
         rankTab: SoundTab = SoundTab.YOUTUBE,
     ) {
         try {
+            if (!isYouTubeProviderEnabled()) {
+                _state.update {
+                    it.copy(
+                        sounds = emptyList(),
+                        isLoading = false,
+                        isRefreshing = false,
+                        hasMore = false,
+                        error = youtubeDisabledMessage(),
+                    )
+                }
+                return
+            }
             val blocked = try {
                 prefs.ytSoundBlockedWords.first()
                     .split(",").map { it.trim() }.filter { it.isNotBlank() }
@@ -1200,6 +1312,10 @@ class SoundsViewModel @Inject constructor(
         else -> e.message ?: "Something went wrong"
     }
 
+    private suspend fun isYouTubeProviderEnabled(): Boolean = prefs.youtubeProviderEnabled.first()
+
+    private fun youtubeDisabledMessage(): String = "YouTube features are disabled in Settings"
+
     fun uploadSound(
         localUri: android.net.Uri,
         name: String,
@@ -1229,6 +1345,7 @@ class SoundsViewModel @Inject constructor(
         const val FIRST_VISIBLE_PREVIEW_COUNT = 5
         val ACTIVE_SOUND_SOURCES = setOf(
             ContentSource.YOUTUBE,
+            ContentSource.BUNDLED,
         )
     }
 }

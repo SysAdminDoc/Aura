@@ -385,10 +385,10 @@ val providerRuntimeControls = listOf(
     ProviderRuntimeControl(
         source = ContentSource.YOUTUBE,
         surfaces = "Sound tabs, sound search, pasted URL import, top hits, similar sounds, video wallpaper feed.",
-        status = ProviderRuntimeControlStatus.MISSING,
-        currentControl = "Query customization and blocked words only; no legal-mode or source-enabled flag.",
-        disabledBehavior = "No source-disabled state; failures surface as unavailable audio/video sources.",
-        followUp = "Add a legal-mode flag that removes YouTube tabs/search/import/video paths and blocks stream resolution.",
+        status = ProviderRuntimeControlStatus.COVERED,
+        currentControl = "Settings exposes a YouTube provider-enabled flag in addition to query customization and blocked words.",
+        disabledBehavior = "Disabled mode hides YouTube browsing, skips top hits and video discovery, falls back to bundled sounds, and blocks stream resolution before cache or downloader use.",
+        followUp = "Carry the flag into channel-specific distribution defaults when store profiles are added.",
     ),
     ProviderRuntimeControl(
         source = ContentSource.PEXELS,

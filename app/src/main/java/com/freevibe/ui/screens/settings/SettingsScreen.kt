@@ -88,6 +88,7 @@ fun SettingsScreen(
     val ytNotificationsQuery by viewModel.ytNotificationsQuery.collectAsStateWithLifecycle()
     val ytAlarmsQuery by viewModel.ytAlarmsQuery.collectAsStateWithLifecycle()
     val ytBlockedWords by viewModel.ytBlockedWords.collectAsStateWithLifecycle()
+    val youtubeProviderEnabled by viewModel.youtubeProviderEnabled.collectAsStateWithLifecycle()
     val previewVolume by viewModel.previewVolume.collectAsStateWithLifecycle()
     val redditSubs by viewModel.redditSubs.collectAsStateWithLifecycle()
     val preferredRes by viewModel.preferredRes.collectAsStateWithLifecycle()
@@ -934,6 +935,17 @@ fun SettingsScreen(
                 title = "YouTube search queries",
                 subtitle = "Refine ringtone, notification, and alarm searches for each tab",
                 onClick = { showYtSoundEditor = true },
+            )
+            SettingsToggle(
+                icon = Icons.Default.SmartDisplay,
+                title = "Enable YouTube features",
+                subtitle = if (youtubeProviderEnabled) {
+                    "Shows YouTube sound search, imports, top hits, and video wallpaper results"
+                } else {
+                    "Hides YouTube browsing and blocks stream resolution"
+                },
+                checked = youtubeProviderEnabled,
+                onCheckedChange = { viewModel.setYoutubeProviderEnabled(it) },
             )
             SettingsItem(
                 icon = Icons.Default.Block,
@@ -2261,6 +2273,7 @@ private fun SourceDiagnosticsEmptyState() {
 private fun SourceDiagnosticsSummary(snapshots: List<SourceMetrics.SourceStats>) {
     val totalRequests = remember(snapshots) { snapshots.sumOf { it.totalRequests } }
     val failures = remember(snapshots) { snapshots.sumOf { it.failureCount } }
+    val disabled = remember(snapshots) { snapshots.sumOf { it.disabledCount } }
     val activeSources = remember(snapshots) { snapshots.count { it.totalRequests > 0L } }
     val p95Worst = remember(snapshots) { snapshots.mapNotNull { it.p95Ms }.maxOrNull() }
 
@@ -2271,6 +2284,7 @@ private fun SourceDiagnosticsSummary(snapshots: List<SourceMetrics.SourceStats>)
         DiagnosticMetricPill("Sources", activeSources.toString(), MaterialTheme.colorScheme.primary)
         DiagnosticMetricPill("Requests", totalRequests.toString(), MaterialTheme.colorScheme.secondary)
         DiagnosticMetricPill("Failures", failures.toString(), if (failures > 0) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.tertiary)
+        DiagnosticMetricPill("Disabled", disabled.toString(), MaterialTheme.colorScheme.tertiary)
         DiagnosticMetricPill("Worst p95", p95Worst?.let { "${it}ms" } ?: "n/a", MaterialTheme.colorScheme.tertiary)
     }
 }
@@ -2300,7 +2314,12 @@ private fun DiagnosticMetricPill(
 private fun SourceDiagnosticRow(stat: SourceMetrics.SourceStats) {
     val successPercent = (stat.successRatio * 100).toInt().coerceIn(0, 100)
     val hasFailure = stat.failureCount > 0L
-    val tint = if (hasFailure) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary
+    val hasDisabled = stat.disabledCount > 0L
+    val tint = when {
+        hasFailure -> MaterialTheme.colorScheme.error
+        hasDisabled -> MaterialTheme.colorScheme.tertiary
+        else -> MaterialTheme.colorScheme.primary
+    }
     val latency = if (stat.p50Ms != null) {
         "p50 ${stat.p50Ms}ms / p95 ${stat.p95Ms}ms"
     } else {
@@ -2323,8 +2342,16 @@ private fun SourceDiagnosticRow(stat: SourceMetrics.SourceStats) {
             ) {
                 Text(sourceDisplayName(stat.source), style = MaterialTheme.typography.titleSmall)
                 HighlightPill(
-                    label = if (hasFailure) "Needs attention" else "Healthy",
-                    icon = if (hasFailure) Icons.Default.Error else Icons.Default.CheckCircle,
+                    label = when {
+                        hasFailure -> "Needs attention"
+                        hasDisabled -> "Disabled"
+                        else -> "Healthy"
+                    },
+                    icon = when {
+                        hasFailure -> Icons.Default.Error
+                        hasDisabled -> Icons.Default.Block
+                        else -> Icons.Default.CheckCircle
+                    },
                     tint = tint,
                 )
             }
@@ -2338,7 +2365,7 @@ private fun SourceDiagnosticRow(stat: SourceMetrics.SourceStats) {
                 trackColor = MaterialTheme.colorScheme.surfaceContainerHigh,
             )
             Text(
-                "${stat.totalRequests} requests • $successPercent% success • $latency",
+                "${stat.totalRequests} requests • $successPercent% success • ${stat.disabledCount} disabled • $latency",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )

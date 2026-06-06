@@ -9,6 +9,7 @@ import com.freevibe.data.local.PreferencesManager
 import com.freevibe.data.remote.pexels.PexelsApi
 import com.freevibe.data.repository.YouTubeRepository
 import com.freevibe.data.repository.VoteRepository
+import com.freevibe.service.SourceMetrics
 import com.freevibe.service.VIDEO_WALLPAPER_SCALE_MODE_ZOOM
 import com.freevibe.service.VideoWallpaperSelectionResult
 import com.freevibe.service.VideoWallpaperStorage
@@ -78,6 +79,7 @@ class VideoWallpapersViewModel @Inject constructor(
     private val prefs: PreferencesManager,
     private val okHttpClient: OkHttpClient,
     private val videoWallpaperStorage: VideoWallpaperStorage,
+    private val sourceMetrics: SourceMetrics,
     val voteRepo: VoteRepository,
 ) : ViewModel() {
 
@@ -235,6 +237,14 @@ class VideoWallpapersViewModel @Inject constructor(
         viewModelScope.launch {
             _state.update { it.copy(isApplying = item.id) }
             try {
+                if (item.source == "YouTube" && !prefs.youtubeProviderEnabled.first()) {
+                    sourceMetrics.recordDisabled("youtube")
+                    withContext(Dispatchers.Main) {
+                        Toast.makeText(context, "YouTube features are disabled in Settings", Toast.LENGTH_SHORT).show()
+                    }
+                    _state.update { it.copy(isApplying = null) }
+                    return@launch
+                }
                 // Get stream URL (cached or resolve)
                 val videoUrl = streamUrls[item.id] ?: run {
                     if (com.freevibe.BuildConfig.DEBUG) Log.d("VideoWP", "Resolving stream URL for apply: ${item.videoId}")
@@ -327,6 +337,7 @@ class VideoWallpapersViewModel @Inject constructor(
             val newItems = mutableListOf<VideoWallpaperItem>()
             val attemptedSources = java.util.Collections.synchronizedSet(mutableSetOf<String>())
             val failedSources = java.util.Collections.synchronizedSet(mutableSetOf<String>())
+            val youtubeEnabled = prefs.youtubeProviderEnabled.first()
 
             kotlinx.coroutines.supervisorScope {
                 // 1. Pexels
@@ -422,6 +433,10 @@ class VideoWallpapersViewModel @Inject constructor(
 
                 // 3. YouTube
                 val ytJob = async(Dispatchers.IO) {
+                    if (!youtubeEnabled) {
+                        sourceMetrics.recordDisabled("youtube")
+                        return@async emptyList<VideoWallpaperItem>()
+                    }
                     try {
                         attemptedSources += "YouTube"
                         val service = NewPipe.getService(ServiceList.YouTube.serviceId)
@@ -562,7 +577,7 @@ class VideoWallpapersViewModel @Inject constructor(
             }
 
             // Pre-resolve YouTube URLs
-            mixed.filter { it.source == "YouTube" && !streamUrls.containsKey(it.id) }.let { ytItems ->
+            mixed.filter { youtubeEnabled && it.source == "YouTube" && !streamUrls.containsKey(it.id) }.let { ytItems ->
                 val sem = kotlinx.coroutines.sync.Semaphore(5)
                 ytItems.forEach { item ->
                     launch {

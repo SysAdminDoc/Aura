@@ -128,6 +128,127 @@ class SoundsViewModelTest {
     }
 
     @Test
+    fun `youtube disabled uses bundled ringtone fallback and skips provider calls`() = runTest(dispatcher) {
+        val youtubeRepo = mockk<YouTubeRepository>()
+        val freesoundRepo = mockk<FreesoundRepository>()
+        val freesoundV2Repo = mockk<FreesoundV2Repository>()
+        val audiusRepo = mockk<AudiusRepository>()
+        val ccMixterRepo = mockk<CcMixterRepository>()
+        val soundCloudRepo = mockk<SoundCloudRepository>()
+        val bundled = listOf(testSound("bundled_ring", ContentSource.BUNDLED, "Bundled Ring"))
+
+        stubCommonDependencies(
+            youtubeRepo = youtubeRepo,
+            freesoundRepo = freesoundRepo,
+            freesoundV2Repo = freesoundV2Repo,
+            audiusRepo = audiusRepo,
+            ccMixterRepo = ccMixterRepo,
+            soundCloudRepo = soundCloudRepo,
+        )
+
+        val viewModel = createViewModel(
+            youtubeRepo = youtubeRepo,
+            freesoundRepo = freesoundRepo,
+            freesoundV2Repo = freesoundV2Repo,
+            audiusRepo = audiusRepo,
+            ccMixterRepo = ccMixterRepo,
+            soundCloudRepo = soundCloudRepo,
+            youtubeProviderEnabled = false,
+            bundledRingtones = bundled,
+        )
+
+        advanceUntilIdle()
+
+        val state = viewModel.state.value
+        assertEquals(listOf("bundled_ring"), state.sounds.map { it.id })
+        assertEquals(listOf("bundled_ring"), viewModel.topHits.value.map { it.id })
+        assertFalse(state.hasMore)
+        coVerify(exactly = 0) { youtubeRepo.searchSounds(any(), any(), any(), any()) }
+        coVerify(exactly = 0) { youtubeRepo.getAudioPreviewUrl(any()) }
+    }
+
+    @Test
+    fun `youtube disabled blocks youtube tab search and import`() = runTest(dispatcher) {
+        val youtubeRepo = mockk<YouTubeRepository>()
+        val freesoundRepo = mockk<FreesoundRepository>()
+        val freesoundV2Repo = mockk<FreesoundV2Repository>()
+        val audiusRepo = mockk<AudiusRepository>()
+        val ccMixterRepo = mockk<CcMixterRepository>()
+        val soundCloudRepo = mockk<SoundCloudRepository>()
+
+        stubCommonDependencies(
+            youtubeRepo = youtubeRepo,
+            freesoundRepo = freesoundRepo,
+            freesoundV2Repo = freesoundV2Repo,
+            audiusRepo = audiusRepo,
+            ccMixterRepo = ccMixterRepo,
+            soundCloudRepo = soundCloudRepo,
+        )
+
+        val viewModel = createViewModel(
+            youtubeRepo = youtubeRepo,
+            freesoundRepo = freesoundRepo,
+            freesoundV2Repo = freesoundV2Repo,
+            audiusRepo = audiusRepo,
+            ccMixterRepo = ccMixterRepo,
+            soundCloudRepo = soundCloudRepo,
+            youtubeProviderEnabled = false,
+        )
+
+        advanceUntilIdle()
+        clearMocks(youtubeRepo, answers = false, recordedCalls = true)
+
+        viewModel.searchYouTube("focus")
+        viewModel.importYouTubeUrl("https://www.youtube.com/watch?v=abc12345678")
+        advanceUntilIdle()
+
+        assertEquals("YouTube features are disabled in Settings", viewModel.state.value.error)
+        coVerify(exactly = 0) { youtubeRepo.searchSounds(any(), any(), any(), any()) }
+        coVerify(exactly = 0) { youtubeRepo.getAudioPreviewUrl(any()) }
+    }
+
+    @Test
+    fun `youtube disabled blocks youtube download resolution`() = runTest(dispatcher) {
+        val youtubeRepo = mockk<YouTubeRepository>()
+        val freesoundRepo = mockk<FreesoundRepository>()
+        val freesoundV2Repo = mockk<FreesoundV2Repository>()
+        val audiusRepo = mockk<AudiusRepository>()
+        val ccMixterRepo = mockk<CcMixterRepository>()
+        val soundCloudRepo = mockk<SoundCloudRepository>()
+        val downloadManager = mockk<DownloadManager>(relaxed = true)
+
+        stubCommonDependencies(
+            youtubeRepo = youtubeRepo,
+            freesoundRepo = freesoundRepo,
+            freesoundV2Repo = freesoundV2Repo,
+            audiusRepo = audiusRepo,
+            ccMixterRepo = ccMixterRepo,
+            soundCloudRepo = soundCloudRepo,
+        )
+
+        val viewModel = createViewModel(
+            youtubeRepo = youtubeRepo,
+            freesoundRepo = freesoundRepo,
+            freesoundV2Repo = freesoundV2Repo,
+            audiusRepo = audiusRepo,
+            ccMixterRepo = ccMixterRepo,
+            soundCloudRepo = soundCloudRepo,
+            youtubeProviderEnabled = false,
+            downloadManagerOverride = downloadManager,
+        )
+
+        advanceUntilIdle()
+        val youtubeSound = testSound("yt_abc12345678", ContentSource.YOUTUBE, "Blocked Download")
+
+        viewModel.downloadSound(youtubeSound)
+        advanceUntilIdle()
+
+        assertEquals("Could not resolve audio stream URL", viewModel.state.value.error)
+        coVerify(exactly = 0) { youtubeRepo.getAudioStreamUrl(any()) }
+        coVerify(exactly = 0) { downloadManager.downloadSound(any(), any(), any(), any()) }
+    }
+
+    @Test
     fun `initial load prebuffers first five provider preview urls`() = runTest(dispatcher) {
         val youtubeRepo = mockk<YouTubeRepository>()
         val freesoundRepo = mockk<FreesoundRepository>()
@@ -899,6 +1020,7 @@ class SoundsViewModelTest {
         audioPreviewCacheOverride: AudioPreviewCache? = null,
         downloadManagerOverride: DownloadManager? = null,
         favoritesRepoOverride: FavoritesRepository? = null,
+        youtubeProviderEnabled: Boolean = true,
     ): SoundsViewModel {
         val prefs = mockk<PreferencesManager>()
         every { prefs.autoPreviewSounds } returns flowOf(true)
@@ -907,6 +1029,7 @@ class SoundsViewModelTest {
         every { prefs.ytSoundQueryNotifications } returns flowOf("Notifications")
         every { prefs.ytSoundQueryAlarms } returns flowOf("Alarms")
         every { prefs.ytSoundBlockedWords } returns flowOf("mix,podcast")
+        every { prefs.youtubeProviderEnabled } returns flowOf(youtubeProviderEnabled)
 
         val searchHistoryRepo = mockk<SearchHistoryRepository>()
         every { searchHistoryRepo.getRecentSoundSearches(any()) } returns flowOf(emptyList<SearchHistoryEntity>())
