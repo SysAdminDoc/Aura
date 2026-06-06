@@ -85,6 +85,7 @@ class MappersTest {
             tags = listOf("art", "digital"), colors = listOf("#000", "#fff"),
             fileSize = 1_000_000, fileType = "image/png",
             sourcePageUrl = "https://wallhaven.cc/w/99",
+            license = "CC BY",
             uploaderName = "creator", views = 42, favorites = 7,
         )
         val restored = original.toFavoriteEntity().toWallpaper()
@@ -96,6 +97,7 @@ class MappersTest {
         assertEquals(original.colors, restored.colors)
         assertEquals(original.category, restored.category)
         assertEquals(original.uploaderName, restored.uploaderName)
+        assertEquals(original.license, restored.license)
         assertEquals(original.fileSize, restored.fileSize)
         assertEquals(original.views, restored.views)
         assertEquals(original.favorites, restored.favorites)

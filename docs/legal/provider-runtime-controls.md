@@ -52,6 +52,9 @@ runtime-control row.
   sound/wallpaper community feeds, uploads, vote actions, creator profile
   navigation, and creator follow/unfollow calls. Data lifecycle, deletion,
   takedown, and App Check hardening remain separate community compliance items.
+  New community uploads require selected license, rights attestation, uploader
+  UID, timestamp, and optional HTTPS source URL metadata; see
+  [community-upload-rights.md](community-upload-rights.md).
 - Generated wallpapers now have a default-on source flag covering the Wallpapers
   Generate chip, the generator API-key surface, and the ViewModel request gate.
   Saved generated wallpapers stay visible because they are local user content.

@@ -394,6 +394,7 @@ fun WallpaperDetailScreen(
                         ) {
                             DetailInfoChip(hints.resolutionLabel)
                             DetailInfoChip(hints.orientationLabel)
+                            if (wp.license.isNotBlank()) DetailInfoChip(wp.license)
                             if (hints.isAmoled) DetailInfoChip("AMOLED-friendly")
                             if (hints.isIconSafe) DetailInfoChip("Icon-safe")
                             if (wp.views > 0) DetailInfoChip("${formatCompactCount(wp.views)} views")
@@ -676,6 +677,7 @@ fun WallpaperDetailScreen(
                         onFindSimilar(wp)
                     },
                     uploaderName = wp.uploaderName,
+                    license = wp.license,
                 )
             }
 
@@ -1016,6 +1018,7 @@ private fun MoreActionsSheet(
     onCollection: () -> Unit,
     onFindSimilar: (() -> Unit)?,
     uploaderName: String = "",
+    license: String = "",
 ) {
     ModalBottomSheet(
         onDismissRequest = onDismiss,
@@ -1034,6 +1037,15 @@ private fun MoreActionsSheet(
                     "Uploaded by $uploaderName",
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+            if (license.isNotBlank()) {
+                Text(
+                    license,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
                 )
             }
             Spacer(Modifier.height(4.dp))

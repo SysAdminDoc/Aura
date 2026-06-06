@@ -48,6 +48,8 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.compose.AsyncImagePainter
 import coil.compose.SubcomposeAsyncImage
 import coil.compose.SubcomposeAsyncImageContent
+import com.freevibe.data.model.COMMUNITY_UPLOAD_LICENSES
+import com.freevibe.data.model.CommunityUploadRights
 import com.freevibe.data.model.FavoriteIdentity
 import com.freevibe.data.model.Wallpaper
 import com.freevibe.data.model.favoriteIdentity
@@ -238,7 +240,7 @@ fun WallpapersScreen(
         WallpaperUploadDialog(
             isUploading = state.isUploadingWallpaper,
             uploadProgress = state.wallpaperUploadProgress,
-            onUpload = { name, category, tags ->
+            onUpload = { name, category, tags, rights ->
                 awaitingWallpaperUploadResult = true
                 selectedWallpaperUploadUri?.let { uri ->
                     viewModel.uploadCommunityWallpaper(
@@ -246,6 +248,7 @@ fun WallpapersScreen(
                         name = name,
                         category = category,
                         tags = tags,
+                        rights = rights,
                     )
                 }
             },
@@ -1456,11 +1459,14 @@ private data class DiscoverCollectionShortcut(
 private fun WallpaperUploadDialog(
     isUploading: Boolean,
     uploadProgress: Float,
-    onUpload: (name: String, category: String, tags: List<String>) -> Unit,
+    onUpload: (name: String, category: String, tags: List<String>, rights: CommunityUploadRights) -> Unit,
     onDismiss: () -> Unit,
 ) {
     var name by remember { mutableStateOf("") }
     var selectedCategory by remember { mutableStateOf("other") }
+    var selectedLicense by remember { mutableStateOf(COMMUNITY_UPLOAD_LICENSES.first()) }
+    var sourceUrl by remember { mutableStateOf("") }
+    var rightsAttested by remember { mutableStateOf(false) }
     var tagsText by remember { mutableStateOf("") }
     val categories = listOf(
         "other" to "General",
@@ -1512,6 +1518,45 @@ private fun WallpaperUploadDialog(
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth(),
                 )
+                Text("License", style = MaterialTheme.typography.labelMedium)
+                FlowRow(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    COMMUNITY_UPLOAD_LICENSES.forEach { license ->
+                        FilterChip(
+                            selected = selectedLicense == license,
+                            onClick = { selectedLicense = license },
+                            label = { Text(license) },
+                            shape = RoundedCornerShape(8.dp),
+                        )
+                    }
+                }
+                OutlinedTextField(
+                    value = sourceUrl,
+                    onValueChange = { sourceUrl = it },
+                    label = { Text("Source URL") },
+                    placeholder = { Text("https://example.com/source") },
+                    supportingText = { Text("Optional HTTPS link for credited source material.") },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth(),
+                )
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    Checkbox(
+                        checked = rightsAttested,
+                        onCheckedChange = { rightsAttested = it },
+                        enabled = !isUploading,
+                    )
+                    Text(
+                        "I own or have rights to share this wallpaper under the selected license.",
+                        style = MaterialTheme.typography.bodySmall,
+                        modifier = Modifier.weight(1f),
+                    )
+                }
                 if (isUploading) {
                     LinearProgressIndicator(
                         progress = { uploadProgress },
@@ -1527,8 +1572,19 @@ private fun WallpaperUploadDialog(
         },
         confirmButton = {
             Button(
-                onClick = { onUpload(name.trim(), selectedCategory, parsedTags) },
-                enabled = !isUploading && name.isNotBlank(),
+                onClick = {
+                    onUpload(
+                        name.trim(),
+                        selectedCategory,
+                        parsedTags,
+                        CommunityUploadRights(
+                            license = selectedLicense,
+                            rightsAttested = rightsAttested,
+                            sourceUrl = sourceUrl.trim(),
+                        ),
+                    )
+                },
+                enabled = !isUploading && name.isNotBlank() && rightsAttested,
                 shape = RoundedCornerShape(10.dp),
             ) { Text("Upload") }
         },

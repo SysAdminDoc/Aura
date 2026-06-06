@@ -5,8 +5,10 @@ import android.net.Uri
 import android.provider.OpenableColumns
 import android.webkit.MimeTypeMap
 import com.freevibe.data.local.PreferencesManager
+import com.freevibe.data.model.CommunityUploadRights
 import com.freevibe.data.model.ContentSource
 import com.freevibe.data.model.Sound
+import com.freevibe.data.model.validateCommunityUploadRights
 import com.freevibe.service.CommunityIdentityProvider
 import com.freevibe.service.SourceMetrics
 import com.google.firebase.database.DataSnapshot
@@ -77,6 +79,7 @@ class UploadRepository @Inject constructor(
         name: String,
         category: String, // ringtone, notification, alarm
         tags: List<String>,
+        rights: CommunityUploadRights,
         onProgress: (Float) -> Unit = {},
     ): Result<String> = try {
         if (!isCommunityProviderEnabled()) {
@@ -91,6 +94,11 @@ class UploadRepository @Inject constructor(
         if (sanitizedName.isBlank()) {
             throw IllegalArgumentException("Sound name cannot be empty")
         }
+        val validatedRights = validateCommunityUploadRights(
+            license = rights.license,
+            rightsAttested = rights.rightsAttested,
+            sourceUrl = rights.sourceUrl,
+        )
 
         val normalizedCategory = normalizeUploadCategory(category)
         val normalizedTags = sanitizeUploadTags(tags)
@@ -139,7 +147,12 @@ class UploadRepository @Inject constructor(
                 "originalFileName" to uploadInfo.originalFileName,
                 "uploadedAt" to timestamp,
                 "uploaderId" to uploaderId,
+                "uploaderUid" to uploaderId,
                 "uploaderLabel" to uploaderLabel,
+                "license" to validatedRights.license,
+                "rightsAttested" to true,
+                "rightsAttestedAt" to timestamp,
+                "sourceUrl" to validatedRights.sourceUrl,
                 "votes" to 0,
             )
             pushRef.setValue(metadata).await()
@@ -193,6 +206,8 @@ class UploadRepository @Inject constructor(
                     val cat = child.child("category").getValue(String::class.java) ?: ""
                     val uploaderId = child.child("uploaderId").getValue(String::class.java) ?: ""
                     val uploaderLabel = child.child("uploaderLabel").getValue(String::class.java) ?: ""
+                    val license = child.child("license").getValue(String::class.java)?.ifBlank { null } ?: "User Upload"
+                    val sourceUrl = child.child("sourceUrl").getValue(String::class.java).orEmpty()
                     val tags = child.child("tags").children.mapNotNull { it.getValue(String::class.java) }
                     val fileType = child.child("fileType").getValue(String::class.java) ?: ""
 
@@ -206,9 +221,9 @@ class UploadRepository @Inject constructor(
                         duration = 0.0,
                         fileType = fileType,
                         tags = tags,
-                        license = "User Upload",
+                        license = license,
                         uploaderName = uploaderLabel.ifBlank { uploaderId.take(8) },
-                        sourcePageUrl = "",
+                        sourcePageUrl = sourceUrl,
                     )
                 }.sortedByDescending { sound ->
                     votesByKey[sound.id.removePrefix("cu_")] ?: 0

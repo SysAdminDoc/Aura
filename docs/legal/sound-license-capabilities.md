@@ -14,7 +14,9 @@ metadata: `source`, `license`, `uploaderName`, `sourcePageUrl`, and
 | No-derivatives variants | Allowed with attribution metadata | Allowed with attribution metadata | Allowed with source/uploader/license text | Disabled | Disabled |
 | YouTube | Confirmation required | Confirmation required | Allowed as a source-link share | Disabled | Disabled |
 | SoundCloud | Disabled until source permissions are reviewed | Disabled until source permissions are reviewed | Allowed as a source-link share | Disabled | Disabled |
-| Community uploads | Confirmation required until rights attestation exists | Confirmation required until rights attestation exists | Allowed with stored provenance | Confirmation required until rights attestation exists | Disabled until reviewed |
+| Community uploads with selected CC0/CC BY metadata | Allowed by selected license | Allowed by selected license | Allowed with stored provenance | Allowed by selected license | Disabled until reviewed |
+| Community uploads with selected CC BY-NC metadata | Confirmation required | Confirmation required | Allowed with stored provenance | Confirmation required | Disabled until reviewed |
+| Legacy community uploads without attested license metadata | Confirmation required | Confirmation required | Allowed with stored provenance | Confirmation required | Disabled until reviewed |
 | Missing remote license metadata | Disabled | Disabled | Disabled | Disabled | Disabled |
 | Source unavailable | Disabled | Disabled | Disabled | Disabled | Disabled |
 
@@ -40,8 +42,7 @@ metadata: `source`, `license`, `uploaderName`, `sourcePageUrl`, and
 
 ## Remaining Follow-Up
 
-- Community upload forms still need explicit rights attestation and selected
-  license metadata before community sounds can move from confirmation-required
-  to normal allowed actions.
+- Report and takedown flows should show the stored license/source context once
+  the moderation queue is implemented.
 - The standalone audio editor should keep enforcing the same policy if new
   entry points are added outside Sound Detail.

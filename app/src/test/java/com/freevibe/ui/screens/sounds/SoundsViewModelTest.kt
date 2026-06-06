@@ -2,6 +2,7 @@ package com.freevibe.ui.screens.sounds
 
 import android.content.Context
 import com.freevibe.data.local.PreferencesManager
+import com.freevibe.data.model.CommunityUploadRights
 import com.freevibe.data.model.ContentType
 import com.freevibe.data.model.ContentSource
 import com.freevibe.data.model.FavoriteEntity
@@ -326,7 +327,7 @@ class SoundsViewModelTest {
         assertEquals(SoundTab.RINGTONES, viewModel.state.value.selectedTab)
 
         viewModel.startCommunityRecording()
-        viewModel.uploadSound(mockk(), "Tone", "ringtone")
+        viewModel.uploadSound(mockk(), "Tone", "ringtone", rights = CommunityUploadRights("CC0", true))
         viewModel.upvote("SOUND::COMMUNITY::cu_one")
         advanceUntilIdle()
 

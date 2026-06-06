@@ -23,7 +23,7 @@ fail when a `ContentSource` enum value lacks a disclosure row.
 | Pixabay | Active | Photos and videos | Pixabay Content License | Uploader/source page | Respect provider cache/rate-limit expectations. |
 | Klipy | Legacy | Animated media | Provider-defined media terms | Creator/source metadata | Legacy records only. |
 | SoundCloud | Legacy | Sounds/music | Provider-defined creator/content terms | Artist, track, source page | Dormant by default; avoid unaudited ripping/downloading paths. |
-| Aura Community | Community | User uploads | Uploader-provided/user-generated content | Uploader/device identity and stored source metadata | Firebase-backed upload, vote, favorite, apply, and report flows. |
+| Aura Community | Community | User uploads | Uploader-selected CC0/CC BY/CC BY-NC or legacy User Upload | Uploader identity, selected license, attestation timestamp, and optional HTTPS source URL | Firebase-backed upload, vote, favorite, apply, and report flows; new uploads require rights attestation. |
 | Aura Picks | Active | Curated bundled sounds | Curated source license, currently CC0 1.0 | Upstream Freesound source, creator, license | Bundled metadata must be reviewable in release notices. |
 | AI-generated | Generated | Generated wallpapers | Generator/provider terms plus user prompt context | Provider, creation time, prompt/style metadata | Store only user-generated outputs and restore/export/apply metadata. |
 
@@ -32,3 +32,5 @@ Runtime disablement and unavailable-source behavior are tracked separately in
 dependency notice generation, native/copyleft packets, and item-level license
 capability gates remain tracked in `ROADMAP.md`. Sound action capabilities are
 documented in [sound-license-capabilities.md](sound-license-capabilities.md).
+Community upload rights metadata is documented in
+[community-upload-rights.md](community-upload-rights.md).

@@ -229,7 +229,7 @@ Append-only Cycle 3 handoff. Every item below is source-backed in `docs/research
   - Touches: sound models, sound repositories, editor/apply/share flows, Aura Originals curation, licenses screen.
   - Acceptance: each sound has normalized license metadata and action capabilities; restricted actions are disabled or require confirmation; Aura Originals accepts only reviewed CC0/compatible assets; source link/uploader/license appear in every detail/export path.
   - Verify: matrix tests for CC0, CC BY, CC BY-NC, SoundCloud, YouTube, community, bundled; editor/apply/share flows respect capability gates.
-  - Progress 2026-06-06: Cycle 49 added `SoundLicensePolicy.kt` with normalized license/action capabilities, Room v16 favorite-license persistence, favorites export/import preservation, ViewModel gates before apply/download stream resolution, Sound Detail/quick-apply/contact disabled or confirmation-required actions, provenance-rich share text, and `docs/legal/sound-license-capabilities.md`. Remaining work: community upload rights attestation and explicit selected license metadata so community sounds can move beyond the generic confirmation-required `User Upload` policy.
+  - Progress 2026-06-06: Cycle 49 added `SoundLicensePolicy.kt` with normalized license/action capabilities, Room v16 favorite-license persistence, favorites export/import preservation, ViewModel gates before apply/download stream resolution, Sound Detail/quick-apply/contact disabled or confirmation-required actions, provenance-rich share text, and `docs/legal/sound-license-capabilities.md`. Cycle 50 added selected community upload licenses and rights attestation so new community sounds use item-specific license decisions while legacy rows keep the `User Upload` fallback. Remaining work: keep standalone editor entry points aligned if new routes are added outside Sound Detail.
 
 - [~] 🤖 🔬 **P2 — Source deletion and takedown reconciliation**
   - Why: Reddit and other user-generated sources can delete, hide, suspend, or remove content after Aura cached it.
@@ -683,7 +683,7 @@ Append-only Cycle 13 handoff. Every item below is source-backed in `docs/researc
   - Touches: content models/entities, migrations, remote mappers, favorites/downloads/cache restoration, detail/share/apply/edit flows, provider policy docs, licenses screen.
   - Acceptance: every content item can expose source, source page, creator/uploader, normalized license, provider terms, takedown/report URL, and allowed actions; unsupported or risky actions are disabled or require source-specific confirmation; favorites/downloads preserve provenance.
   - Verify: fixture items for Pexels, Pixabay, Reddit, YouTube, Freesound, ccMixter, Audius, SoundCloud, community, bundled, AI-generated, and local content render provenance consistently across cards, detail screens, share sheets, favorites, downloads, and editors.
-  - Progress 2026-06-06: Cycle 49 implemented the sound-specific action-capability slice: normalized license metadata, favorite-license persistence, detail/share/apply/download/contact gates, and matrix tests. Wallpapers, video wallpapers, provider takedown/report URLs, and community rights attestation remain separate provenance slices.
+  - Progress 2026-06-06: Cycle 49 implemented the sound-specific action-capability slice: normalized license metadata, favorite-license persistence, detail/share/apply/download/contact gates, and matrix tests. Cycle 50 added selected license/source/attestation metadata for community sounds and wallpapers, plus wallpaper license preservation and detail display. Wallpapers, video wallpapers, provider takedown/report URLs, and moderation/report reasons remain separate provenance slices.
 
 - [ ] 🤖 🔬 **P0 — IP takedown/report queue for community and mirrored content**
   - Why: Google Play can require evidence of rights to use copyrighted content, and Aura needs one route for community-upload reports plus another for provider/source-deletion reconciliation.
@@ -699,12 +699,13 @@ Append-only Cycle 13 handoff. Every item below is source-backed in `docs/researc
   - Acceptance: Play/Izzy/F-Droid/GitHub distribution profiles declare whether YouTube is enabled; disabled profiles remove YouTube tabs/search/default queries/video wallpaper paths and avoid promotional copy/screenshots that encourage unauthorized downloads; fallback sources remain useful.
   - Verify: run app with YouTube disabled and browse Sounds/Videos; confirm no yt-dlp/NewPipe resolution or cache writes; review Play metadata/screenshots for copyrighted-download language; GitHub profile can still enable YouTube when explicitly chosen.
 
-- [ ] 🤖 🔬 **P1 — Community upload rights attestation and license metadata**
+- [~] 🤖 🔬 **P1 — Community upload rights attestation and license metadata**
   - Why: Community uploads publish audio/wallpaper metadata with `uploaderId`/`uploaderLabel`, but no explicit rights attestation, license, source URL, model/property release state, or takedown contact. Community sounds currently show `license = "User Upload"`.
   - Evidence: `UploadRepository.uploadSound()`; `WallpaperUploadRepository.uploadWallpaper()`; `SoundsScreen.kt` upload dialog; Play IP policy; Pixabay/Pexels third-party-rights warnings.
   - Touches: upload dialogs, metadata schema, RTDB rules, community cards/detail screens, privacy/policy docs, deletion/takedown runbook.
   - Acceptance: uploader must attest they own or have rights to share the media, choose a license/usage label, optionally provide source URL/credit, acknowledge public visibility and takedown rules, and understand that infringing content may be removed; metadata stores that evidence.
   - Verify: upload blocked until attestation complete; uploaded metadata includes license/source/rights fields; detail and report flows show license/takedown context; admin can remove content by rights reason.
+  - Progress 2026-06-06: Cycle 50 added `CommunityUploadRights.kt`, sound/wallpaper upload dialog license chips, rights confirmation, optional HTTPS source URL capture, upload-path validation before media upload, stored license/rights/source fields, RTDB rule validation, community sound selected-license action gates, wallpaper license mapping, detail display, and `docs/legal/community-upload-rights.md`. Remaining work: public takedown copy, report/detail actions, and admin hide/delete/restore by rights reason.
 
 - [ ] 🤖 🔬 **P1 — Aura Originals provenance gate**
   - Why: The curation guide correctly requires CC0, source URL, and sha256, but the release gate does not yet prove every bundled sound has reviewed provenance and a retroactive removal path.
@@ -2892,15 +2893,22 @@ Stars/dates as of research pass 2026-05-16.
 - Sound license implementation — `SoundLicensePolicy.kt`, `Models.kt`, `Database.kt`, `DatabaseMigrations.kt`, Room schema v16, `Mappers.kt`, `FavoritesExporter.kt`, `SoundsViewModel.kt`, `SoundDetailScreen.kt`, `SoundsScreen.kt`, `ContactPickerScreen.kt`, and focused sound policy/mapper/export/viewmodel tests.
 - Verification outputs — focused SoundLicensePolicy, Mappers, FavoritesExporterValidation, SoundsViewModel, and ContactPickerViewModel unit tests.
 
+## Appendix AZ — Cycle 50 Sources
+
+- Cycle 50 implementation record — [docs/research/cycle-50-2026-06-06.md](docs/research/cycle-50-2026-06-06.md).
+- Community upload rights matrix — [docs/legal/community-upload-rights.md](docs/legal/community-upload-rights.md).
+- Community upload rights implementation — `CommunityUploadRights.kt`, `UploadRepository.kt`, `WallpaperUploadRepository.kt`, `SoundsScreen.kt`, `WallpapersScreen.kt`, `SoundLicensePolicy.kt`, `WallpaperDetailScreen.kt`, `Mappers.kt`, and `database.rules.json`.
+- Verification outputs — focused CommunityUploadRights, SoundLicensePolicy, UploadRepositoryValidation, WallpaperUploadRepositoryValidation, SoundsViewModel, WallpapersViewModel, and Mappers unit tests.
+
 ## Continuation State
 
 ### Last Completed Cycle
 
-Cycle 49: Sound license capability gates and favorite license persistence.
+Cycle 50: Community upload rights attestation and selected license metadata.
 
 ### Current Focus
 
-Start Cycle 50 with community upload rights attestation and selected license metadata for community sounds/wallpapers. Commit and push completed work when the active project contract allows it.
+Start Cycle 51 with community moderation/report queue integration for rights, source-removed, and safety reports. Commit and push completed work when the active project contract allows it.
 
 ### Important Findings So Far
 
@@ -2944,11 +2952,12 @@ Start Cycle 50 with community upload rights attestation and selected license met
 - Pexels now has enhancement-only guardrails in wallpaper Discover and video-wallpaper discovery: Pexels rows can enrich mixed feeds, but Pexels-only batches are dropped. Focused tests prove provider-off Discover still serves Wallhaven/Pixabay base inventory and Pexels photo rows retain creator/source-page context.
 - Wallpaper and sound apply/download paths now classify explicit 404/410/gone/removed/deleted provider failures and mark saved favorites unavailable with provider-specific reasons; `DownloadManager` also marks matching download-history rows unavailable on failed re-downloads.
 - Sounds now have item-level license capability gates: YouTube apply/download requires confirmation, SoundCloud is link-only until reviewed, CC BY-NC requires confirmation, no-derivatives disables editing, missing remote licenses disable live-source actions, saved sound favorites preserve license metadata through Room v16 and favorites import/export, and share text includes source/uploader/license provenance.
+- Community uploads now require selected CC0/CC BY/CC BY-NC metadata, rights attestation, authenticated uploader UID, attestation timestamp, and optional HTTPS source URL before public sound/wallpaper upload metadata is written. Legacy community sound rows without selected license metadata keep the `User Upload` fallback.
 - Recent history was checked with `rtk git log -10 --oneline --decorate` for this pass.
 
 ### Next Best Actions
 
-1. Add community upload rights attestation and selected license metadata for community sounds/wallpapers.
+1. Add community moderation/report queue integration for rights, source-removed, and safety reports.
 2. Run a real GitHub Actions manual release dry run after secrets are confirmed available and archive the run URL in the release docs.
 3. Add deeper UI verification for the licenses screen on an emulator or screenshot lane when a device/runtime is available.
 4. Preserve exact Termux package commit/build-log evidence for FFmpeg if the release owner can obtain it from upstream or a reproducible rebuild.

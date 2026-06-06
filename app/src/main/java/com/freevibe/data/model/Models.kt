@@ -41,6 +41,7 @@ data class Wallpaper(
     val fileSize: Long = 0,
     val fileType: String = "",
     val sourcePageUrl: String = "",
+    val license: String = "",
     val uploaderName: String = "",
     val views: Int = 0,
     val favorites: Int = 0,

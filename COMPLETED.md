@@ -140,6 +140,11 @@ next pass can resume quickly.
   preservation, confirmation gates for restricted apply/download actions,
   disabled states for link-only or missing-license content, and provenance-rich
   sound share text.
+- Completed Cycle 50 community upload rights metadata: sound and wallpaper
+  uploads now require selected CC0/CC BY/CC BY-NC metadata plus rights
+  attestation, store uploader UID/attestation/source fields, validate them in
+  RTDB rules, feed selected community sound licenses into action gates, and show
+  wallpaper license metadata on detail surfaces.
 
 ## 2026-06-05
 

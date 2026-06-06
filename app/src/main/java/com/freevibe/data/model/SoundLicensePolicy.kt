@@ -100,9 +100,11 @@ fun Sound.soundLicenseCapabilities(): SoundLicenseCapabilities {
             disable(actions, SoundAction.BUNDLE, "SoundCloud sounds cannot be included in Aura Originals.")
         }
         ContentSource.COMMUNITY -> {
-            requireConfirmation(actions, SoundAction.APPLY, "Confirm community upload rights before applying this sound.")
-            requireConfirmation(actions, SoundAction.DOWNLOAD, "Confirm community upload rights before downloading this sound.")
-            requireConfirmation(actions, SoundAction.EDIT, "Confirm community upload rights before editing this sound.")
+            if (normalizedLicense == "User Upload") {
+                requireConfirmation(actions, SoundAction.APPLY, "Confirm community upload rights before applying this sound.")
+                requireConfirmation(actions, SoundAction.DOWNLOAD, "Confirm community upload rights before downloading this sound.")
+                requireConfirmation(actions, SoundAction.EDIT, "Confirm community upload rights before editing this sound.")
+            }
             disable(actions, SoundAction.BUNDLE, "Community uploads need rights review before Aura Originals use.")
         }
         ContentSource.LOCAL -> {

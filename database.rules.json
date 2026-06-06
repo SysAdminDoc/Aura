@@ -43,7 +43,12 @@
         "category": { ".validate": "newData.isString() && newData.val().matches(/^(ringtone|notification|alarm)$/)" },
         "tags": {
           "$idx": { ".validate": "newData.isString() && newData.val().length <= 24" }
-        }
+        },
+        "uploaderUid": { ".validate": "newData.isString() && (newData.val() === auth.uid || auth.token.admin === true)" },
+        "license": { ".validate": "newData.isString() && newData.val().matches(/^(CC0|CC BY|CC BY-NC)$/)" },
+        "rightsAttested": { ".validate": "newData.val() === true" },
+        "rightsAttestedAt": { ".validate": "newData.isNumber() && newData.val() > 0" },
+        "sourceUrl": { ".validate": "newData.isString() && newData.val().length <= 2048 && newData.val().matches(/^$|^https:\\/\\/[^\\s]+$/)" }
       }
     },
     "community_wallpapers": {
@@ -51,7 +56,12 @@
       "$uploadId": {
         ".write": "auth != null && (!data.exists() || data.child('uploaderUid').val() === auth.uid || auth.token.admin === true)",
         "name": { ".validate": "newData.isString() && newData.val().length <= 80" },
-        "category": { ".validate": "newData.isString() && newData.val().matches(/^(abstract|amoled|nature|minimal|city|space|other)$/)" }
+        "category": { ".validate": "newData.isString() && newData.val().matches(/^(abstract|amoled|nature|minimal|city|space|other)$/)" },
+        "uploaderUid": { ".validate": "newData.isString() && (newData.val() === auth.uid || auth.token.admin === true)" },
+        "license": { ".validate": "newData.isString() && newData.val().matches(/^(CC0|CC BY|CC BY-NC)$/)" },
+        "rightsAttested": { ".validate": "newData.val() === true" },
+        "rightsAttestedAt": { ".validate": "newData.isNumber() && newData.val() > 0" },
+        "sourceUrl": { ".validate": "newData.isString() && newData.val().length <= 2048 && newData.val().matches(/^$|^https:\\/\\/[^\\s]+$/)" }
       }
     },
     "creator_profiles": {

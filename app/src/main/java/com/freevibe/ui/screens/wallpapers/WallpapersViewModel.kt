@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import android.content.Context
 import android.net.Uri
 import com.freevibe.data.local.PreferencesManager
+import com.freevibe.data.model.CommunityUploadRights
 import com.freevibe.data.model.ContentSource
 import com.freevibe.data.model.FavoriteIdentity
 import com.freevibe.data.model.Wallpaper
@@ -610,6 +611,7 @@ class WallpapersViewModel @Inject constructor(
         name: String,
         category: String,
         tags: List<String>,
+        rights: CommunityUploadRights,
     ) {
         if (_state.value.isUploadingWallpaper) return
         if (!communityProviderEnabled.value) {
@@ -636,6 +638,7 @@ class WallpapersViewModel @Inject constructor(
                 name = name,
                 category = category,
                 tags = tags,
+                rights = rights,
                 onProgress = { progress ->
                     _state.update { state -> state.copy(wallpaperUploadProgress = progress) }
                 },

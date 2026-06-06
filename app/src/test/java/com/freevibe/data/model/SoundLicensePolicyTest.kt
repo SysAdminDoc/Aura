@@ -81,6 +81,21 @@ class SoundLicensePolicyTest {
     }
 
     @Test
+    fun `community uploads with selected CC0 license allow normal personal actions`() {
+        val capabilities = sound(
+            source = ContentSource.COMMUNITY,
+            license = "CC0",
+        ).soundLicenseCapabilities()
+
+        assertEquals("CC0", capabilities.normalizedLicense)
+        assertTrue(capabilities.canUse(SoundAction.APPLY))
+        assertTrue(capabilities.canUse(SoundAction.DOWNLOAD))
+        assertTrue(capabilities.canUse(SoundAction.EDIT))
+        assertTrue(capabilities.canUse(SoundAction.SHARE))
+        assertFalse(capabilities.canUse(SoundAction.BUNDLE))
+    }
+
+    @Test
     fun `missing remote license disables sound actions`() {
         val capabilities = sound(
             source = ContentSource.FREESOUND,

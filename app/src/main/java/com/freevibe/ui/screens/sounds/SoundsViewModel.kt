@@ -6,6 +6,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.freevibe.data.model.ContentSource
 import com.freevibe.data.model.ContentType
+import com.freevibe.data.model.CommunityUploadRights
 import com.freevibe.data.model.FavoriteIdentity
 import com.freevibe.data.model.SoundAction
 import com.freevibe.data.model.SoundActionDecision
@@ -1428,6 +1429,7 @@ class SoundsViewModel @Inject constructor(
         name: String,
         category: String,
         tags: List<String> = emptyList(),
+        rights: CommunityUploadRights,
     ) {
         if (_state.value.isUploading) return
         if (communityActionBlocked()) return
@@ -1438,6 +1440,7 @@ class SoundsViewModel @Inject constructor(
                 name = name,
                 category = category,
                 tags = tags,
+                rights = rights,
                 onProgress = { progress ->
                     _state.update { it.copy(uploadProgress = progress) }
                 },

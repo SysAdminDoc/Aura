@@ -46,6 +46,8 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.freevibe.data.model.ContentSource
 import com.freevibe.data.model.ContentType
+import com.freevibe.data.model.COMMUNITY_UPLOAD_LICENSES
+import com.freevibe.data.model.CommunityUploadRights
 import com.freevibe.data.model.Sound
 import com.freevibe.data.model.SoundAction
 import com.freevibe.data.model.SoundActionDecision
@@ -188,9 +190,9 @@ fun SoundsScreen(
         UploadDialog(
             isUploading = state.isUploading,
             uploadProgress = state.uploadProgress,
-            onUpload = { name, category, tags ->
+            onUpload = { name, category, tags, rights ->
                 awaitingUploadResult = true
-                viewModel.uploadSound(uploadUri, name, category, tags)
+                viewModel.uploadSound(uploadUri, name, category, tags, rights)
             },
             onDismiss = {
                 if (!state.isUploading) {
@@ -1431,11 +1433,14 @@ private fun RecordingDialog(
 private fun UploadDialog(
     isUploading: Boolean,
     uploadProgress: Float,
-    onUpload: (name: String, category: String, tags: List<String>) -> Unit,
+    onUpload: (name: String, category: String, tags: List<String>, rights: CommunityUploadRights) -> Unit,
     onDismiss: () -> Unit,
 ) {
     var name by remember { mutableStateOf("") }
     var selectedCategory by remember { mutableStateOf("ringtone") }
+    var selectedLicense by remember { mutableStateOf(COMMUNITY_UPLOAD_LICENSES.first()) }
+    var sourceUrl by remember { mutableStateOf("") }
+    var rightsAttested by remember { mutableStateOf(false) }
     var tagsText by remember { mutableStateOf("") }
     val categories = listOf("ringtone" to "Ringtone", "notification" to "Notification", "alarm" to "Alarm")
     val parsedTags = remember(tagsText) {
@@ -1476,6 +1481,42 @@ private fun UploadDialog(
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth(),
                 )
+                Text("License", style = MaterialTheme.typography.labelMedium)
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    COMMUNITY_UPLOAD_LICENSES.forEach { license ->
+                        FilterChip(
+                            selected = selectedLicense == license,
+                            onClick = { selectedLicense = license },
+                            label = { Text(license) },
+                            shape = RoundedCornerShape(8.dp),
+                        )
+                    }
+                }
+                OutlinedTextField(
+                    value = sourceUrl,
+                    onValueChange = { sourceUrl = it },
+                    label = { Text("Source URL") },
+                    placeholder = { Text("https://example.com/source") },
+                    supportingText = { Text("Optional HTTPS link for credited source material.") },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth(),
+                )
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    Checkbox(
+                        checked = rightsAttested,
+                        onCheckedChange = { rightsAttested = it },
+                        enabled = !isUploading,
+                    )
+                    Text(
+                        "I own or have rights to share this sound under the selected license.",
+                        style = MaterialTheme.typography.bodySmall,
+                        modifier = Modifier.weight(1f),
+                    )
+                }
                 if (isUploading) {
                     LinearProgressIndicator(
                         progress = { uploadProgress },
@@ -1491,8 +1532,19 @@ private fun UploadDialog(
         },
         confirmButton = {
             Button(
-                onClick = { onUpload(name.trim(), selectedCategory, parsedTags) },
-                enabled = !isUploading && name.isNotBlank(),
+                onClick = {
+                    onUpload(
+                        name.trim(),
+                        selectedCategory,
+                        parsedTags,
+                        CommunityUploadRights(
+                            license = selectedLicense,
+                            rightsAttested = rightsAttested,
+                            sourceUrl = sourceUrl.trim(),
+                        ),
+                    )
+                },
+                enabled = !isUploading && name.isNotBlank() && rightsAttested,
                 shape = RoundedCornerShape(10.dp),
             ) { Text("Upload") }
         },

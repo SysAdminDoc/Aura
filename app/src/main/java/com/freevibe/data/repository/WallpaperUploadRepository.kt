@@ -8,9 +8,11 @@ import android.net.Uri
 import android.provider.OpenableColumns
 import android.webkit.MimeTypeMap
 import com.freevibe.data.local.PreferencesManager
+import com.freevibe.data.model.CommunityUploadRights
 import com.freevibe.data.model.ContentSource
 import com.freevibe.data.model.SearchResult
 import com.freevibe.data.model.Wallpaper
+import com.freevibe.data.model.validateCommunityUploadRights
 import com.freevibe.service.ColorExtractor
 import com.freevibe.service.CommunityIdentityProvider
 import com.freevibe.service.SourceMetrics
@@ -91,6 +93,7 @@ class WallpaperUploadRepository @Inject constructor(
         name: String,
         category: String,
         tags: List<String>,
+        rights: CommunityUploadRights,
         onProgress: (Float) -> Unit = {},
     ): Result<Wallpaper> = withContext(Dispatchers.IO) {
         try {
@@ -102,6 +105,11 @@ class WallpaperUploadRepository @Inject constructor(
             val wallpapersRefInstance = wallpapersRef ?: throw IllegalStateException("Firebase Database not available")
             val sanitizedName = name.trim().take(100)
             if (sanitizedName.isBlank()) throw IllegalArgumentException("Wallpaper name cannot be empty")
+            val validatedRights = validateCommunityUploadRights(
+                license = rights.license,
+                rightsAttested = rights.rightsAttested,
+                sourceUrl = rights.sourceUrl,
+            )
 
             val normalizedCategory = normalizeWallpaperUploadCategory(category)
             val normalizedTags = sanitizeWallpaperUploadTags(tags)
@@ -153,7 +161,12 @@ class WallpaperUploadRepository @Inject constructor(
                     "originalFileName" to uploadInfo.originalFileName,
                     "uploadedAt" to timestamp,
                     "uploaderId" to uploaderId,
+                    "uploaderUid" to uploaderId,
                     "uploaderLabel" to uploaderLabel,
+                    "license" to validatedRights.license,
+                    "rightsAttested" to true,
+                    "rightsAttestedAt" to timestamp,
+                    "sourceUrl" to validatedRights.sourceUrl,
                     "votes" to 0,
                 )
                 pushRef.setValue(metadata).await()
@@ -172,6 +185,8 @@ class WallpaperUploadRepository @Inject constructor(
                         colors = prepared.colors,
                         fileSize = prepared.bytes.size.toLong(),
                         fileType = "image/jpeg",
+                        sourcePageUrl = validatedRights.sourceUrl,
+                        license = validatedRights.license,
                         uploaderName = uploaderLabel,
                     ),
                 )
@@ -221,6 +236,8 @@ class WallpaperUploadRepository @Inject constructor(
         val thumbnailUrl = child.child("thumbnailUrl").getValue(String::class.java) ?: fullUrl
         val uploaderId = child.child("uploaderId").getValue(String::class.java).orEmpty()
         val uploaderLabel = child.child("uploaderLabel").getValue(String::class.java).orEmpty()
+        val license = child.child("license").getValue(String::class.java).orEmpty()
+        val sourceUrl = child.child("sourceUrl").getValue(String::class.java).orEmpty()
         return Wallpaper(
             id = communityWallpaperId(key),
             source = ContentSource.COMMUNITY,
@@ -233,6 +250,8 @@ class WallpaperUploadRepository @Inject constructor(
             colors = child.stringList("colors"),
             fileSize = child.child("fileSize").getValue(Long::class.java) ?: 0L,
             fileType = child.child("fileType").getValue(String::class.java).orEmpty(),
+            sourcePageUrl = sourceUrl,
+            license = license,
             uploaderName = uploaderLabel.ifBlank { uploaderId.take(8) },
         )
     }
