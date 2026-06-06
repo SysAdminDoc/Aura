@@ -10,6 +10,8 @@ import android.util.Log
 import com.freevibe.data.local.DownloadDao
 import com.freevibe.data.model.ContentType
 import com.freevibe.data.model.DownloadEntity
+import com.freevibe.data.model.SOURCE_AVAILABILITY_UNAVAILABLE
+import com.freevibe.data.model.sourceUnavailableReasonForFailure
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
@@ -228,6 +230,9 @@ class DownloadManager @Inject constructor(
         })
     } catch (e: Exception) {
         if (e is CancellationException) throw e
+        sourceUnavailableReasonForFailure(contentSource, e)?.let { reason ->
+            downloadDao.updateSourceAvailability(historyId, SOURCE_AVAILABILITY_UNAVAILABLE, reason)
+        }
         updateProgress(historyId, DownloadProgress(historyId, fileName, 0f, 0, 0, error = e.message))
         Result.failure(e)
     }

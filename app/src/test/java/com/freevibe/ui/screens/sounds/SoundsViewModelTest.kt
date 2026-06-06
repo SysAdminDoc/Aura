@@ -8,6 +8,7 @@ import com.freevibe.data.model.FavoriteEntity
 import com.freevibe.data.model.SearchResult
 import com.freevibe.data.model.Sound
 import com.freevibe.data.model.SearchHistoryEntity
+import com.freevibe.data.model.favoriteIdentity
 import com.freevibe.data.model.stableKey
 import com.freevibe.data.repository.AudiusRepository
 import com.freevibe.data.repository.CcMixterRepository
@@ -708,6 +709,57 @@ class SoundsViewModelTest {
                 source = ContentSource.YOUTUBE.name,
             )
         }
+    }
+
+    @Test
+    fun `downloadSound marks saved favorite unavailable when provider returns gone status`() = runTest(dispatcher) {
+        val youtubeRepo = mockk<YouTubeRepository>()
+        val freesoundRepo = mockk<FreesoundRepository>()
+        val freesoundV2Repo = mockk<FreesoundV2Repository>()
+        val audiusRepo = mockk<AudiusRepository>()
+        val ccMixterRepo = mockk<CcMixterRepository>()
+        val soundCloudRepo = mockk<SoundCloudRepository>()
+        val downloadManager = mockk<DownloadManager>()
+        val favoritesRepo = mockk<FavoritesRepository>()
+        val sound = testSound("fs_42", ContentSource.FREESOUND, "Removed tone").copy(
+            downloadUrl = "https://cdn.freesound.org/removed.mp3",
+            sourcePageUrl = "https://freesound.org/s/42/",
+        )
+
+        stubCommonDependencies(
+            youtubeRepo = youtubeRepo,
+            freesoundRepo = freesoundRepo,
+            freesoundV2Repo = freesoundV2Repo,
+            audiusRepo = audiusRepo,
+            ccMixterRepo = ccMixterRepo,
+            soundCloudRepo = soundCloudRepo,
+        )
+        coEvery { favoritesRepo.markSourceUnavailable(any(), any()) } returns Unit
+        coEvery { downloadManager.downloadSound(any(), any(), any(), any(), any()) } returns
+            Result.failure(IllegalStateException("Download failed: HTTP 410"))
+
+        val viewModel = createViewModel(
+            youtubeRepo = youtubeRepo,
+            freesoundRepo = freesoundRepo,
+            freesoundV2Repo = freesoundV2Repo,
+            audiusRepo = audiusRepo,
+            ccMixterRepo = ccMixterRepo,
+            soundCloudRepo = soundCloudRepo,
+            downloadManagerOverride = downloadManager,
+            favoritesRepoOverride = favoritesRepo,
+        )
+
+        advanceUntilIdle()
+        viewModel.downloadSound(sound)
+        advanceUntilIdle()
+
+        coVerify(exactly = 1) {
+            favoritesRepo.markSourceUnavailable(
+                sound.favoriteIdentity(),
+                "Freesound media is unavailable or removed (gone)",
+            )
+        }
+        assertEquals("Download failed: HTTP 410", viewModel.state.value.error)
     }
 
     @Test

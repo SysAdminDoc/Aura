@@ -9,6 +9,7 @@ import com.freevibe.data.model.SearchResult
 import com.freevibe.data.model.SearchHistoryEntity
 import com.freevibe.data.model.Wallpaper
 import com.freevibe.data.model.WallpaperCollectionEntity
+import com.freevibe.data.model.favoriteIdentity
 import com.freevibe.data.model.stableKey
 import com.freevibe.data.repository.CollectionRepository
 import com.freevibe.data.repository.FavoritesRepository
@@ -418,6 +419,47 @@ class WallpapersViewModelTest {
                 source = ContentSource.PEXELS.name,
             )
         }
+    }
+
+    @Test
+    fun `downloadWallpaper marks saved favorite unavailable when provider returns removed status`() = runTest(dispatcher) {
+        val wallpaperRepo = mockk<WallpaperRepository>()
+        val redditRepo = mockk<RedditRepository>()
+        val downloadManager = mockk<DownloadManager>()
+        val favoritesRepo = mockk<FavoritesRepository>()
+        val wallpaper = wallpaper(
+            id = "removed_42",
+            color = "#101820",
+            source = ContentSource.PEXELS,
+            fullUrl = "https://images.pexels.com/photos/removed.jpg",
+        )
+
+        stubCommonDependencies(
+            wallpaperRepo = wallpaperRepo,
+            redditRepo = redditRepo,
+        )
+        coEvery { favoritesRepo.markSourceUnavailable(any(), any()) } returns Unit
+        coEvery {
+            downloadManager.downloadWallpaper(any(), any(), any(), any())
+        } returns Result.failure(IllegalStateException("Download failed: HTTP 404"))
+
+        val viewModel = createViewModel(
+            wallpaperRepo = wallpaperRepo,
+            redditRepo = redditRepo,
+            downloadManagerOverride = downloadManager,
+            favoritesRepoOverride = favoritesRepo,
+        )
+
+        viewModel.downloadWallpaper(wallpaper)
+        advanceUntilIdle()
+
+        coVerify(exactly = 1) {
+            favoritesRepo.markSourceUnavailable(
+                wallpaper.favoriteIdentity(),
+                "Pexels media is unavailable or removed",
+            )
+        }
+        assertEquals("Download failed: HTTP 404", viewModel.state.value.error)
     }
 
     @Test

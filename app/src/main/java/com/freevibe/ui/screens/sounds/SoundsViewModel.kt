@@ -10,6 +10,7 @@ import com.freevibe.data.model.FavoriteIdentity
 import com.freevibe.data.model.Sound
 import com.freevibe.data.local.PreferencesManager
 import com.freevibe.data.model.favoriteIdentity
+import com.freevibe.data.model.sourceUnavailableReasonForFailure
 import com.freevibe.data.model.stableKey
 import com.freevibe.data.repository.FavoritesRepository
 import com.freevibe.data.repository.SearchHistoryRepository
@@ -721,7 +722,10 @@ class SoundsViewModel @Inject constructor(
                     }
                     _state.update { it.copy(isApplying = false, applySuccess = "Set as $label") }
                 }
-                .onFailure { e -> _state.update { it.copy(isApplying = false, error = e.message) } }
+                .onFailure { e ->
+                    markSoundSourceUnavailableIfRemoved(sound, e)
+                    _state.update { it.copy(isApplying = false, error = e.message) }
+                }
         }
     }
 
@@ -737,8 +741,13 @@ class SoundsViewModel @Inject constructor(
                 fileName = buildSoundDownloadFileName(sound, ext),
                 type = currentDownloadType(),
                 source = sound.source.name,
+            ).fold(
+                onSuccess = { _state.update { it.copy(applySuccess = "Download started") } },
+                onFailure = { error ->
+                    markSoundSourceUnavailableIfRemoved(sound, error)
+                    _state.update { it.copy(error = error.message) }
+                },
             )
-            _state.update { it.copy(applySuccess = "Download started") }
         }
     }
 
@@ -758,6 +767,12 @@ class SoundsViewModel @Inject constructor(
         "Aura_${sound.source.name.lowercase(java.util.Locale.ROOT)}_${sound.id}_${sound.name.take(24)}.$extension"
 
     fun isFavorite(sound: Sound): Flow<Boolean> = favoritesRepo.isFavorite(sound.favoriteIdentity())
+
+    private suspend fun markSoundSourceUnavailableIfRemoved(sound: Sound, failure: Throwable) {
+        sourceUnavailableReasonForFailure(sound.source, failure)?.let { reason ->
+            favoritesRepo.markSourceUnavailable(sound.favoriteIdentity(), reason)
+        }
+    }
 
     private fun shouldRefreshYouTubePreview(sound: Sound): Boolean {
         if (!youtubeProviderEnabled.value) return false

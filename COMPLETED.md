@@ -131,6 +131,10 @@ next pass can resume quickly.
   discovery now drop Pexels-only batches unless non-Pexels base inventory is
   present, disabled-Pexels Discover still returns Wallhaven/Pixabay fallback
   inventory, and Pexels photo rows keep creator/source-page attribution fields.
+- Completed Cycle 48 provider removal failure reconciliation: explicit
+  404/410/gone/removed/deleted provider failures now mark saved wallpaper/sound
+  favorites unavailable during apply/download paths, and failed re-downloads
+  mark matching download-history rows unavailable.
 
 ## 2026-06-05
 

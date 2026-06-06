@@ -10,6 +10,7 @@ import com.freevibe.data.model.FavoriteIdentity
 import com.freevibe.data.model.Wallpaper
 import com.freevibe.data.model.WallpaperTarget
 import com.freevibe.data.model.favoriteIdentity
+import com.freevibe.data.model.sourceUnavailableReasonForFailure
 import com.freevibe.data.model.stableKey
 import com.freevibe.data.repository.CollectionRepository
 import com.freevibe.data.repository.FavoritesRepository
@@ -451,6 +452,7 @@ class WallpapersViewModel @Inject constructor(
                     )
                 }
                 .onFailure { e ->
+                    markWallpaperSourceUnavailableIfRemoved(wallpaper, e)
                     _state.update { it.copy(isApplying = false, error = e.message) }
                 }
         }
@@ -514,7 +516,10 @@ class WallpapersViewModel @Inject constructor(
                 url = wallpaper.fullUrl,
                 fileName = buildWallpaperDownloadFileName(wallpaper, ext),
                 source = wallpaper.source.name,
-            )
+            ).onFailure { error ->
+                markWallpaperSourceUnavailableIfRemoved(wallpaper, error)
+                _state.update { it.copy(error = error.message) }
+            }
         }
     }
 
@@ -558,6 +563,12 @@ class WallpapersViewModel @Inject constructor(
     }
 
     fun isFavorite(wallpaper: Wallpaper): Flow<Boolean> = favoritesRepo.isFavorite(wallpaper.favoriteIdentity())
+
+    private suspend fun markWallpaperSourceUnavailableIfRemoved(wallpaper: Wallpaper, failure: Throwable) {
+        sourceUnavailableReasonForFailure(wallpaper.source, failure)?.let { reason ->
+            favoritesRepo.markSourceUnavailable(wallpaper.favoriteIdentity(), reason)
+        }
+    }
 
     fun clearError() = _state.update { it.copy(error = null, errorSource = null) }
     fun clearSuccess() = _state.update { it.copy(applySuccess = null) }

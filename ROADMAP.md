@@ -199,7 +199,7 @@ Append-only Cycle 3 handoff. Every item below is source-backed in `docs/research
   - Touches: provider repositories, `SourceMetrics`, Settings provider toggles, detail screens, downloader/apply flows, `docs/legal/provider-policy.md`.
   - Acceptance: every provider has a policy row covering attribution, source link, API cache TTL, media cache TTL, hotlinking, download/apply/share allowances, rate-limit handling, deletion behavior, and kill-switch default.
   - Verify: provider policy unit tests; Settings can disable each remote provider; disabled providers vanish from search/default feeds; existing favorites retain source-deleted/unavailable state without crashing.
-  - Progress 2026-06-05: central `ProviderDisclosure` rows now cover every `ContentSource`, `docs/legal/provider-policy.md` mirrors the matrix, and `ProviderDisclosureTest` fails when a source lacks policy coverage. Cycle 36 added checked runtime-control rows in `ProviderDisclosure.kt` and `docs/legal/provider-runtime-controls.md`; Cycles 37-42 added default-on runtime switches for YouTube, Reddit, Wallhaven, Pexels, Pixabay, Community, and Bing Daily. Cycles 43-44 added 24-hour fresh-cache paths plus 429 backoff for Pixabay photo and video metadata requests. Cycle 45 added a default-on generated-wallpapers source switch that hides generation entry points and blocks Stability requests when disabled. Cycle 46 added persisted unavailable-source states for saved favorites/downloads. Remaining policy gaps include Pexels first-run guardrails and action-level sound license capabilities.
+  - Progress 2026-06-05: central `ProviderDisclosure` rows now cover every `ContentSource`, `docs/legal/provider-policy.md` mirrors the matrix, and `ProviderDisclosureTest` fails when a source lacks policy coverage. Cycle 36 added checked runtime-control rows in `ProviderDisclosure.kt` and `docs/legal/provider-runtime-controls.md`; Cycles 37-42 added default-on runtime switches for YouTube, Reddit, Wallhaven, Pexels, Pixabay, Community, and Bing Daily. Cycles 43-44 added 24-hour fresh-cache paths plus 429 backoff for Pixabay photo and video metadata requests. Cycle 45 added a default-on generated-wallpapers source switch that hides generation entry points and blocks Stability requests when disabled. Cycle 46 added persisted unavailable-source states for saved favorites/downloads. Cycle 47 added Pexels enhancement-only guardrails. Cycle 48 added explicit remote-gone reconciliation for saved favorites and download history. Remaining policy gaps include action-level sound license capabilities and community moderation/report queue integration.
 
 - [x] 🤖 🔬 **P1 — Pexels usage guardrail and fallback plan**
   - Why: Pexels specifically rejects standalone wallpaper/gallery API replication. Aura must prove Pexels is an enhancement source, not the product's core inventory.
@@ -236,7 +236,7 @@ Append-only Cycle 3 handoff. Every item below is source-backed in `docs/research
   - Touches: detail reload paths, favorites/download metadata, source health, report queue from Cycle 1, cache cleanup.
   - Acceptance: source-deleted content stops appearing in remote catalog; favorites/downloads show unavailable/source-deleted state; user can remove local copy; moderator/report queue can hide community mirrors of removed content.
   - Verify: simulate source reload failure/deleted marker; favorite remains navigable but not misrepresented as live remote content; report queue accepts removal reason.
-  - Progress 2026-06-06: Cycle 46 added Room-backed `sourceAvailability`/`sourceAvailabilityReason` metadata for favorites and download history, v15 migration/schema, favorite export/import preservation, provider source names in new download records, and UI badges/detail warnings that hide live-source affordances when saved items are marked source-unavailable. Remaining work: provider-specific reload reconciliation and community moderation/report queue integration.
+  - Progress 2026-06-06: Cycle 46 added Room-backed `sourceAvailability`/`sourceAvailabilityReason` metadata for favorites and download history, v15 migration/schema, favorite export/import preservation, provider source names in new download records, and UI badges/detail warnings that hide live-source affordances when saved items are marked source-unavailable. Cycle 48 added a shared remote-gone classifier for explicit 404/410/gone/removed/deleted failures and wired wallpaper/sound apply/download paths plus download history to mark saved records `SOURCE_UNAVAILABLE`. Remaining work: provider catalog reload pruning and community moderation/report queue integration.
 
 ---
 
@@ -717,6 +717,7 @@ Append-only Cycle 13 handoff. Every item below is source-backed in `docs/researc
   - Touches: cache/favorite/download metadata, detail reload paths, source-health diagnostics, storage cleanup, user copy, report/takedown queue.
   - Acceptance: stale/source-deleted media stops appearing in remote catalog, favorites/downloads show a clear unavailable/local-only state, users can delete local copies, and provider terms decide whether offline copies are retained or purged.
   - Verify: simulate deleted Reddit post, removed Pexels/Pixabay result, unavailable YouTube video, and deleted community upload; detail screens do not misrepresent source status; cleanup removes policy-required local copies.
+  - Progress 2026-06-06: Cycle 46 added persisted unavailable-source state and saved-surface UI. Cycle 48 added explicit removed/gone failure classification for remote 404/410/gone/removed/deleted signals and marks saved favorites/download history unavailable when apply/download or re-download paths prove upstream removal.
 
 ---
 
@@ -2886,15 +2887,15 @@ Stars/dates as of research pass 2026-05-16.
 
 ### Last Completed Cycle
 
-Cycle 47: Pexels enhancement-only guardrails and provider-off fallback proof.
+Cycle 48: Provider removal failure reconciliation for saved items.
 
 ### Current Focus
 
-Start Cycle 48 with provider-specific reload reconciliation that marks saved items unavailable when upstream deletion/removal is detected. Commit and push completed work when the active project contract allows it.
+Start Cycle 49 with sound license capability gates for source-specific apply/download/share/edit restrictions. Commit and push completed work when the active project contract allows it.
 
 ### Important Findings So Far
 
-- `ROADMAP.md` has Cycle 18 through Cycle 47 research/implementation items; `docs/research/cycle-18-2026-06-06.md` through `docs/research/cycle-47-2026-06-06.md` have the source-backed analysis.
+- `ROADMAP.md` has Cycle 18 through Cycle 48 research/implementation items; `docs/research/cycle-18-2026-06-06.md` through `docs/research/cycle-48-2026-06-06.md` have the source-backed analysis.
 - `LicensesScreen.kt` still has manual dependency rows; content sources are already code-backed by `ProviderDisclosure.kt`.
 - `.github/workflows/release.yml` now publishes `THIRD-PARTY-NOTICES.md` and `NATIVE-COMPLIANCE.md` with the APK and includes both files in `SHA256SUMS.txt`; SBOM artifacts remain open.
 - `.github/workflows/verify.yml` and `.github/workflows/release.yml` now run `tools/dependency_notice_lock.py --mode check`, `tools/dependency_notice_lock.py --mode check-metadata`, `tools/native_compliance_inventory.py --mode check-lock`, `tools/dependency_overlay_check.py`, and `tools/dependency_license_policy.py` after `:app:releaseOssLicensesTask`.
@@ -2932,11 +2933,12 @@ Start Cycle 48 with provider-specific reload reconciliation that marks saved ite
 - Generated wallpapers now have a default-on `generated_content_provider_enabled` preference plus Settings switch that hides generation entry points and blocks Stability requests before prompt/key validation when disabled. Saved generated wallpapers remain visible as local user content.
 - Favorites and download history now have persisted `SOURCE_UNAVAILABLE` state with reason metadata so saved local copies can remain navigable without presenting upstream-removed provider content as live source content.
 - Pexels now has enhancement-only guardrails in wallpaper Discover and video-wallpaper discovery: Pexels rows can enrich mixed feeds, but Pexels-only batches are dropped. Focused tests prove provider-off Discover still serves Wallhaven/Pixabay base inventory and Pexels photo rows retain creator/source-page context.
+- Wallpaper and sound apply/download paths now classify explicit 404/410/gone/removed/deleted provider failures and mark saved favorites unavailable with provider-specific reasons; `DownloadManager` also marks matching download-history rows unavailable on failed re-downloads.
 - Recent history was checked with `rtk git log -10 --oneline --decorate` for this pass.
 
 ### Next Best Actions
 
-1. Add provider-specific reload reconciliation that marks saved items `SOURCE_UNAVAILABLE` when upstream deletion/removal is detected.
+1. Add sound license capability gates for source-specific apply/download/share/edit restrictions.
 2. Run a real GitHub Actions manual release dry run after secrets are confirmed available and archive the run URL in the release docs.
 3. Add deeper UI verification for the licenses screen on an emulator or screenshot lane when a device/runtime is available.
 4. Preserve exact Termux package commit/build-log evidence for FFmpeg if the release owner can obtain it from upstream or a reproducible rebuild.
