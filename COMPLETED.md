@@ -46,6 +46,9 @@ next pass can resume quickly.
   `tools/google_oss_raw_archive.py`, wired `GOOGLE-OSS-RAW-INPUTS.zip` into
   release checksums, notes, workflow artifacts, tagged release assets, and the
   bundle validator.
+- Completed Cycle 29 user-facing dependency notice access: added generated
+  release notice cards to `LicensesScreen.kt`, updated Settings copy, and added
+  focused coverage for the release artifact link data.
 
 ## 2026-06-05
 

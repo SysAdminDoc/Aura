@@ -3,6 +3,7 @@
 All notable changes to Aura will be documented in this file.
 
 ## Unreleased
+- **Generated notice access in Settings (Cycle 29)**: Settings > Open source licenses now starts with release notice cards for `THIRD-PARTY-NOTICES.md`, `GOOGLE-OSS-RAW-INPUTS.zip`, and `NATIVE-COMPLIANCE.md`, while keeping manual library rows and content-source disclosures separate.
 - **Raw release notice input archive (Cycle 28)**: release builds now create `GOOGLE-OSS-RAW-INPUTS.zip` with generated `dependencies.json`, `third_party_license_metadata`, `third_party_licenses`, and a manifest, then include the archive in checksums, release notes, workflow artifacts, tagged release assets, and bundle validation.
 - **Release artifact dry-run validation (Cycle 27)**: added `tools/release_artifact_bundle_check.py` and a release dry-run runbook so manual release workflow runs and tag releases fail when the final APK/notices/native/checksum/release-note bundle is incomplete or internally inconsistent.
 - **Curated dependency overlay gate (Cycle 26)**: added `docs/legal/dependency-notice-overrides.json` and `tools/dependency_overlay_check.py` so PR/main verification and release builds require reviewed source URLs, license IDs, usage notes, and release-review notes for high-risk dependencies and native payloads.

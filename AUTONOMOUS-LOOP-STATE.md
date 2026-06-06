@@ -1,8 +1,8 @@
 # Autonomous Loop State
 
 **Assigned project:** `C:\Users\--\repos\Aura`
-**Current pass:** 2026-06-06 Cycle 28 raw release notice input preservation pass
-**Last commit before pass:** `f2c1087` (`feat(release): validate dry-run artifact bundle`)
+**Current pass:** 2026-06-06 Cycle 29 user-facing dependency notice access pass
+**Last commit before pass:** `60946b1` (`feat(release): preserve raw notice inputs`)
 
 ## 2026-06-05 Result
 
@@ -65,13 +65,19 @@
 - Updated `tools/release_artifact_bundle_check.py` to require the raw input archive in release files, checksums, and release notes.
 - Updated `docs/distribution/release-dry-run.md`, `docs/distribution/release-signing.md`, `docs/distribution/supply-chain.md`, `ROADMAP.md`, `CHANGELOG.md`, and `COMPLETED.md` for raw notice input preservation.
 - Cycle 28 verification: `python -m py_compile tools\google_oss_raw_archive.py`; local generated-root archive smoke test; local release bundle smoke test; release-compliance Python compile and lock checks; dependency overlay check.
+- Completed Cycle 29 user-facing dependency notice access.
+- Added a `Release Notices` section to `LicensesScreen.kt` with cards for `THIRD-PARTY-NOTICES.md`, `GOOGLE-OSS-RAW-INPUTS.zip`, and `NATIVE-COMPLIANCE.md` via the latest GitHub Release.
+- Updated the Settings licenses subtitle to mention generated notices.
+- Added `LicensesScreenTest` coverage for the release artifact link names, URLs, labels, and artifact descriptions.
+- Updated `ROADMAP.md`, `CHANGELOG.md`, and `COMPLETED.md` for generated notice access.
+- Cycle 29 verification: focused `:app:testDebugUnitTest --tests com.freevibe.ui.screens.licenses.LicensesScreenTest` passed; release-compliance Python compile and lock checks; dependency overlay check.
 
 ## Still Open
 
 - FFmpeg exact configure line and matching source package review for the resolved youtubedl-android ffmpeg 0.18.1 AAR.
-- User-facing dependency notice access path.
+- FFmpeg source-correspondence evidence.
 - Runtime provider kill switches and disabled-provider behavior.
 
 ## Next Cycle
 
-Continue this same assigned project, Aura. Start Cycle 29 from the `ROADMAP.md` Continuation State and `docs/research/cycle-28-2026-06-06.md`. The Google OSS notices plugin-only path is implemented; `tools/google_oss_to_markdown.py` generates `THIRD-PARTY-NOTICES.md`; `tools/google_oss_raw_archive.py` archives raw Google OSS inputs; `tools/native_compliance_inventory.py` generates `NATIVE-COMPLIANCE.md` and gates native evidence drift; `tools/dependency_notice_lock.py` gates generated release notice drift; `tools/dependency_overlay_check.py` gates curated high-risk dependency/native-payload review metadata; `tools/release_artifact_bundle_check.py` gates final release bundle consistency. Next add a user-facing dependency notice access path in Settings without adding the stock Google OSS notice runtime dependency. Keep AboutLibraries secondary: 14.2.1 configures, but default exports were incomplete and the compliance export logged Windows path errors; do not use AboutLibraries 15.x until N-1 upgrades AGP because v15 requires AGP 8.13. Commit and push completed work when the active project contract allows it.
+Continue this same assigned project, Aura. Start Cycle 30 from the `ROADMAP.md` Continuation State and `docs/research/cycle-29-2026-06-06.md`. The Google OSS notices plugin-only path is implemented; `tools/google_oss_to_markdown.py` generates `THIRD-PARTY-NOTICES.md`; `tools/google_oss_raw_archive.py` archives raw Google OSS inputs; `tools/native_compliance_inventory.py` generates `NATIVE-COMPLIANCE.md` and gates native evidence drift; `tools/dependency_notice_lock.py` gates generated release notice drift; `tools/dependency_overlay_check.py` gates curated high-risk dependency/native-payload review metadata; `tools/release_artifact_bundle_check.py` gates final release bundle consistency; Settings exposes generated release notice artifacts. Next investigate FFmpeg source/configure correspondence for the resolved youtubedl-android FFmpeg payload. Keep AboutLibraries secondary: 14.2.1 configures, but default exports were incomplete and the compliance export logged Windows path errors; do not use AboutLibraries 15.x until N-1 upgrades AGP because v15 requires AGP 8.13. Commit and push completed work when the active project contract allows it.

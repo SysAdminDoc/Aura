@@ -54,6 +54,27 @@ private val licenses = listOf(
     OssLicense("Core library desugaring", "https://developer.android.com/studio/write/java8-support", "Apache 2.0", "Java API backports for Android"),
 )
 
+internal val releaseNoticeLinks = listOf(
+    OssLicense(
+        name = "Generated dependency notices",
+        url = "https://github.com/SysAdminDoc/Aura/releases/latest",
+        license = "Release artifact",
+        description = "Open the latest GitHub Release and download THIRD-PARTY-NOTICES.md.",
+    ),
+    OssLicense(
+        name = "Raw Google OSS inputs",
+        url = "https://github.com/SysAdminDoc/Aura/releases/latest",
+        license = "Release artifact",
+        description = "Download GOOGLE-OSS-RAW-INPUTS.zip for dependencies.json and raw notice inputs.",
+    ),
+    OssLicense(
+        name = "Native compliance packet",
+        url = "https://github.com/SysAdminDoc/Aura/releases/latest",
+        license = "Release artifact",
+        description = "Download NATIVE-COMPLIANCE.md for native, extractor, Python, QuickJS, and FFmpeg evidence.",
+    ),
+)
+
 private val contentSources = providerDisclosures.map { disclosure ->
     OssLicense(
         name = disclosure.displayName,
@@ -83,6 +104,18 @@ fun LicensesScreen(onBack: () -> Unit) {
             modifier = Modifier.fillMaxSize().padding(padding),
         ) {
             item {
+                Text(
+                    "Release Notices",
+                    style = MaterialTheme.typography.labelLarge,
+                    color = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.padding(vertical = 8.dp),
+                )
+            }
+            items(releaseNoticeLinks) { lic ->
+                LicenseCard(lic)
+            }
+            item {
+                Spacer(Modifier.height(8.dp))
                 Text(
                     "Libraries",
                     style = MaterialTheme.typography.labelLarge,

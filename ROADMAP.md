@@ -3,7 +3,7 @@
 > Open-source Android personalization: wallpapers, video wallpapers, ringtones, sounds.
 > Stay the OSS alternative to Zedge: no ads, no surprise charges, no dark patterns.
 
-**Version:** 2026-06-06-cycle28-roadmap (preserved raw release notice inputs).
+**Version:** 2026-06-06-cycle29-roadmap (added user-facing generated notice access).
 **Code version at write:** v6.31.1 / versionCode 112 (per `app/build.gradle.kts`; release/lint Gradle runs are memory-heavy on this Windows workstation, so rerun APK compilation only when explicitly needed).
 **Charter:** personalization, AMOLED-first, free-by-default, multi-source content aggregation, community-fed catalog, polite live wallpapers (battery-aware, pause-on-invisible).
 
@@ -1201,12 +1201,29 @@ Append-only Cycle 28 implementation record. The completed item is source-backed 
   - Verification: `python -m py_compile tools\google_oss_raw_archive.py`; local temporary generated-root archive smoke test; release-compliance Python compile and lock checks.
   - Remaining risk: actual public release artifacts still need a real GitHub Actions manual dry run with repository signing secrets.
 
-- [ ] 🤖 🔬 **P1 — User-facing dependency notice access path**
+- [x] 🤖 🔬 **P1 — User-facing dependency notice access path** — shipped 2026-06-06.
   - Why: release artifacts now contain generated dependency notices, but the in-app Settings licenses surface still relies on manual rows for runtime/native dependencies.
   - Evidence: `LicensesScreen.kt`, `ProviderDisclosure.kt`, `THIRD-PARTY-NOTICES.md`, `GOOGLE-OSS-RAW-INPUTS.zip`, `docs/distribution/supply-chain.md`.
   - Touches: Settings licenses screen, release docs, possible generated-asset packaging decision.
   - Acceptance: Settings exposes a clear path for users to review generated third-party notices without replacing content-source provider disclosures.
   - Verify: local UI/resource path test or documented release-asset link path; no runtime dependency convergence regression from stock Google OSS notice activity.
+
+## 🔬 Researcher Queue (Cycle 29 — 2026-06-06)
+
+Append-only Cycle 29 implementation record. The completed item is source-backed in `docs/research/cycle-29-2026-06-06.md`; use the open item as the next implementation entry point.
+
+- [x] 🤖 🔬 **P1 — User-facing dependency notice access shipped**
+  - Result: Settings > Open source licenses now opens a licenses screen with a first section for generated release notice artifacts.
+  - Evidence: `LicensesScreen.kt`, `SettingsScreen.kt`, `LicensesScreenTest`, `docs/research/cycle-29-2026-06-06.md`.
+  - Verification: focused `:app:testDebugUnitTest --tests com.freevibe.ui.screens.licenses.LicensesScreenTest` passed.
+  - Remaining risk: the latest-release links depend on a public GitHub Release existing with the expected artifacts.
+
+- [ ] 🤖 🔬 **P0 — FFmpeg source-correspondence evidence**
+  - Why: native locks and native packets identify FFmpeg payloads, but the resolved youtubedl-android FFmpeg AAR still does not encode the exact configure line or matching source package required for a complete release-owner review.
+  - Evidence: `docs/legal/native-compliance.md`, `docs/legal/native-compliance.lock.json`, `docs/legal/dependency-notice-overrides.json`, `tools/native_compliance_inventory.py`.
+  - Touches: native compliance docs, release checklist, dependency overlay notes, possible source archive/link evidence.
+  - Acceptance: release owners have a documented source/configure correspondence path for the resolved youtubedl-android FFmpeg payload or an explicit unresolved-owner-action record with exact missing evidence.
+  - Verify: source URL/configure evidence is recorded; native compliance packet and release checklist point to it; unresolved gaps fail a documented manual review checklist.
 
 ---
 
@@ -2690,19 +2707,26 @@ Stars/dates as of research pass 2026-05-16.
 - Generated input references — `app/build/generated/third_party_licenses/release/dependencies.json`, `app/build/generated/res/releaseOssLicensesTask/raw/third_party_license_metadata`, `app/build/generated/res/releaseOssLicensesTask/raw/third_party_licenses`.
 - Verification outputs — `python -m py_compile tools\google_oss_raw_archive.py`, local generated-root archive smoke test, release-compliance Python compile checks, dependency notice lock check, native compliance lock check, dependency overlay check, and release bundle smoke test.
 
+## Appendix AG — Cycle 29 Sources
+
+- Cycle 29 implementation record — [docs/research/cycle-29-2026-06-06.md](docs/research/cycle-29-2026-06-06.md).
+- User-facing notice implementation — `app/src/main/java/com/freevibe/ui/screens/licenses/LicensesScreen.kt`, `app/src/main/java/com/freevibe/ui/screens/settings/SettingsScreen.kt`, `app/src/test/java/com/freevibe/ui/screens/licenses/LicensesScreenTest.kt`.
+- Release artifact references — `THIRD-PARTY-NOTICES.md`, `GOOGLE-OSS-RAW-INPUTS.zip`, `NATIVE-COMPLIANCE.md`.
+- Verification outputs — focused `:app:testDebugUnitTest --tests com.freevibe.ui.screens.licenses.LicensesScreenTest`, release-compliance Python compile checks, dependency notice lock check, native compliance lock check, and dependency overlay check.
+
 ## Continuation State
 
 ### Last Completed Cycle
 
-Cycle 28: raw Google OSS notice input archive and release artifact wiring.
+Cycle 29: Settings release-notice access path and focused coverage.
 
 ### Current Focus
 
-Start Cycle 29 with the user-facing dependency notice access path. Commit and push completed work when the active project contract allows it.
+Start Cycle 30 with FFmpeg source-correspondence evidence. Commit and push completed work when the active project contract allows it.
 
 ### Important Findings So Far
 
-- `ROADMAP.md` has Cycle 18 through Cycle 28 research/implementation items; `docs/research/cycle-18-2026-06-06.md` through `docs/research/cycle-28-2026-06-06.md` have the source-backed analysis.
+- `ROADMAP.md` has Cycle 18 through Cycle 29 research/implementation items; `docs/research/cycle-18-2026-06-06.md` through `docs/research/cycle-29-2026-06-06.md` have the source-backed analysis.
 - `LicensesScreen.kt` still has manual dependency rows; content sources are already code-backed by `ProviderDisclosure.kt`.
 - `.github/workflows/release.yml` now publishes `THIRD-PARTY-NOTICES.md` and `NATIVE-COMPLIANCE.md` with the APK and includes both files in `SHA256SUMS.txt`; SBOM artifacts remain open.
 - `.github/workflows/verify.yml` and `.github/workflows/release.yml` now run `tools/dependency_notice_lock.py --mode check`, `tools/native_compliance_inventory.py --mode check-lock`, and `tools/dependency_overlay_check.py` after `:app:releaseOssLicensesTask`.
@@ -2722,17 +2746,18 @@ Start Cycle 29 with the user-facing dependency notice access path. Commit and pu
 - `docs/legal/dependency-notice-overrides.json` records curated high-risk dependency and native-payload review metadata; `tools/dependency_overlay_check.py` fails stale, missing, or orphaned overlay entries against the dependency/native locks.
 - `tools/release_artifact_bundle_check.py` now validates manual dry-run and tag-release bundles for required artifacts, checksums, release-note evidence, signing digest output, and non-debuggable `aapt` evidence.
 - `tools/google_oss_raw_archive.py` now publishes `GOOGLE-OSS-RAW-INPUTS.zip` with a manifest for raw generated Google OSS notice inputs.
+- `LicensesScreen.kt` now exposes generated release notice artifacts before the manual library and content-source disclosure rows.
 - AboutLibraries 14.2.1 configures but the default release export was incomplete for Aura and logged Windows path errors during compliance export.
 - `ProviderDisclosureTest` now passes in the real repo with `JAVA_HOME` set to Android Studio JBR and `ANDROID_HOME` set to the local Android SDK.
 - Recent history was checked with `rtk git log -10 --oneline --decorate` for this pass.
 
 ### Next Best Actions
 
-1. Add a user-facing dependency notice access path in Settings without adding the stock Google OSS notice runtime dependency.
-2. Investigate exact FFmpeg configure line and matching source package for the resolved youtubedl-android ffmpeg 0.18.1 AAR.
-3. Evaluate whether `licensee` can enforce Aura's desired policy from `releaseRuntimeClasspath` or needs a custom JSON comparison.
-4. Run a real GitHub Actions manual release dry run after secrets are confirmed available and archive the run URL in the release docs.
-5. Decide whether `GOOGLE-OSS-RAW-INPUTS.zip` should remain public-release attached forever or only workflow-artifact attached after the first validation window.
+1. Investigate exact FFmpeg configure line and matching source package for the resolved youtubedl-android ffmpeg 0.18.1 AAR.
+2. Evaluate whether `licensee` can enforce Aura's desired policy from `releaseRuntimeClasspath` or needs a custom JSON comparison.
+3. Run a real GitHub Actions manual release dry run after secrets are confirmed available and archive the run URL in the release docs.
+4. Decide whether `GOOGLE-OSS-RAW-INPUTS.zip` should remain public-release attached forever or only workflow-artifact attached after the first validation window.
+5. Add deeper UI verification for the licenses screen on an emulator or screenshot lane when a device/runtime is available.
 
 ### Unprocessed Leads
 

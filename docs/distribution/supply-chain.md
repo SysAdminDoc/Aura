@@ -58,7 +58,7 @@ python tools\google_oss_to_markdown.py --variant release --output build\reports\
 python tools\google_oss_raw_archive.py --variant release --output build\reports\GOOGLE-OSS-RAW-INPUTS.zip
 ```
 
-Generated dependency notices do not replace Aura's content-source disclosures. `ProviderDisclosure.kt` remains the source of truth for provider policy rows such as YouTube, Reddit, Pexels, Pixabay, community uploads, bundled media, and AI-generated content.
+Generated dependency notices do not replace Aura's content-source disclosures. `ProviderDisclosure.kt` remains the source of truth for provider policy rows such as YouTube, Reddit, Pexels, Pixabay, community uploads, bundled media, and AI-generated content. Settings > Open source licenses links users to the latest release notice artifacts while keeping provider disclosures visible in-app.
 
 ## Raw Google OSS inputs
 

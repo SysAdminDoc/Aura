@@ -1353,7 +1353,7 @@ fun SettingsScreen(
             SettingsItem(
                 icon = Icons.Default.Description,
                 title = "Open source licenses",
-                subtitle = "See library licenses and content-source attributions",
+                subtitle = "See generated notices, library licenses, and content-source attributions",
                 onClick = onLicensesClick,
             )
         }
