@@ -128,6 +128,7 @@ jobs:
       - name: Generate third-party notices
         run: |
           ./gradlew :app:releaseOssLicensesTask --stacktrace --no-daemon
+          python3 tools/dependency_notice_lock.py --mode check --lockfile docs/legal/dependency-notices.lock.json
           python3 tools/google_oss_to_markdown.py --variant release --output "$RELEASE_DIR/THIRD-PARTY-NOTICES.md"
           test -s "$RELEASE_DIR/THIRD-PARTY-NOTICES.md"
           python3 tools/native_compliance_inventory.py --apk "${{ steps.package.outputs.apk_path }}" --output "$RELEASE_DIR/NATIVE-COMPLIANCE.md"

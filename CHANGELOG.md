@@ -3,6 +3,7 @@
 All notable changes to Aura will be documented in this file.
 
 ## Unreleased
+- **Dependency notice drift gate (Cycle 24)**: added `tools/dependency_notice_lock.py` and `docs/legal/dependency-notices.lock.json` so PR/main verification and release builds fail when generated release dependency notices drift without review.
 - **Native compliance packet (Cycle 23)**: release builds now generate `NATIVE-COMPLIANCE.md`, include it in `SHA256SUMS.txt`, and upload/attach it beside tagged APK releases. Added `tools/native_compliance_inventory.py` and committed `docs/legal/native-compliance.md` with youtubedl-android, yt-dlp/Python, QuickJS, FFmpeg, and NewPipeExtractor payload evidence.
 - **Release third-party notices (Cycle 22)**: release builds now generate Google OSS license outputs, convert them to `THIRD-PARTY-NOTICES.md`, include the notices in `SHA256SUMS.txt`, and upload/attach the notices beside tagged APK releases. Added `tools/google_oss_to_markdown.py` and documented the local notice-generation path.
 - **Provider disclosure matrix (Cycle 17 partial)**: Settings > Open source licenses now gets content-source disclosures from a central `ProviderDisclosure` model covering every `ContentSource`, including dormant legacy sources, local media, community uploads, bundled Aura Picks, and AI-generated content. Added `docs/legal/provider-policy.md`, expanded visible runtime/native dependency notice rows, and added a unit test that fails when new content sources lack policy coverage.

@@ -1,8 +1,8 @@
 # Autonomous Loop State
 
 **Assigned project:** `C:\Users\--\repos\Aura`
-**Current pass:** 2026-06-06 Cycle 23 native-compliance implementation pass
-**Last commit before pass:** `1191752` (`feat(release): publish third-party notices`)
+**Current pass:** 2026-06-06 Cycle 24 dependency-notice drift-gate implementation pass
+**Last commit before pass:** `1ef0655` (`feat(release): add native compliance packet`)
 
 ## 2026-06-05 Result
 
@@ -35,15 +35,20 @@
 - Wired release `NATIVE-COMPLIANCE.md` generation into `.github/workflows/release.yml`, including checksums, release notes, workflow artifact upload, and tagged release attachment.
 - Updated `docs/distribution/supply-chain.md`, `ROADMAP.md`, `CHANGELOG.md`, and `COMPLETED.md` for the native packet.
 - Cycle 23 verification: `python -m py_compile tools\native_compliance_inventory.py`; `python tools\native_compliance_inventory.py --output docs\legal\native-compliance.md`.
+- Completed Cycle 24 dependency notice drift gating.
+- Added `tools/dependency_notice_lock.py` to write/check deterministic Google OSS release notice lockfiles.
+- Committed `docs/legal/dependency-notices.lock.json` with 251 release dependency records and 288 notice section hashes.
+- Wired `.github/workflows/verify.yml` and `.github/workflows/release.yml` to run `:app:releaseOssLicensesTask` and check `docs/legal/dependency-notices.lock.json`.
+- Updated `docs/distribution/supply-chain.md`, `ROADMAP.md`, `CHANGELOG.md`, and `COMPLETED.md` for the lockfile gate.
+- Cycle 24 verification: `:app:releaseOssLicensesTask` passed; `python -m py_compile tools\dependency_notice_lock.py tools\google_oss_to_markdown.py tools\native_compliance_inventory.py`; `python tools\dependency_notice_lock.py --mode check --lockfile docs\legal\dependency-notices.lock.json` returned status `ok`.
 
 ## Still Open
 
-- Generated OSS notices and release-runtime license drift gate.
 - Native packet freshness gate for youtubedl-android, NewPipeExtractor, yt-dlp, Python, QuickJS, and FFmpeg version changes.
 - FFmpeg exact configure line and matching source package review for the resolved youtubedl-android ffmpeg 0.18.1 AAR.
-- Generated Gradle runtime dependency inventory comparison and notice-diff gate.
+- Curated source/license overlay for high-risk dependencies and native payloads.
 - Runtime provider kill switches and disabled-provider behavior.
 
 ## Next Cycle
 
-Continue this same assigned project, Aura. Start Cycle 24 from the `ROADMAP.md` Continuation State and `docs/research/cycle-23-2026-06-06.md`. The Google OSS notices plugin-only path is implemented; `tools/google_oss_to_markdown.py` generates `THIRD-PARTY-NOTICES.md`; `tools/native_compliance_inventory.py` generates `NATIVE-COMPLIANCE.md`; release workflow packages both with checksums. Next implement the release-runtime license drift gate: produce a deterministic dependency notice lockfile and fail on added, removed, or changed release-runtime dependency/license/source metadata until reviewed. Keep AboutLibraries secondary: 14.2.1 configures, but default exports were incomplete and the compliance export logged Windows path errors; do not use AboutLibraries 15.x until N-1 upgrades AGP because v15 requires AGP 8.13. Commit and push completed work when the active project contract allows it.
+Continue this same assigned project, Aura. Start Cycle 25 from the `ROADMAP.md` Continuation State and `docs/research/cycle-24-2026-06-06.md`. The Google OSS notices plugin-only path is implemented; `tools/google_oss_to_markdown.py` generates `THIRD-PARTY-NOTICES.md`; `tools/native_compliance_inventory.py` generates `NATIVE-COMPLIANCE.md`; `tools/dependency_notice_lock.py` gates generated release notice drift in PR/main verification and release builds. Next implement the native packet freshness gate for youtubedl-android, NewPipeExtractor, yt-dlp, Python, QuickJS, and FFmpeg evidence. Keep AboutLibraries secondary: 14.2.1 configures, but default exports were incomplete and the compliance export logged Windows path errors; do not use AboutLibraries 15.x until N-1 upgrades AGP because v15 requires AGP 8.13. Commit and push completed work when the active project contract allows it.

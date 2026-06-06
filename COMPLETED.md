@@ -25,6 +25,10 @@ next pass can resume quickly.
   `docs/legal/native-compliance.md`, wired release `NATIVE-COMPLIANCE.md`
   generation/checksums/uploads, and documented FFmpeg source-correspondence
   review requirements.
+- Completed Cycle 24 dependency notice drift gating: added
+  `tools/dependency_notice_lock.py`, committed
+  `docs/legal/dependency-notices.lock.json`, and wired PR/main verification plus
+  release builds to fail on generated Google OSS notice drift.
 
 ## 2026-06-05
 

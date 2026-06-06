@@ -52,6 +52,11 @@ jobs:
             echo "stability.ai.key="
           } > local.properties
 
+      - name: Dependency notice drift
+        run: |
+          ./gradlew :app:releaseOssLicensesTask --stacktrace --no-daemon
+          python3 tools/dependency_notice_lock.py --mode check --lockfile docs/legal/dependency-notices.lock.json
+
       - name: Assemble debug
         run: ./gradlew :app:assembleDebug --stacktrace --no-daemon
 

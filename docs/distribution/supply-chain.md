@@ -8,6 +8,7 @@ Aura is side-loaded through GitHub Releases and Obtainium, so release artifacts 
 | --- | --- | --- |
 | Signed release APK | `.github/workflows/release.yml` | Builds the release variant, verifies the signature, rejects debuggable APKs, and publishes checksums. |
 | Third-party notices | `tools/google_oss_to_markdown.py`, `.github/workflows/release.yml` | Runs the Google OSS Licenses Gradle task for the release variant and publishes `THIRD-PARTY-NOTICES.md` next to the APK. |
+| Dependency notice lockfile | `tools/dependency_notice_lock.py`, `docs/legal/dependency-notices.lock.json` | Fails PR/main/release checks when generated release dependency notices drift without review. |
 | Native compliance packet | `tools/native_compliance_inventory.py`, `.github/workflows/release.yml` | Inventories youtubedl-android, yt-dlp/Python, FFmpeg, QuickJS, and NewPipeExtractor payload evidence and publishes `NATIVE-COMPLIANCE.md` next to the APK. |
 | Artifact attestation | `.github/workflows/release.yml` | Uses `actions/attest@v4` against `release/SHA256SUMS.txt` so release artifact digests are bound to the GitHub Actions build. |
 | Gradle dependency verification | `gradle/verification-metadata.xml` | Records SHA-256 checksums for resolved Gradle plugins and app dependencies. |
@@ -37,10 +38,33 @@ Generate notices locally after the release notice task has run:
 
 ```powershell
 .\gradlew.bat :app:releaseOssLicensesTask --stacktrace --no-daemon
+python tools\dependency_notice_lock.py --mode check --lockfile docs\legal\dependency-notices.lock.json
 python tools\google_oss_to_markdown.py --variant release --output build\reports\THIRD-PARTY-NOTICES.md
 ```
 
 Generated dependency notices do not replace Aura's content-source disclosures. `ProviderDisclosure.kt` remains the source of truth for provider policy rows such as YouTube, Reddit, Pexels, Pixabay, community uploads, bundled media, and AI-generated content.
+
+## Dependency notice lockfile
+
+`docs/legal/dependency-notices.lock.json` is generated from Google's release OSS outputs. It records:
+
+- Sorted release dependency coordinates from `dependencies.json`.
+- SHA-256 hashes for the generated dependency, license metadata, and license text inputs.
+- Notice section names, offsets, lengths, and notice-text SHA-256 hashes.
+
+PR/main verification and the release workflow run:
+
+```bash
+python3 tools/dependency_notice_lock.py --mode check --lockfile docs/legal/dependency-notices.lock.json
+```
+
+When a dependency, version, or generated notice text changes intentionally, refresh the lockfile after rerunning `:app:releaseOssLicensesTask`:
+
+```powershell
+python tools\dependency_notice_lock.py --mode write --lockfile docs\legal\dependency-notices.lock.json
+```
+
+Review the lockfile diff in the same change as the dependency update. Do not regenerate it as a standalone cleanup unless the generated Google outputs are unchanged and the prior lockfile was stale.
 
 ## Native compliance packet
 

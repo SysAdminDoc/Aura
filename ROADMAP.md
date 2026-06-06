@@ -3,7 +3,7 @@
 > Open-source Android personalization: wallpapers, video wallpapers, ringtones, sounds.
 > Stay the OSS alternative to Zedge: no ads, no surprise charges, no dark patterns.
 
-**Version:** 2026-06-06-cycle23-roadmap (implemented native/copyleft payload inventory and release NATIVE-COMPLIANCE.md artifact wiring).
+**Version:** 2026-06-06-cycle24-roadmap (implemented release-runtime dependency notice lockfile and CI drift gate).
 **Code version at write:** v6.31.1 / versionCode 112 (per `app/build.gradle.kts`; release/lint Gradle runs are memory-heavy on this Windows workstation, so rerun APK compilation only when explicitly needed).
 **Charter:** personalization, AMOLED-first, free-by-default, multi-source content aggregation, community-fed catalog, polite live wallpapers (battery-aware, pause-on-invisible).
 
@@ -1114,12 +1114,30 @@ Append-only Cycle 23 implementation record. The completed item is source-backed 
   - Verification: `python -m py_compile tools/native_compliance_inventory.py`; `python tools\native_compliance_inventory.py --output docs\legal\native-compliance.md`.
   - Remaining risk: exact FFmpeg configure line and matching source package are not encoded in the 0.18.1 AAR and remain a release-owner review requirement.
 
-- [ ] 🤖 🔬 **P0 — Release-runtime license drift gate**
+- [x] 🤖 🔬 **P0 — Release-runtime license drift gate** — shipped 2026-06-06.
   - Why: Aura now publishes human-readable Google OSS notices and a native packet, but nothing fails a build when release-runtime dependencies or native payload versions drift without reviewed metadata.
-  - Evidence: Cycle 18 dependency license drift item; `gradle/verification-metadata.xml`; `.github/workflows/release.yml`; `docs/distribution/supply-chain.md`; generated `dependencies.json`.
+  - Result: `tools/dependency_notice_lock.py` writes/checks `docs/legal/dependency-notices.lock.json`; PR/main verify and release workflows now fail when generated release dependency notices drift.
+  - Evidence: Cycle 18 dependency license drift item; `gradle/verification-metadata.xml`; `.github/workflows/release.yml`; `.github/workflows/verify.yml`; `docs/distribution/supply-chain.md`; generated `dependencies.json`.
   - Touches: `tools/`, `docs/legal/dependency-notices.lock.json`, optional curated override JSON, release workflow, CI verification docs.
-  - Acceptance: a deterministic check compares release-runtime dependency identity/license/source metadata to a committed lockfile and fails on unknown, removed, added, or changed dependencies until reviewed.
-  - Verify: fixture or sentinel dependency change produces a failing diff; reviewed lockfile/override updates restore green status.
+  - Acceptance: deterministic check compares release dependency coordinates, generated notice input hashes, and notice-section hashes to a committed lockfile; added/removed/changed dependencies or notices fail until reviewed.
+  - Verify: `:app:releaseOssLicensesTask` passed; `python tools\dependency_notice_lock.py --mode check --lockfile docs\legal\dependency-notices.lock.json` returned status `ok` with 251 dependencies and 288 notice sections.
+
+## 🔬 Researcher Queue (Cycle 24 — 2026-06-06)
+
+Append-only Cycle 24 implementation record. The completed item is source-backed in `docs/research/cycle-24-2026-06-06.md`; use the open item as the next implementation entry point.
+
+- [x] 🤖 🔬 **P0 — Dependency notice lockfile and CI gate shipped**
+  - Result: `docs/legal/dependency-notices.lock.json` records 251 sorted release dependency coordinates, 288 notice section hashes, and input hashes for Google OSS generated files.
+  - Evidence: `tools/dependency_notice_lock.py`, `.github/workflows/verify.yml`, `.github/workflows/release.yml`, `docs/distribution/supply-chain.md`.
+  - Verification: `:app:releaseOssLicensesTask` passed; `python -m py_compile tools\dependency_notice_lock.py tools\google_oss_to_markdown.py tools\native_compliance_inventory.py`; lock check returned status `ok`.
+  - Remaining risk: Google OSS outputs still do not provide source URLs or license IDs per dependency coordinate, so a curated overlay remains future work.
+
+- [ ] 🤖 🔬 **P0 — Native packet freshness gate**
+  - Why: the dependency notice lockfile now catches generated Google OSS notice drift, but youtubedl-android, NewPipeExtractor, yt-dlp, Python, QuickJS, and FFmpeg payload evidence can still become stale if versions change without regenerating `docs/legal/native-compliance.md`.
+  - Evidence: `tools/native_compliance_inventory.py`, `docs/legal/native-compliance.md`, `docs/legal/dependency-notices.lock.json`, `app/build.gradle.kts`.
+  - Touches: `tools/`, `docs/legal/native-compliance.md`, release workflow, verify workflow, `docs/distribution/supply-chain.md`.
+  - Acceptance: a check mode compares current resolved native/copyleft artifact hashes and extracted payload facts to the committed native compliance doc or a machine-readable lock; version/hash drift fails until reviewed.
+  - Verify: sentinel youtubedl-android/NewPipeExtractor version or generated native report change fails the check; regenerated reviewed evidence restores green status.
 
 ---
 
@@ -2570,21 +2588,28 @@ Stars/dates as of research pass 2026-05-16.
 - Primary source references — [youtubedl-android](https://github.com/yausername/youtubedl-android), [yt-dlp 2025.11.12](https://github.com/yt-dlp/yt-dlp/releases/tag/2025.11.12), [Python 3.12 license](https://docs.python.org/3.12/license.html), [QuickJS](https://bellard.org/quickjs/), [FFmpeg legal guidance](https://ffmpeg.org/legal.html), [NewPipeExtractor v0.24.8](https://github.com/TeamNewPipe/NewPipeExtractor/tree/v0.24.8).
 - Verification outputs — `python -m py_compile tools/native_compliance_inventory.py` and `python tools\native_compliance_inventory.py --output docs\legal\native-compliance.md`.
 
+## Appendix AB — Cycle 24 Sources
+
+- Cycle 24 implementation record — [docs/research/cycle-24-2026-06-06.md](docs/research/cycle-24-2026-06-06.md).
+- Dependency notice lock implementation — `tools/dependency_notice_lock.py`, `docs/legal/dependency-notices.lock.json`, `.github/workflows/verify.yml`, `.github/workflows/release.yml`, `docs/distribution/supply-chain.md`.
+- Verification outputs — real-repo `:app:releaseOssLicensesTask`, `python tools\dependency_notice_lock.py --mode write`, `python tools\dependency_notice_lock.py --mode check`, and Python compile checks for all release-compliance tools.
+
 ## Continuation State
 
 ### Last Completed Cycle
 
-Cycle 23: native/copyleft payload inspector, committed `docs/legal/native-compliance.md`, and release `NATIVE-COMPLIANCE.md` artifact wiring.
+Cycle 24: release-runtime dependency notice lockfile, PR/main verification drift gate, and release workflow drift gate.
 
 ### Current Focus
 
-Start Cycle 24 with the release-runtime license drift gate. Commit and push completed work when the active project contract allows it.
+Start Cycle 25 with the native packet freshness gate. Commit and push completed work when the active project contract allows it.
 
 ### Important Findings So Far
 
-- `ROADMAP.md` has Cycle 18, Cycle 19, Cycle 20, Cycle 21, Cycle 22, and Cycle 23 research/implementation items; `docs/research/cycle-18-2026-06-06.md` through `docs/research/cycle-23-2026-06-06.md` have the source-backed analysis.
+- `ROADMAP.md` has Cycle 18 through Cycle 24 research/implementation items; `docs/research/cycle-18-2026-06-06.md` through `docs/research/cycle-24-2026-06-06.md` have the source-backed analysis.
 - `LicensesScreen.kt` still has manual dependency rows; content sources are already code-backed by `ProviderDisclosure.kt`.
-- `.github/workflows/release.yml` now publishes `THIRD-PARTY-NOTICES.md` and `NATIVE-COMPLIANCE.md` with the APK and includes both files in `SHA256SUMS.txt`; dependency-license lock JSON and SBOM artifacts remain open.
+- `.github/workflows/release.yml` now publishes `THIRD-PARTY-NOTICES.md` and `NATIVE-COMPLIANCE.md` with the APK and includes both files in `SHA256SUMS.txt`; SBOM artifacts remain open.
+- `.github/workflows/verify.yml` and `.github/workflows/release.yml` now run `tools/dependency_notice_lock.py --mode check` after `:app:releaseOssLicensesTask`.
 - `docs/distribution/supply-chain.md` defers SBOM work until N-1, but Cycle 18 split out a smaller current-toolchain notice/drift lane that should not wait on the AGP/Kotlin migration.
 - AboutLibraries 15.x is not a current-toolchain fit because its release notes make AGP 8.13 the minimum; Aura is currently on AGP 8.7.3 / Gradle 8.12. Test AboutLibraries 14.2.1 if using it before N-1.
 - Google OSS notices now have the required `settings.gradle.kts` plugin resolution mapping and root/app Gradle wiring in the real repo.
@@ -2594,23 +2619,23 @@ Start Cycle 24 with the release-runtime license drift gate. Commit and push comp
 - `tools/google_oss_to_markdown.py` generated `build/reports/THIRD-PARTY-NOTICES.md` from real-repo Google outputs; the output was 1,367,502 bytes, 25,336 lines, 251 dependency records, and 288 notice sections.
 - `tools/native_compliance_inventory.py` generated `docs/legal/native-compliance.md` with youtubedl-android common/library/ffmpeg AAR hashes, NewPipeExtractor JAR hashes, yt-dlp 2025.11.12 git-head facts, python3.12 payload facts, QuickJS entries, and FFmpeg ABI payload paths.
 - The native packet is factual evidence only; exact FFmpeg configure/source correspondence remains a release-owner review requirement because the AAR does not encode the configure line.
-- Google outputs plus the converter are not a policy-reviewed lockfile; release-runtime license drift still needs a deterministic gate.
+- `docs/legal/dependency-notices.lock.json` records 251 release dependency coordinates and 288 notice section hashes from Google OSS outputs.
+- The dependency notice lockfile gates generated dependency/notice drift, but it still does not provide curated source URLs or license IDs per dependency coordinate.
 - AboutLibraries 14.2.1 configures but the default release export was incomplete for Aura and logged Windows path errors during compliance export.
 - `ProviderDisclosureTest` now passes in the real repo with `JAVA_HOME` set to Android Studio JBR and `ANDROID_HOME` set to the local Android SDK.
 - Recent history was checked with `rtk git log -10 --oneline --decorate` for this pass.
 
 ### Next Best Actions
 
-1. Implement a release-runtime dependency notice lockfile from Google `dependencies.json` or a Gradle release-runtime dependency report.
-2. Add a deterministic check that fails on added, removed, or changed dependency/license/source metadata until reviewed.
-3. Add a native packet freshness check for youtubedl-android, NewPipeExtractor, yt-dlp, Python, QuickJS, and FFmpeg version changes.
+1. Add a native packet freshness check for youtubedl-android, NewPipeExtractor, yt-dlp, Python, QuickJS, and FFmpeg version/hash changes.
+2. Decide whether the native packet freshness check should compare against `docs/legal/native-compliance.md` directly or write a small machine-readable native lockfile.
+3. Add a curated high-risk dependency overlay with source URLs/license IDs for youtubedl-android, NewPipeExtractor, Firebase, Play services ML Kit, ZXing, ProfileInstaller, and native payloads.
 4. Add a future in-app generated dependency notice viewer or Settings link after the release artifact path is stable.
 5. Add release workflow dry-run validation on GitHub Actions or a CI-equivalent environment to prove notices and native packets are checksummed and uploaded with the APK.
 
 ### Unprocessed Leads
 
 - Exact FFmpeg configure line and matching source package for the resolved youtubedl-android ffmpeg 0.18.1 AAR.
-- Whether the dependency lockfile should use Google OSS `dependencies.json`, Gradle `releaseRuntimeClasspath`, or both.
 - Whether the release workflow notices step should also upload raw `dependencies.json` for machine diffing.
 - Whether Aura should parse generated raw resources for a custom Compose in-app dependency notice viewer after the markdown artifact is stable.
 - Whether the stock Google `OssLicensesMenuActivity` is ever worth adding after a dependency convergence audit.
@@ -2625,12 +2650,11 @@ Start Cycle 24 with the release-runtime license drift gate. Commit and push comp
 - `.github/workflows/dependency-review.yml`
 - `.github/workflows/scorecard.yml`
 - `app/src/main/AndroidManifest.xml`
-- Google OSS generated `dependencies.json` structure for lockfile inputs
+- Native compliance markdown structure versus a future machine-readable native lockfile
 
 ### Searches Still To Run
 
-- `CashApp Licensee Gradle releaseRuntimeClasspath Android example`
 - `CycloneDX Gradle Android releaseRuntimeClasspath configuration`
-- `Gradle dependencyInsight license metadata releaseRuntimeClasspath`
-- `Google OSS licenses plugin dependencies.json schema`
+- `FFmpeg Android package source correspondence Termux package metadata`
+- `Android APK native library source offer LGPL checklist`
 - `AboutLibraries 14.2.1 exportLibrariesRelease only BOM dependencies`
