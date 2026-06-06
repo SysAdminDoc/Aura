@@ -23,6 +23,22 @@ enum class ProviderStatus(val label: String) {
     GENERATED("Generated"),
 }
 
+data class ProviderRuntimeControl(
+    val source: ContentSource,
+    val surfaces: String,
+    val status: ProviderRuntimeControlStatus,
+    val currentControl: String,
+    val disabledBehavior: String,
+    val followUp: String,
+)
+
+enum class ProviderRuntimeControlStatus(val label: String) {
+    COVERED("Covered"),
+    PARTIAL("Partial"),
+    MISSING("Missing"),
+    NOT_APPLICABLE("Not applicable"),
+}
+
 val providerDisclosures = listOf(
     ProviderDisclosure(
         source = ContentSource.WALLHAVEN,
@@ -268,3 +284,169 @@ val providerDisclosures = listOf(
 
 val providerDisclosuresBySource: Map<ContentSource, ProviderDisclosure> =
     providerDisclosures.associateBy { it.source }
+
+val providerRuntimeControls = listOf(
+    ProviderRuntimeControl(
+        source = ContentSource.WALLHAVEN,
+        surfaces = "Wallpaper featured, search, similar, random, color, Discover.",
+        status = ProviderRuntimeControlStatus.PARTIAL,
+        currentControl = "Optional API key plus sketchy/NSFW toggles; no full source disable flag.",
+        disabledBehavior = "Blank API key still allows public SFW Wallhaven calls; unsafe tiers coerce to SFW.",
+        followUp = "Add a source-enabled flag before publishing distribution profiles that must remove Wallhaven entirely.",
+    ),
+    ProviderRuntimeControl(
+        source = ContentSource.PICSUM,
+        surfaces = "Legacy restored records only.",
+        status = ProviderRuntimeControlStatus.COVERED,
+        currentControl = "No active repository path.",
+        disabledBehavior = "New feeds do not request Lorem Picsum; saved legacy rows can remain visible.",
+        followUp = "None.",
+    ),
+    ProviderRuntimeControl(
+        source = ContentSource.BING,
+        surfaces = "Wallpaper Discover secondary daily-image source.",
+        status = ProviderRuntimeControlStatus.MISSING,
+        currentControl = "Always attempted as a Discover secondary source.",
+        disabledBehavior = "No first-class disabled state; failures fall back to other Discover sources.",
+        followUp = "Add a source-enabled flag or remote distribution profile before claiming Bing can be disabled.",
+    ),
+    ProviderRuntimeControl(
+        source = ContentSource.WIKIMEDIA,
+        surfaces = "Legacy restored records only.",
+        status = ProviderRuntimeControlStatus.COVERED,
+        currentControl = "No active repository path.",
+        disabledBehavior = "New feeds do not request Wikimedia; saved legacy rows can remain visible.",
+        followUp = "None.",
+    ),
+    ProviderRuntimeControl(
+        source = ContentSource.INTERNET_ARCHIVE,
+        surfaces = "Legacy saved audio metadata only.",
+        status = ProviderRuntimeControlStatus.COVERED,
+        currentControl = "Removed active feed.",
+        disabledBehavior = "New sound feeds do not request Internet Archive; old saved records can still render.",
+        followUp = "None.",
+    ),
+    ProviderRuntimeControl(
+        source = ContentSource.REDDIT,
+        surfaces = "Wallpaper Discover, wallpaper subreddit feeds, video wallpaper feed.",
+        status = ProviderRuntimeControlStatus.MISSING,
+        currentControl = "Wallpaper subreddit lists are editable; video subreddits are currently hardcoded in the video ViewModel.",
+        disabledBehavior = "No source-disabled state; empty or failed requests degrade through feed fallback behavior.",
+        followUp = "Add one runtime flag that removes Reddit from wallpaper and video entry points and records disabled diagnostics.",
+    ),
+    ProviderRuntimeControl(
+        source = ContentSource.NASA,
+        surfaces = "Legacy restored records only.",
+        status = ProviderRuntimeControlStatus.COVERED,
+        currentControl = "No active repository path.",
+        disabledBehavior = "New feeds do not request NASA; saved legacy rows can remain visible.",
+        followUp = "None.",
+    ),
+    ProviderRuntimeControl(
+        source = ContentSource.FREESOUND,
+        surfaces = "Legacy saved records, bundled-source attribution, dormant repository code.",
+        status = ProviderRuntimeControlStatus.COVERED,
+        currentControl = "No active browsing tab uses Freesound; optional key is retained for compatibility.",
+        disabledBehavior = "New sound browsing uses YouTube/community/bundled paths; saved records keep attribution.",
+        followUp = "None.",
+    ),
+    ProviderRuntimeControl(
+        source = ContentSource.JAMENDO,
+        surfaces = "Legacy saved records through old Openverse/Freesound mappings.",
+        status = ProviderRuntimeControlStatus.COVERED,
+        currentControl = "No active repository path.",
+        disabledBehavior = "New feeds do not request Jamendo; saved legacy rows can remain visible.",
+        followUp = "None.",
+    ),
+    ProviderRuntimeControl(
+        source = ContentSource.AUDIUS,
+        surfaces = "Legacy saved records through old sound repository code.",
+        status = ProviderRuntimeControlStatus.COVERED,
+        currentControl = "No active browsing tab uses Audius.",
+        disabledBehavior = "New feeds do not request Audius; saved legacy rows can remain visible.",
+        followUp = "None.",
+    ),
+    ProviderRuntimeControl(
+        source = ContentSource.CCMIXTER,
+        surfaces = "Legacy saved records through old sound repository code.",
+        status = ProviderRuntimeControlStatus.COVERED,
+        currentControl = "No active browsing tab uses ccMixter.",
+        disabledBehavior = "New feeds do not request ccMixter; saved legacy rows can remain visible.",
+        followUp = "None.",
+    ),
+    ProviderRuntimeControl(
+        source = ContentSource.LOCAL,
+        surfaces = "Photo picker, file picker, wallpaper/video/sound edit and apply flows.",
+        status = ProviderRuntimeControlStatus.NOT_APPLICABLE,
+        currentControl = "User action and Android permission/picker grants.",
+        disabledBehavior = "No remote provider is contacted; user can cancel picker flows or delete local copies.",
+        followUp = "None.",
+    ),
+    ProviderRuntimeControl(
+        source = ContentSource.YOUTUBE,
+        surfaces = "Sound tabs, sound search, pasted URL import, top hits, similar sounds, video wallpaper feed.",
+        status = ProviderRuntimeControlStatus.MISSING,
+        currentControl = "Query customization and blocked words only; no legal-mode or source-enabled flag.",
+        disabledBehavior = "No source-disabled state; failures surface as unavailable audio/video sources.",
+        followUp = "Add a legal-mode flag that removes YouTube tabs/search/import/video paths and blocks stream resolution.",
+    ),
+    ProviderRuntimeControl(
+        source = ContentSource.PEXELS,
+        surfaces = "Wallpaper curated/search/style-biased Discover and video wallpaper feed.",
+        status = ProviderRuntimeControlStatus.PARTIAL,
+        currentControl = "Blank API key returns empty results for Pexels calls; default BuildConfig key can still enable it.",
+        disabledBehavior = "When the effective key is blank, Pexels wallpaper and video calls short-circuit to empty results.",
+        followUp = "Add an explicit source-enabled flag so distribution profiles can disable Pexels even when a key is bundled.",
+    ),
+    ProviderRuntimeControl(
+        source = ContentSource.PIXABAY,
+        surfaces = "Wallpaper search/Discover and video wallpaper feed.",
+        status = ProviderRuntimeControlStatus.PARTIAL,
+        currentControl = "Blank API key returns empty results for Pixabay calls; default BuildConfig key can still enable it.",
+        disabledBehavior = "When the effective key is blank, Pixabay wallpaper and video calls short-circuit to empty results.",
+        followUp = "Add an explicit source-enabled flag and provider TTL guard before claiming policy-complete disablement.",
+    ),
+    ProviderRuntimeControl(
+        source = ContentSource.KLIPY,
+        surfaces = "Legacy saved records only.",
+        status = ProviderRuntimeControlStatus.COVERED,
+        currentControl = "Removed active feed.",
+        disabledBehavior = "New feeds do not request Klipy; saved legacy rows can remain visible.",
+        followUp = "None.",
+    ),
+    ProviderRuntimeControl(
+        source = ContentSource.SOUNDCLOUD,
+        surfaces = "Legacy saved records and dormant repository code.",
+        status = ProviderRuntimeControlStatus.COVERED,
+        currentControl = "No active browsing tab uses SoundCloud.",
+        disabledBehavior = "New feeds do not request SoundCloud; saved legacy rows can remain visible.",
+        followUp = "None.",
+    ),
+    ProviderRuntimeControl(
+        source = ContentSource.COMMUNITY,
+        surfaces = "Community sound feed, uploads, votes, moderation, creator surfaces, community wallpaper uploads.",
+        status = ProviderRuntimeControlStatus.MISSING,
+        currentControl = "Firebase configuration availability and auth/rules failures only; no runtime community-off flag.",
+        disabledBehavior = "No source-disabled state; Firebase failures surface through upload/feed errors and cached local state.",
+        followUp = "Add a community-enabled flag that hides upload/actions and reports disabled diagnostics separately from outages.",
+    ),
+    ProviderRuntimeControl(
+        source = ContentSource.BUNDLED,
+        surfaces = "Bundled ringtone, notification, and alarm fallback content.",
+        status = ProviderRuntimeControlStatus.COVERED,
+        currentControl = "Ships with app assets and curated metadata.",
+        disabledBehavior = "No remote provider is contacted; removal requires changing bundled content metadata or assets.",
+        followUp = "None.",
+    ),
+    ProviderRuntimeControl(
+        source = ContentSource.AI_GENERATED,
+        surfaces = "Generated wallpaper flow backed by user/provider key settings.",
+        status = ProviderRuntimeControlStatus.PARTIAL,
+        currentControl = "Provider key gates generation; no separate generated-content source flag.",
+        disabledBehavior = "Blank key prevents provider-backed generation, but generated local outputs can remain saved.",
+        followUp = "Add a generated-content source flag if store/distribution profiles need to remove generation entirely.",
+    ),
+)
+
+val providerRuntimeControlsBySource: Map<ContentSource, ProviderRuntimeControl> =
+    providerRuntimeControls.associateBy { it.source }

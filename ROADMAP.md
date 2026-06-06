@@ -199,7 +199,7 @@ Append-only Cycle 3 handoff. Every item below is source-backed in `docs/research
   - Touches: provider repositories, `SourceMetrics`, Settings provider toggles, detail screens, downloader/apply flows, `docs/legal/provider-policy.md`.
   - Acceptance: every provider has a policy row covering attribution, source link, API cache TTL, media cache TTL, hotlinking, download/apply/share allowances, rate-limit handling, deletion behavior, and kill-switch default.
   - Verify: provider policy unit tests; Settings can disable each remote provider; disabled providers vanish from search/default feeds; existing favorites retain source-deleted/unavailable state without crashing.
-  - Progress 2026-06-05: central `ProviderDisclosure` rows now cover every `ContentSource`, `docs/legal/provider-policy.md` mirrors the matrix, and `ProviderDisclosureTest` fails when a source lacks policy coverage. Runtime provider kill switches, rate-limit enforcement, and unavailable-source states remain open.
+  - Progress 2026-06-05: central `ProviderDisclosure` rows now cover every `ContentSource`, `docs/legal/provider-policy.md` mirrors the matrix, and `ProviderDisclosureTest` fails when a source lacks policy coverage. Cycle 36 added checked runtime-control rows in `ProviderDisclosure.kt` and `docs/legal/provider-runtime-controls.md`; actual source disable flags, rate-limit enforcement, and unavailable-source states remain open.
 
 - [ ] 🤖 🔬 **P1 — Pexels usage guardrail and fallback plan**
   - Why: Pexels specifically rejects standalone wallpaper/gallery API replication. Aura must prove Pexels is an enhancement source, not the product's core inventory.
@@ -1267,7 +1267,7 @@ Append-only Cycle 31 implementation record. The completed item is source-backed 
   - Acceptance: a deterministic check fails when generated raw metadata rows diverge from the locked notice-section count or contain malformed ranges.
   - Verify: focused Python fixture or temporary generated-root smoke test proves malformed metadata fails and current generated outputs pass.
 
-- [ ] 🤖 🔬 **P1 — Runtime provider kill-switch behavior matrix**
+- [x] 🤖 🔬 **P1 — Runtime provider kill-switch behavior matrix**
   - Why: Aura has many provider toggles and legacy/dormant sources, but disabled-provider behavior is still mostly implicit. Users and release owners need predictable behavior when a provider is disabled, missing credentials, or temporarily unavailable.
   - Evidence: `ProviderDisclosure.kt`, `PreferencesManager.kt`, `SettingsScreen.kt`, repository entry points for YouTube, Reddit, Pexels, Pixabay, community uploads, bundled content, and legacy sound providers.
   - Touches: provider settings/disclosure docs, focused provider tests, roadmap/state files.
@@ -2805,19 +2805,26 @@ Stars/dates as of research pass 2026-05-16.
 - Primary source reference — [Google Play services open-source notices guide](https://developers.google.com/android/guides/opensource).
 - Verification outputs — release-compliance Python compile checks, dependency notice lock check, generated notice metadata parity check, malformed-range and missing-row negative fixtures, native compliance lock check, dependency overlay check, dependency license policy check, `git diff --check`, and changed-line attribution scan.
 
+## Appendix AN — Cycle 36 Sources
+
+- Cycle 36 implementation record — [docs/research/cycle-36-2026-06-06.md](docs/research/cycle-36-2026-06-06.md).
+- Runtime provider control implementation — `app/src/main/java/com/freevibe/data/legal/ProviderDisclosure.kt`, `app/src/test/java/com/freevibe/data/legal/ProviderDisclosureTest.kt`, `docs/legal/provider-runtime-controls.md`, `docs/legal/provider-policy.md`.
+- Primary source references — [Pexels API wallpaper guidance](https://help.pexels.com/hc/en-us/articles/4405588861721-Can-I-use-the-API-as-a-wallpaper-app), [Pixabay API documentation](https://pixabay.com/api/docs/), [Reddit Data API Terms](https://redditinc.com/policies/data-api-terms), [Reddit Developer Terms](https://redditinc.com/policies/developer-terms), [YouTube API Services Developer Policies](https://developers.google.com/youtube/terms/developer-policies).
+- Verification outputs — focused provider disclosure unit test, release-compliance Python compile checks, dependency notice lock check, generated notice metadata parity check, native compliance lock check, dependency overlay check, dependency license policy check, `git diff --check`, and changed-line attribution scan.
+
 ## Continuation State
 
 ### Last Completed Cycle
 
-Cycle 35: generated notice metadata parity guard.
+Cycle 36: runtime provider kill-switch behavior matrix.
 
 ### Current Focus
 
-Start Cycle 36 with a runtime provider kill-switch behavior matrix. Commit and push completed work when the active project contract allows it.
+Start Cycle 37 with the existing YouTube legal-mode/offline-risk switch item. Commit and push completed work when the active project contract allows it.
 
 ### Important Findings So Far
 
-- `ROADMAP.md` has Cycle 18 through Cycle 35 research/implementation items; `docs/research/cycle-18-2026-06-06.md` through `docs/research/cycle-35-2026-06-06.md` have the source-backed analysis.
+- `ROADMAP.md` has Cycle 18 through Cycle 36 research/implementation items; `docs/research/cycle-18-2026-06-06.md` through `docs/research/cycle-36-2026-06-06.md` have the source-backed analysis.
 - `LicensesScreen.kt` still has manual dependency rows; content sources are already code-backed by `ProviderDisclosure.kt`.
 - `.github/workflows/release.yml` now publishes `THIRD-PARTY-NOTICES.md` and `NATIVE-COMPLIANCE.md` with the APK and includes both files in `SHA256SUMS.txt`; SBOM artifacts remain open.
 - `.github/workflows/verify.yml` and `.github/workflows/release.yml` now run `tools/dependency_notice_lock.py --mode check`, `tools/dependency_notice_lock.py --mode check-metadata`, `tools/native_compliance_inventory.py --mode check-lock`, `tools/dependency_overlay_check.py`, and `tools/dependency_license_policy.py` after `:app:releaseOssLicensesTask`.
@@ -2844,11 +2851,13 @@ Start Cycle 36 with a runtime provider kill-switch behavior matrix. Commit and p
 - The generated notice viewer now has name/license filtering plus a review watchlist for generated rows that match curated Firebase, Play services, ML Kit, NewPipeExtractor, youtubedl-android, ProfileInstaller, and ZXing surfaces.
 - AboutLibraries 14.2.1 configures but the default release export was incomplete for Aura and logged Windows path errors during compliance export.
 - `ProviderDisclosureTest` now passes in the real repo with `JAVA_HOME` set to Android Studio JBR and `ANDROID_HOME` set to the local Android SDK.
+- `ProviderDisclosure.kt` now includes a checked runtime-control matrix for every `ContentSource`; `docs/legal/provider-runtime-controls.md` records disabled behavior and follow-up gaps for YouTube, Reddit, Pexels, Pixabay, Bing, community, Wallhaven, and generated-content controls.
+- YouTube is the highest-risk missing provider kill switch because it spans default sound tabs, explicit YouTube search/import, similar-sound lookup, top-hit prefetch, video wallpaper discovery, and stream resolution.
 - Recent history was checked with `rtk git log -10 --oneline --decorate` for this pass.
 
 ### Next Best Actions
 
-1. Map runtime provider kill switches and disabled-provider behavior across current content sources.
+1. Implement the YouTube legal-mode/offline-risk switch across sound tabs, YouTube import/search, similar sounds, top hits, video wallpapers, and stream resolution.
 2. Run a real GitHub Actions manual release dry run after secrets are confirmed available and archive the run URL in the release docs.
 3. Add deeper UI verification for the licenses screen on an emulator or screenshot lane when a device/runtime is available.
 4. Preserve exact Termux package commit/build-log evidence for FFmpeg if the release owner can obtain it from upstream or a reproducible rebuild.

@@ -28,4 +28,42 @@ class ProviderDisclosureTest {
             assertTrue("${disclosure.source} storeDisclosure", disclosure.storeDisclosure.isNotBlank())
         }
     }
+
+    @Test
+    fun `provider runtime controls cover every content source exactly once`() {
+        val coveredSources = providerRuntimeControls.map { it.source }
+
+        assertEquals(ContentSource.entries.toSet(), coveredSources.toSet())
+        assertEquals(coveredSources.size, coveredSources.toSet().size)
+    }
+
+    @Test
+    fun `provider runtime controls include disabled behavior and follow ups`() {
+        providerRuntimeControls.forEach { control ->
+            assertTrue("${control.source} surfaces", control.surfaces.isNotBlank())
+            assertTrue("${control.source} currentControl", control.currentControl.isNotBlank())
+            assertTrue("${control.source} disabledBehavior", control.disabledBehavior.isNotBlank())
+            assertTrue("${control.source} followUp", control.followUp.isNotBlank())
+            if (control.status == ProviderRuntimeControlStatus.PARTIAL ||
+                control.status == ProviderRuntimeControlStatus.MISSING
+            ) {
+                assertTrue("${control.source} unresolved followUp", control.followUp != "None.")
+            }
+        }
+    }
+
+    @Test
+    fun `active network sources have runtime control decisions`() {
+        val controlledStatuses = setOf(
+            ProviderRuntimeControlStatus.COVERED,
+            ProviderRuntimeControlStatus.PARTIAL,
+            ProviderRuntimeControlStatus.MISSING,
+        )
+        providerDisclosures
+            .filter { it.status in setOf(ProviderStatus.ACTIVE, ProviderStatus.COMMUNITY, ProviderStatus.GENERATED) }
+            .forEach { disclosure ->
+                val control = providerRuntimeControlsBySource.getValue(disclosure.source)
+                assertTrue("${disclosure.source} runtime status", control.status in controlledStatuses)
+            }
+    }
 }

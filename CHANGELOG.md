@@ -3,6 +3,7 @@
 All notable changes to Aura will be documented in this file.
 
 ## Unreleased
+- **Provider runtime controls (Cycle 36)**: added a checked runtime-control matrix for every content source, documented current disabled-provider behavior, and identified YouTube as the next legal-mode/offline-risk switch.
 - **Generated notice metadata parity (Cycle 35)**: `tools/dependency_notice_lock.py` now has a `check-metadata` mode, and PR/main plus release workflows fail when raw Google OSS metadata rows no longer match the reviewed dependency notice lockfile.
 - **Generated notice search and review markers (Cycle 34)**: the in-app generated dependency notice viewer now supports filtering by dependency name or license label and highlights generated rows that map to curated high-risk dependency review surfaces.
 - **In-app generated dependency notices (Cycle 33)**: Settings > Open source licenses now reads generated Google OSS raw resources directly, lists generated dependency notices in-app, and opens full notice text without adding the stock Play services OSS licenses runtime dependency.

@@ -27,6 +27,7 @@ fail when a `ContentSource` enum value lacks a disclosure row.
 | Aura Picks | Active | Curated bundled sounds | Curated source license, currently CC0 1.0 | Upstream Freesound source, creator, license | Bundled metadata must be reviewable in release notices. |
 | AI-generated | Generated | Generated wallpapers | Generator/provider terms plus user prompt context | Provider, creation time, prompt/style metadata | Store only user-generated outputs and restore/export/apply metadata. |
 
-Open follow-up: this matrix covers content sources. Release-runtime dependency
-notice generation, native/copyleft packets, and item-level license persistence
-remain tracked in `ROADMAP.md`.
+Runtime disablement and unavailable-source behavior are tracked separately in
+[provider-runtime-controls.md](provider-runtime-controls.md). Release-runtime
+dependency notice generation, native/copyleft packets, and item-level license
+persistence remain tracked in `ROADMAP.md`.

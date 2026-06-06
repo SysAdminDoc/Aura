@@ -75,6 +75,11 @@ next pass can resume quickly.
   `tools/dependency_notice_lock.py --mode check-metadata`, wired PR/main and
   release workflows to run it after the full generated notice lock check, and
   documented the raw metadata parity command in the supply-chain runbook.
+- Completed Cycle 36 runtime provider kill-switch behavior matrix: added
+  code-backed `ProviderRuntimeControl` rows for every `ContentSource`, extended
+  provider disclosure tests to require explicit disabled behavior/follow-ups, and
+  documented current missing/partial controls in
+  `docs/legal/provider-runtime-controls.md`.
 
 ## 2026-06-05
 
