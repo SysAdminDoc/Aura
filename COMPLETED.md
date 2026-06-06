@@ -54,6 +54,11 @@ next pass can resume quickly.
   7.1.1 configure lines and license-mode facts into the native compliance
   generator/lock, regenerated the native packet, and updated release review
   docs for the remaining Termux source/build-log owner action.
+- Completed Cycle 31 release dependency license policy gate: added
+  `docs/legal/dependency-license-policy.json`,
+  `tools/dependency_license_policy.py`, and wired PR/main verification plus
+  release builds to fail unknown, disallowed, or unreviewed curated dependency
+  and native-payload license IDs.
 
 ## 2026-06-05
 

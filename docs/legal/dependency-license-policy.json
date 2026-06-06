@@ -1,0 +1,92 @@
+{
+  "allowedLicenseIds": [
+    "Apache-2.0",
+    "MIT"
+  ],
+  "disallowedLicensePatterns": [
+    "AGPL",
+    "BUSL",
+    "Commons Clause",
+    "Proprietary non-redistributable",
+    "SSPL",
+    "nonfree flags present"
+  ],
+  "requiredCoordinatePrefixes": [
+    {
+      "overlayId": "firebase-android-sdk",
+      "prefix": "com.google.firebase"
+    },
+    {
+      "overlayId": "google-play-services",
+      "prefix": "com.google.android.gms"
+    },
+    {
+      "overlayId": "newpipe-extractor",
+      "prefix": "com.github.teamnewpipe"
+    },
+    {
+      "overlayId": "newpipe-extractor",
+      "prefix": "com.github.teamnewpipe.NewPipeExtractor"
+    },
+    {
+      "overlayId": "profileinstaller",
+      "prefix": "androidx.profileinstaller:profileinstaller:"
+    },
+    {
+      "overlayId": "youtubedl-android",
+      "prefix": "io.github.junkfood02.youtubedl-android:"
+    },
+    {
+      "overlayId": "zxing-core",
+      "prefix": "com.google.zxing:core:"
+    }
+  ],
+  "requiredOverlayIds": [
+    "firebase-android-sdk",
+    "ffmpeg-payload",
+    "google-mlkit-subject-segmentation",
+    "google-play-services",
+    "newpipe-extractor",
+    "profileinstaller",
+    "python-runtime",
+    "quickjs-runtime",
+    "youtubedl-android",
+    "yt-dlp-payload",
+    "zxing-core"
+  ],
+  "requiredPayloadTargets": [
+    {
+      "overlayId": "ffmpeg-payload",
+      "target": "ffmpeg"
+    },
+    {
+      "overlayId": "python-runtime",
+      "target": "python-runtime"
+    },
+    {
+      "overlayId": "quickjs-runtime",
+      "target": "quickjs"
+    },
+    {
+      "overlayId": "yt-dlp-payload",
+      "target": "yt-dlp"
+    }
+  ],
+  "reviewRequiredLicenseIds": [
+    "GPL-3.0",
+    "GPL-3.0-or-later",
+    "GPL-3.0-or-later for the resolved payload; FFmpeg base licensing depends on build flags",
+    "Google ML Kit terms / Google Play services SDK terms",
+    "Google Play services SDK terms",
+    "PSF-2.0 plus packaged dependency licenses",
+    "Unlicense plus ISC/MIT release-file components"
+  ],
+  "reviewRequiredLicensePatterns": [
+    "GPL",
+    "LGPL",
+    "Google",
+    "PSF-2.0 plus",
+    "Unlicense plus"
+  ],
+  "schemaVersion": 1
+}

@@ -1228,16 +1228,23 @@ Append-only Cycle 29 implementation record. The completed item is source-backed 
   - Verification: Python compile, native lock check, native markdown regeneration, dependency notice lock check, dependency overlay check, and diff checks passed.
   - Remaining risk: the exact Termux package commit, patches, dependency source set, and build logs still need owner confirmation before publishing changed FFmpeg payloads.
 
-## 🔬 Researcher Queue (Cycle 30 — 2026-06-06)
+## 🔬 Researcher Queue (Cycle 31 — 2026-06-06)
 
-Append-only Cycle 30 implementation record. The completed item is source-backed in `docs/research/cycle-30-2026-06-06.md`; use the open item as the next implementation entry point.
+Append-only Cycle 31 implementation record. The completed item is source-backed in `docs/research/cycle-31-2026-06-06.md`; use the open item as the next implementation entry point.
 
-- [ ] 🤖 🔬 **P1 — Release dependency license policy gate**
+- [x] 🤖 🔬 **P1 — Release dependency license policy gate**
   - Why: generated notices, native locks, and curated overlays now prove dependency/payload drift, but Aura still lacks an explicit policy check that fails newly introduced disallowed or owner-review-required license IDs before release.
   - Evidence: `docs/legal/dependency-notice-overrides.json`, `docs/legal/dependency-notices.lock.json`, `docs/legal/native-compliance.lock.json`, `tools/dependency_overlay_check.py`, `tools/dependency_notice_lock.py`.
   - Touches: release-compliance tools, `docs/legal`, `.github/workflows/verify.yml`, `.github/workflows/release.yml`, `docs/distribution/supply-chain.md`.
   - Acceptance: high-risk and disallowed license policy is encoded in a deterministic checked file or tool mode; PR/main/release checks fail when generated notices or overlays introduce unreviewed license IDs.
   - Verify: sentinel overlay/lock fixture or local temporary copy proves an unreviewed license fails and reviewed metadata restores green status.
+
+- [ ] 🤖 🔬 **P1 — Raw Google OSS archive retention policy**
+  - Why: `GOOGLE-OSS-RAW-INPUTS.zip` now preserves exact generated notice inputs and is attached to workflow artifacts plus tagged public releases, but Aura has not decided whether the raw archive should stay publicly attached forever or move to workflow-artifact retention after a validation window.
+  - Evidence: `.github/workflows/release.yml`, `tools/google_oss_raw_archive.py`, `tools/release_artifact_bundle_check.py`, `docs/distribution/supply-chain.md`, `docs/distribution/release-dry-run.md`.
+  - Touches: release workflow, release bundle validator, supply-chain docs, release dry-run docs, roadmap/state files.
+  - Acceptance: release-owner retention decision is documented; workflow and bundle validator behavior matches that decision; release verification steps tell owners where to find raw Google OSS inputs.
+  - Verify: local release-bundle smoke test or focused validator test proves the selected raw-archive expectation is enforced.
 
 ---
 
@@ -2735,22 +2742,29 @@ Stars/dates as of research pass 2026-05-16.
 - Primary source references — [FFmpeg legal guidance](https://ffmpeg.org/legal.html), [FFmpeg downloads and verification](https://ffmpeg.org/download.html), [FFmpeg 7.1.1 source tarball](https://ffmpeg.org/releases/ffmpeg-7.1.1.tar.xz), [FFmpeg 7.1.1 PGP signature](https://ffmpeg.org/releases/ffmpeg-7.1.1.tar.xz.asc), [youtubedl-android 0.18.1](https://github.com/yausername/youtubedl-android/tree/0.18.1), [youtubedl-android FFmpeg build note](https://raw.githubusercontent.com/yausername/youtubedl-android/master/BUILD_FFMPEG.md), [Termux FFmpeg package recipe](https://github.com/termux/termux-packages/tree/master/packages/ffmpeg).
 - Verification outputs — `python -m py_compile tools\native_compliance_inventory.py`, `python tools\native_compliance_inventory.py --mode write-lock`, `python tools\native_compliance_inventory.py --mode check-lock`, `python tools\native_compliance_inventory.py --output docs\legal\native-compliance.md`, dependency notice lock check, dependency overlay check, `git diff --check`, and changed-line attribution scan.
 
+## Appendix AI — Cycle 31 Sources
+
+- Cycle 31 implementation record — [docs/research/cycle-31-2026-06-06.md](docs/research/cycle-31-2026-06-06.md).
+- License policy implementation — `docs/legal/dependency-license-policy.json`, `tools/dependency_license_policy.py`, `.github/workflows/verify.yml`, `.github/workflows/release.yml`, `docs/distribution/supply-chain.md`.
+- Primary source references — [Cash App Licensee](https://github.com/cashapp/licensee), [Licensee 1.x documentation](https://cashapp.github.io/licensee/docs/1.x/).
+- Verification outputs — `python -m py_compile tools\dependency_license_policy.py`, dependency notice lock check, native compliance lock check, dependency overlay check, dependency license policy check, sentinel disallowed-license failure check, `git diff --check`, and changed-line attribution scan.
+
 ## Continuation State
 
 ### Last Completed Cycle
 
-Cycle 30: FFmpeg source-correspondence evidence and native configure extraction.
+Cycle 31: release dependency license policy gate.
 
 ### Current Focus
 
-Start Cycle 31 with a release dependency license policy gate. Commit and push completed work when the active project contract allows it.
+Start Cycle 32 with the raw Google OSS archive retention policy decision. Commit and push completed work when the active project contract allows it.
 
 ### Important Findings So Far
 
-- `ROADMAP.md` has Cycle 18 through Cycle 30 research/implementation items; `docs/research/cycle-18-2026-06-06.md` through `docs/research/cycle-30-2026-06-06.md` have the source-backed analysis.
+- `ROADMAP.md` has Cycle 18 through Cycle 31 research/implementation items; `docs/research/cycle-18-2026-06-06.md` through `docs/research/cycle-31-2026-06-06.md` have the source-backed analysis.
 - `LicensesScreen.kt` still has manual dependency rows; content sources are already code-backed by `ProviderDisclosure.kt`.
 - `.github/workflows/release.yml` now publishes `THIRD-PARTY-NOTICES.md` and `NATIVE-COMPLIANCE.md` with the APK and includes both files in `SHA256SUMS.txt`; SBOM artifacts remain open.
-- `.github/workflows/verify.yml` and `.github/workflows/release.yml` now run `tools/dependency_notice_lock.py --mode check`, `tools/native_compliance_inventory.py --mode check-lock`, and `tools/dependency_overlay_check.py` after `:app:releaseOssLicensesTask`.
+- `.github/workflows/verify.yml` and `.github/workflows/release.yml` now run `tools/dependency_notice_lock.py --mode check`, `tools/native_compliance_inventory.py --mode check-lock`, `tools/dependency_overlay_check.py`, and `tools/dependency_license_policy.py` after `:app:releaseOssLicensesTask`.
 - `docs/distribution/supply-chain.md` defers SBOM work until N-1, but Cycle 18 split out a smaller current-toolchain notice/drift lane that should not wait on the AGP/Kotlin migration.
 - AboutLibraries 15.x is not a current-toolchain fit because its release notes make AGP 8.13 the minimum; Aura is currently on AGP 8.7.3 / Gradle 8.12. Test AboutLibraries 14.2.1 if using it before N-1.
 - Google OSS notices now have the required `settings.gradle.kts` plugin resolution mapping and root/app Gradle wiring in the real repo.
@@ -2765,6 +2779,7 @@ Start Cycle 31 with a release dependency license policy gate. Commit and push co
 - `docs/legal/native-compliance.lock.json` records 8 native/copyleft coordinates, 23 artifact records, and 36 payload entries from youtubedl-android and NewPipeExtractor artifacts.
 - The native lockfile now gates artifact hash, payload fact, and embedded FFmpeg configure drift, but it still does not prove the exact Termux package commit, patches, dependency source set, or build logs.
 - `docs/legal/dependency-notice-overrides.json` records curated high-risk dependency and native-payload review metadata; `tools/dependency_overlay_check.py` fails stale, missing, or orphaned overlay entries against the dependency/native locks.
+- `docs/legal/dependency-license-policy.json` now records allowed, review-required, disallowed, and required-coverage license policy; `tools/dependency_license_policy.py` fails unknown, disallowed, or unreviewed curated license IDs.
 - `tools/release_artifact_bundle_check.py` now validates manual dry-run and tag-release bundles for required artifacts, checksums, release-note evidence, signing digest output, and non-debuggable `aapt` evidence.
 - `tools/google_oss_raw_archive.py` now publishes `GOOGLE-OSS-RAW-INPUTS.zip` with a manifest for raw generated Google OSS notice inputs.
 - `LicensesScreen.kt` now exposes generated release notice artifacts before the manual library and content-source disclosure rows.
@@ -2774,11 +2789,11 @@ Start Cycle 31 with a release dependency license policy gate. Commit and push co
 
 ### Next Best Actions
 
-1. Evaluate whether `licensee` can enforce Aura's desired policy from `releaseRuntimeClasspath` or whether the existing generated lock/overlay tools should grow a custom license-policy mode.
+1. Decide whether `GOOGLE-OSS-RAW-INPUTS.zip` should remain public-release attached forever or only workflow-artifact attached after the first validation window.
 2. Run a real GitHub Actions manual release dry run after secrets are confirmed available and archive the run URL in the release docs.
-3. Decide whether `GOOGLE-OSS-RAW-INPUTS.zip` should remain public-release attached forever or only workflow-artifact attached after the first validation window.
-4. Add deeper UI verification for the licenses screen on an emulator or screenshot lane when a device/runtime is available.
-5. Preserve exact Termux package commit/build-log evidence for FFmpeg if the release owner can obtain it from upstream or a reproducible rebuild.
+3. Add deeper UI verification for the licenses screen on an emulator or screenshot lane when a device/runtime is available.
+4. Preserve exact Termux package commit/build-log evidence for FFmpeg if the release owner can obtain it from upstream or a reproducible rebuild.
+5. Add a custom Compose in-app dependency notice viewer after release artifact behavior stabilizes.
 
 ### Unprocessed Leads
 
@@ -2786,7 +2801,6 @@ Start Cycle 31 with a release dependency license policy gate. Commit and push co
 - Whether `GOOGLE-OSS-RAW-INPUTS.zip` should be hidden from public releases after the review process proves stable.
 - Whether Aura should parse generated raw resources for a custom Compose in-app dependency notice viewer after the markdown artifact is stable.
 - Whether the stock Google `OssLicensesMenuActivity` is ever worth adding after a dependency convergence audit.
-- Whether `licensee` can enforce Aura's desired policy from `releaseRuntimeClasspath` or needs a custom JSON comparison.
 - Whether CycloneDX should be immediate or delayed until N-1.
 - Whether AboutLibraries can be configured to include the full release runtime graph; default 14.2.1 output only showed three Kotlin BOM rows in this spike.
 
