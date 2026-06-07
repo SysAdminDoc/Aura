@@ -5,9 +5,23 @@
   "storage": {
     "rules": "storage.rules"
   },
+  "functions": {
+    "source": "functions",
+    "codebase": "community",
+    "ignore": [
+      "node_modules",
+      ".git",
+      "firebase-debug.log",
+      "firebase-debug.*.log"
+    ],
+    "predeploy": "npm --prefix functions run build"
+  },
   "emulators": {
     "database": {
       "port": 9000
+    },
+    "functions": {
+      "port": 5001
     },
     "storage": {
       "port": 9199

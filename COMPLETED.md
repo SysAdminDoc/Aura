@@ -344,6 +344,11 @@ next pass can resume quickly.
   `docs/support/community-account-deletion-web-page.md`,
   `tools/community_deletion_web_page_check.py`, and backend tool tests so the
   owner has checked publishable page copy before assigning a live HTTPS URL.
+- Completed Cycle 93 Cloud Functions scaffold: added the Node 20 TypeScript
+  `functions/` project, fail-closed App Check/Auth callable exports for the
+  seven contracted community surfaces, a manifest-synced callable contract
+  mirror, a UTC quota decision engine, Functions unit tests, backend manifest
+  coverage, and CI change detection.
 
 ## 2026-06-05
 

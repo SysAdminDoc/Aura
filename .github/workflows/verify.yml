@@ -47,6 +47,7 @@ jobs:
             database.rules.json \
             storage.rules \
             firebase.json \
+            functions \
             package.json \
             package-lock.json \
             test/firebase \
@@ -124,6 +125,14 @@ jobs:
       - name: Install Firebase rules dependencies
         if: steps.firebase_rules_changes.outputs.changed == 'true'
         run: npm ci
+
+      - name: Install Firebase functions dependencies
+        if: steps.firebase_rules_changes.outputs.changed == 'true'
+        run: npm --prefix functions ci
+
+      - name: Firebase functions tests
+        if: steps.firebase_rules_changes.outputs.changed == 'true'
+        run: npm run test:functions
 
       - name: Firebase rules tests
         if: steps.firebase_rules_changes.outputs.changed == 'true'

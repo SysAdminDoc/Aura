@@ -1,19 +1,20 @@
 {
   "commands": {
-    "deploy": "npx firebase deploy --only database,storage --project <project-id> --message <message>",
-    "dryRun": "npx firebase deploy --only database,storage --project <project-id> --dry-run",
-    "rollback": "git checkout <known-good-commit> -- firebase.json database.rules.json storage.rules package.json package-lock.json",
-    "verify": "npm run test:firebase-rules"
+    "deploy": "npx firebase deploy --only database,storage,functions --project <project-id> --message <message>",
+    "dryRun": "npx firebase deploy --only database,storage,functions --project <project-id> --dry-run",
+    "rollback": "git checkout <known-good-commit> -- firebase.json database.rules.json storage.rules package.json package-lock.json functions/package.json functions/package-lock.json functions/tsconfig.json functions/src docs/community-backend-manifest.json",
+    "verify": "npm run test:firebase-rules && npm run test:functions"
   },
   "deployTargets": [
     "database",
-    "storage"
+    "storage",
+    "functions"
   ],
   "files": [
     {
-      "bytes": 289,
+      "bytes": 580,
       "path": "firebase.json",
-      "sha256": "21b185bf9eba0cd70d9f5b524d999d2d56e429998426a95ba107fa81b626a755"
+      "sha256": "39e9d0e77b270990f33fe9e2810100d0c191c944bc9cca0f4e69ba0eefe3ed54"
     },
     {
       "bytes": 19076,
@@ -26,14 +27,49 @@
       "sha256": "1456338faf77a98f6c4af7d42b8c365297526a2453351096802312f31cec0a32"
     },
     {
-      "bytes": 674,
+      "bytes": 727,
       "path": "package.json",
-      "sha256": "6bcdbbf5a6b6f7a201cbbf279522982d4c178146095e959c735c5ec767e1dc6c"
+      "sha256": "025665f333338579cc63e24b30e264029aeebb2ab82f73f9f5fb876c182b6af6"
     },
     {
       "bytes": 338694,
       "path": "package-lock.json",
       "sha256": "1cf68418fa43749bd36968244d927844282c0bbb899d508ccfdfe769ec8aa43e"
+    },
+    {
+      "bytes": 399,
+      "path": "functions/package.json",
+      "sha256": "ccf8b2e67545a66d0cdff42b0bdd113e06db351939ec12b4c30d33fbc1e28400"
+    },
+    {
+      "bytes": 111678,
+      "path": "functions/package-lock.json",
+      "sha256": "2a4acabaabb1bf695378f506e7b68a4814e78dc2a9ec93fe6f6cd90463a8dfb7"
+    },
+    {
+      "bytes": 425,
+      "path": "functions/tsconfig.json",
+      "sha256": "801fc6e8bab4b392ef5f4a9069ad1fc99024f969c93c29ecbf9b2dd0c4669590"
+    },
+    {
+      "bytes": 1249,
+      "path": "functions/src/callableScaffold.ts",
+      "sha256": "0e24830e6f9ee6c37845ab7ef0f73826374c9d4ab6cb57bd53cdc8fbdff484f1"
+    },
+    {
+      "bytes": 6662,
+      "path": "functions/src/communityContract.ts",
+      "sha256": "5394e08997e13c82664fa524fd8372bfce8cc2f14f339fdbf32bcf594e69b771"
+    },
+    {
+      "bytes": 1143,
+      "path": "functions/src/index.ts",
+      "sha256": "cc45f53390383828deb1be1ed5c30ffabddfa4358e16c929a4d625f1dc2865b5"
+    },
+    {
+      "bytes": 5421,
+      "path": "functions/src/quotaEngine.ts",
+      "sha256": "e050ecd2d4dc61c85cb9bb596f386f62b0f291cde1ceb16d5fd2198cf8ea2200"
     }
   ],
   "firebaseCli": {
@@ -46,6 +82,9 @@
       "database": {
         "port": 9000
       },
+      "functions": {
+        "port": 5001
+      },
       "singleProjectMode": true,
       "storage": {
         "port": 9199
@@ -54,12 +93,24 @@
         "enabled": false
       }
     },
+    "functions": {
+      "codebase": "community",
+      "ignore": [
+        "node_modules",
+        ".git",
+        "firebase-debug.log",
+        "firebase-debug.*.log"
+      ],
+      "predeploy": "npm --prefix functions run build",
+      "source": "functions"
+    },
     "storageRules": "storage.rules"
   },
   "name": "aura-community-firebase-backend",
   "npmScripts": {
     "test:database-rules": "firebase emulators:exec --only database --project aura-rules-test \"node --test test/firebase/database.rules.test.mjs\"",
     "test:firebase-rules": "firebase emulators:exec --only database,storage --project aura-rules-test \"node --test test/firebase/*.rules.test.mjs\"",
+    "test:functions": "npm --prefix functions test",
     "test:storage-rules": "firebase emulators:exec --only storage --project aura-rules-test \"node --test test/firebase/storage.rules.test.mjs\""
   },
   "schemaVersion": 1

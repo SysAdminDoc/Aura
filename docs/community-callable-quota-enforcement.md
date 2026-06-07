@@ -1,9 +1,10 @@
 # Community Callable Quota Enforcement
 
 Cycle 63 turns the Cycle 54 quota policy into a backend contract for callable
-functions. The repo does not yet include a deployed Cloud Functions project;
-this document is the implementation contract that the backend and Android
-repository migration must follow.
+functions. Cycle 93 adds the first checked Cloud Functions project scaffold.
+The exported callables currently fail closed until each surface has a write
+handler and emulator-backed tests; this document is the implementation contract
+that the backend and Android repository migration must follow.
 
 ## Contract Source
 
@@ -25,6 +26,10 @@ same contract. It pins the quota day boundary to UTC and is validated by:
 py -3 tools\community_callable_contract_check.py --contract docs\community-callable-contract.json
 ```
 
+`functions/src/communityContract.ts` mirrors that manifest for the Node 20
+Functions project. `functions/test/communityContract.test.cjs` fails if the
+Functions contract drifts from `docs/community-callable-contract.json`.
+
 ## Callable Matrix
 
 | Surface | Callable | Payload | Final writes | Limited-use token |
@@ -41,6 +46,26 @@ Every callable also owns these protected ledgers for its surface:
 
 - `/community_write_quotas/{uid}/{yyyyMMdd}/{surface}`
 - `/community_write_dedupe/{uid}/{surface}/{dedupeKey}`
+
+## Functions Scaffold Status
+
+Cycle 93 added:
+
+- `functions/package.json` with Node 20, `firebase-functions` 7.2.5,
+  `firebase-admin` 13.10.0, and TypeScript 5.9.3.
+- `functions/src/index.ts` exports all seven contracted callables with
+  `enforceAppCheck` and per-surface `consumeAppCheckToken` options.
+- `functions/src/callableScaffold.ts` requires Firebase Auth and App Check, then
+  returns `failed-precondition` while write handlers are pending.
+- `functions/src/quotaEngine.ts` implements pure UTC quota-day, cooldown,
+  daily-limit, duplicate, accepted-state, blocked-state, and dedupe-marker
+  decisions.
+- `functions/test/*.test.cjs` covers manifest sync, runtime App Check options,
+  limited-use token choices, UTC day boundaries, duplicate handling, cooldown,
+  and daily-limit decisions.
+
+Do not deploy the scaffold as production enforcement until at least one surface
+has a real write handler, Emulator Suite coverage, and Android migration code.
 
 ## Request Envelope
 
@@ -118,6 +143,7 @@ response when the server provides an existing target.
 - Run `CommunityQuotaPolicyTest` after contract edits.
 - Run `tools/community_callable_contract_check.py` after any callable contract
   or deployment-manifest edit.
+- Run `npm --prefix functions test` after any Functions source or contract edit.
 - Add callable unit tests for accepted, duplicate, cooldown, daily-limit, and
   unauthorized writes for every surface.
 - Add Emulator Suite tests before direct RTDB rules are tightened.

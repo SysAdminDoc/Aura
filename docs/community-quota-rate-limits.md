@@ -4,8 +4,9 @@ Cycle 54 defines the first enforceable quota contract for Aura community writes.
 Cycle 63 adds callable function contract metadata to `CommunityQuotaPolicies`
 and records the backend sequence in
 [`docs/community-callable-quota-enforcement.md`](community-callable-quota-enforcement.md).
-This design does not claim production enforcement until the callable backend and
-Firebase Console App Check enforcement are deployed.
+Cycle 93 adds a fail-closed Cloud Functions scaffold and pure quota decision
+engine. This design does not claim production enforcement until real callable
+write handlers and Firebase Console App Check enforcement are deployed.
 
 ## Goals
 
@@ -83,8 +84,8 @@ Admin SDK job should own ledger updates.
 
 ## Remaining Implementation Work
 
-- Add the callable backend project and wire Android repositories to the Cycle 63
-  callable contract, including the Cycle 68 user-block row.
+- Implement callable write handlers and wire Android repositories to the Cycle
+  63 callable contract, including the Cycle 68 user-block row.
 - Keep quota reset days on the manifest-pinned UTC boundary unless the backend
   deployment config deliberately changes it with policy review.
 - Decide whether blocked quota attempts should create private moderation events.

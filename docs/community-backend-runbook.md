@@ -2,8 +2,9 @@
 
 Cycle 64 defines the deployable evidence packet for Aura community backend
 rules. The backend surface currently includes Firebase Realtime Database rules,
-Cloud Storage rules, local Emulator Suite tests, and a deterministic manifest of
-the files that affect rules deployment.
+Cloud Storage rules, a fail-closed Cloud Functions scaffold, local Emulator
+Suite tests, Functions unit tests, and a deterministic manifest of the files
+that affect backend deployment.
 
 ## Backend Manifest
 
@@ -15,6 +16,10 @@ Firebase CLI package version, rules-test scripts, and SHA-256 hashes for:
 - `storage.rules`
 - `package.json`
 - `package-lock.json`
+- `functions/package.json`
+- `functions/package-lock.json`
+- `functions/tsconfig.json`
+- `functions/src/*.ts`
 
 Regenerate it after changing any of those files:
 
@@ -37,10 +42,12 @@ Run from the repo root:
 ```powershell
 git status --short --branch
 npm ci
+npm --prefix functions ci
 py -3 tools\community_backend_manifest.py --mode check
 py -3 tools\community_callable_contract_check.py --contract docs\community-callable-contract.json
 py -3 tools\community_deletion_web_url_check.py --manifest docs\support\community-account-deletion-web-url.json --repo-root .
 py -3 tools\community_deletion_web_page_check.py --page docs\support\community-account-deletion-web-page.md
+npm run test:functions
 npm run test:firebase-rules
 npx firebase --version
 ```
@@ -56,7 +63,7 @@ production validation.
 
 ```powershell
 $projectId = "<project-id>"
-npx firebase deploy --only database,storage --project $projectId --dry-run
+npx firebase deploy --only database,storage,functions --project $projectId --dry-run
 ```
 
 The pinned CLI advertises `deploy --dry-run` as validating and building without
@@ -69,6 +76,7 @@ Record this evidence before a real deploy:
 - Git commit SHA.
 - `docs/community-backend-manifest.json` SHA-256 or copied JSON.
 - `npm run test:firebase-rules` result.
+- `npm run test:functions` result.
 - `npx firebase --version` output.
 - Dry-run command and exit code.
 - Firebase project ID.
@@ -83,7 +91,7 @@ Deploy only after the preflight and dry run pass:
 ```powershell
 $projectId = "<project-id>"
 $message = "Aura community backend <git-sha>"
-npx firebase deploy --only database,storage --project $projectId --message $message
+npx firebase deploy --only database,storage,functions --project $projectId --message $message
 ```
 
 After deploy:
@@ -101,17 +109,19 @@ Rollback means redeploying the last known-good backend file set. Do not edit
 rules directly in the Firebase Console as the primary rollback path.
 
 1. Identify the known-good commit from `git log --oneline -- firebase.json
-   database.rules.json storage.rules package.json package-lock.json`.
+   database.rules.json storage.rules package.json package-lock.json functions`.
 2. Restore the backend file set in the worktree:
 
    ```powershell
    $knownGood = "<commit-sha>"
-   git checkout $knownGood -- firebase.json database.rules.json storage.rules package.json package-lock.json docs/community-backend-manifest.json
+   git checkout $knownGood -- firebase.json database.rules.json storage.rules package.json package-lock.json functions/package.json functions/package-lock.json functions/tsconfig.json functions/src docs/community-backend-manifest.json
    py -3 tools\community_backend_manifest.py --mode write
    npm ci
+   npm --prefix functions ci
+   npm run test:functions
    npm run test:firebase-rules
-   npx firebase deploy --only database,storage --project <project-id> --dry-run
-   npx firebase deploy --only database,storage --project <project-id> --message "Aura community backend rollback <known-good-sha>"
+   npx firebase deploy --only database,storage,functions --project <project-id> --dry-run
+   npx firebase deploy --only database,storage,functions --project <project-id> --message "Aura community backend rollback <known-good-sha>"
    ```
 
 3. Commit the rollback file set if the repository needs to remain aligned with
@@ -130,6 +140,8 @@ must include:
 - Backend manifest check result.
 - Callable contract manifest check result when callable policy, quota, or
   backend contract files change.
+- Functions unit test result when `functions/`, `firebase.json`, or callable
+  contract files change.
 - Firebase rules test result.
 - Dry-run result or explicit owner note explaining why the deploy was deferred.
 - Deployed project ID and command output when deployed.
@@ -159,6 +171,8 @@ must include:
   submission or after any web deletion URL change.
 - Hosted account deletion page copy check from
   `tools/community_deletion_web_page_check.py` before owner publication.
+- Functions scaffold status from `npm run test:functions` until real callable
+  write handlers and emulator coverage replace the fail-closed exports.
 - Account deletion review receipt from
   `tools/community_account_deletion_review.py` before any future trusted apply
   step accepts a deletion plan.
@@ -198,4 +212,6 @@ must include:
 - Firebase CLI deploy reference: https://firebase.google.com/docs/cli
 - Firebase App Check overview: https://firebase.google.com/docs/app-check
 - App Check enforcement: https://firebase.google.com/docs/app-check/enable-enforcement
+- App Check for Cloud Functions: https://firebase.google.com/docs/app-check/cloud-functions
+- Callable Cloud Functions: https://firebase.google.com/docs/functions/callable
 - Cloud Storage lifecycle management: https://docs.cloud.google.com/storage/docs/lifecycle

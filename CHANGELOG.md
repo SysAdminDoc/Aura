@@ -3,6 +3,7 @@
 All notable changes to Aura will be documented in this file.
 
 ## Unreleased
+- **Cloud Functions scaffold (Cycle 93)**: added a Node 20 TypeScript `functions/` project with App Check/Auth fail-closed callable exports, a manifest-synced callable contract mirror, a UTC quota decision engine, backend manifest coverage, and CI tests.
 - **Hosted deletion page template gate (Cycle 92)**: added checked publishable copy and a validator for the hosted account deletion request page before the owner assigns a live HTTPS URL.
 - **Callable contract manifest gate (Cycle 91)**: added a backend JSON manifest and validator for the community callable quota contract, including UTC quota-day boundary, App Check/Auth requirements, final write paths, and CI coverage.
 - **Upload deletion execution receipt (Cycle 90)**: added a redacted receipt builder for owner/admin public-upload deletion evidence after clean account-deletion upload plans, covering Storage, metadata, owner-index, and tombstone completion.

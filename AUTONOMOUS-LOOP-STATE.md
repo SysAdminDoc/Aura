@@ -1,8 +1,8 @@
 # Autonomous Loop State
 
 **Assigned project:** `C:\Users\--\repos\Aura`
-**Current pass:** 2026-06-07 Cycle 92 hosted deletion page template gate
-**Last commit before pass:** `9ae6c70` (`feat(community): add callable contract gate`)
+**Current pass:** 2026-06-07 Cycle 93 Cloud Functions scaffold
+**Last commit before pass:** `515d8c8` (`feat(community): add deletion web page gate`)
 
 ## 2026-06-05 Result
 
@@ -862,10 +862,40 @@
   page check, backend tool unittest discovery, diff hygiene, and
   attribution/ASCII scans passed.
 
+## Cycle 93 Result - 2026-06-07
+
+- Added the Node 20 TypeScript `functions/` project with pinned
+  `firebase-functions` 7.2.5, `firebase-admin` 13.10.0, and TypeScript 5.9.3.
+- Added `functions/src/communityContract.ts` as a runtime mirror of
+  `docs/community-callable-contract.json`.
+- Added `functions/src/quotaEngine.ts` with pure UTC quota-day, duplicate,
+  cooldown, daily-limit, accepted-state, blocked-state, and dedupe-marker
+  decisions.
+- Added fail-closed App Check/Auth callable exports for all seven contracted
+  community write surfaces in `functions/src/index.ts`.
+- Added `functions/test/communityContract.test.cjs` and
+  `functions/test/quotaEngine.test.cjs` for manifest sync, runtime options,
+  limited-use token choices, UTC day boundaries, duplicate handling, cooldown,
+  and daily-limit behavior.
+- Updated `firebase.json`, `.github/workflows/verify.yml`, `package.json`,
+  `.gitignore`, `tools/community_backend_manifest.py`, and
+  `docs/community-backend-manifest.json` so Functions source is part of backend
+  verification.
+- Updated `docs/research/cycle-93-2026-06-07.md`,
+  `docs/community-callable-quota-enforcement.md`,
+  `docs/community-quota-rate-limits.md`,
+  `docs/community-backend-runbook.md`, `ROADMAP.md`, `COMPLETED.md`, and
+  `CHANGELOG.md`.
+- Cycle 93 verification: Functions test suite, backend manifest check,
+  callable contract manifest check, high-severity npm audit, diff hygiene, and
+  attribution/ASCII scans passed. The current Firebase Admin/Functions
+  dependency chain still reports moderate transitive `uuid` advisories; forced
+  audit remediation would downgrade Firebase Admin across a breaking boundary.
+
 ## Next Cycle
 
-Continue this same assigned project, Aura. Start Cycle 93 from the `ROADMAP.md`
-Continuation State and `docs/research/cycle-92-2026-06-07.md`. The account
+Continue this same assigned project, Aura. Start Cycle 94 from the `ROADMAP.md`
+Continuation State and `docs/research/cycle-93-2026-06-07.md`. The account
 deletion dry-run planner, read-only Settings identity surface, redacted
 shareable request draft, request-code lookup tool, review receipt gate, offline
 apply simulator, private executor package builder, and guarded REST executor
@@ -883,13 +913,16 @@ verification; Cycle 90 added a redacted upload execution receipt for
 owner/admin public-upload deletion workflow evidence after clean plans; Cycle
 91 added a machine-checked callable contract manifest with UTC quota-day
 boundary; Cycle 92 added checked hosted deletion page copy for owner
-publication. Cloud Functions implementation, Android callable migration, a live
-hosted HTTPS web deletion URL, and production-project dry-run evidence remain
-open. Next add the Cloud Functions project for the Cycle 63/91 callable
-contract, Android callable repository adapters, hosted URL publication after
-owner approval, or a real production-project Firebase executor dry-run after
-owner access is confirmed. Commit and push completed work when the active
-project contract allows it.
+publication; Cycle 93 added the Node 20 Cloud Functions scaffold, fail-closed
+community callable exports, a manifest-synced Functions contract mirror, and a
+UTC quota decision engine. Real callable write handlers, Android callable
+migration, a live hosted HTTPS web deletion URL, and production-project dry-run
+evidence remain open. Next add the first real callable write handler with
+emulator-backed accepted, duplicate, cooldown, daily-limit, unauthenticated,
+and missing-App-Check tests; add Android callable repository adapters; publish
+the hosted URL after owner approval; or run a real production-project Firebase
+executor dry-run after owner access is confirmed. Commit and push completed
+work when the active project contract allows it.
 
 ## Previous Cycle Prompt
 

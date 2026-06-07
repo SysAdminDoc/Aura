@@ -12,6 +12,8 @@ local.properties
 /app/build
 /baselineprofile/build
 /node_modules
+/functions/node_modules
+/functions/lib
 /database-debug.log
 /firebase-debug.log
 /storage-debug.log

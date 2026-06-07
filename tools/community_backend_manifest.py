@@ -12,12 +12,15 @@ from pathlib import Path
 
 DEFAULT_MANIFEST = "docs/community-backend-manifest.json"
 
-BACKEND_FILES = [
+STATIC_BACKEND_FILES = [
     "firebase.json",
     "database.rules.json",
     "storage.rules",
     "package.json",
     "package-lock.json",
+    "functions/package.json",
+    "functions/package-lock.json",
+    "functions/tsconfig.json",
 ]
 
 
@@ -74,9 +77,19 @@ def selected_scripts(package_json: dict[str, object]) -> dict[str, str]:
         raise ValueError("package.json scripts must be an object")
     selected: dict[str, str] = {}
     for name, command in scripts.items():
-        if isinstance(name, str) and name.startswith("test:") and "rules" in name:
+        if (
+            isinstance(name, str)
+            and name.startswith("test:")
+            and ("rules" in name or name == "test:functions")
+        ):
             selected[name] = str(command)
     return dict(sorted(selected.items()))
+
+
+def backend_files(root: Path) -> list[Path]:
+    files = [root / path for path in STATIC_BACKEND_FILES]
+    functions_src = sorted((root / "functions" / "src").glob("*.ts"))
+    return files + functions_src
 
 
 def build_manifest(root: Path) -> dict[str, object]:
@@ -89,24 +102,25 @@ def build_manifest(root: Path) -> dict[str, object]:
     return {
         "schemaVersion": 1,
         "name": "aura-community-firebase-backend",
-        "deployTargets": ["database", "storage"],
+        "deployTargets": ["database", "storage", "functions"],
         "firebaseCli": {
             "package": "firebase-tools",
             "version": str(dev_dependencies.get("firebase-tools", "")),
         },
         "commands": {
-            "verify": "npm run test:firebase-rules",
-            "dryRun": "npx firebase deploy --only database,storage --project <project-id> --dry-run",
-            "deploy": "npx firebase deploy --only database,storage --project <project-id> --message <message>",
-            "rollback": "git checkout <known-good-commit> -- firebase.json database.rules.json storage.rules package.json package-lock.json",
+            "verify": "npm run test:firebase-rules && npm run test:functions",
+            "dryRun": "npx firebase deploy --only database,storage,functions --project <project-id> --dry-run",
+            "deploy": "npx firebase deploy --only database,storage,functions --project <project-id> --message <message>",
+            "rollback": "git checkout <known-good-commit> -- firebase.json database.rules.json storage.rules package.json package-lock.json functions/package.json functions/package-lock.json functions/tsconfig.json functions/src docs/community-backend-manifest.json",
         },
         "firebaseConfig": {
             "databaseRules": firebase_json.get("database", {}).get("rules"),
             "storageRules": firebase_json.get("storage", {}).get("rules"),
+            "functions": firebase_json.get("functions", {}),
             "emulators": firebase_json.get("emulators", {}),
         },
         "npmScripts": selected_scripts(package_json),
-        "files": [file_entry(root, root / path) for path in BACKEND_FILES],
+        "files": [file_entry(root, path) for path in backend_files(root)],
     }
 
 
