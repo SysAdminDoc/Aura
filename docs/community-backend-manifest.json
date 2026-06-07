@@ -52,9 +52,9 @@
       "sha256": "801fc6e8bab4b392ef5f4a9069ad1fc99024f969c93c29ecbf9b2dd0c4669590"
     },
     {
-      "bytes": 11000,
+      "bytes": 11033,
       "path": "functions/src/blockHandler.ts",
-      "sha256": "3bf1d49b6c1b8f648afcf9155ef2d44f91554de74a2e470cd7b78835d8ec1781"
+      "sha256": "dbcb74f93ebd91c0e6d2cf771959025ac89bc60bba406733803556cb092497e5"
     },
     {
       "bytes": 1249,

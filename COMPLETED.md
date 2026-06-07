@@ -431,6 +431,11 @@ next pass can resume quickly.
   `test/firebase/functions.follow.test.mjs`, default real-backend invocation
   for `setCreatorFollowHandler`, and verified follow writes, unfollow removals,
   quota, dedupe, and missing-unfollow idempotency through the RTDB emulator.
+- Completed Cycle 105 user block callable emulator coverage: added
+  `test/firebase/functions.block.test.mjs`, default real-backend invocation
+  for `setCommunityUserBlockHandler`, and verified private block rows,
+  reverse-index rows, unblock removals, quota, dedupe, and missing-unblock
+  idempotency through the RTDB emulator.
 
 ## 2026-06-05
 

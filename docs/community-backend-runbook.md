@@ -180,8 +180,8 @@ must include:
   Android migration replace handler-only rollout status.
 - RTDB-emulator-backed callable handler persistence status from
   `npm run test:functions-emulator`, currently covering profile, report, vote,
-  and follow handlers, until all callable surfaces and the full callable wire
-  protocol have coverage.
+  follow, and block handlers, until all callable surfaces and the full callable
+  wire protocol have coverage.
 - Account deletion review receipt from
   `tools/community_account_deletion_review.py` before any future trusted apply
   step accepts a deletion plan.

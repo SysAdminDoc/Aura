@@ -77,7 +77,7 @@ export function createSetCommunityUserBlockCallable(backend = new FirebaseUserBl
 
 export async function setCommunityUserBlockHandler(
   request: CallableRequestLike,
-  backend: UserBlockBackend,
+  backend: UserBlockBackend = new FirebaseUserBlockBackend(),
 ) {
   const uid = requireCallableIdentity(request, USER_BLOCK_SURFACE);
   const nowMillis = backend.nowMillis();
