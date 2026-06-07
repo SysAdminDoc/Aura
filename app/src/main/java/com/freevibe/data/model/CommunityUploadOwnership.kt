@@ -15,6 +15,11 @@ enum class CommunityUploadKind(
     WALLPAPER("WALLPAPER", "community_wallpapers", "wallpapers", "cw_"),
 }
 
+enum class CommunityUploadDeleteReason(val storageValue: String) {
+    OWNER_DELETE("OWNER_DELETE"),
+    ADMIN_TAKEDOWN("ADMIN_TAKEDOWN"),
+}
+
 fun sanitizeCommunityUploadKey(value: String): String =
     value
         .removePrefix("cu_")
@@ -34,6 +39,9 @@ fun communityUploadMetadataPath(kind: CommunityUploadKind, uploadId: String): St
 
 fun communityOwnerUploadIndexPath(kind: CommunityUploadKind, ownerUid: String, uploadId: String): String =
     "/owner_uploads/${sanitizeCommunityOwnerKey(ownerUid)}/${kind.ownerRoot}/${sanitizeCommunityUploadKey(uploadId)}"
+
+fun communityUploadDeletionPath(kind: CommunityUploadKind, uploadId: String): String =
+    "/community_upload_deletions/${kind.publicIdPrefix}${sanitizeCommunityUploadKey(uploadId)}"
 
 fun buildCommunityOwnerUploadIndexPayload(
     kind: CommunityUploadKind,
@@ -63,15 +71,37 @@ fun buildCommunityUploadDeleteUpdates(
     kind: CommunityUploadKind,
     ownerUid: String,
     uploadId: String,
+    storagePath: String,
+    deletedByUid: String,
+    deletedAt: Long,
+    reason: CommunityUploadDeleteReason,
 ): Map<String, Any?> {
     val safeOwner = sanitizeCommunityOwnerKey(ownerUid)
     require(safeOwner.isNotBlank()) { "Owner UID is required" }
+    val safeDeletedBy = sanitizeCommunityOwnerKey(deletedByUid)
+    require(safeDeletedBy.isNotBlank()) { "Deleted-by UID is required" }
     val safeUploadId = sanitizeCommunityUploadKey(uploadId)
     require(safeUploadId.isNotBlank()) { "Upload ID is required" }
+    val normalizedStoragePath = storagePath.trim()
+    require(normalizedStoragePath.startsWith("${kind.ownerRoot}/$safeOwner/")) {
+        "Storage path does not match upload owner"
+    }
+    require(deletedAt > 0L) { "Deletion timestamp is required" }
 
     return mapOf(
         communityUploadMetadataPath(kind, safeUploadId) to null,
         communityOwnerUploadIndexPath(kind, safeOwner, safeUploadId) to null,
+        communityUploadDeletionPath(kind, safeUploadId) to mapOf(
+            "publicId" to "${kind.publicIdPrefix}$safeUploadId",
+            "uploadId" to safeUploadId,
+            "contentType" to kind.contentType,
+            "metadataPath" to communityUploadMetadataPath(kind, safeUploadId),
+            "storagePath" to normalizedStoragePath,
+            "uploaderUid" to safeOwner,
+            "deletedByUid" to safeDeletedBy,
+            "deletedAt" to deletedAt,
+            "reason" to reason.storageValue,
+        ),
     )
 }
 

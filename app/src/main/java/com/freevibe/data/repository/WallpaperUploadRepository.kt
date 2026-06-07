@@ -8,6 +8,7 @@ import android.net.Uri
 import android.provider.OpenableColumns
 import android.webkit.MimeTypeMap
 import com.freevibe.data.local.PreferencesManager
+import com.freevibe.data.model.CommunityUploadDeleteReason
 import com.freevibe.data.model.CommunityUploadKind
 import com.freevibe.data.model.CommunityUploadRights
 import com.freevibe.data.model.ContentSource
@@ -237,11 +238,16 @@ class WallpaperUploadRepository @Inject constructor(
                 require(storagePath.isNotBlank()) { "Wallpaper upload is missing a deletion handle" }
 
                 storageInstance.deleteCommunityStoragePathIfPresent(storagePath)
+                val deletedAt = System.currentTimeMillis()
                 databaseRoot.updateChildren(
                     buildCommunityUploadDeleteUpdates(
                         kind = CommunityUploadKind.WALLPAPER,
                         ownerUid = ownerUid,
                         uploadId = safeUploadId,
+                        storagePath = storagePath,
+                        deletedByUid = ownerUid,
+                        deletedAt = deletedAt,
+                        reason = CommunityUploadDeleteReason.OWNER_DELETE,
                     ),
                 ).await()
             }

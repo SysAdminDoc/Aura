@@ -110,6 +110,23 @@ function ownerIndexPayload({ uploadId, uid, kind = 'sounds', overrides = {} }) {
   };
 }
 
+function uploadDeletionPayload({ uploadId, uid, kind = 'sounds', overrides = {} }) {
+  const isSound = kind === 'sounds';
+  const publicId = `${isSound ? 'cu' : 'cw'}_${uploadId}`;
+  return {
+    publicId,
+    uploadId,
+    contentType: isSound ? 'SOUND' : 'WALLPAPER',
+    metadataPath: `/${isSound ? 'community_sounds' : 'community_wallpapers'}/${uploadId}`,
+    storagePath: `${kind}/${uid}/${uploadId}.${isSound ? 'mp3' : 'jpg'}`,
+    uploaderUid: uid,
+    deletedByUid: uid,
+    deletedAt: nowMs(),
+    reason: 'OWNER_DELETE',
+    ...overrides,
+  };
+}
+
 function reportPayload(reporterUid, overrides = {}) {
   return {
     contentId: 'cu_sound_reported',
@@ -250,6 +267,66 @@ test('owner upload indexes stay private to the owner and admins', async () => {
   await assertFails(other.ref(path).once('value'));
   await assertFails(other.ref(path).set(payload));
   await assertFails(owner.ref(path).set({ ...payload, uploadId: 'different' }));
+});
+
+test('community upload deletion tombstones stay private and validate ownership evidence', async () => {
+  const owner = dbFor('delete-owner');
+  const other = dbFor('delete-other');
+  const admin = adminDb();
+  const path = 'community_upload_deletions/cu_sound1';
+  const payload = uploadDeletionPayload({ uploadId: 'sound1', uid: 'delete-owner' });
+
+  await assertFails(unauthenticatedDb().ref(path).set(payload));
+  await assertFails(other.ref(path).set(payload));
+  await assertSucceeds(owner.ref(path).set(payload));
+  await assertFails(owner.ref(path).once('value'));
+  await assertSucceeds(admin.ref(path).once('value'));
+  await assertFails(owner.ref(path).update({ deletedAt: nowMs() }));
+
+  await assertFails(owner.ref('community_upload_deletions/cu_badpath').set(
+    uploadDeletionPayload({
+      uploadId: 'badpath',
+      uid: 'delete-owner',
+      overrides: {
+        publicId: 'cu_badpath',
+        storagePath: 'wallpapers/delete-owner/badpath.jpg',
+      },
+    }),
+  ));
+
+  await assertFails(owner.ref('community_upload_deletions/cu_wrongowner').set(
+    uploadDeletionPayload({
+      uploadId: 'wrongowner',
+      uid: 'delete-owner',
+      overrides: {
+        publicId: 'cu_wrongowner',
+        storagePath: 'sounds/someone-else/wrongowner.mp3',
+      },
+    }),
+  ));
+
+  await assertFails(owner.ref('community_upload_deletions/cu_badreason').set(
+    uploadDeletionPayload({
+      uploadId: 'badreason',
+      uid: 'delete-owner',
+      overrides: {
+        publicId: 'cu_badreason',
+        reason: 'ADMIN_TAKEDOWN',
+      },
+    }),
+  ));
+
+  await assertSucceeds(admin.ref('community_upload_deletions/cw_wall1').set(
+    uploadDeletionPayload({
+      uploadId: 'wall1',
+      uid: 'delete-owner',
+      kind: 'wallpapers',
+      overrides: {
+        deletedByUid: 'rules-admin',
+        reason: 'ADMIN_TAKEDOWN',
+      },
+    }),
+  ));
 });
 
 test('community report intake is reporter-owned and admin-readable', async () => {

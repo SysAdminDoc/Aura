@@ -222,6 +222,10 @@ next pass can resume quickly.
   owner indexes, unit coverage for Firebase Storage URL parsing and unsafe-row
   blocking, CI path coverage for all backend tool tests, and a backfill runbook
   with candidate requirements, apply gate, and evidence requirements.
+- Completed Cycle 67 community deletion tombstones: owner and admin upload
+  deletes now remove public metadata plus owner indexes while writing private
+  admin-only tombstones with owner-scoped Storage handles, RTDB rules/emulator
+  coverage, and a deletion retention policy for removed uploads.
 
 ## 2026-06-05
 

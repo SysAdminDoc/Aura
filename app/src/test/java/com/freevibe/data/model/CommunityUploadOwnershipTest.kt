@@ -45,14 +45,60 @@ class CommunityUploadOwnershipTest {
             kind = CommunityUploadKind.WALLPAPER,
             ownerUid = "uid/1",
             uploadId = "cw_wallpaper.1",
+            storagePath = "wallpapers/uid_1/123_wallpaper.jpg",
+            deletedByUid = "uid/1",
+            deletedAt = 456L,
+            reason = CommunityUploadDeleteReason.OWNER_DELETE,
         )
 
         assertEquals(
             mapOf(
                 "/community_wallpapers/wallpaper_1" to null,
                 "/owner_uploads/uid_1/wallpapers/wallpaper_1" to null,
+                "/community_upload_deletions/cw_wallpaper_1" to mapOf(
+                    "publicId" to "cw_wallpaper_1",
+                    "uploadId" to "wallpaper_1",
+                    "contentType" to "WALLPAPER",
+                    "metadataPath" to "/community_wallpapers/wallpaper_1",
+                    "storagePath" to "wallpapers/uid_1/123_wallpaper.jpg",
+                    "uploaderUid" to "uid_1",
+                    "deletedByUid" to "uid_1",
+                    "deletedAt" to 456L,
+                    "reason" to "OWNER_DELETE",
+                ),
             ),
             updates,
         )
+    }
+
+    @Test
+    fun `buildCommunityUploadDeleteUpdates rejects wrong tombstone storage root or owner`() {
+        try {
+            buildCommunityUploadDeleteUpdates(
+                kind = CommunityUploadKind.SOUND,
+                ownerUid = "uid1",
+                uploadId = "sound1",
+                storagePath = "wallpapers/uid1/wall.jpg",
+                deletedByUid = "uid1",
+                deletedAt = 456L,
+                reason = CommunityUploadDeleteReason.OWNER_DELETE,
+            )
+            fail("Expected wrong storage root to throw")
+        } catch (_: IllegalArgumentException) {
+        }
+
+        try {
+            buildCommunityUploadDeleteUpdates(
+                kind = CommunityUploadKind.SOUND,
+                ownerUid = "uid1",
+                uploadId = "sound1",
+                storagePath = "sounds/other_uid/sound.mp3",
+                deletedByUid = "uid1",
+                deletedAt = 456L,
+                reason = CommunityUploadDeleteReason.OWNER_DELETE,
+            )
+            fail("Expected wrong storage owner to throw")
+        } catch (_: IllegalArgumentException) {
+        }
     }
 }

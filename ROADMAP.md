@@ -260,7 +260,7 @@ Append-only Cycle 4 handoff. Every item below is source-backed in `docs/research
   - Touches: upload dialogs, RTDB rules, Storage metadata, creator profile repository, report queue, `docs/privacy/community-data.md`.
   - Acceptance: upload flow says content and metadata become public; metadata excludes unnecessary original filenames or clearly justifies them; owner field names are consistent; users can delete their uploads or request removal; admin moderation hides public catalog entries and has retention notes.
   - Verify: Firebase rules tests for owner delete/admin hide/public read; upload/delete manual pass; public catalog no longer exposes unneeded metadata; removal path documented in privacy policy.
-  - Progress 2026-06-06: Cycle 55 added `storagePath` metadata for new sound/wallpaper uploads, private `/owner_uploads/{uid}` indexes, owner repository delete methods, RTDB owner-index rules, and `docs/community-upload-deletion.md`. Cycle 56 added owner-visible detail delete actions. Cycle 57 added tracked Storage rules plus emulator tests for owner-only blob create/delete, public reads, MIME/size ceilings, and unmanaged-path denial. Cycle 58 added RTDB emulator tests for public metadata reads, owner creates/deletes, owner-index privacy, report authorization, quota ledgers, and collection shares. Cycle 60 added private admin takedown receipts that must match current upload `storagePath` handles. Cycle 61 added confirmed admin delete actions that consume those receipts, remove Storage and metadata rows, and record retry state. Cycle 65 added Storage orphan cleanup policy. Cycle 66 added `tools/community_upload_backfill_plan.py`, tests, and `docs/community-upload-backfill.md` for dry-run legacy `storagePath` and owner-index backfill planning. Remaining work: public request copy, live backfill evidence after owner access is confirmed, and deletion retention/tombstone policy.
+  - Progress 2026-06-06: Cycle 55 added `storagePath` metadata for new sound/wallpaper uploads, private `/owner_uploads/{uid}` indexes, owner repository delete methods, RTDB owner-index rules, and `docs/community-upload-deletion.md`. Cycle 56 added owner-visible detail delete actions. Cycle 57 added tracked Storage rules plus emulator tests for owner-only blob create/delete, public reads, MIME/size ceilings, and unmanaged-path denial. Cycle 58 added RTDB emulator tests for public metadata reads, owner creates/deletes, owner-index privacy, report authorization, quota ledgers, and collection shares. Cycle 60 added private admin takedown receipts that must match current upload `storagePath` handles. Cycle 61 added confirmed admin delete actions that consume those receipts, remove Storage and metadata rows, and record retry state. Cycle 65 added Storage orphan cleanup policy. Cycle 66 added `tools/community_upload_backfill_plan.py`, tests, and `docs/community-upload-backfill.md` for dry-run legacy `storagePath` and owner-index backfill planning. Cycle 67 added private owner/admin deletion tombstones plus `docs/community-deletion-retention-policy.md`. Remaining work: public request copy and live backfill evidence after owner access is confirmed.
 
 - [ ] 🤖 🔬 **P1 — Android 17 Contact Picker and contacts-permission minimization**
   - Why: Per-contact ringtone assignment requests broad contacts read/write permissions immediately on screen entry. Android 17 provides a picker that gives selected-contact read access without broad address-book access.
@@ -663,7 +663,7 @@ Append-only Cycle 12 handoff. Every item below is source-backed in `docs/researc
   - Why: Upload metadata stores public download URLs but not a canonical `storagePath` or per-owner upload index, making owner deletion and admin web deletion dependent on broad scans and brittle URL parsing.
   - Evidence: `UploadRepository.uploadSound()` Storage path and RTDB metadata; `WallpaperUploadRepository.uploadWallpaper()` Storage path and RTDB metadata; `database.rules.json`; Firebase RTDB/Storage delete docs.
   - Touches: upload metadata schema, RTDB rules, new owner index (`owner_uploads/{uid}` or equivalent), Storage rules, migration/backfill script, community backend runbook.
-  - Progress 2026-06-06: Cycle 55 added `CommunityUploadOwnership.kt`, `storagePath` metadata, `/owner_uploads/{uid}/sounds|wallpapers/{uploadId}` writes, owner delete update builders, repository delete methods, and RTDB rules for owner/admin index access. Cycle 56 added owner-visible app deletes. Cycle 57 added Storage rules and emulator tests for upload blob authorization. Cycle 58 added RTDB emulator tests for upload metadata and owner-index authorization. Cycle 66 added dry-run legacy backfill planning from Firebase Storage URLs to canonical `storagePath` plus owner-index update payloads. Remaining work: run the planner against a fresh production RTDB export and add trusted apply tooling if service-account handling is approved.
+  - Progress 2026-06-06: Cycle 55 added `CommunityUploadOwnership.kt`, `storagePath` metadata, `/owner_uploads/{uid}/sounds|wallpapers/{uploadId}` writes, owner delete update builders, repository delete methods, and RTDB rules for owner/admin index access. Cycle 56 added owner-visible app deletes. Cycle 57 added Storage rules and emulator tests for upload blob authorization. Cycle 58 added RTDB emulator tests for upload metadata and owner-index authorization. Cycle 66 added dry-run legacy backfill planning from Firebase Storage URLs to canonical `storagePath` plus owner-index update payloads. Cycle 67 added owner/admin deletion tombstones with owner-scoped Storage handle validation and a retention policy. Remaining work: run the planner against a fresh production RTDB export and add trusted apply tooling if service-account handling is approved.
   - Acceptance: new uploads store `storagePath`, owner UID, content type, and upload ID in both public metadata and an owner-scoped index; rules allow owners/admins to delete their own records; legacy uploads are backfilled or marked "admin-only deletion until migrated."
   - Verify: upload sound/wallpaper, inspect metadata/index, delete by owner from app and by admin script, confirm Storage object deletion and public feed removal; rules tests reject cross-owner deletes.
 
@@ -673,6 +673,7 @@ Append-only Cycle 12 handoff. Every item below is source-backed in `docs/researc
   - Touches: deletion contract, privacy policy, RTDB schema, moderation runbook, abuse-prevention design, rules tests.
   - Acceptance: deletion policy separately defines behavior for public uploads, vote counts, voter markers, outbound follows, inbound follows to a deleted creator, creator profile labels, moderation records, and abuse-prevention tombstones; retained records are nonpublic and minimized.
   - Verify: deletion seed with voted content, followed creators, followers of deleted creator, and moderated upload; confirm post-delete counts, visibility, and retention match the policy.
+  - Progress 2026-06-06: Cycle 67 defined the upload deletion subset in `docs/community-deletion-retention-policy.md` and implemented private upload tombstones. Remaining work: vote-marker privacy, account-deletion semantics, follows/profile retention, and block-user abuse-prevention policy.
 
 - [ ] 🤖 🔬 **P2 — Community data receipt/export surface**
   - Why: Users need a way to understand and request deletion of an anonymous identity, especially after reinstall or when using the web deletion path.
@@ -3046,19 +3047,32 @@ Stars/dates as of research pass 2026-05-16.
 - Backfill implementation — `tools/community_upload_backfill_plan.py`, `test/tools/community_upload_backfill_plan_test.py`, and `.github/workflows/verify.yml`.
 - Verification outputs — `py -3 -m py_compile tools\community_upload_backfill_plan.py test\tools\community_upload_backfill_plan_test.py`, `py -3 -m unittest discover -s test/tools -p '*_test.py'`, and `npm run test:firebase-rules` passed locally.
 
+## Appendix BQ — Cycle 67 Sources
+
+- Cycle 67 implementation record — [docs/research/cycle-67-2026-06-06.md](docs/research/cycle-67-2026-06-06.md).
+- Deletion retention policy — [docs/community-deletion-retention-policy.md](docs/community-deletion-retention-policy.md).
+- Community upload deletion runbook — [docs/community-upload-deletion.md](docs/community-upload-deletion.md).
+- Official Firebase sources — [Realtime Database Android read/write/delete](https://firebase.google.com/docs/database/android/read-and-write), [Firebase DatabaseReference API](https://firebase.google.com/docs/reference/android/com/google/firebase/database/DatabaseReference), [Firebase Storage Android delete files](https://firebase.google.com/docs/storage/android/delete-files), and [Realtime Database Security Rules](https://firebase.google.com/docs/database/security).
+- Tombstone implementation — `CommunityUploadOwnership.kt`, sound/wallpaper upload repositories, `CommunityReportRepository.kt`, `database.rules.json`, and `test/firebase/database.rules.test.mjs`.
+- Verification outputs — focused `CommunityUploadOwnershipTest`, `py -3 -m json.tool database.rules.json`, `py -3 tools\community_backend_manifest.py --mode check`, `node --check test\firebase\database.rules.test.mjs`, and `npm run test:firebase-rules` passed locally.
+
 ## Continuation State
 
 ### Last Completed Cycle
 
-Cycle 66: added dry-run legacy upload backfill planner, tests, runbook, and CI path coverage.
+Cycle 67: added private owner/admin deletion tombstones, owner-scoped Storage handle validation, RTDB rules/emulator coverage, and a deletion retention policy.
 
 ### Current Focus
+
+Start Cycle 68 with block-user policy, public takedown copy, vote marker privacy/account deletion semantics, a real production-project Firebase dry-run/orphan/backfill evidence pass after owner access is confirmed, or the Cloud Functions implementation for the Cycle 63 callable contract. Continue backend enforcement work until community uploads, reports, and shares have deployable rules, test coverage, CI gates, and operational runbooks. Commit and push completed work when the active project contract allows it.
+
+### Previous Focus
 
 Start Cycle 67 with deletion retention/tombstone policy, block-user policy, a real production-project Firebase dry-run/orphan/backfill evidence pass after owner access is confirmed, or the Cloud Functions implementation for the Cycle 63 callable contract. Continue backend enforcement work until community uploads, reports, and shares have deployable rules, test coverage, CI gates, and operational runbooks. Commit and push completed work when the active project contract allows it.
 
 ### Important Findings So Far
 
-- `ROADMAP.md` has Cycle 18 through Cycle 66 research/implementation items; `docs/research/cycle-18-2026-06-06.md` through `docs/research/cycle-66-2026-06-06.md` have the source-backed analysis.
+- `ROADMAP.md` has Cycle 18 through Cycle 67 research/implementation items; `docs/research/cycle-18-2026-06-06.md` through `docs/research/cycle-67-2026-06-06.md` have the source-backed analysis.
 - `LicensesScreen.kt` still has manual dependency rows; content sources are already code-backed by `ProviderDisclosure.kt`.
 - `.github/workflows/release.yml` now publishes `THIRD-PARTY-NOTICES.md` and `NATIVE-COMPLIANCE.md` with the APK and includes both files in `SHA256SUMS.txt`; SBOM artifacts remain open.
 - `.github/workflows/verify.yml` and `.github/workflows/release.yml` now run `tools/dependency_notice_lock.py --mode check`, `tools/dependency_notice_lock.py --mode check-metadata`, `tools/native_compliance_inventory.py --mode check-lock`, `tools/dependency_overlay_check.py`, and `tools/dependency_license_policy.py` after `:app:releaseOssLicensesTask`.

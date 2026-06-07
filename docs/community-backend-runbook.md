@@ -133,6 +133,9 @@ must include:
 - Storage lifecycle/orphan cleanup status from
   [`docs/community-storage-lifecycle-policy.md`](community-storage-lifecycle-policy.md),
   including orphan report hashes when manual cleanup is performed.
+- Deletion retention status from
+  [`docs/community-deletion-retention-policy.md`](community-deletion-retention-policy.md),
+  including tombstone-path evidence for owner deletes or admin takedowns.
 
 ## Sources
 

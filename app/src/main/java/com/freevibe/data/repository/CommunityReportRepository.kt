@@ -5,6 +5,7 @@ import com.freevibe.data.model.CommunityReportRecord
 import com.freevibe.data.model.CommunityReportReason
 import com.freevibe.data.model.CommunityReportResolutionStatus
 import com.freevibe.data.model.CommunityTakedownAction
+import com.freevibe.data.model.CommunityUploadDeleteReason
 import com.freevibe.data.model.CommunityUploadKind
 import com.freevibe.data.model.buildCommunityReportPayload
 import com.freevibe.data.model.buildCommunityReportResolutionPayload
@@ -179,6 +180,10 @@ class CommunityReportRepository @Inject constructor(
                 kind = target.kind,
                 ownerUid = target.uploaderUid,
                 uploadId = target.uploadId,
+                storagePath = target.storagePath,
+                deletedByUid = resolverUid,
+                deletedAt = deletedAt,
+                reason = CommunityUploadDeleteReason.ADMIN_TAKEDOWN,
             ).toMutableMap()
             deleteUpdates["/community_takedown_receipts/$reportKey/deleteState"] = "SUCCEEDED"
             deleteUpdates["/community_takedown_receipts/$reportKey/deletedAt"] = deletedAt

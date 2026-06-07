@@ -82,6 +82,9 @@ covers:
   the receipt;
 - delete receipt state transitions for `STARTED`, `SUCCEEDED`, and `FAILED`
   retry evidence after the initial handle-matched receipt is created;
+- private `/community_upload_deletions/{publicId}` tombstones that allow
+  owner-created `OWNER_DELETE` rows, admin-created takedown rows, admin-only
+  reads, owner-prefix Storage path validation, and admin-only updates;
 - app-matched `shared_collections/{token}` public reads, authenticated creator
   writes, owner/admin cleanup, and bounded payloads; and
 - denial for the old unused `collection_shares` path.

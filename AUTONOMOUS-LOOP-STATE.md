@@ -1,8 +1,8 @@
 # Autonomous Loop State
 
 **Assigned project:** `C:\Users\--\repos\Aura`
-**Current pass:** 2026-06-06 Cycle 66 legacy upload backfill planning
-**Last commit before pass:** `a575932` (`feat(storage): add orphan cleanup policy`)
+**Current pass:** 2026-06-06 Cycle 67 community deletion tombstones
+**Last commit before pass:** `d2e68c8` (`feat(community): add upload backfill planner`)
 
 ## 2026-06-05 Result
 
@@ -307,6 +307,19 @@
 - Added `docs/community-upload-backfill.md` with candidate requirements, apply gate, evidence requirements, and remaining trusted-writer work.
 - Updated `docs/community-upload-deletion.md`, `docs/community-storage-lifecycle-policy.md`, `docs/research/cycle-66-2026-06-06.md`, `ROADMAP.md`, `CHANGELOG.md`, and `COMPLETED.md` for legacy backfill planning.
 - Cycle 66 verification: `py -3 -m py_compile tools\community_upload_backfill_plan.py test\tools\community_upload_backfill_plan_test.py`; `py -3 -m unittest discover -s test/tools -p '*_test.py'`; `npm run test:firebase-rules`.
+- Completed Cycle 67 community deletion tombstones.
+- Added private `/community_upload_deletions/{publicId}` tombstones for owner
+  deletes and admin rights takedowns.
+- Extended owner/admin upload delete flows to remove public metadata plus owner
+  indexes while writing tombstones with owner-scoped Storage handles.
+- Added RTDB rules/emulator coverage for admin-only tombstone reads, owner-only
+  `OWNER_DELETE` creates, admin takedown creates, admin-only updates, wrong
+  Storage root denial, wrong owner prefix denial, and owner misuse of
+  `ADMIN_TAKEDOWN`.
+- Added `docs/community-deletion-retention-policy.md` and
+  `docs/research/cycle-67-2026-06-06.md`; updated upload deletion, rules
+  harness, backend runbook, roadmap, changelog, and completed docs.
+- Cycle 67 verification: focused `CommunityUploadOwnershipTest`; `py -3 -m json.tool database.rules.json`; `py -3 tools\community_backend_manifest.py --mode check`; `node --check test\firebase\database.rules.test.mjs`; `npm run test:firebase-rules`.
 
 ## Still Open
 
@@ -317,8 +330,20 @@
 - Real production-project Firebase backend dry-run evidence after owner access is confirmed.
 - Real exported Storage/RTDB orphan reports after owner access is confirmed.
 - Real production RTDB legacy backfill plan after owner access is confirmed.
-- Public takedown copy, deletion retention/tombstone policy, block-user policy, and deployable callable backend implementation.
+- Public takedown copy, block-user policy, vote marker privacy/account deletion semantics, and deployable callable backend implementation.
 
 ## Next Cycle
+
+Continue this same assigned project, Aura. Start Cycle 68 from the `ROADMAP.md`
+Continuation State and `docs/research/cycle-67-2026-06-06.md`. The community
+upload deletion path now has private owner/admin tombstones and a retention
+policy. Next add block-user policy, public takedown copy, vote marker
+privacy/account deletion semantics, a real production-project Firebase backend
+dry run/orphan/backfill evidence pass after owner access is confirmed, Cloud
+Functions implementation for the callable quota contract, or Android callable
+migration adapters. Commit and push completed work when the active project
+contract allows it.
+
+## Previous Cycle Prompt
 
 Continue this same assigned project, Aura. Start Cycle 67 from the `ROADMAP.md` Continuation State and `docs/research/cycle-66-2026-06-06.md`. The Google OSS notices plugin-only path is implemented; `tools/google_oss_to_markdown.py` generates `THIRD-PARTY-NOTICES.md`; `tools/google_oss_raw_archive.py` archives raw Google OSS inputs and the repo now keeps `GOOGLE-OSS-RAW-INPUTS.zip` attached to tagged public releases; `GeneratedDependencyNotices.kt` parses generated raw resources for an in-app notice viewer with search and review markers; `tools/native_compliance_inventory.py` generates `NATIVE-COMPLIANCE.md`, extracts embedded FFmpeg configure evidence, and gates native evidence drift; `tools/dependency_notice_lock.py` gates generated release notice drift and raw metadata parity; `tools/dependency_overlay_check.py` gates curated high-risk dependency/native-payload review metadata; `tools/dependency_license_policy.py` gates allowed, review-required, disallowed, and unknown curated license IDs; `tools/release_artifact_bundle_check.py` gates final release bundle consistency; `ProviderDisclosure.kt` now has checked runtime-control rows for every content source; YouTube, Reddit, Wallhaven, Pexels, Pixabay, Community, Bing Daily, and generated wallpapers now have runtime provider/source switches that block active fetch/resolver/upload/action paths before remote calls or bundled key reads where applicable; Pixabay photo and video metadata now have 24-hour request caches and 429 backoff; favorites/download history now have persisted unavailable-source states for saved local copies; Pexels is now enhancement-only in wallpaper Discover and video-wallpaper discovery; explicit removed/gone provider failures now reconcile saved favorite and download-history source states; sounds now have normalized license action gates and saved favorite license preservation; community sound and wallpaper uploads now require selected license metadata, rights attestation, uploader UID, timestamp, optional HTTPS source URL, canonical `storagePath`, and private owner-index rows before public metadata is written; repository owner delete methods can remove new upload blobs plus public metadata/index rows; sound and wallpaper detail surfaces now show confirmed owner-only delete actions when owner metadata and `storagePath` prove a new upload is deletable; collection shares now write `createdByUid` and use owner/admin RTDB rules under `shared_collections`; tracked Storage rules and local emulator tests now cover community upload blob authorization; RTDB rules and local emulator tests now cover community upload metadata, owner indexes, reports, report resolutions, takedown receipts/delete states, quota/dedupe ledgers, and app-matched `shared_collections`; the main verify workflow now runs the combined Firebase rules suite, backend manifest check, and backend tool unittests for lifecycle/backfill changes; `docs/community-backend-runbook.md` covers preflight, dry run, deploy, rollback, App Check rollback separation, and release evidence; `docs/community-storage-lifecycle-policy.md` blocks automatic deletes on committed upload prefixes and requires two matching orphan reports before manual cleanup; `docs/community-upload-backfill.md` defines dry-run legacy backfill planning for missing `storagePath` and owner-index rows; community reports now have private intake, admin review, status filters for open/closed queues, moderation hide/unhide actions, admin resolution metadata paths, rights-confirmed takedown receipts, and confirmed admin delete actions tied to current upload deletion handles; App Check client providers are installed for debug and release builds with a rollout runbook; community write quotas now have typed policy rows, protected admin-only RTDB quota/dedupe ledgers, callable function names, payload schemas, final write path contracts, protected ledger path coverage, and limited-use App Check token decisions. Next add deletion retention policy, block-user policy, a real production-project Firebase backend dry run/orphan/backfill evidence pass after owner access is confirmed, Cloud Functions implementation for the callable quota contract, or Android callable migration adapters. Keep AboutLibraries secondary: 14.2.1 configures, but default exports were incomplete and the compliance export logged Windows path errors; do not use AboutLibraries 15.x until N-1 upgrades AGP because v15 requires AGP 8.13. Commit and push completed work when the active project contract allows it.

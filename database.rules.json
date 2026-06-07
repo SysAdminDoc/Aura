@@ -89,6 +89,22 @@
         }
       }
     },
+    "community_upload_deletions": {
+      ".read": "auth != null && auth.token.admin === true",
+      "$publicId": {
+        ".write": "auth != null && ((!data.exists() && ((newData.child('uploaderUid').val() === auth.uid && newData.child('deletedByUid').val() === auth.uid && newData.child('reason').val() === 'OWNER_DELETE') || auth.token.admin === true)) || (data.exists() && auth.token.admin === true))",
+        ".validate": "newData.hasChildren(['publicId', 'uploadId', 'contentType', 'metadataPath', 'storagePath', 'uploaderUid', 'deletedByUid', 'deletedAt', 'reason']) && newData.child('publicId').val() === $publicId && ((newData.child('contentType').val() === 'SOUND' && newData.child('publicId').val().beginsWith('cu_') && newData.child('metadataPath').val() === '/community_sounds/' + newData.child('uploadId').val() && newData.child('storagePath').val().beginsWith('sounds/' + newData.child('uploaderUid').val() + '/')) || (newData.child('contentType').val() === 'WALLPAPER' && newData.child('publicId').val().beginsWith('cw_') && newData.child('metadataPath').val() === '/community_wallpapers/' + newData.child('uploadId').val() && newData.child('storagePath').val().beginsWith('wallpapers/' + newData.child('uploaderUid').val() + '/')))",
+        "publicId": { ".validate": "newData.isString() && newData.val().length > 3 && newData.val().length <= 260" },
+        "uploadId": { ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 240" },
+        "contentType": { ".validate": "newData.val() === 'SOUND' || newData.val() === 'WALLPAPER'" },
+        "metadataPath": { ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 280" },
+        "storagePath": { ".validate": "newData.isString() && newData.val().length > 7 && newData.val().length <= 512" },
+        "uploaderUid": { ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 240" },
+        "deletedByUid": { ".validate": "newData.isString() && (newData.val() === auth.uid || auth.token.admin === true)" },
+        "deletedAt": { ".validate": "newData.isNumber() && newData.val() > 0 && newData.val() <= now" },
+        "reason": { ".validate": "newData.val() === 'OWNER_DELETE' || newData.val() === 'ADMIN_TAKEDOWN'" }
+      }
+    },
     "community_reports": {
       ".indexOn": ["status"],
       ".read": "auth != null && auth.token.admin === true",
