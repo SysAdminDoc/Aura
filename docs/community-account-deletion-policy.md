@@ -74,6 +74,17 @@ The completion receipt refuses dry-run receipts and keeps full Firebase UIDs,
 RTDB paths, database hosts, update payloads, and access tokens out of the
 shareable artifact.
 
+After backend completion, operators can build the local/Auth cleanup sequence:
+
+```powershell
+py -3 tools\community_account_deletion_cleanup_sequence.py --completion-receipt .\account-deletion-completion-receipt.json --support-reference <ticket-id> --output .\account-deletion-cleanup-sequence.json
+```
+
+The cleanup sequence keeps local device cleanup, Firebase Auth deletion, and
+public upload deletion in that order. It does not delete Auth users by itself;
+Auth deletion still requires the private UID, requester verification, and owner
+access after backend marker deletion has completed.
+
 ## Deleted Marker Paths
 
 The planner removes:
@@ -154,14 +165,15 @@ operator lookup step.
 - `py -3 -m py_compile tools\community_account_deletion_executor_package.py test\tools\community_account_deletion_executor_package_test.py`
 - `py -3 -m py_compile tools\community_account_deletion_rest_executor.py test\tools\community_account_deletion_rest_executor_test.py`
 - `py -3 -m py_compile tools\community_account_deletion_completion_receipt.py test\tools\community_account_deletion_completion_receipt_test.py`
+- `py -3 -m py_compile tools\community_account_deletion_cleanup_sequence.py test\tools\community_account_deletion_cleanup_sequence_test.py`
 
 ## Remaining Work
 
 - Run the guarded REST executor only after requester verification, retained
   record review, operator approval, and production-project access are confirmed,
   then generate only the redacted completion receipt for the requester.
-- Add local/Auth deletion and community cache cleanup after the trusted
-  executor owns final sequencing.
+- Add the in-app local cleanup affordance and trusted Firebase Auth deletion
+  implementation after the sequencing contract is exercised with owner access.
 - Publish the hosted private support route or web deletion page before Play
   production submission, using the validated web-intake field contract.
 - Decide whether future callable-backed vote deletion should decrement

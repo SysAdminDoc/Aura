@@ -79,6 +79,11 @@ executor package against an applied REST executor receipt, rejects dry-runs, and
 emits a user-safe completion receipt that omits full UIDs, RTDB paths, database
 hosts, update payloads, and access tokens.
 
+`tools/community_account_deletion_cleanup_sequence.py` starts only from the
+completion receipt and records the remaining local device cleanup, Firebase
+Auth deletion, and public upload deletion sequencing without exposing the full
+UID.
+
 ## Operator Handling
 
 1. Receive the request draft through a private support channel.
@@ -141,7 +146,14 @@ hosts, update payloads, and access tokens.
    py -3 tools\community_account_deletion_completion_receipt.py --package .\account-deletion-executor-package.json --rest-receipt .\account-deletion-rest-apply.json --request-code AURA-123456789ABC --support-reference <ticket-id> --output .\account-deletion-completion-receipt.json
    ```
 
-13. Share only the completion receipt with the requester. Keep lookup, plan,
+13. Build the local/Auth cleanup sequence after backend completion:
+
+   ```powershell
+   py -3 tools\community_account_deletion_cleanup_sequence.py --completion-receipt .\account-deletion-completion-receipt.json --support-reference <ticket-id> --output .\account-deletion-cleanup-sequence.json
+   ```
+
+14. Share only the completion receipt and requester-facing local cleanup
+    instructions with the requester. Keep lookup, plan,
     review, simulation, executor package, REST apply receipt, database export,
     access token, full UID, and RTDB paths private.
 

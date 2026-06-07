@@ -302,6 +302,11 @@ next pass can resume quickly.
   private hosted form exports, hash requester contact/statement fields, require
   deletion/retention/upload attestations, and hand off to request-code lookup
   without committing raw requester data.
+- Completed Cycle 84 account deletion local/Auth cleanup sequence: added
+  `tools/community_account_deletion_cleanup_sequence.py` and backend tool tests
+  to require a completed backend receipt before ordering requester local app
+  cleanup, operator Firebase Auth deletion, and separate public upload deletion
+  handoff.
 
 ## 2026-06-05
 

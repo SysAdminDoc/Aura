@@ -165,6 +165,10 @@ must include:
   `tools/community_account_deletion_completion_receipt.py` after an applied
   REST receipt exists and before any requester-facing completion response is
   shared.
+- Local/Auth cleanup sequence from
+  `tools/community_account_deletion_cleanup_sequence.py` after backend
+  completion and before Firebase Auth deletion or requester local-cleanup
+  instructions are handled.
 
 ## Sources
 
