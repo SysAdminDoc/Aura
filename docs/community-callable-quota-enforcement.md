@@ -18,6 +18,13 @@ repository migration must follow.
 Unit tests keep all community write surfaces covered and fail if a callable
 contract loses auth, App Check, ledger, or final-write coverage.
 
+`docs/community-callable-contract.json` is the backend-facing manifest for the
+same contract. It pins the quota day boundary to UTC and is validated by:
+
+```powershell
+py -3 tools\community_callable_contract_check.py --contract docs\community-callable-contract.json
+```
+
 ## Callable Matrix
 
 | Surface | Callable | Payload | Final writes | Limited-use token |
@@ -109,6 +116,8 @@ response when the server provides an existing target.
 ## Verification
 
 - Run `CommunityQuotaPolicyTest` after contract edits.
+- Run `tools/community_callable_contract_check.py` after any callable contract
+  or deployment-manifest edit.
 - Add callable unit tests for accepted, duplicate, cooldown, daily-limit, and
   unauthorized writes for every surface.
 - Add Emulator Suite tests before direct RTDB rules are tightened.

@@ -1,0 +1,138 @@
+{
+  "schemaVersion": 1,
+  "contractKind": "communityCallableQuotaContract",
+  "quotaDayBoundary": "UTC",
+  "surfaces": [
+    {
+      "surfaceKey": "reports",
+      "dailyLimit": 10,
+      "minIntervalMillis": 120000,
+      "dedupeKey": "content key + reason",
+      "enforcement": ["APP_CHECKED_CALLABLE"],
+      "quotaLedgerPath": "/community_write_quotas/{uid}/{yyyyMMdd}/reports",
+      "dedupeLedgerPath": "/community_write_dedupe/{uid}/reports/{dedupeKey}",
+      "callable": {
+        "functionName": "submitCommunityReport",
+        "payloadSchema": "CommunityReportInput",
+        "finalWritePaths": ["/community_reports/{reportId}"],
+        "consumeLimitedUseAppCheckToken": true,
+        "requiresAuth": true,
+        "requiresAppCheck": true
+      }
+    },
+    {
+      "surfaceKey": "sound_uploads",
+      "dailyLimit": 3,
+      "minIntervalMillis": 900000,
+      "dedupeKey": "storagePath",
+      "enforcement": ["APP_CHECKED_CALLABLE", "STORAGE_RULES"],
+      "quotaLedgerPath": "/community_write_quotas/{uid}/{yyyyMMdd}/sound_uploads",
+      "dedupeLedgerPath": "/community_write_dedupe/{uid}/sound_uploads/{dedupeKey}",
+      "callable": {
+        "functionName": "finalizeCommunitySoundUpload",
+        "payloadSchema": "CommunitySoundUploadMetadata",
+        "finalWritePaths": [
+          "/community_sounds/{uploadId}",
+          "/owner_uploads/{uid}/sounds/{uploadId}"
+        ],
+        "consumeLimitedUseAppCheckToken": true,
+        "requiresAuth": true,
+        "requiresAppCheck": true
+      }
+    },
+    {
+      "surfaceKey": "wallpaper_uploads",
+      "dailyLimit": 5,
+      "minIntervalMillis": 600000,
+      "dedupeKey": "storagePath",
+      "enforcement": ["APP_CHECKED_CALLABLE", "STORAGE_RULES"],
+      "quotaLedgerPath": "/community_write_quotas/{uid}/{yyyyMMdd}/wallpaper_uploads",
+      "dedupeLedgerPath": "/community_write_dedupe/{uid}/wallpaper_uploads/{dedupeKey}",
+      "callable": {
+        "functionName": "finalizeCommunityWallpaperUpload",
+        "payloadSchema": "CommunityWallpaperUploadMetadata",
+        "finalWritePaths": [
+          "/community_wallpapers/{uploadId}",
+          "/owner_uploads/{uid}/wallpapers/{uploadId}"
+        ],
+        "consumeLimitedUseAppCheckToken": true,
+        "requiresAuth": true,
+        "requiresAppCheck": true
+      }
+    },
+    {
+      "surfaceKey": "votes",
+      "dailyLimit": 100,
+      "minIntervalMillis": 3000,
+      "dedupeKey": "contentId",
+      "enforcement": ["APP_CHECKED_CALLABLE", "RTDB_TRANSACTION"],
+      "quotaLedgerPath": "/community_write_quotas/{uid}/{yyyyMMdd}/votes",
+      "dedupeLedgerPath": "/community_write_dedupe/{uid}/votes/{dedupeKey}",
+      "callable": {
+        "functionName": "recordCommunityVote",
+        "payloadSchema": "CommunityVoteInput",
+        "finalWritePaths": [
+          "/votes/{contentId}",
+          "/voters/{contentId}/{uid}"
+        ],
+        "consumeLimitedUseAppCheckToken": false,
+        "requiresAuth": true,
+        "requiresAppCheck": true
+      }
+    },
+    {
+      "surfaceKey": "follows",
+      "dailyLimit": 50,
+      "minIntervalMillis": 5000,
+      "dedupeKey": "creatorId",
+      "enforcement": ["APP_CHECKED_CALLABLE"],
+      "quotaLedgerPath": "/community_write_quotas/{uid}/{yyyyMMdd}/follows",
+      "dedupeLedgerPath": "/community_write_dedupe/{uid}/follows/{dedupeKey}",
+      "callable": {
+        "functionName": "setCreatorFollow",
+        "payloadSchema": "CommunityFollowInput",
+        "finalWritePaths": ["/creator_follows/{uid}/{creatorId}"],
+        "consumeLimitedUseAppCheckToken": false,
+        "requiresAuth": true,
+        "requiresAppCheck": true
+      }
+    },
+    {
+      "surfaceKey": "user_blocks",
+      "dailyLimit": 100,
+      "minIntervalMillis": 1000,
+      "dedupeKey": "blockedUid",
+      "enforcement": ["APP_CHECKED_CALLABLE"],
+      "quotaLedgerPath": "/community_write_quotas/{uid}/{yyyyMMdd}/user_blocks",
+      "dedupeLedgerPath": "/community_write_dedupe/{uid}/user_blocks/{dedupeKey}",
+      "callable": {
+        "functionName": "setCommunityUserBlock",
+        "payloadSchema": "CommunityUserBlockInput",
+        "finalWritePaths": [
+          "/community_user_blocks/{uid}/{blockedUid}",
+          "/community_blocked_by/{blockedUid}/{uid}"
+        ],
+        "consumeLimitedUseAppCheckToken": false,
+        "requiresAuth": true,
+        "requiresAppCheck": true
+      }
+    },
+    {
+      "surfaceKey": "profile_edits",
+      "dailyLimit": 12,
+      "minIntervalMillis": 300000,
+      "dedupeKey": "profileUid",
+      "enforcement": ["APP_CHECKED_CALLABLE"],
+      "quotaLedgerPath": "/community_write_quotas/{uid}/{yyyyMMdd}/profile_edits",
+      "dedupeLedgerPath": "/community_write_dedupe/{uid}/profile_edits/{dedupeKey}",
+      "callable": {
+        "functionName": "updateCreatorProfile",
+        "payloadSchema": "CreatorProfileUpdateInput",
+        "finalWritePaths": ["/creator_profiles/{uid}"],
+        "consumeLimitedUseAppCheckToken": false,
+        "requiresAuth": true,
+        "requiresAppCheck": true
+      }
+    }
+  ]
+}

@@ -52,6 +52,7 @@ jobs:
             test/firebase \
             test/tools \
             tools/community_backend_manifest.py \
+            tools/community_callable_contract_check.py \
             tools/community_account_deletion_plan.py \
             tools/community_deletion_request_lookup.py \
             tools/community_deletion_web_intake.py \
@@ -70,6 +71,7 @@ jobs:
             tools/community_storage_orphan_report.py \
             docs/community-backend-manifest.json \
             docs/community-backend-runbook.md \
+            docs/community-callable-contract.json \
             docs/community-account-deletion-policy.md \
             docs/privacy/privacy-policy.md \
             docs/support/community-account-deletion-web-url.json \
@@ -100,6 +102,10 @@ jobs:
       - name: Community backend manifest
         if: steps.firebase_rules_changes.outputs.changed == 'true'
         run: python3 tools/community_backend_manifest.py --mode check
+
+      - name: Community callable contract manifest
+        if: steps.firebase_rules_changes.outputs.changed == 'true'
+        run: python3 tools/community_callable_contract_check.py --contract docs/community-callable-contract.json
 
       - name: Community account deletion web URL manifest
         if: steps.firebase_rules_changes.outputs.changed == 'true'

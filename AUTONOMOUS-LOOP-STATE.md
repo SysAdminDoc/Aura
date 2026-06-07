@@ -1,8 +1,8 @@
 # Autonomous Loop State
 
 **Assigned project:** `C:\Users\--\repos\Aura`
-**Current pass:** 2026-06-07 Cycle 90 upload deletion execution receipt
-**Last commit before pass:** `dfff762` (`feat(community): add auth deletion receipt`)
+**Current pass:** 2026-06-07 Cycle 91 callable contract manifest gate
+**Last commit before pass:** `3880eaf` (`feat(community): add upload deletion receipt`)
 
 ## 2026-06-05 Result
 
@@ -812,10 +812,34 @@
   receipt tests, backend tool unittest discovery, diff hygiene, and
   attribution/ASCII scans.
 
+## Cycle 91 Result - 2026-06-07
+
+- Added `docs/community-callable-contract.json` as the backend-facing manifest
+  for the current `CommunityQuotaPolicies` callable contract.
+- The manifest records all seven community write surfaces, daily limits,
+  cooldowns, dedupe keys, protected quota/dedupe ledgers, function names,
+  payload schemas, final write paths, Auth/App Check requirements, limited-use
+  App Check token decisions, and UTC quota-day boundary.
+- Added `tools/community_callable_contract_check.py` to validate the manifest
+  against the Android quota policy constants.
+- Added backend tool coverage in
+  `test/tools/community_callable_contract_check_test.py` for the valid manifest
+  summary plus missing surface, duplicate function name, limited-use App Check
+  drift, and ledger namespace drift failures.
+- Wired the callable contract manifest check into Firebase backend CI change
+  detection.
+- Updated `docs/research/cycle-91-2026-06-07.md`,
+  `docs/community-callable-quota-enforcement.md`,
+  `docs/community-quota-rate-limits.md`, `docs/community-backend-runbook.md`,
+  `ROADMAP.md`, `COMPLETED.md`, and `CHANGELOG.md`.
+- Cycle 91 verification: Python compile, focused callable contract
+  tests, callable manifest check, backend tool unittest discovery, diff hygiene,
+  and attribution/ASCII scans.
+
 ## Next Cycle
 
-Continue this same assigned project, Aura. Start Cycle 91 from the `ROADMAP.md`
-Continuation State and `docs/research/cycle-90-2026-06-07.md`. The account
+Continue this same assigned project, Aura. Start Cycle 92 from the `ROADMAP.md`
+Continuation State and `docs/research/cycle-91-2026-06-07.md`. The account
 deletion dry-run planner, read-only Settings identity surface, redacted
 shareable request draft, request-code lookup tool, review receipt gate, offline
 apply simulator, private executor package builder, and guarded REST executor
@@ -830,13 +854,15 @@ Cycle 88 added the privacy-policy-backed hosted URL manifest gate for pending
 owner publication; Cycle 89 added a redacted Auth execution receipt for
 owner-approved private deletion evidence after post-delete not-found
 verification; Cycle 90 added a redacted upload execution receipt for
-owner/admin public-upload deletion workflow evidence after clean plans. A live
-hosted HTTPS web deletion URL, production-project dry-run evidence, Cloud
-Functions implementation, and Android callable migration remain open. Next add
-hosted URL publication after owner approval, a real production-project Firebase
-executor dry-run after owner access is confirmed, Cloud Functions implementation
-for the callable quota contract, or Android callable migration adapters. Commit
-and push completed work when the active project contract allows it.
+owner/admin public-upload deletion workflow evidence after clean plans; Cycle
+91 added a machine-checked callable contract manifest with UTC quota-day
+boundary. Cloud Functions implementation, Android callable migration, a live
+hosted HTTPS web deletion URL, and production-project dry-run evidence remain
+open. Next add the Cloud Functions project for the Cycle 63/91 callable
+contract, Android callable repository adapters, hosted URL publication after
+owner approval, or a real production-project Firebase executor dry-run after
+owner access is confirmed. Commit and push completed work when the active
+project contract allows it.
 
 ## Previous Cycle Prompt
 

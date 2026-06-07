@@ -335,6 +335,11 @@ next pass can resume quickly.
   `tools/community_account_deletion_upload_execution_receipt.py` and backend
   tool tests to validate clean-plan owner/admin deletion evidence for Storage,
   public metadata, owner index, and tombstone completion.
+- Completed Cycle 91 callable contract manifest gate: added
+  `docs/community-callable-contract.json`,
+  `tools/community_callable_contract_check.py`, and backend tool tests so the
+  callable quota contract is machine-checkable and quota reset days are pinned
+  to UTC before the Cloud Functions project is added.
 
 ## 2026-06-05
 

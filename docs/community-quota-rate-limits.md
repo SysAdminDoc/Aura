@@ -31,7 +31,8 @@ Firebase Console App Check enforcement are deployed.
 The matching code contract is `CommunityQuotaPolicies`. Unit tests verify every
 required surface has a limit, cooldown, dedupe key, callable enforcement row,
 function name, payload schema, final write path set, and protected ledger path
-set.
+set. `docs/community-callable-contract.json` mirrors that contract for backend
+implementation and pins quota reset days to UTC.
 
 ## Backend Ledgers
 
@@ -71,6 +72,7 @@ Admin SDK job should own ledger updates.
 ## Verification Plan
 
 - Unit test `CommunityQuotaPolicies` for required surface coverage.
+- Run `py -3 tools\community_callable_contract_check.py --contract docs\community-callable-contract.json`.
 - Run `npm run test:database-rules` after every RTDB rules edit; Cycle 58 covers
   anonymous user, regular user, owner, and custom-claim admin personas for the
   protected quota and dedupe namespaces.
@@ -83,7 +85,8 @@ Admin SDK job should own ledger updates.
 
 - Add the callable backend project and wire Android repositories to the Cycle 63
   callable contract, including the Cycle 68 user-block row.
-- Define quota reset timezone in code and backend deployment config.
+- Keep quota reset days on the manifest-pinned UTC boundary unless the backend
+  deployment config deliberately changes it with policy review.
 - Decide whether blocked quota attempts should create private moderation events.
 - Continue owner-delete and rights-confirmed takedown flows after Cycle 55's
   new-upload deletion handles and owner indexes.

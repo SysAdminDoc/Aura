@@ -38,6 +38,7 @@ Run from the repo root:
 git status --short --branch
 npm ci
 py -3 tools\community_backend_manifest.py --mode check
+py -3 tools\community_callable_contract_check.py --contract docs\community-callable-contract.json
 py -3 tools\community_deletion_web_url_check.py --manifest docs\support\community-account-deletion-web-url.json --repo-root .
 npm run test:firebase-rules
 npx firebase --version
@@ -126,6 +127,8 @@ Every release or backend-only change that touches Firebase community behavior
 must include:
 
 - Backend manifest check result.
+- Callable contract manifest check result when callable policy, quota, or
+  backend contract files change.
 - Firebase rules test result.
 - Dry-run result or explicit owner note explaining why the deploy was deferred.
 - Deployed project ID and command output when deployed.
