@@ -3,6 +3,7 @@
 All notable changes to Aura will be documented in this file.
 
 ## Unreleased
+- **Android sound upload finalizer callable migration (Cycle 112)**: added Android sound upload metadata payload normalization, extended the shared callable client for `finalizeCommunitySoundUpload`, and routed post-Storage sound upload metadata finalization through the callable when Firebase Auth is available.
 - **Android user-block callable migration (Cycle 111)**: added Android block/unblock payload normalization, extended the shared callable client for `setCommunityUserBlock`, routed user block state changes through the callable when Firebase Auth is available, and preserved direct RTDB fallback only for compatibility cases.
 - **Android follow callable migration (Cycle 110)**: added Android follow/unfollow payload normalization, extended the shared callable client for `setCreatorFollow`, routed creator follow state changes through the callable when Firebase Auth is available, and preserved direct RTDB fallback only for compatibility cases.
 - **Android vote callable migration (Cycle 109)**: added Android vote payload normalization, extended the shared callable client for `recordCommunityVote`, routed vote submissions through the callable when Firebase Auth is available, and preserved direct RTDB fallback only for compatibility cases.

@@ -4,6 +4,7 @@ import com.freevibe.data.model.CommunityBlockReason
 import com.freevibe.data.model.CommunityFollowInput
 import com.freevibe.data.model.CommunityReportInput
 import com.freevibe.data.model.CommunityReportReason
+import com.freevibe.data.model.CommunitySoundUploadMetadataInput
 import com.freevibe.data.model.CommunityUserBlockInput
 import com.freevibe.data.model.ContentSource
 import kotlinx.coroutines.test.runTest
@@ -220,6 +221,61 @@ class CommunityCallableClientTest {
         assertEquals("blocked_one", payload["blockedUid"])
         assertEquals(false, payload["blocked"])
         assertFalse(payload.containsKey("reason"))
+    }
+
+    @Test
+    fun `finalizeCommunitySoundUpload sends metadata with limited use token request`() = runTest {
+        val invoker = RecordingCommunityCallableInvoker(
+            response = mapOf(
+                "operationId" to "sound_upload_test",
+                "status" to "accepted",
+                "uploadId" to "soundA",
+                "publicId" to "cu_soundA",
+                "targetPath" to "/community_sounds/soundA",
+                "ownerIndexPath" to "/owner_uploads/soundOwner1/sounds/soundA",
+                "serverTimeMillis" to 123L,
+            ),
+        )
+        val client = CommunityCallableClient(invoker)
+
+        val result = client.finalizeCommunitySoundUpload(
+            CommunitySoundUploadMetadataInput(
+                name = " Soft\nBell ",
+                category = " Notification ",
+                tags = listOf(" Calm ", "CALM", "bell!!!", "lo-fi"),
+                downloadUrl = "https://firebasestorage.googleapis.com/v0/b/aura/o/sounds%2FsoundOwner1%2Fbell.mp3",
+                storagePath = "sounds/soundOwner1/1700000000000_soft_bell.mp3",
+                fileType = " AUDIO/MPEG ",
+                originalFileName = " Soft Bell.mp3 ",
+                uploaderLabel = " Sound Owner ",
+                license = "cc-by",
+                rightsAttested = true,
+                sourceUrl = "https://example.com/source",
+            ),
+        )
+
+        val request = requireNotNull(invoker.lastRequest)
+        assertEquals("finalizeCommunitySoundUpload", request.functionName)
+        assertTrue(request.consumeLimitedUseAppCheckToken)
+        assertEquals("soundA", result.targetId())
+        assertEquals("accepted", result.status)
+
+        assertTrue((request.data["operationId"] as String).startsWith("sound_upload_"))
+        assertTrue((request.data["clientSentAt"] as Long) > 0L)
+        val payload = request.data["payload"] as Map<*, *>
+        assertEquals("Soft Bell", payload["name"])
+        assertEquals("notification", payload["category"])
+        assertEquals(listOf("calm", "bell", "lo-fi"), payload["tags"])
+        assertEquals("audio/mpeg", payload["fileType"])
+        assertEquals("Soft Bell.mp3", payload["originalFileName"])
+        assertEquals("Sound Owner", payload["uploaderLabel"])
+        assertEquals("CC BY", payload["license"])
+        assertEquals(true, payload["rightsAttested"])
+        assertEquals("https://example.com/source", payload["sourceUrl"])
+        assertFalse(payload.containsKey("uploaderId"))
+        assertFalse(payload.containsKey("uploaderUid"))
+        assertFalse(payload.containsKey("uploadedAt"))
+        assertFalse(payload.containsKey("votes"))
     }
 
     @Test

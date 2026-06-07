@@ -471,6 +471,13 @@ next pass can resume quickly.
   Firebase Auth is available, preserved direct RTDB fallback only for missing
   endpoint or missing Auth compatibility, and covered block plus unblock
   callable envelopes with focused unit tests.
+- Completed Cycle 112 Android sound upload finalizer callable migration: added
+  `CommunitySoundUploadMetadataInput` payload normalization, extended
+  `CommunityCallableClient` for `finalizeCommunitySoundUpload`, routed
+  `UploadRepository.uploadSound()` metadata finalization through the callable
+  after Storage upload when Firebase Auth is available, preserved direct RTDB
+  fallback only for missing endpoint or missing Auth compatibility, and covered
+  the sound upload callable envelope with focused unit tests.
 
 ## 2026-06-05
 

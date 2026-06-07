@@ -12,9 +12,10 @@ wallpaper upload finalizer. Cycle 100 adds the handler-backed profile edit
 callable and refines profile dedupe to include the normalized public profile
 hash. Cycle 108 adds the first Android callable migration adapter for report
 submission, Cycle 109 adds the Android vote callable migration adapter, Cycle
-110 adds the Android follow callable migration adapter, and Cycle 111 adds the
-Android user-block callable migration adapter. Every exported callable now has
-a handler core, while production enforcement still waits for full callable
+110 adds the Android follow callable migration adapter, Cycle 111 adds the
+Android user-block callable migration adapter, and Cycle 112 adds the Android
+sound upload finalizer callable migration adapter. Every exported callable now
+has a handler core, while production enforcement still waits for full callable
 wire-protocol coverage, the remaining Android write migrations,
 owner-approved deploy evidence, and App Check console evidence.
 
@@ -201,9 +202,20 @@ Cycle 111 added:
   when Firebase Auth is available, with direct RTDB fallback only for missing
   callable endpoint or missing Auth compatibility.
 
-Report, vote, follow, and user-block submissions are the Android write surfaces
-with callable client code today. Upload finalizers and profile edits still
-write through their existing direct repository paths.
+Cycle 112 added:
+
+- `CommunitySoundUploadMetadataInput` payload normalization for Android sound
+  upload finalizer callable requests.
+- `CommunityCallableClient.finalizeCommunitySoundUpload()` using
+  `CommunityQuotaPolicies.soundUploads` and limited-use App Check tokens.
+- Callable-first `UploadRepository.uploadSound()` metadata finalization after
+  Storage upload when Firebase Auth is available, with direct RTDB fallback
+  only for missing callable endpoint or missing Auth compatibility.
+
+Report, vote, follow, user-block, and sound upload finalization writes are the
+Android write surfaces with callable client code today. Wallpaper upload
+finalization and profile edits still write through their existing direct
+repository paths.
 
 ## Request Envelope
 
@@ -268,9 +280,9 @@ response when the server provides an existing target.
    progress flow.
 4. Migrate profile edits next while keeping the existing local optimistic UI
    state.
-5. Migrate upload metadata finalization after Storage rules and owner indexes
-   are verified. Storage upload bytes still go through Firebase Storage; the
-   callable owns the public metadata and owner-index final write.
+5. Migrate wallpaper upload metadata finalization after Storage rules and owner
+   indexes are verified. Storage upload bytes still go through Firebase
+   Storage; the callable owns the public metadata and owner-index final write.
 6. Migrate profile edits last because profile copy and display-name validation
    can change without affecting moderation safety.
 7. After each surface is callable-backed, tighten direct RTDB writes for that

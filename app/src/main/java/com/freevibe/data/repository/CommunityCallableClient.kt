@@ -3,9 +3,11 @@ package com.freevibe.data.repository
 import com.freevibe.data.model.CommunityFollowInput
 import com.freevibe.data.model.CommunityQuotaPolicies
 import com.freevibe.data.model.CommunityReportInput
+import com.freevibe.data.model.CommunitySoundUploadMetadataInput
 import com.freevibe.data.model.CommunityUserBlockInput
 import com.freevibe.data.model.buildCommunityFollowCallablePayload
 import com.freevibe.data.model.buildCommunityReportCallablePayload
+import com.freevibe.data.model.buildCommunitySoundUploadCallablePayload
 import com.freevibe.data.model.buildCommunityUserBlockCallablePayload
 import com.freevibe.data.model.buildCommunityVoteCallablePayload
 import com.google.firebase.functions.FirebaseFunctions
@@ -140,6 +142,20 @@ class CommunityCallableClient @Inject constructor(
             consumeLimitedUseAppCheckToken = policy.consumeLimitedUseAppCheckToken,
         )
         return invoker.call(request).toWriteResult(resourceIdField = "blockedUid")
+    }
+
+    suspend fun finalizeCommunitySoundUpload(input: CommunitySoundUploadMetadataInput): CommunityCallableWriteResult {
+        val policy = CommunityQuotaPolicies.soundUploads.callable
+        val request = CommunityCallableRequest(
+            functionName = policy.functionName,
+            data = buildCommunityCallableEnvelope(
+                payload = buildCommunitySoundUploadCallablePayload(input),
+                operationId = communityOperationId("sound_upload"),
+                clientSentAt = System.currentTimeMillis(),
+            ),
+            consumeLimitedUseAppCheckToken = policy.consumeLimitedUseAppCheckToken,
+        )
+        return invoker.call(request).toWriteResult(resourceIdField = "uploadId")
     }
 }
 
