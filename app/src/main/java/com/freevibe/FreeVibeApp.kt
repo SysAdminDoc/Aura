@@ -215,6 +215,10 @@ class FreeVibeApp : Application(), Configuration.Provider, ImageLoaderFactory {
                     sourceMetrics.recordDisabled("community")
                     return@launch
                 }
+                if (!prefs.communityGuidelinesAccepted.first()) {
+                    sourceMetrics.recordDisabled("community")
+                    return@launch
+                }
                 communityIdentityProvider.ensureSignedIn()
                 // Refresh admin Custom Claim once the user is signed in. This is the
                 // server-side source of truth for moderation privileges (the legacy

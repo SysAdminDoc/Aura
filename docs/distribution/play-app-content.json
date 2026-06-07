@@ -15,6 +15,7 @@
     "docs/support/community-reporting.md",
     "docs/community-block-user-policy.md",
     "docs/community-upload-deletion.md",
+    "docs/legal/community-guidelines.md",
     "docs/support/community-account-deletion.md",
     "docs/support/community-account-deletion-web-url.json"
   ],
@@ -131,9 +132,13 @@
       "hasUserGeneratedContent": true,
       "reportAndBlockAvailable": true,
       "moderationQueueAvailable": true,
-      "termsOrGuidelinesStatus": "ownerActionRequired",
-      "answer": "Aura has report/block/moderation/delete flows for community UGC, but Play production submission still needs owner confirmation that in-app terms or community guidelines consent is complete before users engage with UGC.",
+      "termsOrGuidelinesStatus": "implemented",
+      "answer": "Aura requires users to accept versioned Community Guidelines before community feeds, uploads, votes, reports, blocks, follows, profiles, or startup community identity warm-up can proceed.",
       "evidenceRefs": [
+        "docs/legal/community-guidelines.md",
+        "app/src/main/java/com/freevibe/data/model/CommunityGuidelinesPolicy.kt",
+        "app/src/main/java/com/freevibe/data/local/PreferencesManager.kt",
+        "app/src/main/java/com/freevibe/ui/components/CommunityGuidelinesDialog.kt",
         "docs/support/community-reporting.md",
         "docs/community-block-user-policy.md",
         "docs/community-upload-deletion.md",
@@ -202,15 +207,6 @@
       "evidenceRefs": [
         "docs/support/community-account-deletion.md",
         "docs/support/community-account-deletion-web-url.json"
-      ]
-    },
-    {
-      "id": "confirm-ugc-guidelines-consent",
-      "status": "requiredBeforePlayProduction",
-      "description": "Confirm or implement clear in-app community terms/guidelines consent before users engage with UGC.",
-      "evidenceRefs": [
-        "docs/support/community-reporting.md",
-        "docs/legal/community-upload-rights.md"
       ]
     },
     {

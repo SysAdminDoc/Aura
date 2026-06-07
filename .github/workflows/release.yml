@@ -106,6 +106,9 @@ jobs:
       - name: Privacy data safety matrix
         run: python3 tools/privacy_data_safety_check.py --policy docs/privacy/data-safety.json --repo-root .
 
+      - name: Community guidelines consent
+        run: python3 tools/community_guidelines_consent_check.py --repo-root .
+
       - name: Play App content packet
         run: python3 tools/play_app_content_packet_check.py --policy docs/distribution/play-app-content.json --repo-root .
 

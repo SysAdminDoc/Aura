@@ -3,6 +3,7 @@
 All notable changes to Aura will be documented in this file.
 
 ## Unreleased
+- **Community Guidelines consent gate (Cycle 146)**: added versioned community guidelines acceptance before community feeds, uploads, votes, reports, blocks, follows, profiles, and startup identity warm-up, then wired a checked consent policy gate into verify and release.
 - **Play App content packet gate (Cycle 145)**: added a checked owner-ready Play App content declaration packet covering ads, app access, target audience, content rating notes, Data safety, UGC, generated content, sensitive permissions, evidence paths, and owner actions.
 - **SDK Data safety surface gate (Cycle 144)**: extended the Data safety matrix check with Gradle-marker-backed SDK rows for Firebase Auth, RTDB, Storage, Functions, App Check, and Play services ML Kit/module install surfaces.
 - **Local storage Data safety gate (Cycle 143)**: extended the Data safety matrix check with source-backed local storage rows for DataStore, Room, SharedPreferences, diagnostics logs, app-private media, and cache surfaces, including backup/transfer posture.

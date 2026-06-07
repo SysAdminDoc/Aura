@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import android.content.Context
 import android.net.Uri
 import com.freevibe.data.local.PreferencesManager
+import com.freevibe.data.model.COMMUNITY_GUIDELINES_REQUIRED_MESSAGE
 import com.freevibe.data.model.CommunityBlockReason
 import com.freevibe.data.model.CommunityReportInput
 import com.freevibe.data.model.CommunityReportReason
@@ -128,6 +129,7 @@ class WallpapersViewModel @Inject constructor(
     val pexelsProviderEnabled = prefs.pexelsProviderEnabled.stateIn(viewModelScope, SharingStarted.Eagerly, true)
     val pixabayProviderEnabled = prefs.pixabayProviderEnabled.stateIn(viewModelScope, SharingStarted.Eagerly, true)
     val communityProviderEnabled = prefs.communityProviderEnabled.stateIn(viewModelScope, SharingStarted.Eagerly, true)
+    val communityGuidelinesAccepted = prefs.communityGuidelinesAccepted.stateIn(viewModelScope, SharingStarted.Eagerly, false)
     val generatedContentProviderEnabled =
         prefs.generatedContentProviderEnabled.stateIn(viewModelScope, SharingStarted.Eagerly, true)
 
@@ -596,14 +598,10 @@ class WallpapersViewModel @Inject constructor(
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptySet())
 
     fun getVoteCount(contentId: String) =
-        if (communityProviderEnabled.value) voteRepo.getVoteCount(contentId) else flowOf(0)
+        if (communityProviderEnabled.value && communityGuidelinesAccepted.value) voteRepo.getVoteCount(contentId) else flowOf(0)
 
     fun upvote(contentId: String) {
-        if (!communityProviderEnabled.value) {
-            sourceMetrics.recordDisabled(SOURCE_COMMUNITY)
-            _state.update { it.copy(error = communityDisabledMessage()) }
-            return
-        }
+        if (communityActionBlocked()) return
         viewModelScope.launch {
             val success = voteRepo.upvote(contentId)
             if (!success) _state.update { it.copy(applySuccess = "Already voted") }
@@ -611,11 +609,7 @@ class WallpapersViewModel @Inject constructor(
     }
 
     fun downvote(contentId: String) {
-        if (!communityProviderEnabled.value) {
-            sourceMetrics.recordDisabled(SOURCE_COMMUNITY)
-            _state.update { it.copy(error = communityDisabledMessage()) }
-            return
-        }
+        if (communityActionBlocked()) return
         viewModelScope.launch {
             voteRepo.downvote(contentId)
             _state.update { it.copy(applySuccess = if (voteRepo.isAdmin) "Moderated (hidden for all)" else "Hidden") }
@@ -624,11 +618,7 @@ class WallpapersViewModel @Inject constructor(
 
     fun reportWallpaper(wallpaper: Wallpaper, reason: CommunityReportReason, note: String = "") {
         val isGeneratedWallpaper = wallpaper.source == ContentSource.AI_GENERATED
-        if (!isGeneratedWallpaper && !communityProviderEnabled.value) {
-            sourceMetrics.recordDisabled(SOURCE_COMMUNITY)
-            _state.update { it.copy(error = communityDisabledMessage()) }
-            return
-        }
+        if (!isGeneratedWallpaper && communityActionBlocked()) return
         viewModelScope.launch {
             reportRepo.submitReport(
                 CommunityReportInput(
@@ -653,14 +643,11 @@ class WallpapersViewModel @Inject constructor(
     fun canBlockCommunityWallpaper(wallpaper: Wallpaper): Boolean =
         wallpaper.source == ContentSource.COMMUNITY &&
             communityProviderEnabled.value &&
+            communityGuidelinesAccepted.value &&
             wallpaper.communityUploaderId.isNotBlank()
 
     fun blockCommunityWallpaper(wallpaper: Wallpaper, onBlocked: () -> Unit = {}) {
-        if (!communityProviderEnabled.value) {
-            sourceMetrics.recordDisabled(SOURCE_COMMUNITY)
-            _state.update { it.copy(error = communityDisabledMessage()) }
-            return
-        }
+        if (communityActionBlocked()) return
         val blockedUploaderId = wallpaper.communityUploaderId
         if (wallpaper.source != ContentSource.COMMUNITY || blockedUploaderId.isBlank()) {
             _state.update { it.copy(error = "This wallpaper does not expose a blockable community uploader") }
@@ -685,16 +672,16 @@ class WallpapersViewModel @Inject constructor(
     }
 
     suspend fun canDeleteCommunityWallpaper(wallpaper: Wallpaper): Boolean {
-        if (wallpaper.source != ContentSource.COMMUNITY || !communityProviderEnabled.value) return false
+        if (
+            wallpaper.source != ContentSource.COMMUNITY ||
+            !communityProviderEnabled.value ||
+            !communityGuidelinesAccepted.value
+        ) return false
         return wallpaperUploadRepo.canDeleteWallpaperUpload(wallpaper.id)
     }
 
     fun deleteCommunityWallpaper(wallpaper: Wallpaper) {
-        if (!communityProviderEnabled.value) {
-            sourceMetrics.recordDisabled(SOURCE_COMMUNITY)
-            _state.update { it.copy(error = communityDisabledMessage()) }
-            return
-        }
+        if (communityActionBlocked()) return
         viewModelScope.launch {
             wallpaperUploadRepo.deleteWallpaperUpload(wallpaper.id)
                 .onSuccess {
@@ -720,16 +707,7 @@ class WallpapersViewModel @Inject constructor(
         rights: CommunityUploadRights,
     ) {
         if (_state.value.isUploadingWallpaper) return
-        if (!communityProviderEnabled.value) {
-            sourceMetrics.recordDisabled(SOURCE_COMMUNITY)
-            _state.update {
-                it.copy(
-                    error = communityDisabledMessage(),
-                    errorSource = WallpaperTab.COMMUNITY.name,
-                )
-            }
-            return
-        }
+        if (communityActionBlocked()) return
         viewModelScope.launch {
             _state.update {
                 it.copy(
@@ -1172,14 +1150,15 @@ class WallpapersViewModel @Inject constructor(
             .filter { it.isNotBlank() }
 
     private suspend fun isRedditProviderEnabled(): Boolean = prefs.redditProviderEnabled.first()
-    private suspend fun isCommunityProviderEnabled(): Boolean = prefs.communityProviderEnabled.first()
+    private suspend fun isCommunityProviderEnabled(): Boolean =
+        prefs.communityProviderEnabled.first() && prefs.communityGuidelinesAccepted.first()
 
     private fun isProviderDisabledTab(tab: WallpaperTab): Boolean = when (tab) {
         WallpaperTab.WALLHAVEN -> !wallhavenProviderEnabled.value
         WallpaperTab.REDDIT -> !redditProviderEnabled.value
         WallpaperTab.PEXELS -> !pexelsProviderEnabled.value
         WallpaperTab.PIXABAY -> !pixabayProviderEnabled.value
-        WallpaperTab.COMMUNITY -> !communityProviderEnabled.value
+        WallpaperTab.COMMUNITY -> !communityProviderEnabled.value || !communityGuidelinesAccepted.value
         else -> false
     }
 
@@ -1205,7 +1184,22 @@ class WallpapersViewModel @Inject constructor(
 
     private fun wallhavenDisabledMessage(): String = "Wallhaven source is disabled in Settings"
 
-    private fun communityDisabledMessage(): String = "Community source is disabled in Settings"
+    private fun communityActionBlocked(): Boolean {
+        if (communityProviderEnabled.value && communityGuidelinesAccepted.value) return false
+        sourceMetrics.recordDisabled(SOURCE_COMMUNITY)
+        _state.update { it.copy(error = communityDisabledMessage()) }
+        return true
+    }
+
+    private fun communityDisabledMessage(): String =
+        if (!communityProviderEnabled.value) {
+            "Community source is disabled in Settings"
+        } else {
+            COMMUNITY_GUIDELINES_REQUIRED_MESSAGE
+        }
+
+    fun acceptCommunityGuidelines() =
+        viewModelScope.launch { prefs.acceptCommunityGuidelines() }
 
     private companion object {
         const val SOURCE_WALLHAVEN = "wallhaven"

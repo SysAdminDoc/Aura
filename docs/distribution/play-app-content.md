@@ -23,8 +23,6 @@ Do not submit Aura to Play production until these owner actions are complete:
 - `publish-hosted-deletion-url`: publish the hosted HTTPS account deletion
   request URL, move `docs/support/community-account-deletion-web-url.json` to
   `published`, and link the URL from the privacy/support docs.
-- `confirm-ugc-guidelines-consent`: confirm or implement clear in-app community
-  terms/guidelines consent before users engage with UGC.
 - `complete-live-content-rating-questionnaire`: complete Play Console's live
   content rating questionnaire using this packet.
 - `capture-play-console-app-content-receipt`: archive owner-visible App content
@@ -142,6 +140,8 @@ are enabled for the Play build.
 Current implemented and documented controls:
 
 - Community upload rights/license attestation.
+- Versioned Community Guidelines consent before community feeds, uploads,
+  votes, reports, blocks, follows, profiles, or startup identity warm-up.
 - Private report queue for community/provider content.
 - Generated-content report reasons for generated wallpapers.
 - Private block-list and visible block/unblock entry points.
@@ -151,16 +151,12 @@ Current implemented and documented controls:
   handles.
 - Account deletion support docs and private cleanup tooling.
 
-Open owner action:
-
-- `confirm-ugc-guidelines-consent`: Play UGC guidance calls for clear terms or
-  guidelines before users engage with UGC. Aura has rights attestation and
-  reporting/blocking flows, but Play production submission needs owner
-  confirmation that terms/guidelines consent is complete in app, or a follow-up
-  implementation that adds it.
-
 Evidence:
 
+- `docs/legal/community-guidelines.md`
+- `app/src/main/java/com/freevibe/data/model/CommunityGuidelinesPolicy.kt`
+- `app/src/main/java/com/freevibe/data/local/PreferencesManager.kt`
+- `app/src/main/java/com/freevibe/ui/components/CommunityGuidelinesDialog.kt`
 - `docs/legal/community-upload-rights.md`
 - `docs/support/community-reporting.md`
 - `docs/community-block-user-policy.md`
@@ -211,7 +207,6 @@ behavior, retention, deletion path, and Data safety answer.
 | ID | Status | Required evidence |
 | --- | --- | --- |
 | `publish-hosted-deletion-url` | `requiredBeforePlayProduction` | Published HTTPS URL linked from privacy/support docs and URL manifest set to `published`. |
-| `confirm-ugc-guidelines-consent` | `requiredBeforePlayProduction` | In-app terms/guidelines consent is confirmed or implemented before community UGC engagement. |
 | `complete-live-content-rating-questionnaire` | `ownerConfirmationRequired` | Owner confirms Play Console content rating answers and resulting rating. |
 | `capture-play-console-app-content-receipt` | `ownerConfirmationRequired` | Owner archives App content answers or screenshots for release evidence. |
 
@@ -219,6 +214,7 @@ behavior, retention, deletion path, and Data safety answer.
 
 - Run `python3 tools/play_app_content_packet_check.py --policy docs/distribution/play-app-content.json --repo-root .`.
 - Run `python3 tools/privacy_data_safety_check.py --policy docs/privacy/data-safety.json --repo-root .`.
+- Run `python3 tools/community_guidelines_consent_check.py --repo-root .`.
 - Confirm the privacy policy URL is live and appears in the store listing,
   in-app Settings, README, Fastlane metadata, release workflow, and release
   docs.

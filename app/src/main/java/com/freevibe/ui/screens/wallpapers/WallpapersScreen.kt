@@ -57,6 +57,7 @@ import com.freevibe.data.model.stableKey
 import com.freevibe.data.repository.matchesHiddenIds
 import com.freevibe.service.SeasonalTheme
 import com.freevibe.ui.components.CompactSearchField
+import com.freevibe.ui.components.CommunityGuidelinesDialog
 import com.freevibe.ui.components.CommunityPolicyNotice
 import com.freevibe.ui.components.CountBadge
 import com.freevibe.ui.components.DownloadProgressBar
@@ -112,20 +113,29 @@ fun WallpapersScreen(
     val pexelsProviderEnabled by viewModel.pexelsProviderEnabled.collectAsStateWithLifecycle()
     val pixabayProviderEnabled by viewModel.pixabayProviderEnabled.collectAsStateWithLifecycle()
     val communityProviderEnabled by viewModel.communityProviderEnabled.collectAsStateWithLifecycle()
+    val communityGuidelinesAccepted by viewModel.communityGuidelinesAccepted.collectAsStateWithLifecycle()
     val generatedContentProviderEnabled by viewModel.generatedContentProviderEnabled.collectAsStateWithLifecycle()
-    val visibleSections = remember(state.wallpapers, hiddenIds, topVoted, dailyPick, state.selectedTab, communityProviderEnabled) {
+    val visibleSections = remember(
+        state.wallpapers,
+        hiddenIds,
+        topVoted,
+        dailyPick,
+        state.selectedTab,
+        communityProviderEnabled,
+        communityGuidelinesAccepted,
+    ) {
         computeVisibleWallpaperSections(
             wallpapers = state.wallpapers,
             hiddenIds = hiddenIds,
-            topVoted = if (communityProviderEnabled) topVoted else emptyList(),
+            topVoted = if (communityProviderEnabled && communityGuidelinesAccepted) topVoted else emptyList(),
             dailyPick = dailyPick,
             isDiscoverTab = state.selectedTab == WallpaperTab.DISCOVER,
         )
     }
 
     // Vote counts for visible wallpapers — use derivedStateOf to avoid recomputing on referential inequality
-    val wallpaperIds = remember(state.wallpapers, communityProviderEnabled) {
-        if (communityProviderEnabled) state.wallpapers.map { it.stableKey() } else emptyList()
+    val wallpaperIds = remember(state.wallpapers, communityProviderEnabled, communityGuidelinesAccepted) {
+        if (communityProviderEnabled && communityGuidelinesAccepted) state.wallpapers.map { it.stableKey() } else emptyList()
     }
     val voteCountsFlow = remember(wallpaperIds) {
         if (wallpaperIds.isNotEmpty()) {
@@ -144,6 +154,7 @@ fun WallpapersScreen(
     var showSearchHistory by remember { mutableStateOf(false) }
     var showSourceMenu by remember { mutableStateOf(false) }
     var showFiltersSheet by remember { mutableStateOf(false) }
+    var showCommunityGuidelines by remember { mutableStateOf(false) }
     var showWallpaperUploadDialog by remember { mutableStateOf(false) }
     var selectedWallpaperUploadUri by remember { mutableStateOf<Uri?>(null) }
     var awaitingWallpaperUploadResult by remember { mutableStateOf(false) }
@@ -167,9 +178,12 @@ fun WallpapersScreen(
     val wallpaperUploadLauncher = rememberLauncherForActivityResult(
         com.freevibe.service.AuraPickVisualMedia()
     ) { uri ->
-        if (communityProviderEnabled && uri != null) {
+        if (communityProviderEnabled && communityGuidelinesAccepted && uri != null) {
             selectedWallpaperUploadUri = uri
             showWallpaperUploadDialog = true
+        } else if (communityProviderEnabled && uri != null) {
+            selectedWallpaperUploadUri = uri
+            showCommunityGuidelines = true
         }
     }
     val wallpaperUploadPickerRequest = remember {
@@ -239,7 +253,7 @@ fun WallpapersScreen(
             }
         }
     }
-    if (communityProviderEnabled && showWallpaperUploadDialog && selectedWallpaperUploadUri != null) {
+    if (communityProviderEnabled && communityGuidelinesAccepted && showWallpaperUploadDialog && selectedWallpaperUploadUri != null) {
         WallpaperUploadDialog(
             isUploading = state.isUploadingWallpaper,
             uploadProgress = state.wallpaperUploadProgress,
@@ -448,7 +462,11 @@ fun WallpapersScreen(
                                     text = { Text(wallpaperTabLabel(tab)) },
                                     onClick = {
                                         showSourceMenu = false
-                                        viewModel.selectTab(tab)
+                                        if (tab == WallpaperTab.COMMUNITY && communityProviderEnabled && !communityGuidelinesAccepted) {
+                                            showCommunityGuidelines = true
+                                        } else {
+                                            viewModel.selectTab(tab)
+                                        }
                                     },
                                     leadingIcon = {
                                         if (state.selectedTab == tab) {
@@ -599,7 +617,11 @@ fun WallpapersScreen(
                                     },
                                     onClick = {
                                         if (state.selectedTab == WallpaperTab.COMMUNITY) {
-                                            wallpaperUploadLauncher.launch(wallpaperUploadPickerRequest)
+                                            if (communityGuidelinesAccepted) {
+                                                wallpaperUploadLauncher.launch(wallpaperUploadPickerRequest)
+                                            } else {
+                                                showCommunityGuidelines = true
+                                            }
                                         } else if (state.selectedColor != null || state.selectedTab != WallpaperTab.DISCOVER) {
                                             viewModel.selectTab(WallpaperTab.DISCOVER)
                                         } else {
@@ -631,8 +653,12 @@ fun WallpapersScreen(
                                 },
                                 favoriteIdentities = favoriteIdentities,
                                 hiddenIds = hiddenIds,
-                                onUpvote = if (communityProviderEnabled) ({ id -> viewModel.upvote(id) }) else null,
-                                onDownvote = if (communityProviderEnabled) ({ id -> viewModel.downvote(id) }) else null,
+                                onUpvote = if (communityProviderEnabled) ({ id ->
+                                    if (communityGuidelinesAccepted) viewModel.upvote(id) else showCommunityGuidelines = true
+                                }) else null,
+                                onDownvote = if (communityProviderEnabled) ({ id ->
+                                    if (communityGuidelinesAccepted) viewModel.downvote(id) else showCommunityGuidelines = true
+                                }) else null,
                                 voteCounts = voteCounts,
                                 onLoadMore = { viewModel.loadMore() },
                                 onSearch = { query -> viewModel.search(query) },
@@ -661,7 +687,13 @@ fun WallpapersScreen(
             showThemeMatch = wallhavenProviderEnabled && state.selectedTab == WallpaperTab.DISCOVER,
             showEyeDropper = wallhavenProviderEnabled && eyeDropperAvailable && state.selectedTab == WallpaperTab.DISCOVER,
             showSurprise = wallhavenProviderEnabled,
-            onUpload = { wallpaperUploadLauncher.launch(wallpaperUploadPickerRequest) },
+            onUpload = {
+                if (communityGuidelinesAccepted) {
+                    wallpaperUploadLauncher.launch(wallpaperUploadPickerRequest)
+                } else {
+                    showCommunityGuidelines = true
+                }
+            },
             onThemeMatch = { viewModel.matchMyTheme() },
             onEyeDropper = {
                 val intent = android.content.Intent("android.intent.action.OPEN_EYE_DROPPER")
@@ -712,6 +744,16 @@ fun WallpapersScreen(
                 } else null,
             )
         }
+    }
+    if (showCommunityGuidelines) {
+        CommunityGuidelinesDialog(
+            onAccept = {
+                viewModel.acceptCommunityGuidelines()
+                if (selectedWallpaperUploadUri != null) showWallpaperUploadDialog = true
+                showCommunityGuidelines = false
+            },
+            onDismiss = { showCommunityGuidelines = false },
+        )
     }
 }
 

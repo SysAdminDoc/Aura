@@ -19,6 +19,8 @@ Manual branch runs:
 - Check that every manifest permission, reviewed network endpoint,
   source-backed local storage surface, and SDK data surface has a Data safety
   matrix row before the signed release build.
+- Check that the community guidelines doc, consent dialog, DataStore version
+  key, and repository gates remain wired before the signed release build.
 - Check that the owner-ready Play App content packet covers ads, app access,
   target audience, content rating notes, Data safety, UGC, generated content,
   sensitive permissions, and explicit owner actions before the signed release
@@ -56,6 +58,7 @@ Before the APK build, release dry runs also validate committed store metadata:
 python3 tools/store_metadata_preflight.py --repo-root .
 python3 tools/privacy_policy_link_check.py --policy docs/privacy/privacy-policy-link.json --repo-root .
 python3 tools/privacy_data_safety_check.py --policy docs/privacy/data-safety.json --repo-root .
+python3 tools/community_guidelines_consent_check.py --repo-root .
 python3 tools/play_app_content_packet_check.py --policy docs/distribution/play-app-content.json --repo-root .
 ```
 
@@ -71,6 +74,9 @@ network endpoint inventory changes, local storage rows cite missing source
 files, or SDK rows cite missing Gradle dependency markers/source files without
 matching purpose, data type, collection/sharing, retention, deletion,
 denial/user-control, backup posture, and Play declaration rows.
+The community guidelines consent gate fails when the legal guidelines doc,
+versioned preference, shared consent dialog, Settings entry, community screens,
+or repository access gates drift apart.
 The Play App content packet fails when the owner-ready declaration file loses
 required sections, source URLs, evidence paths, no-ads/privacy alignment,
 target-audience guardrails, UGC/generated-content controls, sensitive

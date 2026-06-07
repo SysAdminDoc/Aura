@@ -4,6 +4,8 @@ import android.content.Context
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.*
 import androidx.datastore.preferences.preferencesDataStore
+import com.freevibe.data.model.COMMUNITY_GUIDELINES_VERSION
+import com.freevibe.data.model.hasAcceptedCommunityGuidelinesVersion
 import com.freevibe.service.VIDEO_AUTO_BATTERY_SAVER_PREF
 import com.freevibe.service.VIDEO_FPS_LIMIT_PREF
 import com.freevibe.service.VIDEO_FPS_OVERLAY_PREF
@@ -56,6 +58,9 @@ class PreferencesManager @Inject constructor(
     val pexelsProviderEnabled: Flow<Boolean> = get(Keys.PEXELS_PROVIDER_ENABLED, true)
     val pixabayProviderEnabled: Flow<Boolean> = get(Keys.PIXABAY_PROVIDER_ENABLED, true)
     val communityProviderEnabled: Flow<Boolean> = get(Keys.COMMUNITY_PROVIDER_ENABLED, true)
+    val communityGuidelinesAcceptedVersion: Flow<Int> = get(Keys.COMMUNITY_GUIDELINES_ACCEPTED_VERSION, 0)
+    val communityGuidelinesAccepted: Flow<Boolean> =
+        communityGuidelinesAcceptedVersion.map(::hasAcceptedCommunityGuidelinesVersion)
 
     // Sanitize API keys: strip surrounding whitespace and reject any control chars (including CR/LF
     // which OkHttp would throw on when placed in a request header — prefer to drop them here with
@@ -77,6 +82,9 @@ class PreferencesManager @Inject constructor(
     suspend fun setPexelsProviderEnabled(enabled: Boolean) = set(Keys.PEXELS_PROVIDER_ENABLED, enabled)
     suspend fun setPixabayProviderEnabled(enabled: Boolean) = set(Keys.PIXABAY_PROVIDER_ENABLED, enabled)
     suspend fun setCommunityProviderEnabled(enabled: Boolean) = set(Keys.COMMUNITY_PROVIDER_ENABLED, enabled)
+    suspend fun acceptCommunityGuidelines() =
+        set(Keys.COMMUNITY_GUIDELINES_ACCEPTED_VERSION, COMMUNITY_GUIDELINES_VERSION)
+    suspend fun resetCommunityGuidelines() = set(Keys.COMMUNITY_GUIDELINES_ACCEPTED_VERSION, 0)
 
     // ── Auto-wallpaper ────────────────────────────────────────────
 
@@ -253,6 +261,7 @@ class PreferencesManager @Inject constructor(
         val PEXELS_PROVIDER_ENABLED = booleanPreferencesKey("pexels_provider_enabled")
         val PIXABAY_PROVIDER_ENABLED = booleanPreferencesKey("pixabay_provider_enabled")
         val COMMUNITY_PROVIDER_ENABLED = booleanPreferencesKey("community_provider_enabled")
+        val COMMUNITY_GUIDELINES_ACCEPTED_VERSION = intPreferencesKey("community_guidelines_accepted_version")
         val AUTO_WP_ENABLED = booleanPreferencesKey("auto_wp_enabled")
         val AUTO_WP_INTERVAL = longPreferencesKey("auto_wp_interval")
         val AUTO_WP_SOURCE = stringPreferencesKey("auto_wp_source")

@@ -8,6 +8,7 @@ import com.freevibe.data.model.CommunityReportInput
 import com.freevibe.data.model.CommunityReportReason
 import com.freevibe.data.model.CommunityUploadRights
 import com.freevibe.data.model.CommunityBlockReason
+import com.freevibe.data.model.COMMUNITY_GUIDELINES_REQUIRED_MESSAGE
 import com.freevibe.data.model.ContentSource
 import com.freevibe.data.model.ContentType
 import com.freevibe.data.model.FavoriteIdentity
@@ -119,6 +120,7 @@ class SoundsViewModel @Inject constructor(
     val previewVolume = prefs.soundPreviewVolume.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0.7f)
     val youtubeProviderEnabled = prefs.youtubeProviderEnabled.stateIn(viewModelScope, SharingStarted.Eagerly, true)
     val communityProviderEnabled = prefs.communityProviderEnabled.stateIn(viewModelScope, SharingStarted.Eagerly, true)
+    val communityGuidelinesAccepted = prefs.communityGuidelinesAccepted.stateIn(viewModelScope, SharingStarted.Eagerly, false)
 
     private val _previewReadyIds = MutableStateFlow<Set<String>>(emptySet())
     val previewReadyIds = _previewReadyIds.asStateFlow()
@@ -279,6 +281,12 @@ class SoundsViewModel @Inject constructor(
             redirectToRingtones()
             return
         }
+        if (tab == SoundTab.COMMUNITY && !communityGuidelinesAccepted.value) {
+            sourceMetrics.recordDisabled(SOURCE_COMMUNITY)
+            redirectToRingtones()
+            _state.update { it.copy(error = communityDisabledMessage()) }
+            return
+        }
         _state.update {
             it.copy(
                 selectedTab = tab, query = "", sounds = emptyList(),
@@ -328,7 +336,7 @@ class SoundsViewModel @Inject constructor(
     }
 
     private fun communityActionBlocked(): Boolean {
-        if (communityProviderEnabled.value) return false
+        if (communityProviderEnabled.value && communityGuidelinesAccepted.value) return false
         showCommunityDisabledError()
         return true
     }
@@ -858,10 +866,7 @@ class SoundsViewModel @Inject constructor(
     fun clearSuccess() = _state.update { it.copy(applySuccess = null) }
 
     fun upvote(id: String) {
-        if (!communityProviderEnabled.value && isCommunityVoteId(id)) {
-            showCommunityDisabledError()
-            return
-        }
+        if (isCommunityVoteId(id) && communityActionBlocked()) return
         viewModelScope.launch {
             try { voteRepo.upvote(id) }
             catch (e: Exception) {
@@ -871,10 +876,7 @@ class SoundsViewModel @Inject constructor(
         }
     }
     fun downvote(id: String) {
-        if (!communityProviderEnabled.value && isCommunityVoteId(id)) {
-            showCommunityDisabledError()
-            return
-        }
+        if (isCommunityVoteId(id) && communityActionBlocked()) return
         viewModelScope.launch {
             try { voteRepo.downvote(id) }
             catch (e: Exception) {
@@ -945,10 +947,7 @@ class SoundsViewModel @Inject constructor(
     }
 
     fun reportRecordingPermissionDenied() {
-        if (!communityProviderEnabled.value) {
-            showCommunityDisabledError()
-            return
-        }
+        if (communityActionBlocked()) return
         _state.update { it.copy(error = "Microphone permission is required to record a community sound") }
     }
 
@@ -1244,7 +1243,7 @@ class SoundsViewModel @Inject constructor(
 
     private fun loadCommunityTab(isRefresh: Boolean = false) {
         communityJob?.cancel()
-        if (!communityProviderEnabled.value) {
+        if (communityActionBlocked()) {
             showCommunityDisabledContent()
             return
         }
@@ -1430,7 +1429,15 @@ class SoundsViewModel @Inject constructor(
 
     private fun youtubeDisabledMessage(): String = "YouTube features are disabled in Settings"
 
-    private fun communityDisabledMessage(): String = "Community source is disabled in Settings"
+    private fun communityDisabledMessage(): String =
+        if (!communityProviderEnabled.value) {
+            "Community source is disabled in Settings"
+        } else {
+            COMMUNITY_GUIDELINES_REQUIRED_MESSAGE
+        }
+
+    fun acceptCommunityGuidelines() =
+        viewModelScope.launch { prefs.acceptCommunityGuidelines() }
 
     fun uploadSound(
         localUri: android.net.Uri,
@@ -1461,7 +1468,11 @@ class SoundsViewModel @Inject constructor(
     }
 
     suspend fun canDeleteCommunitySound(sound: Sound): Boolean {
-        if (sound.source != ContentSource.COMMUNITY || !communityProviderEnabled.value) return false
+        if (
+            sound.source != ContentSource.COMMUNITY ||
+            !communityProviderEnabled.value ||
+            !communityGuidelinesAccepted.value
+        ) return false
         return uploadRepo.canDeleteSoundUpload(sound.id)
     }
 
@@ -1512,6 +1523,7 @@ class SoundsViewModel @Inject constructor(
     fun canBlockCommunitySound(sound: Sound): Boolean =
         sound.source == ContentSource.COMMUNITY &&
             communityProviderEnabled.value &&
+            communityGuidelinesAccepted.value &&
             sound.communityUploaderId.isNotBlank()
 
     fun blockCommunitySound(sound: Sound, onBlocked: () -> Unit = {}) {

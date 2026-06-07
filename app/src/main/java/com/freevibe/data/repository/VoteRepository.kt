@@ -2,6 +2,7 @@ package com.freevibe.data.repository
 
 import android.content.Context
 import android.util.Log
+import com.freevibe.data.local.PreferencesManager
 import com.freevibe.service.CommunityIdentityProvider
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.DataSnapshot
@@ -16,6 +17,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.updateAndGet
 import kotlinx.coroutines.tasks.await
 import kotlin.coroutines.resume
@@ -80,6 +82,7 @@ class VoteRepository @Inject constructor(
     @ApplicationContext private val context: Context,
     private val identityProvider: CommunityIdentityProvider,
     private val callableClient: CommunityCallableClient,
+    private val prefs: PreferencesManager,
 ) {
     private val db by lazy {
         try { FirebaseDatabase.getInstance().reference } catch (_: Exception) { null }
@@ -197,6 +200,7 @@ class VoteRepository @Inject constructor(
     // ── Voting ──
 
     fun getVoteCount(contentId: String): Flow<Int> = callbackFlow {
+        if (!isCommunityAccessEnabled()) { trySend(0); awaitClose {}; return@callbackFlow }
         val votesRefInstance = votesRef
         if (votesRefInstance == null) { trySend(0); awaitClose {}; return@callbackFlow }
         val safeId = sanitizeKey(contentId)
@@ -212,6 +216,7 @@ class VoteRepository @Inject constructor(
     }
 
     suspend fun hasVoted(contentId: String, alreadySanitized: Boolean = false): Boolean {
+        if (!isCommunityAccessEnabled()) return false
         val safeId = if (alreadySanitized) contentId else sanitizeKey(contentId)
         return try {
             identityProvider.knownIdentityIds()
@@ -227,6 +232,7 @@ class VoteRepository @Inject constructor(
     }
 
     suspend fun upvote(contentId: String): Boolean {
+        if (!isCommunityAccessEnabled()) return false
         val safeId = sanitizeKey(contentId)
         identityProvider.ensureSignedIn()
         if (hasVoted(safeId, alreadySanitized = true)) return false
@@ -297,6 +303,7 @@ class VoteRepository @Inject constructor(
 
     /** Regular user: hide locally. Admin: hide globally for everyone. */
     suspend fun downvote(contentId: String) {
+        if (!isCommunityAccessEnabled()) return
         if (com.freevibe.BuildConfig.DEBUG) {
             Log.d("VoteRepo", "downvote($contentId) userId=${identityProvider.currentUserId()} isAdmin=$isAdmin")
         }
@@ -316,6 +323,7 @@ class VoteRepository @Inject constructor(
 
     /** Admin: globally hide content for ALL users via Firebase */
     suspend fun moderateHide(contentId: String) {
+        if (!isCommunityAccessEnabled()) return
         val moderationRefInstance = moderationRef
         if (moderationRefInstance == null) { hideLocally(contentId); return }
         val safeId = sanitizeKey(contentId)
@@ -332,6 +340,7 @@ class VoteRepository @Inject constructor(
 
     /** Admin: remove global moderation (unhide for everyone) */
     suspend fun moderateUnhide(contentId: String) {
+        if (!isCommunityAccessEnabled()) return
         val moderationRefInstance = moderationRef ?: return
         val safeId = sanitizeKey(contentId)
         try {
@@ -355,6 +364,7 @@ class VoteRepository @Inject constructor(
     // ── Batch ──
 
     fun getVoteCounts(contentIds: List<String>): Flow<Map<String, Int>> = callbackFlow {
+        if (!isCommunityAccessEnabled()) { trySend(emptyMap()); awaitClose {}; return@callbackFlow }
         val votesRefInstance = votesRef
         if (votesRefInstance == null) { trySend(emptyMap()); awaitClose {}; return@callbackFlow }
         val counts = java.util.concurrent.ConcurrentHashMap<String, Int>()
@@ -382,6 +392,7 @@ class VoteRepository @Inject constructor(
 
     /** Get top upvoted content IDs globally, sorted by vote count descending */
     suspend fun getTopVotedIds(limit: Int = 50): List<Pair<String, Int>> {
+        if (!isCommunityAccessEnabled()) return emptyList()
         val votesRefInstance = votesRef ?: return emptyList()
         return try {
             val snapshot = votesRefInstance.get().await()
@@ -399,4 +410,7 @@ class VoteRepository @Inject constructor(
 
     fun sanitizeKey(id: String): String =
         sanitizeVoteKey(id)
+
+    private suspend fun isCommunityAccessEnabled(): Boolean =
+        prefs.communityProviderEnabled.first() && prefs.communityGuidelinesAccepted.first()
 }

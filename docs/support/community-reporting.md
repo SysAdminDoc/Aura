@@ -66,6 +66,9 @@ Reporter UIDs are not public catalog data.
   be enabled because those reports use the same Firebase-backed community
   surface. Generated-content reports remain available independently so users can
   flag generated output without enabling the community feed.
+- Community/provider report submission also requires the current
+  [`Community Guidelines`](../legal/community-guidelines.md) version to be
+  accepted in app before community UGC engagement.
 - ViewModels submit the current source, license, uploader, and HTTPS source URL
   context with each report.
 - Generated-content reports submit the generated wallpaper identity, source,

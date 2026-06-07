@@ -58,6 +58,7 @@ import com.freevibe.service.shouldUseVideoBatterySaver
 import com.freevibe.service.videoBatteryImpactSummary
 import com.freevibe.service.videoWallpaperMimeTypes
 import com.freevibe.ui.LiveWallpaperLaunchMode
+import com.freevibe.ui.components.CommunityGuidelinesDialog
 import com.freevibe.ui.components.GlassCard
 import com.freevibe.ui.components.HighlightPill
 import com.freevibe.ui.screens.aigenerate.GeneratedWallpaperDisclosureDialog
@@ -189,6 +190,8 @@ fun SettingsScreen(
     val pexelsProviderEnabled by viewModel.pexelsProviderEnabled.collectAsStateWithLifecycle()
     val pixabayProviderEnabled by viewModel.pixabayProviderEnabled.collectAsStateWithLifecycle()
     val communityProviderEnabled by viewModel.communityProviderEnabled.collectAsStateWithLifecycle()
+    val communityGuidelinesAccepted by viewModel.communityGuidelinesAccepted.collectAsStateWithLifecycle()
+    val communityGuidelinesAcceptedVersion by viewModel.communityGuidelinesAcceptedVersion.collectAsStateWithLifecycle()
     val blockedCommunityCreators by viewModel.blockedCommunityCreators.collectAsStateWithLifecycle()
     val communityBlockAction by viewModel.communityBlockAction.collectAsStateWithLifecycle()
     val communityIdentityCleanup by viewModel.communityIdentityCleanup.collectAsStateWithLifecycle()
@@ -366,6 +369,7 @@ fun SettingsScreen(
     var showYtBlockedEditor by remember { mutableStateOf(false) }
     var showBlockedCreators by remember { mutableStateOf(false) }
     var showCommunityIdentity by remember { mutableStateOf(false) }
+    var showCommunityGuidelines by remember { mutableStateOf(false) }
     var showDarkModeWallpaperPicker by remember { mutableStateOf(false) }
     var showLightModeWallpaperPicker by remember { mutableStateOf(false) }
     var showCrashDiagnostics by remember { mutableStateOf(false) }
@@ -583,6 +587,18 @@ fun SettingsScreen(
             )
             if (communityProviderEnabled) {
                 SettingsItem(
+                    icon = Icons.Default.VerifiedUser,
+                    title = "Community guidelines",
+                    subtitle = if (communityGuidelinesAccepted) {
+                        "Accepted v$communityGuidelinesAcceptedVersion"
+                    } else {
+                        "Required before uploads, votes, reports, blocks, follows, and profiles"
+                    },
+                    onClick = { showCommunityGuidelines = true },
+                )
+            }
+            if (communityProviderEnabled && communityGuidelinesAccepted) {
+                SettingsItem(
                     icon = Icons.Default.Person,
                     title = "Community identity",
                     subtitle = communityIdentitySubtitle(communityIdentitySummary),
@@ -633,6 +649,21 @@ fun SettingsScreen(
                     actionState = communityBlockAction,
                     onUnblock = viewModel::unblockCommunityCreator,
                     onDismiss = { showBlockedCreators = false },
+                )
+            }
+            if (showCommunityGuidelines) {
+                CommunityGuidelinesDialog(
+                    onAccept = {
+                        viewModel.acceptCommunityGuidelines()
+                        showCommunityGuidelines = false
+                    },
+                    onReset = if (communityGuidelinesAccepted) {
+                        {
+                            viewModel.resetCommunityGuidelines()
+                            showCommunityGuidelines = false
+                        }
+                    } else null,
+                    onDismiss = { showCommunityGuidelines = false },
                 )
             }
             // #2: Wallpaper history — opens browsable grid

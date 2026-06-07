@@ -158,6 +158,16 @@ class SettingsViewModel @Inject constructor(
     val pexelsProviderEnabled = prefs.pexelsProviderEnabled.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), true)
     val pixabayProviderEnabled = prefs.pixabayProviderEnabled.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), true)
     val communityProviderEnabled = prefs.communityProviderEnabled.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), true)
+    val communityGuidelinesAccepted = prefs.communityGuidelinesAccepted.stateIn(
+        viewModelScope,
+        SharingStarted.WhileSubscribed(5000),
+        false,
+    )
+    val communityGuidelinesAcceptedVersion = prefs.communityGuidelinesAcceptedVersion.stateIn(
+        viewModelScope,
+        SharingStarted.WhileSubscribed(5000),
+        0,
+    )
     val showSketchyContent = prefs.showSketchyContent.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
     val showNsfwContent = prefs.showNsfwContent.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
     val isAdmin: Boolean get() = voteRepo.isAdmin
@@ -326,6 +336,12 @@ class SettingsViewModel @Inject constructor(
 
     fun setCommunityProviderEnabled(enabled: Boolean) = viewModelScope.launch {
         prefs.setCommunityProviderEnabled(enabled)
+    }
+    fun acceptCommunityGuidelines() = viewModelScope.launch {
+        prefs.acceptCommunityGuidelines()
+    }
+    fun resetCommunityGuidelines() = viewModelScope.launch {
+        prefs.resetCommunityGuidelines()
     }
 
     fun unblockCommunityCreator(userId: String) = viewModelScope.launch {

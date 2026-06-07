@@ -657,6 +657,11 @@ next pass can resume quickly.
   content rating notes, Data safety, UGC, generated content, sensitive
   permissions, source URLs, evidence paths, and owner actions are checked
   before verify/release workflows continue.
+- Completed Cycle 146 Community Guidelines consent gate: added a versioned
+  community guidelines policy, shared consent dialog, Settings review/reset
+  path, repository and UI gates for community feeds/uploads/votes/reports/
+  blocks/follows/profiles/startup identity warm-up, documentation, and
+  `tools/community_guidelines_consent_check.py` verify/release enforcement.
 
 ## 2026-06-05
 

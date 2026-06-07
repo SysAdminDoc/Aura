@@ -1,6 +1,7 @@
 package com.freevibe.data.repository
 
 import com.freevibe.data.local.PreferencesManager
+import com.freevibe.data.model.COMMUNITY_GUIDELINES_REQUIRED_MESSAGE
 import com.freevibe.data.model.CommunityFollowInput
 import com.freevibe.data.model.ContentSource
 import com.freevibe.data.model.CreatorProfileUpdateInput
@@ -291,6 +292,10 @@ class CreatorProfileRepository @Inject constructor(
         if (!prefs.communityProviderEnabled.first()) {
             sourceMetrics.recordDisabled("community")
             throw IllegalStateException("Community source is disabled in Settings")
+        }
+        if (!prefs.communityGuidelinesAccepted.first()) {
+            sourceMetrics.recordDisabled("community")
+            throw IllegalStateException(COMMUNITY_GUIDELINES_REQUIRED_MESSAGE)
         }
     }
 

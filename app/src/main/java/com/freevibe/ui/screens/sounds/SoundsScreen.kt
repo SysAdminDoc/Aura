@@ -58,6 +58,7 @@ import com.freevibe.data.repository.matchesHiddenIds
 import com.freevibe.ui.components.AuraStateAction
 import com.freevibe.ui.components.AuraStateCard
 import com.freevibe.ui.components.CompactSearchField
+import com.freevibe.ui.components.CommunityGuidelinesDialog
 import com.freevibe.ui.components.CountBadge
 import com.freevibe.ui.components.GlassCard
 import com.freevibe.ui.components.CommunityPolicyNotice
@@ -84,6 +85,7 @@ fun SoundsScreen(
     val playbackProgress by viewModel.playbackProgress.collectAsStateWithLifecycle()
     val youtubeProviderEnabled by viewModel.youtubeProviderEnabled.collectAsStateWithLifecycle()
     val communityProviderEnabled by viewModel.communityProviderEnabled.collectAsStateWithLifecycle()
+    val communityGuidelinesAccepted by viewModel.communityGuidelinesAccepted.collectAsStateWithLifecycle()
     val hiddenIds by viewModel.hiddenIds.collectAsStateWithLifecycle(initialValue = emptySet())
     val communityVoteIds = remember(state.sounds, state.selectedTab, communityProviderEnabled) {
         if (communityProviderEnabled && state.selectedTab == SoundTab.COMMUNITY) {
@@ -134,6 +136,7 @@ fun SoundsScreen(
         }
     }
     var showSearchHistory by remember { mutableStateOf(false) }
+    var showCommunityGuidelines by remember { mutableStateOf(false) }
     var quickApplySound by remember { mutableStateOf<Sound?>(null) }
     var quickApplyActionInFlight by remember { mutableStateOf(false) }
     var quickApplyObservedApplying by remember { mutableStateOf(false) }
@@ -151,7 +154,15 @@ fun SoundsScreen(
     var awaitingUploadResult by remember { mutableStateOf(false) }
     val uploadAudioPickerLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.GetContent()
-    ) { uri -> if (communityProviderEnabled && uri != null) { selectedAudioUri = uri; showUploadDialog = true } }
+    ) { uri ->
+        if (communityProviderEnabled && communityGuidelinesAccepted && uri != null) {
+            selectedAudioUri = uri
+            showUploadDialog = true
+        } else if (communityProviderEnabled && uri != null) {
+            selectedAudioUri = uri
+            showCommunityGuidelines = true
+        }
+    }
     val createAudioPickerLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.GetContent()
     ) { uri -> uri?.let(onCreateRingtone) }
@@ -164,6 +175,8 @@ fun SoundsScreen(
     val startRecording: () -> Unit = {
         if (!communityProviderEnabled) {
             viewModel.startCommunityRecording()
+        } else if (!communityGuidelinesAccepted) {
+            showCommunityGuidelines = true
         } else if (ContextCompat.checkSelfPermission(context, Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED) {
             viewModel.startCommunityRecording()
         } else {
@@ -173,9 +186,15 @@ fun SoundsScreen(
 
     LaunchedEffect(state.recordedUploadUri) {
         state.recordedUploadUri?.let { uri ->
-            selectedAudioUri = uri
-            showUploadDialog = true
-            viewModel.consumeRecordedUpload()
+            if (communityGuidelinesAccepted) {
+                selectedAudioUri = uri
+                showUploadDialog = true
+                viewModel.consumeRecordedUpload()
+            } else {
+                selectedAudioUri = uri
+                viewModel.consumeRecordedUpload()
+                showCommunityGuidelines = true
+            }
         }
     }
 
@@ -189,7 +208,7 @@ fun SoundsScreen(
 
     // Upload dialog
     val uploadUri = selectedAudioUri
-    if (communityProviderEnabled && showUploadDialog && uploadUri != null) {
+    if (communityProviderEnabled && communityGuidelinesAccepted && showUploadDialog && uploadUri != null) {
         UploadDialog(
             isUploading = state.isUploading,
             uploadProgress = state.uploadProgress,
@@ -379,7 +398,13 @@ fun SoundsScreen(
                     selectedTab = state.selectedTab,
                     youtubeProviderEnabled = youtubeProviderEnabled,
                     communityProviderEnabled = communityProviderEnabled,
-                    onSelectTab = viewModel::selectTab,
+                    onSelectTab = { tab ->
+                        if (tab == SoundTab.COMMUNITY && communityProviderEnabled && !communityGuidelinesAccepted) {
+                            showCommunityGuidelines = true
+                        } else {
+                            viewModel.selectTab(tab)
+                        }
+                    },
                 )
             }
 
@@ -437,10 +462,20 @@ fun SoundsScreen(
                                 }
                             } else emptyList(),
                             onCollectionClick = { collection -> viewModel.search(collection.query) },
-                            onUploadClick = if (communityProviderEnabled) ({ uploadAudioPickerLauncher.launch("audio/*") }) else null,
+                            onUploadClick = if (communityProviderEnabled) ({
+                                if (communityGuidelinesAccepted) {
+                                    uploadAudioPickerLauncher.launch("audio/*")
+                                } else {
+                                    showCommunityGuidelines = true
+                                }
+                            }) else null,
                             onRecordClick = if (communityProviderEnabled) startRecording else null,
-                            onUpvote = if (communityProviderEnabled) ({ sound -> viewModel.upvote(sound.stableKey()) }) else null,
-                            onDownvote = if (communityProviderEnabled) ({ sound -> viewModel.downvote(sound.stableKey()) }) else null,
+                            onUpvote = if (communityProviderEnabled) ({ sound ->
+                                if (communityGuidelinesAccepted) viewModel.upvote(sound.stableKey()) else showCommunityGuidelines = true
+                            }) else null,
+                            onDownvote = if (communityProviderEnabled) ({ sound ->
+                                if (communityGuidelinesAccepted) viewModel.downvote(sound.stableKey()) else showCommunityGuidelines = true
+                            }) else null,
                         )
                     }
                 }
@@ -464,6 +499,17 @@ fun SoundsScreen(
                 } else null,
             )
         }
+    }
+
+    if (showCommunityGuidelines) {
+        CommunityGuidelinesDialog(
+            onAccept = {
+                viewModel.acceptCommunityGuidelines()
+                if (selectedAudioUri != null) showUploadDialog = true
+                showCommunityGuidelines = false
+            },
+            onDismiss = { showCommunityGuidelines = false },
+        )
     }
 }
 

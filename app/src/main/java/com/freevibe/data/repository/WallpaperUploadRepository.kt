@@ -8,6 +8,7 @@ import android.net.Uri
 import android.provider.OpenableColumns
 import android.webkit.MimeTypeMap
 import com.freevibe.data.local.PreferencesManager
+import com.freevibe.data.model.COMMUNITY_GUIDELINES_REQUIRED_MESSAGE
 import com.freevibe.data.model.CommunityUploadDeleteReason
 import com.freevibe.data.model.CommunityUploadKind
 import com.freevibe.data.model.CommunityUploadRights
@@ -307,9 +308,15 @@ class WallpaperUploadRepository @Inject constructor(
         )
     }
 
-    private suspend fun isCommunityProviderEnabled(): Boolean = prefs.communityProviderEnabled.first()
+    private suspend fun isCommunityProviderEnabled(): Boolean =
+        prefs.communityProviderEnabled.first() && prefs.communityGuidelinesAccepted.first()
 
-    private fun communityDisabledMessage(): String = "Community source is disabled in Settings"
+    private suspend fun communityDisabledMessage(): String =
+        if (!prefs.communityProviderEnabled.first()) {
+            "Community source is disabled in Settings"
+        } else {
+            COMMUNITY_GUIDELINES_REQUIRED_MESSAGE
+        }
 
     private suspend fun finalizeWallpaperUploadWithCallableOrNull(
         name: String,

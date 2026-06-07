@@ -1,8 +1,8 @@
 # Autonomous Loop State
 
 **Assigned project:** `C:\Users\--\repos\Aura`
-**Current pass:** 2026-06-07 Cycle 145 Play App content packet gate
-**Last commit before pass:** `24a50aa` (`ci(privacy): gate sdk data safety`)
+**Current pass:** 2026-06-07 Cycle 146 Community Guidelines consent gate
+**Last commit before pass:** `8301403` (`ci(store): gate play app content packet`)
 
 ## 2026-06-05 Result
 
@@ -2110,11 +2110,32 @@
 - Cycle 145 verification: Play App content packet check, workflow security
   policy check, Python compile, and focused backend tests passed.
 
+## Cycle 146 Result - 2026-06-07
+
+- Added a versioned `CommunityGuidelinesPolicy` and persisted accepted version
+  in app preferences.
+- Added a shared `CommunityGuidelinesDialog` plus Settings review/reset entry.
+- Blocked community startup identity warm-up, feeds, uploads, votes, reports,
+  blocks, follows, profiles, and upload finalization until the current
+  Community Guidelines version is accepted.
+- Updated Sounds and Wallpapers to prompt for guidelines acceptance before
+  community tabs, uploads, recording, and vote actions.
+- Added `docs/legal/community-guidelines.md` and removed the UGC guidelines
+  consent owner action from the Play App content packet.
+- Added `tools/community_guidelines_consent_check.py`, focused tests, and
+  verify/release workflow gates for consent drift.
+- Updated release dry-run, release signing, supply-chain, workflow security
+  policy, community reporting, research, roadmap, changelog, completion, and
+  loop-state docs.
+- Cycle 146 verification: Community Guidelines consent check, Play App content
+  packet check, workflow/security/privacy policy checks, backend tool tests,
+  Kotlin debug compile, and diff hygiene passed locally.
+
 ## Next Cycle
 
-Continue this same assigned project, Aura. Start Cycle 146 from the
+Continue this same assigned project, Aura. Start Cycle 147 from the
 `ROADMAP.md` Continuation State and
-`docs/research/cycle-145-2026-06-07.md`. The account
+`docs/research/cycle-146-2026-06-07.md`. The account
 deletion dry-run planner, read-only Settings identity surface, redacted
 shareable request draft, request-code lookup tool, review receipt gate, offline
 apply simulator, private executor package builder, and guarded REST executor
@@ -2233,7 +2254,9 @@ same gate to Gradle-marker-backed SDK surfaces for Firebase Auth, RTDB,
 Storage, Functions, App Check, and Play services ML Kit/module install; Cycle
 145 added a checked Play App content packet with owner actions for hosted
 deletion URL publication, UGC terms/guidelines consent, live content rating
-completion, and App content receipt capture.
+completion, and App content receipt capture; Cycle 146 added a versioned
+Community Guidelines consent gate before community engagement and removed the
+UGC consent owner action from the packet.
 Actual live callable invocation evidence, a live hosted HTTPS web deletion URL,
 direct RTDB rule tightening, App Check console evidence, production-project
 dry-run evidence, and owner/admin GitHub repository security-settings evidence
@@ -2246,8 +2269,7 @@ owner access is confirmed, collect owner/admin GitHub security settings
 evidence and generate the redacted receipt when access is available, or
 continue with signed release dry-run evidence capture on a suitable runner,
 the screenshot and feature-graphic pipeline for the remaining store metadata
-asset gap, the UGC terms/guidelines consent blocker surfaced by the checked
-Play App content packet, or the
+asset gap, alternative-store disclosure checks, or the
 next checkable backend, deploy, security, support, policy, or rules hardening
 artifact if owner-gated evidence is still unavailable.
 Commit and push completed work when the active project contract allows it.

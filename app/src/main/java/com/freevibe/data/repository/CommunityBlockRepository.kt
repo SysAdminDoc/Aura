@@ -1,6 +1,7 @@
 package com.freevibe.data.repository
 
 import com.freevibe.data.local.PreferencesManager
+import com.freevibe.data.model.COMMUNITY_GUIDELINES_REQUIRED_MESSAGE
 import com.freevibe.data.model.CommunityBlockReason
 import com.freevibe.data.model.CommunityUserBlockInput
 import com.freevibe.data.model.buildCommunityUserBlockUpdates
@@ -236,9 +237,15 @@ class CommunityBlockRepository @Inject constructor(
         awaitClose { ref.removeEventListener(listener) }
     }
 
-    private suspend fun isCommunityProviderEnabled(): Boolean = prefs.communityProviderEnabled.first()
+    private suspend fun isCommunityProviderEnabled(): Boolean =
+        prefs.communityProviderEnabled.first() && prefs.communityGuidelinesAccepted.first()
 
-    private fun communityDisabledMessage(): String = "Community source is disabled in Settings"
+    private suspend fun communityDisabledMessage(): String =
+        if (!prefs.communityProviderEnabled.first()) {
+            "Community source is disabled in Settings"
+        } else {
+            COMMUNITY_GUIDELINES_REQUIRED_MESSAGE
+        }
 }
 
 internal fun parseBlockedUserIds(snapshot: DataSnapshot): Set<String> =
