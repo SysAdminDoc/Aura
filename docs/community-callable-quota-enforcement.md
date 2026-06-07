@@ -231,6 +231,8 @@ response when the server provides an existing target.
 - Run `tools/community_callable_contract_check.py` after any callable contract
   or deployment-manifest edit.
 - Run `npm --prefix functions test` after any Functions source or contract edit.
+- Run `npm run test:functions-emulator` after any emulator-backed handler
+  persistence test or root backend script edit.
 - Add callable unit tests for accepted, duplicate, cooldown, daily-limit, and
   unauthorized writes for every surface.
 - Add Emulator Suite tests before direct RTDB rules are tightened.

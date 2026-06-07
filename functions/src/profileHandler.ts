@@ -84,7 +84,7 @@ export function createUpdateCreatorProfileCallable(backend = new FirebaseProfile
 
 export async function updateCreatorProfileHandler(
   request: CallableRequestLike,
-  backend: ProfileBackend,
+  backend: ProfileBackend = new FirebaseProfileBackend(),
 ) {
   const uid = requireCallableIdentity(request, PROFILE_SURFACE);
   const nowMillis = backend.nowMillis();

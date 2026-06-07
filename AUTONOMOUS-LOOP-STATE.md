@@ -1,7 +1,7 @@
 # Autonomous Loop State
 
 **Assigned project:** `C:\Users\--\repos\Aura`
-**Current pass:** 2026-06-07 Cycle 100 creator profile callable handler
+**Current pass:** 2026-06-07 Cycle 101 profile callable emulator coverage
 **Last commit before pass:** `2e7f199` (`feat(community): add sound upload callable handler`)
 
 ## 2026-06-05 Result
@@ -1090,11 +1090,41 @@
   owner-approved deploy evidence, direct RTDB rule tightening, and Firebase
   Console App Check evidence remain open.
 
+## Cycle 101 Result - 2026-06-07
+
+- Added `test/firebase/functions.profile.test.mjs` for RTDB-emulator-backed
+  `updateCreatorProfileHandler` persistence coverage.
+- Added `npm run test:functions-emulator`, which builds the Functions project
+  and runs the profile handler test under
+  `firebase emulators:exec --only database`.
+- Wired `npm run test:functions-emulator` into the `firebase-rules` CI lane
+  after Functions unit tests and before the rules suite.
+- The emulator test resolves `firebase-admin` from the `functions/` package,
+  invokes the profile handler with its real Admin SDK backend, and verifies
+  accepted profile writes, quota rows, dedupe markers, and unchanged-profile
+  idempotency in the RTDB emulator.
+- Updated `functions/src/profileHandler.ts` so direct handler invocations can
+  default to the real Firebase backend when a fake backend is not provided.
+- Updated `tools/community_backend_manifest.py` and refreshed
+  `docs/community-backend-manifest.json` so Functions-related emulator test
+  scripts are tracked in the backend manifest.
+- Updated `docs/research/cycle-101-2026-06-07.md`,
+  `docs/community-backend-runbook.md`,
+  `docs/community-callable-quota-enforcement.md`, `ROADMAP.md`,
+  `COMPLETED.md`, and `CHANGELOG.md`.
+- Cycle 101 verification: new Functions emulator test, Functions test suite,
+  backend manifest check, callable contract manifest check, high-severity npm
+  audit, diff hygiene, and attribution/ASCII scans. RTDB-emulator-backed
+  handler persistence coverage for report, vote, follow, block, sound upload,
+  and wallpaper upload handlers, full callable wire-protocol coverage, Android
+  callable migration, owner-approved deploy evidence, direct RTDB rule
+  tightening, and Firebase Console App Check evidence remain open.
+
 ## Next Cycle
 
-Continue this same assigned project, Aura. Start Cycle 101 from the
+Continue this same assigned project, Aura. Start Cycle 102 from the
 `ROADMAP.md` Continuation State and
-`docs/research/cycle-100-2026-06-07.md`. The account
+`docs/research/cycle-101-2026-06-07.md`. The account
 deletion dry-run planner, read-only Settings identity surface, redacted
 shareable request draft, request-code lookup tool, review receipt gate, offline
 apply simulator, private executor package builder, and guarded REST executor
@@ -1132,16 +1162,19 @@ normalization, storage-path ownership, storage-path dedupe, quota, Auth, App
 Check, and payload validation tests; Cycle 100 added the handler-backed
 `updateCreatorProfile` callable with focused public profile normalization,
 normalized-profile dedupe, quota, Auth, App Check, and payload validation
-tests. Emulator-backed callable invocation, Android callable migration, a live
-hosted HTTPS web deletion URL, and production-project dry-run evidence remain
-open. Next add emulator-backed coverage for `submitCommunityReport`,
-`recordCommunityVote`, `setCreatorFollow`, `setCommunityUserBlock`,
-`finalizeCommunitySoundUpload`, `finalizeCommunityWallpaperUpload`, and
-`updateCreatorProfile`, add Android report/vote/follow/block/upload/profile
-callable repository adapters, publish the hosted URL after owner approval, or
-run a real production-project Firebase executor dry-run after owner access is
-confirmed. Commit and push completed work when the active project contract
-allows it.
+tests; Cycle 101 added RTDB-emulator-backed `updateCreatorProfile` handler
+persistence coverage for profile, quota, dedupe, and unchanged-profile
+idempotency writes. Android callable migration, broader callable emulator
+coverage, a live hosted HTTPS web deletion URL, and production-project dry-run
+evidence remain open. Next add RTDB-emulator-backed handler persistence
+coverage for `submitCommunityReport`, `recordCommunityVote`,
+`setCreatorFollow`, `setCommunityUserBlock`,
+`finalizeCommunitySoundUpload`, and `finalizeCommunityWallpaperUpload`, add
+full callable wire-protocol coverage when Auth/App Check emulator wiring is
+available, add Android report/vote/follow/block/upload/profile callable
+repository adapters, publish the hosted URL after owner approval, or run a real
+production-project Firebase executor dry-run after owner access is confirmed.
+Commit and push completed work when the active project contract allows it.
 
 ## Previous Cycle Prompt
 

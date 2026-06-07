@@ -80,7 +80,7 @@ def selected_scripts(package_json: dict[str, object]) -> dict[str, str]:
         if (
             isinstance(name, str)
             and name.startswith("test:")
-            and ("rules" in name or name == "test:functions")
+            and ("rules" in name or "functions" in name)
         ):
             selected[name] = str(command)
     return dict(sorted(selected.items()))

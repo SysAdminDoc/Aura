@@ -409,6 +409,13 @@ next pass can resume quickly.
   final `/creator_profiles/{uid}` writes, and focused Functions tests for
   accepted update, duplicate, cooldown, daily-limit, unauthenticated,
   missing-App-Check, and invalid payload paths.
+- Completed Cycle 101 profile callable emulator coverage: added
+  `test/firebase/functions.profile.test.mjs`, the
+  `npm run test:functions-emulator` script, real Admin SDK backend invocation
+  for `updateCreatorProfileHandler`, RTDB-emulator assertions for profile,
+  quota, and dedupe rows, unchanged-profile idempotency coverage, and backend
+  manifest script tracking plus CI execution for Functions-related emulator
+  tests.
 
 ## 2026-06-05
 

@@ -49,6 +49,7 @@ py -3 tools\community_callable_contract_check.py --contract docs\community-calla
 py -3 tools\community_deletion_web_url_check.py --manifest docs\support\community-account-deletion-web-url.json --repo-root .
 py -3 tools\community_deletion_web_page_check.py --page docs\support\community-account-deletion-web-page.md
 npm run test:functions
+npm run test:functions-emulator
 npm run test:firebase-rules
 npx firebase --version
 ```
@@ -78,6 +79,7 @@ Record this evidence before a real deploy:
 - `docs/community-backend-manifest.json` SHA-256 or copied JSON.
 - `npm run test:firebase-rules` result.
 - `npm run test:functions` result.
+- `npm run test:functions-emulator` result.
 - `npx firebase --version` output.
 - Dry-run command and exit code.
 - Firebase project ID.
@@ -120,6 +122,7 @@ rules directly in the Firebase Console as the primary rollback path.
    npm ci
    npm --prefix functions ci
    npm run test:functions
+   npm run test:functions-emulator
    npm run test:firebase-rules
    npx firebase deploy --only database,storage,functions --project <project-id> --dry-run
    npx firebase deploy --only database,storage,functions --project <project-id> --message "Aura community backend rollback <known-good-sha>"
@@ -175,6 +178,9 @@ must include:
 - Functions report/vote/follow/block/sound-upload/wallpaper-upload/profile-edit
   handler status from `npm run test:functions` until emulator coverage and
   Android migration replace handler-only rollout status.
+- RTDB-emulator-backed callable handler persistence status from
+  `npm run test:functions-emulator` until all callable surfaces and the full
+  callable wire protocol have coverage.
 - Account deletion review receipt from
   `tools/community_account_deletion_review.py` before any future trusted apply
   step accepts a deletion plan.

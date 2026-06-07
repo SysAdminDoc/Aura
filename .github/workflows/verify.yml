@@ -134,6 +134,10 @@ jobs:
         if: steps.firebase_rules_changes.outputs.changed == 'true'
         run: npm run test:functions
 
+      - name: Firebase functions emulator tests
+        if: steps.firebase_rules_changes.outputs.changed == 'true'
+        run: npm run test:functions-emulator
+
       - name: Firebase rules tests
         if: steps.firebase_rules_changes.outputs.changed == 'true'
         run: npm run test:firebase-rules

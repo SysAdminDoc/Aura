@@ -5,6 +5,7 @@
   "scripts": {
     "test:database-rules": "firebase emulators:exec --only database --project aura-rules-test \"node --test test/firebase/database.rules.test.mjs\"",
     "test:firebase-rules": "firebase emulators:exec --only database,storage --project aura-rules-test \"node --test test/firebase/*.rules.test.mjs\"",
+    "test:functions-emulator": "npm --prefix functions run build && firebase emulators:exec --only database --project aura-rules-test \"node --test test/firebase/functions.profile.test.mjs\"",
     "test:functions": "npm --prefix functions test",
     "test:storage-rules": "firebase emulators:exec --only storage --project aura-rules-test \"node --test test/firebase/storage.rules.test.mjs\""
   },
