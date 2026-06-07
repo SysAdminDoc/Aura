@@ -28,6 +28,9 @@ Manual branch runs:
 - Check that GitHub/Obtainium/Izzy/F-Droid channel status, anti-feature notes,
   manifest permissions, reviewed network services, and proprietary dependency
   markers remain disclosed before the signed release build.
+- Check that package/version metadata, Fastlane text, README links, release
+  preflight commands, privacy URLs, and expected release artifacts remain
+  consistent before the signed release build.
 - Check dependency notice, native compliance, and curated overlay drift gates.
 - Generate `SHA256SUMS.txt` and `RELEASE_NOTES.md`.
 - Run `tools/release_artifact_bundle_check.py` against the final `release/` directory.
@@ -64,6 +67,7 @@ python3 tools/privacy_data_safety_check.py --policy docs/privacy/data-safety.jso
 python3 tools/community_guidelines_consent_check.py --repo-root .
 python3 tools/play_app_content_packet_check.py --policy docs/distribution/play-app-content.json --repo-root .
 python3 tools/alt_store_metadata_check.py --policy docs/distribution/alt-store-metadata.json --repo-root .
+python3 tools/release_metadata_consistency_check.py --policy docs/distribution/release-metadata-consistency.json --repo-root .
 ```
 
 The text-mode check fails when title or description limits drift, the current
@@ -89,6 +93,9 @@ The alternative-store disclosure matrix fails when channel statuses,
 anti-feature notes, manifest permissions, reviewed network services,
 proprietary dependency markers, or Izzy/F-Droid submission notes drift from the
 current full-build decision.
+The release metadata consistency gate fails when package/version metadata,
+Fastlane text, README links, privacy URLs, preflight commands, packet package
+names, or expected release artifact documentation drift apart.
 
 The release workflow validates the final directory before upload:
 

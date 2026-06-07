@@ -59,6 +59,7 @@
         "python3 tools/community_guidelines_consent_check.py",
         "python3 tools/play_app_content_packet_check.py",
         "python3 tools/alt_store_metadata_check.py",
+        "python3 tools/release_metadata_consistency_check.py",
         "python3 tools/dependency_notice_lock.py --mode check",
         "python3 tools/native_compliance_inventory.py --mode check-lock",
         "python3 tools/dependency_overlay_check.py --overlay",

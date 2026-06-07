@@ -3,6 +3,7 @@
 All notable changes to Aura will be documented in this file.
 
 ## Unreleased
+- **Release metadata consistency gate (Cycle 148)**: added a checked release metadata packet that reconciles app package/version values, Fastlane text, README links, privacy URLs, Play/alternative-store packets, release preflight commands, and expected GitHub release artifacts.
 - **Alternative-store disclosure gate (Cycle 147)**: added a checked GitHub/Obtainium/Izzy/F-Droid disclosure packet covering channel status, anti-feature notes, manifest permissions, reviewed network services, proprietary dependency markers, and Izzy submission notes.
 - **Community Guidelines consent gate (Cycle 146)**: added versioned community guidelines acceptance before community feeds, uploads, votes, reports, blocks, follows, profiles, and startup identity warm-up, then wired a checked consent policy gate into verify and release.
 - **Play App content packet gate (Cycle 145)**: added a checked owner-ready Play App content declaration packet covering ads, app access, target audience, content rating notes, Data safety, UGC, generated content, sensitive permissions, evidence paths, and owner actions.

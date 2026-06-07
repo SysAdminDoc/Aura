@@ -669,6 +669,13 @@ next pass can resume quickly.
   status, anti-feature notes, manifest permission disclosures, reviewed
   network services, proprietary dependency markers, and Izzy submission notes
   are checked before verify/release workflows continue.
+- Completed Cycle 148 release metadata consistency gate: added
+  `docs/distribution/release-metadata-consistency.md`,
+  `docs/distribution/release-metadata-consistency.json`, and
+  `tools/release_metadata_consistency_check.py` so package/version metadata,
+  Fastlane text, README links, privacy URLs, Play/alternative-store packets,
+  release preflight commands, and expected GitHub release artifact names stay
+  aligned.
 
 ## 2026-06-05
 

@@ -115,6 +115,9 @@ jobs:
       - name: Alternative-store disclosure matrix
         run: python3 tools/alt_store_metadata_check.py --policy docs/distribution/alt-store-metadata.json --repo-root .
 
+      - name: Release metadata consistency
+        run: python3 tools/release_metadata_consistency_check.py --policy docs/distribution/release-metadata-consistency.json --repo-root .
+
       - name: Build signed release APK
         run: ./gradlew :app:assembleRelease --stacktrace --no-daemon
 

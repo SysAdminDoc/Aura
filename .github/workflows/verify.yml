@@ -207,6 +207,9 @@ jobs:
       - name: Alternative-store disclosure matrix
         run: python3 tools/alt_store_metadata_check.py --policy docs/distribution/alt-store-metadata.json --repo-root .
 
+      - name: Release metadata consistency
+        run: python3 tools/release_metadata_consistency_check.py --policy docs/distribution/release-metadata-consistency.json --repo-root .
+
       - name: On-device AI wallpaper decision gate
         run: python3 tools/on_device_ai_decision_check.py --policy docs/ai/on-device-wallpaper-decision.json --repo-root .
 

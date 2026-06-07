@@ -1,0 +1,64 @@
+{
+  "schemaVersion": 1,
+  "policyKind": "releaseMetadataConsistency",
+  "packageName": "com.freevibe",
+  "versionName": "6.31.1",
+  "versionCode": 112,
+  "docsPath": "docs/distribution/release-metadata-consistency.md",
+  "metadataRoot": "fastlane/metadata/android/en-US",
+  "privacyPolicyUrl": "https://github.com/SysAdminDoc/Aura/blob/main/docs/privacy/privacy-policy.md",
+  "requiredEvidencePaths": [
+    "app/build.gradle.kts",
+    "README.md",
+    "CHANGELOG.md",
+    "COMPLETED.md",
+    "fastlane/metadata/android/en-US/title.txt",
+    "fastlane/metadata/android/en-US/short_description.txt",
+    "fastlane/metadata/android/en-US/full_description.txt",
+    "fastlane/metadata/android/en-US/changelogs/112.txt",
+    "docs/privacy/privacy-policy-link.json",
+    "docs/privacy/data-safety.json",
+    "docs/distribution/play-app-content.json",
+    "docs/distribution/alt-store-metadata.json",
+    "docs/distribution/release-dry-run.md",
+    "docs/distribution/release-signing.md",
+    "docs/distribution/supply-chain.md",
+    ".github/workflows/verify.yml",
+    ".github/workflows/release.yml"
+  ],
+  "requiredReadmeLinks": [
+    "docs/privacy/privacy-policy.md",
+    "docs/distribution/release-signing.md",
+    "docs/distribution/channel-strategy.md",
+    "docs/distribution/alt-store-metadata.md",
+    "docs/distribution/developer-verification.md",
+    "docs/distribution/supply-chain.md"
+  ],
+  "requiredPreflightCommands": [
+    "tools/store_metadata_preflight.py",
+    "tools/privacy_policy_link_check.py",
+    "tools/privacy_data_safety_check.py",
+    "tools/community_guidelines_consent_check.py",
+    "tools/play_app_content_packet_check.py",
+    "tools/alt_store_metadata_check.py",
+    "tools/release_artifact_bundle_check.py"
+  ],
+  "requiredReleaseArtifacts": [
+    "Aura-vX.Y.Z-versionCode-N-universal-release.apk",
+    "THIRD-PARTY-NOTICES.md",
+    "GOOGLE-OSS-RAW-INPUTS.zip",
+    "NATIVE-COMPLIANCE.md",
+    "SHA256SUMS.txt",
+    "RELEASE_NOTES.md",
+    "apksigner.txt",
+    "aapt-badging.txt"
+  ],
+  "sourceUrls": [
+    "https://support.google.com/googleplay/android-developer/answer/9859152",
+    "https://support.google.com/googleplay/android-developer/answer/13393723",
+    "https://docs.fastlane.tools/actions/supply/",
+    "https://docs.github.com/en/actions/using-workflows/storing-workflow-data-as-artifacts",
+    "https://docs.github.com/en/repositories/releasing-projects-on-github/about-releases",
+    "https://f-droid.org/en/docs/All_About_Descriptions_Graphics_and_Screenshots/"
+  ]
+}
