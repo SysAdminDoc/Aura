@@ -6,6 +6,14 @@ next pass can resume quickly.
 
 ## 2026-06-07
 
+- Completed Cycle 154 background work network posture gate: added
+  `docs/background-work-network-posture.md`,
+  `docs/background-work-network-posture.json`, and
+  `tools/background_work_network_check.py` so each scheduled background work
+  row has checked connected/unmetered network posture, metered-network behavior,
+  Data Saver gap text, privacy surface, release risk, source terms, release
+  docs, and verify/release workflow wiring. Direct Settings Data Saver receipts
+  remain open.
 - Completed Cycle 153 background work scheduling ledger: added
   `docs/background-work-scheduling-ledger.md`,
   `docs/background-work-scheduling-ledger.json`, and

@@ -1,8 +1,8 @@
 # Autonomous Loop State
 
 **Assigned project:** `C:\Users\--\repos\Aura`
-**Current pass:** 2026-06-07 Cycle 153 background work scheduling ledger
-**Last commit before pass:** `89f08e7` (`ci(policy): gate rotation foreground service`)
+**Current pass:** 2026-06-07 Cycle 154 background work network posture gate
+**Last commit before pass:** `56abf65` (`ci(background): gate scheduling ledger`)
 
 ## 2026-06-05 Result
 
@@ -2265,11 +2265,27 @@
   metadata consistency check, workflow security policy check, Python compile,
   focused tests, and full backend tool tests passed locally.
 
+## Cycle 154 Result - 2026-06-07
+
+- Added `docs/background-work-network-posture.md` and
+  `docs/background-work-network-posture.json` as the checked network/Data Saver
+  posture packet for every WorkManager row in the scheduling ledger.
+- Added `tools/background_work_network_check.py` plus focused backend tests so
+  connected/unmetered posture, metered-network behavior, Data Saver gap text,
+  privacy surfaces, release risk, source terms, release docs, and workflow
+  wiring cannot drift silently.
+- Wired verify and release workflows, release metadata consistency, GitHub
+  security workflow policy, release dry-run, release signing, and supply-chain
+  docs to run the new gate before Android build work.
+- Cycle 154 verification: background work network posture check, release
+  metadata consistency check, workflow security policy check, Python compile,
+  focused tests, and full backend tool tests passed locally.
+
 ## Next Cycle
 
-Continue this same assigned project, Aura. Start Cycle 154 from the
+Continue this same assigned project, Aura. Start Cycle 155 from the
 `ROADMAP.md` Continuation State and
-`docs/research/cycle-153-2026-06-07.md`. The account
+`docs/research/cycle-154-2026-06-07.md`. The account
 deletion dry-run planner, read-only Settings identity surface, redacted
 shareable request draft, request-code lookup tool, review receipt gate, offline
 apply simulator, private executor package builder, and guarded REST executor
@@ -2413,6 +2429,10 @@ Cycle 153 added a checked background work scheduling ledger for `auto_wallpaper`
 `rotation_trigger_oneshot`, including source-backed unique work names, enqueue
 policies, constraints, deferral reasons, release metadata/security workflow
 policy coverage, and verify/release workflow wiring.
+Cycle 154 added a checked background work network posture gate for connected
+versus unmetered WorkManager constraints, metered-network behavior, Data Saver
+diagnostic gaps, privacy surfaces, release risk, release metadata/security
+workflow policy coverage, and verify/release workflow wiring.
 Actual live callable invocation evidence, a live hosted HTTPS web deletion URL,
 direct RTDB rule tightening, App Check console evidence, production-project
 dry-run evidence, and owner/admin GitHub repository security-settings evidence

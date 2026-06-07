@@ -1,0 +1,121 @@
+{
+  "schemaVersion": 1,
+  "policyKind": "backgroundWorkNetworkPosture",
+  "status": "networkPostureCheckedSettingsPending",
+  "docsPath": "docs/background-work-network-posture.md",
+  "schedulingLedgerPath": "docs/background-work-scheduling-ledger.json",
+  "postureRows": [
+    {
+      "id": "auto-wallpaper-periodic",
+      "uniqueWorkName": "auto_wallpaper",
+      "networkPosture": "userSelectableConnectedOrUnmetered",
+      "sourcePath": "app/src/main/java/com/freevibe/service/AutoWallpaperWorker.kt",
+      "requiredSourceTerms": [
+        "if (requiresWiFiOnly) NetworkType.UNMETERED else NetworkType.CONNECTED",
+        "setRequiresBatteryNotLow(true)",
+        "setRequiresCharging(true)",
+        "setRequiresDeviceIdle(true)"
+      ],
+      "settingsSourcePath": "app/src/main/java/com/freevibe/ui/screens/settings/SettingsViewModel.kt",
+      "requiredSettingsTerms": [
+        "setAutoWallpaperRequiresWiFiOnly",
+        "setAutoWallpaperRequiresCharging",
+        "setAutoWallpaperRequiresIdle"
+      ],
+      "meteredPolicy": "Metered network is allowed only when the user has not enabled Wi-Fi-only rotation.",
+      "dataSaverPolicy": "No direct ConnectivityManager Data Saver receipt yet; Settings diagnostics must label metered/Data Saver state in the next slice.",
+      "privacySurface": "Remote wallpaper provider fetches already map through Data safety network endpoint rows.",
+      "releaseRisk": "Medium"
+    },
+    {
+      "id": "daily-wallpaper-periodic",
+      "uniqueWorkName": "daily_wallpaper",
+      "networkPosture": "connected",
+      "sourcePath": "app/src/main/java/com/freevibe/service/DailyWallpaperWorker.kt",
+      "requiredSourceTerms": [
+        "setRequiredNetworkType(NetworkType.CONNECTED)",
+        "redditProviderEnabled",
+        "POST_NOTIFICATIONS"
+      ],
+      "settingsSourcePath": "app/src/main/java/com/freevibe/ui/screens/settings/SettingsScreen.kt",
+      "requiredSettingsTerms": [
+        "daily_wallpaper_enabled",
+        "DailyWallpaperWorker.schedule",
+        "DailyWallpaperWorker.cancel"
+      ],
+      "meteredPolicy": "Metered network is currently allowed for the small daily Reddit metadata and thumbnail fetch.",
+      "dataSaverPolicy": "No direct ConnectivityManager Data Saver receipt yet; future diagnostics should label Data Saver as a possible background delay.",
+      "privacySurface": "Reddit endpoint and notification behavior are covered by network endpoint and Data safety rows.",
+      "releaseRisk": "Medium"
+    },
+    {
+      "id": "weather-update-periodic",
+      "uniqueWorkName": "weather_update",
+      "networkPosture": "connected",
+      "sourcePath": "app/src/main/java/com/freevibe/service/WeatherUpdateWorker.kt",
+      "requiredSourceTerms": [
+        "setRequiredNetworkType(NetworkType.CONNECTED)",
+        "ACCESS_FINE_LOCATION",
+        "ACCESS_COARSE_LOCATION"
+      ],
+      "settingsSourcePath": "app/src/main/java/com/freevibe/ui/screens/settings/SettingsScreen.kt",
+      "requiredSettingsTerms": [
+        "WeatherUpdateWorker.schedule",
+        "WeatherUpdateWorker.cancel",
+        "ACCESS_COARSE_LOCATION"
+      ],
+      "meteredPolicy": "Metered network is currently allowed for lightweight Open-Meteo refreshes.",
+      "dataSaverPolicy": "No direct ConnectivityManager Data Saver receipt yet; future diagnostics should label Data Saver as a possible background delay.",
+      "privacySurface": "Weather endpoint and location data use are covered by network endpoint and Data safety rows.",
+      "releaseRisk": "Medium"
+    },
+    {
+      "id": "aura-originals-one-shot",
+      "uniqueWorkName": "aura_originals_download",
+      "networkPosture": "unmetered",
+      "sourcePath": "app/src/main/java/com/freevibe/service/AuraOriginalsDownloader.kt",
+      "requiredSourceTerms": [
+        "setRequiredNetworkType(NetworkType.UNMETERED)",
+        "MAX_TOTAL_BYTES",
+        "MAX_PER_FILE_BYTES",
+        "verifyHash"
+      ],
+      "settingsSourcePath": "app/src/main/java/com/freevibe/FreeVibeApp.kt",
+      "requiredSettingsTerms": [
+        "enqueueAuraOriginalsDownload",
+        "AuraOriginalsDownloader.enqueue"
+      ],
+      "meteredPolicy": "Metered network is blocked for the bundled sound pack download.",
+      "dataSaverPolicy": "Unmetered WorkManager constraint is the current Data Saver-safe posture for this larger first-run transfer.",
+      "privacySurface": "Bundled sound provenance and native/dependency packets cover release evidence; no user data is uploaded.",
+      "releaseRisk": "Low"
+    },
+    {
+      "id": "rotation-trigger-one-shot",
+      "uniqueWorkName": "rotation_trigger_oneshot",
+      "networkPosture": "connected",
+      "sourcePath": "app/src/main/java/com/freevibe/service/RotationTriggerService.kt",
+      "requiredSourceTerms": [
+        "setRequiredNetworkType(NetworkType.CONNECTED)",
+        "setRequiresBatteryNotLow(true)",
+        "OutOfQuotaPolicy.RUN_AS_NON_EXPEDITED_WORK_REQUEST"
+      ],
+      "settingsSourcePath": "app/src/main/java/com/freevibe/service/TaskerActionReceiver.kt",
+      "requiredSettingsTerms": [
+        "ACTION_ROTATE_NOW",
+        "ACTION_SHUFFLE_NOW",
+        "RotationTriggerService.enqueueRotation"
+      ],
+      "meteredPolicy": "Metered network is allowed for explicit user/automation-triggered one-shot rotations.",
+      "dataSaverPolicy": "No direct ConnectivityManager Data Saver receipt yet; future diagnostics should label Data Saver and expedited quota fallback separately.",
+      "privacySurface": "Provider fetches inherit the selected wallpaper source's network/Data safety rows.",
+      "releaseRisk": "Medium"
+    }
+  ],
+  "sourceUrls": [
+    "https://developer.android.com/develop/background-work/background-tasks/persistent/getting-started/define-work",
+    "https://developer.android.com/develop/connectivity/network-ops/data-saver",
+    "https://developer.android.com/reference/androidx/work/NetworkType",
+    "https://developer.android.com/reference/android/net/ConnectivityManager"
+  ]
+}
