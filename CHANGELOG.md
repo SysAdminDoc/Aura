@@ -3,6 +3,7 @@
 All notable changes to Aura will be documented in this file.
 
 ## Unreleased
+- **Follow callable emulator coverage (Cycle 104)**: added RTDB-emulator-backed `setCreatorFollow` handler coverage for follow writes, unfollow removals, quota, dedupe, and no-op idempotency through the real Admin SDK backend.
 - **Vote callable emulator coverage (Cycle 103)**: added RTDB-emulator-backed `recordCommunityVote` handler coverage for vote tally, nested and legacy voter markers, quota, dedupe, and repeat-vote idempotency through the real Admin SDK backend.
 - **Report callable emulator coverage (Cycle 102)**: added RTDB-emulator-backed `submitCommunityReport` handler coverage for report, quota, dedupe, and duplicate report writes through the real Admin SDK backend.
 - **Profile callable emulator coverage (Cycle 101)**: added `npm run test:functions-emulator` and an RTDB-emulator-backed profile handler test that verifies profile, quota, dedupe, and unchanged-profile idempotency writes through the real Admin SDK backend, then wired the script into the Firebase backend CI lane.

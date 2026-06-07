@@ -67,9 +67,9 @@
       "sha256": "c9c3e24d80d39d3835be6d97e955ecdfb4de3070faa916de75f65288e6b94f65"
     },
     {
-      "bytes": 9976,
+      "bytes": 10006,
       "path": "functions/src/followHandler.ts",
-      "sha256": "1dc72892e9fc042b2c97b769c499ffeb771fd3b5a6e16047bb53cd84f358e74b"
+      "sha256": "e8e40bf507ee7e17d26cea0d5e0a8935f84f649f3f592c401f8f63488208527c"
     },
     {
       "bytes": 1186,

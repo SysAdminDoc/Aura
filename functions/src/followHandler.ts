@@ -76,7 +76,7 @@ export function createSetCreatorFollowCallable(backend = new FirebaseFollowBacke
 
 export async function setCreatorFollowHandler(
   request: CallableRequestLike,
-  backend: FollowBackend,
+  backend: FollowBackend = new FirebaseFollowBackend(),
 ) {
   const uid = requireCallableIdentity(request, FOLLOW_SURFACE);
   const nowMillis = backend.nowMillis();

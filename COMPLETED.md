@@ -427,6 +427,10 @@ next pass can resume quickly.
   `recordCommunityVoteHandler`, serialized the callable emulator test runner,
   and verified vote tally, nested voter, legacy voter, quota, dedupe, and
   repeat-vote idempotency writes through the RTDB emulator.
+- Completed Cycle 104 follow callable emulator coverage: added
+  `test/firebase/functions.follow.test.mjs`, default real-backend invocation
+  for `setCreatorFollowHandler`, and verified follow writes, unfollow removals,
+  quota, dedupe, and missing-unfollow idempotency through the RTDB emulator.
 
 ## 2026-06-05
 
