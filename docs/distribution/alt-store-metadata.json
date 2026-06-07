@@ -190,11 +190,6 @@
       "disclosure": "Scoped by platform version; modern flows use scoped storage."
     },
     {
-      "name": "android.permission.RECEIVE_BOOT_COMPLETED",
-      "purpose": "Restore scheduled wallpaper and background behaviors after reboot.",
-      "disclosure": "Used for user-configured schedule continuity."
-    },
-    {
       "name": "android.permission.FOREGROUND_SERVICE",
       "purpose": "Run active media and wallpaper operations that require foreground service behavior.",
       "disclosure": "Supports visible long-running user actions."

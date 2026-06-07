@@ -1,8 +1,8 @@
 # Autonomous Loop State
 
 **Assigned project:** `C:\Users\--\repos\Aura`
-**Current pass:** 2026-06-07 Cycle 150 store asset pipeline gate
-**Last commit before pass:** `41206d4` (`ci(release): gate sbom readiness`)
+**Current pass:** 2026-06-07 Cycle 151 rotation trigger boot permission gate
+**Last commit before pass:** `82289df` (`ci(store): gate asset pipeline`)
 
 ## 2026-06-05 Result
 
@@ -2206,11 +2206,32 @@
   consistency check, workflow security policy check, Python compile, focused
   tests, and full backend tool tests passed locally.
 
+## Cycle 151 Result - 2026-06-07
+
+- Removed the unused `android.permission.RECEIVE_BOOT_COMPLETED` permission from
+  `app/src/main/AndroidManifest.xml` after confirming Aura has no boot receiver
+  or boot-completed source terms.
+- Updated Data safety and alternative-store disclosure packets to match the
+  14-permission manifest.
+- Added `docs/rotation-trigger-boot-behavior.md` and
+  `docs/rotation-trigger-boot-behavior.json` to document that rotation
+  triggers resume after opening Aura.
+- Added `tools/rotation_boot_permission_check.py` plus focused backend tests so
+  the permission, boot receiver terms, release docs, and workflow wiring cannot
+  drift silently.
+- Wired the gate into verify and release workflows, release metadata
+  consistency, GitHub security workflow policy, release dry-run, release
+  signing, and supply-chain docs.
+- Cycle 151 verification: rotation boot permission check, Data safety matrix,
+  alternative-store disclosure matrix, Play App content packet, release metadata
+  consistency check, workflow security policy checks, Python compile, focused
+  tests, and full backend tool tests passed locally.
+
 ## Next Cycle
 
-Continue this same assigned project, Aura. Start Cycle 151 from the
+Continue this same assigned project, Aura. Start Cycle 152 from the
 `ROADMAP.md` Continuation State and
-`docs/research/cycle-150-2026-06-07.md`. The account
+`docs/research/cycle-151-2026-06-07.md`. The account
 deletion dry-run planner, read-only Settings identity surface, redacted
 shareable request draft, request-code lookup tool, review receipt gate, offline
 apply simulator, private executor package builder, and guarded REST executor
@@ -2337,7 +2358,15 @@ manifest permissions, reviewed network services, proprietary dependency
 markers, and Izzy/F-Droid submission notes; Cycle 148 added a checked release
 metadata consistency packet for package/version metadata, Fastlane text, README
 links, privacy URL alignment, Play/alternative-store packet alignment, preflight
-commands, and expected release artifacts.
+commands, and expected release artifacts; Cycle 149 added a checked SBOM
+readiness packet for the deferred-until-N-1 SBOM decision, current release
+evidence floor, future CycloneDX/SPDX artifact names, future scope, source
+URLs, and workflow wiring; Cycle 150 added a checked store asset capture plan
+for Fastlane image paths, capture-pending status, four planned phone screenshot
+slots, feature graphic requirements, alt text, source URLs, future asset-mode
+command, and workflow wiring; Cycle 151 removed the unused boot-completed
+permission, documented that rotation triggers resume after opening Aura, and
+added a checked rotation trigger boot behavior gate.
 Actual live callable invocation evidence, a live hosted HTTPS web deletion URL,
 direct RTDB rule tightening, App Check console evidence, production-project
 dry-run evidence, and owner/admin GitHub repository security-settings evidence
@@ -2350,7 +2379,8 @@ owner access is confirmed, collect owner/admin GitHub security settings
 evidence and generate the redacted receipt when access is available, or
 continue with signed release dry-run evidence capture on a suitable runner,
 the screenshot and feature-graphic pipeline for the remaining store metadata
-asset gap, release artifact/SBOM hardening, or the
+asset gap, rotation trigger foreground-service policy hardening,
+background-work scheduling ledgers, release artifact hardening, or the
 next checkable backend, deploy, security, support, policy, or rules hardening
 artifact if owner-gated evidence is still unavailable.
 Commit and push completed work when the active project contract allows it.

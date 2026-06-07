@@ -1,0 +1,29 @@
+{
+  "schemaVersion": 1,
+  "policyKind": "rotationTriggerBootBehavior",
+  "status": "permissionRemoved",
+  "docsPath": "docs/rotation-trigger-boot-behavior.md",
+  "manifestPath": "app/src/main/AndroidManifest.xml",
+  "removedPermission": "android.permission.RECEIVE_BOOT_COMPLETED",
+  "forbiddenSourceTerms": [
+    "Intent.ACTION_BOOT_COMPLETED",
+    "Intent.ACTION_LOCKED_BOOT_COMPLETED",
+    "android.intent.action.BOOT_COMPLETED",
+    "android.intent.action.LOCKED_BOOT_COMPLETED"
+  ],
+  "sourceRoots": [
+    "app/src/main/java",
+    "app/src/main/AndroidManifest.xml"
+  ],
+  "requiredDocs": [
+    "docs/privacy/data-safety.md",
+    "docs/distribution/alt-store-metadata.md",
+    "docs/distribution/play-app-content.md",
+    "docs/rotation-trigger-boot-behavior.md"
+  ],
+  "sourceUrls": [
+    "https://developer.android.com/reference/android/content/Intent#ACTION_BOOT_COMPLETED",
+    "https://developer.android.com/about/versions/14/changes/fgs-types-required",
+    "https://support.google.com/googleplay/android-developer/answer/13392821"
+  ]
+}

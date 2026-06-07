@@ -71,6 +71,7 @@ python3 tools/store_metadata_preflight.py --repo-root .
 python3 tools/store_asset_pipeline_check.py --policy docs/distribution/store-assets.json --repo-root .
 python3 tools/privacy_policy_link_check.py --policy docs/privacy/privacy-policy-link.json --repo-root .
 python3 tools/privacy_data_safety_check.py --policy docs/privacy/data-safety.json --repo-root .
+python3 tools/rotation_boot_permission_check.py --policy docs/rotation-trigger-boot-behavior.json --repo-root .
 python3 tools/community_guidelines_consent_check.py --repo-root .
 python3 tools/play_app_content_packet_check.py --policy docs/distribution/play-app-content.json --repo-root .
 python3 tools/alt_store_metadata_check.py --policy docs/distribution/alt-store-metadata.json --repo-root .
@@ -90,6 +91,10 @@ network endpoint inventory changes, local storage rows cite missing source
 files, or SDK rows cite missing Gradle dependency markers/source files without
 matching purpose, data type, collection/sharing, retention, deletion,
 denial/user-control, backup posture, and Play declaration rows.
+The rotation boot permission gate fails when
+`android.permission.RECEIVE_BOOT_COMPLETED` returns to the manifest, when
+boot-completed receiver terms appear in app source, or when release
+disclosures still claim boot scheduling.
 The community guidelines consent gate fails when the legal guidelines doc,
 versioned preference, shared consent dialog, Settings entry, community screens,
 or repository access gates drift apart.

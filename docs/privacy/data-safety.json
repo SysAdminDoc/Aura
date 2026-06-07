@@ -103,19 +103,6 @@
       "playDeclaration": "Legacy maxSdkVersion 28 storage compatibility only."
     },
     {
-      "name": "android.permission.RECEIVE_BOOT_COMPLETED",
-      "category": "scheduling",
-      "purpose": "Restore opted-in wallpaper rotation scheduling after device reboot.",
-      "userAction": "User enables rotation triggers or scheduling.",
-      "dataTypes": ["App interactions"],
-      "collectionStatus": "localOnly",
-      "sharingStatus": "notShared",
-      "retention": "Scheduler preferences remain in app-private DataStore until changed or app data is cleared.",
-      "deletionPath": "Disable scheduler settings or clear app data.",
-      "denialBehavior": "Rotation does not restart after reboot until the app is opened.",
-      "playDeclaration": "Background scheduling behavior disclosed in app settings and listing copy."
-    },
-    {
       "name": "android.permission.FOREGROUND_SERVICE",
       "category": "foregroundService",
       "purpose": "Run visible long-lived media or rotation work when enabled by the user.",

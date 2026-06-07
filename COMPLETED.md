@@ -690,6 +690,15 @@ next pass can resume quickly.
   feature-graphic plan, Fastlane image paths, four planned phone screenshot
   slots, alt text, source URLs, future asset-mode command, and verify/release
   workflow wiring are checked while actual image capture remains open.
+- Completed Cycle 151 rotation trigger boot permission decision: removed the
+  unused `android.permission.RECEIVE_BOOT_COMPLETED` manifest permission,
+  updated Data safety and alternative-store disclosure packets, added
+  `docs/rotation-trigger-boot-behavior.md`,
+  `docs/rotation-trigger-boot-behavior.json`, and
+  `tools/rotation_boot_permission_check.py` so verify/release workflows fail if
+  boot permission, boot receiver source terms, or release disclosure claims
+  drift from the documented "rotation triggers resume after opening Aura"
+  behavior.
 
 ## 2026-06-05
 

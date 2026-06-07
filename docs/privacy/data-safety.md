@@ -20,7 +20,6 @@ coverage.
 | `android.permission.INTERNET` | Fetch provider content, community data, generated wallpapers, and release-linked resources. | App interactions, user-generated content, generated wallpaper prompts depending on feature. | Shared with selected providers only for enabled features. | Network/provider disclosures required. |
 | `android.permission.ACCESS_NETWORK_STATE` | Check connectivity for provider and worker operations. | Diagnostics; local only. | Not shared. | Normal network support. |
 | `android.permission.WRITE_EXTERNAL_STORAGE` (`maxSdkVersion=28`) | Support legacy downloads/exports on API 28 and below. | Photos/videos, audio files, files/docs; local only. | Not shared. | Legacy storage compatibility only. |
-| `android.permission.RECEIVE_BOOT_COMPLETED` | Restore opted-in wallpaper rotation scheduling after reboot. | App interactions; local only. | Not shared. | Background scheduling disclosure required. |
 | `android.permission.FOREGROUND_SERVICE` | Run user-visible media or rotation work. | App interactions; local only. | Not shared. | Foreground service declaration must match behavior. |
 | `android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK` | Keep audio/media playback controls alive. | App interactions and audio files; local only. | Not shared. | Media playback foreground service type. |
 | `android.permission.FOREGROUND_SERVICE_SPECIAL_USE` | Run opt-in screen-off/unlock rotation triggers. | App interactions; local only. | Not shared. | Special-use foreground service subtype is documented in the manifest. |

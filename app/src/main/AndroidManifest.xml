@@ -20,7 +20,6 @@
         android:maxSdkVersion="28" />
 
     <!-- Scheduling -->
-    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK" />
     <!-- NX-6: RotationTriggerService runs as a long-lived foreground service to

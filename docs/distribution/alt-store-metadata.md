@@ -28,8 +28,8 @@ contract is [`alt-store-metadata.json`](alt-store-metadata.json).
 Every manifest permission must stay listed in the JSON `permissions` array with
 purpose and store-facing disclosure text. The rows currently cover wallpaper
 application, sound assignment, recording, network access, storage compatibility,
-boot scheduling, foreground services, notifications, optional coarse location,
-and local contact ringtone assignment.
+foreground services, notifications, optional coarse location, and local contact
+ringtone assignment.
 
 ## Network services
 
