@@ -162,6 +162,9 @@ jobs:
       - name: GitHub security workflow policy
         run: python3 tools/github_security_workflow_check.py --policy docs/distribution/github-security-workflows.json --repo-root .
 
+      - name: GitHub Actions allowlist
+        run: python3 tools/github_actions_allowlist_check.py --policy docs/distribution/github-actions-allowlist.json --repo-root .
+
       - name: Dependabot update policy
         run: python3 tools/dependabot_config_check.py --config .github/dependabot.yml
 

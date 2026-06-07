@@ -528,6 +528,11 @@ next pass can resume quickly.
   `distributionSha256Sum` for the reviewed Gradle 8.12 bin ZIP, plus
   `tools/gradle_wrapper_check.py` and backend tool tests so wrapper URL,
   checksum, URL validation, storage roots, and timeout drift fail verification.
+- Completed Cycle 121 GitHub Actions allowlist guard: added
+  `docs/distribution/github-actions-allowlist.json`,
+  `tools/github_actions_allowlist_check.py`, and backend tool tests so every
+  workflow `uses:` reference is checked against reviewed action refs and
+  floating/local/unpinned action drift fails verification.
 
 ## 2026-06-05
 

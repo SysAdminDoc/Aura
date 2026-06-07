@@ -1,8 +1,8 @@
 # Autonomous Loop State
 
 **Assigned project:** `C:\Users\--\repos\Aura`
-**Current pass:** 2026-06-07 Cycle 120 Gradle wrapper checksum guard
-**Last commit before pass:** `8713b0e` (`test(security): add settings receipt guard`)
+**Current pass:** 2026-06-07 Cycle 121 GitHub Actions allowlist guard
+**Last commit before pass:** `59f8a5f` (`test(security): add gradle wrapper guard`)
 
 ## 2026-06-05 Result
 
@@ -1587,11 +1587,34 @@
   update the wrapper URL, checksum, policy constant, tests, and related
   dependency-verification metadata together.
 
+## Cycle 121 Result - 2026-06-07
+
+- Added `docs/distribution/github-actions-allowlist.json` with reviewed
+  GitHub Actions refs for all workflow `uses:` entries and the required
+  workflow file set.
+- Added `tools/github_actions_allowlist_check.py` to reject missing refs, local
+  actions, forbidden floating refs, unreviewed actions, unexpected workflow
+  files, missing workflow files, and unused allowlist entries.
+- Added `test/tools/github_actions_allowlist_check_test.py` coverage for the
+  live workflow set and drift cases around unreviewed actions, floating refs,
+  unpinned actions, missing workflows, and unused allowlist entries.
+- Wired `.github/workflows/verify.yml` so the action allowlist check runs
+  before Android setup.
+- Updated `docs/distribution/supply-chain.md`,
+  `docs/research/cycle-121-2026-06-07.md`, `ROADMAP.md`, `COMPLETED.md`,
+  `CHANGELOG.md`, and loop state.
+- Cycle 121 verification: GitHub Actions allowlist check, focused allowlist
+  tests, backend tool tests, Gradle wrapper policy check, Dependabot policy
+  check, GitHub security workflow policy check, callable wire-protocol check,
+  callable contract check, dependency notice lock checks, native lock check,
+  dependency overlay check, dependency license policy check, high-severity
+  Functions npm audit, diff hygiene, and attribution/ASCII scans passed.
+
 ## Next Cycle
 
-Continue this same assigned project, Aura. Start Cycle 121 from the
+Continue this same assigned project, Aura. Start Cycle 122 from the
 `ROADMAP.md` Continuation State and
-`docs/research/cycle-120-2026-06-07.md`. The account
+`docs/research/cycle-121-2026-06-07.md`. The account
 deletion dry-run planner, read-only Settings identity surface, redacted
 shareable request draft, request-code lookup tool, review receipt gate, offline
 apply simulator, private executor package builder, and guarded REST executor
@@ -1674,7 +1697,8 @@ GitHub security workflow policy guard for Dependency Review, OpenSSF Scorecard,
 and Release workflow drift; Cycle 118 added checked Dependabot version-update
 coverage for GitHub Actions, Gradle, root npm, and Functions npm; Cycle 119
 added a redacted receipt gate for future owner/admin GitHub evidence; Cycle
-120 pinned the Gradle wrapper ZIP checksum and added a wrapper policy guard.
+120 pinned the Gradle wrapper ZIP checksum and added a wrapper policy guard;
+Cycle 121 added a repository-wide GitHub Actions allowlist guard.
 Actual live callable invocation evidence, a live hosted HTTPS web deletion URL,
 direct RTDB rule tightening, App Check console evidence, production-project
 dry-run evidence, and owner/admin GitHub repository security-settings evidence

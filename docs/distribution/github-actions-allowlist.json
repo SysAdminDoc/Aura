@@ -1,0 +1,29 @@
+{
+  "schemaVersion": 1,
+  "policyKind": "githubActionsAllowlist",
+  "workflowDirectory": ".github/workflows",
+  "requiredWorkflowPaths": [
+    ".github/workflows/dependency-review.yml",
+    ".github/workflows/performance.yml",
+    ".github/workflows/release.yml",
+    ".github/workflows/scorecard.yml",
+    ".github/workflows/verify.yml"
+  ],
+  "allowedActions": [
+    "actions/attest@v4",
+    "actions/cache@v4",
+    "actions/checkout@v4",
+    "actions/dependency-review-action@v5",
+    "actions/setup-java@v4",
+    "actions/setup-node@v4",
+    "actions/upload-artifact@v4",
+    "github/codeql-action/upload-sarif@v3",
+    "ossf/scorecard-action@v2.4.3",
+    "softprops/action-gh-release@v2"
+  ],
+  "forbiddenRefs": [
+    "latest",
+    "main",
+    "master"
+  ]
+}
