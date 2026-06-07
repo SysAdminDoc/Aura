@@ -3,6 +3,7 @@
 All notable changes to Aura will be documented in this file.
 
 ## Unreleased
+- **Android profile edit callable migration (Cycle 114)**: added Android creator profile payload normalization, extended the shared callable client for `updateCreatorProfile`, routed creator profile saves through the callable when Firebase Auth is available, and added an edit action to the creator profile screen.
 - **Android wallpaper upload finalizer callable migration (Cycle 113)**: added Android wallpaper upload metadata payload normalization, extended the shared callable client for `finalizeCommunityWallpaperUpload`, and routed post-Storage wallpaper upload metadata finalization through the callable when Firebase Auth is available.
 - **Android sound upload finalizer callable migration (Cycle 112)**: added Android sound upload metadata payload normalization, extended the shared callable client for `finalizeCommunitySoundUpload`, and routed post-Storage sound upload metadata finalization through the callable when Firebase Auth is available.
 - **Android user-block callable migration (Cycle 111)**: added Android block/unblock payload normalization, extended the shared callable client for `setCommunityUserBlock`, routed user block state changes through the callable when Firebase Auth is available, and preserved direct RTDB fallback only for compatibility cases.

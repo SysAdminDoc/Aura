@@ -14,11 +14,12 @@ hash. Cycle 108 adds the first Android callable migration adapter for report
 submission, Cycle 109 adds the Android vote callable migration adapter, Cycle
 110 adds the Android follow callable migration adapter, Cycle 111 adds the
 Android user-block callable migration adapter, Cycle 112 adds the Android
-sound upload finalizer callable migration adapter, and Cycle 113 adds the
-Android wallpaper upload finalizer callable migration adapter. Every exported
-callable now has a handler core, while production enforcement still waits for
-full callable wire-protocol coverage, the remaining Android profile write
-migration, owner-approved deploy evidence, and App Check console evidence.
+sound upload finalizer callable migration adapter, Cycle 113 adds the Android
+wallpaper upload finalizer callable migration adapter, and Cycle 114 adds the
+Android profile edit callable migration adapter. Every exported callable now
+has a handler core and Android client adapter, while production enforcement
+still waits for full callable wire-protocol coverage, owner-approved deploy
+evidence, and App Check console evidence.
 
 ## Contract Source
 
@@ -224,10 +225,21 @@ Cycle 113 added:
   direct RTDB fallback only for missing callable endpoint or missing Auth
   compatibility.
 
-Report, vote, follow, user-block, sound upload finalization, and wallpaper
-upload finalization writes are the Android write surfaces with callable client
-code today. Profile edits still write through their existing direct repository
-path.
+Cycle 114 added:
+
+- `CreatorProfileUpdateInput` payload normalization for Android profile edit
+  callable requests.
+- `CommunityCallableClient.updateCreatorProfile()` using
+  `CommunityQuotaPolicies.profileEdits`.
+- Callable-first `CreatorProfileRepository.updateCreatorProfile()` when
+  Firebase Auth is available, with direct RTDB fallback only for missing
+  callable endpoint or missing Auth compatibility.
+- Creator profile screen edit UI that uses the repository update path and keeps
+  local dashboard state in sync after a successful save.
+
+Report, vote, follow, user-block, sound upload finalization, wallpaper upload
+finalization, and profile edit writes are the Android write surfaces with
+callable client code today.
 
 ## Request Envelope
 
@@ -290,14 +302,12 @@ response when the server provides an existing target.
    error mapping.
 3. Migrate reports first because reports do not require a binary upload
    progress flow.
-4. Migrate profile edits next while keeping the existing local optimistic UI
-   state.
+4. Keep local optimistic UI state on profile edits while the callable owns the
+   server write.
 5. Migrate wallpaper upload metadata finalization after Storage rules and owner
    indexes are verified. Storage upload bytes still go through Firebase
    Storage; the callable owns the public metadata and owner-index final write.
-6. Migrate profile edits last because profile copy and display-name validation
-   can change without affecting moderation safety.
-7. After each surface is callable-backed, tighten direct RTDB writes for that
+6. After each surface is callable-backed, tighten direct RTDB writes for that
    path to owner/admin migration exceptions or admin-only writes.
 
 ## Verification

@@ -4,6 +4,7 @@ import com.freevibe.data.model.CommunityBlockReason
 import com.freevibe.data.repository.CommunityBlockRepository
 import com.freevibe.data.repository.CreatorProfileDashboard
 import com.freevibe.data.repository.CreatorProfileRepository
+import com.freevibe.data.repository.CreatorPublicProfile
 import com.freevibe.data.repository.CreatorStats
 import com.freevibe.data.repository.CreatorUploadRef
 import io.mockk.coEvery
@@ -67,6 +68,45 @@ class CreatorProfileViewModelTest {
         assertEquals(listOf("creator-2"), updated?.followedCreators?.map { it.creatorId })
         assertEquals(listOf("creator-2"), updated?.followedUploads?.map { it.creatorId })
         coVerify(exactly = 1) { blockRepo.blockUser("creator/1", CommunityBlockReason.OTHER) }
+    }
+
+    @Test
+    fun `updateProfile saves public copy and updates current creator label`() = runTest(dispatcher) {
+        val repository = mockk<CreatorProfileRepository>()
+        val blockRepo = mockk<CommunityBlockRepository>()
+        val dashboard = CreatorProfileDashboard(
+            currentCreator = creator("current-user", "Old Label"),
+            topCreators = emptyList(),
+            followedCreators = emptyList(),
+            followedUploads = emptyList(),
+            authLabel = "Signed in",
+            googleSignInAvailable = true,
+        )
+        val updatedProfile = CreatorPublicProfile(
+            displayName = "Aura Maker",
+            bio = "AMOLED packs",
+            websiteUrl = "https://example.com/profile",
+            avatarUrl = "",
+        )
+        coEvery { repository.getDashboard(80) } returns dashboard
+        coEvery { repository.updateCreatorProfile(any()) } returns Result.success(updatedProfile)
+
+        val viewModel = CreatorProfileViewModel(repository, blockRepo)
+        advanceUntilIdle()
+
+        viewModel.updateProfile(
+            displayName = "Aura Maker",
+            bio = "AMOLED packs",
+            websiteUrl = "https://example.com/profile",
+            avatarUrl = "",
+        )
+        advanceUntilIdle()
+
+        val updated = viewModel.state.value.dashboard
+        assertEquals("Profile saved", viewModel.state.value.message)
+        assertEquals("Aura Maker", updated?.currentCreator?.label)
+        assertEquals(updatedProfile, updated?.currentProfile)
+        coVerify(exactly = 1) { repository.updateCreatorProfile(any()) }
     }
 
     private fun creator(id: String, label: String): CreatorStats = CreatorStats(

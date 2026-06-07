@@ -485,6 +485,14 @@ next pass can resume quickly.
   the callable after Storage upload when Firebase Auth is available, preserved
   direct RTDB fallback only for missing endpoint or missing Auth compatibility,
   and covered the wallpaper upload callable envelope with focused unit tests.
+- Completed Cycle 114 Android profile edit callable migration: added
+  `CreatorProfileUpdateInput` payload normalization, extended
+  `CommunityCallableClient` for `updateCreatorProfile`, routed
+  `CreatorProfileRepository.updateCreatorProfile()` through the callable when
+  Firebase Auth is available, preserved direct RTDB fallback only for missing
+  endpoint or missing Auth compatibility, added a creator profile edit action,
+  and covered the callable envelope plus ViewModel state update with focused
+  unit tests.
 
 ## 2026-06-05
 

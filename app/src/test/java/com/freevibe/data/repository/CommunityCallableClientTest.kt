@@ -7,6 +7,7 @@ import com.freevibe.data.model.CommunityReportReason
 import com.freevibe.data.model.CommunitySoundUploadMetadataInput
 import com.freevibe.data.model.CommunityUserBlockInput
 import com.freevibe.data.model.CommunityWallpaperUploadMetadataInput
+import com.freevibe.data.model.CreatorProfileUpdateInput
 import com.freevibe.data.model.ContentSource
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
@@ -343,6 +344,47 @@ class CommunityCallableClientTest {
         assertFalse(payload.containsKey("uploadedAt"))
         assertFalse(payload.containsKey("rightsAttestedAt"))
         assertFalse(payload.containsKey("votes"))
+    }
+
+    @Test
+    fun `updateCreatorProfile sends public profile with standard app check token request`() = runTest {
+        val invoker = RecordingCommunityCallableInvoker(
+            response = mapOf(
+                "operationId" to "profile_update_test",
+                "status" to "accepted",
+                "targetPath" to "/creator_profiles/profileOwner1",
+                "serverTimeMillis" to 123L,
+            ),
+        )
+        val client = CommunityCallableClient(invoker)
+
+        val result = client.updateCreatorProfile(
+            CreatorProfileUpdateInput(
+                displayName = "  Aura\nMaker  ",
+                bio = " Builds\nAMOLED packs ",
+                websiteUrl = "https://example.com/profile",
+                avatarUrl = "https://example.com/avatar.jpg",
+            ),
+        )
+
+        val request = requireNotNull(invoker.lastRequest)
+        assertEquals("updateCreatorProfile", request.functionName)
+        assertFalse(request.consumeLimitedUseAppCheckToken)
+        assertEquals("profileOwner1", result.targetId())
+        assertEquals("accepted", result.status)
+
+        assertTrue((request.data["operationId"] as String).startsWith("profile_update_"))
+        assertTrue((request.data["clientSentAt"] as Long) > 0L)
+        val payload = request.data["payload"] as Map<*, *>
+        assertEquals("Aura Maker", payload["displayName"])
+        assertEquals("Builds AMOLED packs", payload["bio"])
+        assertEquals("https://example.com/profile", payload["websiteUrl"])
+        assertEquals("https://example.com/avatar.jpg", payload["avatarUrl"])
+        assertFalse(payload.containsKey("uid"))
+        assertFalse(payload.containsKey("profileUid"))
+        assertFalse(payload.containsKey("ownerUid"))
+        assertFalse(payload.containsKey("createdAt"))
+        assertFalse(payload.containsKey("updatedAt"))
     }
 
     @Test

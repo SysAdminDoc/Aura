@@ -1411,11 +1411,37 @@
   deploy evidence, direct RTDB rule tightening, and Firebase Console App Check
   evidence remain open.
 
+## Cycle 114 Result - 2026-06-07
+
+- Added `CreatorProfileUpdateInput` payload normalization for Android creator
+  profile edit callable requests.
+- Extended `CommunityCallableClient` with `updateCreatorProfile`, using
+  `CommunityQuotaPolicies.profileEdits` and standard App Check token handling.
+- Updated `CreatorProfileRepository` with current-profile dashboard reads and a
+  callable-first `updateCreatorProfile()` save path when Firebase Auth is
+  available, with direct RTDB fallback only for missing callable endpoint or
+  missing Firebase Auth compatibility.
+- Added creator profile screen edit UI for display name, bio, website URL, and
+  avatar URL, with local dashboard state sync after a successful save.
+- Extended `CommunityCallableClientTest` and `CreatorProfileViewModelTest`
+  coverage for profile update request envelopes, server-owned field omission,
+  standard token selection, and successful UI-state updates.
+- Updated `docs/research/cycle-114-2026-06-07.md`, `ROADMAP.md`,
+  `COMPLETED.md`, `CHANGELOG.md`, backend runbook, callable quota enforcement
+  doc, and loop state.
+- Cycle 114 verification: focused Android callable client, creator profile
+  repository, and creator profile ViewModel tests, callable contract check,
+  dependency notice lock checks, native lock check, dependency overlay check,
+  dependency license policy check, high-severity Functions npm audit, and diff
+  hygiene plus attribution/ASCII scans passed. Full callable wire-protocol
+  coverage, owner-approved deploy evidence, direct RTDB rule tightening, and
+  Firebase Console App Check evidence remain open.
+
 ## Next Cycle
 
-Continue this same assigned project, Aura. Start Cycle 114 from the
+Continue this same assigned project, Aura. Start Cycle 115 from the
 `ROADMAP.md` Continuation State and
-`docs/research/cycle-113-2026-06-07.md`. The account
+`docs/research/cycle-114-2026-06-07.md`. The account
 deletion dry-run planner, read-only Settings identity surface, redacted
 shareable request draft, request-code lookup tool, review receipt gate, offline
 apply simulator, private executor package builder, and guarded REST executor
@@ -1487,12 +1513,13 @@ Storage upload with compatibility fallback only for missing callable endpoint
 or missing Firebase Auth; Cycle 113 added the Android wallpaper upload
 finalizer callable payload/client adapter and callable-first metadata
 finalization after Storage upload with compatibility fallback only for missing
-callable endpoint or missing Firebase Auth. Android callable migration for
-profile edits, full callable wire-protocol
+callable endpoint or missing Firebase Auth; Cycle 114 added the Android
+profile edit callable payload/client adapter, callable-first creator profile
+updates with compatibility fallback only for missing callable endpoint or
+missing Firebase Auth, and creator profile edit UI. Full callable wire-protocol
 coverage, a live hosted HTTPS web deletion URL, and production-project dry-run
-evidence remain open. Next migrate Android profile writes to
-callable adapters, add full callable wire-protocol coverage when Auth and App
-Check emulator wiring is available, publish the hosted URL after owner
+evidence remain open. Next add full callable wire-protocol coverage when Auth
+and App Check emulator wiring is available, publish the hosted URL after owner
 approval, or run a real
 production-project Firebase executor dry-run after owner access is confirmed.
 Commit and push completed work when the active project contract allows it.

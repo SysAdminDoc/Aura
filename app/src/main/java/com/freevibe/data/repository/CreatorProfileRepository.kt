@@ -3,8 +3,10 @@ package com.freevibe.data.repository
 import com.freevibe.data.local.PreferencesManager
 import com.freevibe.data.model.CommunityFollowInput
 import com.freevibe.data.model.ContentSource
+import com.freevibe.data.model.CreatorProfileUpdateInput
 import com.freevibe.data.model.Sound
 import com.freevibe.data.model.Wallpaper
+import com.freevibe.data.model.normalizeCreatorProfileInput
 import com.freevibe.data.model.stableKey
 import com.freevibe.service.CommunityIdentityProvider
 import com.freevibe.service.SourceMetrics
@@ -52,6 +54,14 @@ data class CreatorProfileDashboard(
     val followedUploads: List<CreatorUploadRef>,
     val authLabel: String,
     val googleSignInAvailable: Boolean,
+    val currentProfile: CreatorPublicProfile = CreatorPublicProfile(),
+)
+
+data class CreatorPublicProfile(
+    val displayName: String = "",
+    val bio: String = "",
+    val websiteUrl: String = "",
+    val avatarUrl: String = "",
 )
 
 @Singleton
@@ -72,6 +82,7 @@ class CreatorProfileRepository @Inject constructor(
         ensureCommunityEnabled()
         val currentUserId = identityProvider.ensureSignedIn()
         val knownIds = identityProvider.knownIdentityIds().toSet() + currentUserId
+        val currentProfile = readCreatorProfile(currentUserId)
         val followed = getFollowedCreatorIds()
         val blockedCreatorIds = communityBlockRepo.blockedUserIdsOnce()
         val uploads = filterCreatorUploadsForBlockedUsers(fetchCommunityUploads(limit), blockedCreatorIds)
@@ -81,12 +92,16 @@ class CreatorProfileRepository @Inject constructor(
             currentUserIds = knownIds,
             followedCreatorIds = followed,
         )
-        val current = rankedCreators.firstOrNull { it.creatorId in knownIds }?.copy(
-            favoritesCount = localFavoritesCount,
-        )
+        val current = rankedCreators.firstOrNull { it.creatorId in knownIds }
+            ?.let { stats ->
+                stats.copy(
+                    favoritesCount = localFavoritesCount,
+                    label = currentProfile.displayName.ifBlank { stats.label },
+                )
+            }
             ?: CreatorStats(
                 creatorId = currentUserId,
-                label = identityProvider.currentUploaderLabel(),
+                label = currentProfile.displayName.ifBlank { identityProvider.currentUploaderLabel() },
                 soundUploads = 0,
                 wallpaperUploads = 0,
                 totalVotes = 0,
@@ -108,8 +123,24 @@ class CreatorProfileRepository @Inject constructor(
                 .take(20),
             authLabel = identityProvider.currentAuthLabel(),
             googleSignInAvailable = identityProvider.hasGoogleOAuthClient(),
+            currentProfile = currentProfile,
         )
     }
+
+    suspend fun updateCreatorProfile(input: CreatorProfileUpdateInput): Result<CreatorPublicProfile> =
+        withContext(Dispatchers.IO) {
+            runCatching {
+                ensureCommunityEnabled()
+                val profileUid = identityProvider.ensureSignedIn()
+                val normalizedInput = normalizeCreatorProfileInput(input)
+                if (!identityProvider.currentFirebaseUid().isNullOrBlank()) {
+                    updateCreatorProfileWithCallableOrNull(normalizedInput)?.let {
+                        return@runCatching normalizedInput.toPublicProfile()
+                    }
+                }
+                updateCreatorProfileWithDirectDatabase(profileUid, normalizedInput)
+            }.onFailure { it.rethrowIfCancelled() }
+        }
 
     suspend fun followCreator(creatorId: String, label: String): Result<Unit> = withContext(Dispatchers.IO) {
         runCatching {
@@ -161,6 +192,44 @@ class CreatorProfileRepository @Inject constructor(
             if (e.isMissingEndpoint()) null else throw e
         }
 
+    private suspend fun updateCreatorProfileWithCallableOrNull(input: CreatorProfileUpdateInput): Boolean? =
+        try {
+            val result = callableClient.updateCreatorProfile(input)
+            when {
+                result.status.equals("accepted", ignoreCase = true) -> true
+                result.status.equals("duplicate", ignoreCase = true) -> true
+                else -> throw IllegalStateException("Unexpected creator profile status: ${result.status}")
+            }
+        } catch (e: CommunityCallableException) {
+            if (e.isMissingEndpoint()) null else throw e
+        }
+
+    private suspend fun updateCreatorProfileWithDirectDatabase(
+        profileUid: String,
+        input: CreatorProfileUpdateInput,
+    ): CreatorPublicProfile {
+        val db = database ?: throw IllegalStateException("Firebase Database not available")
+        val now = System.currentTimeMillis()
+        val profileRef = db.child("creator_profiles").child(profileUid)
+        val createdAt = profileRef.get().await()
+            .child("createdAt")
+            .getValue(Long::class.java)
+            ?.takeIf { it > 0L }
+            ?: now
+        profileRef.setValue(
+            mapOf(
+                "profileUid" to profileUid,
+                "displayName" to input.displayName,
+                "bio" to input.bio,
+                "websiteUrl" to input.websiteUrl,
+                "avatarUrl" to input.avatarUrl,
+                "createdAt" to createdAt,
+                "updatedAt" to now,
+            ),
+        ).await()
+        return input.toPublicProfile()
+    }
+
     private suspend fun followCreatorWithDirectDatabase(creatorId: String, label: String) {
         val db = database ?: throw IllegalStateException("Firebase Database not available")
         val currentUserId = voteRepo.sanitizeKey(identityProvider.ensureSignedIn())
@@ -199,6 +268,22 @@ class CreatorProfileRepository @Inject constructor(
         } catch (e: Exception) {
             e.rethrowIfCancelled()
             emptySet()
+        }
+    }
+
+    private suspend fun readCreatorProfile(profileUid: String): CreatorPublicProfile {
+        val db = database ?: return CreatorPublicProfile()
+        return try {
+            val snapshot = db.child("creator_profiles").child(profileUid).get().await()
+            CreatorPublicProfile(
+                displayName = snapshot.child("displayName").getValue(String::class.java).orEmpty(),
+                bio = snapshot.child("bio").getValue(String::class.java).orEmpty(),
+                websiteUrl = snapshot.child("websiteUrl").getValue(String::class.java).orEmpty(),
+                avatarUrl = snapshot.child("avatarUrl").getValue(String::class.java).orEmpty(),
+            )
+        } catch (e: Exception) {
+            e.rethrowIfCancelled()
+            CreatorPublicProfile()
         }
     }
 
@@ -330,3 +415,11 @@ private suspend fun VoteRepository.getVoteCountsOnce(ids: List<String>): Map<Str
 private fun Throwable.rethrowIfCancelled() {
     if (this is CancellationException) throw this
 }
+
+private fun CreatorProfileUpdateInput.toPublicProfile(): CreatorPublicProfile =
+    CreatorPublicProfile(
+        displayName = displayName,
+        bio = bio,
+        websiteUrl = websiteUrl,
+        avatarUrl = avatarUrl,
+    )

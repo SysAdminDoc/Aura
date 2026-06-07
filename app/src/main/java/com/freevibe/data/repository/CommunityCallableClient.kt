@@ -6,12 +6,14 @@ import com.freevibe.data.model.CommunityReportInput
 import com.freevibe.data.model.CommunitySoundUploadMetadataInput
 import com.freevibe.data.model.CommunityUserBlockInput
 import com.freevibe.data.model.CommunityWallpaperUploadMetadataInput
+import com.freevibe.data.model.CreatorProfileUpdateInput
 import com.freevibe.data.model.buildCommunityFollowCallablePayload
 import com.freevibe.data.model.buildCommunityReportCallablePayload
 import com.freevibe.data.model.buildCommunitySoundUploadCallablePayload
 import com.freevibe.data.model.buildCommunityUserBlockCallablePayload
 import com.freevibe.data.model.buildCommunityVoteCallablePayload
 import com.freevibe.data.model.buildCommunityWallpaperUploadCallablePayload
+import com.freevibe.data.model.buildCreatorProfileUpdateCallablePayload
 import com.google.firebase.functions.FirebaseFunctions
 import com.google.firebase.functions.FirebaseFunctionsException
 import com.google.firebase.functions.HttpsCallableOptions
@@ -174,6 +176,20 @@ class CommunityCallableClient @Inject constructor(
             consumeLimitedUseAppCheckToken = policy.consumeLimitedUseAppCheckToken,
         )
         return invoker.call(request).toWriteResult(resourceIdField = "uploadId")
+    }
+
+    suspend fun updateCreatorProfile(input: CreatorProfileUpdateInput): CommunityCallableWriteResult {
+        val policy = CommunityQuotaPolicies.profileEdits.callable
+        val request = CommunityCallableRequest(
+            functionName = policy.functionName,
+            data = buildCommunityCallableEnvelope(
+                payload = buildCreatorProfileUpdateCallablePayload(input),
+                operationId = communityOperationId("profile_update"),
+                clientSentAt = System.currentTimeMillis(),
+            ),
+            consumeLimitedUseAppCheckToken = policy.consumeLimitedUseAppCheckToken,
+        )
+        return invoker.call(request).toWriteResult(resourceIdField = "profileUid")
     }
 }
 

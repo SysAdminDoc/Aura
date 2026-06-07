@@ -9,6 +9,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Block
 import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Groups
 import androidx.compose.material.icons.filled.Leaderboard
@@ -33,10 +34,12 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewModelScope
 import com.freevibe.data.model.CommunityBlockReason
+import com.freevibe.data.model.CreatorProfileUpdateInput
 import com.freevibe.data.model.isCommunityUserBlocked
 import com.freevibe.data.repository.CommunityBlockRepository
 import com.freevibe.data.repository.CreatorProfileDashboard
 import com.freevibe.data.repository.CreatorProfileRepository
+import com.freevibe.data.repository.CreatorPublicProfile
 import com.freevibe.data.repository.CreatorStats
 import com.freevibe.data.repository.CreatorUploadRef
 import com.freevibe.ui.components.AuraStateAction
@@ -56,6 +59,7 @@ data class CreatorProfileUiState(
     val error: String? = null,
     val message: String? = null,
     val actionInFlightCreatorId: String? = null,
+    val isProfileSaving: Boolean = false,
 )
 
 @HiltViewModel
@@ -120,6 +124,40 @@ class CreatorProfileViewModel @Inject constructor(
                         it.copy(
                             actionInFlightCreatorId = null,
                             error = e.message ?: "Creator block failed",
+                            message = null,
+                        )
+                    }
+                }
+        }
+    }
+
+    fun updateProfile(displayName: String, bio: String, websiteUrl: String, avatarUrl: String) {
+        viewModelScope.launch {
+            _state.update { it.copy(isProfileSaving = true, error = null, message = null) }
+            repository.updateCreatorProfile(
+                CreatorProfileUpdateInput(
+                    displayName = displayName,
+                    bio = bio,
+                    websiteUrl = websiteUrl,
+                    avatarUrl = avatarUrl,
+                ),
+            )
+                .onSuccess { profile ->
+                    _state.update { state ->
+                        state.copy(
+                            isProfileSaving = false,
+                            dashboard = state.dashboard?.withCurrentProfile(profile),
+                            error = null,
+                            message = "Profile saved",
+                        )
+                    }
+                }
+                .onFailure { e ->
+                    if (e is kotlinx.coroutines.CancellationException) throw e
+                    _state.update {
+                        it.copy(
+                            isProfileSaving = false,
+                            error = e.message ?: "Profile save failed",
                             message = null,
                         )
                     }
@@ -210,7 +248,11 @@ fun CreatorProfileScreen(
                         verticalArrangement = Arrangement.spacedBy(12.dp),
                     ) {
                         item {
-                            CreatorSummaryCard(dashboard)
+                            CreatorSummaryCard(
+                                dashboard = dashboard,
+                                isSaving = state.isProfileSaving,
+                                onUpdateProfile = viewModel::updateProfile,
+                            )
                         }
                         val statusMessage = state.error ?: state.message
                         if (statusMessage != null) {
@@ -291,8 +333,25 @@ fun CreatorProfileScreen(
 }
 
 @Composable
-private fun CreatorSummaryCard(dashboard: CreatorProfileDashboard) {
+private fun CreatorSummaryCard(
+    dashboard: CreatorProfileDashboard,
+    isSaving: Boolean,
+    onUpdateProfile: (String, String, String, String) -> Unit,
+) {
     val creator = dashboard.currentCreator
+    var showEditProfile by remember { mutableStateOf(false) }
+    if (showEditProfile) {
+        CreatorProfileEditDialog(
+            profile = dashboard.currentProfile,
+            fallbackDisplayName = creator.label,
+            isSaving = isSaving,
+            onDismiss = { if (!isSaving) showEditProfile = false },
+            onSave = { displayName, bio, websiteUrl, avatarUrl ->
+                onUpdateProfile(displayName, bio, websiteUrl, avatarUrl)
+                showEditProfile = false
+            },
+        )
+    }
     GlassCard(
         modifier = Modifier.fillMaxWidth(),
         contentPadding = PaddingValues(16.dp),
@@ -319,6 +378,27 @@ private fun CreatorSummaryCard(dashboard: CreatorProfileDashboard) {
             Column(Modifier.weight(1f)) {
                 Text(creator.label, style = MaterialTheme.typography.titleMedium, maxLines = 1, overflow = TextOverflow.Ellipsis)
                 Text(dashboard.authLabel, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                if (dashboard.currentProfile.bio.isNotBlank()) {
+                    Text(
+                        dashboard.currentProfile.bio,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                }
+                if (dashboard.currentProfile.websiteUrl.isNotBlank()) {
+                    Text(
+                        dashboard.currentProfile.websiteUrl,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.primary,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                }
+            }
+            IconButton(onClick = { showEditProfile = true }, enabled = !isSaving) {
+                Icon(Icons.Default.Edit, contentDescription = "Edit creator profile")
             }
             Icon(Icons.Default.VerifiedUser, contentDescription = null, tint = MaterialTheme.colorScheme.tertiary, modifier = Modifier.size(20.dp))
         }
@@ -337,6 +417,78 @@ private fun CreatorSummaryCard(dashboard: CreatorProfileDashboard) {
             )
         }
     }
+}
+
+@Composable
+private fun CreatorProfileEditDialog(
+    profile: CreatorPublicProfile,
+    fallbackDisplayName: String,
+    isSaving: Boolean,
+    onDismiss: () -> Unit,
+    onSave: (String, String, String, String) -> Unit,
+) {
+    var displayName by remember(profile, fallbackDisplayName) {
+        mutableStateOf(profile.displayName.ifBlank { fallbackDisplayName })
+    }
+    var bio by remember(profile) { mutableStateOf(profile.bio) }
+    var websiteUrl by remember(profile) { mutableStateOf(profile.websiteUrl) }
+    var avatarUrl by remember(profile) { mutableStateOf(profile.avatarUrl) }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Edit creator profile") },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                OutlinedTextField(
+                    value = displayName,
+                    onValueChange = { displayName = it },
+                    label = { Text("Display name") },
+                    singleLine = true,
+                    enabled = !isSaving,
+                )
+                OutlinedTextField(
+                    value = bio,
+                    onValueChange = { bio = it },
+                    label = { Text("Bio") },
+                    minLines = 2,
+                    maxLines = 4,
+                    enabled = !isSaving,
+                )
+                OutlinedTextField(
+                    value = websiteUrl,
+                    onValueChange = { websiteUrl = it },
+                    label = { Text("Website URL") },
+                    singleLine = true,
+                    enabled = !isSaving,
+                )
+                OutlinedTextField(
+                    value = avatarUrl,
+                    onValueChange = { avatarUrl = it },
+                    label = { Text("Avatar URL") },
+                    singleLine = true,
+                    enabled = !isSaving,
+                )
+            }
+        },
+        confirmButton = {
+            Button(
+                onClick = { onSave(displayName, bio, websiteUrl, avatarUrl) },
+                enabled = !isSaving && displayName.trim().length >= 2,
+                shape = RoundedCornerShape(10.dp),
+            ) {
+                if (isSaving) {
+                    CircularProgressIndicator(Modifier.size(14.dp), strokeWidth = 2.dp)
+                } else {
+                    Text("Save")
+                }
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss, enabled = !isSaving, shape = RoundedCornerShape(10.dp)) {
+                Text("Cancel")
+            }
+        },
+    )
 }
 
 @Composable
@@ -497,6 +649,12 @@ private fun CreatorProfileDashboard.withoutCreator(creatorId: String): CreatorPr
         topCreators = topCreators.filterNot { it.matchesCreator(creatorId) },
         followedCreators = followedCreators.filterNot { it.matchesCreator(creatorId) },
         followedUploads = followedUploads.filterNot { it.matchesCreator(creatorId) },
+    )
+
+private fun CreatorProfileDashboard.withCurrentProfile(profile: CreatorPublicProfile): CreatorProfileDashboard =
+    copy(
+        currentProfile = profile,
+        currentCreator = currentCreator.copy(label = profile.displayName.ifBlank { currentCreator.label }),
     )
 
 private fun CreatorStats.matchesCreator(creatorId: String): Boolean =
