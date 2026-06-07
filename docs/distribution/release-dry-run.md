@@ -31,6 +31,9 @@ Manual branch runs:
 - Check that package/version metadata, Fastlane text, README links, release
   preflight commands, privacy URLs, and expected release artifacts remain
   consistent before the signed release build.
+- Check that the SBOM decision, current evidence floor, future SBOM artifact
+  names, future SBOM scope, and workflow wiring remain documented before the
+  signed release build.
 - Check dependency notice, native compliance, and curated overlay drift gates.
 - Generate `SHA256SUMS.txt` and `RELEASE_NOTES.md`.
 - Run `tools/release_artifact_bundle_check.py` against the final `release/` directory.
@@ -68,6 +71,7 @@ python3 tools/community_guidelines_consent_check.py --repo-root .
 python3 tools/play_app_content_packet_check.py --policy docs/distribution/play-app-content.json --repo-root .
 python3 tools/alt_store_metadata_check.py --policy docs/distribution/alt-store-metadata.json --repo-root .
 python3 tools/release_metadata_consistency_check.py --policy docs/distribution/release-metadata-consistency.json --repo-root .
+python3 tools/sbom_readiness_check.py --policy docs/distribution/sbom-readiness.json --repo-root .
 ```
 
 The text-mode check fails when title or description limits drift, the current
@@ -96,6 +100,9 @@ current full-build decision.
 The release metadata consistency gate fails when package/version metadata,
 Fastlane text, README links, privacy URLs, preflight commands, packet package
 names, or expected release artifact documentation drift apart.
+The SBOM readiness gate fails when the deferred-until-N-1 decision, current
+evidence paths, future SBOM artifact names, future scope, source URLs, release
+docs, or workflow wiring drift apart.
 
 The release workflow validates the final directory before upload:
 

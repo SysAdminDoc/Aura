@@ -118,6 +118,9 @@ jobs:
       - name: Release metadata consistency
         run: python3 tools/release_metadata_consistency_check.py --policy docs/distribution/release-metadata-consistency.json --repo-root .
 
+      - name: SBOM readiness
+        run: python3 tools/sbom_readiness_check.py --policy docs/distribution/sbom-readiness.json --repo-root .
+
       - name: Build signed release APK
         run: ./gradlew :app:assembleRelease --stacktrace --no-daemon
 

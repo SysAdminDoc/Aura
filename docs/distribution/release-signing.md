@@ -28,7 +28,7 @@ Do not commit `freevibe.jks`, `local.properties`, copied APKs, or generated base
 1. Restores the release keystore from GitHub secrets.
 2. Writes a temporary `local.properties` with signing paths and blank optional provider keys.
 3. Runs `tools/provider_credential_release_check.py` to confirm optional provider keys are blank before they can be bundled into `BuildConfig`.
-4. Runs the provider credential storage, cleartext release, store metadata preflight, privacy-policy link, Data safety matrix, community guidelines consent, Play App content, alternative-store disclosure, and release metadata consistency checks.
+4. Runs the provider credential storage, cleartext release, store metadata preflight, privacy-policy link, Data safety matrix, community guidelines consent, Play App content, alternative-store disclosure, release metadata consistency, and SBOM readiness checks.
 5. Runs `./gradlew :app:assembleRelease --stacktrace --no-daemon`.
 6. Copies the signed universal APK to `release/Aura-vX.Y.Z-versionCode-N-universal-release.apk`.
 7. Runs `tools/provider_credential_apk_scan.py` against the packaged APK and temporary release `local.properties`.
@@ -55,6 +55,7 @@ python tools\community_guidelines_consent_check.py --repo-root .
 python tools\play_app_content_packet_check.py --policy docs\distribution\play-app-content.json --repo-root .
 python tools\alt_store_metadata_check.py --policy docs\distribution\alt-store-metadata.json --repo-root .
 python tools\release_metadata_consistency_check.py --policy docs\distribution\release-metadata-consistency.json --repo-root .
+python tools\sbom_readiness_check.py --policy docs\distribution\sbom-readiness.json --repo-root .
 .\gradlew.bat :app:assembleRelease --stacktrace --no-daemon
 python tools\provider_credential_apk_scan.py --local-properties local.properties --apk app\build\outputs\apk\release\app-release.apk
 ```

@@ -1,8 +1,8 @@
 # Autonomous Loop State
 
 **Assigned project:** `C:\Users\--\repos\Aura`
-**Current pass:** 2026-06-07 Cycle 148 release metadata consistency gate
-**Last commit before pass:** `19043f9` (`ci(distribution): gate alt store disclosures`)
+**Current pass:** 2026-06-07 Cycle 149 SBOM readiness gate
+**Last commit before pass:** `6e99f1c` (`ci(release): gate metadata consistency`)
 
 ## 2026-06-05 Result
 
@@ -2168,11 +2168,30 @@
   policy check, store metadata preflight, Python compile, focused tests, and
   full backend tool tests passed locally.
 
+## Cycle 149 Result - 2026-06-07
+
+- Added `docs/distribution/sbom-readiness.md` as the owner-facing SBOM
+  readiness packet.
+- Added `docs/distribution/sbom-readiness.json` as the checked contract for the
+  deferred-until-N-1 SBOM decision, current release evidence paths, current
+  release artifact names, future CycloneDX/SPDX artifact names, future scope,
+  workflow commands, and source URLs.
+- Added `tools/sbom_readiness_check.py` plus focused backend tests for the live
+  packet, status drift, missing future artifact documentation, missing workflow
+  command, and missing evidence path.
+- Wired the gate into verify and release workflows before Android build work.
+- Updated release dry-run, release signing, supply-chain, release metadata,
+  workflow security policy, README, research, roadmap, changelog, completion,
+  and loop-state docs.
+- Cycle 149 verification: SBOM readiness check, release metadata consistency
+  check, workflow security policy check, Python compile, focused tests, and
+  full backend tool tests passed locally.
+
 ## Next Cycle
 
-Continue this same assigned project, Aura. Start Cycle 149 from the
+Continue this same assigned project, Aura. Start Cycle 150 from the
 `ROADMAP.md` Continuation State and
-`docs/research/cycle-148-2026-06-07.md`. The account
+`docs/research/cycle-149-2026-06-07.md`. The account
 deletion dry-run planner, read-only Settings identity surface, redacted
 shareable request draft, request-code lookup tool, review receipt gate, offline
 apply simulator, private executor package builder, and guarded REST executor

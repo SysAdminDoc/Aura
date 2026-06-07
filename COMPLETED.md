@@ -676,6 +676,13 @@ next pass can resume quickly.
   Fastlane text, README links, privacy URLs, Play/alternative-store packets,
   release preflight commands, and expected GitHub release artifact names stay
   aligned.
+- Completed Cycle 149 SBOM readiness gate: added
+  `docs/distribution/sbom-readiness.md`,
+  `docs/distribution/sbom-readiness.json`, and
+  `tools/sbom_readiness_check.py` so the deferred-until-N-1 SBOM decision,
+  current release evidence floor, future CycloneDX/SPDX artifact names, scope,
+  source URLs, and verify/release workflow wiring are checked before release
+  build work continues.
 
 ## 2026-06-05
 

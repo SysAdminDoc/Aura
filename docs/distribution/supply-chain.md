@@ -31,6 +31,7 @@ Aura is side-loaded through GitHub Releases and Obtainium, so release artifacts 
 | Play App content packet | `docs/distribution/play-app-content.json`, `docs/distribution/play-app-content.md`, `tools/play_app_content_packet_check.py`, `.github/workflows/verify.yml`, `.github/workflows/release.yml` | Fails PR/main/release checks when ads, app access, target audience, content rating notes, Data safety, UGC, generated content, sensitive permissions, evidence paths, source URLs, or owner actions drift from the owner-ready Play packet. |
 | Alternative-store disclosure matrix | `docs/distribution/alt-store-metadata.json`, `docs/distribution/alt-store-metadata.md`, `tools/alt_store_metadata_check.py`, `.github/workflows/verify.yml`, `.github/workflows/release.yml` | Fails PR/main/release checks when GitHub/Obtainium/Izzy/F-Droid channel status, F-Droid anti-feature notes, manifest permission disclosures, reviewed network service rows, or proprietary dependency markers drift from the current full-build decision. |
 | Release metadata consistency | `docs/distribution/release-metadata-consistency.json`, `docs/distribution/release-metadata-consistency.md`, `tools/release_metadata_consistency_check.py`, `.github/workflows/verify.yml`, `.github/workflows/release.yml` | Fails PR/main/release checks when app package/version metadata, Fastlane text, README links, privacy URLs, Play/alternative-store packets, preflight commands, or release artifact documentation drift apart. |
+| SBOM readiness policy | `docs/distribution/sbom-readiness.json`, `docs/distribution/sbom-readiness.md`, `tools/sbom_readiness_check.py`, `.github/workflows/verify.yml`, `.github/workflows/release.yml` | Fails PR/main/release checks when the deferred-until-N-1 SBOM decision, current evidence floor, future SBOM artifact names, future SBOM scope, source URLs, or workflow wiring drift. |
 | On-device wallpaper decision gate | `docs/ai/on-device-wallpaper-decision.json`, `tools/on_device_ai_decision_check.py`, `.github/workflows/verify.yml` | Keeps on-device wallpaper generation on hold until device baseline, delivery, battery/thermal, license, moderation, fallback, and FOSS-channel evidence is complete, and blocks early production runtime dependencies or model artifacts. |
 | Dependency Review | `.github/workflows/dependency-review.yml` | Runs on pull requests and fails high/critical vulnerable dependency additions. |
 | OpenSSF Scorecard | `.github/workflows/scorecard.yml` | Runs on main pushes, branch-protection changes, weekly schedule, and manual dispatch; keeps public result publishing disabled and uploads SARIF to code scanning. |
@@ -52,7 +53,7 @@ For each `v*` release:
 3. Confirm the GitHub Release contains `GOOGLE-OSS-RAW-INPUTS.zip`; this archive is a permanent public release asset under [raw-oss-input-retention.md](raw-oss-input-retention.md).
 4. Confirm the GitHub Release contains `NATIVE-COMPLIANCE.md`.
 5. Confirm `SHA256SUMS.txt` includes the APK, `THIRD-PARTY-NOTICES.md`, `GOOGLE-OSS-RAW-INPUTS.zip`, and `NATIVE-COMPLIANCE.md`.
-6. Confirm the generated release notes include the APK SHA-256, third-party notices entry, raw Google OSS input archive entry, native compliance packet entry, signing certificate SHA-256, and artifact attestation URL.
+6. Confirm `RELEASE_NOTES.md` includes the APK SHA-256, third-party notices entry, raw Google OSS input archive entry, native compliance packet entry, signing certificate SHA-256, and artifact attestation URL.
 7. Spot-check `THIRD-PARTY-NOTICES.md` for high-risk dependencies such as NewPipeExtractor, youtubedl-android, Firebase, Play services ML Kit, ZXing, Palette, and ProfileInstaller.
 8. Spot-check `GOOGLE-OSS-RAW-INPUTS.zip` for `dependencies.json`, `third_party_license_metadata`, `third_party_licenses`, and `MANIFEST.json`.
 9. Spot-check `docs/legal/dependency-notice-overrides.json` when any high-risk dependency or payload changed intentionally.
@@ -63,7 +64,7 @@ For each `v*` release:
 14. Confirm the release workflow ran `tools/provider_credential_release_check.py` after writing release `local.properties` and before `:app:assembleRelease`.
 15. Confirm the release workflow ran `tools/provider_credential_storage_check.py` before `:app:assembleRelease`.
 16. Confirm the release workflow ran `tools/cleartext_release_check.py` before `:app:assembleRelease`.
-17. Confirm the release workflow ran `tools/store_metadata_preflight.py`, `tools/privacy_policy_link_check.py`, `tools/privacy_data_safety_check.py`, `tools/community_guidelines_consent_check.py`, `tools/play_app_content_packet_check.py`, `tools/alt_store_metadata_check.py`, and `tools/release_metadata_consistency_check.py` before `:app:assembleRelease`.
+17. Confirm the release workflow ran `tools/store_metadata_preflight.py`, `tools/privacy_policy_link_check.py`, `tools/privacy_data_safety_check.py`, `tools/community_guidelines_consent_check.py`, `tools/play_app_content_packet_check.py`, `tools/alt_store_metadata_check.py`, `tools/release_metadata_consistency_check.py`, and `tools/sbom_readiness_check.py` before `:app:assembleRelease`.
 18. Confirm the release workflow ran `tools/provider_credential_apk_scan.py` after packaging the signed APK and before release uploads.
 19. Verify the APK locally with `apksigner verify --verbose --print-certs`.
 20. Compare the local SHA-256 values to `SHA256SUMS.txt`.
@@ -101,6 +102,7 @@ python3 tools/community_guidelines_consent_check.py --repo-root .
 python3 tools/play_app_content_packet_check.py --policy docs/distribution/play-app-content.json --repo-root .
 python3 tools/alt_store_metadata_check.py --policy docs/distribution/alt-store-metadata.json --repo-root .
 python3 tools/release_metadata_consistency_check.py --policy docs/distribution/release-metadata-consistency.json --repo-root .
+python3 tools/sbom_readiness_check.py --policy docs/distribution/sbom-readiness.json --repo-root .
 python3 tools/on_device_ai_decision_check.py --policy docs/ai/on-device-wallpaper-decision.json --repo-root .
 python3 -m unittest discover -s test/tools -p '*_test.py'
 ```
@@ -284,6 +286,7 @@ python3 tools/community_guidelines_consent_check.py --repo-root .
 python3 tools/play_app_content_packet_check.py --policy docs/distribution/play-app-content.json --repo-root .
 python3 tools/alt_store_metadata_check.py --policy docs/distribution/alt-store-metadata.json --repo-root .
 python3 tools/release_metadata_consistency_check.py --policy docs/distribution/release-metadata-consistency.json --repo-root .
+python3 tools/sbom_readiness_check.py --policy docs/distribution/sbom-readiness.json --repo-root .
 ```
 
 The check fails if the wrapper distribution URL, SHA-256, URL validation, storage roots, or timeout drifts. When upgrading Gradle, update `distributionUrl`, `distributionSha256Sum`, `tools/gradle_wrapper_check.py`, and the focused wrapper tests in the same change after verifying the official Gradle checksum.
@@ -355,9 +358,17 @@ OkHttp `.scheme("http")` builders under the reviewed provider source roots.
 
 ## SBOM scope
 
-SBOM generation is deferred until after the N-1 toolchain upgrade because the Android dependency graph is already scheduled for a large AGP/Gradle/Kotlin/KSP migration. When N-1 lands, add a CycloneDX or SPDX SBOM lane that covers:
+SBOM generation is deferred until after the N-1 toolchain upgrade because the Android dependency graph is already scheduled for a large AGP/Gradle/Kotlin/KSP migration. The deferred decision is checked by [sbom-readiness.md](sbom-readiness.md) and `tools/sbom_readiness_check.py` so the release evidence floor cannot silently drift while Aura waits for the toolchain change.
+
+When N-1 lands, add a CycloneDX or SPDX SBOM lane that covers:
 
 - Gradle plugins and version-catalog dependencies.
-- Runtime APK dependencies for the release variant.
-- Native/FFmpeg/youtubedl-android artifacts.
-- The release APK digest and signing certificate fingerprint.
+- Release runtime dependency graph.
+- Native, FFmpeg, and youtubedl-android payloads.
+- Release APK digest and signing certificate fingerprint.
+
+The reviewed candidate artifact names are `SBOM.cyclonedx.json`,
+`SBOM.cyclonedx.xml`, and `SBOM.spdx.json`. The chosen artifact should be
+included in `SHA256SUMS.txt`, workflow artifacts, tagged GitHub Release assets,
+release notes, and any SBOM attestation evidence supported by the selected
+format.
