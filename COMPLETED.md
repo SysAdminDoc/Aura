@@ -240,6 +240,11 @@ next pass can resume quickly.
   public browsing, community sound/wallpaper feed filtering, creator profile
   list filtering, and focused unit coverage for unblock paths and blocked
   creator/uploader matching.
+- Completed Cycle 71 visible block creator actions: community sound and
+  wallpaper detail surfaces now show confirmed block actions when uploader
+  identity is available, block through `CommunityBlockRepository`, and remove
+  matching uploader rows from the active UI state with focused ViewModel and
+  policy-copy coverage.
 
 ## 2026-06-05
 

@@ -7,6 +7,7 @@ import androidx.lifecycle.viewModelScope
 import com.freevibe.data.model.CommunityReportInput
 import com.freevibe.data.model.CommunityReportReason
 import com.freevibe.data.model.CommunityUploadRights
+import com.freevibe.data.model.CommunityBlockReason
 import com.freevibe.data.model.ContentSource
 import com.freevibe.data.model.ContentType
 import com.freevibe.data.model.FavoriteIdentity
@@ -18,6 +19,8 @@ import com.freevibe.data.model.favoriteIdentity
 import com.freevibe.data.model.sourceUnavailableReasonForFailure
 import com.freevibe.data.model.soundLicenseCapabilities
 import com.freevibe.data.model.stableKey
+import com.freevibe.data.model.sanitizeCommunityOwnerKey
+import com.freevibe.data.repository.CommunityBlockRepository
 import com.freevibe.data.repository.CommunityReportRepository
 import com.freevibe.data.repository.FavoritesRepository
 import com.freevibe.data.repository.SearchHistoryRepository
@@ -93,6 +96,7 @@ class SoundsViewModel @Inject constructor(
     private val prefs: PreferencesManager,
     val voteRepo: VoteRepository,
     private val reportRepo: CommunityReportRepository,
+    private val communityBlockRepo: CommunityBlockRepository,
     private val bundledContent: BundledContentProvider,
     private val audioPlaybackManager: AudioPlaybackManager,
     private val audioPreviewCache: AudioPreviewCache,
@@ -1504,6 +1508,38 @@ class SoundsViewModel @Inject constructor(
         }
     }
 
+    fun canBlockCommunitySound(sound: Sound): Boolean =
+        sound.source == ContentSource.COMMUNITY &&
+            communityProviderEnabled.value &&
+            sound.communityUploaderId.isNotBlank()
+
+    fun blockCommunitySound(sound: Sound, onBlocked: () -> Unit = {}) {
+        if (communityActionBlocked()) return
+        val blockedUploaderId = sound.communityUploaderId
+        if (sound.source != ContentSource.COMMUNITY || blockedUploaderId.isBlank()) {
+            _state.update { it.copy(error = "This sound does not expose a blockable community uploader") }
+            return
+        }
+        viewModelScope.launch {
+            communityBlockRepo.blockUser(blockedUploaderId, CommunityBlockReason.OTHER)
+                .onSuccess {
+                    if (_state.value.playingId == sound.stableKey()) stopIfPlaying(sound)
+                    _topHits.update { hits -> hits.filterNot { it.matchesCommunityUploader(blockedUploaderId) } }
+                    _communityUploads.update { uploads -> uploads.filterNot { it.matchesCommunityUploader(blockedUploaderId) } }
+                    _state.update { state ->
+                        state.copy(
+                            sounds = state.sounds.filterNot { it.matchesCommunityUploader(blockedUploaderId) },
+                            applySuccess = "Creator blocked",
+                        )
+                    }
+                    onBlocked()
+                }
+                .onFailure { error ->
+                    _state.update { it.copy(error = "Block failed: ${error.message ?: "try again"}") }
+                }
+        }
+    }
+
     private companion object {
         const val FIRST_VISIBLE_PREVIEW_COUNT = 5
         const val SOURCE_YOUTUBE = "youtube"
@@ -1519,6 +1555,9 @@ private fun reportSourceUrl(primary: String, fallback: String): String =
     listOf(primary, fallback)
         .firstOrNull { it.startsWith("https://", ignoreCase = true) }
         .orEmpty()
+
+private fun Sound.matchesCommunityUploader(uploaderId: String): Boolean =
+    sanitizeCommunityOwnerKey(communityUploaderId).let { it.isNotBlank() && it == sanitizeCommunityOwnerKey(uploaderId) }
 
 internal fun Throwable.rethrowIfCancelled() {
     if (this is CancellationException) throw this

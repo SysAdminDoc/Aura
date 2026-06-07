@@ -2,6 +2,7 @@ package com.freevibe.ui.screens.sounds
 
 import android.content.Context
 import com.freevibe.data.local.PreferencesManager
+import com.freevibe.data.model.CommunityBlockReason
 import com.freevibe.data.model.CommunityReportReason
 import com.freevibe.data.model.CommunityUploadRights
 import com.freevibe.data.model.ContentType
@@ -14,6 +15,7 @@ import com.freevibe.data.model.favoriteIdentity
 import com.freevibe.data.model.stableKey
 import com.freevibe.data.repository.AudiusRepository
 import com.freevibe.data.repository.CcMixterRepository
+import com.freevibe.data.repository.CommunityBlockRepository
 import com.freevibe.data.repository.CommunityReportRepository
 import com.freevibe.data.repository.FavoritesRepository
 import com.freevibe.data.repository.FreesoundRepository
@@ -381,6 +383,55 @@ class SoundsViewModelTest {
                 },
             )
         }
+    }
+
+    @Test
+    fun `blockCommunitySound writes block and removes matching uploader sounds`() = runTest(dispatcher) {
+        val youtubeRepo = mockk<YouTubeRepository>()
+        val freesoundRepo = mockk<FreesoundRepository>()
+        val freesoundV2Repo = mockk<FreesoundV2Repository>()
+        val audiusRepo = mockk<AudiusRepository>()
+        val ccMixterRepo = mockk<CcMixterRepository>()
+        val soundCloudRepo = mockk<SoundCloudRepository>()
+        val uploadRepo = mockk<UploadRepository>(relaxed = true)
+        val blockRepo = mockk<CommunityBlockRepository>()
+        val blocked = testSound("cu_blocked", ContentSource.COMMUNITY, "Blocked").copy(communityUploaderId = "creator/1")
+        val sameCreator = testSound("cu_same", ContentSource.COMMUNITY, "Same Creator").copy(communityUploaderId = "creator.1")
+        val keep = testSound("cu_keep", ContentSource.COMMUNITY, "Keep").copy(communityUploaderId = "creator-2")
+
+        stubCommonDependencies(
+            youtubeRepo = youtubeRepo,
+            freesoundRepo = freesoundRepo,
+            freesoundV2Repo = freesoundV2Repo,
+            audiusRepo = audiusRepo,
+            ccMixterRepo = ccMixterRepo,
+            soundCloudRepo = soundCloudRepo,
+        )
+        every { uploadRepo.getCommunityUploads(limit = 50) } returns flowOf(listOf(blocked, sameCreator, keep))
+        coEvery { blockRepo.blockUser("creator/1", CommunityBlockReason.OTHER) } returns Result.success(Unit)
+
+        val viewModel = createViewModel(
+            youtubeRepo = youtubeRepo,
+            freesoundRepo = freesoundRepo,
+            freesoundV2Repo = freesoundV2Repo,
+            audiusRepo = audiusRepo,
+            ccMixterRepo = ccMixterRepo,
+            soundCloudRepo = soundCloudRepo,
+            uploadRepoOverride = uploadRepo,
+            communityBlockRepoOverride = blockRepo,
+        )
+
+        viewModel.selectTab(SoundTab.COMMUNITY)
+        advanceUntilIdle()
+        assertEquals(listOf("cu_blocked", "cu_same", "cu_keep"), viewModel.state.value.sounds.map { it.id })
+
+        assertTrue(viewModel.canBlockCommunitySound(blocked))
+        viewModel.blockCommunitySound(blocked)
+        advanceUntilIdle()
+
+        assertEquals(listOf("cu_keep"), viewModel.state.value.sounds.map { it.id })
+        assertEquals("Creator blocked", viewModel.state.value.applySuccess)
+        coVerify(exactly = 1) { blockRepo.blockUser("creator/1", CommunityBlockReason.OTHER) }
     }
 
     @Test
@@ -1282,6 +1333,7 @@ class SoundsViewModelTest {
         downloadManagerOverride: DownloadManager? = null,
         favoritesRepoOverride: FavoritesRepository? = null,
         reportRepoOverride: CommunityReportRepository? = null,
+        communityBlockRepoOverride: CommunityBlockRepository? = null,
         uploadRepoOverride: UploadRepository? = null,
         youtubeProviderEnabled: Boolean = true,
         communityProviderEnabled: Boolean = true,
@@ -1338,6 +1390,7 @@ class SoundsViewModelTest {
             prefs = prefs,
             voteRepo = mockk<VoteRepository>(relaxed = true),
             reportRepo = reportRepoOverride ?: mockk<CommunityReportRepository>(relaxed = true),
+            communityBlockRepo = communityBlockRepoOverride ?: mockk<CommunityBlockRepository>(relaxed = true),
             bundledContent = bundledContent,
             audioPlaybackManager = audioPlaybackManager,
             audioPreviewCache = audioPreviewCache,

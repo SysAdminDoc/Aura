@@ -46,6 +46,7 @@ import com.freevibe.data.model.soundLicenseCapabilities
 import com.freevibe.data.model.stableKey
 import com.freevibe.ui.components.CommunityReportDialog
 import com.freevibe.ui.policy.CommunityUploadPolicyKind
+import com.freevibe.ui.policy.communityBlockConfirmationCopy
 import com.freevibe.ui.policy.communityOwnerDeleteConfirmationCopy
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
@@ -150,8 +151,10 @@ fun SoundDetailScreen(
     val canDeleteUpload by produceState(false, s.stableKey()) {
         value = viewModel.canDeleteCommunitySound(s)
     }
+    val canBlockCreator = viewModel.canBlockCommunitySound(s) && !canDeleteUpload
     val policyMessages = remember(licenseCapabilities) { soundPolicyMessages(licenseCapabilities) }
     var showReportDialog by remember(s.stableKey()) { mutableStateOf(false) }
+    var showBlockCreatorDialog by remember(s.stableKey()) { mutableStateOf(false) }
     var showDeleteUploadDialog by remember(s.stableKey()) { mutableStateOf(false) }
 
     val currentSoundKey = s.stableKey()
@@ -219,6 +222,30 @@ fun SoundDetailScreen(
             },
             dismissButton = {
                 TextButton(onClick = { showDeleteUploadDialog = false }) {
+                    Text("Cancel")
+                }
+            },
+        )
+    }
+
+    if (showBlockCreatorDialog) {
+        AlertDialog(
+            onDismissRequest = { showBlockCreatorDialog = false },
+            title = { Text("Block creator?") },
+            text = { Text(communityBlockConfirmationCopy(CommunityUploadPolicyKind.SOUND)) },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        showBlockCreatorDialog = false
+                        viewModel.blockCommunitySound(s, onBlocked = onBack)
+                    },
+                    colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error),
+                ) {
+                    Text("Block")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showBlockCreatorDialog = false }) {
                     Text("Cancel")
                 }
             },
@@ -464,6 +491,18 @@ fun SoundDetailScreen(
                     Icon(Icons.Default.Report, contentDescription = null, modifier = Modifier.size(18.dp))
                     Spacer(Modifier.width(8.dp))
                     Text("Report content")
+                }
+            }
+            if (canBlockCreator) {
+                OutlinedButton(
+                    onClick = { showBlockCreatorDialog = true },
+                    modifier = Modifier.fillMaxWidth().height(44.dp),
+                    shape = RoundedCornerShape(10.dp),
+                    colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.error),
+                ) {
+                    Icon(Icons.Default.Block, contentDescription = null, modifier = Modifier.size(18.dp))
+                    Spacer(Modifier.width(8.dp))
+                    Text("Block creator")
                 }
             }
             if (canDeleteUpload) {

@@ -35,5 +35,8 @@ fun communityUploadPolicyCopy(kind: CommunityUploadPolicyKind): CommunityUploadP
 fun communityOwnerDeleteConfirmationCopy(kind: CommunityUploadPolicyKind): String =
     "This removes your ${kind.publicListingName}, public listing, owner index, and ${kind.uploadedFileName}. Private deletion or takedown records may remain for moderation and abuse review."
 
+fun communityBlockConfirmationCopy(kind: CommunityUploadPolicyKind): String =
+    "This hides community ${kind.displayName}s from this uploader across Aura for your account. The uploader is not notified, and admins can still review reports separately."
+
 const val COMMUNITY_REPORT_TAKEDOWN_COPY =
     "Use Rights or license for takedown requests. Reports are private to admins; confirmed rights reports can hide or delete community uploads."

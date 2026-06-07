@@ -41,6 +41,15 @@ class CommunityPolicyCopyTest {
     }
 
     @Test
+    fun `block copy explains private hiding and no notification`() {
+        val copy = communityBlockConfirmationCopy(CommunityUploadPolicyKind.WALLPAPER)
+
+        assertTrue(copy.contains("hides community wallpapers"))
+        assertTrue(copy.contains("for your account"))
+        assertTrue(copy.contains("not notified"))
+    }
+
+    @Test
     fun `report copy directs rights reports to takedown review`() {
         assertTrue(COMMUNITY_REPORT_TAKEDOWN_COPY.contains("Rights or license"))
         assertTrue(COMMUNITY_REPORT_TAKEDOWN_COPY.contains("private to admins"))

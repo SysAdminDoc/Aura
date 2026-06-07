@@ -337,6 +337,7 @@ class WallpaperUploadRepository @Inject constructor(
             sourcePageUrl = sourceUrl,
             license = license,
             uploaderName = uploaderLabel.ifBlank { uploaderUid.ifBlank { uploaderId }.take(8) },
+            communityUploaderId = uploaderUid.ifBlank { uploaderId },
         )
     }
 

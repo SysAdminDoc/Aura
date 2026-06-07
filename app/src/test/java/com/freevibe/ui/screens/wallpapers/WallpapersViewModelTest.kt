@@ -3,6 +3,7 @@ package com.freevibe.ui.screens.wallpapers
 import android.content.Context
 import com.freevibe.data.local.PreferencesManager
 import com.freevibe.data.local.WallpaperCacheManager
+import com.freevibe.data.model.CommunityBlockReason
 import com.freevibe.data.model.CommunityReportReason
 import com.freevibe.data.model.ContentSource
 import com.freevibe.data.model.FavoriteIdentity
@@ -13,6 +14,7 @@ import com.freevibe.data.model.WallpaperCollectionEntity
 import com.freevibe.data.model.favoriteIdentity
 import com.freevibe.data.model.stableKey
 import com.freevibe.data.repository.CollectionRepository
+import com.freevibe.data.repository.CommunityBlockRepository
 import com.freevibe.data.repository.CommunityReportRepository
 import com.freevibe.data.repository.FavoritesRepository
 import com.freevibe.data.repository.RedditRepository
@@ -410,6 +412,48 @@ class WallpapersViewModelTest {
     }
 
     @Test
+    fun `blockCommunityWallpaper writes block and removes matching uploader wallpapers`() = runTest(dispatcher) {
+        val wallpaperRepo = mockk<WallpaperRepository>()
+        val redditRepo = mockk<RedditRepository>()
+        val uploadRepo = mockk<WallpaperUploadRepository>(relaxed = true)
+        val blockRepo = mockk<CommunityBlockRepository>()
+        val blocked = wallpaper("cw_blocked", color = "#112233", source = ContentSource.COMMUNITY)
+            .copy(communityUploaderId = "creator/1")
+        val sameCreator = wallpaper("cw_same", color = "#223344", source = ContentSource.COMMUNITY)
+            .copy(communityUploaderId = "creator.1")
+        val keep = wallpaper("cw_keep", color = "#334455", source = ContentSource.COMMUNITY)
+            .copy(communityUploaderId = "creator-2")
+
+        stubCommonDependencies(wallpaperRepo, redditRepo)
+        coEvery { uploadRepo.getCommunityWallpapers() } returns SearchResult(
+            items = listOf(blocked, sameCreator, keep),
+            totalCount = 3,
+            currentPage = 1,
+            hasMore = false,
+        )
+        coEvery { blockRepo.blockUser("creator/1", CommunityBlockReason.OTHER) } returns Result.success(Unit)
+
+        val viewModel = createViewModel(
+            wallpaperRepo = wallpaperRepo,
+            redditRepo = redditRepo,
+            wallpaperUploadRepoOverride = uploadRepo,
+            communityBlockRepoOverride = blockRepo,
+        )
+
+        viewModel.selectTab(WallpaperTab.COMMUNITY)
+        advanceUntilIdle()
+        assertEquals(listOf("cw_blocked", "cw_same", "cw_keep"), viewModel.state.value.wallpapers.map { it.id })
+
+        assertTrue(viewModel.canBlockCommunityWallpaper(blocked))
+        viewModel.blockCommunityWallpaper(blocked)
+        advanceUntilIdle()
+
+        assertEquals(listOf("cw_keep"), viewModel.state.value.wallpapers.map { it.id })
+        assertEquals("Creator blocked", viewModel.state.value.applySuccess)
+        coVerify(exactly = 1) { blockRepo.blockUser("creator/1", CommunityBlockReason.OTHER) }
+    }
+
+    @Test
     fun `canDeleteCommunityWallpaper delegates owner availability to upload repository`() = runTest(dispatcher) {
         val wallpaperRepo = mockk<WallpaperRepository>()
         val redditRepo = mockk<RedditRepository>()
@@ -692,6 +736,7 @@ class WallpapersViewModelTest {
         cacheManagerOverride: WallpaperCacheManager? = null,
         favoritesRepoOverride: FavoritesRepository? = null,
         reportRepoOverride: CommunityReportRepository? = null,
+        communityBlockRepoOverride: CommunityBlockRepository? = null,
         wallpaperUploadRepoOverride: WallpaperUploadRepository? = null,
         wallhavenProviderEnabled: Boolean = true,
         redditProviderEnabled: Boolean = true,
@@ -763,6 +808,7 @@ class WallpapersViewModelTest {
             applyFeedbackBus = mockk(relaxed = true),
             voteRepo = voteRepo,
             reportRepo = reportRepoOverride ?: mockk<CommunityReportRepository>(relaxed = true),
+            communityBlockRepo = communityBlockRepoOverride ?: mockk<CommunityBlockRepository>(relaxed = true),
             seasonalContentManager = SeasonalContentManager(),
             wallpaperUploadRepo = wallpaperUploadRepoOverride ?: mockk(relaxed = true),
             sourceMetrics = com.freevibe.service.SourceMetrics(),

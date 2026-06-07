@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import android.content.Context
 import android.net.Uri
 import com.freevibe.data.local.PreferencesManager
+import com.freevibe.data.model.CommunityBlockReason
 import com.freevibe.data.model.CommunityReportInput
 import com.freevibe.data.model.CommunityReportReason
 import com.freevibe.data.model.CommunityUploadRights
@@ -13,9 +14,11 @@ import com.freevibe.data.model.FavoriteIdentity
 import com.freevibe.data.model.Wallpaper
 import com.freevibe.data.model.WallpaperTarget
 import com.freevibe.data.model.favoriteIdentity
+import com.freevibe.data.model.sanitizeCommunityOwnerKey
 import com.freevibe.data.model.sourceUnavailableReasonForFailure
 import com.freevibe.data.model.stableKey
 import com.freevibe.data.repository.CollectionRepository
+import com.freevibe.data.repository.CommunityBlockRepository
 import com.freevibe.data.repository.CommunityReportRepository
 import com.freevibe.data.repository.FavoritesRepository
 import com.freevibe.data.repository.RedditRepository
@@ -90,6 +93,7 @@ class WallpapersViewModel @Inject constructor(
     private val applyFeedbackBus: ApplyFeedbackBus,
     val voteRepo: VoteRepository,
     private val reportRepo: CommunityReportRepository,
+    private val communityBlockRepo: CommunityBlockRepository,
     private val seasonalContentManager: SeasonalContentManager,
     private val wallpaperUploadRepo: WallpaperUploadRepository,
     private val sourceMetrics: SourceMetrics,
@@ -636,6 +640,40 @@ class WallpapersViewModel @Inject constructor(
         }
     }
 
+    fun canBlockCommunityWallpaper(wallpaper: Wallpaper): Boolean =
+        wallpaper.source == ContentSource.COMMUNITY &&
+            communityProviderEnabled.value &&
+            wallpaper.communityUploaderId.isNotBlank()
+
+    fun blockCommunityWallpaper(wallpaper: Wallpaper, onBlocked: () -> Unit = {}) {
+        if (!communityProviderEnabled.value) {
+            sourceMetrics.recordDisabled(SOURCE_COMMUNITY)
+            _state.update { it.copy(error = communityDisabledMessage()) }
+            return
+        }
+        val blockedUploaderId = wallpaper.communityUploaderId
+        if (wallpaper.source != ContentSource.COMMUNITY || blockedUploaderId.isBlank()) {
+            _state.update { it.copy(error = "This wallpaper does not expose a blockable community uploader") }
+            return
+        }
+        viewModelScope.launch {
+            communityBlockRepo.blockUser(blockedUploaderId, CommunityBlockReason.OTHER)
+                .onSuccess {
+                    _topVoted.update { rows -> rows.filterNot { it.first.matchesCommunityUploader(blockedUploaderId) } }
+                    _state.update { state ->
+                        state.copy(
+                            wallpapers = state.wallpapers.filterNot { it.matchesCommunityUploader(blockedUploaderId) },
+                            applySuccess = "Creator blocked",
+                        )
+                    }
+                    onBlocked()
+                }
+                .onFailure { error ->
+                    _state.update { it.copy(error = "Block failed: ${error.message ?: "try again"}") }
+                }
+        }
+    }
+
     suspend fun canDeleteCommunityWallpaper(wallpaper: Wallpaper): Boolean {
         if (wallpaper.source != ContentSource.COMMUNITY || !communityProviderEnabled.value) return false
         return wallpaperUploadRepo.canDeleteWallpaperUpload(wallpaper.id)
@@ -1169,6 +1207,9 @@ private fun reportSourceUrl(primary: String, fallback: String): String =
     listOf(primary, fallback)
         .firstOrNull { it.startsWith("https://", ignoreCase = true) }
         .orEmpty()
+
+private fun Wallpaper.matchesCommunityUploader(uploaderId: String): Boolean =
+    sanitizeCommunityOwnerKey(communityUploaderId).let { it.isNotBlank() && it == sanitizeCommunityOwnerKey(uploaderId) }
 
 internal fun matchesWallpaperIdentity(
     wallpaper: Wallpaper,

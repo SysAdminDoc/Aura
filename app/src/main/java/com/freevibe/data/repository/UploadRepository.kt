@@ -310,6 +310,7 @@ class UploadRepository @Inject constructor(
                     license = license,
                     uploaderName = uploaderLabel.ifBlank { uploaderUid.ifBlank { uploaderId }.take(8) },
                     sourcePageUrl = sourceUrl,
+                    communityUploaderId = uploaderUid.ifBlank { uploaderId },
                 )
             }.sortedByDescending { sound ->
                 votesByKey[sound.id.removePrefix("cu_")] ?: 0

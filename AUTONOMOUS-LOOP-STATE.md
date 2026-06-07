@@ -1,8 +1,8 @@
 # Autonomous Loop State
 
 **Assigned project:** `C:\Users\--\repos\Aura`
-**Current pass:** 2026-06-06 Cycle 68 community block-user policy
-**Last commit before pass:** `f664fc8` (`feat(community): add deletion tombstones`)
+**Current pass:** 2026-06-06 Cycle 71 visible block creator actions
+**Last commit before pass:** `888f447` (`feat(community): filter blocked users`)
 
 ## 2026-06-05 Result
 
@@ -345,7 +345,9 @@
 - Real production-project Firebase backend dry-run evidence after owner access is confirmed.
 - Real exported Storage/RTDB orphan reports after owner access is confirmed.
 - Real production RTDB legacy backfill plan after owner access is confirmed.
-- Visible block-user UI, vote marker privacy/account deletion semantics, and deployable callable backend implementation.
+- Blocked-users review/unblock UI, report-card/profile block entry points,
+  vote marker privacy/account deletion semantics, and deployable callable
+  backend implementation.
 
 ## Cycle 69 Result - 2026-06-06
 
@@ -374,16 +376,33 @@
 - Cycle 70 verification: focused `CommunityBlockPolicyTest` plus
   `CreatorProfileRepositoryTest` passed locally.
 
+## Cycle 71 Result - 2026-06-06
+
+- Added `communityUploaderId` metadata to community sound and wallpaper UI
+  models so block actions can target canonical upload owners.
+- Community sound and wallpaper detail surfaces now show confirmed `Block
+  creator` actions when uploader identity is available and the item is not an
+  owner-deletable upload.
+- Block actions write through `CommunityBlockRepository` and remove matching
+  uploader rows from active sound/wallpaper UI state.
+- Updated `docs/research/cycle-71-2026-06-06.md`,
+  `docs/community-block-user-policy.md`, `ROADMAP.md`, `COMPLETED.md`, and
+  `CHANGELOG.md`.
+- Cycle 71 verification: focused `SoundsViewModelTest`,
+  `WallpapersViewModelTest`, and `CommunityPolicyCopyTest` reports recorded
+  zero failures and zero errors.
+
 ## Next Cycle
 
-Continue this same assigned project, Aura. Start Cycle 71 from the `ROADMAP.md`
-Continuation State and `docs/research/cycle-70-2026-06-06.md`. Block-list
-repository support and feed/profile filtering are now in place. Next add
-visible block/unblock entry points, vote marker privacy/account deletion
-semantics, a real production-project Firebase backend dry run/orphan/backfill
-evidence pass after owner access is confirmed, Cloud Functions implementation
-for the callable quota contract, or Android callable migration adapters. Commit
-and push completed work when the active project contract allows it.
+Continue this same assigned project, Aura. Start Cycle 72 from the `ROADMAP.md`
+Continuation State and `docs/research/cycle-71-2026-06-06.md`. Detail-screen
+block actions are now in place for community sounds and wallpapers. Next add a
+blocked-users review/unblock surface, report-card/profile block entry points,
+vote marker privacy/account deletion semantics, a real production-project
+Firebase backend dry run/orphan/backfill evidence pass after owner access is
+confirmed, Cloud Functions implementation for the callable quota contract, or
+Android callable migration adapters. Commit and push completed work when the
+active project contract allows it.
 
 ## Previous Cycle Prompt
 

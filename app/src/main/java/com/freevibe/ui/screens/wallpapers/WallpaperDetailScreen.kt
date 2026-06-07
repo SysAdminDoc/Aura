@@ -47,6 +47,7 @@ import com.freevibe.ui.components.GlassCard
 import com.freevibe.ui.components.HighlightPill
 import com.freevibe.ui.components.SourceBadge
 import com.freevibe.ui.policy.CommunityUploadPolicyKind
+import com.freevibe.ui.policy.communityBlockConfirmationCopy
 import com.freevibe.ui.policy.communityOwnerDeleteConfirmationCopy
 import com.freevibe.ui.launchLiveWallpaperPicker
 import coil.compose.AsyncImagePainter
@@ -220,12 +221,14 @@ fun WallpaperDetailScreen(
     var showMoreMenu by remember { mutableStateOf(false) }
     var showCollectionPicker by remember { mutableStateOf(false) }
     var showReportDialog by remember(wp.stableKey()) { mutableStateOf(false) }
+    var showBlockCreatorDialog by remember(wp.stableKey()) { mutableStateOf(false) }
     var showDeleteUploadDialog by remember(wp.stableKey()) { mutableStateOf(false) }
     var showDetailsPanel by remember { mutableStateOf(false) }
     val canReportWallpaper = wp.source != ContentSource.LOCAL
     val canDeleteUpload by produceState(false, wp.stableKey(), communityProviderEnabled) {
         value = if (communityProviderEnabled) viewModel.canDeleteCommunityWallpaper(wp) else false
     }
+    val canBlockCreator = viewModel.canBlockCommunityWallpaper(wp) && !canDeleteUpload
     LaunchedEffect(wp.stableKey()) {
         showDetailsPanel = false
     }
@@ -624,6 +627,14 @@ fun WallpaperDetailScreen(
                                     onClick = { showReportDialog = true },
                                 )
                             }
+                            if (canBlockCreator) {
+                                DetailActionPill(
+                                    icon = Icons.Default.Block,
+                                    label = "Block",
+                                    tint = MaterialTheme.colorScheme.error,
+                                    onClick = { showBlockCreatorDialog = true },
+                                )
+                            }
                             DetailActionPill(
                                 icon = Icons.Default.MoreHoriz,
                                 label = "More",
@@ -697,6 +708,10 @@ fun WallpaperDetailScreen(
                         showMoreMenu = false
                         showReportDialog = true
                     }) else null,
+                    onBlockCreator = if (canBlockCreator) ({
+                        showMoreMenu = false
+                        showBlockCreatorDialog = true
+                    }) else null,
                     onDeleteUpload = if (canDeleteUpload) ({
                         showMoreMenu = false
                         showDeleteUploadDialog = true
@@ -711,6 +726,30 @@ fun WallpaperDetailScreen(
                     title = "Report wallpaper",
                     onDismiss = { showReportDialog = false },
                     onSubmit = { reason, note -> viewModel.reportWallpaper(wp, reason, note) },
+                )
+            }
+
+            if (showBlockCreatorDialog) {
+                AlertDialog(
+                    onDismissRequest = { showBlockCreatorDialog = false },
+                    title = { Text("Block creator?") },
+                    text = { Text(communityBlockConfirmationCopy(CommunityUploadPolicyKind.WALLPAPER)) },
+                    confirmButton = {
+                        TextButton(
+                            onClick = {
+                                showBlockCreatorDialog = false
+                                viewModel.blockCommunityWallpaper(wp, onBlocked = onBack)
+                            },
+                            colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error),
+                        ) {
+                            Text("Block")
+                        }
+                    },
+                    dismissButton = {
+                        TextButton(onClick = { showBlockCreatorDialog = false }) {
+                            Text("Cancel")
+                        }
+                    },
                 )
             }
 
@@ -1076,6 +1115,7 @@ private fun MoreActionsSheet(
     onCollection: () -> Unit,
     onFindSimilar: (() -> Unit)?,
     onReport: (() -> Unit)?,
+    onBlockCreator: (() -> Unit)?,
     onDeleteUpload: (() -> Unit)?,
     uploaderName: String = "",
     license: String = "",
@@ -1118,6 +1158,14 @@ private fun MoreActionsSheet(
             }
             if (onReport != null) {
                 SheetOption(Icons.Default.Report, "Report content", "Send this source and license context for review") { onReport() }
+            }
+            if (onBlockCreator != null) {
+                SheetOption(
+                    Icons.Default.Block,
+                    "Block creator",
+                    "Hide community wallpapers from this uploader",
+                    tint = MaterialTheme.colorScheme.error,
+                ) { onBlockCreator() }
             }
             if (onDeleteUpload != null) {
                 SheetOption(
