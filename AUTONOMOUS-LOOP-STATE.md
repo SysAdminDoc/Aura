@@ -1,8 +1,8 @@
 # Autonomous Loop State
 
 **Assigned project:** `C:\Users\--\repos\Aura`
-**Current pass:** 2026-06-07 Cycle 152 rotation trigger foreground-service policy gate
-**Last commit before pass:** `93cd031` (`fix(policy): remove unused boot permission`)
+**Current pass:** 2026-06-07 Cycle 153 background work scheduling ledger
+**Last commit before pass:** `89f08e7` (`ci(policy): gate rotation foreground service`)
 
 ## 2026-06-05 Result
 
@@ -2248,11 +2248,28 @@
   policy check, Python compile, focused tests, and full backend tool tests
   passed locally.
 
+## Cycle 153 Result - 2026-06-07
+
+- Added `docs/background-work-scheduling-ledger.md` and
+  `docs/background-work-scheduling-ledger.json` as the checked WorkManager
+  scheduling packet for periodic auto wallpaper, daily wallpaper, weather
+  refresh, Aura Originals download, and rotation trigger one-shots.
+- Added `tools/background_work_scheduling_check.py` plus focused backend tests
+  so unique work names, worker classes, source paths, enqueue APIs, work
+  policies, constraints, deferral reasons, source terms, release docs, and
+  workflow wiring cannot drift silently.
+- Wired verify and release workflows, release metadata consistency, GitHub
+  security workflow policy, release dry-run, release signing, and supply-chain
+  docs to run the new gate before Android build work.
+- Cycle 153 verification: background work scheduling ledger check, release
+  metadata consistency check, workflow security policy check, Python compile,
+  focused tests, and full backend tool tests passed locally.
+
 ## Next Cycle
 
-Continue this same assigned project, Aura. Start Cycle 153 from the
+Continue this same assigned project, Aura. Start Cycle 154 from the
 `ROADMAP.md` Continuation State and
-`docs/research/cycle-152-2026-06-07.md`. The account
+`docs/research/cycle-153-2026-06-07.md`. The account
 deletion dry-run planner, read-only Settings identity surface, redacted
 shareable request draft, request-code lookup tool, review receipt gate, offline
 apply simulator, private executor package builder, and guarded REST executor
@@ -2391,6 +2408,11 @@ added a checked rotation trigger boot behavior gate; Cycle 152 added a checked
 rotation trigger foreground-service policy gate for the special-use service
 permission, manifest subtype, source safeguards, Play Console declaration
 packet, owner evidence action, and workflow wiring.
+Cycle 153 added a checked background work scheduling ledger for `auto_wallpaper`,
+`daily_wallpaper`, `weather_update`, `aura_originals_download`, and
+`rotation_trigger_oneshot`, including source-backed unique work names, enqueue
+policies, constraints, deferral reasons, release metadata/security workflow
+policy coverage, and verify/release workflow wiring.
 Actual live callable invocation evidence, a live hosted HTTPS web deletion URL,
 direct RTDB rule tightening, App Check console evidence, production-project
 dry-run evidence, and owner/admin GitHub repository security-settings evidence
@@ -2403,9 +2425,10 @@ owner access is confirmed, collect owner/admin GitHub security settings
 evidence and generate the redacted receipt when access is available, or
 continue with signed release dry-run evidence capture on a suitable runner,
 the screenshot and feature-graphic pipeline for the remaining store metadata
-asset gap, background-work scheduling ledgers, release artifact hardening, or the
-next checkable backend, deploy, security, support, policy, or rules hardening
-artifact if owner-gated evidence is still unavailable.
+asset gap, background-work Settings diagnostics/support-bundle receipts, release
+artifact hardening, or the next checkable backend, deploy, security, support,
+policy, or rules hardening artifact if owner-gated evidence is still
+unavailable.
 Commit and push completed work when the active project contract allows it.
 
 ## Previous Cycle Prompt

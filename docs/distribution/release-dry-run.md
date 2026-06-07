@@ -37,6 +37,9 @@ Manual branch runs:
 - Check that the SBOM decision, current evidence floor, future SBOM artifact
   names, future SBOM scope, and workflow wiring remain documented before the
   signed release build.
+- Check that WorkManager unique work names, enqueue policies, constraints,
+  deferral reasons, and scheduler source terms remain documented before the
+  signed release build.
 - Check dependency notice, native compliance, and curated overlay drift gates.
 - Generate `SHA256SUMS.txt` and `RELEASE_NOTES.md`.
 - Run `tools/release_artifact_bundle_check.py` against the final `release/` directory.
@@ -73,6 +76,7 @@ python3 tools/privacy_policy_link_check.py --policy docs/privacy/privacy-policy-
 python3 tools/privacy_data_safety_check.py --policy docs/privacy/data-safety.json --repo-root .
 python3 tools/rotation_boot_permission_check.py --policy docs/rotation-trigger-boot-behavior.json --repo-root .
 python3 tools/rotation_fgs_policy_check.py --policy docs/rotation-trigger-fgs-policy.json --repo-root .
+python3 tools/background_work_scheduling_check.py --policy docs/background-work-scheduling-ledger.json --repo-root .
 python3 tools/community_guidelines_consent_check.py --repo-root .
 python3 tools/play_app_content_packet_check.py --policy docs/distribution/play-app-content.json --repo-root .
 python3 tools/alt_store_metadata_check.py --policy docs/distribution/alt-store-metadata.json --repo-root .
@@ -99,6 +103,9 @@ disclosures still claim boot scheduling.
 The rotation foreground-service policy gate fails when the special-use service
 permission, manifest subtype, source safeguards, Play declaration packet,
 owner evidence action, or workflow wiring drifts.
+The background work scheduling ledger gate fails when a WorkManager row,
+unique work name, enqueue policy, constraint, deferral reason, source term,
+release doc, or workflow command drifts from the checked scheduler matrix.
 The community guidelines consent gate fails when the legal guidelines doc,
 versioned preference, shared consent dialog, Settings entry, community screens,
 or repository access gates drift apart.

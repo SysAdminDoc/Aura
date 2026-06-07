@@ -1,0 +1,223 @@
+{
+  "schemaVersion": 1,
+  "policyKind": "backgroundWorkSchedulingLedger",
+  "status": "ledgerReadySettingsPending",
+  "docsPath": "docs/background-work-scheduling-ledger.md",
+  "requiredSettingsStatusFields": [
+    "uniqueWorkName",
+    "enabledState",
+    "lastSuccessUtc",
+    "lastFailureUtc",
+    "lastErrorClass",
+    "currentWorkInfoState",
+    "constraints",
+    "deferralReasons"
+  ],
+  "workItems": [
+    {
+      "id": "auto-wallpaper-periodic",
+      "uniqueWorkName": "auto_wallpaper",
+      "workerClass": "AutoWallpaperWorker",
+      "sourcePath": "app/src/main/java/com/freevibe/service/AutoWallpaperWorker.kt",
+      "settingsSources": [
+        "app/src/main/java/com/freevibe/ui/screens/settings/SettingsViewModel.kt"
+      ],
+      "workKind": "periodic",
+      "enqueueApi": "enqueueUniquePeriodicWork",
+      "existingWorkPolicy": "ExistingPeriodicWorkPolicy.UPDATE",
+      "interval": "default 360 minutes; minimum 15 minutes",
+      "initialDelay": "none",
+      "constraints": [
+        "NetworkType.CONNECTED by default",
+        "NetworkType.UNMETERED when Wi-Fi-only is enabled",
+        "battery not low",
+        "charging when enabled",
+        "device idle when enabled"
+      ],
+      "backoff": "exponential, 15 minutes",
+      "expedited": false,
+      "enabledSurface": "Settings auto wallpaper and enhanced scheduler toggles",
+      "scheduleTrigger": "Enable auto wallpaper or scheduler; changing interval or constraint preferences reschedules the unique work",
+      "cancelTrigger": "Disable auto wallpaper or scheduler",
+      "deferralReasons": [
+        "network unavailable",
+        "metered network when Wi-Fi-only is enabled",
+        "battery low",
+        "charging constraint not met",
+        "device-idle constraint not met",
+        "Doze or App Standby maintenance window delay"
+      ],
+      "sourceTerms": [
+        "const val WORK_NAME = \"auto_wallpaper\"",
+        "PeriodicWorkRequestBuilder<AutoWallpaperWorker>",
+        "intervalMinutes.coerceAtLeast(15)",
+        "ExistingPeriodicWorkPolicy.UPDATE",
+        "buildAutoWallpaperConstraints",
+        "NetworkType.UNMETERED",
+        "setRequiresBatteryNotLow(true)",
+        "setRequiresCharging(true)",
+        "setRequiresDeviceIdle(true)",
+        "setBackoffCriteria(BackoffPolicy.EXPONENTIAL, 15, TimeUnit.MINUTES)"
+      ]
+    },
+    {
+      "id": "daily-wallpaper-periodic",
+      "uniqueWorkName": "daily_wallpaper",
+      "workerClass": "DailyWallpaperWorker",
+      "sourcePath": "app/src/main/java/com/freevibe/service/DailyWallpaperWorker.kt",
+      "settingsSources": [
+        "app/src/main/java/com/freevibe/ui/screens/settings/SettingsScreen.kt"
+      ],
+      "workKind": "periodic",
+      "enqueueApi": "enqueueUniquePeriodicWork",
+      "existingWorkPolicy": "ExistingPeriodicWorkPolicy.KEEP",
+      "interval": "24 hours",
+      "initialDelay": "8 hours",
+      "constraints": [
+        "NetworkType.CONNECTED"
+      ],
+      "backoff": "exponential, 15 minutes",
+      "expedited": false,
+      "enabledSurface": "Settings daily wallpaper toggle",
+      "scheduleTrigger": "Enable daily wallpaper",
+      "cancelTrigger": "Disable daily wallpaper",
+      "deferralReasons": [
+        "network unavailable",
+        "Reddit provider disabled",
+        "notification permission denied",
+        "no eligible safe Reddit image",
+        "Doze or App Standby maintenance window delay"
+      ],
+      "sourceTerms": [
+        "const val WORK_NAME = \"daily_wallpaper\"",
+        "PeriodicWorkRequestBuilder<DailyWallpaperWorker>",
+        "24, TimeUnit.HOURS",
+        ".setInitialDelay(8, TimeUnit.HOURS)",
+        "ExistingPeriodicWorkPolicy.KEEP",
+        "NetworkType.CONNECTED",
+        "setBackoffCriteria(BackoffPolicy.EXPONENTIAL, 15, TimeUnit.MINUTES)"
+      ]
+    },
+    {
+      "id": "weather-update-periodic",
+      "uniqueWorkName": "weather_update",
+      "workerClass": "WeatherUpdateWorker",
+      "sourcePath": "app/src/main/java/com/freevibe/service/WeatherUpdateWorker.kt",
+      "settingsSources": [
+        "app/src/main/java/com/freevibe/ui/screens/settings/SettingsScreen.kt"
+      ],
+      "workKind": "periodic",
+      "enqueueApi": "enqueueUniquePeriodicWork",
+      "existingWorkPolicy": "ExistingPeriodicWorkPolicy.KEEP",
+      "interval": "30 minutes",
+      "initialDelay": "none",
+      "constraints": [
+        "NetworkType.CONNECTED"
+      ],
+      "backoff": "exponential, 15 minutes",
+      "expedited": false,
+      "enabledSurface": "Settings weather effects toggle",
+      "scheduleTrigger": "Enable weather effects after coarse or fine location permission is available",
+      "cancelTrigger": "Disable weather effects",
+      "deferralReasons": [
+        "network unavailable",
+        "location permission denied",
+        "no last-known location",
+        "weather endpoint unavailable",
+        "Doze or App Standby maintenance window delay"
+      ],
+      "sourceTerms": [
+        "const val WORK_NAME = \"weather_update\"",
+        "PeriodicWorkRequestBuilder<WeatherUpdateWorker>",
+        "30, TimeUnit.MINUTES",
+        "ExistingPeriodicWorkPolicy.KEEP",
+        "NetworkType.CONNECTED",
+        "setBackoffCriteria(BackoffPolicy.EXPONENTIAL, 15, TimeUnit.MINUTES)"
+      ]
+    },
+    {
+      "id": "aura-originals-one-shot",
+      "uniqueWorkName": "aura_originals_download",
+      "workerClass": "AuraOriginalsDownloader",
+      "sourcePath": "app/src/main/java/com/freevibe/service/AuraOriginalsDownloader.kt",
+      "settingsSources": [
+        "app/src/main/java/com/freevibe/FreeVibeApp.kt"
+      ],
+      "workKind": "oneTime",
+      "enqueueApi": "enqueueUniqueWork",
+      "existingWorkPolicy": "ExistingWorkPolicy.KEEP",
+      "interval": "not periodic",
+      "initialDelay": "none",
+      "constraints": [
+        "NetworkType.UNMETERED"
+      ],
+      "backoff": "exponential, 15 minutes",
+      "expedited": true,
+      "outOfQuotaPolicy": "OutOfQuotaPolicy.RUN_AS_NON_EXPEDITED_WORK_REQUEST",
+      "enabledSurface": "App startup enqueue; worker is idempotent once bundled files pass hash checks",
+      "scheduleTrigger": "Application startup calls enqueueAuraOriginalsDownload",
+      "cancelTrigger": "none; unique KEEP coalesces startup requests",
+      "deferralReasons": [
+        "unmetered network unavailable",
+        "expedited quota exhausted and downgraded",
+        "manifest unavailable",
+        "download hash mismatch",
+        "Doze or App Standby maintenance window delay"
+      ],
+      "sourceTerms": [
+        "private const val UNIQUE_WORK_NAME = \"aura_originals_download\"",
+        "OneTimeWorkRequestBuilder<AuraOriginalsDownloader>",
+        "ExistingWorkPolicy.KEEP",
+        "NetworkType.UNMETERED",
+        "setExpedited(OutOfQuotaPolicy.RUN_AS_NON_EXPEDITED_WORK_REQUEST)",
+        "setBackoffCriteria(BackoffPolicy.EXPONENTIAL, 15, TimeUnit.MINUTES)"
+      ]
+    },
+    {
+      "id": "rotation-trigger-one-shot",
+      "uniqueWorkName": "rotation_trigger_oneshot",
+      "workerClass": "AutoWallpaperWorker",
+      "sourcePath": "app/src/main/java/com/freevibe/service/RotationTriggerService.kt",
+      "settingsSources": [
+        "app/src/main/java/com/freevibe/ui/screens/settings/SettingsViewModel.kt",
+        "app/src/main/java/com/freevibe/service/TaskerActionReceiver.kt"
+      ],
+      "workKind": "oneTime",
+      "enqueueApi": "enqueueUniqueWork",
+      "existingWorkPolicy": "ExistingWorkPolicy.KEEP",
+      "interval": "not periodic",
+      "initialDelay": "none",
+      "constraints": [
+        "NetworkType.CONNECTED",
+        "battery not low"
+      ],
+      "backoff": "WorkManager default for one-shot trigger work",
+      "expedited": true,
+      "outOfQuotaPolicy": "OutOfQuotaPolicy.RUN_AS_NON_EXPEDITED_WORK_REQUEST",
+      "enabledSurface": "Rotation trigger foreground service toggles and public Tasker/MacroDroid actions",
+      "scheduleTrigger": "Unlock, screen-off, ROTATE_NOW, or SHUFFLE_NOW trigger",
+      "cancelTrigger": "Unique KEEP coalesces chatty triggers; no explicit cancel path",
+      "deferralReasons": [
+        "network unavailable",
+        "battery low",
+        "expedited quota exhausted and downgraded",
+        "existing trigger work already enqueued",
+        "Doze or App Standby maintenance window delay"
+      ],
+      "sourceTerms": [
+        "\"rotation_trigger_oneshot\"",
+        "OneTimeWorkRequestBuilder<AutoWallpaperWorker>",
+        "ExistingWorkPolicy.KEEP",
+        "NetworkType.CONNECTED",
+        "setRequiresBatteryNotLow(true)",
+        "setExpedited(OutOfQuotaPolicy.RUN_AS_NON_EXPEDITED_WORK_REQUEST)"
+      ]
+    }
+  ],
+  "sourceUrls": [
+    "https://developer.android.com/develop/background-work/background-tasks/persistent/getting-started/define-work",
+    "https://developer.android.com/develop/background-work/background-tasks/persistent/how-to/manage-work",
+    "https://developer.android.com/develop/background-work/background-tasks/persistent/how-to/states",
+    "https://developer.android.com/training/monitoring-device-state/doze-standby"
+  ]
+}

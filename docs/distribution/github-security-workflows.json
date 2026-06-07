@@ -59,6 +59,7 @@
         "python3 tools/privacy_data_safety_check.py",
         "python3 tools/rotation_boot_permission_check.py",
         "python3 tools/rotation_fgs_policy_check.py",
+        "python3 tools/background_work_scheduling_check.py",
         "python3 tools/community_guidelines_consent_check.py",
         "python3 tools/play_app_content_packet_check.py",
         "python3 tools/alt_store_metadata_check.py",

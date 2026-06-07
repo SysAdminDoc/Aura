@@ -4,6 +4,18 @@ Append-only completion ledger for autonomous Aura passes. `ROADMAP.md` remains
 the open-work source of truth; this file records shipped or closed items so the
 next pass can resume quickly.
 
+## 2026-06-07
+
+- Completed Cycle 153 background work scheduling ledger: added
+  `docs/background-work-scheduling-ledger.md`,
+  `docs/background-work-scheduling-ledger.json`, and
+  `tools/background_work_scheduling_check.py` so periodic auto wallpaper,
+  daily wallpaper, weather refresh, Aura Originals download, and rotation
+  trigger one-shots have checked unique work names, enqueue policies,
+  constraints, deferral reasons, source terms, release docs, and verify/release
+  workflow wiring. The Settings diagnostics/support-bundle surface remains open
+  as the next background-work slice.
+
 ## 2026-06-06
 
 - Completed Cycle 18 research for generated release-runtime OSS notices, license

@@ -28,7 +28,7 @@ Do not commit `freevibe.jks`, `local.properties`, copied APKs, or generated base
 1. Restores the release keystore from GitHub secrets.
 2. Writes a temporary `local.properties` with signing paths and blank optional provider keys.
 3. Runs `tools/provider_credential_release_check.py` to confirm optional provider keys are blank before they can be bundled into `BuildConfig`.
-4. Runs the provider credential storage, cleartext release, store metadata preflight, store asset pipeline, privacy-policy link, Data safety matrix, community guidelines consent, Play App content, alternative-store disclosure, release metadata consistency, and SBOM readiness checks.
+4. Runs the provider credential storage, cleartext release, store metadata preflight, store asset pipeline, privacy-policy link, Data safety matrix, rotation trigger, background work scheduling, community guidelines consent, Play App content, alternative-store disclosure, release metadata consistency, and SBOM readiness checks.
 5. Runs `./gradlew :app:assembleRelease --stacktrace --no-daemon`.
 6. Copies the signed universal APK to `release/Aura-vX.Y.Z-versionCode-N-universal-release.apk`.
 7. Runs `tools/provider_credential_apk_scan.py` against the packaged APK and temporary release `local.properties`.
@@ -54,6 +54,7 @@ python tools\privacy_policy_link_check.py --policy docs\privacy\privacy-policy-l
 python tools\privacy_data_safety_check.py --policy docs\privacy\data-safety.json --repo-root .
 python tools/rotation_boot_permission_check.py --policy docs/rotation-trigger-boot-behavior.json --repo-root .
 python tools/rotation_fgs_policy_check.py --policy docs/rotation-trigger-fgs-policy.json --repo-root .
+python tools/background_work_scheduling_check.py --policy docs/background-work-scheduling-ledger.json --repo-root .
 python tools\community_guidelines_consent_check.py --repo-root .
 python tools\play_app_content_packet_check.py --policy docs\distribution\play-app-content.json --repo-root .
 python tools\alt_store_metadata_check.py --policy docs\distribution\alt-store-metadata.json --repo-root .
