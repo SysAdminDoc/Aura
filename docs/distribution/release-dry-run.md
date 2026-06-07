@@ -72,6 +72,7 @@ python3 tools/store_asset_pipeline_check.py --policy docs/distribution/store-ass
 python3 tools/privacy_policy_link_check.py --policy docs/privacy/privacy-policy-link.json --repo-root .
 python3 tools/privacy_data_safety_check.py --policy docs/privacy/data-safety.json --repo-root .
 python3 tools/rotation_boot_permission_check.py --policy docs/rotation-trigger-boot-behavior.json --repo-root .
+python3 tools/rotation_fgs_policy_check.py --policy docs/rotation-trigger-fgs-policy.json --repo-root .
 python3 tools/community_guidelines_consent_check.py --repo-root .
 python3 tools/play_app_content_packet_check.py --policy docs/distribution/play-app-content.json --repo-root .
 python3 tools/alt_store_metadata_check.py --policy docs/distribution/alt-store-metadata.json --repo-root .
@@ -95,6 +96,9 @@ The rotation boot permission gate fails when
 `android.permission.RECEIVE_BOOT_COMPLETED` returns to the manifest, when
 boot-completed receiver terms appear in app source, or when release
 disclosures still claim boot scheduling.
+The rotation foreground-service policy gate fails when the special-use service
+permission, manifest subtype, source safeguards, Play declaration packet,
+owner evidence action, or workflow wiring drifts.
 The community guidelines consent gate fails when the legal guidelines doc,
 versioned preference, shared consent dialog, Settings entry, community screens,
 or repository access gates drift apart.

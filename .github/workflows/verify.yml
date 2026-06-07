@@ -204,6 +204,9 @@ jobs:
       - name: Rotation trigger boot permission
         run: python3 tools/rotation_boot_permission_check.py --policy docs/rotation-trigger-boot-behavior.json --repo-root .
 
+      - name: Rotation trigger foreground-service policy
+        run: python3 tools/rotation_fgs_policy_check.py --policy docs/rotation-trigger-fgs-policy.json --repo-root .
+
       - name: Community guidelines consent
         run: python3 tools/community_guidelines_consent_check.py --repo-root .
 

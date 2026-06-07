@@ -53,6 +53,7 @@ python tools/store_asset_pipeline_check.py --policy docs/distribution/store-asse
 python tools\privacy_policy_link_check.py --policy docs\privacy\privacy-policy-link.json --repo-root .
 python tools\privacy_data_safety_check.py --policy docs\privacy\data-safety.json --repo-root .
 python tools/rotation_boot_permission_check.py --policy docs/rotation-trigger-boot-behavior.json --repo-root .
+python tools/rotation_fgs_policy_check.py --policy docs/rotation-trigger-fgs-policy.json --repo-root .
 python tools\community_guidelines_consent_check.py --repo-root .
 python tools\play_app_content_packet_check.py --policy docs\distribution\play-app-content.json --repo-root .
 python tools\alt_store_metadata_check.py --policy docs\distribution\alt-store-metadata.json --repo-root .

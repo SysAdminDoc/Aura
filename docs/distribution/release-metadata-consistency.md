@@ -31,6 +31,9 @@ disclosures, and GitHub Release artifacts. The machine-readable contract is
 privacy-policy URL where those fields apply.
 - `docs/rotation-trigger-boot-behavior.json` keeps the boot-completed
   permission decision aligned with manifest and release disclosures.
+- `docs/rotation-trigger-fgs-policy.json` keeps the special-use foreground
+  service declaration aligned with manifest, Settings, Play, and release
+  evidence.
 
 ## Release preflights
 
@@ -42,6 +45,7 @@ Android build or release publication work:
 - `tools/privacy_policy_link_check.py`
 - `tools/privacy_data_safety_check.py`
 - `tools/rotation_boot_permission_check.py`
+- `tools/rotation_fgs_policy_check.py`
 - `tools/community_guidelines_consent_check.py`
 - `tools/play_app_content_packet_check.py`
 - `tools/alt_store_metadata_check.py`
@@ -66,7 +70,7 @@ Release dry runs and tagged releases must document these expected artifacts:
 Before any public release:
 
 1. Run `py -3 tools\release_metadata_consistency_check.py --policy docs\distribution\release-metadata-consistency.json --repo-root .`.
-2. Run the store metadata, store asset pipeline, privacy, Data safety, rotation boot permission, community guidelines, Play App content, alternative-store, and SBOM readiness gates listed above.
+2. Run the store metadata, store asset pipeline, privacy, Data safety, rotation boot permission, rotation foreground-service policy, community guidelines, Play App content, alternative-store, and SBOM readiness gates listed above.
 3. Confirm the current `versionCode` changelog mentions the current `versionName`.
 4. Confirm the GitHub Release or dry-run artifact contains the expected release files.
 

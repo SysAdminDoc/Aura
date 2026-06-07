@@ -1,8 +1,8 @@
 # Autonomous Loop State
 
 **Assigned project:** `C:\Users\--\repos\Aura`
-**Current pass:** 2026-06-07 Cycle 151 rotation trigger boot permission gate
-**Last commit before pass:** `82289df` (`ci(store): gate asset pipeline`)
+**Current pass:** 2026-06-07 Cycle 152 rotation trigger foreground-service policy gate
+**Last commit before pass:** `93cd031` (`fix(policy): remove unused boot permission`)
 
 ## 2026-06-05 Result
 
@@ -2227,11 +2227,32 @@
   consistency check, workflow security policy checks, Python compile, focused
   tests, and full backend tool tests passed locally.
 
+## Cycle 152 Result - 2026-06-07
+
+- Added `docs/rotation-trigger-fgs-policy.md` and
+  `docs/rotation-trigger-fgs-policy.json` as the checked policy packet for
+  `RotationTriggerService` special-use foreground-service behavior.
+- Added `tools/rotation_fgs_policy_check.py` plus focused backend tests so the
+  manifest permission, service type, subtype property, source safeguards,
+  Settings opt-in terms, Play declaration packet, owner evidence action, and
+  workflow wiring cannot drift silently.
+- Extended the Play App content packet with foreground-service declaration text,
+  a `foregroundServices` JSON row, the
+  `capture-foreground-service-declaration-evidence` owner action, and the
+  corrected 14-permission current coverage count.
+- Wired verify and release workflows, release metadata consistency, GitHub
+  security workflow policy, release dry-run, release signing, and supply-chain
+  docs to run the new gate before Android build work.
+- Cycle 152 verification: rotation foreground-service policy check, Play App
+  content packet check, release metadata consistency check, workflow security
+  policy check, Python compile, focused tests, and full backend tool tests
+  passed locally.
+
 ## Next Cycle
 
-Continue this same assigned project, Aura. Start Cycle 152 from the
+Continue this same assigned project, Aura. Start Cycle 153 from the
 `ROADMAP.md` Continuation State and
-`docs/research/cycle-151-2026-06-07.md`. The account
+`docs/research/cycle-152-2026-06-07.md`. The account
 deletion dry-run planner, read-only Settings identity surface, redacted
 shareable request draft, request-code lookup tool, review receipt gate, offline
 apply simulator, private executor package builder, and guarded REST executor
@@ -2366,7 +2387,10 @@ for Fastlane image paths, capture-pending status, four planned phone screenshot
 slots, feature graphic requirements, alt text, source URLs, future asset-mode
 command, and workflow wiring; Cycle 151 removed the unused boot-completed
 permission, documented that rotation triggers resume after opening Aura, and
-added a checked rotation trigger boot behavior gate.
+added a checked rotation trigger boot behavior gate; Cycle 152 added a checked
+rotation trigger foreground-service policy gate for the special-use service
+permission, manifest subtype, source safeguards, Play Console declaration
+packet, owner evidence action, and workflow wiring.
 Actual live callable invocation evidence, a live hosted HTTPS web deletion URL,
 direct RTDB rule tightening, App Check console evidence, production-project
 dry-run evidence, and owner/admin GitHub repository security-settings evidence
@@ -2379,8 +2403,7 @@ owner access is confirmed, collect owner/admin GitHub security settings
 evidence and generate the redacted receipt when access is available, or
 continue with signed release dry-run evidence capture on a suitable runner,
 the screenshot and feature-graphic pipeline for the remaining store metadata
-asset gap, rotation trigger foreground-service policy hardening,
-background-work scheduling ledgers, release artifact hardening, or the
+asset gap, background-work scheduling ledgers, release artifact hardening, or the
 next checkable backend, deploy, security, support, policy, or rules hardening
 artifact if owner-gated evidence is still unavailable.
 Commit and push completed work when the active project contract allows it.

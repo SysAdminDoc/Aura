@@ -11,6 +11,8 @@
     "docs/privacy/privacy-policy.md",
     "docs/privacy/data-safety.json",
     "docs/privacy/data-safety.md",
+    "docs/rotation-trigger-fgs-policy.json",
+    "docs/rotation-trigger-fgs-policy.md",
     "docs/privacy/ai-generation.md",
     "docs/support/community-reporting.md",
     "docs/community-block-user-policy.md",
@@ -197,6 +199,23 @@
         "declaration": "Legacy API 28-and-below storage compatibility for user-directed downloads and exports.",
         "evidenceRefs": ["docs/privacy/data-safety.md", "app/src/main/AndroidManifest.xml"]
       }
+    ],
+    "foregroundServices": [
+      {
+        "type": "specialUse",
+        "service": ".service.RotationTriggerService",
+        "permission": "android.permission.FOREGROUND_SERVICE_SPECIAL_USE",
+        "manifestSubtype": "wallpaper_rotation_triggers",
+        "functionalityDescription": "Opt-in wallpaper rotation triggers listen for device unlock and screen-off broadcasts while the foreground service is enabled by Settings toggles.",
+        "deferredImpact": "Wallpaper rotation may be delayed until network and battery constraints allow AutoWallpaperWorker to run; manual wallpaper apply remains available.",
+        "interruptedImpact": "Trigger listening stops until Aura restarts the service from Settings or app cold start; existing wallpapers remain applied and no user data is lost.",
+        "demoVideoStatus": "ownerActionRequired",
+        "evidenceRefs": [
+          "docs/rotation-trigger-fgs-policy.md",
+          "app/src/main/AndroidManifest.xml",
+          "docs/privacy/data-safety.md"
+        ]
+      }
     ]
   },
   "ownerActions": [
@@ -220,6 +239,15 @@
       "status": "ownerConfirmationRequired",
       "description": "Archive owner-visible Play Console App content answers or screenshots after submission.",
       "evidenceRefs": ["docs/distribution/play-app-content.md"]
+    },
+    {
+      "id": "capture-foreground-service-declaration-evidence",
+      "status": "requiredBeforePlayProduction",
+      "description": "Archive the Play Console foreground-service declaration row, demo video URL or internal evidence pointer, and Android 14+ smoke result for RotationTriggerService specialUse.",
+      "evidenceRefs": [
+        "docs/rotation-trigger-fgs-policy.md",
+        "docs/distribution/play-app-content.md"
+      ]
     }
   ],
   "sourceUrls": [
@@ -227,6 +255,9 @@
     "https://support.google.com/googleplay/android-developer/answer/9867159",
     "https://support.google.com/googleplay/android-developer/answer/10787469",
     "https://support.google.com/googleplay/android-developer/answer/12923286",
-    "https://support.google.com/googleplay/android-developer/answer/14094294"
+    "https://support.google.com/googleplay/android-developer/answer/14094294",
+    "https://developer.android.com/develop/background-work/services/fgs/service-types#special-use",
+    "https://developer.android.com/about/versions/14/changes/fgs-types-required",
+    "https://support.google.com/googleplay/android-developer/answer/13392821"
   ]
 }

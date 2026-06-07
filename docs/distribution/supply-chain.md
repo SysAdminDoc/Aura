@@ -29,6 +29,7 @@ Aura is side-loaded through GitHub Releases and Obtainium, so release artifacts 
 | Privacy policy link gate | `docs/privacy/privacy-policy-link.json`, `tools/privacy_policy_link_check.py`, `.github/workflows/verify.yml`, `.github/workflows/release.yml` | Fails PR/main/release checks when the public privacy-policy URL is missing from Settings, Fastlane metadata, README, release dry-run docs, or the release workflow gate. |
 | Privacy Data safety matrix | `docs/privacy/data-safety.json`, `docs/privacy/data-safety.md`, `tools/privacy_data_safety_check.py`, `.github/workflows/verify.yml`, `.github/workflows/release.yml` | Fails PR/main/release checks when manifest permissions, reviewed network endpoint IDs, source-backed local storage surfaces, or SDK dependency/data surfaces drift without matching data type, collection/sharing, retention, deletion, user-control, backup posture, and Play declaration rows. |
 | Rotation trigger boot permission | `docs/rotation-trigger-boot-behavior.json`, `docs/rotation-trigger-boot-behavior.md`, `tools/rotation_boot_permission_check.py`, `.github/workflows/verify.yml`, `.github/workflows/release.yml` | Fails PR/main/release checks when the removed boot-completed permission returns, boot receiver terms appear in app source, release disclosures claim boot scheduling, or the current rotation-trigger reboot behavior decision drifts. |
+| Rotation trigger foreground-service policy | `docs/rotation-trigger-fgs-policy.json`, `docs/rotation-trigger-fgs-policy.md`, `tools/rotation_fgs_policy_check.py`, `.github/workflows/verify.yml`, `.github/workflows/release.yml` | Fails PR/main/release checks when the special-use foreground service permission, manifest subtype, source safeguards, Play declaration packet, owner evidence action, or workflow wiring drifts. |
 | Community guidelines consent | `docs/legal/community-guidelines.md`, `tools/community_guidelines_consent_check.py`, `.github/workflows/verify.yml`, `.github/workflows/release.yml` | Fails PR/main/release checks when the guidelines doc, versioned DataStore key, consent dialog, Settings entry, community screens, repository gates, or Play packet UGC evidence drift apart. |
 | Play App content packet | `docs/distribution/play-app-content.json`, `docs/distribution/play-app-content.md`, `tools/play_app_content_packet_check.py`, `.github/workflows/verify.yml`, `.github/workflows/release.yml` | Fails PR/main/release checks when ads, app access, target audience, content rating notes, Data safety, UGC, generated content, sensitive permissions, evidence paths, source URLs, or owner actions drift from the owner-ready Play packet. |
 | Alternative-store disclosure matrix | `docs/distribution/alt-store-metadata.json`, `docs/distribution/alt-store-metadata.md`, `tools/alt_store_metadata_check.py`, `.github/workflows/verify.yml`, `.github/workflows/release.yml` | Fails PR/main/release checks when GitHub/Obtainium/Izzy/F-Droid channel status, F-Droid anti-feature notes, manifest permission disclosures, reviewed network service rows, or proprietary dependency markers drift from the current full-build decision. |
@@ -66,7 +67,7 @@ For each `v*` release:
 14. Confirm the release workflow ran `tools/provider_credential_release_check.py` after writing release `local.properties` and before `:app:assembleRelease`.
 15. Confirm the release workflow ran `tools/provider_credential_storage_check.py` before `:app:assembleRelease`.
 16. Confirm the release workflow ran `tools/cleartext_release_check.py` before `:app:assembleRelease`.
-17. Confirm the release workflow ran `tools/store_metadata_preflight.py`, `tools/store_asset_pipeline_check.py`, `tools/privacy_policy_link_check.py`, `tools/privacy_data_safety_check.py`, `tools/rotation_boot_permission_check.py`, `tools/community_guidelines_consent_check.py`, `tools/play_app_content_packet_check.py`, `tools/alt_store_metadata_check.py`, `tools/release_metadata_consistency_check.py`, and `tools/sbom_readiness_check.py` before `:app:assembleRelease`.
+17. Confirm the release workflow ran `tools/store_metadata_preflight.py`, `tools/store_asset_pipeline_check.py`, `tools/privacy_policy_link_check.py`, `tools/privacy_data_safety_check.py`, `tools/rotation_boot_permission_check.py`, `tools/rotation_fgs_policy_check.py`, `tools/community_guidelines_consent_check.py`, `tools/play_app_content_packet_check.py`, `tools/alt_store_metadata_check.py`, `tools/release_metadata_consistency_check.py`, and `tools/sbom_readiness_check.py` before `:app:assembleRelease`.
 18. Confirm the release workflow ran `tools/provider_credential_apk_scan.py` after packaging the signed APK and before release uploads.
 19. Verify the APK locally with `apksigner verify --verbose --print-certs`.
 20. Compare the local SHA-256 values to `SHA256SUMS.txt`.
@@ -102,6 +103,7 @@ python3 tools/store_asset_pipeline_check.py --policy docs/distribution/store-ass
 python3 tools/privacy_policy_link_check.py --policy docs/privacy/privacy-policy-link.json --repo-root .
 python3 tools/privacy_data_safety_check.py --policy docs/privacy/data-safety.json --repo-root .
 python3 tools/rotation_boot_permission_check.py --policy docs/rotation-trigger-boot-behavior.json --repo-root .
+python3 tools/rotation_fgs_policy_check.py --policy docs/rotation-trigger-fgs-policy.json --repo-root .
 python3 tools/community_guidelines_consent_check.py --repo-root .
 python3 tools/play_app_content_packet_check.py --policy docs/distribution/play-app-content.json --repo-root .
 python3 tools/alt_store_metadata_check.py --policy docs/distribution/alt-store-metadata.json --repo-root .
@@ -288,6 +290,7 @@ python3 tools/store_asset_pipeline_check.py --policy docs/distribution/store-ass
 python3 tools/privacy_policy_link_check.py --policy docs/privacy/privacy-policy-link.json --repo-root .
 python3 tools/privacy_data_safety_check.py --policy docs/privacy/data-safety.json --repo-root .
 python3 tools/rotation_boot_permission_check.py --policy docs/rotation-trigger-boot-behavior.json --repo-root .
+python3 tools/rotation_fgs_policy_check.py --policy docs/rotation-trigger-fgs-policy.json --repo-root .
 python3 tools/community_guidelines_consent_check.py --repo-root .
 python3 tools/play_app_content_packet_check.py --policy docs/distribution/play-app-content.json --repo-root .
 python3 tools/alt_store_metadata_check.py --policy docs/distribution/alt-store-metadata.json --repo-root .

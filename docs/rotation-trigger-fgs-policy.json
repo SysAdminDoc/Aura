@@ -1,0 +1,57 @@
+{
+  "schemaVersion": 1,
+  "policyKind": "rotationTriggerForegroundServicePolicy",
+  "status": "ownerActionRequired",
+  "docsPath": "docs/rotation-trigger-fgs-policy.md",
+  "manifestPath": "app/src/main/AndroidManifest.xml",
+  "serviceName": ".service.RotationTriggerService",
+  "serviceSource": "app/src/main/java/com/freevibe/service/RotationTriggerService.kt",
+  "settingsSources": [
+    "app/src/main/java/com/freevibe/ui/screens/settings/SettingsScreen.kt",
+    "app/src/main/java/com/freevibe/ui/screens/settings/SettingsViewModel.kt"
+  ],
+  "playPacketDocs": "docs/distribution/play-app-content.md",
+  "playPacketPolicy": "docs/distribution/play-app-content.json",
+  "foregroundServiceType": "specialUse",
+  "requiredPermissions": [
+    "android.permission.FOREGROUND_SERVICE",
+    "android.permission.FOREGROUND_SERVICE_SPECIAL_USE"
+  ],
+  "subtypeProperty": {
+    "name": "android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE",
+    "value": "wallpaper_rotation_triggers"
+  },
+  "requiredServiceTerms": [
+    "ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE",
+    "Context.RECEIVER_NOT_EXPORTED",
+    "Intent.ACTION_USER_PRESENT",
+    "Intent.ACTION_SCREEN_OFF",
+    "ExistingWorkPolicy.KEEP",
+    "OutOfQuotaPolicy.RUN_AS_NON_EXPEDITED_WORK_REQUEST",
+    "setRequiredNetworkType(NetworkType.CONNECTED)",
+    "setRequiresBatteryNotLow(true)",
+    "stopSelf()"
+  ],
+  "requiredSettingsTerms": [
+    "Change on every unlock",
+    "screen is off",
+    "RotationTriggerService.reconcile"
+  ],
+  "requiredPlayTerms": [
+    "Foreground Service Declaration",
+    "capture-foreground-service-declaration-evidence",
+    "RotationTriggerService",
+    "wallpaper_rotation_triggers",
+    "ownerActionRequired",
+    "demo video"
+  ],
+  "forbiddenManifestPermissions": [
+    "android.permission.SCHEDULE_EXACT_ALARM",
+    "android.permission.USE_EXACT_ALARM"
+  ],
+  "sourceUrls": [
+    "https://developer.android.com/develop/background-work/services/fgs/service-types#special-use",
+    "https://developer.android.com/about/versions/14/changes/fgs-types-required",
+    "https://support.google.com/googleplay/android-developer/answer/13392821"
+  ]
+}

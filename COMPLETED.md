@@ -699,6 +699,13 @@ next pass can resume quickly.
   boot permission, boot receiver source terms, or release disclosure claims
   drift from the documented "rotation triggers resume after opening Aura"
   behavior.
+- Completed Cycle 152 rotation trigger foreground-service policy gate: added
+  `docs/rotation-trigger-fgs-policy.md`,
+  `docs/rotation-trigger-fgs-policy.json`, and
+  `tools/rotation_fgs_policy_check.py` so the `specialUse`
+  `RotationTriggerService` permission, manifest subtype, source safeguards,
+  Play Console declaration packet, owner demo-video evidence action, and
+  verify/release workflow wiring stay aligned before Play production.
 
 ## 2026-06-05
 

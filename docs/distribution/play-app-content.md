@@ -27,6 +27,9 @@ Do not submit Aura to Play production until these owner actions are complete:
   content rating questionnaire using this packet.
 - `capture-play-console-app-content-receipt`: archive owner-visible App content
   answers or screenshots after submission.
+- `capture-foreground-service-declaration-evidence`: archive the Play Console
+  foreground-service declaration row, demo video URL or internal evidence
+  pointer, and Android 14+ smoke result for `RotationTriggerService`.
 
 ## Privacy Policy
 
@@ -127,7 +130,7 @@ Evidence:
 
 Current checked coverage:
 
-- 15 manifest permissions.
+- 14 manifest permissions.
 - 15 reviewed network endpoint rows.
 - 12 source-backed local storage rows.
 - 6 Gradle-marker-backed SDK rows.
@@ -186,13 +189,35 @@ Evidence:
 - `docs/support/community-reporting.md`
 - `docs/privacy/data-safety.md`
 
+## Foreground Service Declaration
+
+Aura declares foreground service types for active audio playback and opt-in
+rotation triggers. The checked special-use packet is
+[`../rotation-trigger-fgs-policy.md`](../rotation-trigger-fgs-policy.md).
+
+| Field | Aura answer |
+| --- | --- |
+| Type | `specialUse` |
+| Service | `RotationTriggerService` |
+| Manifest subtype | `wallpaper_rotation_triggers` |
+| App functionality | Opt-in wallpaper rotation triggers listen for unlock and screen-off broadcasts while enabled in Settings. |
+| Deferred impact | Rotation may happen later if network, battery, or expedited-work quota constraints delay `AutoWallpaperWorker`; manual wallpaper apply remains available. |
+| Interrupted impact | Trigger listening stops until Aura restarts the service from Settings or app cold start; existing wallpapers remain applied. |
+| Demo video status | `ownerActionRequired`; record Settings enablement, persistent notification, trigger behavior, and Settings disablement. |
+
+Evidence:
+
+- `docs/rotation-trigger-fgs-policy.md`
+- `app/src/main/AndroidManifest.xml`
+- `app/src/main/java/com/freevibe/service/RotationTriggerService.kt`
+
 ## Sensitive Permissions
 
 | Permission | Play-facing justification |
 | --- | --- |
 | `android.permission.WRITE_SETTINGS` | User-granted special access to set selected sounds as ringtone, notification, or alarm tones. |
 | `android.permission.RECORD_AUDIO` | User-started community sound recording only. |
-| `android.permission.FOREGROUND_SERVICE_SPECIAL_USE` | Opt-in wallpaper rotation triggers for screen-off and unlock. |
+| `android.permission.FOREGROUND_SERVICE_SPECIAL_USE` | Opt-in wallpaper rotation triggers for screen-off and unlock, with Play foreground-service declaration evidence required before Play production. |
 | `android.permission.POST_NOTIFICATIONS` | Foreground service and worker notifications when Android requires visible status. |
 | `android.permission.ACCESS_COARSE_LOCATION` | Optional weather wallpaper effects. |
 | `android.permission.READ_CONTACTS` | Local per-contact ringtone picker. |
@@ -209,20 +234,22 @@ behavior, retention, deletion path, and Data safety answer.
 | `publish-hosted-deletion-url` | `requiredBeforePlayProduction` | Published HTTPS URL linked from privacy/support docs and URL manifest set to `published`. |
 | `complete-live-content-rating-questionnaire` | `ownerConfirmationRequired` | Owner confirms Play Console content rating answers and resulting rating. |
 | `capture-play-console-app-content-receipt` | `ownerConfirmationRequired` | Owner archives App content answers or screenshots for release evidence. |
+| `capture-foreground-service-declaration-evidence` | `requiredBeforePlayProduction` | Owner archives the Play Console foreground-service declaration row, demo video URL or internal evidence pointer, and Android 14+ smoke result. |
 
 ## Release Checklist
 
 - Run `python3 tools/play_app_content_packet_check.py --policy docs/distribution/play-app-content.json --repo-root .`.
 - Run `python3 tools/privacy_data_safety_check.py --policy docs/privacy/data-safety.json --repo-root .`.
+- Run `python3 tools/rotation_fgs_policy_check.py --policy docs/rotation-trigger-fgs-policy.json --repo-root .`.
 - Run `python3 tools/community_guidelines_consent_check.py --repo-root .`.
 - Confirm the privacy policy URL is live and appears in the store listing,
   in-app Settings, README, Fastlane metadata, release workflow, and release
   docs.
 - Confirm every owner action in this packet is either complete or intentionally
   marked as blocking Play production.
-- Re-run this packet when permissions, provider SDKs, UGC flows, generated
-  wallpaper behavior, store metadata, target audience, or App content answers
-  change.
+- Re-run this packet when permissions, foreground-service declarations,
+  provider SDKs, UGC flows, generated wallpaper behavior, store metadata,
+  target audience, or App content answers change.
 
 ## Sources
 
@@ -236,3 +263,9 @@ behavior, retention, deletion path, and Data safety answer.
   https://support.google.com/googleplay/android-developer/answer/12923286
 - Google Play AI-generated content policy help:
   https://support.google.com/googleplay/android-developer/answer/14094294
+- Android foreground service special-use type:
+  https://developer.android.com/develop/background-work/services/fgs/service-types#special-use
+- Android 14 foreground service type requirements:
+  https://developer.android.com/about/versions/14/changes/fgs-types-required
+- Play Console foreground service declarations:
+  https://support.google.com/googleplay/android-developer/answer/13392821
