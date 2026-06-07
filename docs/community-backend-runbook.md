@@ -5,9 +5,10 @@ rules. The backend surface currently includes Firebase Realtime Database rules,
 Cloud Storage rules, a Cloud Functions scaffold with handler-backed report,
 vote, follow, block, sound upload, wallpaper upload, and profile edit
 submission, Android report, vote, follow, user-block, sound upload,
-wallpaper upload, and profile edit callable client adapters, local
-Emulator Suite tests, Functions unit tests, and a deterministic manifest of the
-files that affect backend deployment.
+wallpaper upload, and profile edit callable client adapters, checked Android
+callable wire-protocol coverage, local Emulator Suite tests, Functions unit
+tests, and a deterministic manifest of the files that affect backend
+deployment.
 
 ## Backend Manifest
 
@@ -48,6 +49,7 @@ npm ci
 npm --prefix functions ci
 py -3 tools\community_backend_manifest.py --mode check
 py -3 tools\community_callable_contract_check.py --contract docs\community-callable-contract.json
+py -3 tools\community_callable_wire_protocol_check.py --contract docs\community-callable-contract.json --protocol docs\community-callable-wire-protocol.json
 py -3 tools\community_deletion_web_url_check.py --manifest docs\support\community-account-deletion-web-url.json --repo-root .
 py -3 tools\community_deletion_web_page_check.py --page docs\support\community-account-deletion-web-page.md
 npm run test:functions
@@ -146,6 +148,8 @@ must include:
 - Backend manifest check result.
 - Callable contract manifest check result when callable policy, quota, or
   backend contract files change.
+- Callable wire-protocol manifest check result when callable policy, quota,
+  Android callable client, or Android callable test files change.
 - Functions unit test result when `functions/`, `firebase.json`, or callable
   contract files change.
 - Firebase rules test result.
@@ -180,14 +184,19 @@ must include:
 - Functions report/vote/follow/block/sound-upload/wallpaper-upload/profile-edit
   handler status from `npm run test:functions` until emulator coverage and
   Android migration replace handler-only rollout status.
-- Android report, vote, follow, user-block, and sound-upload callable adapter
-  test status from focused `CommunityCallable`, `CommunityReport`, vote
-  payload, follow payload, user-block payload, and sound-upload payload unit
-  tests until all write surfaces are callable-backed.
+- Android report, vote, follow, user-block, sound-upload, wallpaper-upload,
+  and profile-edit callable adapter test status from focused
+  `CommunityCallable`, repository, and ViewModel unit tests while compatibility
+  direct-write fallbacks remain in place.
 - RTDB-emulator-backed callable handler persistence status from
   `npm run test:functions-emulator`, currently covering profile, report, vote,
-  follow, block, sound upload, and wallpaper upload handlers, until the full
-  callable wire protocol has coverage.
+  follow, block, sound upload, and wallpaper upload handlers, until live
+  callable invocation evidence replaces handler-only rollout status.
+- Android callable wire-protocol status from
+  `tools/community_callable_wire_protocol_check.py`, currently covering report,
+  vote, follow, user-block, sound-upload, wallpaper-upload, and profile-edit
+  client method names, payload builders, request envelopes, App Check token
+  choices, operation prefixes, response resource IDs, and focused client tests.
 - Account deletion review receipt from
   `tools/community_account_deletion_review.py` before any future trusted apply
   step accepts a deletion plan.

@@ -1,0 +1,103 @@
+{
+  "schemaVersion": 1,
+  "contractKind": "communityCallableWireProtocol",
+  "androidClient": {
+    "sourcePath": "app/src/main/java/com/freevibe/data/repository/CommunityCallableClient.kt",
+    "testPath": "app/src/test/java/com/freevibe/data/repository/CommunityCallableClientTest.kt",
+    "envelopeBuilder": "buildCommunityCallableEnvelope",
+    "resultType": "CommunityCallableWriteResult"
+  },
+  "surfaces": [
+    {
+      "surfaceKey": "reports",
+      "functionName": "submitCommunityReport",
+      "quotaPolicyAccessor": "reports",
+      "androidMethod": "submitCommunityReport",
+      "payloadSchema": "CommunityReportInput",
+      "androidInputType": "CommunityReportInput",
+      "payloadBuilder": "buildCommunityReportCallablePayload",
+      "operationPrefixes": ["report"],
+      "resultResourceIdField": "reportId",
+      "consumeLimitedUseAppCheckToken": true,
+      "focusedTest": "submitCommunityReport sends envelope and limited use token request"
+    },
+    {
+      "surfaceKey": "votes",
+      "functionName": "recordCommunityVote",
+      "quotaPolicyAccessor": "votes",
+      "androidMethod": "recordCommunityVote",
+      "payloadSchema": "CommunityVoteInput",
+      "androidInputType": "String",
+      "payloadBuilder": "buildCommunityVoteCallablePayload",
+      "operationPrefixes": ["vote"],
+      "resultResourceIdField": "voteId",
+      "consumeLimitedUseAppCheckToken": false,
+      "focusedTest": "recordCommunityVote sends envelope without limited use token request"
+    },
+    {
+      "surfaceKey": "follows",
+      "functionName": "setCreatorFollow",
+      "quotaPolicyAccessor": "follows",
+      "androidMethod": "setCreatorFollow",
+      "payloadSchema": "CommunityFollowInput",
+      "androidInputType": "CommunityFollowInput",
+      "payloadBuilder": "buildCommunityFollowCallablePayload",
+      "operationPrefixes": ["follow", "unfollow"],
+      "resultResourceIdField": "creatorId",
+      "consumeLimitedUseAppCheckToken": false,
+      "focusedTest": "setCreatorFollow sends desired state without limited use token request"
+    },
+    {
+      "surfaceKey": "user_blocks",
+      "functionName": "setCommunityUserBlock",
+      "quotaPolicyAccessor": "userBlocks",
+      "androidMethod": "setCommunityUserBlock",
+      "payloadSchema": "CommunityUserBlockInput",
+      "androidInputType": "CommunityUserBlockInput",
+      "payloadBuilder": "buildCommunityUserBlockCallablePayload",
+      "operationPrefixes": ["block", "unblock"],
+      "resultResourceIdField": "blockedUid",
+      "consumeLimitedUseAppCheckToken": false,
+      "focusedTest": "setCommunityUserBlock sends block state without limited use token request"
+    },
+    {
+      "surfaceKey": "sound_uploads",
+      "functionName": "finalizeCommunitySoundUpload",
+      "quotaPolicyAccessor": "soundUploads",
+      "androidMethod": "finalizeCommunitySoundUpload",
+      "payloadSchema": "CommunitySoundUploadMetadata",
+      "androidInputType": "CommunitySoundUploadMetadataInput",
+      "payloadBuilder": "buildCommunitySoundUploadCallablePayload",
+      "operationPrefixes": ["sound_upload"],
+      "resultResourceIdField": "uploadId",
+      "consumeLimitedUseAppCheckToken": true,
+      "focusedTest": "finalizeCommunitySoundUpload sends metadata with limited use token request"
+    },
+    {
+      "surfaceKey": "wallpaper_uploads",
+      "functionName": "finalizeCommunityWallpaperUpload",
+      "quotaPolicyAccessor": "wallpaperUploads",
+      "androidMethod": "finalizeCommunityWallpaperUpload",
+      "payloadSchema": "CommunityWallpaperUploadMetadata",
+      "androidInputType": "CommunityWallpaperUploadMetadataInput",
+      "payloadBuilder": "buildCommunityWallpaperUploadCallablePayload",
+      "operationPrefixes": ["wallpaper_upload"],
+      "resultResourceIdField": "uploadId",
+      "consumeLimitedUseAppCheckToken": true,
+      "focusedTest": "finalizeCommunityWallpaperUpload sends metadata with limited use token request"
+    },
+    {
+      "surfaceKey": "profile_edits",
+      "functionName": "updateCreatorProfile",
+      "quotaPolicyAccessor": "profileEdits",
+      "androidMethod": "updateCreatorProfile",
+      "payloadSchema": "CreatorProfileUpdateInput",
+      "androidInputType": "CreatorProfileUpdateInput",
+      "payloadBuilder": "buildCreatorProfileUpdateCallablePayload",
+      "operationPrefixes": ["profile_update"],
+      "resultResourceIdField": "profileUid",
+      "consumeLimitedUseAppCheckToken": false,
+      "focusedTest": "updateCreatorProfile sends public profile with standard app check token request"
+    }
+  ]
+}

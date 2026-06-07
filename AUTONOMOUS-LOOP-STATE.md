@@ -1,8 +1,8 @@
 # Autonomous Loop State
 
 **Assigned project:** `C:\Users\--\repos\Aura`
-**Current pass:** 2026-06-07 Cycle 112 Android sound upload finalizer callable migration
-**Last commit before pass:** `4ab658e` (`feat(community): add Android user-block callable adapter`)
+**Current pass:** 2026-06-07 Cycle 115 callable wire-protocol guard
+**Last commit before pass:** `7aada6e` (`feat(community): add Android profile edit callable adapter`)
 
 ## 2026-06-05 Result
 
@@ -1437,11 +1437,37 @@
   coverage, owner-approved deploy evidence, direct RTDB rule tightening, and
   Firebase Console App Check evidence remain open.
 
+## Cycle 115 Result - 2026-06-07
+
+- Added `docs/community-callable-wire-protocol.json` as the checked Android
+  callable wire-protocol manifest for report, vote, follow, user-block, sound
+  upload finalization, wallpaper upload finalization, and profile edit writes.
+- Added `tools/community_callable_wire_protocol_check.py` to compare the wire
+  manifest against the backend callable contract and Android client source,
+  including method signatures, quota-policy accessors, payload builders, shared
+  request envelope use, operation-ID prefixes, response resource-ID mappings,
+  App Check token choices, and focused client tests.
+- Added `test/tools/community_callable_wire_protocol_check_test.py` coverage
+  for the live manifest plus missing-surface, token-choice, missing-method,
+  Android-input-type, and missing-focused-test drift cases.
+- Wired `.github/workflows/verify.yml` to run the callable wire-protocol check
+  in the Firebase backend CI lane when callable/backend files change.
+- Updated `docs/research/cycle-115-2026-06-07.md`, `ROADMAP.md`,
+  `COMPLETED.md`, `CHANGELOG.md`, backend runbook, callable quota enforcement
+  doc, and loop state.
+- Cycle 115 verification: callable wire-protocol manifest check, backend tool
+  tests, callable contract check, dependency notice lock checks, native lock
+  check, dependency overlay check, dependency license policy check,
+  high-severity Functions npm audit, diff hygiene, and attribution/ASCII scans
+  passed. Owner-approved deploy evidence, live callable invocation evidence,
+  direct RTDB rule tightening, and Firebase Console App Check evidence remain
+  open.
+
 ## Next Cycle
 
-Continue this same assigned project, Aura. Start Cycle 115 from the
+Continue this same assigned project, Aura. Start Cycle 116 from the
 `ROADMAP.md` Continuation State and
-`docs/research/cycle-114-2026-06-07.md`. The account
+`docs/research/cycle-115-2026-06-07.md`. The account
 deletion dry-run planner, read-only Settings identity surface, redacted
 shareable request draft, request-code lookup tool, review receipt gate, offline
 apply simulator, private executor package builder, and guarded REST executor
@@ -1516,12 +1542,15 @@ finalization after Storage upload with compatibility fallback only for missing
 callable endpoint or missing Firebase Auth; Cycle 114 added the Android
 profile edit callable payload/client adapter, callable-first creator profile
 updates with compatibility fallback only for missing callable endpoint or
-missing Firebase Auth, and creator profile edit UI. Full callable wire-protocol
-coverage, a live hosted HTTPS web deletion URL, and production-project dry-run
-evidence remain open. Next add full callable wire-protocol coverage when Auth
-and App Check emulator wiring is available, publish the hosted URL after owner
-approval, or run a real
-production-project Firebase executor dry-run after owner access is confirmed.
+missing Firebase Auth, and creator profile edit UI; Cycle 115 added checked
+Android callable wire-protocol coverage for all seven contracted callable
+client surfaces. Live callable invocation evidence, a live hosted HTTPS web
+deletion URL, direct RTDB rule tightening, App Check console evidence, and
+production-project dry-run evidence remain open. Next capture live callable
+invocation evidence after owner-approved deploy/App Check access is available,
+publish the hosted URL after owner approval, tighten direct RTDB write rules
+after callable deploy evidence, or run a real production-project Firebase
+executor dry-run after owner access is confirmed.
 Commit and push completed work when the active project contract allows it.
 
 ## Previous Cycle Prompt

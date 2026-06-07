@@ -16,10 +16,12 @@ submission, Cycle 109 adds the Android vote callable migration adapter, Cycle
 Android user-block callable migration adapter, Cycle 112 adds the Android
 sound upload finalizer callable migration adapter, Cycle 113 adds the Android
 wallpaper upload finalizer callable migration adapter, and Cycle 114 adds the
-Android profile edit callable migration adapter. Every exported callable now
-has a handler core and Android client adapter, while production enforcement
-still waits for full callable wire-protocol coverage, owner-approved deploy
-evidence, and App Check console evidence.
+Android profile edit callable migration adapter. Cycle 115 adds the checked
+Android callable wire-protocol manifest. Every exported callable now has a
+handler core, Android client adapter, and machine-checked Android envelope
+coverage, while production enforcement still waits for owner-approved deploy
+evidence, App Check console evidence, live callable invocation evidence, and
+direct RTDB rule tightening.
 
 ## Contract Source
 
@@ -44,6 +46,16 @@ py -3 tools\community_callable_contract_check.py --contract docs\community-calla
 `functions/src/communityContract.ts` mirrors that manifest for the Node 20
 Functions project. `functions/test/communityContract.test.cjs` fails if the
 Functions contract drifts from `docs/community-callable-contract.json`.
+
+`docs/community-callable-wire-protocol.json` is the Android-facing manifest for
+the callable client wire protocol. It maps each contracted surface to its
+Android client method, backend payload schema, Android input type, payload
+builder, operation-ID prefix, resource-ID response field, and App Check token
+selection. It is validated by:
+
+```powershell
+py -3 tools\community_callable_wire_protocol_check.py --contract docs\community-callable-contract.json --protocol docs\community-callable-wire-protocol.json
+```
 
 ## Callable Matrix
 
@@ -157,8 +169,8 @@ Cycle 100 added:
   invalid public-copy cases.
 
 Do not claim production callable enforcement until all callable surfaces have
-full callable wire-protocol coverage, Android migration code,
-owner-approved deploy evidence, and Firebase Console App Check evidence.
+owner-approved deploy evidence, live callable invocation evidence, Firebase
+Console App Check evidence, and direct RTDB rule tightening.
 
 ## Android Client Status
 
@@ -237,9 +249,21 @@ Cycle 114 added:
 - Creator profile screen edit UI that uses the repository update path and keeps
   local dashboard state in sync after a successful save.
 
+Cycle 115 added:
+
+- `docs/community-callable-wire-protocol.json` as the checked Android callable
+  wire-protocol manifest for all seven contracted community write surfaces.
+- `tools/community_callable_wire_protocol_check.py` to fail drift between the
+  backend callable contract and Android client method names, input types,
+  quota-policy accessors, payload builders, shared request envelope,
+  operation-ID prefixes, response resource-ID mappings, App Check token
+  choices, and focused client tests.
+- Backend CI execution for the wire-protocol guard before the broader backend
+  tool test sweep.
+
 Report, vote, follow, user-block, sound upload finalization, wallpaper upload
 finalization, and profile edit writes are the Android write surfaces with
-callable client code today.
+callable client code and checked Android wire-protocol coverage today.
 
 ## Request Envelope
 
@@ -315,6 +339,8 @@ response when the server provides an existing target.
 - Run `CommunityQuotaPolicyTest` after contract edits.
 - Run `tools/community_callable_contract_check.py` after any callable contract
   or deployment-manifest edit.
+- Run `tools/community_callable_wire_protocol_check.py` after any callable
+  contract or Android callable-client edit.
 - Run `npm --prefix functions test` after any Functions source or contract edit.
 - Run `npm run test:functions-emulator` after any emulator-backed handler
   persistence test or root backend script edit.

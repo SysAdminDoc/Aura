@@ -3,6 +3,7 @@
 All notable changes to Aura will be documented in this file.
 
 ## Unreleased
+- **Callable wire-protocol guard (Cycle 115)**: added a checked Android callable wire-protocol manifest and validator that keep all seven community callable client methods, payload schemas, Android input types, operation prefixes, App Check token choices, response IDs, and focused tests aligned with the backend callable contract.
 - **Android profile edit callable migration (Cycle 114)**: added Android creator profile payload normalization, extended the shared callable client for `updateCreatorProfile`, routed creator profile saves through the callable when Firebase Auth is available, and added an edit action to the creator profile screen.
 - **Android wallpaper upload finalizer callable migration (Cycle 113)**: added Android wallpaper upload metadata payload normalization, extended the shared callable client for `finalizeCommunityWallpaperUpload`, and routed post-Storage wallpaper upload metadata finalization through the callable when Firebase Auth is available.
 - **Android sound upload finalizer callable migration (Cycle 112)**: added Android sound upload metadata payload normalization, extended the shared callable client for `finalizeCommunitySoundUpload`, and routed post-Storage sound upload metadata finalization through the callable when Firebase Auth is available.

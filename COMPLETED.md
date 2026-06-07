@@ -493,6 +493,13 @@ next pass can resume quickly.
   endpoint or missing Auth compatibility, added a creator profile edit action,
   and covered the callable envelope plus ViewModel state update with focused
   unit tests.
+- Completed Cycle 115 callable wire-protocol guard: added
+  `docs/community-callable-wire-protocol.json`,
+  `tools/community_callable_wire_protocol_check.py`, and backend tool tests so
+  all seven contracted Android callable surfaces are machine-checked against
+  the backend callable contract, Android client methods, payload builders,
+  shared request envelope, App Check token choices, operation prefixes,
+  response resource IDs, and focused client tests.
 
 ## 2026-06-05
 
