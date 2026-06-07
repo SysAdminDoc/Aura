@@ -132,7 +132,7 @@ object CommunityQuotaPolicies {
         surfaceKey = "user_blocks",
         dailyLimit = 100,
         minIntervalMillis = SECOND_MILLIS,
-        dedupeKey = "blockedUid",
+        dedupeKey = "blockedUid + desired state",
         enforcement = setOf(CommunityQuotaEnforcement.APP_CHECKED_CALLABLE),
         callable = CommunityQuotaCallableContract(
             functionName = "setCommunityUserBlock",

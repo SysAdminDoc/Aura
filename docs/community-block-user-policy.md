@@ -7,7 +7,9 @@ confirmed block actions on community sound and wallpaper detail surfaces when
 the uploader identity is present. Cycle 72 adds a Settings review surface for
 blocked creators and one-tap unblock. Cycle 73 adds creator-profile and admin
 report-card block entry points backed by optional report uploader UID metadata.
-Callable-backed writes remain follow-up work.
+Cycle 97 adds the handler-backed `setCommunityUserBlock` callable with
+state-aware block/unblock dedupe; Android migration and emulator-backed
+callable coverage remain follow-up work.
 
 ## Policy
 
@@ -53,8 +55,9 @@ Reasons:
 Rules reject anonymous writes, cross-user writes, mismatched path payloads, and
 self-block rows. The current direct RTDB write is a compatibility bridge
 exposed through `CommunityBlockRepository`. The Cycle 63 callable contract
-includes `setCommunityUserBlock` so block writes can move behind Auth,
-App Check, quota, and dedupe ledgers.
+includes `setCommunityUserBlock`; Cycle 97 implements the handler core so block
+writes can move behind Auth, App Check, quota, and dedupe ledgers after Android
+migration and deploy evidence are complete.
 
 ## Runtime Behavior
 
@@ -88,8 +91,8 @@ App Check, quota, and dedupe ledgers.
 
 ## Remaining Work
 
-- Move block/unblock writes to `setCommunityUserBlock` and then tighten direct
-  RTDB writes.
+- Add Emulator Suite coverage and Android callable migration for
+  `setCommunityUserBlock`, then tighten direct RTDB writes.
 - Decide account-deletion cleanup for outbound blocks and inbound reverse
   indexes.
 

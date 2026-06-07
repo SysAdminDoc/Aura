@@ -52,14 +52,19 @@
       "sha256": "801fc6e8bab4b392ef5f4a9069ad1fc99024f969c93c29ecbf9b2dd0c4669590"
     },
     {
+      "bytes": 11000,
+      "path": "functions/src/blockHandler.ts",
+      "sha256": "3bf1d49b6c1b8f648afcf9155ef2d44f91554de74a2e470cd7b78835d8ec1781"
+    },
+    {
       "bytes": 1249,
       "path": "functions/src/callableScaffold.ts",
       "sha256": "0e24830e6f9ee6c37845ab7ef0f73826374c9d4ab6cb57bd53cdc8fbdff484f1"
     },
     {
-      "bytes": 6678,
+      "bytes": 6694,
       "path": "functions/src/communityContract.ts",
-      "sha256": "0cf4f109f9b8b487b6a723e983fd66e27f4dd4775c60364508bff22c15bf6eaa"
+      "sha256": "8df911b2dbb979969a327964d38050da78c630d84c67ea79db07f8294da5a907"
     },
     {
       "bytes": 9976,
@@ -67,9 +72,9 @@
       "sha256": "1dc72892e9fc042b2c97b769c499ffeb771fd3b5a6e16047bb53cd84f358e74b"
     },
     {
-      "bytes": 1200,
+      "bytes": 1221,
       "path": "functions/src/index.ts",
-      "sha256": "a22ffd1f5e6cb26f33046a36a5d39dce14064d359e2964bbe8331fce559abae0"
+      "sha256": "ec3cabc5bcab92d0eaff8e3ae840ff95c979299a6ca0fe161ec7786ef8970c22"
     },
     {
       "bytes": 5421,

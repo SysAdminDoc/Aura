@@ -3,6 +3,7 @@
 All notable changes to Aura will be documented in this file.
 
 ## Unreleased
+- **Community block callable handler (Cycle 97)**: implemented the `setCommunityUserBlock` Functions handler with Auth/App Check enforcement, block/unblock payload normalization, state-aware dedupe keys, private and reverse-index writes, and focused unit coverage.
 - **Creator follow callable handler (Cycle 96)**: implemented the `setCreatorFollow` Functions handler with Auth/App Check enforcement, follow/unfollow payload normalization, state-aware dedupe keys, no-op idempotency, UTC quota reservation, and focused unit coverage.
 - **Community vote callable handler (Cycle 95)**: implemented the `recordCommunityVote` Functions handler with Auth/App Check enforcement, vote-key normalization, existing-voter idempotency, UTC quota reservation, dedupe handling, and focused unit coverage.
 - **Community report callable handler (Cycle 94)**: implemented the `submitCommunityReport` Functions handler core with Auth/App Check identity enforcement, server-derived reporter UID, HTTPS/source validation, UTC quota reservation, dedupe handling, and focused unit coverage.

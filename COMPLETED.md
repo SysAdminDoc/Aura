@@ -371,6 +371,16 @@ next pass can resume quickly.
   final follow-row set/remove writes, and focused Functions tests for accepted
   follow, accepted unfollow, duplicate no-ops, same-state dedupe, cooldown,
   daily-limit, unauthenticated, missing-App-Check, and invalid payload paths.
+- Completed Cycle 97 community block callable handler: refined the block dedupe
+  contract from blocked-user-only to blocked-user-plus-desired-state,
+  implemented `setCommunityUserBlock` handler logic with Firebase Auth/App
+  Check identity enforcement, block/unblock payload normalization, self-block
+  and blocker-override rejection, no-op state idempotency before quota
+  reservation, UTC quota checks, action-specific dedupe handling, private block
+  row and admin reverse-index set/remove writes, and focused Functions tests
+  for accepted block, accepted unblock, duplicate no-ops, same-state dedupe,
+  cooldown, daily-limit, unauthenticated, missing-App-Check, and invalid
+  payload paths.
 
 ## 2026-06-05
 

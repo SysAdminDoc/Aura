@@ -5,7 +5,8 @@ functions. Cycle 93 adds the first checked Cloud Functions project scaffold,
 Cycle 94 adds the first handler-backed callable for community reports, and
 Cycle 95 adds the handler-backed vote callable. Cycle 96 adds the
 handler-backed creator follow callable and refines follow dedupe to include the
-desired state. The remaining exported
+desired state. Cycle 97 adds the handler-backed user block callable and
+refines user-block dedupe to include the desired state. The remaining exported
 callables currently fail closed until each surface has a write handler and
 emulator-backed tests; this document is the implementation contract that the
 backend and Android repository migration must follow.
@@ -98,10 +99,21 @@ Cycle 96 added:
   unfollow, no-op duplicates, same-state dedupe, cooldown, daily-limit,
   unauthenticated, missing-App-Check, and invalid payload cases.
 
-Do not claim production callable enforcement until the report, vote, and follow
-handlers have Emulator Suite coverage, Android migration code, owner-approved
-deploy evidence, and Firebase Console App Check evidence. The four
-non-report/non-vote/non-follow exports remain fail-closed.
+Cycle 97 added:
+
+- `functions/src/blockHandler.ts` implements `setCommunityUserBlock` handler
+  logic with block/unblock payload normalization, server-derived blocker UID,
+  self-block rejection, no-op state idempotency before quota reservation,
+  action-specific dedupe keys, UTC quota checks, and private block plus admin
+  reverse-index set/remove writes.
+- `functions/test/setCommunityUserBlock.test.cjs` covers accepted block,
+  accepted unblock, no-op duplicates, same-state dedupe, cooldown, daily-limit,
+  unauthenticated, missing-App-Check, and invalid payload cases.
+
+Do not claim production callable enforcement until the report, vote, follow,
+and block handlers have Emulator Suite coverage, Android migration code,
+owner-approved deploy evidence, and Firebase Console App Check evidence. The
+three non-report/non-vote/non-follow/non-block exports remain fail-closed.
 
 ## Request Envelope
 

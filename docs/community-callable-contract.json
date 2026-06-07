@@ -101,7 +101,7 @@
       "surfaceKey": "user_blocks",
       "dailyLimit": 100,
       "minIntervalMillis": 1000,
-      "dedupeKey": "blockedUid",
+      "dedupeKey": "blockedUid + desired state",
       "enforcement": ["APP_CHECKED_CALLABLE"],
       "quotaLedgerPath": "/community_write_quotas/{uid}/{yyyyMMdd}/user_blocks",
       "dedupeLedgerPath": "/community_write_dedupe/{uid}/user_blocks/{dedupeKey}",

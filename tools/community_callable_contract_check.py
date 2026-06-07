@@ -77,7 +77,7 @@ EXPECTED_SURFACES: dict[str, dict[str, Any]] = {
     "user_blocks": {
         "dailyLimit": 100,
         "minIntervalMillis": 1000,
-        "dedupeKey": "blockedUid",
+        "dedupeKey": "blockedUid + desired state",
         "enforcement": ["APP_CHECKED_CALLABLE"],
         "functionName": "setCommunityUserBlock",
         "payloadSchema": "CommunityUserBlockInput",

@@ -1,5 +1,6 @@
 import { getApps, initializeApp } from "firebase-admin/app";
 
+import { createSetCommunityUserBlockCallable } from "./blockHandler";
 import { createFailClosedCommunityCallable } from "./callableScaffold";
 import { surfaceByFunctionName } from "./communityContract";
 import { createSetCreatorFollowCallable } from "./followHandler";
@@ -19,9 +20,7 @@ export const finalizeCommunityWallpaperUpload = createFailClosedCommunityCallabl
 );
 export const recordCommunityVote = createRecordCommunityVoteCallable();
 export const setCreatorFollow = createSetCreatorFollowCallable();
-export const setCommunityUserBlock = createFailClosedCommunityCallable(
-  surfaceByFunctionName("setCommunityUserBlock"),
-);
+export const setCommunityUserBlock = createSetCommunityUserBlockCallable();
 export const updateCreatorProfile = createFailClosedCommunityCallable(
   surfaceByFunctionName("updateCreatorProfile"),
 );

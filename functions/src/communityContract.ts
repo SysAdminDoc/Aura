@@ -129,7 +129,7 @@ export const COMMUNITY_CALLABLE_SURFACES: readonly CommunityCallableSurface[] = 
     surfaceKey: "user_blocks",
     dailyLimit: 100,
     minIntervalMillis: SECOND_MILLIS,
-    dedupeKey: "blockedUid",
+    dedupeKey: "blockedUid + desired state",
     enforcement: ["APP_CHECKED_CALLABLE"],
     quotaLedgerPath: "/community_write_quotas/{uid}/{yyyyMMdd}/user_blocks",
     dedupeLedgerPath: "/community_write_dedupe/{uid}/user_blocks/{dedupeKey}",
