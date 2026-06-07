@@ -1,8 +1,8 @@
 # Autonomous Loop State
 
 **Assigned project:** `C:\Users\--\repos\Aura`
-**Current pass:** 2026-06-07 Cycle 97 community block callable handler
-**Last commit before pass:** `84c89fd` (`feat(community): add follow callable handler`)
+**Current pass:** 2026-06-07 Cycle 98 community sound upload callable handler
+**Last commit before pass:** `c21421b` (`feat(community): add block callable handler`)
 
 ## 2026-06-05 Result
 
@@ -1002,10 +1002,37 @@
   migration, owner-approved deploy evidence, direct RTDB rule tightening, and
   Firebase Console App Check evidence remain open.
 
+## Cycle 98 Result - 2026-06-07
+
+- Added `functions/src/soundUploadHandler.ts` and switched
+  `finalizeCommunitySoundUpload` from fail-closed scaffold to a handler-backed
+  callable.
+- The handler requires Firebase Auth and App Check, rejects client-supplied
+  owner/uploader/upload ID/timestamp/vote overrides, validates the common
+  envelope, normalizes sound upload metadata, requires an authenticated-owner
+  `sounds/{uid}/...` Storage path, derives storage-path dedupe server-side,
+  checks UTC quota, allocates the public upload ID server-side, and writes both
+  `/community_sounds/{uploadId}` and
+  `/owner_uploads/{uid}/sounds/{uploadId}` with a server-owned dedupe marker.
+- Added `functions/test/finalizeCommunitySoundUpload.test.cjs` for accepted
+  finalization, active storage-path dedupe, cooldown, daily-limit,
+  unauthenticated, missing-App-Check, and invalid ownership/payload paths.
+- Refreshed `docs/community-backend-manifest.json`.
+- Updated `docs/research/cycle-98-2026-06-07.md`,
+  `docs/community-callable-quota-enforcement.md`,
+  `docs/community-quota-rate-limits.md`,
+  `docs/community-backend-runbook.md`, `ROADMAP.md`, `COMPLETED.md`, and
+  `CHANGELOG.md`.
+- Cycle 98 verification: Functions test suite, backend manifest check,
+  callable contract manifest check, high-severity npm audit, diff hygiene, and
+  attribution/ASCII scans. Emulator-backed callable invocation, Android sound
+  upload migration, owner-approved deploy evidence, direct RTDB rule
+  tightening, and Firebase Console App Check evidence remain open.
+
 ## Next Cycle
 
-Continue this same assigned project, Aura. Start Cycle 98 from the `ROADMAP.md`
-Continuation State and `docs/research/cycle-97-2026-06-07.md`. The account
+Continue this same assigned project, Aura. Start Cycle 99 from the `ROADMAP.md`
+Continuation State and `docs/research/cycle-98-2026-06-07.md`. The account
 deletion dry-run planner, read-only Settings identity surface, redacted
 shareable request draft, request-code lookup tool, review receipt gate, offline
 apply simulator, private executor package builder, and guarded REST executor
@@ -1034,16 +1061,20 @@ handler-backed `setCreatorFollow` callable with focused follow/unfollow
 idempotency, action-specific dedupe, quota, Auth, App Check, and payload
 validation tests; Cycle 97 added the handler-backed `setCommunityUserBlock`
 callable with focused block/unblock idempotency, action-specific dedupe, quota,
-Auth, App Check, and payload validation tests. Emulator-backed callable
-invocation, Android callable migration, a live hosted HTTPS web deletion URL,
-and production-project dry-run evidence remain open. Next add emulator-backed
+Auth, App Check, and payload validation tests; Cycle 98 added the
+handler-backed `finalizeCommunitySoundUpload` callable with focused metadata
+normalization, storage-path ownership, storage-path dedupe, quota, Auth, App
+Check, and payload validation tests. Emulator-backed callable invocation,
+Android callable migration, a live hosted HTTPS web deletion URL, and
+production-project dry-run evidence remain open. Next add emulator-backed
 coverage for `submitCommunityReport`, `recordCommunityVote`,
-`setCreatorFollow`, and `setCommunityUserBlock`, add Android
-report/vote/follow/block callable repository adapters, implement the next real
-callable write handler, publish the hosted URL after owner approval, or run a
-real production-project Firebase executor dry-run after owner access is
-confirmed. Commit and push completed work when the active project contract
-allows it.
+`setCreatorFollow`, `setCommunityUserBlock`, and
+`finalizeCommunitySoundUpload`, add Android report/vote/follow/block/sound
+upload callable repository adapters, implement the next real callable write
+handler for wallpaper upload finalization or profile edits, publish the hosted
+URL after owner approval, or run a real production-project Firebase executor
+dry-run after owner access is confirmed. Commit and push completed work when
+the active project contract allows it.
 
 ## Previous Cycle Prompt
 

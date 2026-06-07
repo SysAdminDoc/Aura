@@ -3,7 +3,7 @@
 > Open-source Android personalization: wallpapers, video wallpapers, ringtones, sounds.
 > Stay the OSS alternative to Zedge: no ads, no surprise charges, no dark patterns.
 
-**Version:** 2026-06-07-cycle97-roadmap (added community block callable handler).
+**Version:** 2026-06-07-cycle98-roadmap (added community sound upload callable handler).
 **Code version at write:** v6.31.1 / versionCode 112 (per `app/build.gradle.kts`; release/lint Gradle runs are memory-heavy on this Windows workstation, so rerun APK compilation only when explicitly needed).
 **Charter:** personalization, AMOLED-first, free-by-default, multi-source content aggregation, community-fed catalog, polite live wallpapers (battery-aware, pause-on-invisible).
 
@@ -3060,6 +3060,7 @@ Stars/dates as of research pass 2026-05-16.
 
 ## Appendix BR - Cycles 68-97 Sources
 
+- Cycle 98 implementation record - [docs/research/cycle-98-2026-06-07.md](docs/research/cycle-98-2026-06-07.md).
 - Cycle 97 implementation record - [docs/research/cycle-97-2026-06-07.md](docs/research/cycle-97-2026-06-07.md).
 - Cycle 96 implementation record - [docs/research/cycle-96-2026-06-07.md](docs/research/cycle-96-2026-06-07.md).
 - Cycle 95 implementation record - [docs/research/cycle-95-2026-06-07.md](docs/research/cycle-95-2026-06-07.md).
@@ -3095,17 +3096,17 @@ Stars/dates as of research pass 2026-05-16.
 - Community callable contract manifest - [docs/community-callable-contract.json](docs/community-callable-contract.json).
 - Official sources - [Google Play User Generated Content policy](https://support.google.com/googleplay/android-developer/answer/9876937), [Google Play moderation requirements](https://support.google.com/googleplay/android-developer/answer/12923286), [Google Play account deletion requirements](https://support.google.com/googleplay/android-developer/answer/13327111), [Firebase Realtime Database Android read/write/delete](https://firebase.google.com/docs/database/android/read-and-write), [Firebase Realtime Database Security Rules](https://firebase.google.com/docs/database/security), [Firebase Auth delete users](https://firebase.google.com/docs/auth/android/manage-users#delete_a_user), and [Firebase Storage delete files](https://firebase.google.com/docs/storage/android/delete-files).
 - Block-user/account-deletion implementation - `CommunityIdentityProvider.kt`, `CommunityDeletionRequest.kt`, `CommunityBlockRepository.kt`, `CommunityBlockPolicy.kt`, `CommunityReport.kt`, `CommunityReportRepository.kt`, `UploadRepository.kt`, `WallpaperUploadRepository.kt`, `CreatorProfileRepository.kt`, `CommunityReportsScreen.kt`, `CreatorProfileScreen.kt`, `SoundDetailScreen.kt`, `WallpaperDetailScreen.kt`, `SoundsViewModel.kt`, `WallpapersViewModel.kt`, `SettingsScreen.kt`, `SettingsViewModel.kt`, `docs/privacy/privacy-policy.md`, `docs/support/community-account-deletion-web-page.md`, `docs/support/community-account-deletion-web-url.json`, `docs/community-callable-contract.json`, `tools/community_callable_contract_check.py`, `tools/community_account_deletion_plan.py`, `tools/community_deletion_request_lookup.py`, `tools/community_deletion_web_intake.py`, `tools/community_deletion_web_page_check.py`, `tools/community_deletion_web_url_check.py`, `tools/community_account_deletion_review.py`, `tools/community_account_deletion_apply_simulator.py`, `tools/community_account_deletion_executor_package.py`, `tools/community_account_deletion_rest_executor.py`, `tools/community_account_deletion_completion_receipt.py`, `tools/community_account_deletion_cleanup_sequence.py`, `tools/community_account_deletion_auth_package.py`, `tools/community_account_deletion_auth_execution_receipt.py`, `tools/community_account_deletion_upload_plan.py`, `tools/community_account_deletion_upload_execution_receipt.py`, and backend tool tests.
-- Verification outputs - focused `CommunityBlockPolicyTest`, `CreatorProfileRepositoryTest`, `CommunityReportTest`, `CommunityReportsViewModelTest`, `CreatorProfileViewModelTest`, `SoundsViewModelTest`, `WallpapersViewModelTest`, `CommunityPolicyCopyTest`, `CommunityIdentityProviderTest`, and `SettingsViewModelTest` passed locally; Cycle 73 Firebase rules verification passed locally; Cycle 74/Cycle 77/Cycle 78/Cycle 79/Cycle 80/Cycle 81/Cycle 82/Cycle 83/Cycle 84/Cycle 86/Cycle 87/Cycle 88/Cycle 89/Cycle 90/Cycle 91/Cycle 92 backend tool tests passed locally; Cycle 93/Cycle 94/Cycle 95/Cycle 96/Cycle 97 Functions tests, backend manifest checks, and callable contract checks passed locally; Cycle 85 focused Android identity/settings tests passed locally.
+- Verification outputs - focused `CommunityBlockPolicyTest`, `CreatorProfileRepositoryTest`, `CommunityReportTest`, `CommunityReportsViewModelTest`, `CreatorProfileViewModelTest`, `SoundsViewModelTest`, `WallpapersViewModelTest`, `CommunityPolicyCopyTest`, `CommunityIdentityProviderTest`, and `SettingsViewModelTest` passed locally; Cycle 73 Firebase rules verification passed locally; Cycle 74/Cycle 77/Cycle 78/Cycle 79/Cycle 80/Cycle 81/Cycle 82/Cycle 83/Cycle 84/Cycle 86/Cycle 87/Cycle 88/Cycle 89/Cycle 90/Cycle 91/Cycle 92 backend tool tests passed locally; Cycle 93/Cycle 94/Cycle 95/Cycle 96/Cycle 97/Cycle 98 Functions tests, backend manifest checks, and callable contract checks passed locally; Cycle 85 focused Android identity/settings tests passed locally.
 
 ## Continuation State
 
 ### Last Completed Cycle
 
-Cycle 97: added the handler-backed `setCommunityUserBlock` callable with block/unblock state idempotency, action-specific dedupe, private block/reverse-index writes, and identity tests.
+Cycle 98: added the handler-backed `finalizeCommunitySoundUpload` callable with server-allocated upload IDs, sound metadata normalization, storage-path owner checks, storage-path dedupe, public metadata writes, owner-index writes, and identity/quota tests.
 
 ### Current Focus
 
-Start Cycle 98 with emulator-backed coverage for `submitCommunityReport`, `recordCommunityVote`, `setCreatorFollow`, and `setCommunityUserBlock`, Android callable migration adapters for reports/votes/follows/blocks, the next real Cloud Functions write handler, a real hosted HTTPS deletion request URL after owner publication, or a production-project Firebase executor dry-run after owner access is confirmed. Continue backend enforcement work until community uploads, reports, votes, follows, blocks, shares, and deletion requests have deployable rules, test coverage, CI gates, operational runbooks, and user-facing policy surfaces. Commit and push completed work when the active project contract allows it.
+Start Cycle 99 with emulator-backed coverage for `submitCommunityReport`, `recordCommunityVote`, `setCreatorFollow`, `setCommunityUserBlock`, and `finalizeCommunitySoundUpload`, Android callable migration adapters for reports/votes/follows/blocks/sound upload finalization, the next real Cloud Functions write handler for wallpaper upload or profile edits, a real hosted HTTPS deletion request URL after owner publication, or a production-project Firebase executor dry-run after owner access is confirmed. Continue backend enforcement work until community uploads, reports, votes, follows, blocks, shares, and deletion requests have deployable rules, test coverage, CI gates, operational runbooks, and user-facing policy surfaces. Commit and push completed work when the active project contract allows it.
 
 ### Previous Focus
 
@@ -3113,7 +3114,8 @@ Start Cycle 67 with deletion retention/tombstone policy, block-user policy, a re
 
 ### Important Findings So Far
 
-- `ROADMAP.md` has Cycle 18 through Cycle 97 research/implementation items; `docs/research/cycle-18-2026-06-06.md` through `docs/research/cycle-97-2026-06-07.md` have the source-backed analysis.
+- `ROADMAP.md` has Cycle 18 through Cycle 98 research/implementation items; `docs/research/cycle-18-2026-06-06.md` through `docs/research/cycle-98-2026-06-07.md` have the source-backed analysis.
+- Cycle 98 added the handler-backed `finalizeCommunitySoundUpload` callable. The remaining fail-closed callable handler exports are `finalizeCommunityWallpaperUpload` and `updateCreatorProfile`; report, vote, follow, block, and sound upload handlers still need emulator-backed callable coverage, Android migration, deploy evidence, App Check console evidence, and direct RTDB rule tightening before production enforcement claims.
 - `LicensesScreen.kt` still has manual dependency rows; content sources are already code-backed by `ProviderDisclosure.kt`.
 - `.github/workflows/release.yml` now publishes `THIRD-PARTY-NOTICES.md` and `NATIVE-COMPLIANCE.md` with the APK and includes both files in `SHA256SUMS.txt`; SBOM artifacts remain open.
 - `.github/workflows/verify.yml` and `.github/workflows/release.yml` now run `tools/dependency_notice_lock.py --mode check`, `tools/dependency_notice_lock.py --mode check-metadata`, `tools/native_compliance_inventory.py --mode check-lock`, `tools/dependency_overlay_check.py`, and `tools/dependency_license_policy.py` after `:app:releaseOssLicensesTask`.

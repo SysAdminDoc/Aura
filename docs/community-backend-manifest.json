@@ -72,9 +72,9 @@
       "sha256": "1dc72892e9fc042b2c97b769c499ffeb771fd3b5a6e16047bb53cd84f358e74b"
     },
     {
-      "bytes": 1221,
+      "bytes": 1255,
       "path": "functions/src/index.ts",
-      "sha256": "ec3cabc5bcab92d0eaff8e3ae840ff95c979299a6ca0fe161ec7786ef8970c22"
+      "sha256": "5a520326f2dcbe1476766a7cb2cd4296a88c710790b913514bf8115b2b6fa65e"
     },
     {
       "bytes": 5421,
@@ -85,6 +85,11 @@
       "bytes": 11195,
       "path": "functions/src/reportHandler.ts",
       "sha256": "edf32b224da730756e21862b21952a325f04c822672199e4e97d09a9d750702e"
+    },
+    {
+      "bytes": 16570,
+      "path": "functions/src/soundUploadHandler.ts",
+      "sha256": "8725200534fc5f4470b49804e0eed08a94eacea26cf34084d6c3ea28eb30e4eb"
     },
     {
       "bytes": 9501,

@@ -9,10 +9,11 @@ engine. Cycle 94 adds the first handler-backed callable for community reports.
 Cycle 95 adds the handler-backed vote callable. Cycle 96 adds the
 handler-backed follow callable and refines follow dedupe to include the desired
 state. Cycle 97 adds the handler-backed user-block callable and refines block
-dedupe to include the desired state. This design does not claim production
-enforcement until emulator-backed callable coverage, Android migration,
-owner-approved deploy evidence, and Firebase Console App Check enforcement are
-complete.
+dedupe to include the desired state. Cycle 98 adds the handler-backed sound
+upload finalizer with storage-path dedupe and owner-index writes. This design
+does not claim production enforcement until emulator-backed callable coverage,
+Android migration, owner-approved deploy evidence, and Firebase Console App
+Check enforcement are complete.
 
 ## Goals
 
@@ -92,8 +93,9 @@ Admin SDK job should own ledger updates.
 
 - Add Emulator Suite coverage and Android migration for
   `submitCommunityReport`, `recordCommunityVote`, `setCreatorFollow`, and
-  `setCommunityUserBlock`, then implement the remaining callable write handlers
-  from the Cycle 63 callable contract.
+  `setCommunityUserBlock`, add Emulator Suite coverage and Android migration for
+  `finalizeCommunitySoundUpload`, then implement the remaining callable write
+  handlers from the Cycle 63 callable contract.
 - Keep quota reset days on the manifest-pinned UTC boundary unless the backend
   deployment config deliberately changes it with policy review.
 - Decide whether blocked quota attempts should create private moderation events.

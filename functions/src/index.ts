@@ -5,6 +5,7 @@ import { createFailClosedCommunityCallable } from "./callableScaffold";
 import { surfaceByFunctionName } from "./communityContract";
 import { createSetCreatorFollowCallable } from "./followHandler";
 import { createSubmitCommunityReportCallable } from "./reportHandler";
+import { createFinalizeCommunitySoundUploadCallable } from "./soundUploadHandler";
 import { createRecordCommunityVoteCallable } from "./voteHandler";
 
 if (getApps().length === 0) {
@@ -12,9 +13,7 @@ if (getApps().length === 0) {
 }
 
 export const submitCommunityReport = createSubmitCommunityReportCallable();
-export const finalizeCommunitySoundUpload = createFailClosedCommunityCallable(
-  surfaceByFunctionName("finalizeCommunitySoundUpload"),
-);
+export const finalizeCommunitySoundUpload = createFinalizeCommunitySoundUploadCallable();
 export const finalizeCommunityWallpaperUpload = createFailClosedCommunityCallable(
   surfaceByFunctionName("finalizeCommunityWallpaperUpload"),
 );

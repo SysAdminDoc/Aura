@@ -6,10 +6,11 @@ Cycle 94 adds the first handler-backed callable for community reports, and
 Cycle 95 adds the handler-backed vote callable. Cycle 96 adds the
 handler-backed creator follow callable and refines follow dedupe to include the
 desired state. Cycle 97 adds the handler-backed user block callable and
-refines user-block dedupe to include the desired state. The remaining exported
-callables currently fail closed until each surface has a write handler and
-emulator-backed tests; this document is the implementation contract that the
-backend and Android repository migration must follow.
+refines user-block dedupe to include the desired state. Cycle 98 adds the
+handler-backed sound upload finalizer. The remaining exported callables
+currently fail closed until each surface has a write handler and emulator-backed
+tests; this document is the implementation contract that the backend and
+Android repository migration must follow.
 
 ## Contract Source
 
@@ -110,10 +111,22 @@ Cycle 97 added:
   accepted unblock, no-op duplicates, same-state dedupe, cooldown, daily-limit,
   unauthenticated, missing-App-Check, and invalid payload cases.
 
+Cycle 98 added:
+
+- `functions/src/soundUploadHandler.ts` implements
+  `finalizeCommunitySoundUpload` handler logic with server-derived uploader
+  UID, server-allocated upload IDs, sound metadata normalization, Storage path
+  ownership checks under `sounds/{uid}/...`, HTTPS URL validation, UTC quota
+  checks, storage-path dedupe, and final public metadata plus owner-index
+  writes.
+- `functions/test/finalizeCommunitySoundUpload.test.cjs` covers accepted
+  finalization, active storage-path dedupe, cooldown, daily-limit,
+  unauthenticated, missing-App-Check, and invalid ownership/payload cases.
+
 Do not claim production callable enforcement until the report, vote, follow,
-and block handlers have Emulator Suite coverage, Android migration code,
-owner-approved deploy evidence, and Firebase Console App Check evidence. The
-three non-report/non-vote/non-follow/non-block exports remain fail-closed.
+block, and sound upload handlers have Emulator Suite coverage, Android
+migration code, owner-approved deploy evidence, and Firebase Console App Check
+evidence. The wallpaper upload and profile edit exports remain fail-closed.
 
 ## Request Envelope
 

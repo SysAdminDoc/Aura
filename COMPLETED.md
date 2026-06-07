@@ -381,6 +381,15 @@ next pass can resume quickly.
   for accepted block, accepted unblock, duplicate no-ops, same-state dedupe,
   cooldown, daily-limit, unauthenticated, missing-App-Check, and invalid
   payload paths.
+- Completed Cycle 98 community sound upload callable handler: implemented
+  `finalizeCommunitySoundUpload` handler logic with Firebase Auth/App Check
+  identity enforcement, server-allocated upload IDs, sound metadata
+  normalization, Storage path ownership checks under `sounds/{uid}/...`, HTTPS
+  URL validation, storage-path dedupe, UTC quota checks, public
+  `/community_sounds/{uploadId}` metadata writes, private
+  `/owner_uploads/{uid}/sounds/{uploadId}` index writes, and focused Functions
+  tests for accepted finalization, active dedupe, cooldown, daily-limit,
+  unauthenticated, missing-App-Check, and invalid ownership/payload paths.
 
 ## 2026-06-05
 
