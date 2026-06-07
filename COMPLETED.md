@@ -436,6 +436,11 @@ next pass can resume quickly.
   for `setCommunityUserBlockHandler`, and verified private block rows,
   reverse-index rows, unblock removals, quota, dedupe, and missing-unblock
   idempotency through the RTDB emulator.
+- Completed Cycle 106 sound upload callable emulator coverage: added
+  `test/firebase/functions.sound-upload.test.mjs`, default real-backend
+  invocation for `finalizeCommunitySoundUploadHandler`, and verified public
+  metadata, owner index, quota, storage-path dedupe, and duplicate upload
+  idempotency through the RTDB emulator.
 
 ## 2026-06-05
 

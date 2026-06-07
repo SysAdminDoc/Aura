@@ -120,7 +120,7 @@ export function createFinalizeCommunitySoundUploadCallable(backend = new Firebas
 
 export async function finalizeCommunitySoundUploadHandler(
   request: CallableRequestLike,
-  backend: SoundUploadBackend,
+  backend: SoundUploadBackend = new FirebaseSoundUploadBackend(),
 ) {
   const uid = requireCallableIdentity(request, SOUND_UPLOAD_SURFACE);
   const nowMillis = backend.nowMillis();

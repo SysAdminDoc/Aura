@@ -149,10 +149,9 @@ Cycle 100 added:
   daily-limit, unauthenticated, missing-App-Check, UID/timestamp override, and
   invalid public-copy cases.
 
-Do not claim production callable enforcement until the sound upload and
-wallpaper upload handlers have Emulator Suite coverage and all callable
-surfaces have Android migration code, owner-approved deploy evidence, and
-Firebase Console App Check evidence.
+Do not claim production callable enforcement until the wallpaper upload handler
+has Emulator Suite coverage and all callable surfaces have Android migration
+code, owner-approved deploy evidence, and Firebase Console App Check evidence.
 
 ## Request Envelope
 

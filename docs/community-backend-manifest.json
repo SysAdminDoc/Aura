@@ -92,9 +92,9 @@
       "sha256": "33fe58e7aef5142bee5c502b647d598c7b393580b34beb71ddc81be5465a1793"
     },
     {
-      "bytes": 16570,
+      "bytes": 16605,
       "path": "functions/src/soundUploadHandler.ts",
-      "sha256": "8725200534fc5f4470b49804e0eed08a94eacea26cf34084d6c3ea28eb30e4eb"
+      "sha256": "893bdcba32ef8419154efeafe16778cdfc763c75dc019643600092b7a3b6aac7"
     },
     {
       "bytes": 9529,

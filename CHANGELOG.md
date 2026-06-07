@@ -3,6 +3,7 @@
 All notable changes to Aura will be documented in this file.
 
 ## Unreleased
+- **Sound upload callable emulator coverage (Cycle 106)**: added RTDB-emulator-backed `finalizeCommunitySoundUpload` handler coverage for public metadata, owner index, quota, storage-path dedupe, and duplicate upload idempotency through the real Admin SDK backend.
 - **User block callable emulator coverage (Cycle 105)**: added RTDB-emulator-backed `setCommunityUserBlock` handler coverage for private block rows, reverse-index rows, unblock removals, quota, dedupe, and no-op idempotency through the real Admin SDK backend.
 - **Follow callable emulator coverage (Cycle 104)**: added RTDB-emulator-backed `setCreatorFollow` handler coverage for follow writes, unfollow removals, quota, dedupe, and no-op idempotency through the real Admin SDK backend.
 - **Vote callable emulator coverage (Cycle 103)**: added RTDB-emulator-backed `recordCommunityVote` handler coverage for vote tally, nested and legacy voter markers, quota, dedupe, and repeat-vote idempotency through the real Admin SDK backend.
