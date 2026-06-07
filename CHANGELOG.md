@@ -3,6 +3,7 @@
 All notable changes to Aura will be documented in this file.
 
 ## Unreleased
+- **Android report callable migration (Cycle 108)**: added the Android Cloud Functions client dependency, a shared callable request/response adapter, limited-use App Check token selection for report submissions, callable report payload tests, and callable-first report submission with a compatibility fallback while deploy evidence is pending.
 - **Wallpaper upload callable emulator coverage (Cycle 107)**: added RTDB-emulator-backed `finalizeCommunityWallpaperUpload` handler coverage for public metadata, owner index, quota, storage-path dedupe, and duplicate upload idempotency through the real Admin SDK backend.
 - **Sound upload callable emulator coverage (Cycle 106)**: added RTDB-emulator-backed `finalizeCommunitySoundUpload` handler coverage for public metadata, owner index, quota, storage-path dedupe, and duplicate upload idempotency through the real Admin SDK backend.
 - **User block callable emulator coverage (Cycle 105)**: added RTDB-emulator-backed `setCommunityUserBlock` handler coverage for private block rows, reverse-index rows, unblock removals, quota, dedupe, and no-op idempotency through the real Admin SDK backend.

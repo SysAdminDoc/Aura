@@ -10,9 +10,11 @@ refines user-block dedupe to include the desired state. Cycle 98 adds the
 handler-backed sound upload finalizer. Cycle 99 adds the handler-backed
 wallpaper upload finalizer. Cycle 100 adds the handler-backed profile edit
 callable and refines profile dedupe to include the normalized public profile
-hash. Every exported callable now has a handler core, while production
-enforcement still waits for emulator-backed callable coverage, Android
-migration, owner-approved deploy evidence, and App Check console evidence.
+hash. Cycle 108 adds the first Android callable migration adapter for report
+submission. Every exported callable now has a handler core, while production
+enforcement still waits for full callable wire-protocol coverage, the remaining
+Android write migrations, owner-approved deploy evidence, and App Check console
+evidence.
 
 ## Contract Source
 
@@ -152,6 +154,24 @@ Cycle 100 added:
 Do not claim production callable enforcement until all callable surfaces have
 full callable wire-protocol coverage, Android migration code,
 owner-approved deploy evidence, and Firebase Console App Check evidence.
+
+## Android Client Status
+
+Cycle 108 added:
+
+- `firebase-functions` under the existing Firebase BoM.
+- `CommunityCallableClient` and a Firebase-backed invoker that call named
+  HTTPS callables through `FirebaseFunctions`.
+- Limited-use App Check token selection for report submission, derived from
+  `CommunityQuotaPolicies.reports`.
+- `buildCommunityReportCallablePayload()` so Android omits server-owned
+  reporter UID, report timestamp, report status, and report key fields.
+- Callable-first `CommunityReportRepository.submitReport()` with a direct RTDB
+  compatibility fallback while the callable endpoint is not yet deployed.
+
+Report submission is the only Android write surface with callable client code
+today. Votes, follows, user blocks, upload finalizers, and profile edits still
+write through their existing direct repository paths.
 
 ## Request Envelope
 

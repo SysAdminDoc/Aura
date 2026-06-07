@@ -93,18 +93,29 @@ fun buildCommunityReportPayload(
     reporterUid: String,
     reportedAt: Long,
 ): Map<String, Any> {
-    val contentId = normalizeCommunityReportText(input.contentId, MAX_REPORT_CONTENT_ID)
-    require(contentId.isNotBlank()) { "Report content ID is required" }
-    val contentType = input.contentType.trim().uppercase(Locale.ROOT)
-    require(REPORT_CONTENT_TYPE_REGEX.matches(contentType)) { "Report content type is invalid" }
+    val payload = buildCommunityReportCallablePayload(input).toMutableMap()
     val reporter = reporterUid.trim()
     require(reporter.isNotBlank()) { "Reporter UID is required" }
     require(reportedAt > 0L) { "Report timestamp is required" }
 
+    return payload.apply {
+        val contentId = getValue("contentId").toString()
+        put("contentKey", sanitizeCommunityReportKey(contentId))
+        put("reporterUid", reporter)
+        put("reportedAt", reportedAt)
+        put("status", CommunityReportResolutionStatus.OPEN.storageValue)
+    }
+}
+
+fun buildCommunityReportCallablePayload(input: CommunityReportInput): Map<String, Any> {
+    val contentId = normalizeCommunityReportText(input.contentId, MAX_REPORT_CONTENT_ID)
+    require(contentId.isNotBlank()) { "Report content ID is required" }
+    val contentType = input.contentType.trim().uppercase(Locale.ROOT)
+    require(REPORT_CONTENT_TYPE_REGEX.matches(contentType)) { "Report content type is invalid" }
     val uploaderUid = normalizeCommunityReportText(input.uploaderUid, MAX_REPORT_CONTENT_ID)
+
     return mutableMapOf<String, Any>(
         "contentId" to contentId,
-        "contentKey" to sanitizeCommunityReportKey(contentId),
         "contentType" to contentType,
         "contentSource" to input.contentSource.name,
         "reason" to input.reason.storageValue,
@@ -112,9 +123,6 @@ fun buildCommunityReportPayload(
         "sourceUrl" to normalizeCommunityReportSourceUrl(input.sourceUrl),
         "license" to normalizeCommunityReportText(input.license, MAX_REPORT_SHORT_TEXT),
         "uploaderName" to normalizeCommunityReportText(input.uploaderName, MAX_REPORT_SHORT_TEXT),
-        "reporterUid" to reporter,
-        "reportedAt" to reportedAt,
-        "status" to CommunityReportResolutionStatus.OPEN.storageValue,
     ).also { payload ->
         if (uploaderUid.isNotBlank()) {
             payload["uploaderUid"] = uploaderUid

@@ -1,7 +1,7 @@
 {
   "counts": {
-    "dependencyRecords": 252,
-    "noticeSections": 289
+    "dependencyRecords": 260,
+    "noticeSections": 305
   },
   "dependencies": [
     {
@@ -1061,6 +1061,12 @@
       "version": "18.9.0"
     },
     {
+      "coordinate": "com.google.android.gms:play-services-cloud-messaging:16.0.0",
+      "group": "com.google.android.gms",
+      "name": "play-services-cloud-messaging",
+      "version": "16.0.0"
+    },
+    {
       "coordinate": "com.google.android.gms:play-services-fido:20.1.0",
       "group": "com.google.android.gms",
       "name": "play-services-fido",
@@ -1071,6 +1077,12 @@
       "group": "com.google.android.gms",
       "name": "play-services-mlkit-subject-segmentation",
       "version": "16.0.0-beta1"
+    },
+    {
+      "coordinate": "com.google.android.gms:play-services-stats:17.0.0",
+      "group": "com.google.android.gms",
+      "name": "play-services-stats",
+      "version": "17.0.0"
     },
     {
       "coordinate": "com.google.android.gms:play-services-tasks:18.4.0",
@@ -1221,6 +1233,36 @@
       "group": "com.google.firebase",
       "name": "firebase-encoders-json",
       "version": "17.1.0"
+    },
+    {
+      "coordinate": "com.google.firebase:firebase-functions:22.1.1",
+      "group": "com.google.firebase",
+      "name": "firebase-functions",
+      "version": "22.1.1"
+    },
+    {
+      "coordinate": "com.google.firebase:firebase-iid:21.1.0",
+      "group": "com.google.firebase",
+      "name": "firebase-iid",
+      "version": "21.1.0"
+    },
+    {
+      "coordinate": "com.google.firebase:firebase-iid-interop:17.1.0",
+      "group": "com.google.firebase",
+      "name": "firebase-iid-interop",
+      "version": "17.1.0"
+    },
+    {
+      "coordinate": "com.google.firebase:firebase-installations:19.1.0",
+      "group": "com.google.firebase",
+      "name": "firebase-installations",
+      "version": "19.1.0"
+    },
+    {
+      "coordinate": "com.google.firebase:firebase-installations-interop:17.3.0",
+      "group": "com.google.firebase",
+      "name": "firebase-installations-interop",
+      "version": "17.3.0"
     },
     {
       "coordinate": "com.google.firebase:firebase-storage:22.0.1",
@@ -1515,6 +1557,12 @@
       "group": "org.mozilla",
       "name": "rhino-engine",
       "version": "1.8.0"
+    },
+    {
+      "coordinate": "org.reactivestreams:reactive-streams:1.0.4",
+      "group": "org.reactivestreams",
+      "name": "reactive-streams",
+      "version": "1.0.4"
     }
   ],
   "generatedFrom": {
@@ -1523,9 +1571,9 @@
     "licenseText": "app/build/generated/res/releaseOssLicensesTask/raw/third_party_licenses"
   },
   "inputSha256": {
-    "dependencies": "4eb3dab5591ab5d7cd6811ec45c833789a531a7582d9239598148bf9d2c32c66",
-    "licenseMetadata": "604e4291b1cfaa26ca9259554ef29100c05c5fc456b2bc177c385ac528f4b3ac",
-    "licenseText": "ae1d623fca6a5eb286f29dac4633b5f3a17d7d7f7371fd1c6ed592f7a74db48b"
+    "dependencies": "697fa9f824161518b1c8a34654f659f66238c4e08a2607da980b1e7a9e3ad6bf",
+    "licenseMetadata": "5a533c30ecb8a3c03402162c22bed7b1343ae36d9a51232aa0f9ca9e30a9e77a",
+    "licenseText": "cb881b3019bf898d0a4df4ec4f5d98b3ab9449e40ba3f9ca27e542da050fbf9f"
   },
   "noticeSections": [
     {
@@ -2538,6 +2586,30 @@
     },
     {
       "length": 47,
+      "name": "play-services-cloud-messaging",
+      "noticeSha256": "e3f505f692c1334ec5b11a95faaaa72477e4c4bc1e0ea10830a5ffdb04bd27d7",
+      "offset": 11498
+    },
+    {
+      "length": 10694,
+      "name": "AndroidX lifecycle common library",
+      "noticeSha256": "2f1aa69014fbe0b673f7ed0a26efc04c605787a42c7f3acd0a452ee0e84254b3",
+      "offset": 304207
+    },
+    {
+      "length": 10694,
+      "name": "AndroidX lifecycle livedatacore library",
+      "noticeSha256": "2f1aa69014fbe0b673f7ed0a26efc04c605787a42c7f3acd0a452ee0e84254b3",
+      "offset": 304207
+    },
+    {
+      "length": 10694,
+      "name": "AndroidX lifecycle runtime library",
+      "noticeSha256": "2f1aa69014fbe0b673f7ed0a26efc04c605787a42c7f3acd0a452ee0e84254b3",
+      "offset": 304207
+    },
+    {
+      "length": 47,
       "name": "play-services-fido",
       "noticeSha256": "e3f505f692c1334ec5b11a95faaaa72477e4c4bc1e0ea10830a5ffdb04bd27d7",
       "offset": 11498
@@ -2682,24 +2754,6 @@
     },
     {
       "length": 10694,
-      "name": "AndroidX lifecycle common library",
-      "noticeSha256": "2f1aa69014fbe0b673f7ed0a26efc04c605787a42c7f3acd0a452ee0e84254b3",
-      "offset": 304207
-    },
-    {
-      "length": 10694,
-      "name": "AndroidX lifecycle livedatacore library",
-      "noticeSha256": "2f1aa69014fbe0b673f7ed0a26efc04c605787a42c7f3acd0a452ee0e84254b3",
-      "offset": 304207
-    },
-    {
-      "length": 10694,
-      "name": "AndroidX lifecycle runtime library",
-      "noticeSha256": "2f1aa69014fbe0b673f7ed0a26efc04c605787a42c7f3acd0a452ee0e84254b3",
-      "offset": 304207
-    },
-    {
-      "length": 10694,
       "name": "AndroidX lifecycle viewmodel library",
       "noticeSha256": "2f1aa69014fbe0b673f7ed0a26efc04c605787a42c7f3acd0a452ee0e84254b3",
       "offset": 304207
@@ -2772,6 +2826,48 @@
     },
     {
       "length": 47,
+      "name": "play-services-stats",
+      "noticeSha256": "e3f505f692c1334ec5b11a95faaaa72477e4c4bc1e0ea10830a5ffdb04bd27d7",
+      "offset": 11498
+    },
+    {
+      "length": 21000,
+      "name": "ICU4C",
+      "noticeSha256": "4eac19453ddf356478db3be6b101a6d872d0046cdc8222df1ff5c997dd4b9fbe",
+      "offset": 418571
+    },
+    {
+      "length": 1732,
+      "name": "Protobuf Nano",
+      "noticeSha256": "31c7505c31a1ea8557a5362cd69946dc9f5ee80fac8fa1d1b1531c08530497b0",
+      "offset": 439573
+    },
+    {
+      "length": 680,
+      "name": "STL",
+      "noticeSha256": "c90e5f7087454491c222670ecf8ba419dd9e0a8ecbd43bc83926bce0bce05741",
+      "offset": 441307
+    },
+    {
+      "length": 731,
+      "name": "UTF",
+      "noticeSha256": "fb80673636bcfc1b5dc9e9953224e7a38d373edc9b7253a21814f67a2a22939f",
+      "offset": 441989
+    },
+    {
+      "length": 11342,
+      "name": "flatbuffers",
+      "noticeSha256": "7ec9661a8afafab1eee3523d6f1a193eff76314a5ab10b4ce96aefd87621b0c3",
+      "offset": 442722
+    },
+    {
+      "length": 11358,
+      "name": "safeparcel",
+      "noticeSha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+      "offset": 25898
+    },
+    {
+      "length": 47,
       "name": "play-services-tasks",
       "noticeSha256": "e3f505f692c1334ec5b11a95faaaa72477e4c4bc1e0ea10830a5ffdb04bd27d7",
       "offset": 11498
@@ -2792,7 +2888,7 @@
       "length": 10692,
       "name": "AndroidX credentials library",
       "noticeSha256": "4b8b44f689ed7e822a2930b5967d6dee4f94975ebb76a00a6faa71b90e0fc63f",
-      "offset": 418571
+      "offset": 454066
     },
     {
       "length": 47,
@@ -2816,43 +2912,43 @@
       "length": 52,
       "name": "core-common",
       "noticeSha256": "399b6fd6585f48c42ea11271314123bff08fc4ad8e75eacece9374d0a31a832c",
-      "offset": 429265
+      "offset": 464760
     },
     {
       "length": 11357,
       "name": "Jakarta Inject",
       "noticeSha256": "58d1e17ffe5109a7ae296caafcadfdbe6a7d176f0bc4ab01e12a689b0499d8bd",
-      "offset": 429319
+      "offset": 464814
     },
     {
       "length": 1360,
       "name": "Play Core Software Development Kit",
       "noticeSha256": "62eefe4377b4ed9a123f2ec95399acaf9ac1edf99b38c74c471d5db38632464d",
-      "offset": 440678
+      "offset": 476173
     },
     {
       "length": 12521,
       "name": "archive_patcher",
       "noticeSha256": "9e69074ca08973d9129cfd12658e6bc6cc502edb3bb99824db836726cb11a86f",
-      "offset": 442040
+      "offset": 477535
     },
     {
       "length": 64,
       "name": "integrity",
       "noticeSha256": "3127f64803ff1f427c69006e1186c2ba7279db728de152690b8df8ae97da08a1",
-      "offset": 454563
+      "offset": 490058
     },
     {
       "length": 1384,
       "name": "Play Integrity API Terms of Service",
       "noticeSha256": "af887da609cd24660f3ffca8b186d7a6ea8687632a0f7dba8b9acd626e9bd0d6",
-      "offset": 454629
+      "offset": 490124
     },
     {
       "length": 9217,
       "name": "p2putils",
       "noticeSha256": "299d8188dce0db22d8e31cb86dc3c15e4263bf870a1cf99ecce37fe91415498d",
-      "offset": 456015
+      "offset": 491510
     },
     {
       "length": 47,
@@ -2900,7 +2996,7 @@
       "length": 11359,
       "name": "HighwayHash",
       "noticeSha256": "8c6db340475136df3c1201d458fa5755698eace76e510471ecc9d857d6083dac",
-      "offset": 465234
+      "offset": 500729
     },
     {
       "length": 11358,
@@ -2918,25 +3014,25 @@
       "length": 47,
       "name": "Dagger",
       "noticeSha256": "736a325ef9e9536d16c9fd809854aac91be9b601663c6674bb3f0bc2a6fa33ad",
-      "offset": 476595
+      "offset": 512090
     },
     {
       "length": 47,
       "name": "Dagger Lint Rules AAR Distribution",
       "noticeSha256": "736a325ef9e9536d16c9fd809854aac91be9b601663c6674bb3f0bc2a6fa33ad",
-      "offset": 476595
+      "offset": 512090
     },
     {
       "length": 47,
       "name": "Hilt Android",
       "noticeSha256": "736a325ef9e9536d16c9fd809854aac91be9b601663c6674bb3f0bc2a6fa33ad",
-      "offset": 476595
+      "offset": 512090
     },
     {
       "length": 47,
       "name": "Hilt Core",
       "noticeSha256": "736a325ef9e9536d16c9fd809854aac91be9b601663c6674bb3f0bc2a6fa33ad",
-      "offset": 476595
+      "offset": 512090
     },
     {
       "length": 46,
@@ -2978,25 +3074,25 @@
       "length": 328861,
       "name": "Cronet",
       "noticeSha256": "2f734af53ccc3b6071d0958e63a140fc85556461ff67e11eb68101c36c4cf556",
-      "offset": 476644
+      "offset": 512139
     },
     {
       "length": 1732,
       "name": "Protocol Buffers",
       "noticeSha256": "31c7505c31a1ea8557a5362cd69946dc9f5ee80fac8fa1d1b1531c08530497b0",
-      "offset": 805507
+      "offset": 439573
     },
     {
       "length": 1479,
       "name": "Protocol Buffers for Go v2",
       "noticeSha256": "4835612df0098ca95f8e7d9e3bffcb02358d435dbb38057c844c99d7f725eb20",
-      "offset": 807241
+      "offset": 841002
     },
     {
       "length": 1036,
       "name": "checker_framework_util",
       "noticeSha256": "edad15df7d01516356d84c8a887598e2051e8b55d520ac19085d9afad89941bb",
-      "offset": 808722
+      "offset": 842483
     },
     {
       "length": 1732,
@@ -3008,7 +3104,7 @@
       "length": 11357,
       "name": "mobiledatadownload",
       "noticeSha256": "58d1e17ffe5109a7ae296caafcadfdbe6a7d176f0bc4ab01e12a689b0499d8bd",
-      "offset": 429319
+      "offset": 464814
     },
     {
       "length": 47,
@@ -3054,6 +3150,54 @@
     },
     {
       "length": 46,
+      "name": "com.google.firebase:firebase-functions",
+      "noticeSha256": "0dec6aeec4006c044352a33f0825bf879bcd810e5e38e2b3230e4475916cdd2f",
+      "offset": 0
+    },
+    {
+      "length": 11361,
+      "name": "Apache-2.0",
+      "noticeSha256": "e8076546f4222d1eb96f7c60dd5a450360d7aeb51d31153eda7c9e6e008a541f",
+      "offset": 135
+    },
+    {
+      "length": 47,
+      "name": "firebase-iid",
+      "noticeSha256": "e3f505f692c1334ec5b11a95faaaa72477e4c4bc1e0ea10830a5ffdb04bd27d7",
+      "offset": 11498
+    },
+    {
+      "length": 16013,
+      "name": "Android SDK",
+      "noticeSha256": "29714c52481af51064f56bca49bfbbec4d1004eadfc82415fc35bd200bee4e3c",
+      "offset": 843521
+    },
+    {
+      "length": 10695,
+      "name": "AndroidX slidingpanelayout library",
+      "noticeSha256": "8a9d1ae85f7e294183b3df28502f8c511eb96481937ba71fca535f32fa80f4e4",
+      "offset": 342315
+    },
+    {
+      "length": 47,
+      "name": "firebase-iid-interop",
+      "noticeSha256": "e3f505f692c1334ec5b11a95faaaa72477e4c4bc1e0ea10830a5ffdb04bd27d7",
+      "offset": 11498
+    },
+    {
+      "length": 46,
+      "name": "com.google.firebase:firebase-installations",
+      "noticeSha256": "0dec6aeec4006c044352a33f0825bf879bcd810e5e38e2b3230e4475916cdd2f",
+      "offset": 0
+    },
+    {
+      "length": 46,
+      "name": "com.google.firebase:firebase-installations-interop",
+      "noticeSha256": "0dec6aeec4006c044352a33f0825bf879bcd810e5e38e2b3230e4475916cdd2f",
+      "offset": 0
+    },
+    {
+      "length": 46,
       "name": "com.google.firebase:firebase-storage",
       "noticeSha256": "0dec6aeec4006c044352a33f0825bf879bcd810e5e38e2b3230e4475916cdd2f",
       "offset": 0
@@ -3071,12 +3215,6 @@
       "offset": 326261
     },
     {
-      "length": 16008,
-      "name": "Android SDK",
-      "noticeSha256": "8598f4e111252d203df6c4ec0b9274d8d9ea034d4fcf13cd50b2b15de23a5e62",
-      "offset": 326305
-    },
-    {
       "length": 42,
       "name": "vision-interfaces",
       "noticeSha256": "b3267b2c808d2fc217dc404a125168edbc154b4e6b2ae7e6442f59e6db327646",
@@ -3086,7 +3224,7 @@
       "length": 47,
       "name": "moshi",
       "noticeSha256": "736a325ef9e9536d16c9fd809854aac91be9b601663c6674bb3f0bc2a6fa33ad",
-      "offset": 476595
+      "offset": 512090
     },
     {
       "length": 46,
@@ -3110,55 +3248,55 @@
       "length": 47,
       "name": "Converter: Moshi",
       "noticeSha256": "736a325ef9e9536d16c9fd809854aac91be9b601663c6674bb3f0bc2a6fa33ad",
-      "offset": 476595
+      "offset": 512090
     },
     {
       "length": 47,
       "name": "Retrofit",
       "noticeSha256": "736a325ef9e9536d16c9fd809854aac91be9b601663c6674bb3f0bc2a6fa33ad",
-      "offset": 476595
+      "offset": 512090
     },
     {
       "length": 47,
       "name": "coil",
       "noticeSha256": "736a325ef9e9536d16c9fd809854aac91be9b601663c6674bb3f0bc2a6fa33ad",
-      "offset": 476595
+      "offset": 512090
     },
     {
       "length": 47,
       "name": "coil-base",
       "noticeSha256": "736a325ef9e9536d16c9fd809854aac91be9b601663c6674bb3f0bc2a6fa33ad",
-      "offset": 476595
+      "offset": 512090
     },
     {
       "length": 47,
       "name": "coil-compose",
       "noticeSha256": "736a325ef9e9536d16c9fd809854aac91be9b601663c6674bb3f0bc2a6fa33ad",
-      "offset": 476595
+      "offset": 512090
     },
     {
       "length": 47,
       "name": "coil-compose-base",
       "noticeSha256": "736a325ef9e9536d16c9fd809854aac91be9b601663c6674bb3f0bc2a6fa33ad",
-      "offset": 476595
+      "offset": 512090
     },
     {
       "length": 44,
       "name": "youtubedl-android",
       "noticeSha256": "1b79220a341bece2927be4c892333ab7153186fa81b1ca3f50028045b6ab8c26",
-      "offset": 809760
+      "offset": 859536
     },
     {
       "length": 44,
       "name": "youtubedl-android",
       "noticeSha256": "1b79220a341bece2927be4c892333ab7153186fa81b1ca3f50028045b6ab8c26",
-      "offset": 809760
+      "offset": 859536
     },
     {
       "length": 44,
       "name": "youtubedl-android",
       "noticeSha256": "1b79220a341bece2927be4c892333ab7153186fa81b1ca3f50028045b6ab8c26",
-      "offset": 809760
+      "offset": 859536
     },
     {
       "length": 46,
@@ -3176,7 +3314,7 @@
       "length": 47,
       "name": "JetBrains Java Annotations",
       "noticeSha256": "736a325ef9e9536d16c9fd809854aac91be9b601663c6674bb3f0bc2a6fa33ad",
-      "offset": 476595
+      "offset": 512090
     },
     {
       "length": 46,
@@ -3212,37 +3350,37 @@
       "length": 47,
       "name": "kotlinx-coroutines-android",
       "noticeSha256": "736a325ef9e9536d16c9fd809854aac91be9b601663c6674bb3f0bc2a6fa33ad",
-      "offset": 476595
+      "offset": 512090
     },
     {
       "length": 47,
       "name": "kotlinx-coroutines-core",
       "noticeSha256": "736a325ef9e9536d16c9fd809854aac91be9b601663c6674bb3f0bc2a6fa33ad",
-      "offset": 476595
+      "offset": 512090
     },
     {
       "length": 47,
       "name": "kotlinx-coroutines-play-services",
       "noticeSha256": "736a325ef9e9536d16c9fd809854aac91be9b601663c6674bb3f0bc2a6fa33ad",
-      "offset": 476595
+      "offset": 512090
     },
     {
       "length": 47,
       "name": "kotlinx-serialization-core",
       "noticeSha256": "736a325ef9e9536d16c9fd809854aac91be9b601663c6674bb3f0bc2a6fa33ad",
-      "offset": 476595
+      "offset": 512090
     },
     {
       "length": 47,
       "name": "kotlinx-serialization-json",
       "noticeSha256": "736a325ef9e9536d16c9fd809854aac91be9b601663c6674bb3f0bc2a6fa33ad",
-      "offset": 476595
+      "offset": 512090
     },
     {
       "length": 25,
       "name": "jsoup Java HTML Parser",
       "noticeSha256": "29b6f0c083155ceebec1ec130d7b7bc36e525f8bbbc5fce12f577c39fa40d49d",
-      "offset": 809806
+      "offset": 859582
     },
     {
       "length": 46,
@@ -3254,13 +3392,19 @@
       "length": 40,
       "name": "org.mozilla:rhino",
       "noticeSha256": "c0e4d7c997ac8120d6ea3a8d2fd2560b720cbb3bea7df5bc925cb6f47bb35b3a",
-      "offset": 809833
+      "offset": 859609
     },
     {
       "length": 40,
       "name": "org.mozilla:rhino-engine",
       "noticeSha256": "c0e4d7c997ac8120d6ea3a8d2fd2560b720cbb3bea7df5bc925cb6f47bb35b3a",
-      "offset": 809833
+      "offset": 859609
+    },
+    {
+      "length": 36,
+      "name": "reactive-streams",
+      "noticeSha256": "cdfe7a2d1de3c3b1bf7dd515128ca856b7ada6953d3ae8a5d9d091f1d934d2f9",
+      "offset": 859651
     }
   ],
   "schemaVersion": 1,

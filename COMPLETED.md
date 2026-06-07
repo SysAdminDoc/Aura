@@ -446,6 +446,12 @@ next pass can resume quickly.
   invocation for `finalizeCommunityWallpaperUploadHandler`, and verified public
   metadata, owner index, quota, storage-path dedupe, and duplicate upload
   idempotency through the RTDB emulator.
+- Completed Cycle 108 Android report callable migration: added the Android
+  `firebase-functions` dependency under the existing Firebase BoM, a shared
+  callable invoker/client, limited-use App Check token selection for report
+  calls, callable report payload tests that omit server-owned fields, and
+  callable-first `CommunityReportRepository.submitReport()` with a compatibility
+  fallback while deploy evidence and direct-rule tightening remain pending.
 
 ## 2026-06-05
 

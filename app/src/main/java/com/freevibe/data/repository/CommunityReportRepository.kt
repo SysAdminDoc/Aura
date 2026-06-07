@@ -36,6 +36,7 @@ import javax.inject.Singleton
 @Singleton
 class CommunityReportRepository @Inject constructor(
     private val identityProvider: CommunityIdentityProvider,
+    private val callableClient: CommunityCallableClient,
 ) {
     private val database by lazy {
         try { FirebaseDatabase.getInstance().reference } catch (_: Exception) { null }
@@ -46,20 +47,41 @@ class CommunityReportRepository @Inject constructor(
     private val reportsRef get() = database?.child("community_reports")
 
     suspend fun submitReport(input: CommunityReportInput): Result<String> = try {
-        val reports = reportsRef ?: throw IllegalStateException("Firebase Database not available")
         val reporterUid = identityProvider.ensureSignedIn()
-        val reportedAt = System.currentTimeMillis()
-        val payload = buildCommunityReportPayload(
-            input = input,
-            reporterUid = reporterUid,
-            reportedAt = reportedAt,
-        )
-        val ref = reports.push()
-        ref.setValue(payload).await()
-        Result.success(ref.key.orEmpty())
+        val callableReportId = submitReportWithCallableOrNull(input)
+        if (callableReportId != null) {
+            Result.success(callableReportId)
+        } else {
+            submitReportWithDirectDatabase(input, reporterUid)
+        }
     } catch (e: Exception) {
         e.rethrowIfCancelled()
         Result.failure(e)
+    }
+
+    private suspend fun submitReportWithCallableOrNull(input: CommunityReportInput): String? {
+        if (identityProvider.currentFirebaseUid().isNullOrBlank()) return null
+        return try {
+            callableClient.submitCommunityReport(input).targetId()
+        } catch (e: CommunityCallableException) {
+            e.rethrowIfCancelled()
+            if (e.isMissingEndpoint()) null else throw e
+        }
+    }
+
+    private suspend fun submitReportWithDirectDatabase(
+        input: CommunityReportInput,
+        reporterUid: String,
+    ): Result<String> {
+        val reports = reportsRef ?: throw IllegalStateException("Firebase Database not available")
+        val payload = buildCommunityReportPayload(
+            input = input,
+            reporterUid = reporterUid,
+            reportedAt = System.currentTimeMillis(),
+        )
+        val ref = reports.push()
+        ref.setValue(payload).await()
+        return Result.success(ref.key.orEmpty())
     }
 
     fun reports(

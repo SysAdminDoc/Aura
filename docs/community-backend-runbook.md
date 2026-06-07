@@ -4,8 +4,9 @@ Cycle 64 defines the deployable evidence packet for Aura community backend
 rules. The backend surface currently includes Firebase Realtime Database rules,
 Cloud Storage rules, a Cloud Functions scaffold with handler-backed report,
 vote, follow, block, sound upload, wallpaper upload, and profile edit
-submission, local Emulator Suite tests, Functions unit tests, and a
-deterministic manifest of the files that affect backend deployment.
+submission, the first Android report callable client adapter, local Emulator
+Suite tests, Functions unit tests, and a deterministic manifest of the files
+that affect backend deployment.
 
 ## Backend Manifest
 
@@ -178,6 +179,8 @@ must include:
 - Functions report/vote/follow/block/sound-upload/wallpaper-upload/profile-edit
   handler status from `npm run test:functions` until emulator coverage and
   Android migration replace handler-only rollout status.
+- Android report callable adapter test status from focused `CommunityCallable`
+  and `CommunityReport` unit tests until all write surfaces are callable-backed.
 - RTDB-emulator-backed callable handler persistence status from
   `npm run test:functions-emulator`, currently covering profile, report, vote,
   follow, block, sound upload, and wallpaper upload handlers, until the full

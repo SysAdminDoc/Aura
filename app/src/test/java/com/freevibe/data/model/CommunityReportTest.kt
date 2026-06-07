@@ -34,6 +34,34 @@ class CommunityReportTest {
     }
 
     @Test
+    fun `buildCommunityReportCallablePayload omits server owned fields`() {
+        val payload = buildCommunityReportCallablePayload(
+            CommunityReportInput(
+                contentId = " WALLPAPER::COMMUNITY::cw_123 ",
+                contentType = "wallpaper",
+                contentSource = ContentSource.COMMUNITY,
+                reason = CommunityReportReason.RIGHTS,
+                note = "  license\nlooks wrong  ",
+                sourceUrl = "https://example.com/source",
+                license = "CC BY",
+                uploaderName = "Creator",
+                uploaderUid = "creator-1",
+            ),
+        )
+
+        assertEquals("WALLPAPER::COMMUNITY::cw_123", payload["contentId"])
+        assertEquals("WALLPAPER", payload["contentType"])
+        assertEquals("COMMUNITY", payload["contentSource"])
+        assertEquals("RIGHTS", payload["reason"])
+        assertEquals("license looks wrong", payload["note"])
+        assertEquals("creator-1", payload["uploaderUid"])
+        assertEquals(false, payload.containsKey("reporterUid"))
+        assertEquals(false, payload.containsKey("reportedAt"))
+        assertEquals(false, payload.containsKey("status"))
+        assertEquals(false, payload.containsKey("contentKey"))
+    }
+
+    @Test
     fun `buildCommunityReportPayload rejects blank ids and non https sources`() {
         try {
             buildCommunityReportPayload(
