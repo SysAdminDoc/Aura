@@ -36,6 +36,12 @@ rows, reverse indexes, and community share rows. Public uploads, Storage
 objects, owner-upload indexes, Auth deletion, and local app cache cleanup still
 require the trusted orchestrator path.
 
+`tools/community_account_deletion_review.py` validates that a request-code
+lookup and dry-run plan describe exactly one matching user, that every planned
+update is a null delete, and that retained public/moderation roots are still
+declared. It emits a redacted review receipt for private operator evidence; it
+does not apply any database changes.
+
 ## Operator Handling
 
 1. Receive the request draft through a private support channel.
@@ -46,10 +52,21 @@ require the trusted orchestrator path.
    py -3 tools\community_deletion_request_lookup.py --database-export .\rtdb-export.json --request-code AURA-123456789ABC --output .\deletion-request-lookup.json
    ```
 
-4. Run the dry-run planner against a current RTDB export.
-5. Review retained public upload and moderation records against
+4. Run the dry-run planner against a current RTDB export:
+
+   ```powershell
+   py -3 tools\community_account_deletion_plan.py --database-export .\rtdb-export.json --uid <matched-private-uid> --output .\account-deletion-plan.json
+   ```
+
+5. Review the lookup and plan consistency:
+
+   ```powershell
+   py -3 tools\community_account_deletion_review.py --lookup .\deletion-request-lookup.json --plan .\account-deletion-plan.json --request-code AURA-123456789ABC --output .\account-deletion-review.json
+   ```
+
+6. Review retained public upload and moderation records against
    `docs/community-account-deletion-policy.md`.
-6. Apply changes only through the future trusted executor or callable
+7. Apply changes only through the future trusted executor or callable
    orchestrator.
 
 Do not request or publish a full Firebase UID in a public issue.

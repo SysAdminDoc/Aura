@@ -18,6 +18,17 @@ The generated `updates` object is a Realtime Database multi-path update shape
 whose values are `null`. It is a review artifact until a trusted admin script
 or callable deletion orchestrator applies it.
 
+Operators should pair the dry-run plan with the request-code lookup and review
+receipt before any future apply step:
+
+```powershell
+py -3 tools\community_account_deletion_review.py --lookup .\deletion-request-lookup.json --plan .\account-deletion-plan.json --request-code AURA-123456789ABC --output .\account-deletion-review.json
+```
+
+The review receipt validates one lookup match, matching sanitized UID keys,
+null-only update values, category coverage, required retained roots, and emits
+hashes plus a redacted UID-key suffix for private release evidence.
+
 ## Deleted Marker Paths
 
 The planner removes:
@@ -72,7 +83,7 @@ User and operator handling instructions live in
 [`docs/support/community-account-deletion.md`](support/community-account-deletion.md).
 Operators can use `tools/community_deletion_request_lookup.py` with a current
 RTDB export to map a request code to candidate UID evidence before running the
-dry-run planner.
+dry-run planner and review receipt.
 
 ## Verification
 
@@ -80,11 +91,12 @@ dry-run planner.
 - `py -3 -m unittest discover -s test/tools -p '*_test.py'`
 - `.\gradlew.bat --no-daemon --max-workers=2 :app:testDebugUnitTest --tests com.freevibe.service.CommunityIdentityProviderTest --tests com.freevibe.ui.screens.settings.SettingsViewModelTest`
 - `py -3 -m py_compile tools\community_deletion_request_lookup.py test\tools\community_deletion_request_lookup_test.py`
+- `py -3 -m py_compile tools\community_account_deletion_review.py test\tools\community_account_deletion_review_test.py`
 
 ## Remaining Work
 
 - Add a trusted deletion executor after the Cloud Functions/backend deployment
-  surface exists.
+  surface exists. The local review receipt is an apply gate, not the executor.
 - Add local/Auth deletion and community cache cleanup after the trusted
   executor owns final sequencing.
 - Publish a hosted private support route or web deletion page before Play

@@ -146,6 +146,9 @@ must include:
 - Deletion request-code lookup output from
   `tools/community_deletion_request_lookup.py` when support receives an
   `AURA-` request code instead of a full UID.
+- Account deletion review receipt from
+  `tools/community_account_deletion_review.py` before any future trusted apply
+  step accepts a deletion plan.
 
 ## Sources
 

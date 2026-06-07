@@ -272,6 +272,11 @@ next pass can resume quickly.
   `tools/community_deletion_request_lookup.py` and backend tool tests to map an
   `AURA-` request code to candidate UID evidence paths in a current RTDB export
   before running the dry-run deletion planner.
+- Completed Cycle 78 account deletion review gate: added
+  `tools/community_account_deletion_review.py` and backend tool tests to
+  cross-check request-code lookup output against dry-run RTDB null-update plans,
+  reject ambiguous or mismatched artifacts, and emit a redacted review receipt
+  before any future trusted apply step.
 
 ## 2026-06-05
 
