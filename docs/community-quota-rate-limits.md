@@ -12,9 +12,11 @@ state. Cycle 97 adds the handler-backed user-block callable and refines block
 dedupe to include the desired state. Cycle 98 adds the handler-backed sound
 upload finalizer with storage-path dedupe and owner-index writes. Cycle 99 adds
 the handler-backed wallpaper upload finalizer with storage-path dedupe and
-owner-index writes. This design does not claim production enforcement until
-emulator-backed callable coverage, Android migration, owner-approved deploy
-evidence, and Firebase Console App Check enforcement are complete.
+owner-index writes. Cycle 100 adds the handler-backed profile edit callable
+and refines profile dedupe to include the normalized public profile hash. This
+design does not claim production enforcement until emulator-backed callable
+coverage, Android migration, owner-approved deploy evidence, and Firebase
+Console App Check enforcement are complete.
 
 ## Goals
 
@@ -35,7 +37,7 @@ evidence, and Firebase Console App Check enforcement are complete.
 | Votes | 100 | 3 seconds | content ID | App-Checked callable + existing RTDB transaction |
 | Follows | 50 | 5 seconds | creator ID + desired state | App-Checked callable write |
 | User blocks | 100 | 1 second | blocked UID + desired state | App-Checked callable write |
-| Profile edits | 12 | 5 minutes | profile UID | App-Checked callable write |
+| Profile edits | 12 | 5 minutes | profile UID + normalized profile hash | App-Checked callable write |
 
 The matching code contract is `CommunityQuotaPolicies`. Unit tests verify every
 required surface has a limit, cooldown, dedupe key, callable enforcement row,
@@ -95,9 +97,8 @@ Admin SDK job should own ledger updates.
 - Add Emulator Suite coverage and Android migration for
   `submitCommunityReport`, `recordCommunityVote`, `setCreatorFollow`, and
   `setCommunityUserBlock`, add Emulator Suite coverage and Android migration for
-  `finalizeCommunitySoundUpload` and `finalizeCommunityWallpaperUpload`, then
-  implement the remaining profile edit callable from the Cycle 63 callable
-  contract.
+  `finalizeCommunitySoundUpload`, `finalizeCommunityWallpaperUpload`, and
+  `updateCreatorProfile`.
 - Keep quota reset days on the manifest-pinned UTC boundary unless the backend
   deployment config deliberately changes it with policy review.
 - Decide whether blocked quota attempts should create private moderation events.

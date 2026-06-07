@@ -149,7 +149,7 @@ object CommunityQuotaPolicies {
         surfaceKey = "profile_edits",
         dailyLimit = 12,
         minIntervalMillis = 5 * MINUTE_MILLIS,
-        dedupeKey = "profileUid",
+        dedupeKey = "profileUid + normalized profile hash",
         enforcement = setOf(CommunityQuotaEnforcement.APP_CHECKED_CALLABLE),
         callable = CommunityQuotaCallableContract(
             functionName = "updateCreatorProfile",

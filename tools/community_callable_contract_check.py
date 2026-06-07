@@ -90,7 +90,7 @@ EXPECTED_SURFACES: dict[str, dict[str, Any]] = {
     "profile_edits": {
         "dailyLimit": 12,
         "minIntervalMillis": 300000,
-        "dedupeKey": "profileUid",
+        "dedupeKey": "profileUid + normalized profile hash",
         "enforcement": ["APP_CHECKED_CALLABLE"],
         "functionName": "updateCreatorProfile",
         "payloadSchema": "CreatorProfileUpdateInput",

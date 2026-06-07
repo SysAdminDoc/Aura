@@ -3,6 +3,7 @@
 All notable changes to Aura will be documented in this file.
 
 ## Unreleased
+- **Creator profile callable handler (Cycle 100)**: implemented the `updateCreatorProfile` Functions handler with Auth/App Check enforcement, server-derived profile UID and timestamps, display-copy normalization, normalized-profile dedupe, quota checks, and focused unit coverage.
 - **Community wallpaper upload callable handler (Cycle 99)**: implemented the `finalizeCommunityWallpaperUpload` Functions handler with Auth/App Check enforcement, server-allocated upload IDs, wallpaper metadata normalization, Storage path ownership checks, storage-path dedupe, public metadata and owner-index writes, and focused unit coverage.
 - **Community sound upload callable handler (Cycle 98)**: implemented the `finalizeCommunitySoundUpload` Functions handler with Auth/App Check enforcement, server-allocated upload IDs, sound metadata normalization, Storage path ownership checks, storage-path dedupe, public metadata and owner-index writes, and focused unit coverage.
 - **Community block callable handler (Cycle 97)**: implemented the `setCommunityUserBlock` Functions handler with Auth/App Check enforcement, block/unblock payload normalization, state-aware dedupe keys, private and reverse-index writes, and focused unit coverage.

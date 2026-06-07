@@ -149,7 +149,7 @@ export const COMMUNITY_CALLABLE_SURFACES: readonly CommunityCallableSurface[] = 
     surfaceKey: "profile_edits",
     dailyLimit: 12,
     minIntervalMillis: 5 * MINUTE_MILLIS,
-    dedupeKey: "profileUid",
+    dedupeKey: "profileUid + normalized profile hash",
     enforcement: ["APP_CHECKED_CALLABLE"],
     quotaLedgerPath: "/community_write_quotas/{uid}/{yyyyMMdd}/profile_edits",
     dedupeLedgerPath: "/community_write_dedupe/{uid}/profile_edits/{dedupeKey}",

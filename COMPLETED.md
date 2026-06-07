@@ -400,6 +400,15 @@ next pass can resume quickly.
   and focused Functions tests for accepted finalization, active dedupe,
   cooldown, daily-limit, unauthenticated, missing-App-Check, and invalid
   ownership/payload paths.
+- Completed Cycle 100 creator profile callable handler: refined profile edit
+  dedupe from profile UID only to profile UID plus normalized public profile
+  hash, implemented `updateCreatorProfile` handler logic with Firebase
+  Auth/App Check identity enforcement, server-derived profile UID,
+  display-name/bio/HTTPS URL normalization, server-assigned timestamps,
+  identical-profile idempotency before quota reservation, UTC quota checks,
+  final `/creator_profiles/{uid}` writes, and focused Functions tests for
+  accepted update, duplicate, cooldown, daily-limit, unauthenticated,
+  missing-App-Check, and invalid payload paths.
 
 ## 2026-06-05
 

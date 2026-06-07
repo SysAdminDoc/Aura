@@ -8,10 +8,11 @@ handler-backed creator follow callable and refines follow dedupe to include the
 desired state. Cycle 97 adds the handler-backed user block callable and
 refines user-block dedupe to include the desired state. Cycle 98 adds the
 handler-backed sound upload finalizer. Cycle 99 adds the handler-backed
-wallpaper upload finalizer. The remaining exported callables currently fail
-closed until each surface has a write handler and emulator-backed tests; this
-document is the implementation contract that the backend and Android repository
-migration must follow.
+wallpaper upload finalizer. Cycle 100 adds the handler-backed profile edit
+callable and refines profile dedupe to include the normalized public profile
+hash. Every exported callable now has a handler core, while production
+enforcement still waits for emulator-backed callable coverage, Android
+migration, owner-approved deploy evidence, and App Check console evidence.
 
 ## Contract Source
 
@@ -136,10 +137,22 @@ Cycle 99 added:
   finalization, active storage-path dedupe, cooldown, daily-limit,
   unauthenticated, missing-App-Check, and invalid ownership/payload cases.
 
+Cycle 100 added:
+
+- `functions/src/profileHandler.ts` implements `updateCreatorProfile` handler
+  logic with server-derived profile UID, public display copy normalization,
+  HTTPS URL validation, server-assigned `createdAt`/`updatedAt` timestamps,
+  identical-profile idempotency before quota reservation, UTC quota checks,
+  normalized-profile dedupe, and final `/creator_profiles/{uid}` writes.
+- `functions/test/updateCreatorProfile.test.cjs` covers accepted update,
+  identical-profile duplicate, active normalized-profile dedupe, cooldown,
+  daily-limit, unauthenticated, missing-App-Check, UID/timestamp override, and
+  invalid public-copy cases.
+
 Do not claim production callable enforcement until the report, vote, follow,
-block, sound upload, and wallpaper upload handlers have Emulator Suite
-coverage, Android migration code, owner-approved deploy evidence, and Firebase
-Console App Check evidence. The profile edit export remains fail-closed.
+block, sound upload, wallpaper upload, and profile edit handlers have Emulator
+Suite coverage, Android migration code, owner-approved deploy evidence, and
+Firebase Console App Check evidence.
 
 ## Request Envelope
 
