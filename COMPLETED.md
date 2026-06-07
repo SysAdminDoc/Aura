@@ -518,6 +518,12 @@ next pass can resume quickly.
   tool tests so GitHub Actions, Gradle, root npm, and Functions npm version
   update surfaces have checked weekly cadence, `main` target branch, PR limit,
   labels, and commit prefix policy.
+- Completed Cycle 119 GitHub security settings receipt: added
+  `docs/distribution/github-security-settings-evidence.md`,
+  `tools/github_security_settings_receipt.py`, and backend tool tests so future
+  owner/admin branch-protection, Dependabot, code-scanning, secret-scanning,
+  and release-attestation evidence can be validated before emitting a redacted
+  receipt.
 
 ## 2026-06-05
 

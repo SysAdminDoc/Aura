@@ -22,6 +22,7 @@ Aura is side-loaded through GitHub Releases and Obtainium, so release artifacts 
 | OpenSSF Scorecard | `.github/workflows/scorecard.yml` | Runs on main pushes, branch-protection changes, weekly schedule, and manual dispatch; keeps public result publishing disabled and uploads SARIF to code scanning. |
 | GitHub security workflow policy | `docs/distribution/github-security-workflows.json`, `tools/github_security_workflow_check.py`, `.github/workflows/verify.yml` | Fails verification when dependency review, scorecard, or release workflow security controls drift or add unsafe trigger/permission escape hatches. |
 | Dependabot update policy | `.github/dependabot.yml`, `tools/dependabot_config_check.py`, `.github/workflows/verify.yml` | Opens weekly version-update PRs for GitHub Actions, Gradle, root Firebase npm, and Functions npm with small PR limits and checked schedule/label/target-branch policy. |
+| GitHub security settings receipt | `docs/distribution/github-security-settings-evidence.md`, `tools/github_security_settings_receipt.py` | Validates owner-provided private evidence for branch protection, Dependabot, code scanning, secret scanning, and release attestation settings before emitting a redacted receipt. |
 | F-Droid blocker preflight | `tools/fdroid_preflight.py` | Confirms that F-Droid mainline remains blocked until proprietary dependency boundaries change. |
 
 ## Release verification
@@ -78,6 +79,18 @@ python3 tools/dependabot_config_check.py --config .github/dependabot.yml
 ```
 
 The check fails if an expected surface is missing, an unsupported surface is added, update cadence or target branch drifts, open PR limits rise above five, or the `dependencies`/`security` labels and `deps` commit prefix are removed. Live Dependabot alerts, security updates, and repository security settings still require owner/admin confirmation in GitHub.
+
+## GitHub security settings receipt
+
+`github-security-settings-evidence.md` defines the private evidence schema and redacted receipt command for live GitHub repository settings. Use it only after an owner/admin captures current branch protection, required checks, Dependabot alerts/security updates, Scorecard SARIF code scanning, secret scanning, and release-attestation visibility.
+
+Receipt command:
+
+```bash
+python3 tools/github_security_settings_receipt.py --workflow-policy docs/distribution/github-security-workflows.json --dependabot-config .github/dependabot.yml --settings-evidence private/github-security-settings-evidence.json --support-reference github-settings-<ticket-or-release> --output artifacts/github-security-settings-receipt.json
+```
+
+The receipt keeps policy and evidence hashes but omits raw repository names, private evidence paths, required-check names, screenshots, API responses, credentials, and tokens.
 
 ## Third-party notices
 

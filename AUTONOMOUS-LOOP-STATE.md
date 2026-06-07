@@ -1,8 +1,8 @@
 # Autonomous Loop State
 
 **Assigned project:** `C:\Users\--\repos\Aura`
-**Current pass:** 2026-06-07 Cycle 118 Dependabot update policy guard
-**Last commit before pass:** `43c5a1f` (`test(security): add workflow policy guard`)
+**Current pass:** 2026-06-07 Cycle 119 GitHub security settings receipt
+**Last commit before pass:** `8c63864` (`test(security): add dependabot policy guard`)
 
 ## 2026-06-05 Result
 
@@ -1538,11 +1538,36 @@
   App Check evidence, live GitHub repository security-settings evidence, and
   live Dependabot alerts/security-updates evidence remain open.
 
+## Cycle 119 Result - 2026-06-07
+
+- Added `docs/distribution/github-security-settings-evidence.md` as the
+  private-evidence and redacted-receipt runbook for future live GitHub
+  repository security settings proof.
+- Added `tools/github_security_settings_receipt.py` to validate
+  owner/admin-provided private evidence against the checked workflow policy and
+  Dependabot config before emitting a redacted receipt.
+- Added `test/tools/github_security_settings_receipt_test.py` coverage for
+  receipt redaction and drift failures around missing required checks, policy
+  hash drift, disabled Dependabot alerts, disabled secret scanning, and
+  support-reference drift.
+- Updated `docs/distribution/supply-chain.md`,
+  `docs/research/cycle-119-2026-06-07.md`, `ROADMAP.md`, `COMPLETED.md`,
+  `CHANGELOG.md`, and loop state.
+- Cycle 119 verification: focused GitHub security settings receipt tests,
+  backend tool tests, Dependabot policy check, GitHub security workflow policy
+  check, callable wire-protocol check, callable contract check, dependency
+  notice lock checks, native lock check, dependency overlay check, dependency
+  license policy check, high-severity Functions npm audit, diff hygiene, and
+  attribution/ASCII scans passed. Owner-approved deploy evidence, actual live
+  callable invocation evidence, direct RTDB rule tightening, Firebase Console
+  App Check evidence, and owner/admin GitHub security settings evidence remain
+  open.
+
 ## Next Cycle
 
-Continue this same assigned project, Aura. Start Cycle 119 from the
+Continue this same assigned project, Aura. Start Cycle 120 from the
 `ROADMAP.md` Continuation State and
-`docs/research/cycle-118-2026-06-07.md`. The account
+`docs/research/cycle-119-2026-06-07.md`. The account
 deletion dry-run planner, read-only Settings identity surface, redacted
 shareable request draft, request-code lookup tool, review receipt gate, offline
 apply simulator, private executor package builder, and guarded REST executor
@@ -1626,16 +1651,16 @@ and Release workflow drift; Cycle 118 added checked Dependabot version-update
 coverage for GitHub Actions, Gradle, root npm, and Functions npm. Actual live
 callable invocation evidence, a live hosted HTTPS web deletion URL, direct
 RTDB rule tightening, App Check console evidence, production-project dry-run
-evidence, live GitHub repository security-settings evidence, and live
-Dependabot alerts/security-updates evidence remain open. Next collect
-owner-approved live callable invocation evidence and generate the redacted
-rollout receipt when deploy/App Check access is available, publish the hosted
-URL after owner approval, tighten direct RTDB write rules after callable deploy
-evidence, run a real production-project Firebase executor dry-run after owner
-access is confirmed, collect live GitHub branch-protection/security-settings
-and Dependabot evidence when owner access is available, or continue with the
-next checkable backend, deploy, security, support, policy, or rules hardening
-artifact if owner-gated evidence is still unavailable.
+evidence, and owner/admin GitHub repository security-settings evidence remain
+open; Cycle 119 added a redacted receipt gate for that future GitHub evidence.
+Next collect owner-approved live callable invocation evidence and generate the
+redacted rollout receipt when deploy/App Check access is available, publish the
+hosted URL after owner approval, tighten direct RTDB write rules after callable
+deploy evidence, run a real production-project Firebase executor dry-run after
+owner access is confirmed, collect owner/admin GitHub security settings
+evidence and generate the redacted receipt when access is available, or
+continue with the next checkable backend, deploy, security, support, policy, or
+rules hardening artifact if owner-gated evidence is still unavailable.
 Commit and push completed work when the active project contract allows it.
 
 ## Previous Cycle Prompt
