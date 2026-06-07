@@ -42,6 +42,7 @@ import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.freevibe.data.repository.CommunityBlockedUser
 import com.freevibe.service.CrashDiagnosticsSummary
 import com.freevibe.service.DailyWallpaperWorker
 import com.freevibe.service.SourceMetrics
@@ -59,6 +60,9 @@ import com.freevibe.ui.components.HighlightPill
 import com.freevibe.ui.launchLiveWallpaperPicker
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import java.text.DateFormat
+import java.util.Date
+import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
@@ -118,6 +122,8 @@ fun SettingsScreen(
     val pexelsProviderEnabled by viewModel.pexelsProviderEnabled.collectAsStateWithLifecycle()
     val pixabayProviderEnabled by viewModel.pixabayProviderEnabled.collectAsStateWithLifecycle()
     val communityProviderEnabled by viewModel.communityProviderEnabled.collectAsStateWithLifecycle()
+    val blockedCommunityCreators by viewModel.blockedCommunityCreators.collectAsStateWithLifecycle()
+    val communityBlockAction by viewModel.communityBlockAction.collectAsStateWithLifecycle()
     val showSketchyContent by viewModel.showSketchyContent.collectAsStateWithLifecycle()
     val showNsfwContent by viewModel.showNsfwContent.collectAsStateWithLifecycle()
     val videoFpsOverlayEnabled by viewModel.videoFpsOverlayEnabled.collectAsStateWithLifecycle()
@@ -238,6 +244,16 @@ fun SettingsScreen(
             else -> Unit
         }
     }
+    LaunchedEffect(communityBlockAction.message, communityBlockAction.error) {
+        communityBlockAction.message?.let {
+            Toast.makeText(context, it, Toast.LENGTH_LONG).show()
+            viewModel.clearCommunityBlockAction()
+        }
+        communityBlockAction.error?.let {
+            Toast.makeText(context, it, Toast.LENGTH_LONG).show()
+            viewModel.clearCommunityBlockAction()
+        }
+    }
 
     val notificationPermissionLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestPermission()
@@ -269,6 +285,7 @@ fun SettingsScreen(
     var showStylePicker by remember { mutableStateOf(false) }
     var showYtSoundEditor by remember { mutableStateOf(false) }
     var showYtBlockedEditor by remember { mutableStateOf(false) }
+    var showBlockedCreators by remember { mutableStateOf(false) }
     var showDarkModeWallpaperPicker by remember { mutableStateOf(false) }
     var showLightModeWallpaperPicker by remember { mutableStateOf(false) }
     var showCrashDiagnostics by remember { mutableStateOf(false) }
@@ -490,6 +507,16 @@ fun SettingsScreen(
                     subtitle = "Uploads, votes, follows, and leaderboard",
                     onClick = onCreatorProfileClick,
                 )
+                SettingsItem(
+                    icon = Icons.Default.Block,
+                    title = "Blocked creators",
+                    subtitle = if (blockedCommunityCreators.isEmpty()) {
+                        "No community creators hidden"
+                    } else {
+                        "${blockedCommunityCreators.size} community creators hidden"
+                    },
+                    onClick = { showBlockedCreators = true },
+                )
                 if (viewModel.isAdmin) {
                     SettingsItem(
                         icon = Icons.Default.Report,
@@ -498,6 +525,14 @@ fun SettingsScreen(
                         onClick = onCommunityReportsClick,
                     )
                 }
+            }
+            if (showBlockedCreators) {
+                BlockedCreatorsDialog(
+                    blockedCreators = blockedCommunityCreators,
+                    actionState = communityBlockAction,
+                    onUnblock = viewModel::unblockCommunityCreator,
+                    onDismiss = { showBlockedCreators = false },
+                )
             }
             // #2: Wallpaper history — opens browsable grid
             if (wallpaperHistory.isNotEmpty()) {
@@ -1756,6 +1791,98 @@ fun SettingsScreen(
         )
     }
 
+}
+
+@Composable
+private fun BlockedCreatorsDialog(
+    blockedCreators: List<CommunityBlockedUser>,
+    actionState: CommunityBlockActionState,
+    onUnblock: (String) -> Unit,
+    onDismiss: () -> Unit,
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Blocked creators") },
+        text = {
+            if (blockedCreators.isEmpty()) {
+                Text(
+                    "No community creators are hidden for your account.",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            } else {
+                Column(
+                    modifier = Modifier
+                        .heightIn(max = 420.dp)
+                        .verticalScroll(rememberScrollState()),
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    blockedCreators.forEach { blocked ->
+                        Surface(
+                            color = MaterialTheme.colorScheme.surfaceContainerHighest.copy(alpha = 0.55f),
+                            shape = RoundedCornerShape(10.dp),
+                        ) {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(12.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                            ) {
+                                Icon(
+                                    Icons.Default.Block,
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.error,
+                                    modifier = Modifier.size(20.dp),
+                                )
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text(
+                                        blocked.userId,
+                                        style = MaterialTheme.typography.titleSmall,
+                                        maxLines = 1,
+                                    )
+                                    Text(
+                                        blockedCreatorSubtitle(blocked),
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    )
+                                }
+                                val isBusy = actionState.unblockingUserId == blocked.userId
+                                TextButton(
+                                    onClick = { onUnblock(blocked.userId) },
+                                    enabled = !isBusy,
+                                ) {
+                                    if (isBusy) {
+                                        CircularProgressIndicator(
+                                            modifier = Modifier.size(16.dp),
+                                            strokeWidth = 2.dp,
+                                        )
+                                    } else {
+                                        Text("Unblock")
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = onDismiss) { Text("Close") }
+        },
+    )
+}
+
+private fun blockedCreatorSubtitle(blocked: CommunityBlockedUser): String {
+    val reason = blocked.reason.storageValue.lowercase(Locale.ROOT)
+        .replaceFirstChar { it.titlecase(Locale.ROOT) }
+    val blockedAt = blocked.createdAt.takeIf { it > 0L }?.let {
+        DateFormat.getDateTimeInstance(DateFormat.SHORT, DateFormat.SHORT).format(Date(it))
+    }
+    return listOfNotNull(
+        "Reason: $reason",
+        blockedAt?.let { "Blocked: $it" },
+    ).joinToString(" - ")
 }
 
 @Composable

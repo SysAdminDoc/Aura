@@ -6,6 +6,7 @@ import com.freevibe.data.local.PreferencesManager
 import com.freevibe.data.local.WallpaperCacheManager
 import com.freevibe.data.model.WallpaperCollectionEntity
 import com.freevibe.data.repository.CollectionRepository
+import com.freevibe.data.repository.CommunityBlockRepository
 import com.freevibe.data.repository.VoteRepository
 import com.freevibe.di.IoDispatcher
 import com.freevibe.service.AutoWallpaperWorker
@@ -30,6 +31,12 @@ data class CacheUsageState(
     val hasWallpaperMetadataCache: Boolean = false,
 )
 
+data class CommunityBlockActionState(
+    val unblockingUserId: String? = null,
+    val message: String? = null,
+    val error: String? = null,
+)
+
 sealed interface ParallaxGalleryResult {
     data object Preparing : ParallaxGalleryResult
     data object Ready : ParallaxGalleryResult
@@ -49,6 +56,7 @@ class SettingsViewModel @Inject constructor(
     private val sourceMetrics: SourceMetrics,
     private val crashDiagnosticsCollector: CrashDiagnosticsCollector,
     private val voteRepo: VoteRepository,
+    private val communityBlockRepo: CommunityBlockRepository,
     @IoDispatcher private val ioDispatcher: CoroutineDispatcher,
 ) : ViewModel() {
 
@@ -139,6 +147,10 @@ class SettingsViewModel @Inject constructor(
     val showSketchyContent = prefs.showSketchyContent.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
     val showNsfwContent = prefs.showNsfwContent.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
     val isAdmin: Boolean get() = voteRepo.isAdmin
+    val blockedCommunityCreators = communityBlockRepo.blockedUsers()
+        .stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
+    private val _communityBlockAction = MutableStateFlow(CommunityBlockActionState())
+    val communityBlockAction = _communityBlockAction.asStateFlow()
 
     fun setShowSketchy(show: Boolean) = viewModelScope.launch { prefs.setShowSketchy(show) }
     fun setShowNsfw(show: Boolean) = viewModelScope.launch { prefs.setShowNsfw(show) }
@@ -296,6 +308,24 @@ class SettingsViewModel @Inject constructor(
 
     fun setCommunityProviderEnabled(enabled: Boolean) = viewModelScope.launch {
         prefs.setCommunityProviderEnabled(enabled)
+    }
+
+    fun unblockCommunityCreator(userId: String) = viewModelScope.launch {
+        if (userId.isBlank()) return@launch
+        _communityBlockAction.value = CommunityBlockActionState(unblockingUserId = userId)
+        communityBlockRepo.unblockUser(userId)
+            .onSuccess {
+                _communityBlockAction.value = CommunityBlockActionState(message = "Creator unblocked")
+            }
+            .onFailure { error ->
+                _communityBlockAction.value = CommunityBlockActionState(
+                    error = "Unblock failed: ${error.message ?: "try again"}",
+                )
+            }
+    }
+
+    fun clearCommunityBlockAction() {
+        _communityBlockAction.value = CommunityBlockActionState()
     }
 
     fun setFreesoundKey(key: String) = viewModelScope.launch {

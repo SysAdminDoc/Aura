@@ -3,6 +3,7 @@
 All notable changes to Aura will be documented in this file.
 
 ## Unreleased
+- **Blocked creators review (Cycle 72)**: Settings now shows blocked community creators with reason/timestamp metadata and per-row unblock actions backed by `CommunityBlockRepository`.
 - **Visible block creator actions (Cycle 71)**: community sound and wallpaper detail surfaces now expose confirmed block actions when uploader identity is available, write through `CommunityBlockRepository`, and remove matching uploader rows from the current UI state.
 - **Community block-user filtering (Cycle 70)**: added Android block-list repository reads/writes, kept public browsing from creating an identity solely for filtering, and filtered community sound feeds, wallpaper feeds, and creator profile lists by private block state.
 - **Public takedown copy (Cycle 69)**: community upload dialogs now disclose public listing behavior and rights-takedown outcomes, report dialogs explain the private rights-takedown route, and owner-delete confirmations describe public metadata/index removal plus private moderation record retention.

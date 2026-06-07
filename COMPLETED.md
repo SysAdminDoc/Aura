@@ -245,6 +245,10 @@ next pass can resume quickly.
   identity is available, block through `CommunityBlockRepository`, and remove
   matching uploader rows from the active UI state with focused ViewModel and
   policy-copy coverage.
+- Completed Cycle 72 blocked creators review: Settings now lists blocked
+  community creators with reason/timestamp metadata and supports per-row unblock
+  actions through `CommunityBlockRepository`, with focused Settings ViewModel
+  coverage.
 
 ## 2026-06-05
 

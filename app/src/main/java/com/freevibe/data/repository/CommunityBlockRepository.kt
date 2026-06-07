@@ -27,6 +27,12 @@ import kotlinx.coroutines.withContext
 
 private const val SOURCE_COMMUNITY = "community"
 
+data class CommunityBlockedUser(
+    val userId: String,
+    val reason: CommunityBlockReason,
+    val createdAt: Long,
+)
+
 @Singleton
 class CommunityBlockRepository @Inject constructor(
     private val identityProvider: CommunityIdentityProvider,
@@ -54,6 +60,25 @@ class CommunityBlockRepository @Inject constructor(
             return@flow
         }
         emitAll(observeBlockedUserIds(sanitizeCommunityOwnerKey(currentUid)))
+    }
+
+    fun blockedUsers(): Flow<List<CommunityBlockedUser>> = flow {
+        if (!isCommunityProviderEnabled()) {
+            sourceMetrics.recordDisabled(SOURCE_COMMUNITY)
+            emit(emptyList())
+            return@flow
+        }
+        val currentUid = identityProvider.currentFirebaseUid()
+        if (currentUid.isNullOrBlank()) {
+            emit(emptyList())
+            return@flow
+        }
+        val db = database
+        if (db == null) {
+            emit(emptyList())
+            return@flow
+        }
+        emitAll(observeBlockedUsers(sanitizeCommunityOwnerKey(currentUid)))
     }
 
     suspend fun blockedUserIdsOnce(): Set<String> = withContext(Dispatchers.IO) {
@@ -136,6 +161,30 @@ class CommunityBlockRepository @Inject constructor(
         awaitClose { ref.removeEventListener(listener) }
     }
 
+    private fun observeBlockedUsers(currentUid: String): Flow<List<CommunityBlockedUser>> = callbackFlow {
+        val db = database
+        if (db == null || currentUid.isBlank()) {
+            trySend(emptyList())
+            close()
+            return@callbackFlow
+        }
+
+        val ref = db.child("community_user_blocks").child(currentUid)
+        val listener = object : ValueEventListener {
+            override fun onDataChange(snapshot: DataSnapshot) {
+                trySend(parseBlockedUsers(snapshot))
+            }
+
+            override fun onCancelled(error: DatabaseError) {
+                trySend(emptyList())
+                close()
+            }
+        }
+
+        ref.addValueEventListener(listener)
+        awaitClose { ref.removeEventListener(listener) }
+    }
+
     private suspend fun isCommunityProviderEnabled(): Boolean = prefs.communityProviderEnabled.first()
 
     private fun communityDisabledMessage(): String = "Community source is disabled in Settings"
@@ -147,6 +196,22 @@ internal fun parseBlockedUserIds(snapshot: DataSnapshot): Set<String> =
             child.child("blockedUid").getValue(String::class.java) ?: child.key
         },
     )
+
+internal fun parseBlockedUsers(snapshot: DataSnapshot): List<CommunityBlockedUser> =
+    snapshot.children.mapNotNull { child ->
+        val userId = sanitizeCommunityOwnerKey(
+            child.child("blockedUid").getValue(String::class.java) ?: child.key.orEmpty(),
+        )
+        if (userId.isBlank()) return@mapNotNull null
+        CommunityBlockedUser(
+            userId = userId,
+            reason = communityBlockReasonFromStorage(child.child("reason").getValue(String::class.java)),
+            createdAt = child.child("createdAt").getValue(Long::class.java) ?: 0L,
+        )
+    }.sortedByDescending { it.createdAt }
+
+private fun communityBlockReasonFromStorage(value: String?): CommunityBlockReason =
+    CommunityBlockReason.entries.firstOrNull { it.storageValue == value } ?: CommunityBlockReason.OTHER
 
 private fun Throwable.rethrowIfCancelled() {
     if (this is CancellationException) throw this

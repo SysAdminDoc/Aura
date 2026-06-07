@@ -4,7 +4,9 @@ Cycle 68 reserved the data contract for user-to-user blocks on Aura community
 surfaces. Cycle 70 adds Android repository support and private block-list
 filtering for community feeds and creator profile surfaces. Cycle 71 adds
 confirmed block actions on community sound and wallpaper detail surfaces when
-the uploader identity is present. Callable-backed writes remain follow-up work.
+the uploader identity is present. Cycle 72 adds a Settings review surface for
+blocked creators and one-tap unblock. Callable-backed writes remain follow-up
+work.
 
 ## Policy
 
@@ -69,13 +71,14 @@ App Check, quota, and dedupe ledgers.
 - `SoundDetailScreen` and `WallpaperDetailScreen` show confirmed `Block
   creator` actions for blockable community uploads, then remove visible rows
   from the same uploader after the private block write succeeds.
+- Settings shows a `Blocked creators` review dialog with blocked uploader IDs,
+  reason/timestamp metadata, and per-row unblock actions.
 - Block and unblock repository methods maintain both the private list and
   admin reverse index.
 
 ## Remaining Work
 
 - Add visible UI entry points from report cards and creator profile surfaces.
-- Add a Settings or creator-profile surface for reviewing and unblocking users.
 - Move block/unblock writes to `setCommunityUserBlock` and then tighten direct
   RTDB writes.
 - Decide account-deletion cleanup for outbound blocks and inbound reverse

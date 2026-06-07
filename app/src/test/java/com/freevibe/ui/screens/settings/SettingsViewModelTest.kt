@@ -4,6 +4,9 @@ import android.content.Context
 import android.net.Uri
 import com.freevibe.data.local.PreferencesManager
 import com.freevibe.data.local.WallpaperCacheManager
+import com.freevibe.data.model.CommunityBlockReason
+import com.freevibe.data.repository.CommunityBlockedUser
+import com.freevibe.data.repository.CommunityBlockRepository
 import com.freevibe.data.repository.VoteRepository
 import com.freevibe.service.CrashDiagnosticsCollector
 import com.freevibe.service.OfflineFavoritesManager
@@ -154,6 +157,29 @@ class SettingsViewModelTest {
         assertTrue(viewModel.isAdmin)
     }
 
+    @Test
+    fun `unblockCommunityCreator delegates to block repository and reports success`() = runTest(dispatcher) {
+        val blockRepo = mockk<CommunityBlockRepository>()
+        every { blockRepo.blockedUsers() } returns flowOf(
+            listOf(CommunityBlockedUser("creator_1", CommunityBlockReason.OTHER, 123L)),
+        )
+        coEvery { blockRepo.unblockUser("creator_1") } returns Result.success(Unit)
+
+        val viewModel = createViewModel(
+            cacheDir = createTempDirectory("settings-unblock").toFile().also(tempDirs::add),
+            communityBlockRepoOverride = blockRepo,
+        )
+        advanceUntilIdle()
+
+        assertEquals(listOf("creator_1"), viewModel.blockedCommunityCreators.value.map { it.userId })
+
+        viewModel.unblockCommunityCreator("creator_1")
+        advanceUntilIdle()
+
+        assertEquals("Creator unblocked", viewModel.communityBlockAction.value.message)
+        coVerify(exactly = 1) { blockRepo.unblockUser("creator_1") }
+    }
+
     private fun createViewModel(
         cacheDir: File,
         offlineFavoritesSize: Long = 0L,
@@ -161,6 +187,7 @@ class SettingsViewModelTest {
         offlineFavoritesOverride: OfflineFavoritesManager? = null,
         wallpaperCacheManagerOverride: WallpaperCacheManager? = null,
         videoWallpaperStorageOverride: VideoWallpaperStorage? = null,
+        communityBlockRepoOverride: CommunityBlockRepository? = null,
         isAdmin: Boolean = false,
     ): SettingsViewModel {
         val context = mockk<Context>(relaxed = true).also {
@@ -188,6 +215,9 @@ class SettingsViewModelTest {
         val voteRepo = mockk<VoteRepository>(relaxed = true).also {
             every { it.isAdmin } returns isAdmin
         }
+        val communityBlockRepo = communityBlockRepoOverride ?: mockk<CommunityBlockRepository>(relaxed = true).also {
+            every { it.blockedUsers() } returns flowOf(emptyList())
+        }
         return SettingsViewModel(
             context = context,
             prefs = prefs,
@@ -204,6 +234,7 @@ class SettingsViewModelTest {
                 sourceMetrics = com.freevibe.service.SourceMetrics(),
             ),
             voteRepo = voteRepo,
+            communityBlockRepo = communityBlockRepo,
             ioDispatcher = dispatcher,
         )
     }
