@@ -6,6 +6,7 @@ import com.freevibe.data.model.CommunityReportInput
 import com.freevibe.data.model.CommunityReportReason
 import com.freevibe.data.model.CommunitySoundUploadMetadataInput
 import com.freevibe.data.model.CommunityUserBlockInput
+import com.freevibe.data.model.CommunityWallpaperUploadMetadataInput
 import com.freevibe.data.model.ContentSource
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
@@ -275,6 +276,72 @@ class CommunityCallableClientTest {
         assertFalse(payload.containsKey("uploaderId"))
         assertFalse(payload.containsKey("uploaderUid"))
         assertFalse(payload.containsKey("uploadedAt"))
+        assertFalse(payload.containsKey("votes"))
+    }
+
+    @Test
+    fun `finalizeCommunityWallpaperUpload sends metadata with limited use token request`() = runTest {
+        val invoker = RecordingCommunityCallableInvoker(
+            response = mapOf(
+                "operationId" to "wallpaper_upload_test",
+                "status" to "accepted",
+                "uploadId" to "wallA",
+                "publicId" to "cw_wallA",
+                "targetPath" to "/community_wallpapers/wallA",
+                "ownerIndexPath" to "/owner_uploads/wallOwner1/wallpapers/wallA",
+                "serverTimeMillis" to 123L,
+            ),
+        )
+        val client = CommunityCallableClient(invoker)
+
+        val result = client.finalizeCommunityWallpaperUpload(
+            CommunityWallpaperUploadMetadataInput(
+                name = " Soft\nGradient ",
+                category = " AMOLED ",
+                tags = listOf(" Dark ", "DARK", "lock-screen!!!", "lo-fi"),
+                colors = listOf("#112233", "#112233", "#abcdef"),
+                thumbnailUrl = "https://firebasestorage.googleapis.com/v0/b/aura/o/wallpapers%2FwallOwner1%2Fsoft.jpg",
+                fullUrl = "https://firebasestorage.googleapis.com/v0/b/aura/o/wallpapers%2FwallOwner1%2Fsoft.jpg",
+                downloadUrl = "https://firebasestorage.googleapis.com/v0/b/aura/o/wallpapers%2FwallOwner1%2Fsoft.jpg",
+                storagePath = "wallpapers/wallOwner1/1700000000000_soft.jpg",
+                width = 1080,
+                height = 1920,
+                fileSize = 345_678,
+                fileType = " IMAGE/JPEG ",
+                originalFileName = " Soft Gradient.png ",
+                uploaderLabel = " Wall Owner ",
+                license = "attribution",
+                rightsAttested = true,
+                sourceUrl = "https://example.com/wall",
+            ),
+        )
+
+        val request = requireNotNull(invoker.lastRequest)
+        assertEquals("finalizeCommunityWallpaperUpload", request.functionName)
+        assertTrue(request.consumeLimitedUseAppCheckToken)
+        assertEquals("wallA", result.targetId())
+        assertEquals("accepted", result.status)
+
+        assertTrue((request.data["operationId"] as String).startsWith("wallpaper_upload_"))
+        assertTrue((request.data["clientSentAt"] as Long) > 0L)
+        val payload = request.data["payload"] as Map<*, *>
+        assertEquals("Soft Gradient", payload["name"])
+        assertEquals("amoled", payload["category"])
+        assertEquals(listOf("dark", "lock-screen", "lo-fi"), payload["tags"])
+        assertEquals(listOf("#112233", "#ABCDEF"), payload["colors"])
+        assertEquals(1080, payload["width"])
+        assertEquals(1920, payload["height"])
+        assertEquals(345_678, payload["fileSize"])
+        assertEquals("image/jpeg", payload["fileType"])
+        assertEquals("Soft Gradient.png", payload["originalFileName"])
+        assertEquals("Wall Owner", payload["uploaderLabel"])
+        assertEquals("CC BY", payload["license"])
+        assertEquals(true, payload["rightsAttested"])
+        assertEquals("https://example.com/wall", payload["sourceUrl"])
+        assertFalse(payload.containsKey("uploaderId"))
+        assertFalse(payload.containsKey("uploaderUid"))
+        assertFalse(payload.containsKey("uploadedAt"))
+        assertFalse(payload.containsKey("rightsAttestedAt"))
         assertFalse(payload.containsKey("votes"))
     }
 

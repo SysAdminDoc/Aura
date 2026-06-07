@@ -5,7 +5,7 @@ rules. The backend surface currently includes Firebase Realtime Database rules,
 Cloud Storage rules, a Cloud Functions scaffold with handler-backed report,
 vote, follow, block, sound upload, wallpaper upload, and profile edit
 submission, Android report, vote, follow, user-block, and sound upload
-callable client adapters, local
+and wallpaper upload callable client adapters, local
 Emulator Suite tests, Functions unit tests, and a deterministic manifest of the
 files that affect backend deployment.
 

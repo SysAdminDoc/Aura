@@ -478,6 +478,13 @@ next pass can resume quickly.
   after Storage upload when Firebase Auth is available, preserved direct RTDB
   fallback only for missing endpoint or missing Auth compatibility, and covered
   the sound upload callable envelope with focused unit tests.
+- Completed Cycle 113 Android wallpaper upload finalizer callable migration:
+  added `CommunityWallpaperUploadMetadataInput` payload normalization, extended
+  `CommunityCallableClient` for `finalizeCommunityWallpaperUpload`, routed
+  `WallpaperUploadRepository.uploadWallpaper()` metadata finalization through
+  the callable after Storage upload when Firebase Auth is available, preserved
+  direct RTDB fallback only for missing endpoint or missing Auth compatibility,
+  and covered the wallpaper upload callable envelope with focused unit tests.
 
 ## 2026-06-05
 

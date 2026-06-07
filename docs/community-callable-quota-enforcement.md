@@ -13,11 +13,12 @@ callable and refines profile dedupe to include the normalized public profile
 hash. Cycle 108 adds the first Android callable migration adapter for report
 submission, Cycle 109 adds the Android vote callable migration adapter, Cycle
 110 adds the Android follow callable migration adapter, Cycle 111 adds the
-Android user-block callable migration adapter, and Cycle 112 adds the Android
-sound upload finalizer callable migration adapter. Every exported callable now
-has a handler core, while production enforcement still waits for full callable
-wire-protocol coverage, the remaining Android write migrations,
-owner-approved deploy evidence, and App Check console evidence.
+Android user-block callable migration adapter, Cycle 112 adds the Android
+sound upload finalizer callable migration adapter, and Cycle 113 adds the
+Android wallpaper upload finalizer callable migration adapter. Every exported
+callable now has a handler core, while production enforcement still waits for
+full callable wire-protocol coverage, the remaining Android profile write
+migration, owner-approved deploy evidence, and App Check console evidence.
 
 ## Contract Source
 
@@ -212,10 +213,21 @@ Cycle 112 added:
   Storage upload when Firebase Auth is available, with direct RTDB fallback
   only for missing callable endpoint or missing Auth compatibility.
 
-Report, vote, follow, user-block, and sound upload finalization writes are the
-Android write surfaces with callable client code today. Wallpaper upload
-finalization and profile edits still write through their existing direct
-repository paths.
+Cycle 113 added:
+
+- `CommunityWallpaperUploadMetadataInput` payload normalization for Android
+  wallpaper upload finalizer callable requests.
+- `CommunityCallableClient.finalizeCommunityWallpaperUpload()` using
+  `CommunityQuotaPolicies.wallpaperUploads` and limited-use App Check tokens.
+- Callable-first `WallpaperUploadRepository.uploadWallpaper()` metadata
+  finalization after Storage upload when Firebase Auth is available, with
+  direct RTDB fallback only for missing callable endpoint or missing Auth
+  compatibility.
+
+Report, vote, follow, user-block, sound upload finalization, and wallpaper
+upload finalization writes are the Android write surfaces with callable client
+code today. Profile edits still write through their existing direct repository
+path.
 
 ## Request Envelope
 

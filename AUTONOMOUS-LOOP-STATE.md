@@ -1383,11 +1383,39 @@
   deploy evidence, direct RTDB rule tightening, and Firebase Console App Check
   evidence remain open.
 
+## Cycle 113 Result - 2026-06-07
+
+- Added `CommunityWallpaperUploadMetadataInput` payload normalization for
+  Android wallpaper upload finalizer callable requests.
+- Extended `CommunityCallableClient` with
+  `finalizeCommunityWallpaperUpload`, using
+  `CommunityQuotaPolicies.wallpaperUploads` and limited-use App Check tokens.
+- Updated `WallpaperUploadRepository.uploadWallpaper()` to prefer the
+  `finalizeCommunityWallpaperUpload` callable for metadata finalization after
+  Storage upload when Firebase Auth is available, preserve duplicate responses
+  as success, avoid direct RTDB fallback for quota/App Check/validation/storage
+  ownership errors, and keep the direct RTDB metadata path only for missing
+  callable endpoint or missing Firebase Auth compatibility.
+- Extended `CommunityCallableClientTest` coverage for wallpaper upload
+  finalizer request envelopes, metadata normalization, server-owned field
+  omission, and limited-use token selection.
+- Updated `docs/research/cycle-113-2026-06-07.md`, `ROADMAP.md`,
+  `COMPLETED.md`, `CHANGELOG.md`, backend runbook, callable quota enforcement
+  doc, and loop state.
+- Cycle 113 verification: focused Android callable client, wallpaper upload
+  repository validation, upload rights, and upload ownership tests, callable
+  contract check, dependency notice lock checks, native lock check, dependency
+  overlay check, dependency license policy check, high-severity Functions npm
+  audit, diff hygiene, and attribution/ASCII scans passed. Profile Android
+  callable migration, full callable wire-protocol coverage, owner-approved
+  deploy evidence, direct RTDB rule tightening, and Firebase Console App Check
+  evidence remain open.
+
 ## Next Cycle
 
-Continue this same assigned project, Aura. Start Cycle 113 from the
+Continue this same assigned project, Aura. Start Cycle 114 from the
 `ROADMAP.md` Continuation State and
-`docs/research/cycle-112-2026-06-07.md`. The account
+`docs/research/cycle-113-2026-06-07.md`. The account
 deletion dry-run planner, read-only Settings identity surface, redacted
 shareable request draft, request-code lookup tool, review receipt gate, offline
 apply simulator, private executor package builder, and guarded REST executor
@@ -1456,10 +1484,13 @@ submission with compatibility fallback only for missing callable endpoint or
 missing Firebase Auth; Cycle 112 added the Android sound upload finalizer
 callable payload/client adapter and callable-first metadata finalization after
 Storage upload with compatibility fallback only for missing callable endpoint
-or missing Firebase Auth. Android callable migration for wallpaper upload
-finalizers and profile edits, full callable wire-protocol
+or missing Firebase Auth; Cycle 113 added the Android wallpaper upload
+finalizer callable payload/client adapter and callable-first metadata
+finalization after Storage upload with compatibility fallback only for missing
+callable endpoint or missing Firebase Auth. Android callable migration for
+profile edits, full callable wire-protocol
 coverage, a live hosted HTTPS web deletion URL, and production-project dry-run
-evidence remain open. Next migrate Android wallpaper upload finalizer or profile writes to
+evidence remain open. Next migrate Android profile writes to
 callable adapters, add full callable wire-protocol coverage when Auth and App
 Check emulator wiring is available, publish the hosted URL after owner
 approval, or run a real

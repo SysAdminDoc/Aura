@@ -11,6 +11,7 @@ import com.freevibe.data.local.PreferencesManager
 import com.freevibe.data.model.CommunityUploadDeleteReason
 import com.freevibe.data.model.CommunityUploadKind
 import com.freevibe.data.model.CommunityUploadRights
+import com.freevibe.data.model.CommunityWallpaperUploadMetadataInput
 import com.freevibe.data.model.ContentSource
 import com.freevibe.data.model.SearchResult
 import com.freevibe.data.model.Wallpaper
@@ -74,6 +75,7 @@ class WallpaperUploadRepository @Inject constructor(
     private val prefs: PreferencesManager,
     private val sourceMetrics: SourceMetrics,
     private val communityBlockRepo: CommunityBlockRepository,
+    private val callableClient: CommunityCallableClient,
 ) {
     private data class WallpaperUploadInfo(
         val baseName: String,
@@ -110,8 +112,6 @@ class WallpaperUploadRepository @Inject constructor(
                 throw IllegalStateException(communityDisabledMessage())
             }
             val storageInstance = storage ?: throw IllegalStateException("Firebase Storage not available")
-            val wallpapersRefInstance = wallpapersRef ?: throw IllegalStateException("Firebase Database not available")
-            val databaseRoot = database?.reference ?: throw IllegalStateException("Firebase Database not available")
             val sanitizedName = name.trim().take(100)
             if (sanitizedName.isBlank()) throw IllegalArgumentException("Wallpaper name cannot be empty")
             val validatedRights = validateCommunityUploadRights(
@@ -153,50 +153,53 @@ class WallpaperUploadRepository @Inject constructor(
                 }
                 uploadTask.await()
                 val downloadUrl = storageRef.downloadUrl.await().toString()
-                val pushRef = wallpapersRefInstance.push()
-                val key = pushRef.key ?: throw IllegalStateException("Could not create wallpaper record")
-                val metadata = mapOf(
-                    "name" to sanitizedName,
-                    "category" to normalizedCategory,
-                    "tags" to normalizedTags,
-                    "colors" to prepared.colors,
-                    "thumbnailUrl" to downloadUrl,
-                    "fullUrl" to downloadUrl,
-                    "downloadUrl" to downloadUrl,
-                    "storagePath" to storagePath,
-                    "width" to prepared.width,
-                    "height" to prepared.height,
-                    "fileSize" to prepared.bytes.size,
-                    "fileType" to "image/jpeg",
-                    "originalFileName" to uploadInfo.originalFileName,
-                    "uploadedAt" to timestamp,
-                    "uploaderId" to uploaderId,
-                    "uploaderUid" to uploaderId,
-                    "uploaderLabel" to uploaderLabel,
-                    "license" to validatedRights.license,
-                    "rightsAttested" to true,
-                    "rightsAttestedAt" to timestamp,
-                    "sourceUrl" to validatedRights.sourceUrl,
-                    "votes" to 0,
-                )
-                val ownerIndex = buildCommunityOwnerUploadIndexPayload(
-                    kind = CommunityUploadKind.WALLPAPER,
-                    uploadId = key,
-                    storagePath = storagePath,
-                    title = sanitizedName,
-                    createdAt = timestamp,
-                )
-                databaseRoot.updateChildren(
-                    mapOf(
-                        "/community_wallpapers/$key" to metadata,
-                        communityOwnerUploadIndexPath(CommunityUploadKind.WALLPAPER, uploaderId, key) to ownerIndex,
-                    ),
-                ).await()
-                metadataSaved = true
+                var uploadKey = ""
+                if (!identityProvider.currentFirebaseUid().isNullOrBlank()) {
+                    finalizeWallpaperUploadWithCallableOrNull(
+                        name = sanitizedName,
+                        category = normalizedCategory,
+                        tags = normalizedTags,
+                        colors = prepared.colors,
+                        downloadUrl = downloadUrl,
+                        storagePath = storagePath,
+                        width = prepared.width,
+                        height = prepared.height,
+                        fileSize = prepared.bytes.size,
+                        originalFileName = uploadInfo.originalFileName,
+                        uploaderLabel = uploaderLabel,
+                        rights = validatedRights,
+                    )?.let { key ->
+                        uploadKey = key
+                        metadataSaved = true
+                    }
+                }
+                if (!metadataSaved) {
+                    val wallpapersRefInstance = wallpapersRef ?: throw IllegalStateException("Firebase Database not available")
+                    val databaseRoot = database?.reference ?: throw IllegalStateException("Firebase Database not available")
+                    uploadKey = saveWallpaperUploadMetadataDirect(
+                        wallpapersRefInstance = wallpapersRefInstance,
+                        databaseRoot = databaseRoot,
+                        uploaderId = uploaderId,
+                        name = sanitizedName,
+                        category = normalizedCategory,
+                        tags = normalizedTags,
+                        colors = prepared.colors,
+                        downloadUrl = downloadUrl,
+                        storagePath = storagePath,
+                        width = prepared.width,
+                        height = prepared.height,
+                        fileSize = prepared.bytes.size,
+                        originalFileName = uploadInfo.originalFileName,
+                        uploadedAt = timestamp,
+                        uploaderLabel = uploaderLabel,
+                        rights = validatedRights,
+                    )
+                    metadataSaved = true
+                }
 
                 Result.success(
                     Wallpaper(
-                        id = communityWallpaperId(key),
+                        id = communityWallpaperId(uploadKey),
                         source = ContentSource.COMMUNITY,
                         thumbnailUrl = downloadUrl,
                         fullUrl = downloadUrl,
@@ -307,6 +310,111 @@ class WallpaperUploadRepository @Inject constructor(
     private suspend fun isCommunityProviderEnabled(): Boolean = prefs.communityProviderEnabled.first()
 
     private fun communityDisabledMessage(): String = "Community source is disabled in Settings"
+
+    private suspend fun finalizeWallpaperUploadWithCallableOrNull(
+        name: String,
+        category: String,
+        tags: List<String>,
+        colors: List<String>,
+        downloadUrl: String,
+        storagePath: String,
+        width: Int,
+        height: Int,
+        fileSize: Int,
+        originalFileName: String,
+        uploaderLabel: String,
+        rights: CommunityUploadRights,
+    ): String? =
+        try {
+            val result = callableClient.finalizeCommunityWallpaperUpload(
+                CommunityWallpaperUploadMetadataInput(
+                    name = name,
+                    category = category,
+                    tags = tags,
+                    colors = colors,
+                    thumbnailUrl = downloadUrl,
+                    fullUrl = downloadUrl,
+                    downloadUrl = downloadUrl,
+                    storagePath = storagePath,
+                    width = width,
+                    height = height,
+                    fileSize = fileSize,
+                    fileType = "image/jpeg",
+                    originalFileName = originalFileName,
+                    uploaderLabel = uploaderLabel,
+                    license = rights.license,
+                    rightsAttested = rights.rightsAttested,
+                    sourceUrl = rights.sourceUrl,
+                ),
+            )
+            when {
+                result.status.equals("accepted", ignoreCase = true) -> result.targetId()
+                result.status.equals("duplicate", ignoreCase = true) -> result.targetId()
+                else -> throw IllegalStateException("Unexpected wallpaper upload status: ${result.status}")
+            }
+        } catch (e: CommunityCallableException) {
+            if (e.isMissingEndpoint()) null else throw e
+        }
+
+    private suspend fun saveWallpaperUploadMetadataDirect(
+        wallpapersRefInstance: com.google.firebase.database.DatabaseReference,
+        databaseRoot: com.google.firebase.database.DatabaseReference,
+        uploaderId: String,
+        name: String,
+        category: String,
+        tags: List<String>,
+        colors: List<String>,
+        downloadUrl: String,
+        storagePath: String,
+        width: Int,
+        height: Int,
+        fileSize: Int,
+        originalFileName: String,
+        uploadedAt: Long,
+        uploaderLabel: String,
+        rights: CommunityUploadRights,
+    ): String {
+        val pushRef = wallpapersRefInstance.push()
+        val key = pushRef.key ?: throw IllegalStateException("Could not create wallpaper record")
+        val metadata = mapOf(
+            "name" to name,
+            "category" to category,
+            "tags" to tags,
+            "colors" to colors,
+            "thumbnailUrl" to downloadUrl,
+            "fullUrl" to downloadUrl,
+            "downloadUrl" to downloadUrl,
+            "storagePath" to storagePath,
+            "width" to width,
+            "height" to height,
+            "fileSize" to fileSize,
+            "fileType" to "image/jpeg",
+            "originalFileName" to originalFileName,
+            "uploadedAt" to uploadedAt,
+            "uploaderId" to uploaderId,
+            "uploaderUid" to uploaderId,
+            "uploaderLabel" to uploaderLabel,
+            "license" to rights.license,
+            "rightsAttested" to true,
+            "rightsAttestedAt" to uploadedAt,
+            "sourceUrl" to rights.sourceUrl,
+            "votes" to 0,
+        )
+        val ownerIndex = buildCommunityOwnerUploadIndexPayload(
+            kind = CommunityUploadKind.WALLPAPER,
+            uploadId = key,
+            storagePath = storagePath,
+            title = name,
+            createdAt = uploadedAt,
+        )
+        databaseRoot.updateChildren(
+            mapOf(
+                "/community_wallpapers/$key" to metadata,
+                communityOwnerUploadIndexPath(CommunityUploadKind.WALLPAPER, uploaderId, key) to ownerIndex,
+            ),
+        ).await()
+        return key
+    }
 
     private fun snapshotToWallpaper(child: DataSnapshot, blockedUploaderIds: Set<String> = emptySet()): Wallpaper? {
         val key = child.key ?: return null
