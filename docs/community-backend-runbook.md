@@ -152,6 +152,9 @@ must include:
 - Account deletion apply simulation receipt from
   `tools/community_account_deletion_apply_simulator.py` when a reviewed plan is
   tested against an exported RTDB snapshot.
+- Private account deletion executor package from
+  `tools/community_account_deletion_executor_package.py` before any future
+  trusted executor or callable applies RTDB updates.
 
 ## Sources
 

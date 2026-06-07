@@ -47,6 +47,11 @@ null-update plan to a local copy of the RTDB export, prunes empty objects, and
 emits a hashed simulation receipt. It does not contact Firebase and is only
 evidence for a future trusted executor.
 
+`tools/community_account_deletion_executor_package.py` validates the plan,
+review receipt, and simulation receipt, then builds the private RTDB update
+package a future trusted executor can consume. The package contains full update
+paths and must not be published.
+
 ## Operator Handling
 
 1. Receive the request draft through a private support channel.
@@ -75,9 +80,15 @@ evidence for a future trusted executor.
    py -3 tools\community_account_deletion_apply_simulator.py --database-export .\rtdb-export.json --plan .\account-deletion-plan.json --review .\account-deletion-review.json --output .\account-deletion-simulation.json
    ```
 
-7. Review retained public upload and moderation records against
+7. Build the private executor package:
+
+   ```powershell
+   py -3 tools\community_account_deletion_executor_package.py --plan .\account-deletion-plan.json --review .\account-deletion-review.json --simulation .\account-deletion-simulation.json --request-code AURA-123456789ABC --operator <private-ticket-or-initials> --output .\account-deletion-executor-package.json
+   ```
+
+8. Review retained public upload and moderation records against
    `docs/community-account-deletion-policy.md`.
-8. Apply changes only through the future trusted executor or callable
+9. Apply changes only through the future trusted executor or callable
    orchestrator.
 
 Do not request or publish a full Firebase UID in a public issue.

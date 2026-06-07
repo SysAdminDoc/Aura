@@ -39,6 +39,17 @@ The simulator verifies the review hash and plan hash, applies the null updates
 to a local copy, prunes empty objects, and emits a hashed receipt with deleted,
 missing-before, and remaining-path counts. It does not contact Firebase.
 
+After review and simulation pass, operators can build the private executor
+package:
+
+```powershell
+py -3 tools\community_account_deletion_executor_package.py --plan .\account-deletion-plan.json --review .\account-deletion-review.json --simulation .\account-deletion-simulation.json --request-code AURA-123456789ABC --operator <private-ticket-or-initials> --output .\account-deletion-executor-package.json
+```
+
+The executor package validates all hashes again and contains the full RTDB
+multi-path update payload for the future trusted executor. It is private
+operator evidence and must not be published.
+
 ## Deleted Marker Paths
 
 The planner removes:
@@ -103,12 +114,13 @@ dry-run planner and review receipt.
 - `py -3 -m py_compile tools\community_deletion_request_lookup.py test\tools\community_deletion_request_lookup_test.py`
 - `py -3 -m py_compile tools\community_account_deletion_review.py test\tools\community_account_deletion_review_test.py`
 - `py -3 -m py_compile tools\community_account_deletion_apply_simulator.py test\tools\community_account_deletion_apply_simulator_test.py`
+- `py -3 -m py_compile tools\community_account_deletion_executor_package.py test\tools\community_account_deletion_executor_package_test.py`
 
 ## Remaining Work
 
 - Add a trusted deletion executor after the Cloud Functions/backend deployment
-  surface exists. The local review receipt and simulator are apply gates, not
-  the executor.
+  surface exists. The local review receipt, simulator, and executor package are
+  apply gates, not the executor.
 - Add local/Auth deletion and community cache cleanup after the trusted
   executor owns final sequencing.
 - Publish a hosted private support route or web deletion page before Play

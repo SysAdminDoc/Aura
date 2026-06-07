@@ -282,6 +282,10 @@ next pass can resume quickly.
   to verify review/plan hashes, reject retained-root deletes through the review
   gate, simulate null updates against a copied RTDB export, prune empty objects,
   and emit a hashed simulation receipt without contacting Firebase.
+- Completed Cycle 80 account deletion executor package: added
+  `tools/community_account_deletion_executor_package.py` and backend tool tests
+  to validate plan, review, and simulation receipts before producing the
+  private RTDB null-update payload that a future trusted executor can consume.
 
 ## 2026-06-05
 
