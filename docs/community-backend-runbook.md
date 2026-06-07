@@ -158,6 +158,10 @@ must include:
 - Guarded REST executor dry-run/apply receipt from
   `tools/community_account_deletion_rest_executor.py` when reviewed account
   deletion RTDB updates are tested or applied.
+- Redacted account deletion completion receipt from
+  `tools/community_account_deletion_completion_receipt.py` after an applied
+  REST receipt exists and before any requester-facing completion response is
+  shared.
 
 ## Sources
 

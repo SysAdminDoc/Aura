@@ -57,6 +57,11 @@ executor. It defaults to dry-run and only applies through the Realtime Database
 REST API when the operator provides a matching request code, matching plan hash,
 database URL, and OAuth2 access token.
 
+`tools/community_account_deletion_completion_receipt.py` validates the private
+executor package against an applied REST executor receipt, rejects dry-runs, and
+emits a user-safe completion receipt that omits full UIDs, RTDB paths, database
+hosts, update payloads, and access tokens.
+
 ## Operator Handling
 
 1. Receive the request draft through a private support channel.
@@ -106,5 +111,15 @@ database URL, and OAuth2 access token.
    $env:FIREBASE_DATABASE_ACCESS_TOKEN = "<OAuth2 access token>"
    py -3 tools\community_account_deletion_rest_executor.py --package .\account-deletion-executor-package.json --database-url https://<database-name>.firebaseio.com --mode apply --confirm-request-code AURA-123456789ABC --confirm-plan-hash <planHash> --output .\account-deletion-rest-apply.json
    ```
+
+11. Build the redacted completion receipt only from the applied REST receipt:
+
+   ```powershell
+   py -3 tools\community_account_deletion_completion_receipt.py --package .\account-deletion-executor-package.json --rest-receipt .\account-deletion-rest-apply.json --request-code AURA-123456789ABC --support-reference <ticket-id> --output .\account-deletion-completion-receipt.json
+   ```
+
+12. Share only the completion receipt with the requester. Keep lookup, plan,
+    review, simulation, executor package, REST apply receipt, database export,
+    access token, full UID, and RTDB paths private.
 
 Do not request or publish a full Firebase UID in a public issue.

@@ -291,6 +291,11 @@ next pass can resume quickly.
   for a dry-run-default RTDB REST executor that requires matching request-code
   and plan-hash confirmations plus an OAuth2 token before sending a multi-path
   `PATCH`.
+- Completed Cycle 82 account deletion completion receipt: added
+  `tools/community_account_deletion_completion_receipt.py` and backend tool
+  tests to validate applied REST receipts against private executor packages,
+  reject dry-run receipts as completion evidence, and emit a user-safe redacted
+  receipt for requester responses.
 
 ## 2026-06-05
 
