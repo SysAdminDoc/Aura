@@ -1,8 +1,8 @@
 # Autonomous Loop State
 
 **Assigned project:** `C:\Users\--\repos\Aura`
-**Current pass:** 2026-06-06 Cycle 72 blocked creators review
-**Last commit before pass:** `b154cbd` (`feat(community): add block creator actions`)
+**Current pass:** 2026-06-06 Cycle 73 report/profile block actions
+**Last commit before pass:** `b9ce19b` (`feat(community): add blocked creators review`)
 
 ## 2026-06-05 Result
 
@@ -345,8 +345,8 @@
 - Real production-project Firebase backend dry-run evidence after owner access is confirmed.
 - Real exported Storage/RTDB orphan reports after owner access is confirmed.
 - Real production RTDB legacy backfill plan after owner access is confirmed.
-- Report-card/profile block entry points, vote marker privacy/account deletion
-  semantics, and deployable callable backend implementation.
+- Vote marker privacy/account deletion semantics and deployable callable backend
+  implementation.
 
 ## Cycle 69 Result - 2026-06-06
 
@@ -407,17 +407,35 @@
   `CHANGELOG.md`.
 - Cycle 72 verification: focused `SettingsViewModelTest` passed locally.
 
+## Cycle 73 Result - 2026-06-06
+
+- Added optional `uploaderUid` metadata to community report inputs and stored
+  report records so admin report cards can target canonical community uploaders.
+- Community sound and wallpaper report submissions now forward
+  `communityUploaderId` into report metadata when available.
+- Admin report cards now expose confirmed `Block creator` actions for reports
+  that carry community uploader UID metadata.
+- Creator profile rows now expose confirmed `Block creator` actions for
+  non-current-user creators and immediately remove matching dashboard rows after
+  the private block write succeeds.
+- Updated `database.rules.json`, `docs/community-backend-manifest.json`,
+  `docs/research/cycle-73-2026-06-06.md`,
+  `docs/community-block-user-policy.md`, `ROADMAP.md`, `COMPLETED.md`, and
+  `CHANGELOG.md`.
+- Cycle 73 verification: focused report/profile/sound/wallpaper ViewModel and
+  model tests passed locally; backend manifest check and Firebase rules suite
+  passed locally.
+
 ## Next Cycle
 
-Continue this same assigned project, Aura. Start Cycle 73 from the `ROADMAP.md`
-Continuation State and `docs/research/cycle-72-2026-06-06.md`. Detail-screen
-block actions and Settings blocked-creators review/unblock are now in place.
-Next add report-card/profile block entry points, vote marker privacy/account
-deletion semantics, a real production-project Firebase backend dry
-run/orphan/backfill evidence pass after owner access is confirmed, Cloud
-Functions implementation for the callable quota contract, or Android callable
-migration adapters. Commit and push completed work when the active project
-contract allows it.
+Continue this same assigned project, Aura. Start Cycle 74 from the `ROADMAP.md`
+Continuation State and `docs/research/cycle-73-2026-06-06.md`. Detail-screen,
+Settings, creator-profile, and report-card block entry points are now in place.
+Next add vote marker privacy/account deletion semantics, a real
+production-project Firebase backend dry run/orphan/backfill evidence pass after
+owner access is confirmed, Cloud Functions implementation for the callable
+quota contract, or Android callable migration adapters. Commit and push
+completed work when the active project contract allows it.
 
 ## Previous Cycle Prompt
 

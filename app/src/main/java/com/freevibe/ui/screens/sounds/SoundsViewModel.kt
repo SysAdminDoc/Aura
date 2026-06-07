@@ -1499,6 +1499,7 @@ class SoundsViewModel @Inject constructor(
                     sourceUrl = reportSourceUrl(sound.sourcePageUrl, sound.downloadUrl),
                     license = sound.license,
                     uploaderName = sound.uploaderName,
+                    uploaderUid = sound.communityUploaderId,
                 ),
             ).onSuccess {
                 _state.update { it.copy(applySuccess = "Report submitted") }

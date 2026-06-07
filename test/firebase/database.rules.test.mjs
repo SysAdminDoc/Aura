@@ -345,9 +345,10 @@ test('community report intake is reporter-owned and admin-readable', async () =>
   const admin = adminDb();
   const path = 'community_reports/report1';
 
-  await assertSucceeds(reporter.ref(path).set(reportPayload('reporter1')));
+  await assertSucceeds(reporter.ref(path).set(reportPayload('reporter1', { uploaderUid: 'uploader-1' })));
   await assertFails(unauthenticatedDb().ref('community_reports/anon').set(reportPayload('reporter1')));
   await assertFails(other.ref('community_reports/report2').set(reportPayload('reporter1')));
+  await assertFails(reporter.ref('community_reports/report3').set(reportPayload('reporter1', { uploaderUid: 'u'.repeat(241) })));
   await assertFails(reporter.ref(path).once('value'));
   await assertSucceeds(admin.ref(path).once('value'));
   await assertFails(reporter.ref(path).update({ status: 'HIDDEN' }));

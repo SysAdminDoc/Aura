@@ -5,8 +5,9 @@ surfaces. Cycle 70 adds Android repository support and private block-list
 filtering for community feeds and creator profile surfaces. Cycle 71 adds
 confirmed block actions on community sound and wallpaper detail surfaces when
 the uploader identity is present. Cycle 72 adds a Settings review surface for
-blocked creators and one-tap unblock. Callable-backed writes remain follow-up
-work.
+blocked creators and one-tap unblock. Cycle 73 adds creator-profile and admin
+report-card block entry points backed by optional report uploader UID metadata.
+Callable-backed writes remain follow-up work.
 
 ## Policy
 
@@ -68,17 +69,25 @@ App Check, quota, and dedupe ledgers.
   followed creators, and followed upload lists.
 - Community sound and wallpaper models carry `communityUploaderId` from
   canonical `uploaderUid` or legacy `uploaderId` metadata.
+- Community sound and wallpaper report submissions include optional
+  `uploaderUid` metadata when the reported item is a community upload with a
+  canonical uploader ID.
 - `SoundDetailScreen` and `WallpaperDetailScreen` show confirmed `Block
   creator` actions for blockable community uploads, then remove visible rows
   from the same uploader after the private block write succeeds.
 - Settings shows a `Blocked creators` review dialog with blocked uploader IDs,
   reason/timestamp metadata, and per-row unblock actions.
+- Creator profile rows expose confirmed block actions for non-current-user
+  creators, then remove matching top-creator, followed-creator, and followed
+  upload rows from the dashboard.
+- Admin report cards expose confirmed block actions when a report carries a
+  community uploader UID; older reports without that metadata do not show the
+  action.
 - Block and unblock repository methods maintain both the private list and
   admin reverse index.
 
 ## Remaining Work
 
-- Add visible UI entry points from report cards and creator profile surfaces.
 - Move block/unblock writes to `setCommunityUserBlock` and then tighten direct
   RTDB writes.
 - Decide account-deletion cleanup for outbound blocks and inbound reverse

@@ -395,6 +395,7 @@ class WallpapersViewModelTest {
             reportRepoOverride = reportRepo,
         )
         val wallpaper = wallpaper(id = "cw_1", source = ContentSource.COMMUNITY, color = "#223344")
+            .copy(communityUploaderId = "creator-1")
 
         viewModel.reportWallpaper(wallpaper, CommunityReportReason.SOURCE_REMOVED, "gone upstream")
         advanceUntilIdle()
@@ -403,9 +404,10 @@ class WallpapersViewModelTest {
         coVerify {
             reportRepo.submitReport(
                 match {
-                    it.contentId == wallpaper.stableKey() &&
+                        it.contentId == wallpaper.stableKey() &&
                         it.contentType == "WALLPAPER" &&
-                        it.reason == CommunityReportReason.SOURCE_REMOVED
+                        it.reason == CommunityReportReason.SOURCE_REMOVED &&
+                        it.uploaderUid == "creator-1"
                 },
             )
         }

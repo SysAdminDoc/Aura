@@ -7,6 +7,8 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Block
+import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Groups
 import androidx.compose.material.icons.filled.Leaderboard
@@ -18,6 +20,9 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
@@ -27,6 +32,9 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewModelScope
+import com.freevibe.data.model.CommunityBlockReason
+import com.freevibe.data.model.isCommunityUserBlocked
+import com.freevibe.data.repository.CommunityBlockRepository
 import com.freevibe.data.repository.CreatorProfileDashboard
 import com.freevibe.data.repository.CreatorProfileRepository
 import com.freevibe.data.repository.CreatorStats
@@ -46,12 +54,14 @@ data class CreatorProfileUiState(
     val isLoading: Boolean = true,
     val dashboard: CreatorProfileDashboard? = null,
     val error: String? = null,
+    val message: String? = null,
     val actionInFlightCreatorId: String? = null,
 )
 
 @HiltViewModel
 class CreatorProfileViewModel @Inject constructor(
     private val repository: CreatorProfileRepository,
+    private val communityBlockRepo: CommunityBlockRepository,
 ) : ViewModel() {
     private val _state = MutableStateFlow(CreatorProfileUiState())
     val state = _state.asStateFlow()
@@ -62,17 +72,17 @@ class CreatorProfileViewModel @Inject constructor(
 
     fun refresh() {
         viewModelScope.launch {
-            _state.update { it.copy(isLoading = true, error = null) }
+            _state.update { it.copy(isLoading = true, error = null, message = null) }
             runCatching { repository.getDashboard() }
                 .onSuccess { dashboard ->
                     _state.update {
-                        it.copy(isLoading = false, dashboard = dashboard, error = null)
+                        it.copy(isLoading = false, dashboard = dashboard, error = null, message = null)
                     }
                 }
                 .onFailure { e ->
                     if (e is kotlinx.coroutines.CancellationException) throw e
                     _state.update {
-                        it.copy(isLoading = false, error = e.message ?: "Creator profile could not load")
+                        it.copy(isLoading = false, error = e.message ?: "Creator profile could not load", message = null)
                     }
                 }
         }
@@ -86,9 +96,40 @@ class CreatorProfileViewModel @Inject constructor(
         updateFollow(creator, follow = false)
     }
 
+    fun blockCreator(creator: CreatorStats) {
+        val dashboard = _state.value.dashboard
+        if (dashboard != null && creator.matchesCreator(dashboard.currentCreator.creatorId)) {
+            _state.update { it.copy(error = "You cannot block your own creator profile", message = null) }
+            return
+        }
+        viewModelScope.launch {
+            _state.update { it.copy(actionInFlightCreatorId = creator.creatorId, error = null, message = null) }
+            communityBlockRepo.blockUser(creator.creatorId, CommunityBlockReason.OTHER)
+                .onSuccess {
+                    _state.update { state ->
+                        state.copy(
+                            actionInFlightCreatorId = null,
+                            dashboard = state.dashboard?.withoutCreator(creator.creatorId),
+                            message = "Creator blocked",
+                        )
+                    }
+                }
+                .onFailure { e ->
+                    if (e is kotlinx.coroutines.CancellationException) throw e
+                    _state.update {
+                        it.copy(
+                            actionInFlightCreatorId = null,
+                            error = e.message ?: "Creator block failed",
+                            message = null,
+                        )
+                    }
+                }
+        }
+    }
+
     private fun updateFollow(creator: CreatorStats, follow: Boolean) {
         viewModelScope.launch {
-            _state.update { it.copy(actionInFlightCreatorId = creator.creatorId, error = null) }
+            _state.update { it.copy(actionInFlightCreatorId = creator.creatorId, error = null, message = null) }
             val result = if (follow) {
                 repository.followCreator(creator.creatorId, creator.label)
             } else {
@@ -102,12 +143,13 @@ class CreatorProfileViewModel @Inject constructor(
                 .onFailure { e ->
                     if (e is kotlinx.coroutines.CancellationException) throw e
                     _state.update {
-                        it.copy(
-                            actionInFlightCreatorId = null,
-                            error = e.message ?: "Follow action failed",
-                        )
-                    }
+                    it.copy(
+                        actionInFlightCreatorId = null,
+                        error = e.message ?: "Follow action failed",
+                        message = null,
+                    )
                 }
+            }
         }
     }
 }
@@ -170,12 +212,19 @@ fun CreatorProfileScreen(
                         item {
                             CreatorSummaryCard(dashboard)
                         }
-                        if (state.error != null) {
+                        val statusMessage = state.error ?: state.message
+                        if (statusMessage != null) {
                             item {
                                 AssistChip(
                                     onClick = viewModel::refresh,
-                                    label = { Text(state.error ?: "Refresh creator profile") },
-                                    leadingIcon = { Icon(Icons.Default.Refresh, contentDescription = null, modifier = Modifier.size(16.dp)) },
+                                    label = { Text(statusMessage) },
+                                    leadingIcon = {
+                                        Icon(
+                                            if (state.error == null) Icons.Default.CheckCircle else Icons.Default.Refresh,
+                                            contentDescription = null,
+                                            modifier = Modifier.size(16.dp),
+                                        )
+                                    },
                                     shape = RoundedCornerShape(10.dp),
                                 )
                             }
@@ -195,6 +244,11 @@ fun CreatorProfileScreen(
                                     actionInFlight = state.actionInFlightCreatorId == creator.creatorId,
                                     onFollow = { viewModel.follow(creator) },
                                     onUnfollow = { viewModel.unfollow(creator) },
+                                    onBlock = if (creator.matchesCreator(dashboard.currentCreator.creatorId)) {
+                                        null
+                                    } else {
+                                        { viewModel.blockCreator(creator) }
+                                    },
                                 )
                             }
                         }
@@ -213,6 +267,7 @@ fun CreatorProfileScreen(
                                     actionInFlight = state.actionInFlightCreatorId == creator.creatorId,
                                     onFollow = { viewModel.follow(creator) },
                                     onUnfollow = { viewModel.unfollow(creator) },
+                                    onBlock = { viewModel.blockCreator(creator) },
                                 )
                             }
                         }
@@ -314,7 +369,32 @@ private fun CreatorRow(
     actionInFlight: Boolean,
     onFollow: () -> Unit,
     onUnfollow: () -> Unit,
+    onBlock: (() -> Unit)?,
 ) {
+    var showBlockConfirm by remember(creator.creatorId) { mutableStateOf(false) }
+    if (showBlockConfirm && onBlock != null) {
+        AlertDialog(
+            onDismissRequest = { if (!actionInFlight) showBlockConfirm = false },
+            title = { Text("Block creator?") },
+            text = { Text("This hides future community uploads from this creator in your personal community feeds.") },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        showBlockConfirm = false
+                        onBlock()
+                    },
+                    enabled = !actionInFlight,
+                ) {
+                    Text("Block")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showBlockConfirm = false }, enabled = !actionInFlight) {
+                    Text("Cancel")
+                }
+            },
+        )
+    }
     Surface(
         shape = RoundedCornerShape(12.dp),
         color = MaterialTheme.colorScheme.surfaceContainer.copy(alpha = 0.7f),
@@ -334,15 +414,25 @@ private fun CreatorRow(
                 )
             }
             if (!isCurrentUser) {
-                TextButton(
-                    onClick = if (creator.isFollowed) onUnfollow else onFollow,
-                    enabled = !actionInFlight,
-                    shape = RoundedCornerShape(10.dp),
-                ) {
-                    if (actionInFlight) {
-                        CircularProgressIndicator(Modifier.size(14.dp), strokeWidth = 2.dp)
-                    } else {
-                        Text(if (creator.isFollowed) "Following" else "Follow")
+                Row(horizontalArrangement = Arrangement.spacedBy(4.dp), verticalAlignment = Alignment.CenterVertically) {
+                    TextButton(
+                        onClick = if (creator.isFollowed) onUnfollow else onFollow,
+                        enabled = !actionInFlight,
+                        shape = RoundedCornerShape(10.dp),
+                    ) {
+                        if (actionInFlight) {
+                            CircularProgressIndicator(Modifier.size(14.dp), strokeWidth = 2.dp)
+                        } else {
+                            Text(if (creator.isFollowed) "Following" else "Follow")
+                        }
+                    }
+                    if (onBlock != null) {
+                        IconButton(
+                            onClick = { showBlockConfirm = true },
+                            enabled = !actionInFlight,
+                        ) {
+                            Icon(Icons.Default.Block, contentDescription = "Block creator")
+                        }
                     }
                 }
             }
@@ -401,3 +491,24 @@ private fun EmptyCreatorSection(text: String) {
         )
     }
 }
+
+private fun CreatorProfileDashboard.withoutCreator(creatorId: String): CreatorProfileDashboard =
+    copy(
+        topCreators = topCreators.filterNot { it.matchesCreator(creatorId) },
+        followedCreators = followedCreators.filterNot { it.matchesCreator(creatorId) },
+        followedUploads = followedUploads.filterNot { it.matchesCreator(creatorId) },
+    )
+
+private fun CreatorStats.matchesCreator(creatorId: String): Boolean =
+    isCommunityUserBlocked(
+        uploaderUid = this.creatorId,
+        uploaderId = this.creatorId,
+        blockedUserIds = setOf(creatorId),
+    )
+
+private fun CreatorUploadRef.matchesCreator(creatorId: String): Boolean =
+    isCommunityUserBlocked(
+        uploaderUid = this.creatorId,
+        uploaderId = this.creatorId,
+        blockedUserIds = setOf(creatorId),
+    )

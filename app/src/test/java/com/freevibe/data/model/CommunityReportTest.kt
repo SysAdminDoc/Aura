@@ -18,6 +18,7 @@ class CommunityReportTest {
                 sourceUrl = "https://example.com/source",
                 license = "CC BY",
                 uploaderName = "Creator",
+                uploaderUid = "creator-1",
             ),
             reporterUid = "uid-1",
             reportedAt = 123L,
@@ -29,6 +30,7 @@ class CommunityReportTest {
         assertEquals("https://example.com/source", payload["sourceUrl"])
         assertEquals("OPEN", payload["status"])
         assertEquals("uid-1", payload["reporterUid"])
+        assertEquals("creator-1", payload["uploaderUid"])
     }
 
     @Test

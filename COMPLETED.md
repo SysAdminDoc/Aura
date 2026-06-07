@@ -249,6 +249,10 @@ next pass can resume quickly.
   community creators with reason/timestamp metadata and supports per-row unblock
   actions through `CommunityBlockRepository`, with focused Settings ViewModel
   coverage.
+- Completed Cycle 73 report/profile block actions: community reports now carry
+  optional uploader UID metadata, report rules validate that field, admin report
+  cards can block reported community uploaders, and creator profile rows expose
+  confirmed block actions with immediate dashboard filtering.
 
 ## 2026-06-05
 

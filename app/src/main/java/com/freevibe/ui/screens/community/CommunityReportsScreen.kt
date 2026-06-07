@@ -51,12 +51,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.freevibe.data.model.CommunityBlockReason
 import com.freevibe.data.model.CommunityReportReason
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewModelScope
 import com.freevibe.data.model.CommunityReportRecord
 import com.freevibe.data.model.CommunityReportResolutionStatus
+import com.freevibe.data.repository.CommunityBlockRepository
 import com.freevibe.data.repository.CommunityReportRepository
 import com.freevibe.data.repository.VoteRepository
 import com.freevibe.ui.components.AuraStateAction
@@ -86,6 +88,7 @@ data class CommunityReportsUiState(
 class CommunityReportsViewModel @Inject constructor(
     private val reportRepo: CommunityReportRepository,
     private val voteRepo: VoteRepository,
+    private val blockRepo: CommunityBlockRepository,
 ) : ViewModel() {
     val isAdmin: Boolean get() = voteRepo.isAdmin
     private val _selectedStatus = MutableStateFlow(CommunityReportResolutionStatus.OPEN)
@@ -149,6 +152,35 @@ class CommunityReportsViewModel @Inject constructor(
                     )
                 }
             }
+        }
+    }
+
+    fun blockReportedUploader(report: CommunityReportRecord) {
+        val uploaderUid = report.uploaderUid
+        if (!report.canBlockReportedUploader()) {
+            _state.update { it.copy(error = "This report does not expose a blockable community uploader", message = null) }
+            return
+        }
+        viewModelScope.launch {
+            _state.update { it.copy(actionInFlightReportId = report.id, error = null, message = null) }
+            blockRepo.blockUser(uploaderUid, CommunityBlockReason.OTHER)
+                .onSuccess {
+                    _state.update {
+                        it.copy(
+                            actionInFlightReportId = null,
+                            message = "Creator blocked",
+                        )
+                    }
+                }
+                .onFailure { error ->
+                    if (error is kotlinx.coroutines.CancellationException) throw error
+                    _state.update {
+                        it.copy(
+                            actionInFlightReportId = null,
+                            error = error.message ?: "Creator block failed",
+                        )
+                    }
+                }
         }
     }
 
@@ -299,6 +331,11 @@ fun CommunityReportsScreen(
                             } else {
                                 null
                             },
+                            onBlockUploader = if (report.canBlockReportedUploader()) {
+                                { viewModel.blockReportedUploader(report) }
+                            } else {
+                                null
+                            },
                         )
                     }
                 }
@@ -334,8 +371,10 @@ private fun ReportCard(
     onDismiss: () -> Unit,
     onRestore: () -> Unit,
     onDeleteUpload: (() -> Unit)?,
+    onBlockUploader: (() -> Unit)?,
 ) {
     var showDeleteConfirm by remember(report.id) { mutableStateOf(false) }
+    var showBlockConfirm by remember(report.id) { mutableStateOf(false) }
     if (showDeleteConfirm && onDeleteUpload != null) {
         AlertDialog(
             onDismissRequest = { if (!busy) showDeleteConfirm = false },
@@ -354,6 +393,29 @@ private fun ReportCard(
             },
             dismissButton = {
                 TextButton(onClick = { showDeleteConfirm = false }, enabled = !busy) {
+                    Text("Cancel")
+                }
+            },
+        )
+    }
+    if (showBlockConfirm && onBlockUploader != null) {
+        AlertDialog(
+            onDismissRequest = { if (!busy) showBlockConfirm = false },
+            title = { Text("Block creator?") },
+            text = { Text("This hides future community uploads from this creator in your personal community feeds.") },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        showBlockConfirm = false
+                        onBlockUploader()
+                    },
+                    enabled = !busy,
+                ) {
+                    Text("Block")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showBlockConfirm = false }, enabled = !busy) {
                     Text("Cancel")
                 }
             },
@@ -390,6 +452,7 @@ private fun ReportCard(
             }
             ReportFact("License", report.license)
             ReportFact("Uploader", report.uploaderName)
+            ReportFact("Uploader UID", report.uploaderUid.take(12))
             ReportFact("Source", report.sourceUrl)
             ReportFact("Reporter", report.reporterUid.take(12))
             Spacer(Modifier.height(2.dp))
@@ -419,6 +482,17 @@ private fun ReportCard(
                     Text("Delete upload")
                 }
             }
+            if (onBlockUploader != null) {
+                OutlinedButton(
+                    onClick = { showBlockConfirm = true },
+                    enabled = !busy,
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
+                    Icon(Icons.Default.Block, contentDescription = null, modifier = Modifier.size(16.dp))
+                    Spacer(Modifier.size(6.dp))
+                    Text("Block creator")
+                }
+            }
         }
     }
 }
@@ -439,6 +513,10 @@ private fun CommunityReportRecord.canDeleteCommunityUpload(): Boolean =
     reason == CommunityReportReason.RIGHTS &&
         contentSource.equals("COMMUNITY", ignoreCase = true) &&
         contentType.uppercase(Locale.ROOT) in setOf("SOUND", "WALLPAPER")
+
+private fun CommunityReportRecord.canBlockReportedUploader(): Boolean =
+    contentSource.equals("COMMUNITY", ignoreCase = true) &&
+        uploaderUid.isNotBlank()
 
 private val CommunityReportReviewFilters = listOf(
     CommunityReportResolutionStatus.OPEN,

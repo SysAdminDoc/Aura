@@ -34,6 +34,7 @@ data class CommunityReportRecord(
     val sourceUrl: String,
     val license: String,
     val uploaderName: String,
+    val uploaderUid: String = "",
     val reporterUid: String,
     val reportedAt: Long,
     val status: CommunityReportResolutionStatus,
@@ -50,6 +51,7 @@ data class CommunityReportInput(
     val sourceUrl: String = "",
     val license: String = "",
     val uploaderName: String = "",
+    val uploaderUid: String = "",
 )
 
 private val REPORT_KEY_REGEX = Regex("[.#$\\[\\]/]")
@@ -99,7 +101,8 @@ fun buildCommunityReportPayload(
     require(reporter.isNotBlank()) { "Reporter UID is required" }
     require(reportedAt > 0L) { "Report timestamp is required" }
 
-    return mapOf(
+    val uploaderUid = normalizeCommunityReportText(input.uploaderUid, MAX_REPORT_CONTENT_ID)
+    return mutableMapOf<String, Any>(
         "contentId" to contentId,
         "contentKey" to sanitizeCommunityReportKey(contentId),
         "contentType" to contentType,
@@ -112,7 +115,11 @@ fun buildCommunityReportPayload(
         "reporterUid" to reporter,
         "reportedAt" to reportedAt,
         "status" to CommunityReportResolutionStatus.OPEN.storageValue,
-    )
+    ).also { payload ->
+        if (uploaderUid.isNotBlank()) {
+            payload["uploaderUid"] = uploaderUid
+        }
+    }
 }
 
 fun buildCommunityReportResolutionPayload(

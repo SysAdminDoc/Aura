@@ -294,6 +294,7 @@ private fun snapshotToCommunityReport(child: DataSnapshot): CommunityReportRecor
         sourceUrl = child.child("sourceUrl").getValue(String::class.java).orEmpty(),
         license = child.child("license").getValue(String::class.java).orEmpty(),
         uploaderName = child.child("uploaderName").getValue(String::class.java).orEmpty(),
+        uploaderUid = child.child("uploaderUid").getValue(String::class.java).orEmpty(),
         reporterUid = child.child("reporterUid").getValue(String::class.java).orEmpty(),
         reportedAt = child.child("reportedAt").getValue(Long::class.java) ?: 0L,
         status = communityReportStatusFromStorage(child.child("status").getValue(String::class.java)),

@@ -368,6 +368,7 @@ class SoundsViewModelTest {
             reportRepoOverride = reportRepo,
         )
         val sound = testSound("cu_1", ContentSource.COMMUNITY, "Community Tone")
+            .copy(communityUploaderId = "creator-1")
 
         viewModel.reportSound(sound, CommunityReportReason.RIGHTS, "wrong license")
         advanceUntilIdle()
@@ -379,7 +380,8 @@ class SoundsViewModelTest {
                     it.contentId == sound.stableKey() &&
                         it.contentType == "SOUND" &&
                         it.reason == CommunityReportReason.RIGHTS &&
-                        it.license == "CC0"
+                        it.license == "CC0" &&
+                        it.uploaderUid == "creator-1"
                 },
             )
         }

@@ -631,6 +631,7 @@ class WallpapersViewModel @Inject constructor(
                     sourceUrl = reportSourceUrl(wallpaper.sourcePageUrl, wallpaper.fullUrl),
                     license = wallpaper.license,
                     uploaderName = wallpaper.uploaderName,
+                    uploaderUid = wallpaper.communityUploaderId,
                 ),
             ).onSuccess {
                 _state.update { it.copy(applySuccess = "Report submitted") }

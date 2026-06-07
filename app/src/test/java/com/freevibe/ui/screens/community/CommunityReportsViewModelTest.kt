@@ -1,8 +1,10 @@
 package com.freevibe.ui.screens.community
 
+import com.freevibe.data.model.CommunityBlockReason
 import com.freevibe.data.model.CommunityReportReason
 import com.freevibe.data.model.CommunityReportRecord
 import com.freevibe.data.model.CommunityReportResolutionStatus
+import com.freevibe.data.repository.CommunityBlockRepository
 import com.freevibe.data.repository.CommunityReportRepository
 import com.freevibe.data.repository.VoteRepository
 import io.mockk.coEvery
@@ -52,7 +54,7 @@ class CommunityReportsViewModelTest {
             reportRepo.resolveReport(report.id, CommunityReportResolutionStatus.HIDDEN, any())
         } returns Result.success(Unit)
 
-        val viewModel = CommunityReportsViewModel(reportRepo, voteRepo)
+        val viewModel = createViewModel(reportRepo, voteRepo)
 
         viewModel.hide(report)
         advanceUntilIdle()
@@ -74,7 +76,7 @@ class CommunityReportsViewModelTest {
             reportRepo.resolveReport(report.id, CommunityReportResolutionStatus.DISMISSED, any())
         } returns Result.success(Unit)
 
-        val viewModel = CommunityReportsViewModel(reportRepo, voteRepo)
+        val viewModel = createViewModel(reportRepo, voteRepo)
 
         viewModel.dismiss(report)
         advanceUntilIdle()
@@ -96,7 +98,7 @@ class CommunityReportsViewModelTest {
             reportRepo.resolveReport(report.id, CommunityReportResolutionStatus.RESTORED, any())
         } returns Result.success(Unit)
 
-        val viewModel = CommunityReportsViewModel(reportRepo, voteRepo)
+        val viewModel = createViewModel(reportRepo, voteRepo)
 
         viewModel.restore(report)
         advanceUntilIdle()
@@ -116,7 +118,7 @@ class CommunityReportsViewModelTest {
         coEvery { voteRepo.moderateHide(report.contentId) } returns Unit
         coEvery { reportRepo.deleteReportedCommunityUpload(report.id, any()) } returns Result.success(Unit)
 
-        val viewModel = CommunityReportsViewModel(reportRepo, voteRepo)
+        val viewModel = createViewModel(reportRepo, voteRepo)
 
         viewModel.deleteUpload(report)
         advanceUntilIdle()
@@ -125,6 +127,26 @@ class CommunityReportsViewModelTest {
         coVerify { voteRepo.moderateHide(report.contentId) }
         coVerify { reportRepo.deleteReportedCommunityUpload(report.id, any()) }
         coVerify(exactly = 0) { reportRepo.resolveReport(report.id, any(), any()) }
+    }
+
+    @Test
+    fun `block reported uploader writes private block`() = runTest(dispatcher) {
+        val report = testReport(uploaderUid = "uploader-1")
+        val reportRepo = mockk<CommunityReportRepository>()
+        val voteRepo = mockk<VoteRepository>()
+        val blockRepo = mockk<CommunityBlockRepository>()
+        every { voteRepo.isAdmin } returns true
+        every { reportRepo.reports(CommunityReportResolutionStatus.OPEN, any()) } returns flowOf(listOf(report))
+        coEvery { blockRepo.blockUser("uploader-1", CommunityBlockReason.OTHER) } returns Result.success(Unit)
+
+        val viewModel = createViewModel(reportRepo, voteRepo, blockRepo)
+
+        viewModel.blockReportedUploader(report)
+        advanceUntilIdle()
+
+        assertEquals("Creator blocked", viewModel.state.value.message)
+        coVerify(exactly = 1) { blockRepo.blockUser("uploader-1", CommunityBlockReason.OTHER) }
+        coVerify(exactly = 0) { reportRepo.resolveReport(any(), any(), any()) }
     }
 
     @Test
@@ -137,7 +159,7 @@ class CommunityReportsViewModelTest {
         every { reportRepo.reports(CommunityReportResolutionStatus.OPEN, any()) } returns flowOf(listOf(openReport))
         every { reportRepo.reports(CommunityReportResolutionStatus.HIDDEN, any()) } returns flowOf(listOf(hiddenReport))
 
-        val viewModel = CommunityReportsViewModel(reportRepo, voteRepo)
+        val viewModel = createViewModel(reportRepo, voteRepo)
         val job = backgroundScope.launch { viewModel.reports.collect { } }
 
         advanceUntilIdle()
@@ -160,7 +182,7 @@ class CommunityReportsViewModelTest {
         val voteRepo = mockk<VoteRepository>()
         every { voteRepo.isAdmin } returns false
 
-        val viewModel = CommunityReportsViewModel(reportRepo, voteRepo)
+        val viewModel = createViewModel(reportRepo, voteRepo)
         advanceUntilIdle()
 
         assertEquals(emptyList<CommunityReportRecord>(), viewModel.reports.value)
@@ -171,6 +193,7 @@ class CommunityReportsViewModelTest {
     private fun testReport(
         id: String = "report-1",
         status: CommunityReportResolutionStatus = CommunityReportResolutionStatus.OPEN,
+        uploaderUid: String = "",
     ) = CommunityReportRecord(
         id = id,
         contentId = "WALLPAPER::COMMUNITY::cw_1",
@@ -182,8 +205,15 @@ class CommunityReportsViewModelTest {
         sourceUrl = "https://example.com/source",
         license = "CC BY",
         uploaderName = "Creator",
+        uploaderUid = uploaderUid,
         reporterUid = "reporter-1",
         reportedAt = 123L,
         status = status,
     )
+
+    private fun createViewModel(
+        reportRepo: CommunityReportRepository,
+        voteRepo: VoteRepository,
+        blockRepo: CommunityBlockRepository = mockk(relaxed = true),
+    ): CommunityReportsViewModel = CommunityReportsViewModel(reportRepo, voteRepo, blockRepo)
 }
