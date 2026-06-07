@@ -543,6 +543,10 @@ next pass can resume quickly.
   `tools/github_workflow_secrets_check.py`, and backend tool tests so workflow
   secret references are limited to reviewed release signing secrets and
   forbidden token shortcuts fail verification.
+- Completed Cycle 124 always-on backend tool tests: wired
+  `python3 -m unittest discover -s test/tools -p '*_test.py'` into the
+  always-on verify job before Android setup so policy and support-tool drift
+  tests run on every push, pull request, and manual verify run.
 
 ## 2026-06-05
 

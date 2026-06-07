@@ -1,8 +1,8 @@
 # Autonomous Loop State
 
 **Assigned project:** `C:\Users\--\repos\Aura`
-**Current pass:** 2026-06-07 Cycle 123 GitHub workflow secret guard
-**Last commit before pass:** `7031e88` (`test(security): add workflow permissions guard`)
+**Current pass:** 2026-06-07 Cycle 124 always-on backend tool tests
+**Last commit before pass:** `2e52a04` (`test(security): add workflow secret guard`)
 
 ## 2026-06-05 Result
 
@@ -1660,11 +1660,29 @@
   high-severity Functions npm audit, diff hygiene, and attribution/ASCII scans
   passed.
 
+## Cycle 124 Result - 2026-06-07
+
+- Added a `Backend tool unit tests` step to `.github/workflows/verify.yml`
+  before Android setup.
+- The always-on verify job now runs
+  `python3 -m unittest discover -s test/tools -p '*_test.py'` on push, pull
+  request, and manual verify runs.
+- Updated `docs/distribution/supply-chain.md`,
+  `docs/research/cycle-124-2026-06-07.md`, `ROADMAP.md`, `COMPLETED.md`,
+  `CHANGELOG.md`, and loop state.
+- Cycle 124 verification: backend tool tests, GitHub workflow secret policy
+  check, GitHub workflow permissions policy check, GitHub Actions allowlist
+  check, Gradle wrapper policy check, Dependabot policy check, GitHub security
+  workflow policy check, callable wire-protocol check, callable contract check,
+  dependency notice lock checks, native lock check, dependency overlay check,
+  dependency license policy check, high-severity Functions npm audit, diff
+  hygiene, and attribution/ASCII scans passed.
+
 ## Next Cycle
 
-Continue this same assigned project, Aura. Start Cycle 124 from the
+Continue this same assigned project, Aura. Start Cycle 125 from the
 `ROADMAP.md` Continuation State and
-`docs/research/cycle-123-2026-06-07.md`. The account
+`docs/research/cycle-124-2026-06-07.md`. The account
 deletion dry-run planner, read-only Settings identity surface, redacted
 shareable request draft, request-code lookup tool, review receipt gate, offline
 apply simulator, private executor package builder, and guarded REST executor
@@ -1750,7 +1768,8 @@ added a redacted receipt gate for future owner/admin GitHub evidence; Cycle
 120 pinned the Gradle wrapper ZIP checksum and added a wrapper policy guard;
 Cycle 121 added a repository-wide GitHub Actions allowlist guard; Cycle 122
 added a repository-wide GitHub workflow permissions guard; Cycle 123 added a
-repository-wide GitHub workflow secret guard.
+repository-wide GitHub workflow secret guard; Cycle 124 wired backend/tool
+unit tests into the always-on verify job before Android setup.
 Actual live callable invocation evidence, a live hosted HTTPS web deletion URL,
 direct RTDB rule tightening, App Check console evidence, production-project
 dry-run evidence, and owner/admin GitHub repository security-settings evidence

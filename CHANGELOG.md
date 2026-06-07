@@ -3,6 +3,7 @@
 All notable changes to Aura will be documented in this file.
 
 ## Unreleased
+- **Always-on backend tool tests (Cycle 124)**: wired the lightweight `test/tools` Python suite into the always-on verify job before Android setup, so policy and support-tool drift tests run on every push, pull request, and manual verify run.
 - **GitHub workflow secret guard (Cycle 123)**: added a workflow secret-reference policy and verify-time scanner, limiting workflow secret use to the reviewed release signing secrets and blocking unreviewed secret refs, unreviewed env aliases, forbidden token shortcuts, and unexpected workflow files.
 - **GitHub workflow permissions guard (Cycle 122)**: added a workflow event/job-permission policy and verify-time scanner for all workflows, blocking unreviewed triggers, permission drift, unexpected jobs, unexpected workflow files, and scalar `write-all` style permission declarations.
 - **GitHub Actions allowlist guard (Cycle 121)**: added a workflow action allowlist and verify-time scanner for all workflow `uses:` references, blocking unexpected workflows, unreviewed actions, local actions, unpinned refs, and forbidden floating refs.

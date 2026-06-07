@@ -25,6 +25,7 @@ Aura is side-loaded through GitHub Releases and Obtainium, so release artifacts 
 | GitHub workflow permissions policy | `docs/distribution/github-workflow-permissions.json`, `tools/github_workflow_permissions_check.py`, `.github/workflows/verify.yml` | Fails verification when workflow events, workflow-level permissions, job-level permissions, expected jobs, or expected workflow files drift without review. |
 | GitHub workflow secret policy | `docs/distribution/github-workflow-secrets.json`, `tools/github_workflow_secrets_check.py`, `.github/workflows/verify.yml` | Fails verification when workflow secret references, release secret env aliases, forbidden token shortcuts, or expected workflow files drift without review. |
 | GitHub security workflow policy | `docs/distribution/github-security-workflows.json`, `tools/github_security_workflow_check.py`, `.github/workflows/verify.yml` | Fails verification when dependency review, scorecard, or release workflow security controls drift or add unsafe trigger/permission escape hatches. |
+| Backend tool unit tests | `test/tools`, `.github/workflows/verify.yml` | Runs the Python backend/tool unit suite on every verify workflow invocation before Android setup, so policy and support-tool drift tests are not only path-gated by Firebase rule changes. |
 | Dependabot update policy | `.github/dependabot.yml`, `tools/dependabot_config_check.py`, `.github/workflows/verify.yml` | Opens weekly version-update PRs for GitHub Actions, Gradle, root Firebase npm, and Functions npm with small PR limits and checked schedule/label/target-branch policy. |
 | GitHub security settings receipt | `docs/distribution/github-security-settings-evidence.md`, `tools/github_security_settings_receipt.py` | Validates owner-provided private evidence for branch protection, Dependabot, code scanning, secret scanning, and release attestation settings before emitting a redacted receipt. |
 | F-Droid blocker preflight | `tools/fdroid_preflight.py` | Confirms that F-Droid mainline remains blocked until proprietary dependency boundaries change. |
@@ -72,6 +73,7 @@ python3 tools/github_actions_allowlist_check.py --policy docs/distribution/githu
 python3 tools/github_workflow_permissions_check.py --policy docs/distribution/github-workflow-permissions.json --repo-root .
 python3 tools/github_workflow_secrets_check.py --policy docs/distribution/github-workflow-secrets.json --repo-root .
 python3 tools/github_security_workflow_check.py --policy docs/distribution/github-security-workflows.json --repo-root .
+python3 -m unittest discover -s test/tools -p '*_test.py'
 ```
 
 The checks fail if a required control is missing, if a guarded workflow file is removed, if permissions drift, if a new job or secret reference is added without policy review, or if a forbidden escape hatch such as `pull_request_target`, `GITHUB_TOKEN`, release dependency-verification suppression, writable contents in Dependency Review, or persisted checkout credentials in Scorecard appears. Update the relevant policy in the same change as an intentional workflow hardening change, and keep the diff tied to the reviewed workflow file.
