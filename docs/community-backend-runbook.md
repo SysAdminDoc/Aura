@@ -182,6 +182,10 @@ must include:
 - Private account deletion upload handoff plan from
   `tools/community_account_deletion_upload_plan.py` before claiming public
   uploads were removed for a deleted account request.
+- Redacted public-upload deletion execution receipt from
+  `tools/community_account_deletion_upload_execution_receipt.py` after every
+  planned Storage object, metadata row, owner index, and tombstone action has
+  private owner/admin workflow evidence.
 
 ## Sources
 

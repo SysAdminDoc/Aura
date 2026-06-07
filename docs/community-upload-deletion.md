@@ -13,7 +13,8 @@ report tool. Cycle 66 adds a dry-run legacy backfill plan for rows missing
 `storagePath` and owner indexes. Cycle 67 adds private deletion tombstones and a
 retention policy for removed uploads. Cycle 87 adds a private account-deletion
 upload handoff plan for requesters who ask support to remove public uploads
-after backend account deletion completion.
+after backend account deletion completion. Cycle 90 adds a redacted execution
+receipt for owner/admin workflow evidence after planned upload deletes finish.
 
 ## New Metadata
 
@@ -98,6 +99,9 @@ markers away from public read paths.
   deletion package is built to enumerate public uploads owned by the deleted
   account request and block rows that still need handle backfill or manual
   review.
+- Use `tools/community_account_deletion_upload_execution_receipt.py` after every
+  clean-plan candidate has owner/admin workflow evidence for Storage deletion,
+  metadata deletion, owner-index deletion, and tombstone write completion.
 - Migrate vote marker privacy and account-deletion semantics before claiming
   deleted upload vote data is minimized.
 - Run the two-report orphan cleanup gate from

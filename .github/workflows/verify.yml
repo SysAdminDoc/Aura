@@ -64,6 +64,7 @@ jobs:
             tools/community_account_deletion_auth_package.py \
             tools/community_account_deletion_auth_execution_receipt.py \
             tools/community_account_deletion_upload_plan.py \
+            tools/community_account_deletion_upload_execution_receipt.py \
             tools/community_deletion_web_url_check.py \
             tools/community_upload_backfill_plan.py \
             tools/community_storage_orphan_report.py \

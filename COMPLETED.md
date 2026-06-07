@@ -331,6 +331,10 @@ next pass can resume quickly.
   `tools/community_account_deletion_auth_execution_receipt.py` and backend
   tool tests to validate owner-approved Firebase Auth deletion evidence against
   the private Auth package and emit a redacted post-delete receipt.
+- Completed Cycle 90 upload deletion execution receipt: added
+  `tools/community_account_deletion_upload_execution_receipt.py` and backend
+  tool tests to validate clean-plan owner/admin deletion evidence for Storage,
+  public metadata, owner index, and tombstone completion.
 
 ## 2026-06-05
 

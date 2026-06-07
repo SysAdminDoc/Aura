@@ -1,8 +1,8 @@
 # Autonomous Loop State
 
 **Assigned project:** `C:\Users\--\repos\Aura`
-**Current pass:** 2026-06-07 Cycle 89 Auth deletion execution receipt
-**Last commit before pass:** `1b7e923` (`feat(community): add deletion web url gate`)
+**Current pass:** 2026-06-07 Cycle 90 upload deletion execution receipt
+**Last commit before pass:** `dfff762` (`feat(community): add auth deletion receipt`)
 
 ## 2026-06-05 Result
 
@@ -783,10 +783,39 @@
   tests, backend tool unittest discovery, diff hygiene, and attribution/ASCII
   scans.
 
+## Cycle 90 Result - 2026-06-07
+
+- Added `tools/community_account_deletion_upload_execution_receipt.py` to
+  validate private owner/admin public-upload deletion workflow evidence after a
+  clean account-deletion upload handoff plan.
+- The receipt builder rejects blocked plans, requires every planned upload
+  candidate to have matching private execution evidence, and verifies Storage
+  deletion, public metadata deletion, owner-index deletion, and private
+  tombstone write completion for each row.
+- The emitted receipt records counts and hashes while omitting full Firebase
+  UIDs, raw upload IDs, RTDB paths, Storage paths, project ID, command output,
+  credentials, and tokens.
+- Added `validate_upload_execution_receipt()` for future downstream private
+  deletion tooling.
+- Added backend tool coverage in
+  `test/tools/community_account_deletion_upload_execution_receipt_test.py` for
+  the redacted happy path plus blocked plan, missing candidate evidence,
+  incomplete delete row, and path mismatch rejection.
+- Wired the upload execution receipt tool into Firebase backend CI change
+  detection.
+- Updated `docs/research/cycle-90-2026-06-07.md`,
+  `docs/support/community-account-deletion.md`,
+  `docs/community-account-deletion-policy.md`,
+  `docs/community-backend-runbook.md`, `docs/community-upload-deletion.md`,
+  `ROADMAP.md`, `COMPLETED.md`, and `CHANGELOG.md`.
+- Cycle 90 verification: Python compile, focused upload execution
+  receipt tests, backend tool unittest discovery, diff hygiene, and
+  attribution/ASCII scans.
+
 ## Next Cycle
 
-Continue this same assigned project, Aura. Start Cycle 90 from the `ROADMAP.md`
-Continuation State and `docs/research/cycle-89-2026-06-07.md`. The account
+Continue this same assigned project, Aura. Start Cycle 91 from the `ROADMAP.md`
+Continuation State and `docs/research/cycle-90-2026-06-07.md`. The account
 deletion dry-run planner, read-only Settings identity surface, redacted
 shareable request draft, request-code lookup tool, review receipt gate, offline
 apply simulator, private executor package builder, and guarded REST executor
@@ -800,14 +829,14 @@ public-upload handoff plans for owned upload rows and blocked handle review;
 Cycle 88 added the privacy-policy-backed hosted URL manifest gate for pending
 owner publication; Cycle 89 added a redacted Auth execution receipt for
 owner-approved private deletion evidence after post-delete not-found
-verification. Public upload deletion execution evidence after a clean upload
-plan, a live hosted HTTPS web deletion URL, and production-project dry-run
-evidence remain open. Next add public upload deletion execution evidence, hosted
-URL publication after owner approval, a real production-project Firebase
-executor dry-run after owner access is confirmed, Cloud Functions
-implementation for the callable quota contract, or Android callable migration
-adapters. Commit and push completed work when the active project contract allows
-it.
+verification; Cycle 90 added a redacted upload execution receipt for
+owner/admin public-upload deletion workflow evidence after clean plans. A live
+hosted HTTPS web deletion URL, production-project dry-run evidence, Cloud
+Functions implementation, and Android callable migration remain open. Next add
+hosted URL publication after owner approval, a real production-project Firebase
+executor dry-run after owner access is confirmed, Cloud Functions implementation
+for the callable quota contract, or Android callable migration adapters. Commit
+and push completed work when the active project contract allows it.
 
 ## Previous Cycle Prompt
 

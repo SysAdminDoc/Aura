@@ -120,6 +120,18 @@ The upload plan lists owned sound/wallpaper rows with valid Storage handles and
 blocks rows that need backfill or manual review. It does not delete Storage
 objects or RTDB metadata by itself.
 
+After the owner/admin upload deletion workflow completes for a clean upload
+plan, operators can build a redacted upload execution receipt:
+
+```powershell
+py -3 tools\community_account_deletion_upload_execution_receipt.py --upload-plan .\account-deletion-upload-plan.json --execution-evidence .\upload-execution-evidence.json --support-reference <ticket-id> --output .\account-deletion-upload-execution-receipt.json
+```
+
+The receipt validates that every planned candidate has private evidence for the
+Storage object delete, public metadata delete, owner-index delete, and private
+tombstone write. It omits raw upload IDs, RTDB paths, Storage paths, project
+ID, credentials, command output, and tokens.
+
 ## Deleted Marker Paths
 
 The planner removes:
@@ -214,6 +226,7 @@ operator lookup step.
 - `py -3 -m py_compile tools\community_account_deletion_auth_package.py test\tools\community_account_deletion_auth_package_test.py`
 - `py -3 -m py_compile tools\community_account_deletion_auth_execution_receipt.py test\tools\community_account_deletion_auth_execution_receipt_test.py`
 - `py -3 -m py_compile tools\community_account_deletion_upload_plan.py test\tools\community_account_deletion_upload_plan_test.py`
+- `py -3 -m py_compile tools\community_account_deletion_upload_execution_receipt.py test\tools\community_account_deletion_upload_execution_receipt_test.py`
 - `py -3 -m py_compile tools\community_deletion_web_url_check.py test\tools\community_deletion_web_url_check_test.py`
 - `py -3 tools\community_deletion_web_url_check.py --manifest docs\support\community-account-deletion-web-url.json --repo-root .`
 
@@ -226,7 +239,8 @@ operator lookup step.
   owner access and production-project approval are confirmed, then archive the
   redacted Auth execution receipt.
 - Execute public upload deletion only through the owner/admin upload deletion
-  workflow after the private upload plan has no blocked rows.
+  workflow after the private upload plan has no blocked rows, then archive the
+  redacted upload execution receipt.
 - Replace the `pendingOwnerUrl` manifest with a live HTTPS hosted private
   support route or web deletion page before Play production submission, then
   reference that URL from the privacy policy and support intake document.

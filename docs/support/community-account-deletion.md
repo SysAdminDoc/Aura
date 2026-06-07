@@ -110,6 +110,11 @@ package plus a current RTDB export and creates a private public-upload deletion
 handoff plan. It enumerates owned uploads with valid `storagePath` handles and
 blocks rows that need backfill or manual review.
 
+`tools/community_account_deletion_upload_execution_receipt.py` validates private
+owner/admin upload deletion workflow evidence against a clean upload handoff
+plan and emits a redacted receipt after Storage deletes, metadata deletes,
+owner-index deletes, and tombstone writes are all complete.
+
 ## Operator Handling
 
 1. Receive the request draft through a private support channel.
@@ -206,11 +211,19 @@ blocks rows that need backfill or manual review.
     resolve any blocked rows through backfill or manual review before claiming
     public uploads were removed.
 
-19. Share only the completion receipt and requester-facing local cleanup
+19. Build the redacted upload execution receipt from the private owner/admin
+    workflow evidence:
+
+   ```powershell
+   py -3 tools\community_account_deletion_upload_execution_receipt.py --upload-plan .\account-deletion-upload-plan.json --execution-evidence .\upload-execution-evidence.json --support-reference <ticket-id> --output .\account-deletion-upload-execution-receipt.json
+   ```
+
+20. Share only the completion receipt and requester-facing local cleanup
     instructions with the requester. Keep lookup, plan,
     review, simulation, executor package, REST apply receipt, Auth package, raw
-    Auth execution evidence, upload plan, database export, access token, full
-    UID, and RTDB paths private.
+    Auth execution evidence, upload plan, raw upload execution evidence,
+    database export, access token, full UID, Storage paths, and RTDB paths
+    private.
 
 If the requester still has Aura installed, they can open `Settings` >
 `Community identity` > `Clear local` after support confirms backend completion.
