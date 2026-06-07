@@ -70,12 +70,16 @@ request before applying the dry-run plan.
 
 User and operator handling instructions live in
 [`docs/support/community-account-deletion.md`](support/community-account-deletion.md).
+Operators can use `tools/community_deletion_request_lookup.py` with a current
+RTDB export to map a request code to candidate UID evidence before running the
+dry-run planner.
 
 ## Verification
 
 - `py -3 -m py_compile tools\community_account_deletion_plan.py test\tools\community_account_deletion_plan_test.py`
 - `py -3 -m unittest discover -s test/tools -p '*_test.py'`
 - `.\gradlew.bat --no-daemon --max-workers=2 :app:testDebugUnitTest --tests com.freevibe.service.CommunityIdentityProviderTest --tests com.freevibe.ui.screens.settings.SettingsViewModelTest`
+- `py -3 -m py_compile tools\community_deletion_request_lookup.py test\tools\community_deletion_request_lookup_test.py`
 
 ## Remaining Work
 

@@ -143,6 +143,9 @@ must include:
   [`docs/community-account-deletion-policy.md`](community-account-deletion-policy.md),
   including the reviewed plan hash when an account deletion request is tested
   or processed.
+- Deletion request-code lookup output from
+  `tools/community_deletion_request_lookup.py` when support receives an
+  `AURA-` request code instead of a full UID.
 
 ## Sources
 

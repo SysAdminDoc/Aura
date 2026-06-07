@@ -53,6 +53,7 @@ jobs:
             test/tools \
             tools/community_backend_manifest.py \
             tools/community_account_deletion_plan.py \
+            tools/community_deletion_request_lookup.py \
             tools/community_upload_backfill_plan.py \
             tools/community_storage_orphan_report.py \
             docs/community-backend-manifest.json \

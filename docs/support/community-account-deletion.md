@@ -40,10 +40,16 @@ require the trusted orchestrator path.
 
 1. Receive the request draft through a private support channel.
 2. Verify the requester and confirm the request code maps to the intended UID.
-3. Run the dry-run planner against a current RTDB export.
-4. Review retained public upload and moderation records against
+3. Run the request-code lookup against a current RTDB export:
+
+   ```powershell
+   py -3 tools\community_deletion_request_lookup.py --database-export .\rtdb-export.json --request-code AURA-123456789ABC --output .\deletion-request-lookup.json
+   ```
+
+4. Run the dry-run planner against a current RTDB export.
+5. Review retained public upload and moderation records against
    `docs/community-account-deletion-policy.md`.
-5. Apply changes only through the future trusted executor or callable
+6. Apply changes only through the future trusted executor or callable
    orchestrator.
 
 Do not request or publish a full Firebase UID in a public issue.

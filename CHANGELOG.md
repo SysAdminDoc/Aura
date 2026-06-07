@@ -3,6 +3,7 @@
 All notable changes to Aura will be documented in this file.
 
 ## Unreleased
+- **Deletion request code lookup (Cycle 77)**: added a backend lookup tool that maps shared `AURA-` deletion request codes to candidate UID evidence in RTDB exports, with unit coverage and backend CI change detection.
 - **Community deletion request routing (Cycle 76)**: the Community identity dialog can now share a redacted deletion request draft, and support docs describe the private request/operator handling flow without exposing full Firebase UIDs.
 - **Community identity request surface (Cycle 75)**: Settings now exposes the current community auth label, redacted identity suffix, and a deletion request code when a Firebase identity exists without creating a new identity just by opening the panel.
 - **Account deletion dry-run planner (Cycle 74)**: added a backend tool and policy doc that plan RTDB marker deletion for vote markers, follows, creator profiles, block indexes, and community shares while retaining aggregate counts and moderation audit records.

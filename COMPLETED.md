@@ -268,6 +268,10 @@ next pass can resume quickly.
   now shares a redacted deletion request draft through the device share sheet,
   `docs/support/community-account-deletion.md` defines user/operator handling,
   and the README links the private request workflow.
+- Completed Cycle 77 deletion request code lookup: added
+  `tools/community_deletion_request_lookup.py` and backend tool tests to map an
+  `AURA-` request code to candidate UID evidence paths in a current RTDB export
+  before running the dry-run deletion planner.
 
 ## 2026-06-05
 

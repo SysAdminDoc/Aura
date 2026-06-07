@@ -1,8 +1,8 @@
 # Autonomous Loop State
 
 **Assigned project:** `C:\Users\--\repos\Aura`
-**Current pass:** 2026-06-06 Cycle 76 community deletion request routing
-**Last commit before pass:** `693c2c4` (`feat(community): add identity request surface`)
+**Current pass:** 2026-06-06 Cycle 77 deletion request code lookup
+**Last commit before pass:** `2f20039` (`feat(community): add deletion request routing`)
 
 ## 2026-06-05 Result
 
@@ -476,19 +476,36 @@
 - Cycle 76 verification: focused `CommunityIdentityProviderTest` passed
   locally with Android Studio JBR.
 
+## Cycle 77 Result - 2026-06-06
+
+- Added `tools/community_deletion_request_lookup.py` to map `AURA-` deletion
+  request codes to candidate UID evidence paths in an exported RTDB JSON file.
+- The lookup scans known UID-bearing roots and fields, computes the same
+  SHA-256 based request code as Android, and emits matched UID, sanitized UID,
+  and evidence paths.
+- Added backend tool coverage in
+  `test/tools/community_deletion_request_lookup_test.py`.
+- Wired the lookup tool into Firebase backend CI change detection.
+- Updated `docs/research/cycle-77-2026-06-06.md`,
+  `docs/support/community-account-deletion.md`,
+  `docs/community-account-deletion-policy.md`, `docs/community-backend-runbook.md`,
+  `ROADMAP.md`, `COMPLETED.md`, and `CHANGELOG.md`.
+- Cycle 77 verification: Python compile and backend tool unittest discovery
+  passed locally.
+
 ## Next Cycle
 
-Continue this same assigned project, Aura. Start Cycle 77 from the `ROADMAP.md`
-Continuation State and `docs/research/cycle-76-2026-06-06.md`. The account
-deletion dry-run planner, read-only Settings identity surface, and redacted
-shareable request draft are implemented, but trusted apply/orchestration,
-local/Auth deletion cleanup, and a hosted private web deletion request page
-remain open. Next add a trusted apply/orchestrator design, hosted private web
-request plan/page, a real production-project Firebase backend dry
-run/orphan/backfill evidence pass after owner access is confirmed, Cloud
-Functions implementation for the callable quota contract, or Android callable
-migration adapters. Commit and push completed work when the active project
-contract allows it.
+Continue this same assigned project, Aura. Start Cycle 78 from the `ROADMAP.md`
+Continuation State and `docs/research/cycle-77-2026-06-06.md`. The account
+deletion dry-run planner, read-only Settings identity surface, redacted
+shareable request draft, and request-code lookup tool are implemented, but
+trusted apply/orchestration, local/Auth deletion cleanup, and a hosted private
+web deletion request page remain open. Next add a trusted apply/orchestrator
+design, hosted private web request plan/page, a real production-project
+Firebase backend dry run/orphan/backfill evidence pass after owner access is
+confirmed, Cloud Functions implementation for the callable quota contract, or
+Android callable migration adapters. Commit and push completed work when the
+active project contract allows it.
 
 ## Previous Cycle Prompt
 
