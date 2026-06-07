@@ -8,7 +8,8 @@ emulator coverage for public metadata and owner-index delete authorization.
 Cycle 60 adds private admin rights-confirmed takedown receipts for new rows with
 deletion handles. Cycle 61 adds an admin delete action that consumes those
 handles, removes the Storage object plus metadata rows, and records retry state.
-Legacy backfill and lifecycle cleanup remain follow-up work.
+Cycle 65 adds the Storage lifecycle/orphan cleanup policy and offline orphan
+report tool. Legacy backfill remains follow-up work.
 
 ## New Metadata
 
@@ -79,6 +80,9 @@ failure text so the case can be retried without losing the handle evidence.
   `/owner_uploads` entries.
 - Decide whether votes, report records, and moderation audit rows are deleted,
   retained, or tombstoned when an upload is removed.
+- Run the two-report orphan cleanup gate from
+  [`docs/community-storage-lifecycle-policy.md`](community-storage-lifecycle-policy.md)
+  before any manual Storage deletion outside owner/admin app flows.
 
 ## Sources
 

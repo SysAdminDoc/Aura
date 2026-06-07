@@ -117,7 +117,9 @@ risk until the upstream CLI dependency graph publishes a non-downgrade fix.
 
 ## Remaining Work
 
-- Define Cloud Storage lifecycle/orphan cleanup policy for abandoned upload
-  objects.
+- Cycle 65 defines Cloud Storage lifecycle/orphan cleanup policy for abandoned
+  upload objects in `docs/community-storage-lifecycle-policy.md`; remaining
+  work is running real exported Storage/RTDB reports after owner access is
+  confirmed.
 - Run and archive a real production-project `firebase deploy --dry-run` after
   the owner confirms the project ID and access.

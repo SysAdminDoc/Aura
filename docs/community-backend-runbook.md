@@ -130,7 +130,9 @@ must include:
 - Deployed project ID and command output when deployed.
 - Rollback target commit.
 - App Check monitor/enforce state.
-- Any known Storage lifecycle/orphan cleanup exception.
+- Storage lifecycle/orphan cleanup status from
+  [`docs/community-storage-lifecycle-policy.md`](community-storage-lifecycle-policy.md),
+  including orphan report hashes when manual cleanup is performed.
 
 ## Sources
 

@@ -3,7 +3,7 @@
 > Open-source Android personalization: wallpapers, video wallpapers, ringtones, sounds.
 > Stay the OSS alternative to Zedge: no ads, no surprise charges, no dark patterns.
 
-**Version:** 2026-06-06-cycle64-roadmap (added community backend deploy evidence).
+**Version:** 2026-06-06-cycle65-roadmap (added Storage lifecycle/orphan cleanup policy).
 **Code version at write:** v6.31.1 / versionCode 112 (per `app/build.gradle.kts`; release/lint Gradle runs are memory-heavy on this Windows workstation, so rerun APK compilation only when explicitly needed).
 **Charter:** personalization, AMOLED-first, free-by-default, multi-source content aggregation, community-fed catalog, polite live wallpapers (battery-aware, pause-on-invisible).
 
@@ -510,7 +510,7 @@ Append-only Cycle 9 handoff. Every item below is source-backed in `docs/research
   - Touches: `storage.rules`, Storage emulator tests, upload repositories, cleanup job/runbook, lifecycle policy docs, release checklist.
   - Acceptance: Storage rules restrict writes to authenticated owner paths, enforce sound/image MIME and size ceilings, define read behavior, and block cross-user overwrite/delete; lifecycle or cleanup process handles abandoned temp/orphan objects without deleting valid public uploads.
   - Verify: emulator tests reject oversize/wrong-type/cross-owner uploads; metadata-save failure cleanup still works; orphan cleanup dry run reports expected objects before delete.
-  - Progress 2026-06-06: Cycle 57 added tracked `storage.rules`, `firebase.json`, and emulator tests for sound/wallpaper owner creates, public reads, MIME/size ceilings, blocked overwrites, owner/admin deletes, cross-owner rejection, anonymous rejection, and unmanaged path denial. Cycle 59 wired the combined Firebase rules suite into CI for rules-related changes. Remaining work: lifecycle/orphan cleanup policy.
+  - Progress 2026-06-06: Cycle 57 added tracked `storage.rules`, `firebase.json`, and emulator tests for sound/wallpaper owner creates, public reads, MIME/size ceilings, blocked overwrites, owner/admin deletes, cross-owner rejection, anonymous rejection, and unmanaged path denial. Cycle 59 wired the combined Firebase rules suite into CI for rules-related changes. Cycle 65 added `docs/community-storage-lifecycle-policy.md`, `tools/community_storage_orphan_report.py`, unittest coverage, and CI execution for backend lifecycle/tool changes. Remaining work: run real exported Storage/RTDB orphan reports after owner access is confirmed and add a future temp-prefix lifecycle rule if upload finalization moves to temporary paths.
 
 - [~] 🤖 🔬 **P1 — App Check and community abuse throttling**
   - Why: Anonymous Auth and vote markers do not prove requests come from Aura or prevent scripted uploads, votes, reports, follows, and profile writes at scale.
@@ -534,7 +534,7 @@ Append-only Cycle 9 handoff. Every item below is source-backed in `docs/research
   - Touches: `docs/community-backend-runbook.md`, release checklist, deploy/rollback notes, incident/takedown notes, App Check enforcement ledger, Storage lifecycle policy evidence.
   - Acceptance: runbook records current deployed rules hash/version, deploy command, rollback command, App Check monitor/enforce status, rules test command, cleanup cadence, takedown SLA, and owner/admin deletion verification steps.
   - Verify: dry-run release checklist includes backend evidence; a simulated bad rules deploy has a rollback path; a sample takedown/delete case leaves documented evidence without leaking user data.
-  - Progress 2026-06-06: Cycle 64 added the deterministic backend manifest, CI manifest gate, and `docs/community-backend-runbook.md` for preflight, dry run, deploy, rollback, App Check rollback separation, and release checklist evidence. Remaining work: cleanup cadence, takedown SLA packet, and owner/admin deletion verification evidence.
+  - Progress 2026-06-06: Cycle 64 added the deterministic backend manifest, CI manifest gate, and `docs/community-backend-runbook.md` for preflight, dry run, deploy, rollback, App Check rollback separation, and release checklist evidence. Cycle 65 added the Storage lifecycle/orphan cleanup policy, offline orphan-report tool, and two-report manual deletion gate. Remaining work: takedown SLA packet, owner/admin deletion verification evidence, and live orphan report evidence after owner access is confirmed.
 
 ---
 
@@ -3028,19 +3028,28 @@ Stars/dates as of research pass 2026-05-16.
 - Backend manifest implementation — `tools/community_backend_manifest.py`, `.github/workflows/verify.yml`, `firebase.json`, `database.rules.json`, and `storage.rules`.
 - Verification outputs — `py -3 -m py_compile tools\community_backend_manifest.py`, `py -3 tools\community_backend_manifest.py --mode check`, and `npx firebase deploy --help` passed locally.
 
+## Appendix BO — Cycle 65 Sources
+
+- Cycle 65 implementation record — [docs/research/cycle-65-2026-06-06.md](docs/research/cycle-65-2026-06-06.md).
+- Community Storage lifecycle policy — [docs/community-storage-lifecycle-policy.md](docs/community-storage-lifecycle-policy.md).
+- Community upload deletion runbook — [docs/community-upload-deletion.md](docs/community-upload-deletion.md).
+- Official sources — [Cloud Storage lifecycle management](https://docs.cloud.google.com/storage/docs/lifecycle), [Cloud Storage deleting objects](https://docs.cloud.google.com/storage/docs/deleting-objects), and [Firebase Storage Android delete files](https://firebase.google.com/docs/storage/android/delete-files).
+- Orphan cleanup implementation — `tools/community_storage_orphan_report.py`, `test/tools/community_storage_orphan_report_test.py`, and `.github/workflows/verify.yml`.
+- Verification outputs — `py -3 -m py_compile tools\community_storage_orphan_report.py`, `py -3 -m unittest discover -s test/tools -p '*_test.py'`, and `npm run test:firebase-rules` passed locally.
+
 ## Continuation State
 
 ### Last Completed Cycle
 
-Cycle 64: added deterministic Firebase backend manifest, CI manifest gate, and deploy/rollback runbook.
+Cycle 65: added Storage lifecycle/orphan cleanup policy, offline orphan-report tool, unittest coverage, and CI wiring.
 
 ### Current Focus
 
-Start Cycle 65 with Cloud Storage lifecycle/orphan cleanup policy, upload legacy backfill, deletion retention/tombstone policy, block-user policy, a real production-project Firebase dry-run evidence pass after owner access is confirmed, or the Cloud Functions implementation for the Cycle 63 callable contract. Continue backend enforcement work until community uploads, reports, and shares have deployable rules, test coverage, CI gates, and operational runbooks. Commit and push completed work when the active project contract allows it.
+Start Cycle 66 with legacy upload backfill, deletion retention/tombstone policy, block-user policy, a real production-project Firebase dry-run or orphan-report evidence pass after owner access is confirmed, or the Cloud Functions implementation for the Cycle 63 callable contract. Continue backend enforcement work until community uploads, reports, and shares have deployable rules, test coverage, CI gates, and operational runbooks. Commit and push completed work when the active project contract allows it.
 
 ### Important Findings So Far
 
-- `ROADMAP.md` has Cycle 18 through Cycle 64 research/implementation items; `docs/research/cycle-18-2026-06-06.md` through `docs/research/cycle-64-2026-06-06.md` have the source-backed analysis.
+- `ROADMAP.md` has Cycle 18 through Cycle 65 research/implementation items; `docs/research/cycle-18-2026-06-06.md` through `docs/research/cycle-65-2026-06-06.md` have the source-backed analysis.
 - `LicensesScreen.kt` still has manual dependency rows; content sources are already code-backed by `ProviderDisclosure.kt`.
 - `.github/workflows/release.yml` now publishes `THIRD-PARTY-NOTICES.md` and `NATIVE-COMPLIANCE.md` with the APK and includes both files in `SHA256SUMS.txt`; SBOM artifacts remain open.
 - `.github/workflows/verify.yml` and `.github/workflows/release.yml` now run `tools/dependency_notice_lock.py --mode check`, `tools/dependency_notice_lock.py --mode check-metadata`, `tools/native_compliance_inventory.py --mode check-lock`, `tools/dependency_overlay_check.py`, and `tools/dependency_license_policy.py` after `:app:releaseOssLicensesTask`.
@@ -3081,18 +3090,17 @@ Start Cycle 65 with Cloud Storage lifecycle/orphan cleanup policy, upload legacy
 - Wallpaper and sound apply/download paths now classify explicit 404/410/gone/removed/deleted provider failures and mark saved favorites unavailable with provider-specific reasons; `DownloadManager` also marks matching download-history rows unavailable on failed re-downloads.
 - Sounds now have item-level license capability gates: YouTube apply/download requires confirmation, SoundCloud is link-only until reviewed, CC BY-NC requires confirmation, no-derivatives disables editing, missing remote licenses disable live-source actions, saved sound favorites preserve license metadata through Room v16 and favorites import/export, and share text includes source/uploader/license provenance.
 - Community uploads now require selected CC0/CC BY/CC BY-NC metadata, rights attestation, authenticated uploader UID, attestation timestamp, and optional HTTPS source URL before public sound/wallpaper upload metadata is written. New uploads also store `storagePath` and private owner-index rows so owner delete methods can remove blobs plus metadata without parsing public download URLs. Legacy community sound rows without selected license metadata keep the `User Upload` fallback.
-- Community reporting now has private report intake, admin review, status filters for open/closed queues, moderation hide/unhide actions, admin resolution metadata paths, private rights-confirmed takedown receipts tied to current upload `storagePath` handles, and confirmed admin delete actions for qualifying community upload reports. Detail screens submit reports with source/license/uploader context. App Check client providers are installed. Community write quotas now have typed policy rows, protected admin-only ledger namespaces, callable function names, payload schemas, final write paths, ledger path coverage, and limited-use App Check token decisions. New community uploads now have owner-visible delete actions when owner metadata and `storagePath` prove they are deletable. Collection shares now write `createdByUid` and use owner/admin RTDB rules under `shared_collections`. Storage rules and local emulator tests now cover community upload blobs. RTDB rules and local emulator tests now cover upload metadata/index authorization, report intake/admin resolution, takedown receipts/delete states, quota/dedupe ledgers, and app-matched collection shares. The main verify workflow now runs the Firebase rules suite and backend manifest check for rules-related changes. `docs/community-backend-runbook.md` records preflight, dry-run, deploy, rollback, App Check rollback separation, and release evidence. Cloud Functions implementation, Android callable migration, real production dry-run evidence, App Check console evidence, legacy backfill, deletion retention policy, block-user policy, and lifecycle/orphan cleanup remain open.
+- Community reporting now has private report intake, admin review, status filters for open/closed queues, moderation hide/unhide actions, admin resolution metadata paths, private rights-confirmed takedown receipts tied to current upload `storagePath` handles, and confirmed admin delete actions for qualifying community upload reports. Detail screens submit reports with source/license/uploader context. App Check client providers are installed. Community write quotas now have typed policy rows, protected admin-only ledger namespaces, callable function names, payload schemas, final write paths, ledger path coverage, and limited-use App Check token decisions. New community uploads now have owner-visible delete actions when owner metadata and `storagePath` prove they are deletable. Collection shares now write `createdByUid` and use owner/admin RTDB rules under `shared_collections`. Storage rules and local emulator tests now cover community upload blobs. RTDB rules and local emulator tests now cover upload metadata/index authorization, report intake/admin resolution, takedown receipts/delete states, quota/dedupe ledgers, and app-matched collection shares. The main verify workflow now runs the Firebase rules suite, backend manifest check, and orphan-report unittest for backend lifecycle changes. `docs/community-backend-runbook.md` records preflight, dry-run, deploy, rollback, App Check rollback separation, and release evidence. `docs/community-storage-lifecycle-policy.md` blocks automatic deletes on committed upload prefixes and requires two matching orphan reports before manual cleanup. Cloud Functions implementation, Android callable migration, real production dry-run/orphan-report evidence, App Check console evidence, legacy backfill, deletion retention policy, and block-user policy remain open.
 - Recent history was checked with `rtk git log -10 --oneline --decorate` for this pass.
 
 ### Next Best Actions
 
-1. Add Cloud Storage lifecycle/orphan cleanup policy for abandoned upload objects.
-2. Add legacy upload backfill or deletion retention/tombstone policy for removed community uploads.
-3. Add block-user policy for repeat community abuse.
-4. Implement the Cloud Functions project for the Cycle 63 callable quota contract, or prepare the Android repository adapter for callable migration.
-5. Run a real production-project Firebase backend dry run after owner access is confirmed and archive the output in the backend evidence packet.
-6. Run a real GitHub Actions manual release dry run after secrets are confirmed available and archive the run URL in the release docs.
-7. Preserve exact Termux package commit/build-log evidence for FFmpeg if the release owner can obtain it from upstream or a reproducible rebuild.
+1. Add legacy upload backfill or deletion retention/tombstone policy for removed community uploads.
+2. Add block-user policy for repeat community abuse.
+3. Implement the Cloud Functions project for the Cycle 63 callable quota contract, or prepare the Android repository adapter for callable migration.
+4. Run a real production-project Firebase backend dry run or orphan-report evidence pass after owner access is confirmed and archive the output in the backend evidence packet.
+5. Run a real GitHub Actions manual release dry run after secrets are confirmed available and archive the run URL in the release docs.
+6. Preserve exact Termux package commit/build-log evidence for FFmpeg if the release owner can obtain it from upstream or a reproducible rebuild.
 
 ### Unprocessed Leads
 

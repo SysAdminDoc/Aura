@@ -212,6 +212,11 @@ next pass can resume quickly.
   a deploy/rollback runbook covering preflight, production-project dry run,
   deployment evidence, rollback, App Check enforcement rollback separation, and
   release checklist entries.
+- Completed Cycle 65 community Storage lifecycle/orphan cleanup policy: added an
+  offline orphan-report tool, unit coverage for orphan and metadata mismatch
+  classification, CI execution for backend lifecycle/tool changes, and a policy
+  runbook that blocks automatic deletes on committed upload prefixes while
+  requiring two matching orphan reports before manual cleanup.
 
 ## 2026-06-05
 

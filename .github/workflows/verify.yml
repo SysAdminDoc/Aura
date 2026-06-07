@@ -50,9 +50,12 @@ jobs:
             package.json \
             package-lock.json \
             test/firebase \
+            test/tools/community_storage_orphan_report_test.py \
             tools/community_backend_manifest.py \
+            tools/community_storage_orphan_report.py \
             docs/community-backend-manifest.json \
             docs/community-backend-runbook.md \
+            docs/community-storage-lifecycle-policy.md \
             docs/firebase-rules-harness.md \
             docs/firebase-admin-claims.md \
             .github/workflows/verify.yml | grep -q .; then
@@ -78,6 +81,10 @@ jobs:
       - name: Community backend manifest
         if: steps.firebase_rules_changes.outputs.changed == 'true'
         run: python3 tools/community_backend_manifest.py --mode check
+
+      - name: Community storage orphan report tests
+        if: steps.firebase_rules_changes.outputs.changed == 'true'
+        run: python3 -m unittest discover -s test/tools -p '*_test.py'
 
       - name: Install Firebase rules dependencies
         if: steps.firebase_rules_changes.outputs.changed == 'true'

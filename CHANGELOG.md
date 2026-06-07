@@ -3,6 +3,7 @@
 All notable changes to Aura will be documented in this file.
 
 ## Unreleased
+- **Community Storage lifecycle policy (Cycle 65)**: added an offline orphan-report tool and unittest, documented the no-auto-delete policy for committed upload prefixes, and defined the two-report manual cleanup gate.
 - **Community backend deploy evidence (Cycle 64)**: added a deterministic Firebase backend manifest, CI manifest check, and deploy/rollback runbook for Realtime Database and Cloud Storage rules changes.
 - **Callable quota contract (Cycle 63)**: community quota policies now include callable function names, payload schemas, final write paths, protected ledger coverage, and limited-use App Check token decisions for reports, uploads, votes, follows, and profile edits; added the backend migration runbook.
 - **Closed report review filters (Cycle 62)**: the admin community report queue now switches between Open, Hidden, Dismissed, and Restored status filters, including from the empty state, so closed moderation outcomes remain reviewable.
