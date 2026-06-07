@@ -91,6 +91,9 @@ jobs:
       - name: Provider credential release guard
         run: python3 tools/provider_credential_release_check.py --app-gradle app/build.gradle.kts --release-workflow .github/workflows/release.yml --local-properties local.properties
 
+      - name: Cleartext release policy
+        run: python3 tools/cleartext_release_check.py --repo-root .
+
       - name: Build signed release APK
         run: ./gradlew :app:assembleRelease --stacktrace --no-daemon
 

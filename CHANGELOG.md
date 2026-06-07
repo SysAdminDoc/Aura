@@ -3,6 +3,7 @@
 All notable changes to Aura will be documented in this file.
 
 ## Unreleased
+- **Cleartext release gate (Cycle 129)**: removed the ccMixter HTTP fallback and cleartext network-security exception, added a release cleartext guard with focused tests, and wired it into verify and release preflight before signed APK builds.
 - **Network endpoint inventory (Cycle 128)**: added a reviewed endpoint manifest/runbook plus a verify-time scanner and live tool tests so new hard-coded app network hosts require auth/cache/fallback review.
 - **Request redaction contract (Cycle 127)**: added a shared request redactor for provider query/header/local-property credentials, reused it in crash diagnostics, and redacted source-metrics failure details before Settings displays them.
 - **Diagnostics redaction fixtures (Cycle 126)**: added provider-specific crash diagnostics fixtures for Wallhaven, Pixabay, Freesound, SoundCloud, Pexels, Settings, `local.properties`, file URIs, and app-private paths, and tightened assignment redaction for dotted provider properties.

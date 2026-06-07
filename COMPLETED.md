@@ -567,6 +567,11 @@ next pass can resume quickly.
   `tools/network_endpoint_inventory_check.py`, live tool tests, supply-chain
   docs, and verify workflow wiring so hard-coded app network hosts require
   reviewed endpoint/auth/cache/fallback inventory coverage.
+- Completed Cycle 129 cleartext release gate: removed the ccMixter HTTP
+  fallback path and `ccmixter.org` cleartext network-security exception, added
+  `tools/cleartext_release_check.py` with live and negative tests, wired verify
+  and release workflows to run it before Android build work, and updated the
+  endpoint/supply-chain docs for the HTTPS-only provider posture.
 
 ## 2026-06-05
 

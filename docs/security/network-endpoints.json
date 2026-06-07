@@ -170,19 +170,18 @@
     {
       "id": "ccmixter-api",
       "hosts": ["ccmixter.org"],
-      "schemes": ["https", "http"],
-      "surface": "ccMixter API and fallback direct query URLs",
+      "schemes": ["https"],
+      "surface": "ccMixter API",
       "authLocation": "none",
       "dataSent": "search term, limit, sort, and response format",
       "mediaCached": "returned download URLs can be cached as favorite or offline sound media",
       "rateLimitCachePolicy": "no host-specific backoff yet; source metrics record failures",
-      "fallbackBehavior": "repository has an HTTP fallback path; network security config currently permits cleartext for ccmixter.org",
+      "fallbackBehavior": "HTTPS-only; TLS failures fail closed and source metrics record the provider failure",
       "killSwitch": "none",
       "releaseOwner": "maintainer",
       "sourceFiles": [
         "app/src/main/java/com/freevibe/data/remote/ccmixter/CcMixterApi.kt",
-        "app/src/main/java/com/freevibe/data/repository/CcMixterRepository.kt",
-        "app/src/main/res/xml/network_security_config.xml"
+        "app/src/main/java/com/freevibe/data/repository/CcMixterRepository.kt"
       ]
     },
     {

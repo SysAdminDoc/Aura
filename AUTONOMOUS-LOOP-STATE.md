@@ -1,8 +1,8 @@
 # Autonomous Loop State
 
 **Assigned project:** `C:\Users\--\repos\Aura`
-**Current pass:** 2026-06-07 Cycle 125 provider credential release guard
-**Last commit before pass:** `30584f9` (`ci(security): run backend tool tests in verify`)
+**Current pass:** 2026-06-07 Cycle 129 cleartext release gate
+**Last commit before pass:** `affaac3` (`ci(security): add network endpoint inventory guard`)
 
 ## 2026-06-05 Result
 
@@ -1772,11 +1772,39 @@
   policy, provider credential release guard without local secret inspection,
   diff hygiene, and attribution scan passed.
 
+## Cycle 129 Result - 2026-06-07
+
+- Removed the ccMixter HTTP fallback path from `CcMixterRepository`; TLS/API
+  failures now fail closed through the HTTPS Retrofit API path and source
+  metrics record the provider failure.
+- Removed the `ccmixter.org` `cleartextTrafficPermitted="true"` exception from
+  `network_security_config.xml`.
+- Replaced the old fallback URL helper test with `CcMixterRepositoryTest`
+  coverage proving an `SSLHandshakeException` propagates and records a
+  ccMixter failure instead of falling back to HTTP.
+- Added `tools/cleartext_release_check.py` and
+  `test/tools/cleartext_release_check_test.py` so release policy fails on
+  network-security cleartext exceptions, manifest cleartext enablement,
+  provider `http://` URL literals, or OkHttp `.scheme("http")` builders.
+- Wired `.github/workflows/verify.yml` and `.github/workflows/release.yml` to
+  run the cleartext guard before Android build work, and added the release
+  workflow snippet to `docs/distribution/github-security-workflows.json`.
+- Updated `docs/security/network-endpoints.json`,
+  `docs/security/network-endpoints.md`, `docs/distribution/supply-chain.md`,
+  `docs/research/cycle-129-2026-06-07.md`, `ROADMAP.md`, `COMPLETED.md`,
+  `CHANGELOG.md`, and loop state.
+- Cycle 129 verification: cleartext guard compile, live cleartext scan,
+  focused cleartext guard tests, focused ccMixter repository test, endpoint
+  inventory scan, backend tool tests, GitHub Actions allowlist, workflow
+  permissions policy, workflow secret policy, GitHub security workflow policy,
+  Dependabot policy, Gradle wrapper policy, provider credential release guard
+  without local secret inspection, diff hygiene, and attribution scan passed.
+
 ## Next Cycle
 
-Continue this same assigned project, Aura. Start Cycle 129 from the
+Continue this same assigned project, Aura. Start Cycle 130 from the
 `ROADMAP.md` Continuation State and
-`docs/research/cycle-128-2026-06-07.md`. The account
+`docs/research/cycle-129-2026-06-07.md`. The account
 deletion dry-run planner, read-only Settings identity surface, redacted
 shareable request draft, request-code lookup tool, review receipt gate, offline
 apply simulator, private executor package builder, and guarded REST executor
@@ -1868,7 +1896,9 @@ a provider credential release guard for `BuildConfig` and `local.properties`;
 Cycle 126 added provider-specific crash diagnostics redaction fixtures and
 dotted provider-property assignment redaction; Cycle 127 added a shared request
 redactor for crash diagnostics and source metrics error details; Cycle 128
-added a checked network endpoint inventory runbook and literal-host scanner.
+added a checked network endpoint inventory runbook and literal-host scanner;
+Cycle 129 removed the ccMixter HTTP downgrade path and added release cleartext
+policy gates.
 Actual live callable invocation evidence, a live hosted HTTPS web deletion URL,
 direct RTDB rule tightening, App Check console evidence, production-project
 dry-run evidence, and owner/admin GitHub repository security-settings evidence
@@ -1879,8 +1909,10 @@ hosted URL after owner approval, tighten direct RTDB write rules after callable
 deploy evidence, run a real production-project Firebase executor dry-run after
 owner access is confirmed, collect owner/admin GitHub security settings
 evidence and generate the redacted receipt when access is available, or
-continue with the next checkable backend, deploy, security, support, policy, or
-rules hardening artifact if owner-gated evidence is still unavailable.
+continue with provider credential storage classification, signed APK strings
+scan on a suitable runner, or the next checkable backend, deploy, security,
+support, policy, or rules hardening artifact if owner-gated evidence is still
+unavailable.
 Commit and push completed work when the active project contract allows it.
 
 ## Previous Cycle Prompt

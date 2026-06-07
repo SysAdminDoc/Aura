@@ -7,15 +7,6 @@ import com.freevibe.data.remote.ccmixter.CcMixterApi
 import com.freevibe.data.remote.ccmixter.CcMixterFile
 import com.freevibe.data.remote.ccmixter.CcMixterUpload
 import com.freevibe.service.SourceMetrics
-import com.squareup.moshi.Moshi
-import com.squareup.moshi.Types
-import okhttp3.HttpUrl
-import okhttp3.OkHttpClient
-import okhttp3.Request
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
-import java.io.IOException
-import javax.net.ssl.SSLException
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -24,14 +15,8 @@ private const val SOURCE_CCMIXTER = "ccmixter"
 @Singleton
 class CcMixterRepository @Inject constructor(
     private val api: CcMixterApi,
-    private val okHttpClient: OkHttpClient,
     private val sourceMetrics: SourceMetrics,
-    moshi: Moshi,
 ) {
-    private val uploadsAdapter = moshi.adapter<List<CcMixterUpload>>(
-        Types.newParameterizedType(List::class.java, CcMixterUpload::class.java),
-    )
-
     suspend fun search(
         query: String,
         minDuration: Double = 0.0,
@@ -56,33 +41,7 @@ class CcMixterRepository @Inject constructor(
     private suspend fun fetchUploads(
         query: String,
         limit: Int,
-    ): List<CcMixterUpload> {
-        return try {
-            api.searchUploads(search = query, limit = limit)
-        } catch (error: Exception) {
-            if (!shouldRetryCcMixterOverHttp(error)) throw error
-            withContext(Dispatchers.IO) {
-                fetchUploadsOverHttp(query = query, limit = limit)
-            }
-        }
-    }
-
-    private fun fetchUploadsOverHttp(
-        query: String,
-        limit: Int,
-    ): List<CcMixterUpload> {
-        val request = Request.Builder()
-            .url(buildCcMixterFallbackUrl(query = query, limit = limit))
-            .build()
-        return okHttpClient.newCall(request).execute().use { response ->
-            if (!response.isSuccessful) {
-                throw IOException("ccMixter fallback failed: HTTP ${response.code}")
-            }
-            val body = response.body?.string().orEmpty()
-            if (body.isBlank()) return emptyList()
-            uploadsAdapter.fromJson(body).orEmpty()
-        }
-    }
+    ): List<CcMixterUpload> = api.searchUploads(search = query, limit = limit)
 
     private fun CcMixterUpload.toDomain(): Sound? {
         val bestFile = files
@@ -140,19 +99,3 @@ class CcMixterRepository @Inject constructor(
         val COMMON_CCMIXTER_TAGS = setOf("sample", "media", "audio", "preview", "flac", "mp3", "")
     }
 }
-
-internal fun shouldRetryCcMixterOverHttp(error: Throwable): Boolean = error is SSLException
-
-internal fun buildCcMixterFallbackUrl(
-    query: String,
-    limit: Int,
-): HttpUrl = HttpUrl.Builder()
-    .scheme("http")
-    .host("ccmixter.org")
-    .addPathSegment("api")
-    .addPathSegment("query")
-    .addQueryParameter("f", "json")
-    .addQueryParameter("search", query)
-    .addQueryParameter("limit", limit.toString())
-    .addQueryParameter("sort", "rank")
-    .build()
