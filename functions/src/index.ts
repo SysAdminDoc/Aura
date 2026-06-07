@@ -3,6 +3,7 @@ import { getApps, initializeApp } from "firebase-admin/app";
 import { createFailClosedCommunityCallable } from "./callableScaffold";
 import { surfaceByFunctionName } from "./communityContract";
 import { createSubmitCommunityReportCallable } from "./reportHandler";
+import { createRecordCommunityVoteCallable } from "./voteHandler";
 
 if (getApps().length === 0) {
   initializeApp();
@@ -15,9 +16,7 @@ export const finalizeCommunitySoundUpload = createFailClosedCommunityCallable(
 export const finalizeCommunityWallpaperUpload = createFailClosedCommunityCallable(
   surfaceByFunctionName("finalizeCommunityWallpaperUpload"),
 );
-export const recordCommunityVote = createFailClosedCommunityCallable(
-  surfaceByFunctionName("recordCommunityVote"),
-);
+export const recordCommunityVote = createRecordCommunityVoteCallable();
 export const setCreatorFollow = createFailClosedCommunityCallable(
   surfaceByFunctionName("setCreatorFollow"),
 );

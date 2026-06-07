@@ -62,9 +62,9 @@
       "sha256": "5394e08997e13c82664fa524fd8372bfce8cc2f14f339fdbf32bcf594e69b771"
     },
     {
-      "bytes": 1165,
+      "bytes": 1183,
       "path": "functions/src/index.ts",
-      "sha256": "a7e518a447d2ebdcc977c865e7f4111dc77be2b5b6990e54f86868ebe0a013ab"
+      "sha256": "ad427f3c36f7c292e1881301861194b90dbeb077f3295d28b2acfc5c0e4f2dfa"
     },
     {
       "bytes": 5421,
@@ -75,6 +75,11 @@
       "bytes": 11195,
       "path": "functions/src/reportHandler.ts",
       "sha256": "edf32b224da730756e21862b21952a325f04c822672199e4e97d09a9d750702e"
+    },
+    {
+      "bytes": 9501,
+      "path": "functions/src/voteHandler.ts",
+      "sha256": "91308d6e78197871fdc6708a9b70da1aa6d73a16f7f48572c8d151ca41f19ab6"
     }
   ],
   "firebaseCli": {

@@ -6,9 +6,10 @@ and records the backend sequence in
 [`docs/community-callable-quota-enforcement.md`](community-callable-quota-enforcement.md).
 Cycle 93 adds a fail-closed Cloud Functions scaffold and pure quota decision
 engine. Cycle 94 adds the first handler-backed callable for community reports.
-This design does not claim production enforcement until emulator-backed
-callable coverage, Android migration, owner-approved deploy evidence, and
-Firebase Console App Check enforcement are complete.
+Cycle 95 adds the handler-backed vote callable. This design does not claim
+production enforcement until emulator-backed callable coverage, Android
+migration, owner-approved deploy evidence, and Firebase Console App Check
+enforcement are complete.
 
 ## Goals
 
@@ -86,9 +87,10 @@ Admin SDK job should own ledger updates.
 
 ## Remaining Implementation Work
 
-- Add Emulator Suite coverage and Android migration for `submitCommunityReport`,
-  then implement the remaining callable write handlers from the Cycle 63
-  callable contract, including the Cycle 68 user-block row.
+- Add Emulator Suite coverage and Android migration for
+  `submitCommunityReport` and `recordCommunityVote`, then implement the
+  remaining callable write handlers from the Cycle 63 callable contract,
+  including the Cycle 68 user-block row.
 - Keep quota reset days on the manifest-pinned UTC boundary unless the backend
   deployment config deliberately changes it with policy review.
 - Decide whether blocked quota attempts should create private moderation events.

@@ -2,10 +2,11 @@
 
 Cycle 63 turns the Cycle 54 quota policy into a backend contract for callable
 functions. Cycle 93 adds the first checked Cloud Functions project scaffold,
-and Cycle 94 adds the first handler-backed callable for community reports. The
-remaining exported callables currently fail closed until each surface has a
-write handler and emulator-backed tests; this document is the implementation
-contract that the backend and Android repository migration must follow.
+Cycle 94 adds the first handler-backed callable for community reports, and
+Cycle 95 adds the handler-backed vote callable. The remaining exported
+callables currently fail closed until each surface has a write handler and
+emulator-backed tests; this document is the implementation contract that the
+backend and Android repository migration must follow.
 
 ## Contract Source
 
@@ -75,10 +76,20 @@ Cycle 94 added:
   cooldown, daily-limit, unauthenticated, missing-App-Check, reporter-override,
   and insecure-source-URL cases.
 
-Do not claim production callable enforcement until the report handler has
-Emulator Suite coverage, Android migration code, owner-approved deploy evidence,
-and Firebase Console App Check evidence. The six non-report exports remain
-fail-closed.
+Cycle 95 added:
+
+- `functions/src/voteHandler.ts` implements `recordCommunityVote` handler logic
+  with content ID normalization, existing nested/legacy voter-marker
+  idempotency before quota reservation, UTC quota checks, dedupe handling, vote
+  tally transactions, and legacy voter-marker mirroring.
+- `functions/test/recordCommunityVote.test.cjs` covers accepted,
+  existing-voter duplicate, active-dedupe duplicate, cooldown, daily-limit,
+  unauthenticated, missing-App-Check, and invalid-content-ID cases.
+
+Do not claim production callable enforcement until the report and vote handlers
+have Emulator Suite coverage, Android migration code, owner-approved deploy
+evidence, and Firebase Console App Check evidence. The five non-report/non-vote
+exports remain fail-closed.
 
 ## Request Envelope
 

@@ -355,6 +355,14 @@ next pass can resume quickly.
   HTTPS source validation, UTC quota reservation, duplicate handling, and
   focused Functions tests for accepted, duplicate, cooldown, daily-limit,
   unauthenticated, and missing-App-Check paths.
+- Completed Cycle 95 community vote callable handler: implemented
+  `recordCommunityVote` handler logic with Firebase Auth/App Check identity
+  enforcement, content ID normalization matching the Android Firebase-key
+  storage form, existing nested/legacy voter marker idempotency before quota
+  reservation, UTC quota checks, dedupe handling, vote tally transactions,
+  legacy voter-marker mirroring, and focused Functions tests for accepted,
+  duplicate, cooldown, daily-limit, unauthenticated, missing-App-Check, and
+  invalid-content-ID paths.
 
 ## 2026-06-05
 
