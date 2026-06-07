@@ -22,6 +22,7 @@ Aura is side-loaded through GitHub Releases and Obtainium, so release artifacts 
 | Dependency Review | `.github/workflows/dependency-review.yml` | Runs on pull requests and fails high/critical vulnerable dependency additions. |
 | OpenSSF Scorecard | `.github/workflows/scorecard.yml` | Runs on main pushes, branch-protection changes, weekly schedule, and manual dispatch; keeps public result publishing disabled and uploads SARIF to code scanning. |
 | GitHub Actions allowlist | `docs/distribution/github-actions-allowlist.json`, `tools/github_actions_allowlist_check.py`, `.github/workflows/verify.yml` | Fails verification when workflow files use unreviewed actions, local actions, unpinned refs, forbidden floating refs, or unexpected workflow files. |
+| GitHub workflow permissions policy | `docs/distribution/github-workflow-permissions.json`, `tools/github_workflow_permissions_check.py`, `.github/workflows/verify.yml` | Fails verification when workflow events, workflow-level permissions, job-level permissions, expected jobs, or expected workflow files drift without review. |
 | GitHub security workflow policy | `docs/distribution/github-security-workflows.json`, `tools/github_security_workflow_check.py`, `.github/workflows/verify.yml` | Fails verification when dependency review, scorecard, or release workflow security controls drift or add unsafe trigger/permission escape hatches. |
 | Dependabot update policy | `.github/dependabot.yml`, `tools/dependabot_config_check.py`, `.github/workflows/verify.yml` | Opens weekly version-update PRs for GitHub Actions, Gradle, root Firebase npm, and Functions npm with small PR limits and checked schedule/label/target-branch policy. |
 | GitHub security settings receipt | `docs/distribution/github-security-settings-evidence.md`, `tools/github_security_settings_receipt.py` | Validates owner-provided private evidence for branch protection, Dependabot, code scanning, secret scanning, and release attestation settings before emitting a redacted receipt. |
@@ -59,14 +60,17 @@ Procedure: [release-dry-run.md](release-dry-run.md).
 
 `docs/distribution/github-actions-allowlist.json` records the reviewed action refs allowed across every workflow, including the self-hosted performance workflow. The allowlist blocks unexpected workflow files, local actions, missing action refs, and floating refs such as `main`, `master`, or `latest`.
 
+`docs/distribution/github-workflow-permissions.json` records the reviewed workflow event and permission baseline for every workflow. The policy keeps release-only write permissions isolated to the release job, requires read-only permissions for verify/Firebase/performance/Scorecard defaults, and fails unexpected jobs or event-trigger additions such as `pull_request_target`.
+
 PR/main verification runs:
 
 ```bash
 python3 tools/github_actions_allowlist_check.py --policy docs/distribution/github-actions-allowlist.json --repo-root .
+python3 tools/github_workflow_permissions_check.py --policy docs/distribution/github-workflow-permissions.json --repo-root .
 python3 tools/github_security_workflow_check.py --policy docs/distribution/github-security-workflows.json --repo-root .
 ```
 
-The check fails if a required control is missing, if a guarded workflow file is removed, or if a forbidden escape hatch such as `pull_request_target`, release dependency-verification suppression, writable contents in Dependency Review, or persisted checkout credentials in Scorecard appears. Update the policy in the same change as an intentional workflow hardening change, and keep the diff tied to the reviewed workflow file.
+The checks fail if a required control is missing, if a guarded workflow file is removed, if permissions drift, if a new job is added without policy review, or if a forbidden escape hatch such as `pull_request_target`, release dependency-verification suppression, writable contents in Dependency Review, or persisted checkout credentials in Scorecard appears. Update the relevant policy in the same change as an intentional workflow hardening change, and keep the diff tied to the reviewed workflow file.
 
 ## Dependabot update policy
 

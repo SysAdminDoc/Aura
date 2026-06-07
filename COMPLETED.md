@@ -533,6 +533,11 @@ next pass can resume quickly.
   `tools/github_actions_allowlist_check.py`, and backend tool tests so every
   workflow `uses:` reference is checked against reviewed action refs and
   floating/local/unpinned action drift fails verification.
+- Completed Cycle 122 GitHub workflow permissions guard: added
+  `docs/distribution/github-workflow-permissions.json`,
+  `tools/github_workflow_permissions_check.py`, and backend tool tests so
+  workflow events, top-level permissions, job-level permissions, expected jobs,
+  and expected workflow files are checked before Android setup in verify.
 
 ## 2026-06-05
 

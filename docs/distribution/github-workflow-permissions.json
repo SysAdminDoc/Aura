@@ -1,0 +1,95 @@
+{
+  "schemaVersion": 1,
+  "policyKind": "githubWorkflowPermissionsPolicy",
+  "workflowDirectory": ".github/workflows",
+  "requiredWorkflowPaths": [
+    ".github/workflows/dependency-review.yml",
+    ".github/workflows/performance.yml",
+    ".github/workflows/release.yml",
+    ".github/workflows/scorecard.yml",
+    ".github/workflows/verify.yml"
+  ],
+  "workflows": [
+    {
+      "name": "Dependency Review",
+      "path": ".github/workflows/dependency-review.yml",
+      "allowedEvents": [
+        "pull_request"
+      ],
+      "topLevelPermissions": {
+        "contents": "read",
+        "pull-requests": "write"
+      },
+      "jobs": {
+        "dependency-review": null
+      }
+    },
+    {
+      "name": "Performance benchmarks",
+      "path": ".github/workflows/performance.yml",
+      "allowedEvents": [
+        "workflow_dispatch"
+      ],
+      "topLevelPermissions": {
+        "contents": "read"
+      },
+      "jobs": {
+        "baseline-profile-and-macrobenchmark": null
+      }
+    },
+    {
+      "name": "Build & Release APK",
+      "path": ".github/workflows/release.yml",
+      "allowedEvents": [
+        "push",
+        "workflow_dispatch"
+      ],
+      "topLevelPermissions": null,
+      "jobs": {
+        "release": {
+          "attestations": "write",
+          "artifact-metadata": "write",
+          "contents": "write",
+          "id-token": "write"
+        }
+      }
+    },
+    {
+      "name": "OpenSSF Scorecard",
+      "path": ".github/workflows/scorecard.yml",
+      "allowedEvents": [
+        "branch_protection_rule",
+        "push",
+        "schedule",
+        "workflow_dispatch"
+      ],
+      "topLevelPermissions": {
+        "contents": "read"
+      },
+      "jobs": {
+        "scorecard": {
+          "contents": "read",
+          "security-events": "write"
+        }
+      }
+    },
+    {
+      "name": "Verify (build + unit tests + lint)",
+      "path": ".github/workflows/verify.yml",
+      "allowedEvents": [
+        "pull_request",
+        "push",
+        "workflow_dispatch"
+      ],
+      "topLevelPermissions": null,
+      "jobs": {
+        "firebase-rules": {
+          "contents": "read"
+        },
+        "verify": {
+          "contents": "read"
+        }
+      }
+    }
+  ]
+}

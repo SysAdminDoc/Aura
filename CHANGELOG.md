@@ -3,6 +3,7 @@
 All notable changes to Aura will be documented in this file.
 
 ## Unreleased
+- **GitHub workflow permissions guard (Cycle 122)**: added a workflow event/job-permission policy and verify-time scanner for all workflows, blocking unreviewed triggers, permission drift, unexpected jobs, unexpected workflow files, and scalar `write-all` style permission declarations.
 - **GitHub Actions allowlist guard (Cycle 121)**: added a workflow action allowlist and verify-time scanner for all workflow `uses:` references, blocking unexpected workflows, unreviewed actions, local actions, unpinned refs, and forbidden floating refs.
 - **Gradle wrapper checksum guard (Cycle 120)**: pinned the Gradle 8.12 wrapper ZIP SHA-256 and added a verify-time wrapper policy check for distribution URL, checksum, URL validation, storage roots, and timeout drift.
 - **GitHub security settings receipt (Cycle 119)**: added a private-evidence validator and redacted receipt generator for future owner/admin GitHub branch-protection, Dependabot, code-scanning, secret-scanning, and release-attestation settings proof.
