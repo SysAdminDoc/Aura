@@ -650,6 +650,13 @@ next pass can resume quickly.
   are checked against Gradle dependency markers, source paths, data types,
   collection/sharing, retention, deletion, user controls, and Play declaration
   notes.
+- Completed Cycle 145 Play App content packet gate: added
+  `docs/distribution/play-app-content.md`,
+  `docs/distribution/play-app-content.json`, and
+  `tools/play_app_content_packet_check.py` so ads, app access, target audience,
+  content rating notes, Data safety, UGC, generated content, sensitive
+  permissions, source URLs, evidence paths, and owner actions are checked
+  before verify/release workflows continue.
 
 ## 2026-06-05
 

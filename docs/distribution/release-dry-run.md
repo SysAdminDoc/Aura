@@ -19,6 +19,10 @@ Manual branch runs:
 - Check that every manifest permission, reviewed network endpoint,
   source-backed local storage surface, and SDK data surface has a Data safety
   matrix row before the signed release build.
+- Check that the owner-ready Play App content packet covers ads, app access,
+  target audience, content rating notes, Data safety, UGC, generated content,
+  sensitive permissions, and explicit owner actions before the signed release
+  build.
 - Check dependency notice, native compliance, and curated overlay drift gates.
 - Generate `SHA256SUMS.txt` and `RELEASE_NOTES.md`.
 - Run `tools/release_artifact_bundle_check.py` against the final `release/` directory.
@@ -52,6 +56,7 @@ Before the APK build, release dry runs also validate committed store metadata:
 python3 tools/store_metadata_preflight.py --repo-root .
 python3 tools/privacy_policy_link_check.py --policy docs/privacy/privacy-policy-link.json --repo-root .
 python3 tools/privacy_data_safety_check.py --policy docs/privacy/data-safety.json --repo-root .
+python3 tools/play_app_content_packet_check.py --policy docs/distribution/play-app-content.json --repo-root .
 ```
 
 The text-mode check fails when title or description limits drift, the current
@@ -66,6 +71,10 @@ network endpoint inventory changes, local storage rows cite missing source
 files, or SDK rows cite missing Gradle dependency markers/source files without
 matching purpose, data type, collection/sharing, retention, deletion,
 denial/user-control, backup posture, and Play declaration rows.
+The Play App content packet fails when the owner-ready declaration file loses
+required sections, source URLs, evidence paths, no-ads/privacy alignment,
+target-audience guardrails, UGC/generated-content controls, sensitive
+permission rows, or required owner actions.
 
 The release workflow validates the final directory before upload:
 

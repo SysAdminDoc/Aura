@@ -51,6 +51,7 @@ python tools\provider_credential_release_check.py --app-gradle app\build.gradle.
 python tools\store_metadata_preflight.py --repo-root .
 python tools\privacy_policy_link_check.py --policy docs\privacy\privacy-policy-link.json --repo-root .
 python tools\privacy_data_safety_check.py --policy docs\privacy\data-safety.json --repo-root .
+python tools\play_app_content_packet_check.py --policy docs\distribution\play-app-content.json --repo-root .
 .\gradlew.bat :app:assembleRelease --stacktrace --no-daemon
 python tools\provider_credential_apk_scan.py --local-properties local.properties --apk app\build\outputs\apk\release\app-release.apk
 ```

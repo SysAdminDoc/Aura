@@ -106,6 +106,9 @@ jobs:
       - name: Privacy data safety matrix
         run: python3 tools/privacy_data_safety_check.py --policy docs/privacy/data-safety.json --repo-root .
 
+      - name: Play App content packet
+        run: python3 tools/play_app_content_packet_check.py --policy docs/distribution/play-app-content.json --repo-root .
+
       - name: Build signed release APK
         run: ./gradlew :app:assembleRelease --stacktrace --no-daemon
 

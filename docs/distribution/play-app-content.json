@@ -1,0 +1,236 @@
+{
+  "schemaVersion": 1,
+  "policyKind": "playAppContentPacket",
+  "packageName": "com.freevibe",
+  "playSubmissionStatus": "ownerActionRequired",
+  "docsPath": "docs/distribution/play-app-content.md",
+  "requiredEvidencePaths": [
+    "app/build.gradle.kts",
+    "app/src/main/AndroidManifest.xml",
+    "fastlane/metadata/android/en-US/full_description.txt",
+    "docs/privacy/privacy-policy.md",
+    "docs/privacy/data-safety.json",
+    "docs/privacy/data-safety.md",
+    "docs/privacy/ai-generation.md",
+    "docs/support/community-reporting.md",
+    "docs/community-block-user-policy.md",
+    "docs/community-upload-deletion.md",
+    "docs/support/community-account-deletion.md",
+    "docs/support/community-account-deletion-web-url.json"
+  ],
+  "declarations": {
+    "privacyPolicy": {
+      "url": "https://github.com/SysAdminDoc/Aura/blob/main/docs/privacy/privacy-policy.md",
+      "evidenceRefs": [
+        "docs/privacy/privacy-policy.md",
+        "fastlane/metadata/android/en-US/full_description.txt"
+      ]
+    },
+    "ads": {
+      "containsAds": false,
+      "answer": "No. Aura has no ad SDKs, no display ads, no native ads, and no house ads.",
+      "evidenceRefs": [
+        "docs/privacy/privacy-policy.md",
+        "fastlane/metadata/android/en-US/full_description.txt"
+      ]
+    },
+    "appAccess": {
+      "restrictedAccess": false,
+      "reviewerInstructions": "No login is required for the main app. Community actions use anonymous Firebase identity when enabled. Optional provider keys and Stability generation can be skipped during review unless the owner supplies test credentials.",
+      "evidenceRefs": [
+        "docs/privacy/privacy-policy.md",
+        "fastlane/metadata/android/en-US/full_description.txt",
+        "docs/community-app-check-rollout.md"
+      ]
+    },
+    "targetAudience": {
+      "designedForChildren": false,
+      "ageGroups": ["18+"],
+      "rationale": "Aura is a personalization utility with remote provider media, public community uploads, generated wallpaper prompts, YouTube tooling, and optional provider keys. It is not designed for children.",
+      "evidenceRefs": [
+        "fastlane/metadata/android/en-US/full_description.txt",
+        "docs/privacy/privacy-policy.md",
+        "docs/distribution/channel-strategy.md"
+      ]
+    },
+    "contentRatingNotes": [
+      {
+        "formArea": "App category",
+        "answer": "Personalization utility for wallpapers, live wallpapers, sounds, ringtones, widgets, and local editing tools.",
+        "evidenceRefs": ["fastlane/metadata/android/en-US/full_description.txt"]
+      },
+      {
+        "formArea": "User-generated content",
+        "answer": "Yes. Community sounds, wallpapers, creator profiles, reports, votes, follows, blocks, and collection shares exist. Report, block, owner delete, and admin moderation flows are documented.",
+        "evidenceRefs": [
+          "docs/support/community-reporting.md",
+          "docs/community-block-user-policy.md",
+          "docs/community-upload-deletion.md"
+        ]
+      },
+      {
+        "formArea": "Online content",
+        "answer": "Yes. Aura displays remote provider content and public community catalog content from configured sources.",
+        "evidenceRefs": [
+          "docs/security/network-endpoints.json",
+          "docs/privacy/data-safety.md"
+        ]
+      },
+      {
+        "formArea": "Location",
+        "answer": "Approximate location is requested only for optional weather wallpaper effects and is shared with Open-Meteo when enabled.",
+        "evidenceRefs": [
+          "app/src/main/AndroidManifest.xml",
+          "docs/privacy/data-safety.md"
+        ]
+      },
+      {
+        "formArea": "Contacts",
+        "answer": "Contacts are accessed locally only for per-contact ringtone assignment.",
+        "evidenceRefs": [
+          "app/src/main/AndroidManifest.xml",
+          "docs/privacy/data-safety.md"
+        ]
+      },
+      {
+        "formArea": "Microphone",
+        "answer": "Microphone recording is used only when the user explicitly records a community sound.",
+        "evidenceRefs": [
+          "app/src/main/AndroidManifest.xml",
+          "docs/privacy/data-safety.md"
+        ]
+      },
+      {
+        "formArea": "Generated content",
+        "answer": "Generated wallpapers are text-to-image requests sent to Stability only after disclosure acceptance and user action. Generated results can be reported in app.",
+        "evidenceRefs": [
+          "docs/privacy/ai-generation.md",
+          "docs/support/community-reporting.md"
+        ]
+      },
+      {
+        "formArea": "Ads and purchases",
+        "answer": "No ads, subscriptions, or in-app purchases. Some sources accept optional user-supplied provider keys.",
+        "evidenceRefs": [
+          "docs/privacy/privacy-policy.md",
+          "fastlane/metadata/android/en-US/full_description.txt"
+        ]
+      }
+    ],
+    "dataSafety": {
+      "policyPath": "docs/privacy/data-safety.json",
+      "docsPath": "docs/privacy/data-safety.md",
+      "privacyPolicyPath": "docs/privacy/privacy-policy.md",
+      "evidenceRefs": [
+        "docs/privacy/data-safety.json",
+        "docs/privacy/data-safety.md",
+        "docs/privacy/privacy-policy.md"
+      ]
+    },
+    "ugc": {
+      "hasUserGeneratedContent": true,
+      "reportAndBlockAvailable": true,
+      "moderationQueueAvailable": true,
+      "termsOrGuidelinesStatus": "ownerActionRequired",
+      "answer": "Aura has report/block/moderation/delete flows for community UGC, but Play production submission still needs owner confirmation that in-app terms or community guidelines consent is complete before users engage with UGC.",
+      "evidenceRefs": [
+        "docs/support/community-reporting.md",
+        "docs/community-block-user-policy.md",
+        "docs/community-upload-deletion.md",
+        "docs/legal/community-upload-rights.md"
+      ]
+    },
+    "generatedContent": {
+      "hasGeneratedContent": true,
+      "generationProvider": "Stability BYO key",
+      "reportAvailable": true,
+      "disclosureRequired": true,
+      "answer": "Aura can generate wallpapers from text prompts through Stability after an in-app disclosure and can report generated outputs for Offensive, Unsafe, Deceptive, or Other reasons.",
+      "evidenceRefs": [
+        "docs/privacy/ai-generation.md",
+        "docs/support/community-reporting.md"
+      ]
+    },
+    "sensitivePermissions": [
+      {
+        "name": "android.permission.WRITE_SETTINGS",
+        "declaration": "Used after user consent to set selected sounds as ringtone, notification, or alarm tones.",
+        "evidenceRefs": ["docs/privacy/data-safety.md"]
+      },
+      {
+        "name": "android.permission.RECORD_AUDIO",
+        "declaration": "Used only when a user records a community sound.",
+        "evidenceRefs": ["docs/privacy/data-safety.md"]
+      },
+      {
+        "name": "android.permission.FOREGROUND_SERVICE_SPECIAL_USE",
+        "declaration": "Used for opt-in wallpaper rotation triggers on screen-off or unlock.",
+        "evidenceRefs": ["docs/privacy/data-safety.md", "app/src/main/AndroidManifest.xml"]
+      },
+      {
+        "name": "android.permission.POST_NOTIFICATIONS",
+        "declaration": "Used for foreground service and worker notifications when required by Android.",
+        "evidenceRefs": ["docs/privacy/data-safety.md"]
+      },
+      {
+        "name": "android.permission.ACCESS_COARSE_LOCATION",
+        "declaration": "Used for optional weather wallpaper effects.",
+        "evidenceRefs": ["docs/privacy/data-safety.md"]
+      },
+      {
+        "name": "android.permission.READ_CONTACTS",
+        "declaration": "Used locally for per-contact ringtone selection.",
+        "evidenceRefs": ["docs/privacy/data-safety.md"]
+      },
+      {
+        "name": "android.permission.WRITE_CONTACTS",
+        "declaration": "Used locally to assign the selected ringtone URI to the chosen contact.",
+        "evidenceRefs": ["docs/privacy/data-safety.md"]
+      },
+      {
+        "name": "android.permission.WRITE_EXTERNAL_STORAGE",
+        "declaration": "Legacy API 28-and-below storage compatibility for user-directed downloads and exports.",
+        "evidenceRefs": ["docs/privacy/data-safety.md", "app/src/main/AndroidManifest.xml"]
+      }
+    ]
+  },
+  "ownerActions": [
+    {
+      "id": "publish-hosted-deletion-url",
+      "status": "requiredBeforePlayProduction",
+      "description": "Publish the hosted HTTPS account deletion request URL and move the URL manifest to published.",
+      "evidenceRefs": [
+        "docs/support/community-account-deletion.md",
+        "docs/support/community-account-deletion-web-url.json"
+      ]
+    },
+    {
+      "id": "confirm-ugc-guidelines-consent",
+      "status": "requiredBeforePlayProduction",
+      "description": "Confirm or implement clear in-app community terms/guidelines consent before users engage with UGC.",
+      "evidenceRefs": [
+        "docs/support/community-reporting.md",
+        "docs/legal/community-upload-rights.md"
+      ]
+    },
+    {
+      "id": "complete-live-content-rating-questionnaire",
+      "status": "ownerConfirmationRequired",
+      "description": "Complete the Play Console content rating questionnaire using this packet and archive the owner receipt.",
+      "evidenceRefs": ["docs/distribution/play-app-content.md"]
+    },
+    {
+      "id": "capture-play-console-app-content-receipt",
+      "status": "ownerConfirmationRequired",
+      "description": "Archive owner-visible Play Console App content answers or screenshots after submission.",
+      "evidenceRefs": ["docs/distribution/play-app-content.md"]
+    }
+  ],
+  "sourceUrls": [
+    "https://support.google.com/googleplay/android-developer/answer/9859455",
+    "https://support.google.com/googleplay/android-developer/answer/9867159",
+    "https://support.google.com/googleplay/android-developer/answer/10787469",
+    "https://support.google.com/googleplay/android-developer/answer/12923286",
+    "https://support.google.com/googleplay/android-developer/answer/14094294"
+  ]
+}
