@@ -94,7 +94,7 @@ jobs:
 
       - name: Set up JDK 17
         if: steps.firebase_rules_changes.outputs.changed == 'true'
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v5
         with:
           java-version: '17'
           distribution: 'temurin'
@@ -181,7 +181,7 @@ jobs:
         run: python3 -m unittest discover -s test/tools -p '*_test.py'
 
       - name: Set up JDK 17
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v5
         with:
           java-version: '17'
           distribution: 'temurin'
