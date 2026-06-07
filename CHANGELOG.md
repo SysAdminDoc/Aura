@@ -3,6 +3,7 @@
 All notable changes to Aura will be documented in this file.
 
 ## Unreleased
+- **Dependabot update policy guard (Cycle 118)**: added weekly Dependabot version-update coverage for GitHub Actions, Gradle, root npm, and Functions npm, plus a verify-time policy check for cadence, target branch, PR limits, labels, and commit prefix.
 - **GitHub security workflow policy guard (Cycle 117)**: added a checked workflow policy for Dependency Review, OpenSSF Scorecard, and Release so verify fails when security triggers, permissions, attestation, SARIF upload, release bundle, or unsafe escape-hatch expectations drift.
 - **Callable rollout evidence receipt (Cycle 116)**: added a private-evidence validator and redacted receipt generator for future live community callable rollout proof across all seven contracted callable surfaces.
 - **Callable wire-protocol guard (Cycle 115)**: added a checked Android callable wire-protocol manifest and validator that keep all seven community callable client methods, payload schemas, Android input types, operation prefixes, App Check token choices, response IDs, and focused tests aligned with the backend callable contract.

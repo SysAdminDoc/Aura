@@ -513,6 +513,11 @@ next pass can resume quickly.
   Dependency Review, OpenSSF Scorecard, and Release workflow triggers,
   permissions, SARIF upload, attestation, release bundle, and unsafe
   escape-hatch expectations are checked in the always-on verify job.
+- Completed Cycle 118 Dependabot update policy guard: added
+  `.github/dependabot.yml`, `tools/dependabot_config_check.py`, and backend
+  tool tests so GitHub Actions, Gradle, root npm, and Functions npm version
+  update surfaces have checked weekly cadence, `main` target branch, PR limit,
+  labels, and commit prefix policy.
 
 ## 2026-06-05
 

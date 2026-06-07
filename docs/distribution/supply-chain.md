@@ -21,6 +21,7 @@ Aura is side-loaded through GitHub Releases and Obtainium, so release artifacts 
 | Dependency Review | `.github/workflows/dependency-review.yml` | Runs on pull requests and fails high/critical vulnerable dependency additions. |
 | OpenSSF Scorecard | `.github/workflows/scorecard.yml` | Runs on main pushes, branch-protection changes, weekly schedule, and manual dispatch; keeps public result publishing disabled and uploads SARIF to code scanning. |
 | GitHub security workflow policy | `docs/distribution/github-security-workflows.json`, `tools/github_security_workflow_check.py`, `.github/workflows/verify.yml` | Fails verification when dependency review, scorecard, or release workflow security controls drift or add unsafe trigger/permission escape hatches. |
+| Dependabot update policy | `.github/dependabot.yml`, `tools/dependabot_config_check.py`, `.github/workflows/verify.yml` | Opens weekly version-update PRs for GitHub Actions, Gradle, root Firebase npm, and Functions npm with small PR limits and checked schedule/label/target-branch policy. |
 | F-Droid blocker preflight | `tools/fdroid_preflight.py` | Confirms that F-Droid mainline remains blocked until proprietary dependency boundaries change. |
 
 ## Release verification
@@ -60,6 +61,23 @@ python3 tools/github_security_workflow_check.py --policy docs/distribution/githu
 ```
 
 The check fails if a required control is missing, if a guarded workflow file is removed, or if a forbidden escape hatch such as `pull_request_target`, release dependency-verification suppression, writable contents in Dependency Review, or persisted checkout credentials in Scorecard appears. Update the policy in the same change as an intentional workflow hardening change, and keep the diff tied to the reviewed workflow file.
+
+## Dependabot update policy
+
+`.github/dependabot.yml` opens weekly version-update PRs against `main` for the dependency surfaces Aura currently uses:
+
+- GitHub Actions workflows.
+- Gradle plugins and version-catalog dependencies from the repository root.
+- Root Firebase rules npm dependencies.
+- Firebase Functions npm dependencies under `functions/`.
+
+PR/main verification runs:
+
+```bash
+python3 tools/dependabot_config_check.py --config .github/dependabot.yml
+```
+
+The check fails if an expected surface is missing, an unsupported surface is added, update cadence or target branch drifts, open PR limits rise above five, or the `dependencies`/`security` labels and `deps` commit prefix are removed. Live Dependabot alerts, security updates, and repository security settings still require owner/admin confirmation in GitHub.
 
 ## Third-party notices
 
