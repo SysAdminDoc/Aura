@@ -97,6 +97,9 @@ jobs:
       - name: Cleartext release policy
         run: python3 tools/cleartext_release_check.py --repo-root .
 
+      - name: Store metadata preflight
+        run: python3 tools/store_metadata_preflight.py --repo-root .
+
       - name: Build signed release APK
         run: ./gradlew :app:assembleRelease --stacktrace --no-daemon
 

@@ -1,8 +1,8 @@
 # Autonomous Loop State
 
 **Assigned project:** `C:\Users\--\repos\Aura`
-**Current pass:** 2026-06-07 Cycle 137 prompt metadata retention cleanup
-**Last commit before pass:** `f542ebe` (`feat(wallpapers): guard generated request retries`)
+**Current pass:** 2026-06-07 Cycle 138 store metadata preflight
+**Last commit before pass:** `2aca01a` (`feat(wallpapers): stop retaining generated prompts`)
 
 ## 2026-06-05 Result
 
@@ -1961,11 +1961,30 @@
 - Cycle 137 verification: focused generated wallpaper prompt-retention tests
   and AI-generated favorite removal cleanup tests passed.
 
+## Cycle 138 Result - 2026-06-07
+
+- Added `tools/store_metadata_preflight.py` for Fastlane store metadata
+  title, short description, full description, privacy-policy URL, stale
+  branding, current versionCode changelog, and current versionName checks.
+- Added a tested optional asset mode for future Fastlane icon,
+  feature-graphic, and phone screenshot dimensions plus no-alpha requirements.
+- Wired text-mode store metadata preflight into verify and release workflows
+  before Android setup or signed APK assembly.
+- Updated the release workflow security policy so the release preflight keeps
+  the store metadata guard.
+- Shortened the Fastlane short description to fit Google Play's 80-character
+  limit and added the public privacy-policy URL to the full description.
+- Updated release/supply-chain docs, research, roadmap, changelog, completion,
+  and loop-state docs.
+- Cycle 138 verification: focused store metadata preflight, backend tool tests,
+  workflow policy checks, provider/network/security policy checks, and
+  cleartext/endpoint/dependabot/wrapper guards passed.
+
 ## Next Cycle
 
-Continue this same assigned project, Aura. Start Cycle 138 from the
+Continue this same assigned project, Aura. Start Cycle 139 from the
 `ROADMAP.md` Continuation State and
-`docs/research/cycle-137-2026-06-07.md`. The account
+`docs/research/cycle-138-2026-06-07.md`. The account
 deletion dry-run planner, read-only Settings identity surface, redacted
 shareable request draft, request-code lookup tool, review receipt gate, offline
 apply simulator, private executor package builder, and guarded REST executor
@@ -2071,7 +2090,9 @@ paid-secret sentinel to the provider credential storage guard; Cycle 136 added
 generated wallpaper session request counting, duplicate prompt/style
 confirmation, in-flight request rejection, and Stability account/cooldown error
 copy; Cycle 137 removed prompt-derived names/tags from generated favorites and
-added generated-file deletion on favorite removal.
+added generated-file deletion on favorite removal; Cycle 138 added checked
+Fastlane store metadata text/version/privacy preflight and fixed the current
+short-description/privacy URL drift.
 Actual live callable invocation evidence, a live hosted HTTPS web deletion URL,
 direct RTDB rule tightening, App Check console evidence, production-project
 dry-run evidence, and owner/admin GitHub repository security-settings evidence
@@ -2083,9 +2104,10 @@ deploy evidence, run a real production-project Firebase executor dry-run after
 owner access is confirmed, collect owner/admin GitHub security settings
 evidence and generate the redacted receipt when access is available, or
 continue with the on-device AI wallpaper decision gate, signed release dry-run
-evidence capture on a suitable runner, store listing metadata preflight, or the
-next checkable backend, deploy, security, support, policy, or rules hardening
-artifact if owner-gated evidence is still unavailable.
+evidence capture on a suitable runner, the screenshot and feature-graphic
+pipeline for the remaining store metadata asset gap, or the next checkable
+backend, deploy, security, support, policy, or rules hardening artifact if
+owner-gated evidence is still unavailable.
 Commit and push completed work when the active project contract allows it.
 
 ## Previous Cycle Prompt

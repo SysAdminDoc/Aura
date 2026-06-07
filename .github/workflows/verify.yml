@@ -189,6 +189,9 @@ jobs:
       - name: Network endpoint inventory
         run: python3 tools/network_endpoint_inventory_check.py --inventory docs/security/network-endpoints.json --repo-root .
 
+      - name: Store metadata preflight
+        run: python3 tools/store_metadata_preflight.py --repo-root .
+
       - name: Backend tool unit tests
         run: python3 -m unittest discover -s test/tools -p '*_test.py'
 

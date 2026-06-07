@@ -24,6 +24,7 @@ Aura is side-loaded through GitHub Releases and Obtainium, so release artifacts 
 | Provider credential storage policy | `docs/security/provider-credential-storage.json`, `docs/security/provider-credential-storage.md`, `tools/provider_credential_storage_check.py`, `.github/workflows/verify.yml`, `.github/workflows/release.yml` | Classifies each provider credential, documents the no-Keystore storage decision, proves DataStore backup/transfer exclusions, and checks explicit Settings clear controls plus diagnostics/privacy disclosures. |
 | Cleartext release guard | `tools/cleartext_release_check.py`, `.github/workflows/verify.yml`, `.github/workflows/release.yml` | Fails release preflight when network security config enables cleartext, the manifest explicitly enables cleartext, or provider-network code reintroduces raw HTTP URLs or OkHttp HTTP scheme builders. |
 | Network endpoint inventory | `docs/security/network-endpoints.json`, `docs/security/network-endpoints.md`, `tools/network_endpoint_inventory_check.py`, `.github/workflows/verify.yml` | Fails verification when app network-code URL hosts drift from the reviewed endpoint/auth/cache/fallback inventory. |
+| Store metadata preflight | `tools/store_metadata_preflight.py`, `.github/workflows/verify.yml`, `.github/workflows/release.yml` | Fails PR/main/release checks when Fastlane text metadata exceeds Play limits, loses the current versionCode changelog, reintroduces stale branding, or drops the public privacy-policy URL. Asset mode is available for the screenshot and feature-graphic pipeline. |
 | Dependency Review | `.github/workflows/dependency-review.yml` | Runs on pull requests and fails high/critical vulnerable dependency additions. |
 | OpenSSF Scorecard | `.github/workflows/scorecard.yml` | Runs on main pushes, branch-protection changes, weekly schedule, and manual dispatch; keeps public result publishing disabled and uploads SARIF to code scanning. |
 | GitHub Actions allowlist | `docs/distribution/github-actions-allowlist.json`, `tools/github_actions_allowlist_check.py`, `.github/workflows/verify.yml` | Fails verification when workflow files use unreviewed actions, local actions, unpinned refs, forbidden floating refs, or unexpected workflow files. |
@@ -55,9 +56,10 @@ For each `v*` release:
 14. Confirm the release workflow ran `tools/provider_credential_release_check.py` after writing release `local.properties` and before `:app:assembleRelease`.
 15. Confirm the release workflow ran `tools/provider_credential_storage_check.py` before `:app:assembleRelease`.
 16. Confirm the release workflow ran `tools/cleartext_release_check.py` before `:app:assembleRelease`.
-17. Confirm the release workflow ran `tools/provider_credential_apk_scan.py` after packaging the signed APK and before release uploads.
-18. Verify the APK locally with `apksigner verify --verbose --print-certs`.
-19. Compare the local SHA-256 values to `SHA256SUMS.txt`.
+17. Confirm the release workflow ran `tools/store_metadata_preflight.py` before `:app:assembleRelease`.
+18. Confirm the release workflow ran `tools/provider_credential_apk_scan.py` after packaging the signed APK and before release uploads.
+19. Verify the APK locally with `apksigner verify --verbose --print-certs`.
+20. Compare the local SHA-256 values to `SHA256SUMS.txt`.
 
 ## Release dry runs
 
@@ -85,6 +87,7 @@ python3 tools/github_security_workflow_check.py --policy docs/distribution/githu
 python3 tools/provider_credential_storage_check.py --policy docs/security/provider-credential-storage.json --repo-root .
 python3 tools/cleartext_release_check.py --repo-root .
 python3 tools/network_endpoint_inventory_check.py --inventory docs/security/network-endpoints.json --repo-root .
+python3 tools/store_metadata_preflight.py --repo-root .
 python3 -m unittest discover -s test/tools -p '*_test.py'
 ```
 
@@ -260,6 +263,7 @@ python3 tools/gradle_wrapper_check.py --properties gradle/wrapper/gradle-wrapper
 python3 tools/provider_credential_release_check.py --app-gradle app/build.gradle.kts --release-workflow .github/workflows/release.yml --local-properties local.properties
 python3 tools/provider_credential_storage_check.py --policy docs/security/provider-credential-storage.json --repo-root .
 python3 tools/cleartext_release_check.py --repo-root .
+python3 tools/store_metadata_preflight.py --repo-root .
 ```
 
 The check fails if the wrapper distribution URL, SHA-256, URL validation, storage roots, or timeout drifts. When upgrading Gradle, update `distributionUrl`, `distributionSha256Sum`, `tools/gradle_wrapper_check.py`, and the focused wrapper tests in the same change after verifying the official Gradle checksum.

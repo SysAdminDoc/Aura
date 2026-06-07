@@ -612,6 +612,11 @@ next pass can resume quickly.
   words in generated wallpaper tags or favorite names, sanitized generated
   favorite tags to non-prompt values, deleted generated PNG files after favorite
   removal, and updated generated wallpaper privacy docs.
+- Completed Cycle 138 store metadata preflight text gate: added
+  `tools/store_metadata_preflight.py`, focused backend tests, verify/release
+  workflow wiring, release workflow policy coverage, a Play-compliant short
+  description, and a public privacy-policy URL in Fastlane metadata. The tested
+  asset mode remains pending real screenshot/feature-graphic capture.
 
 ## 2026-06-05
 

@@ -28,7 +28,7 @@ Do not commit `freevibe.jks`, `local.properties`, copied APKs, or generated base
 1. Restores the release keystore from GitHub secrets.
 2. Writes a temporary `local.properties` with signing paths and blank optional provider keys.
 3. Runs `tools/provider_credential_release_check.py` to confirm optional provider keys are blank before they can be bundled into `BuildConfig`.
-4. Runs the provider credential storage and cleartext release policy checks.
+4. Runs the provider credential storage, cleartext release, and store metadata preflight checks.
 5. Runs `./gradlew :app:assembleRelease --stacktrace --no-daemon`.
 6. Copies the signed universal APK to `release/Aura-vX.Y.Z-versionCode-N-universal-release.apk`.
 7. Runs `tools/provider_credential_apk_scan.py` against the packaged APK and temporary release `local.properties`.
@@ -48,6 +48,7 @@ Use Android Studio's bundled JBR on Windows:
 ```powershell
 $env:JAVA_HOME = "C:/Program Files/Android/Android Studio/jbr"
 python tools\provider_credential_release_check.py --app-gradle app\build.gradle.kts --release-workflow .github\workflows\release.yml --local-properties local.properties
+python tools\store_metadata_preflight.py --repo-root .
 .\gradlew.bat :app:assembleRelease --stacktrace --no-daemon
 python tools\provider_credential_apk_scan.py --local-properties local.properties --apk app\build\outputs\apk\release\app-release.apk
 ```

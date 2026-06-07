@@ -30,3 +30,5 @@ Features:
 Aura uses free APIs from Wallhaven, Pexels, Pixabay, Freesound, and Reddit, plus NewPipe + yt-dlp for YouTube access. Some sources accept optional free API keys that can be configured in Settings for higher rate limits or NSFW content. Content licenses vary by source.
 
 Built with Kotlin, Jetpack Compose, Material 3, Hilt, Room, Retrofit, Coil, ExoPlayer, and ML Kit.
+
+Privacy policy: https://github.com/SysAdminDoc/Aura/blob/main/docs/privacy/privacy-policy.md
