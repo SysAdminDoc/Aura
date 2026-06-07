@@ -2807,6 +2807,34 @@ private fun BackgroundWorkDiagnosticRow(row: BackgroundWorkStatusRow) {
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
+            row.lastResult?.let { result ->
+                Text(
+                    "Last result: $result",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+            if (row.lastSuccessUtc != null || row.lastFailureUtc != null) {
+                Text(
+                    "Last success ${row.lastSuccessUtc ?: "none"} • last failure ${row.lastFailureUtc ?: "none"}",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+            row.lastErrorClass?.let { error ->
+                Text(
+                    "Last error: $error",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.error,
+                )
+            }
+            row.lastDeferralReason?.let { reason ->
+                Text(
+                    "Deferral: $reason",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
             row.readError?.let { error ->
                 Text(
                     "Read error: $error",

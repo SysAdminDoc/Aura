@@ -46,12 +46,23 @@ class AuraOriginalsDownloader @AssistedInject constructor(
     @Assisted params: WorkerParameters,
     private val manifestLoader: AuraOriginalsManifestLoader,
     private val okHttpClient: OkHttpClient,
+    private val receiptStore: BackgroundWorkReceiptStore,
 ) : CoroutineWorker(appContext, params) {
 
     override suspend fun doWork(): Result = withContext(Dispatchers.IO) {
-        try {
-            val manifest = manifestLoader.load() ?: return@withContext Result.success()
-            if (manifest.sounds.isEmpty()) return@withContext Result.success()
+        val result = runDownloadWork()
+        receiptStore.recordWorkerResult(
+            uniqueWorkName = UNIQUE_WORK_NAME,
+            resultClassName = result.javaClass.simpleName,
+            retryReason = "bundle download pending, hash mismatch, or network unavailable",
+        )
+        result
+    }
+
+    private suspend fun runDownloadWork(): Result {
+        return try {
+            val manifest = manifestLoader.load() ?: return Result.success()
+            if (manifest.sounds.isEmpty()) return Result.success()
             val targetDir = File(applicationContext.filesDir, BUNDLE_DIRNAME).apply { mkdirs() }
             val targetCanonical = targetDir.canonicalFile
             // Reject manifests whose declared total exceeds our hard cap. A zero or
@@ -65,7 +76,7 @@ class AuraOriginalsDownloader @AssistedInject constructor(
                         "Manifest claims $declaredTotal bytes which exceeds $MAX_TOTAL_BYTES; refusing to download",
                     )
                 }
-                return@withContext Result.failure()
+                return Result.failure()
             }
 
             var failedAny = false

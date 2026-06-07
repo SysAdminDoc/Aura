@@ -1,8 +1,8 @@
 # Autonomous Loop State
 
 **Assigned project:** `C:\Users\--\repos\Aura`
-**Current pass:** 2026-06-07 Cycle 156 background work Settings diagnostics
-**Last commit before pass:** `e8c81fc` (`feat(diagnostics): add background work bundle section`)
+**Current pass:** 2026-06-07 Cycle 157 background work persisted receipts
+**Last commit before pass:** `939bf4c` (`feat(diagnostics): add background work status`)
 
 ## 2026-06-05 Result
 
@@ -2313,11 +2313,30 @@
 - Cycle 156 verification: focused `BackgroundWorkDiagnosticsReaderTest` and
   `SettingsViewModelTest` passed locally with Android Studio JBR.
 
+## Cycle 157 Result - 2026-06-07
+
+- Added `BackgroundWorkReceiptStore` for local last-run receipts with success
+  UTC, failure UTC, error class, result, and deferral reason fields.
+- Instrumented `AutoWallpaperWorker`, `DailyWallpaperWorker`,
+  `WeatherUpdateWorker`, and `AuraOriginalsDownloader` to record success,
+  retry, and failure receipts. `RotationTriggerService` now passes the
+  `rotation_trigger_oneshot` receipt key through `AutoWallpaperWorker` input
+  data so trigger receipts remain separate from periodic auto-wallpaper
+  receipts.
+- Extended Settings background-work diagnostics to show last result,
+  success/failure timestamps, last error class, and deferral reason.
+- Updated `docs/background-work-scheduling-ledger.md`,
+  `docs/support/crash-diagnostics.md`, and
+  `docs/research/cycle-157-2026-06-07.md` for the persisted receipt slice.
+- Cycle 157 verification: focused `BackgroundWorkDiagnosticsReaderTest`,
+  `BackgroundWorkReceiptStoreTest`, and `SettingsViewModelTest` passed locally
+  with Android Studio JBR.
+
 ## Next Cycle
 
-Continue this same assigned project, Aura. Start Cycle 157 from the
+Continue this same assigned project, Aura. Start Cycle 158 from the
 `ROADMAP.md` Continuation State and
-`docs/research/cycle-156-2026-06-07.md`. The account
+`docs/research/cycle-157-2026-06-07.md`. The account
 deletion dry-run planner, read-only Settings identity surface, redacted
 shareable request draft, request-code lookup tool, review receipt gate, offline
 apply simulator, private executor package builder, and guarded REST executor
@@ -2471,6 +2490,8 @@ WorkInfo/Data Saver receipt markers.
 Cycle 156 added live Settings background-work diagnostics with WorkManager
 unique-work `WorkInfo` state counts and `ConnectivityManager` metered/Data
 Saver status.
+Cycle 157 added persisted background-work last-run receipts for success, retry,
+failure, error class, deferral reason, and rotation-trigger receipt separation.
 Actual live callable invocation evidence, a live hosted HTTPS web deletion URL,
 direct RTDB rule tightening, App Check console evidence, production-project
 dry-run evidence, and owner/admin GitHub repository security-settings evidence
@@ -2483,7 +2504,7 @@ owner access is confirmed, collect owner/admin GitHub security settings
 evidence and generate the redacted receipt when access is available, or
 continue with signed release dry-run evidence capture on a suitable runner,
 the screenshot and feature-graphic pipeline for the remaining store metadata
-asset gap, persisted background-work last-run/error receipts and deferral text, release
+asset gap, sharper background-work deferral text/support-bundle live merge, release
 artifact hardening, or the next checkable backend, deploy, security, support,
 policy, or rules hardening artifact if owner-gated evidence is still
 unavailable.

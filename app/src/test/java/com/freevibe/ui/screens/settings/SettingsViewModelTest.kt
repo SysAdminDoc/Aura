@@ -257,6 +257,8 @@ class SettingsViewModelTest {
                         workInfoStatus = "ENQUEUED=1",
                         workInfoCount = 1,
                         maxRunAttemptCount = 2,
+                        lastSuccessUtc = "2026-06-07T12:00:00Z",
+                        lastResult = "success",
                     ),
                 ),
             ),
@@ -272,6 +274,8 @@ class SettingsViewModelTest {
         assertEquals(true, viewModel.backgroundWorkDiagnostics.value.network.activeNetworkMetered)
         assertEquals("auto_wallpaper", viewModel.backgroundWorkDiagnostics.value.rows.single().uniqueWorkName)
         assertEquals("ENQUEUED=1", viewModel.backgroundWorkDiagnostics.value.rows.single().workInfoStatus)
+        assertEquals("2026-06-07T12:00:00Z", viewModel.backgroundWorkDiagnostics.value.rows.single().lastSuccessUtc)
+        assertEquals("success", viewModel.backgroundWorkDiagnostics.value.rows.single().lastResult)
 
         reader.snapshot = BackgroundWorkDiagnostics(
             network = BackgroundNetworkDiagnostics(

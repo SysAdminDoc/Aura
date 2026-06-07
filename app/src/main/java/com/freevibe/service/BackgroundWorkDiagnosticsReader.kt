@@ -27,6 +27,11 @@ data class BackgroundWorkStatusRow(
     val workInfoStatus: String,
     val workInfoCount: Int = 0,
     val maxRunAttemptCount: Int? = null,
+    val lastSuccessUtc: String? = null,
+    val lastFailureUtc: String? = null,
+    val lastErrorClass: String? = null,
+    val lastResult: String? = null,
+    val lastDeferralReason: String? = null,
     val readError: String? = null,
 )
 
@@ -37,6 +42,7 @@ interface BackgroundWorkDiagnosticsReader {
 @Singleton
 class AndroidBackgroundWorkDiagnosticsReader @Inject constructor(
     @ApplicationContext private val context: Context,
+    private val receiptStore: BackgroundWorkReceiptStore,
 ) : BackgroundWorkDiagnosticsReader {
 
     override suspend fun read(): BackgroundWorkDiagnostics {
@@ -45,10 +51,16 @@ class AndroidBackgroundWorkDiagnosticsReader @Inject constructor(
             managerResult.fold(
                 onSuccess = { manager -> readWorkInfo(manager, item) },
                 onFailure = { error ->
+                    val receipt = receiptStore.read(item.uniqueWorkName)
                     BackgroundWorkStatusRow(
                         label = item.label,
                         uniqueWorkName = item.uniqueWorkName,
                         workInfoStatus = "WorkManager unavailable",
+                        lastSuccessUtc = receipt.lastSuccessUtc,
+                        lastFailureUtc = receipt.lastFailureUtc,
+                        lastErrorClass = receipt.lastErrorClass,
+                        lastResult = receipt.lastResult,
+                        lastDeferralReason = receipt.lastDeferralReason,
                         readError = error.javaClass.simpleName,
                     )
                 },
@@ -66,18 +78,30 @@ class AndroidBackgroundWorkDiagnosticsReader @Inject constructor(
     ): BackgroundWorkStatusRow = runCatching {
         val infos = manager.getWorkInfosForUniqueWork(item.uniqueWorkName)
             .get(WORK_INFO_TIMEOUT_SECONDS, TimeUnit.SECONDS)
+        val receipt = receiptStore.read(item.uniqueWorkName)
         BackgroundWorkStatusRow(
             label = item.label,
             uniqueWorkName = item.uniqueWorkName,
             workInfoStatus = summarizeWorkInfoStates(infos.map { it.state }),
             workInfoCount = infos.size,
             maxRunAttemptCount = infos.maxOfOrNull { it.runAttemptCount },
+            lastSuccessUtc = receipt.lastSuccessUtc,
+            lastFailureUtc = receipt.lastFailureUtc,
+            lastErrorClass = receipt.lastErrorClass,
+            lastResult = receipt.lastResult,
+            lastDeferralReason = receipt.lastDeferralReason,
         )
     }.getOrElse { error ->
+        val receipt = receiptStore.read(item.uniqueWorkName)
         BackgroundWorkStatusRow(
             label = item.label,
             uniqueWorkName = item.uniqueWorkName,
             workInfoStatus = "WorkInfo read failed",
+            lastSuccessUtc = receipt.lastSuccessUtc,
+            lastFailureUtc = receipt.lastFailureUtc,
+            lastErrorClass = receipt.lastErrorClass,
+            lastResult = receipt.lastResult,
+            lastDeferralReason = receipt.lastDeferralReason,
             readError = error.javaClass.simpleName,
         )
     }

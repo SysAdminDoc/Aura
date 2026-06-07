@@ -22,18 +22,19 @@ class WeatherUpdateWorker @AssistedInject constructor(
     @Assisted appContext: Context,
     @Assisted workerParams: WorkerParameters,
     private val openMeteoApi: OpenMeteoApi,
+    private val receiptStore: BackgroundWorkReceiptStore,
 ) : CoroutineWorker(appContext, workerParams) {
 
     override suspend fun doWork(): Result {
         return try {
-            val location = getLastKnownLocation() ?: return Result.success() // No location = skip
+            val location = getLastKnownLocation() ?: return successReceipt() // No location = skip
 
             val response = openMeteoApi.getCurrentWeather(
                 latitude = location.first,
                 longitude = location.second,
             )
 
-            val weather = response.currentWeather ?: return Result.success()
+            val weather = response.currentWeather ?: return successReceipt()
 
             // Store weather data for WeatherWallpaperService.
             //
@@ -57,13 +58,28 @@ class WeatherUpdateWorker @AssistedInject constructor(
                 .putBoolean("location_present", true)
                 .apply()
 
-            Result.success()
+            successReceipt()
         } catch (_: java.io.IOException) {
+            receiptStore.recordRetry(
+                uniqueWorkName = WORK_NAME,
+                errorClass = "IOException",
+                deferralReason = "weather endpoint or network I/O failed",
+            )
             Result.retry()
         } catch (e: Exception) {
             if (e is kotlinx.coroutines.CancellationException) throw e
+            receiptStore.recordFailure(
+                uniqueWorkName = WORK_NAME,
+                errorClass = e.javaClass.simpleName,
+                deferralReason = "weather worker failed before storing a refresh",
+            )
             Result.failure()
         }
+    }
+
+    private fun successReceipt(): Result {
+        receiptStore.recordSuccess(WORK_NAME)
+        return Result.success()
     }
 
     private fun getLastKnownLocation(): Pair<Double, Double>? {

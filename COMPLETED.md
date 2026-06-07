@@ -6,6 +6,12 @@ next pass can resume quickly.
 
 ## 2026-06-07
 
+- Completed Cycle 157 background work persisted receipts: added
+  `BackgroundWorkReceiptStore`, recorded success/retry/failure receipts from
+  auto wallpaper, daily wallpaper, weather refresh, Aura Originals download,
+  and rotation-trigger one-shots, and surfaced last result, success/failure
+  UTC, error class, and deferral reason in Settings diagnostics. More precise
+  user-actionable platform deferral text remains open.
 - Completed Cycle 156 background work Settings diagnostics: added an injectable
   `BackgroundWorkDiagnosticsReader`, Hilt binding, Settings ViewModel state,
   and `Settings` > `Diagnostics` > `Background work` dialog that reads

@@ -19,6 +19,7 @@ import androidx.work.NetworkType
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.OutOfQuotaPolicy
 import androidx.work.WorkManager
+import androidx.work.workDataOf
 
 /**
  * Foreground service that dynamically registers broadcast receivers for
@@ -142,6 +143,7 @@ class RotationTriggerService : Service() {
         private const val NOTIFICATION_ID = 9241
         const val EXTRA_UNLOCK = "extra_unlock"
         const val EXTRA_SCREEN_OFF = "extra_screen_off"
+        const val WORK_NAME = "rotation_trigger_oneshot"
 
         /**
          * Idempotent start: if any trigger is enabled, start (or update) the service;
@@ -176,10 +178,11 @@ class RotationTriggerService : Service() {
                 .build()
             val request = OneTimeWorkRequestBuilder<AutoWallpaperWorker>()
                 .setConstraints(constraints)
+                .setInputData(workDataOf(AutoWallpaperWorker.RECEIPT_WORK_NAME_KEY to WORK_NAME))
                 .setExpedited(OutOfQuotaPolicy.RUN_AS_NON_EXPEDITED_WORK_REQUEST)
                 .build()
             WorkManager.getInstance(context).enqueueUniqueWork(
-                "rotation_trigger_oneshot",
+                WORK_NAME,
                 ExistingWorkPolicy.KEEP, // Coalesce: don't queue 10 rotations on a chatty unlock
                 request,
             )

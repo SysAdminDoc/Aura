@@ -42,13 +42,14 @@ class DailyWallpaperWorker @AssistedInject constructor(
     private val okHttpClient: OkHttpClient,
     private val prefs: PreferencesManager,
     private val sourceMetrics: SourceMetrics,
+    private val receiptStore: BackgroundWorkReceiptStore,
 ) : CoroutineWorker(appContext, workerParams) {
 
     override suspend fun doWork(): Result {
         return try {
             if (!prefs.redditProviderEnabled.first()) {
                 sourceMetrics.recordDisabled("reddit")
-                return Result.success()
+                return successReceipt()
             }
             // Fetch today's top image posts from multiple wallpaper subreddits
             val subreddits = listOf("wallpapers", "MobileWallpaper")
@@ -67,7 +68,7 @@ class DailyWallpaperWorker @AssistedInject constructor(
             }
                 .filter { it.isImage && !it.over18 }
                 .maxByOrNull { it.ups }
-                ?: return Result.retry()
+                ?: return retryReceipt("no eligible Reddit daily wallpaper was available")
 
             val wallpaper = topPost.toWallpaper()
 
@@ -97,7 +98,7 @@ class DailyWallpaperWorker @AssistedInject constructor(
 
                 if (Build.VERSION.SDK_INT >= 33 &&
                     ContextCompat.checkSelfPermission(applicationContext, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
-                    return Result.success()
+                    return successReceipt()
                 }
 
                 val intent = Intent(applicationContext, MainActivity::class.java).apply {
@@ -140,11 +141,29 @@ class DailyWallpaperWorker @AssistedInject constructor(
             } finally {
                 bitmap?.recycle()
             }
-            Result.success()
+            successReceipt()
         } catch (e: Exception) {
             if (e is kotlinx.coroutines.CancellationException) throw e
+            receiptStore.recordRetry(
+                uniqueWorkName = WORK_NAME,
+                errorClass = e.javaClass.simpleName,
+                deferralReason = "daily wallpaper worker failed and requested retry",
+            )
             Result.retry()
         }
+    }
+
+    private fun successReceipt(): Result {
+        receiptStore.recordSuccess(WORK_NAME)
+        return Result.success()
+    }
+
+    private fun retryReceipt(reason: String): Result {
+        receiptStore.recordRetry(
+            uniqueWorkName = WORK_NAME,
+            deferralReason = reason,
+        )
+        return Result.retry()
     }
 
     private fun formatUpvotes(ups: Int): String = when {

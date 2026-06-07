@@ -3,6 +3,10 @@
 All notable changes to Aura will be documented in this file.
 
 ## Unreleased
+- **Background work persisted receipts (Cycle 157)**: added local worker
+  last-run receipt storage for background work success, retry, failure, error
+  class, and deferral reason, then surfaced those receipts in Settings
+  diagnostics.
 - **Background work Settings diagnostics (Cycle 156)**: added a local
   `Settings` > `Diagnostics` > `Background work` dialog backed by WorkManager
   unique-work `WorkInfo` state counts and `ConnectivityManager` metered/Data

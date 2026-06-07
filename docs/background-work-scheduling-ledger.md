@@ -44,15 +44,15 @@ states from WorkInfo and local receipts:
 
 Cycle 156 added `Settings` > `Diagnostics` > `Background work`, which reads
 current `WorkInfo.State` counts for every unique work name and shows active
-metered/Data Saver state. The full Cycle 14 P0 item remains open until Settings
-diagnostics and support bundles also expose, for every unique work name:
+metered/Data Saver state. Cycle 157 added persisted worker receipts for last
+success UTC, last failure UTC, last error class, last result, and last deferral
+reason. The full Cycle 14 P0 item remains open until Settings diagnostics and
+support bundles also expose, for every unique work name:
 
 - enabled state;
-- last success UTC;
-- last failure UTC;
-- last error class;
 - declared constraints;
-- user-actionable deferral reason text.
+- sharper user-actionable deferral reason text where the worker can identify a
+  specific platform cause.
 
 The P1 unique-work policy matrix is closed by this packet because the ledger
 now records unique work names, work type, enqueue policy, interval, initial

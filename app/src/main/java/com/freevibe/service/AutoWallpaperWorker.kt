@@ -30,24 +30,42 @@ class AutoWallpaperWorker @AssistedInject constructor(
     private val wallpaperApplier: WallpaperApplier,
     private val historyManager: WallpaperHistoryManager,
     private val prefs: PreferencesManager,
+    private val receiptStore: BackgroundWorkReceiptStore,
 ) : CoroutineWorker(appContext, workerParams) {
 
     override suspend fun doWork(): Result {
+        val receiptWorkName = inputData.getString(RECEIPT_WORK_NAME_KEY) ?: WORK_NAME
         return try {
             val schedulerEnabled = prefs.schedulerEnabled.first()
             val legacyEnabled = prefs.autoWallpaperEnabled.first()
 
-            if (schedulerEnabled) {
+            val result = if (schedulerEnabled) {
                 doSchedulerWork()
             } else if (legacyEnabled) {
                 doLegacyWork()
             } else {
                 Result.success()
             }
+            receiptStore.recordWorkerResult(
+                uniqueWorkName = receiptWorkName,
+                resultClassName = result.javaClass.simpleName,
+                retryReason = "wallpaper source unavailable, constraints deferred, or apply failed",
+            )
+            result
         } catch (_: java.io.IOException) {
+            receiptStore.recordRetry(
+                uniqueWorkName = receiptWorkName,
+                errorClass = "IOException",
+                deferralReason = "network or remote source I/O failed",
+            )
             Result.retry()
         } catch (e: Exception) {
             if (e is kotlinx.coroutines.CancellationException) throw e
+            receiptStore.recordFailure(
+                uniqueWorkName = receiptWorkName,
+                errorClass = e.javaClass.simpleName,
+                deferralReason = "worker failed before completing wallpaper rotation",
+            )
             Result.failure()
         }
     }
@@ -175,6 +193,7 @@ class AutoWallpaperWorker @AssistedInject constructor(
 
     companion object {
         const val WORK_NAME = "auto_wallpaper"
+        const val RECEIPT_WORK_NAME_KEY = "receipt_work_name"
 
         /**
          * Schedule with minute-based intervals (minimum 15 min, WorkManager floor).

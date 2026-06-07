@@ -27,9 +27,10 @@ a live scheduler audit.
 
 For live scheduler state, use `Settings` > `Diagnostics` > `Background work`.
 That dialog reads WorkManager unique-work `WorkInfo` state counts plus
-`ConnectivityManager` metered/Data Saver status. The next diagnostics slice
-should persist last success/failure/error receipts from worker execution and
-decide whether to merge the live Settings snapshot into this support bundle.
+`ConnectivityManager` metered/Data Saver status, and now includes persisted
+last result, success/failure timestamps, error class, and deferral reason from
+worker execution. The next diagnostics slice should decide whether to merge the
+live Settings snapshot into this support bundle.
 
 ## Redaction
 
