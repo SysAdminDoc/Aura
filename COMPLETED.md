@@ -296,6 +296,12 @@ next pass can resume quickly.
   tests to validate applied REST receipts against private executor packages,
   reject dry-run receipts as completion evidence, and emit a user-safe redacted
   receipt for requester responses.
+- Completed Cycle 83 account deletion web intake: added
+  `docs/support/community-account-deletion-web-intake.md`,
+  `tools/community_deletion_web_intake.py`, and backend tool tests to validate
+  private hosted form exports, hash requester contact/statement fields, require
+  deletion/retention/upload attestations, and hand off to request-code lookup
+  without committing raw requester data.
 
 ## 2026-06-05
 

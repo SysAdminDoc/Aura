@@ -126,9 +126,21 @@ request before applying the dry-run plan.
 
 User and operator handling instructions live in
 [`docs/support/community-account-deletion.md`](support/community-account-deletion.md).
+Hosted private web intake requirements live in
+[`docs/support/community-account-deletion-web-intake.md`](support/community-account-deletion-web-intake.md).
 Operators can use `tools/community_deletion_request_lookup.py` with a current
 RTDB export to map a request code to candidate UID evidence before running the
 dry-run planner and review receipt.
+
+When a request comes from the hosted web route, validate the raw private form
+export first:
+
+```powershell
+py -3 tools\community_deletion_web_intake.py --request .\web-intake-request.json --support-reference <ticket-id> --output .\web-intake-receipt.json
+```
+
+The web intake receipt hashes requester contact and statement fields before the
+operator lookup step.
 
 ## Verification
 
@@ -136,6 +148,7 @@ dry-run planner and review receipt.
 - `py -3 -m unittest discover -s test/tools -p '*_test.py'`
 - `.\gradlew.bat --no-daemon --max-workers=2 :app:testDebugUnitTest --tests com.freevibe.service.CommunityIdentityProviderTest --tests com.freevibe.ui.screens.settings.SettingsViewModelTest`
 - `py -3 -m py_compile tools\community_deletion_request_lookup.py test\tools\community_deletion_request_lookup_test.py`
+- `py -3 -m py_compile tools\community_deletion_web_intake.py test\tools\community_deletion_web_intake_test.py`
 - `py -3 -m py_compile tools\community_account_deletion_review.py test\tools\community_account_deletion_review_test.py`
 - `py -3 -m py_compile tools\community_account_deletion_apply_simulator.py test\tools\community_account_deletion_apply_simulator_test.py`
 - `py -3 -m py_compile tools\community_account_deletion_executor_package.py test\tools\community_account_deletion_executor_package_test.py`
@@ -149,8 +162,8 @@ dry-run planner and review receipt.
   then generate only the redacted completion receipt for the requester.
 - Add local/Auth deletion and community cache cleanup after the trusted
   executor owns final sequencing.
-- Publish a hosted private support route or web deletion page before Play
-  production submission.
+- Publish the hosted private support route or web deletion page before Play
+  production submission, using the validated web-intake field contract.
 - Decide whether future callable-backed vote deletion should decrement
   aggregate counts transactionally.
 

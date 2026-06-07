@@ -1,8 +1,8 @@
 # Autonomous Loop State
 
 **Assigned project:** `C:\Users\--\repos\Aura`
-**Current pass:** 2026-06-06 Cycle 82 account deletion completion receipt
-**Last commit before pass:** `e4d4010` (`feat(community): add deletion REST executor`)
+**Current pass:** 2026-06-06 Cycle 83 account deletion web intake
+**Last commit before pass:** `93b6786` (`feat(community): add deletion completion receipt`)
 
 ## 2026-06-05 Result
 
@@ -609,22 +609,47 @@
 - Cycle 82 verification: Python compile and backend tool unittest discovery
   passed locally.
 
+## Cycle 83 Result - 2026-06-06
+
+- Added `docs/support/community-account-deletion-web-intake.md` to define the
+  private hosted account deletion request form contract for users who cannot
+  open Aura.
+- Added `tools/community_deletion_web_intake.py` to validate private form
+  exports, normalize the `AURA-` request code, require requester contact,
+  requester statement, support reference, allowed channel, and
+  deletion/retention/public-upload attestations.
+- The web-intake receipt hashes requester contact and statement text, omits raw
+  requester contact, statement text, full Firebase UIDs, RTDB paths, database
+  exports, executor packages, and access tokens, and marks the request
+  `readyForOperatorLookup`.
+- Added backend tool coverage in
+  `test/tools/community_deletion_web_intake_test.py` for redaction, missing
+  attestation rejection, and invalid request-code rejection.
+- Wired the web-intake validator into Firebase backend CI change detection.
+- Updated `docs/research/cycle-83-2026-06-06.md`,
+  `docs/support/community-account-deletion.md`,
+  `docs/community-account-deletion-policy.md`,
+  `docs/community-backend-runbook.md`, `ROADMAP.md`, `COMPLETED.md`, and
+  `CHANGELOG.md`.
+- Cycle 83 verification: Python compile and backend tool unittest discovery
+  passed locally.
+
 ## Next Cycle
 
-Continue this same assigned project, Aura. Start Cycle 83 from the `ROADMAP.md`
-Continuation State and `docs/research/cycle-82-2026-06-06.md`. The account
+Continue this same assigned project, Aura. Start Cycle 84 from the `ROADMAP.md`
+Continuation State and `docs/research/cycle-83-2026-06-06.md`. The account
 deletion dry-run planner, read-only Settings identity surface, redacted
 shareable request draft, request-code lookup tool, review receipt gate, offline
 apply simulator, private executor package builder, and guarded REST executor
-are implemented, and Cycle 82 added the redacted completion receipt after
-applied REST receipts. Local/Auth deletion cleanup, public upload deletion
-orchestration, and a hosted private web deletion request page remain open. Next
-add hosted private web request intake planning, local/Auth cleanup sequencing,
-public upload deletion orchestration, a real production-project Firebase
-executor dry-run after owner access is confirmed, Cloud Functions
-implementation for the callable quota contract, or Android callable migration
-adapters. Commit and push completed work when the active project contract allows
-it.
+are implemented; Cycle 82 added the redacted completion receipt after applied
+REST receipts; Cycle 83 added the private web-intake contract and validator.
+Local/Auth deletion cleanup, public upload deletion orchestration, and hosted
+private web URL publication remain open. Next add hosted private web URL
+publication planning, local/Auth cleanup sequencing, public upload deletion
+orchestration, a real production-project Firebase executor dry-run after owner
+access is confirmed, Cloud Functions implementation for the callable quota
+contract, or Android callable migration adapters. Commit and push completed
+work when the active project contract allows it.
 
 ## Previous Cycle Prompt
 

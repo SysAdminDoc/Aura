@@ -3,6 +3,23 @@
 Aura community identity is anonymous by default. The app can show a redacted
 identity suffix and request code after a Firebase community identity exists.
 
+## Web Request Intake
+
+Users who cannot open Aura can submit the same `AURA-` request code through a
+private hosted support surface. The field contract, privacy boundaries, and
+validation command live in
+[`community-account-deletion-web-intake.md`](community-account-deletion-web-intake.md).
+
+Validate private web form exports before operator lookup:
+
+```powershell
+py -3 tools\community_deletion_web_intake.py --request .\web-intake-request.json --support-reference <ticket-id> --output .\web-intake-receipt.json
+```
+
+The receipt hashes contact and statement fields and does not include raw
+requester contact, full Firebase UIDs, RTDB paths, database exports, executor
+packages, or access tokens.
+
 ## In-App Request Draft
 
 Open:
@@ -65,46 +82,52 @@ hosts, update payloads, and access tokens.
 ## Operator Handling
 
 1. Receive the request draft through a private support channel.
-2. Verify the requester and confirm the request code maps to the intended UID.
-3. Run the request-code lookup against a current RTDB export:
+2. For web submissions, validate the raw private form export:
+
+   ```powershell
+   py -3 tools\community_deletion_web_intake.py --request .\web-intake-request.json --support-reference <ticket-id> --output .\web-intake-receipt.json
+   ```
+
+3. Verify the requester and confirm the request code maps to the intended UID.
+4. Run the request-code lookup against a current RTDB export:
 
    ```powershell
    py -3 tools\community_deletion_request_lookup.py --database-export .\rtdb-export.json --request-code AURA-123456789ABC --output .\deletion-request-lookup.json
    ```
 
-4. Run the dry-run planner against a current RTDB export:
+5. Run the dry-run planner against a current RTDB export:
 
    ```powershell
    py -3 tools\community_account_deletion_plan.py --database-export .\rtdb-export.json --uid <matched-private-uid> --output .\account-deletion-plan.json
    ```
 
-5. Review the lookup and plan consistency:
+6. Review the lookup and plan consistency:
 
    ```powershell
    py -3 tools\community_account_deletion_review.py --lookup .\deletion-request-lookup.json --plan .\account-deletion-plan.json --request-code AURA-123456789ABC --output .\account-deletion-review.json
    ```
 
-6. Simulate the reviewed null updates against the same export:
+7. Simulate the reviewed null updates against the same export:
 
    ```powershell
    py -3 tools\community_account_deletion_apply_simulator.py --database-export .\rtdb-export.json --plan .\account-deletion-plan.json --review .\account-deletion-review.json --output .\account-deletion-simulation.json
    ```
 
-7. Build the private executor package:
+8. Build the private executor package:
 
    ```powershell
    py -3 tools\community_account_deletion_executor_package.py --plan .\account-deletion-plan.json --review .\account-deletion-review.json --simulation .\account-deletion-simulation.json --request-code AURA-123456789ABC --operator <private-ticket-or-initials> --output .\account-deletion-executor-package.json
    ```
 
-8. Dry-run the guarded REST executor:
+9. Dry-run the guarded REST executor:
 
    ```powershell
    py -3 tools\community_account_deletion_rest_executor.py --package .\account-deletion-executor-package.json --database-url https://<database-name>.firebaseio.com --mode dry-run --output .\account-deletion-rest-dry-run.json
    ```
 
-9. Review retained public upload and moderation records against
+10. Review retained public upload and moderation records against
    `docs/community-account-deletion-policy.md`.
-10. Apply only after requester verification, retained-record review, and
+11. Apply only after requester verification, retained-record review, and
     operator approval:
 
    ```powershell
@@ -112,13 +135,13 @@ hosts, update payloads, and access tokens.
    py -3 tools\community_account_deletion_rest_executor.py --package .\account-deletion-executor-package.json --database-url https://<database-name>.firebaseio.com --mode apply --confirm-request-code AURA-123456789ABC --confirm-plan-hash <planHash> --output .\account-deletion-rest-apply.json
    ```
 
-11. Build the redacted completion receipt only from the applied REST receipt:
+12. Build the redacted completion receipt only from the applied REST receipt:
 
    ```powershell
    py -3 tools\community_account_deletion_completion_receipt.py --package .\account-deletion-executor-package.json --rest-receipt .\account-deletion-rest-apply.json --request-code AURA-123456789ABC --support-reference <ticket-id> --output .\account-deletion-completion-receipt.json
    ```
 
-12. Share only the completion receipt with the requester. Keep lookup, plan,
+13. Share only the completion receipt with the requester. Keep lookup, plan,
     review, simulation, executor package, REST apply receipt, database export,
     access token, full UID, and RTDB paths private.
 

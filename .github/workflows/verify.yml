@@ -54,6 +54,7 @@ jobs:
             tools/community_backend_manifest.py \
             tools/community_account_deletion_plan.py \
             tools/community_deletion_request_lookup.py \
+            tools/community_deletion_web_intake.py \
             tools/community_account_deletion_review.py \
             tools/community_account_deletion_apply_simulator.py \
             tools/community_account_deletion_executor_package.py \
