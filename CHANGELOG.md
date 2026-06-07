@@ -3,6 +3,7 @@
 All notable changes to Aura will be documented in this file.
 
 ## Unreleased
+- **GitHub security workflow policy guard (Cycle 117)**: added a checked workflow policy for Dependency Review, OpenSSF Scorecard, and Release so verify fails when security triggers, permissions, attestation, SARIF upload, release bundle, or unsafe escape-hatch expectations drift.
 - **Callable rollout evidence receipt (Cycle 116)**: added a private-evidence validator and redacted receipt generator for future live community callable rollout proof across all seven contracted callable surfaces.
 - **Callable wire-protocol guard (Cycle 115)**: added a checked Android callable wire-protocol manifest and validator that keep all seven community callable client methods, payload schemas, Android input types, operation prefixes, App Check token choices, response IDs, and focused tests aligned with the backend callable contract.
 - **Android profile edit callable migration (Cycle 114)**: added Android creator profile payload normalization, extended the shared callable client for `updateCreatorProfile`, routed creator profile saves through the callable when Firebase Auth is available, and added an edit action to the creator profile screen.

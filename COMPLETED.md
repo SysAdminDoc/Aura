@@ -507,6 +507,12 @@ next pass can resume quickly.
   against the callable contract and wire-protocol manifests, then reduced to a
   redacted receipt that omits raw project IDs, operation IDs, resource IDs,
   command output, credentials, and tokens.
+- Completed Cycle 117 GitHub security workflow policy guard: added
+  `docs/distribution/github-security-workflows.json`,
+  `tools/github_security_workflow_check.py`, and backend tool tests so
+  Dependency Review, OpenSSF Scorecard, and Release workflow triggers,
+  permissions, SARIF upload, attestation, release bundle, and unsafe
+  escape-hatch expectations are checked in the always-on verify job.
 
 ## 2026-06-05
 

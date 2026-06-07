@@ -1,0 +1,69 @@
+{
+  "schemaVersion": 1,
+  "policyKind": "githubSecurityWorkflowPolicy",
+  "workflows": [
+    {
+      "name": "Dependency Review",
+      "path": ".github/workflows/dependency-review.yml",
+      "requiredSnippets": [
+        "pull_request:",
+        "contents: read",
+        "pull-requests: write",
+        "uses: actions/dependency-review-action@v5",
+        "fail-on-severity: high",
+        "comment-summary-in-pr: always"
+      ],
+      "forbiddenSnippets": [
+        "pull_request_target:",
+        "contents: write"
+      ]
+    },
+    {
+      "name": "OpenSSF Scorecard",
+      "path": ".github/workflows/scorecard.yml",
+      "requiredSnippets": [
+        "branch_protection_rule:",
+        "schedule:",
+        "push:",
+        "workflow_dispatch:",
+        "contents: read",
+        "security-events: write",
+        "persist-credentials: false",
+        "uses: ossf/scorecard-action@v2.4.3",
+        "results_format: sarif",
+        "publish_results: false",
+        "uses: github/codeql-action/upload-sarif@v3"
+      ],
+      "forbiddenSnippets": [
+        "pull_request_target:",
+        "persist-credentials: true"
+      ]
+    },
+    {
+      "name": "Release",
+      "path": ".github/workflows/release.yml",
+      "requiredSnippets": [
+        "tags:",
+        "workflow_dispatch:",
+        "contents: write",
+        "id-token: write",
+        "attestations: write",
+        "artifact-metadata: write",
+        "python3 tools/dependency_notice_lock.py --mode check",
+        "python3 tools/native_compliance_inventory.py --mode check-lock",
+        "python3 tools/dependency_overlay_check.py --overlay",
+        "python3 tools/dependency_license_policy.py --policy",
+        "python3 tools/release_artifact_bundle_check.py",
+        "uses: actions/attest@v4",
+        "subject-checksums: release/SHA256SUMS.txt",
+        "uses: softprops/action-gh-release@v2",
+        "GOOGLE-OSS-RAW-INPUTS.zip",
+        "fail_on_unmatched_files: true"
+      ],
+      "forbiddenSnippets": [
+        "pull_request_target:",
+        "dependency-verification=off"
+      ]
+    }
+  ]
+}

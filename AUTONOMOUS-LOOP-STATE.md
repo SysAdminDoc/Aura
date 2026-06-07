@@ -1,8 +1,8 @@
 # Autonomous Loop State
 
 **Assigned project:** `C:\Users\--\repos\Aura`
-**Current pass:** 2026-06-07 Cycle 116 callable rollout evidence receipt
-**Last commit before pass:** `0839f50` (`test(community): add callable wire protocol guard`)
+**Current pass:** 2026-06-07 Cycle 117 GitHub security workflow policy guard
+**Last commit before pass:** `095716a` (`test(community): add callable rollout receipt guard`)
 
 ## 2026-06-05 Result
 
@@ -1488,11 +1488,35 @@
   callable invocation evidence, direct RTDB rule tightening, and Firebase
   Console App Check evidence remain open.
 
+## Cycle 117 Result - 2026-06-07
+
+- Added `docs/distribution/github-security-workflows.json` as the checked
+  workflow policy for Dependency Review, OpenSSF Scorecard, and Release.
+- Added `tools/github_security_workflow_check.py` to validate workflow policy
+  metadata, required snippets, missing workflow files, duplicate workflow
+  names/paths, and forbidden unsafe snippets.
+- Added `test/tools/github_security_workflow_check_test.py` coverage for the
+  live policy and drift cases around required snippets, forbidden snippets,
+  duplicate names, duplicate paths, and missing workflow files.
+- Wired `.github/workflows/verify.yml` so the policy check runs in the
+  always-on verify job before Android setup.
+- Updated `docs/distribution/supply-chain.md`,
+  `docs/research/cycle-117-2026-06-07.md`, `ROADMAP.md`, `COMPLETED.md`,
+  `CHANGELOG.md`, and loop state.
+- Cycle 117 verification: GitHub security workflow policy check, focused
+  policy tests, backend tool tests, callable wire-protocol check, callable
+  contract check, dependency notice lock checks, native lock check, dependency
+  overlay check, dependency license policy check, high-severity Functions npm
+  audit, diff hygiene, and attribution/ASCII scans passed. Owner-approved
+  deploy evidence, actual live callable invocation evidence, direct RTDB rule
+  tightening, Firebase Console App Check evidence, and live GitHub repository
+  security-settings evidence remain open.
+
 ## Next Cycle
 
-Continue this same assigned project, Aura. Start Cycle 117 from the
+Continue this same assigned project, Aura. Start Cycle 118 from the
 `ROADMAP.md` Continuation State and
-`docs/research/cycle-116-2026-06-07.md`. The account
+`docs/research/cycle-117-2026-06-07.md`. The account
 deletion dry-run planner, read-only Settings identity surface, redacted
 shareable request draft, request-code lookup tool, review receipt gate, offline
 apply simulator, private executor package builder, and guarded REST executor
@@ -1570,15 +1594,19 @@ updates with compatibility fallback only for missing callable endpoint or
 missing Firebase Auth, and creator profile edit UI; Cycle 115 added checked
 Android callable wire-protocol coverage for all seven contracted callable
 client surfaces; Cycle 116 added a redacted receipt gate for future
-owner-provided live callable rollout evidence. Actual live callable invocation
-evidence, a live hosted HTTPS web deletion URL, direct RTDB rule tightening,
-App Check console evidence, and production-project dry-run evidence remain
-open. Next collect owner-approved live callable invocation evidence and
-generate the redacted rollout receipt when deploy/App Check access is
-available, publish the hosted URL after owner approval, tighten direct RTDB
-write rules after callable deploy evidence, run a real production-project
-Firebase executor dry-run after owner access is confirmed, or continue with the
-next checkable backend support/deploy/rules hardening artifact if owner-gated
+owner-provided live callable rollout evidence; Cycle 117 added a checked
+GitHub security workflow policy guard for Dependency Review, OpenSSF Scorecard,
+and Release workflow drift. Actual live callable invocation evidence, a live
+hosted HTTPS web deletion URL, direct RTDB rule tightening, App Check console
+evidence, production-project dry-run evidence, and live GitHub repository
+security-settings evidence remain open. Next collect owner-approved live
+callable invocation evidence and generate the redacted rollout receipt when
+deploy/App Check access is available, publish the hosted URL after owner
+approval, tighten direct RTDB write rules after callable deploy evidence, run a
+real production-project Firebase executor dry-run after owner access is
+confirmed, collect live GitHub branch-protection/security-settings evidence
+when owner access is available, or continue with the next checkable backend,
+deploy, security, support, policy, or rules hardening artifact if owner-gated
 evidence is still unavailable.
 Commit and push completed work when the active project contract allows it.
 

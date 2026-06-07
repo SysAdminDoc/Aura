@@ -20,6 +20,7 @@ Aura is side-loaded through GitHub Releases and Obtainium, so release artifacts 
 | Gradle dependency verification | `gradle/verification-metadata.xml` | Records SHA-256 checksums for resolved Gradle plugins and app dependencies. |
 | Dependency Review | `.github/workflows/dependency-review.yml` | Runs on pull requests and fails high/critical vulnerable dependency additions. |
 | OpenSSF Scorecard | `.github/workflows/scorecard.yml` | Runs on main pushes, branch-protection changes, weekly schedule, and manual dispatch; keeps public result publishing disabled and uploads SARIF to code scanning. |
+| GitHub security workflow policy | `docs/distribution/github-security-workflows.json`, `tools/github_security_workflow_check.py`, `.github/workflows/verify.yml` | Fails verification when dependency review, scorecard, or release workflow security controls drift or add unsafe trigger/permission escape hatches. |
 | F-Droid blocker preflight | `tools/fdroid_preflight.py` | Confirms that F-Droid mainline remains blocked until proprietary dependency boundaries change. |
 
 ## Release verification
@@ -47,6 +48,18 @@ For each `v*` release:
 Manual `workflow_dispatch` runs on `main` are Aura's release dry-run lane. They build the signed release APK, generate third-party notices, archive the raw Google OSS inputs, generate the native compliance packet, run the lock/overlay gates, produce checksums/release notes, validate the final bundle, and upload the result as a workflow artifact without creating a GitHub Release.
 
 Procedure: [release-dry-run.md](release-dry-run.md).
+
+## GitHub security workflows
+
+`docs/distribution/github-security-workflows.json` records the security-sensitive workflow requirements for Dependency Review, OpenSSF Scorecard, and Release. The policy intentionally checks exact workflow snippets so review can see when trigger, permission, attestation, SARIF upload, release bundle, or dependency-verification behavior changes.
+
+PR/main verification runs:
+
+```bash
+python3 tools/github_security_workflow_check.py --policy docs/distribution/github-security-workflows.json --repo-root .
+```
+
+The check fails if a required control is missing, if a guarded workflow file is removed, or if a forbidden escape hatch such as `pull_request_target`, release dependency-verification suppression, writable contents in Dependency Review, or persisted checkout credentials in Scorecard appears. Update the policy in the same change as an intentional workflow hardening change, and keep the diff tied to the reviewed workflow file.
 
 ## Third-party notices
 
