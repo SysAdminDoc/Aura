@@ -9,9 +9,12 @@ import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.verify
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
@@ -43,7 +46,7 @@ class CommunityReportsViewModelTest {
         val reportRepo = mockk<CommunityReportRepository>()
         val voteRepo = mockk<VoteRepository>()
         every { voteRepo.isAdmin } returns true
-        every { reportRepo.reports() } returns flowOf(listOf(report))
+        every { reportRepo.reports(CommunityReportResolutionStatus.OPEN, any()) } returns flowOf(listOf(report))
         coEvery { voteRepo.moderateHide(report.contentId) } returns Unit
         coEvery {
             reportRepo.resolveReport(report.id, CommunityReportResolutionStatus.HIDDEN, any())
@@ -66,7 +69,7 @@ class CommunityReportsViewModelTest {
         val reportRepo = mockk<CommunityReportRepository>()
         val voteRepo = mockk<VoteRepository>()
         every { voteRepo.isAdmin } returns true
-        every { reportRepo.reports() } returns flowOf(listOf(report))
+        every { reportRepo.reports(CommunityReportResolutionStatus.OPEN, any()) } returns flowOf(listOf(report))
         coEvery {
             reportRepo.resolveReport(report.id, CommunityReportResolutionStatus.DISMISSED, any())
         } returns Result.success(Unit)
@@ -87,7 +90,7 @@ class CommunityReportsViewModelTest {
         val reportRepo = mockk<CommunityReportRepository>()
         val voteRepo = mockk<VoteRepository>()
         every { voteRepo.isAdmin } returns true
-        every { reportRepo.reports() } returns flowOf(listOf(report))
+        every { reportRepo.reports(CommunityReportResolutionStatus.OPEN, any()) } returns flowOf(listOf(report))
         coEvery { voteRepo.moderateUnhide(report.contentId) } returns Unit
         coEvery {
             reportRepo.resolveReport(report.id, CommunityReportResolutionStatus.RESTORED, any())
@@ -109,7 +112,7 @@ class CommunityReportsViewModelTest {
         val reportRepo = mockk<CommunityReportRepository>()
         val voteRepo = mockk<VoteRepository>()
         every { voteRepo.isAdmin } returns true
-        every { reportRepo.reports() } returns flowOf(listOf(report))
+        every { reportRepo.reports(CommunityReportResolutionStatus.OPEN, any()) } returns flowOf(listOf(report))
         coEvery { voteRepo.moderateHide(report.contentId) } returns Unit
         coEvery { reportRepo.deleteReportedCommunityUpload(report.id, any()) } returns Result.success(Unit)
 
@@ -122,6 +125,33 @@ class CommunityReportsViewModelTest {
         coVerify { voteRepo.moderateHide(report.contentId) }
         coVerify { reportRepo.deleteReportedCommunityUpload(report.id, any()) }
         coVerify(exactly = 0) { reportRepo.resolveReport(report.id, any(), any()) }
+    }
+
+    @Test
+    fun `select status switches report feed to closed queue`() = runTest(dispatcher) {
+        val openReport = testReport(id = "report-open", status = CommunityReportResolutionStatus.OPEN)
+        val hiddenReport = testReport(id = "report-hidden", status = CommunityReportResolutionStatus.HIDDEN)
+        val reportRepo = mockk<CommunityReportRepository>()
+        val voteRepo = mockk<VoteRepository>()
+        every { voteRepo.isAdmin } returns true
+        every { reportRepo.reports(CommunityReportResolutionStatus.OPEN, any()) } returns flowOf(listOf(openReport))
+        every { reportRepo.reports(CommunityReportResolutionStatus.HIDDEN, any()) } returns flowOf(listOf(hiddenReport))
+
+        val viewModel = CommunityReportsViewModel(reportRepo, voteRepo)
+        val job = backgroundScope.launch { viewModel.reports.collect { } }
+
+        advanceUntilIdle()
+        assertEquals(CommunityReportResolutionStatus.OPEN, viewModel.selectedStatus.value)
+        assertEquals(listOf(openReport), viewModel.reports.value)
+
+        viewModel.selectStatus(CommunityReportResolutionStatus.HIDDEN)
+        advanceUntilIdle()
+
+        assertEquals(CommunityReportResolutionStatus.HIDDEN, viewModel.selectedStatus.value)
+        assertEquals(listOf(hiddenReport), viewModel.reports.value)
+        verify { reportRepo.reports(CommunityReportResolutionStatus.OPEN, any()) }
+        verify { reportRepo.reports(CommunityReportResolutionStatus.HIDDEN, any()) }
+        job.cancel()
     }
 
     @Test
@@ -138,8 +168,11 @@ class CommunityReportsViewModelTest {
         coVerify(exactly = 0) { reportRepo.deleteReportedCommunityUpload(any(), any()) }
     }
 
-    private fun testReport() = CommunityReportRecord(
-        id = "report-1",
+    private fun testReport(
+        id: String = "report-1",
+        status: CommunityReportResolutionStatus = CommunityReportResolutionStatus.OPEN,
+    ) = CommunityReportRecord(
+        id = id,
         contentId = "WALLPAPER::COMMUNITY::cw_1",
         contentKey = "WALLPAPER::COMMUNITY::cw_1",
         contentType = "WALLPAPER",
@@ -151,6 +184,6 @@ class CommunityReportsViewModelTest {
         uploaderName = "Creator",
         reporterUid = "reporter-1",
         reportedAt = 123L,
-        status = CommunityReportResolutionStatus.OPEN,
+        status = status,
     )
 }

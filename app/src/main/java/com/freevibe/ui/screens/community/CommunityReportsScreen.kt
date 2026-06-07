@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -61,9 +62,11 @@ import com.freevibe.data.repository.VoteRepository
 import com.freevibe.ui.components.AuraStateAction
 import com.freevibe.ui.components.AuraStateCard
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
@@ -79,13 +82,18 @@ data class CommunityReportsUiState(
 )
 
 @HiltViewModel
+@OptIn(ExperimentalCoroutinesApi::class)
 class CommunityReportsViewModel @Inject constructor(
     private val reportRepo: CommunityReportRepository,
     private val voteRepo: VoteRepository,
 ) : ViewModel() {
     val isAdmin: Boolean get() = voteRepo.isAdmin
+    private val _selectedStatus = MutableStateFlow(CommunityReportResolutionStatus.OPEN)
+    val selectedStatus = _selectedStatus.asStateFlow()
     val reports = if (isAdmin) {
-        reportRepo.reports()
+        _selectedStatus.flatMapLatest { status ->
+            reportRepo.reports(status = status)
+        }
     } else {
         flowOf(emptyList())
     }
@@ -96,6 +104,11 @@ class CommunityReportsViewModel @Inject constructor(
 
     fun refresh() {
         _state.update { it.copy(message = "Report queue refreshed", error = null) }
+    }
+
+    fun selectStatus(status: CommunityReportResolutionStatus) {
+        _selectedStatus.value = status
+        _state.update { it.copy(message = "${status.reviewLabel} reports", error = null) }
     }
 
     fun hide(report: CommunityReportRecord) {
@@ -183,6 +196,7 @@ fun CommunityReportsScreen(
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     val reports by viewModel.reports.collectAsStateWithLifecycle()
+    val selectedStatus by viewModel.selectedStatus.collectAsStateWithLifecycle()
 
     Scaffold(
         topBar = {
@@ -216,20 +230,47 @@ fun CommunityReportsScreen(
                         .align(Alignment.Center)
                         .padding(24.dp),
                 )
-                reports.isEmpty() -> AuraStateCard(
-                    icon = Icons.Default.Report,
-                    title = "No open reports",
-                    description = "New reports will appear here after users submit them from content detail screens.",
-                    primaryAction = AuraStateAction("Refresh", Icons.Default.Refresh, viewModel::refresh),
+                reports.isEmpty() -> Column(
                     modifier = Modifier
-                        .align(Alignment.Center)
-                        .padding(24.dp),
-                )
+                        .fillMaxSize()
+                        .padding(horizontal = 14.dp, vertical = 10.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp),
+                ) {
+                    ReportStatusChips(
+                        selectedStatus = selectedStatus,
+                        onSelectStatus = viewModel::selectStatus,
+                    )
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .weight(1f),
+                    ) {
+                        AuraStateCard(
+                            icon = Icons.Default.Report,
+                            title = "No ${selectedStatus.reviewLabel.lowercase(Locale.ROOT)} reports",
+                            description = if (selectedStatus == CommunityReportResolutionStatus.OPEN) {
+                                "New reports will appear here after users submit them from content detail screens."
+                            } else {
+                                "Closed reports will appear here after admins take action."
+                            },
+                            primaryAction = AuraStateAction("Refresh", Icons.Default.Refresh, viewModel::refresh),
+                            modifier = Modifier
+                                .align(Alignment.Center)
+                                .padding(24.dp),
+                        )
+                    }
+                }
                 else -> LazyColumn(
                     modifier = Modifier.fillMaxSize(),
                     contentPadding = PaddingValues(horizontal = 14.dp, vertical = 10.dp),
                     verticalArrangement = Arrangement.spacedBy(12.dp),
                 ) {
+                    item {
+                        ReportStatusChips(
+                            selectedStatus = selectedStatus,
+                            onSelectStatus = viewModel::selectStatus,
+                        )
+                    }
                     if (state.error != null || state.message != null) {
                         item {
                             FilterChip(
@@ -262,6 +303,25 @@ fun CommunityReportsScreen(
                     }
                 }
             }
+        }
+    }
+}
+
+@Composable
+private fun ReportStatusChips(
+    selectedStatus: CommunityReportResolutionStatus,
+    onSelectStatus: (CommunityReportResolutionStatus) -> Unit,
+) {
+    LazyRow(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        items(CommunityReportReviewFilters, key = { it.storageValue }) { status ->
+            FilterChip(
+                selected = selectedStatus == status,
+                onClick = { onSelectStatus(status) },
+                label = { Text(status.reviewLabel) },
+            )
         }
     }
 }
@@ -379,3 +439,18 @@ private fun CommunityReportRecord.canDeleteCommunityUpload(): Boolean =
     reason == CommunityReportReason.RIGHTS &&
         contentSource.equals("COMMUNITY", ignoreCase = true) &&
         contentType.uppercase(Locale.ROOT) in setOf("SOUND", "WALLPAPER")
+
+private val CommunityReportReviewFilters = listOf(
+    CommunityReportResolutionStatus.OPEN,
+    CommunityReportResolutionStatus.HIDDEN,
+    CommunityReportResolutionStatus.DISMISSED,
+    CommunityReportResolutionStatus.RESTORED,
+)
+
+private val CommunityReportResolutionStatus.reviewLabel: String
+    get() = when (this) {
+        CommunityReportResolutionStatus.OPEN -> "Open"
+        CommunityReportResolutionStatus.HIDDEN -> "Hidden"
+        CommunityReportResolutionStatus.DISMISSED -> "Dismissed"
+        CommunityReportResolutionStatus.RESTORED -> "Restored"
+    }

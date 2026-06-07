@@ -46,6 +46,9 @@ Reporter UIDs are not public catalog data.
 - Custom-claim admins see Settings > Community reports, which lists open
   reports with reason, content key, source, license, uploader, source URL, and
   reporter suffix context.
+- Admins can switch the report queue between Open, Hidden, Dismissed, and
+  Restored status filters to review closed moderation history without exposing
+  reporter details publicly.
 - Admin actions can hide reported content by writing `/moderation/{contentId}`,
   dismiss a report without moderation changes, or restore hidden content by
   removing the moderation entry.
@@ -79,5 +82,5 @@ Reporter UIDs are not public catalog data.
   creation, reporter UID validation, admin-only reads, admin status updates, and
   admin-only resolution receipts. Cycle 60 extends that coverage to
   rights-confirmed takedown receipt authorization and storage-handle matching.
-- Add report tabs or filters for closed reports if admins need historical
-  review beyond the current open queue.
+- Cycle 62 adds closed-report status filters for Hidden, Dismissed, and Restored
+  review queues.

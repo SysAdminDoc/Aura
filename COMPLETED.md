@@ -197,6 +197,9 @@ next pass can resume quickly.
   receipt, hides the content ID, deletes the Storage object, removes public
   upload metadata plus the owner index, and updates the receipt to `SUCCEEDED`
   or `FAILED` for retry evidence.
+- Completed Cycle 62 closed report review filters: the admin report queue now
+  switches between Open, Hidden, Dismissed, and Restored status feeds, including
+  from the empty state, so closed moderation outcomes remain reviewable.
 
 ## 2026-06-05
 
