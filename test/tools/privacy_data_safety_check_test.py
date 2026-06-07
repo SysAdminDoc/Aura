@@ -63,6 +63,20 @@ def minimal_policy() -> dict[str, object]:
                 "deletionPath": "Clear cache.",
             }
         ],
+        "localStorageSurfaces": [
+            {
+                "surfaceId": "test-store",
+                "storageLocation": "App-private test store.",
+                "sourcePaths": ["app/src/main/java/TestStore.kt"],
+                "dataTypes": ["App interactions"],
+                "collectionStatus": "localOnly",
+                "sharingStatus": "notShared",
+                "userControl": "Clear app data.",
+                "retention": "Retained until cleared.",
+                "deletionPath": "Clear app data.",
+                "backupStatus": "excludedFromBackupAndTransfer",
+            }
+        ],
         "sourceUrls": ["https://support.google.com/googleplay/android-developer/answer/10787469"],
     }
 
@@ -79,7 +93,7 @@ def seed_repo(repo: Path) -> Path:
     )
     write(
         repo / "docs/privacy/data-safety.md",
-        "`android.permission.INTERNET`\n`android.permission.WRITE_EXTERNAL_STORAGE`\n`test-api`\n",
+        "`android.permission.INTERNET`\n`android.permission.WRITE_EXTERNAL_STORAGE`\n`test-api`\n`test-store`\n",
     )
     write(
         repo / "docs/privacy/privacy-policy.md",
@@ -89,6 +103,7 @@ def seed_repo(repo: Path) -> Path:
         repo / "docs/security/network-endpoints.json",
         '{"schemaVersion": 1, "policyKind": "networkEndpointInventory", "endpoints": [{"id": "test-api"}]}\n',
     )
+    write(repo / "app/src/main/java/TestStore.kt", "class TestStore\n")
     return repo
 
 
@@ -99,6 +114,7 @@ class PrivacyDataSafetyCheckTest(unittest.TestCase):
         self.assertEqual("ok", result["status"])
         self.assertEqual(result["manifestPermissionCount"], result["matrixPermissionCount"])
         self.assertGreaterEqual(result["networkSurfaceCount"], 1)
+        self.assertGreaterEqual(result["localStorageSurfaceCount"], 1)
         self.assertGreaterEqual(result["sensitiveOrSharedRowCount"], 1)
 
     def test_rejects_missing_permission_row(self) -> None:
@@ -179,6 +195,36 @@ class PrivacyDataSafetyCheckTest(unittest.TestCase):
                     "deletionPath": "None.",
                 }
             )
+
+            with self.assertRaises(PrivacyDataSafetyError):
+                validate_policy(repo, policy)
+
+    def test_rejects_missing_local_storage_source_path(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            repo = seed_repo(Path(tmpdir))
+            policy = minimal_policy()
+            policy["localStorageSurfaces"][0]["sourcePaths"] = ["app/src/main/java/MissingStore.kt"]  # type: ignore[index]
+
+            with self.assertRaises(PrivacyDataSafetyError):
+                validate_policy(repo, policy)
+
+    def test_rejects_docs_without_local_storage_row(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            repo = seed_repo(Path(tmpdir))
+            policy = minimal_policy()
+            write(
+                repo / "docs/privacy/data-safety.md",
+                "`android.permission.INTERNET`\n`android.permission.WRITE_EXTERNAL_STORAGE`\n`test-api`\n",
+            )
+
+            with self.assertRaises(PrivacyDataSafetyError):
+                validate_policy(repo, policy)
+
+    def test_rejects_unsupported_local_storage_backup_status(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            repo = seed_repo(Path(tmpdir))
+            policy = minimal_policy()
+            policy["localStorageSurfaces"][0]["backupStatus"] = "unknown"  # type: ignore[index]
 
             with self.assertRaises(PrivacyDataSafetyError):
                 validate_policy(repo, policy)

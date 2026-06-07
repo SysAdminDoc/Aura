@@ -637,6 +637,12 @@ next pass can resume quickly.
   `tools/privacy_data_safety_check.py` so every reviewed endpoint in
   `docs/security/network-endpoints.json` has a matching privacy row with data
   type, collection/sharing, user-control, retention, and deletion coverage.
+- Completed Cycle 143 local storage Data safety surface gate: extended
+  `docs/privacy/data-safety.json`, `docs/privacy/data-safety.md`, and
+  `tools/privacy_data_safety_check.py` so app-private local storage surfaces
+  have source-backed privacy rows covering DataStore, Room, SharedPreferences,
+  diagnostics logs, media files, generated wallpapers, offline favorites,
+  cache/share artifacts, deletion paths, and backup/transfer posture.
 
 ## 2026-06-05
 

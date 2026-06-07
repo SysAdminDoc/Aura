@@ -3,6 +3,7 @@
 All notable changes to Aura will be documented in this file.
 
 ## Unreleased
+- **Local storage Data safety gate (Cycle 143)**: extended the Data safety matrix check with source-backed local storage rows for DataStore, Room, SharedPreferences, diagnostics logs, app-private media, and cache surfaces, including backup/transfer posture.
 - **Network Data safety surface gate (Cycle 142)**: extended the Data safety matrix check to reconcile every reviewed network endpoint with privacy rows for data types, sharing, retention, deletion, and user controls.
 - **Privacy Data safety matrix (Cycle 141)**: added a manifest-permission privacy ledger and verify/release gate that blocks permission drift without reviewed data type, purpose, retention, deletion, denial, and Play declaration rows.
 - **Privacy policy link gate (Cycle 140)**: added an in-app Settings privacy-policy link plus verify/release checks that keep the public policy URL aligned across Settings, README, Fastlane metadata, and release docs.

@@ -340,6 +340,201 @@
       "deletionPath": "Use owner delete actions, support deletion request flow, local cleanup, or clear app data depending on data type."
     }
   ],
+  "localStorageSurfaces": [
+    {
+      "surfaceId": "preferences-datastore",
+      "storageLocation": "datastore/freevibe_prefs.preferences_pb",
+      "sourcePaths": [
+        "app/src/main/java/com/freevibe/data/local/PreferencesManager.kt",
+        "app/src/main/res/xml/backup_rules.xml",
+        "app/src/main/res/xml/data_extraction_rules.xml"
+      ],
+      "dataTypes": ["Provider API keys", "App settings", "Generated content disclosure", "Provider source switches", "Scheduler preferences"],
+      "collectionStatus": "localOnly",
+      "sharingStatus": "notShared",
+      "userControl": "Settings provider-key Clear actions, feature switches, generated-content disclosure reset, or Android clear-app-data.",
+      "retention": "Retained until the user changes the setting, clears the key/disclosure where available, or clears app data.",
+      "deletionPath": "Use Settings controls for keys and toggles, or clear Aura app data.",
+      "backupStatus": "excludedFromBackupAndTransfer"
+    },
+    {
+      "surfaceId": "room-database",
+      "storageLocation": "databases/freevibe.db",
+      "sourcePaths": [
+        "app/src/main/java/com/freevibe/data/local/Database.kt",
+        "app/src/main/java/com/freevibe/di/AppModule.kt"
+      ],
+      "dataTypes": ["Favorites", "Downloads", "Search history", "Wallpaper cache metadata", "Wallpaper history", "Collections"],
+      "collectionStatus": "localOnly",
+      "sharingStatus": "notShared",
+      "userControl": "Favorites, downloads, collections, history, export/import, and cache cleanup surfaces.",
+      "retention": "Retained as user app state until the user deletes rows, clears caches/history, exports/imports replacements, or clears app data.",
+      "deletionPath": "Remove favorites/downloads/collections/history where exposed, clear caches, or clear Aura app data.",
+      "backupStatus": "includedInBackupOrTransfer"
+    },
+    {
+      "surfaceId": "community-identity-and-vote-prefs",
+      "storageLocation": "shared_prefs/aura_community_identity.xml and shared_prefs/aura_votes.xml",
+      "sourcePaths": [
+        "app/src/main/java/com/freevibe/service/CommunityIdentityProvider.kt",
+        "app/src/main/java/com/freevibe/data/repository/VoteRepository.kt"
+      ],
+      "dataTypes": ["Local fallback identity", "Community vote hide state"],
+      "collectionStatus": "localOnly",
+      "sharingStatus": "notShared",
+      "userControl": "Settings community identity surface can clear the local fallback identity; local hide state clears with app data.",
+      "retention": "Retained locally until the user clears the fallback identity, removes app data, or uninstalls.",
+      "deletionPath": "Use Settings > Community identity > Clear local for fallback identity, or clear Aura app data.",
+      "backupStatus": "includedInBackupOrTransfer"
+    },
+    {
+      "surfaceId": "widget-and-selection-prefs",
+      "storageLocation": "shared_prefs/freevibe_widget.xml and selected-content snapshot preferences",
+      "sourcePaths": [
+        "app/src/main/java/com/freevibe/widget/FreeVibeWidget.kt",
+        "app/src/main/java/com/freevibe/service/WallpaperHistoryManager.kt",
+        "app/src/main/java/com/freevibe/service/SelectedContentHolder.kt",
+        "app/src/main/java/com/freevibe/ui/FreeVibeRoot.kt"
+      ],
+      "dataTypes": ["Wallpaper metadata", "Sound metadata", "Widget tint colors", "Recent selection state"],
+      "collectionStatus": "localOnly",
+      "sharingStatus": "notShared",
+      "userControl": "Change or clear selected content, remove widgets, clear wallpaper history, or clear app data.",
+      "retention": "Retained locally to restore navigation and widget state until replaced or app data is cleared.",
+      "deletionPath": "Change selections/widgets, clear history where exposed, or clear Aura app data.",
+      "backupStatus": "includedInBackupOrTransfer"
+    },
+    {
+      "surfaceId": "live-wallpaper-prefs-and-media",
+      "storageLocation": "shared_prefs/freevibe_live_wp.xml, shared_prefs/freevibe_weather_wp.xml, shared_prefs/freevibe_parallax.xml, files/live_wallpaper.*, and files/parallax/",
+      "sourcePaths": [
+        "app/src/main/java/com/freevibe/data/local/PreferencesManager.kt",
+        "app/src/main/java/com/freevibe/service/VideoWallpaperStorage.kt",
+        "app/src/main/java/com/freevibe/service/VideoWallpaperService.kt",
+        "app/src/main/java/com/freevibe/service/WeatherWallpaperService.kt",
+        "app/src/main/java/com/freevibe/service/WallpaperApplier.kt",
+        "app/src/main/res/xml/backup_rules.xml",
+        "app/src/main/res/xml/data_extraction_rules.xml"
+      ],
+      "dataTypes": ["Video files", "Photos or images", "Approximate location", "Weather data", "Live wallpaper settings", "Battery diagnostics"],
+      "collectionStatus": "localOnly",
+      "sharingStatus": "notShared",
+      "userControl": "Live wallpaper/video/weather/parallax settings, media replacement actions, and Android clear-app-data.",
+      "retention": "Latest managed live wallpaper media and state persist until replaced, disabled, or app data is cleared; weather/live-wallpaper prefs are excluded from backup.",
+      "deletionPath": "Replace or disable the live wallpaper feature, clear weather state, delete managed media by clearing app data, or uninstall.",
+      "backupStatus": "mixed"
+    },
+    {
+      "surfaceId": "crash-diagnostics-log",
+      "storageLocation": "files/crash.log",
+      "sourcePaths": [
+        "app/src/main/java/com/freevibe/FreeVibeApp.kt",
+        "app/src/main/java/com/freevibe/service/CrashDiagnosticsCollector.kt",
+        "app/src/main/res/xml/backup_rules.xml",
+        "app/src/main/res/xml/data_extraction_rules.xml"
+      ],
+      "dataTypes": ["Crash logs", "Diagnostics", "Device information", "App version"],
+      "collectionStatus": "localOnly",
+      "sharingStatus": "userDirectedShare",
+      "userControl": "Settings diagnostics bundle requires explicit Copy or Share action and redacts app-private paths and provider credentials.",
+      "retention": "Crash log tail is capped locally and retained until app data is cleared or overwritten by newer crashes.",
+      "deletionPath": "Clear Aura app data, or avoid sharing the diagnostics bundle.",
+      "backupStatus": "excludedFromBackupAndTransfer"
+    },
+    {
+      "surfaceId": "coil-and-audio-caches",
+      "storageLocation": "cache/coil_cache, cache/audio-preview-cache, cache/trimmed, and cache/audio_edit",
+      "sourcePaths": [
+        "app/src/main/java/com/freevibe/FreeVibeApp.kt",
+        "app/src/main/java/com/freevibe/service/AudioPreviewCache.kt",
+        "app/src/main/java/com/freevibe/service/AudioTrimmer.kt",
+        "app/src/main/java/com/freevibe/ui/screens/editor/SoundEditorViewModel.kt",
+        "app/src/main/java/com/freevibe/ui/screens/settings/SettingsViewModel.kt"
+      ],
+      "dataTypes": ["Photos or images", "Audio files", "Provider response media"],
+      "collectionStatus": "localOnly",
+      "sharingStatus": "notShared",
+      "userControl": "Settings cache cleanup and Android clear-cache/app-data controls.",
+      "retention": "Transient cache files are bounded by cache policies and can be deleted by the app or Android cache cleanup.",
+      "deletionPath": "Use Settings cache cleanup, Android clear cache/app data, or uninstall.",
+      "backupStatus": "transientCache"
+    },
+    {
+      "surfaceId": "offline-favorite-files",
+      "storageLocation": "files/offline_favorites/",
+      "sourcePaths": [
+        "app/src/main/java/com/freevibe/service/OfflineFavoritesManager.kt",
+        "app/src/main/res/xml/file_paths.xml"
+      ],
+      "dataTypes": ["Photos or images", "Audio files", "Favorite metadata"],
+      "collectionStatus": "localOnly",
+      "sharingStatus": "userDirectedShare",
+      "userControl": "Offline favorite cache actions, favorite removal, export/share surfaces, and Android clear-app-data.",
+      "retention": "Offline files persist under a 512 MB total cache budget until removed, orphan-pruned, or app data is cleared.",
+      "deletionPath": "Remove the favorite/offline copy, clear offline favorites, clear app data, or uninstall.",
+      "backupStatus": "includedInBackupOrTransfer"
+    },
+    {
+      "surfaceId": "generated-wallpaper-files",
+      "storageLocation": "files/ai_wallpapers/",
+      "sourcePaths": [
+        "app/src/main/java/com/freevibe/data/repository/AiWallpaperRepository.kt",
+        "docs/privacy/ai-generation.md"
+      ],
+      "dataTypes": ["Generated images", "Generated wallpaper metadata"],
+      "collectionStatus": "localOnly",
+      "sharingStatus": "userDirectedShare",
+      "userControl": "Generated wallpaper disclosure, generated source switch, favorite removal cleanup, and Android clear-app-data.",
+      "retention": "Generated PNG files are capped to the most recent 50 outputs and saved generated favorites delete their app-private PNG after removal.",
+      "deletionPath": "Remove generated favorites, clear app data, or uninstall.",
+      "backupStatus": "includedInBackupOrTransfer"
+    },
+    {
+      "surfaceId": "community-recording-temp-files",
+      "storageLocation": "cache/sounds/community_recordings/",
+      "sourcePaths": [
+        "app/src/main/java/com/freevibe/service/CommunityAudioRecorder.kt",
+        "app/src/main/res/xml/file_paths.xml"
+      ],
+      "dataTypes": ["Voice or sound recordings", "User-generated content"],
+      "collectionStatus": "localOnly",
+      "sharingStatus": "sharedWhenUploaded",
+      "userControl": "Stop/cancel recording, discard before upload, upload with rights attestation, or clear cache/app data.",
+      "retention": "Temporary recordings are deleted on cancel or failed short recording and otherwise remain cache-backed until uploaded or cache/app data is cleared.",
+      "deletionPath": "Cancel/discard the recording, clear cache/app data, or uninstall.",
+      "backupStatus": "transientCache"
+    },
+    {
+      "surfaceId": "share-out-temp-files",
+      "storageLocation": "cache/share_out/",
+      "sourcePaths": [
+        "app/src/main/java/com/freevibe/service/CollectionExporter.kt",
+        "app/src/main/res/xml/file_paths.xml"
+      ],
+      "dataTypes": ["Collection metadata", "Wallpaper metadata", "Files and docs"],
+      "collectionStatus": "localOnly",
+      "sharingStatus": "userDirectedShare",
+      "userControl": "User chooses export/share recipients and can clear cache/app data.",
+      "retention": "Share artifacts are cache-backed temporary files retained until cache cleanup or app data is cleared.",
+      "deletionPath": "Clear cache/app data or uninstall.",
+      "backupStatus": "transientCache"
+    },
+    {
+      "surfaceId": "aura-originals-files",
+      "storageLocation": "files/aura_originals/",
+      "sourcePaths": [
+        "app/src/main/java/com/freevibe/service/AuraOriginalsDownloader.kt",
+        "docs/aura-originals-curation.md"
+      ],
+      "dataTypes": ["Bundled audio files", "Provider response media"],
+      "collectionStatus": "featureDependentCollection",
+      "sharingStatus": "notShared",
+      "userControl": "Wi-Fi-only worker constraints, bundled sound browsing controls, local file cleanup by clearing app data.",
+      "retention": "Verified Aura Originals files remain local after download so bundled sounds work offline.",
+      "deletionPath": "Clear Aura app data or uninstall.",
+      "backupStatus": "includedInBackupOrTransfer"
+    }
+  ],
   "sourceUrls": [
     "https://support.google.com/googleplay/android-developer/answer/10144311",
     "https://support.google.com/googleplay/android-developer/answer/10787469",

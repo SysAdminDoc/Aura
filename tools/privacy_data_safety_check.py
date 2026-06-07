@@ -34,6 +34,18 @@ REQUIRED_NETWORK_SURFACE_FIELDS = {
     "retention",
     "deletionPath",
 }
+REQUIRED_LOCAL_STORAGE_FIELDS = {
+    "surfaceId",
+    "storageLocation",
+    "sourcePaths",
+    "dataTypes",
+    "collectionStatus",
+    "sharingStatus",
+    "userControl",
+    "retention",
+    "deletionPath",
+    "backupStatus",
+}
 SUPPORTED_COLLECTION_STATUSES = {
     "localOnly",
     "notCollected",
@@ -45,6 +57,14 @@ SUPPORTED_SHARING_STATUSES = {
     "sharedWhenUploaded",
     "sharedWithSelectedProviders",
     "sharedWithWeatherProvider",
+    "userDirectedShare",
+}
+SUPPORTED_BACKUP_STATUSES = {
+    "excludedFromBackupAndTransfer",
+    "includedInBackupOrTransfer",
+    "transientCache",
+    "userExportOrSystemManaged",
+    "mixed",
 }
 
 
@@ -210,6 +230,54 @@ def validate_network_surfaces(repo_root: Path, policy: dict[str, Any], docs_text
     return surfaces
 
 
+def validate_local_storage_surfaces(repo_root: Path, policy: dict[str, Any], docs_text: str) -> list[dict[str, Any]]:
+    surfaces_raw = policy.get("localStorageSurfaces")
+    if not isinstance(surfaces_raw, list) or not surfaces_raw:
+        raise PrivacyDataSafetyError("localStorageSurfaces must be a non-empty list")
+
+    surfaces: list[dict[str, Any]] = []
+    surface_ids: set[str] = set()
+    for index, raw_surface in enumerate(surfaces_raw):
+        surface = require_object(raw_surface, f"localStorageSurfaces[{index}]")
+        missing = sorted(REQUIRED_LOCAL_STORAGE_FIELDS - set(surface))
+        if missing:
+            raise PrivacyDataSafetyError(f"localStorageSurfaces[{index}] missing fields: {', '.join(missing)}")
+        surface_id = require_string(surface.get("surfaceId"), f"localStorageSurfaces[{index}].surfaceId")
+        if surface_id in surface_ids:
+            raise PrivacyDataSafetyError(f"duplicate local storage surface row: {surface_id}")
+        surface_ids.add(surface_id)
+
+        for field in REQUIRED_LOCAL_STORAGE_FIELDS - {
+            "surfaceId",
+            "sourcePaths",
+            "dataTypes",
+            "collectionStatus",
+            "sharingStatus",
+            "backupStatus",
+        }:
+            require_string(surface.get(field), f"{surface_id}.{field}")
+        require_string_list(surface.get("dataTypes"), f"{surface_id}.dataTypes")
+
+        source_paths = require_string_list(surface.get("sourcePaths"), f"{surface_id}.sourcePaths")
+        for source_path in source_paths:
+            if not (repo_root / source_path).is_file():
+                raise PrivacyDataSafetyError(f"{surface_id}.sourcePaths entry is missing: {source_path}")
+
+        collection_status = require_string(surface.get("collectionStatus"), f"{surface_id}.collectionStatus")
+        if collection_status not in SUPPORTED_COLLECTION_STATUSES:
+            raise PrivacyDataSafetyError(f"{surface_id}.collectionStatus is unsupported")
+        sharing_status = require_string(surface.get("sharingStatus"), f"{surface_id}.sharingStatus")
+        if sharing_status not in SUPPORTED_SHARING_STATUSES:
+            raise PrivacyDataSafetyError(f"{surface_id}.sharingStatus is unsupported")
+        backup_status = require_string(surface.get("backupStatus"), f"{surface_id}.backupStatus")
+        if backup_status not in SUPPORTED_BACKUP_STATUSES:
+            raise PrivacyDataSafetyError(f"{surface_id}.backupStatus is unsupported")
+        if surface_id not in docs_text:
+            raise PrivacyDataSafetyError(f"data-safety docs are missing local storage row for {surface_id}")
+        surfaces.append(surface)
+    return surfaces
+
+
 def validate_policy(repo_root: Path, policy: dict[str, Any]) -> dict[str, Any]:
     if policy.get("schemaVersion") != 1:
         raise PrivacyDataSafetyError("privacy data-safety schemaVersion must be 1")
@@ -229,6 +297,7 @@ def validate_policy(repo_root: Path, policy: dict[str, Any]) -> dict[str, Any]:
         if name not in docs_text:
             raise PrivacyDataSafetyError(f"{docs_path} is missing permission row for {name}")
     network_surfaces = validate_network_surfaces(repo_root, policy, docs_text)
+    local_storage_surfaces = validate_local_storage_surfaces(repo_root, policy, docs_text)
     for required_term in ("no ads", "cross-app tracking", "anonymous firebase identity", "generated wallpaper prompts"):
         if required_term not in " ".join(privacy_text.split()):
             raise PrivacyDataSafetyError(f"{privacy_policy_path} is missing privacy term: {required_term}")
@@ -250,6 +319,7 @@ def validate_policy(repo_root: Path, policy: dict[str, Any]) -> dict[str, Any]:
         "manifestPermissionCount": len(manifest_permissions),
         "matrixPermissionCount": len(rows),
         "networkSurfaceCount": len(network_surfaces),
+        "localStorageSurfaceCount": len(local_storage_surfaces),
         "sensitiveOrSharedRowCount": sensitive_count,
         "sourceUrlCount": len(source_urls),
     }

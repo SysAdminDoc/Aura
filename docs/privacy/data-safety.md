@@ -1,9 +1,11 @@
 # Privacy Data Safety Matrix
 
 This matrix is the release-reviewed source of truth for Aura manifest
-permissions. `tools/privacy_data_safety_check.py` compares this document's JSON
-contract with `app/src/main/AndroidManifest.xml` so new permissions cannot ship
-without a reviewed privacy and store-disclosure row.
+permissions, network data surfaces, and local storage surfaces.
+`tools/privacy_data_safety_check.py` compares this document's JSON contract
+with `app/src/main/AndroidManifest.xml`, `docs/security/network-endpoints.json`,
+and source-backed local storage rows so new privacy-relevant surfaces cannot
+ship without reviewed store-disclosure coverage.
 
 ## Permission Ledger
 
@@ -65,6 +67,28 @@ must have a matching `networkSurfaces` row in `docs/privacy/data-safety.json`.
 | `aura-collection-links` | No app-initiated network collection; links are import locators. | User chooses whether to import a collection link. |
 | `firebase-community` | Firebase UID, community uploads, votes, follows, reports, blocks, profile edits, storage uploads, and callable payloads. | Community source switch, upload/report/delete flows, and support deletion tools. |
 
+## Local Storage Ledger
+
+`localStorageSurfaces` rows in `docs/privacy/data-safety.json` must cite
+existing source files, name the user data classes stored locally, and state
+whether current backup/transfer rules exclude, include, or treat the files as
+transient cache.
+
+| Surface | Local data | User control | Backup posture |
+| --- | --- | --- | --- |
+| `preferences-datastore` | Provider keys, app settings, generated-content disclosure, provider switches, and scheduler preferences. | Settings key Clear actions, feature switches, generated disclosure reset, or clear app data. | Excluded from cloud backup and device transfer. |
+| `room-database` | Favorites, downloads, search history, wallpaper cache metadata, wallpaper history, and collections. | Remove rows through app surfaces, clear caches/history, export/import replacements, or clear app data. | Included by current backup/transfer rules; Room sidecars are excluded. |
+| `community-identity-and-vote-prefs` | Local fallback identity and local vote-hide state. | Settings Community identity Clear local action for fallback identity; app data clear for vote-hide state. | Included by current backup/transfer rules. |
+| `widget-and-selection-prefs` | Widget tint colors and selected wallpaper/sound navigation snapshots. | Change selected content, remove widgets, clear history where exposed, or clear app data. | Included by current backup/transfer rules. |
+| `live-wallpaper-prefs-and-media` | Live wallpaper media, parallax images, weather coordinates/state, video settings, and video battery diagnostics. | Replace/disable live wallpaper, clear weather state, clear app data, or uninstall. | Mixed: weather/live-wallpaper prefs are excluded; managed media and runtime stats are not fully excluded today. |
+| `crash-diagnostics-log` | Local crash log tail, app/device diagnostics, and source context. | Diagnostics bundle requires explicit Copy or Share and redacts app-private paths and provider credentials. | Excluded from cloud backup and device transfer. |
+| `coil-and-audio-caches` | Provider image/audio previews, temporary trims, and editor cache files. | Settings cache cleanup, Android clear cache, Android clear app data, or uninstall. | Transient cache. |
+| `offline-favorite-files` | Offline favorite image/audio files plus linked favorite metadata. | Remove the favorite/offline copy, clear offline favorites, clear app data, or uninstall. | Included by current backup/transfer rules. |
+| `generated-wallpaper-files` | Generated wallpaper PNG files and local generated-output metadata. | Generated disclosure/source controls, generated favorite removal cleanup, clear app data, or uninstall. | Included by current backup/transfer rules. |
+| `community-recording-temp-files` | Temporary microphone recordings before community upload. | Cancel/discard recording, upload with rights attestation, clear cache/app data, or uninstall. | Transient cache. |
+| `share-out-temp-files` | Temporary collection export JSON and share artifacts. | User chooses share recipient; clear cache/app data or uninstall removes app-side temp files. | Transient cache. |
+| `aura-originals-files` | Downloaded Aura Originals bundled audio files. | Wi-Fi worker constraints and clear app data/uninstall for local cleanup. | Included by current backup/transfer rules. |
+
 ## Release Checklist
 
 - Run `python3 tools/privacy_data_safety_check.py --policy docs/privacy/data-safety.json --repo-root .`.
@@ -75,6 +99,8 @@ must have a matching `networkSurfaces` row in `docs/privacy/data-safety.json`.
   Fastlane full description consistent with this matrix.
 - Keep `docs/security/network-endpoints.json` and the `networkSurfaces` rows in
   `docs/privacy/data-safety.json` in lockstep.
+- Keep app-private source paths and the `localStorageSurfaces` rows in
+  `docs/privacy/data-safety.json` in lockstep with backup/transfer rules.
 
 ## Sources
 
