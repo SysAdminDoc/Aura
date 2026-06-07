@@ -97,6 +97,18 @@ evidence. It does not delete the Auth user by itself; the actual deletion must
 use an owner-approved Firebase Console, Admin SDK, or CLI path for the
 production project.
 
+After the owner-approved Auth deletion action completes, operators can build a
+redacted Auth execution receipt:
+
+```powershell
+py -3 tools\community_account_deletion_auth_execution_receipt.py --auth-package .\account-deletion-auth-package.json --execution-evidence .\auth-execution-evidence.json --support-reference <ticket-id> --output .\account-deletion-auth-execution-receipt.json
+```
+
+The receipt validates request code, support reference, UID hash, owner-approved
+method, private evidence hash, and post-delete not-found verification while
+omitting the full Firebase UID, project ID, credentials, command output, and
+tokens.
+
 If the requester also asks to remove public uploads, operators can build the
 private upload deletion handoff plan:
 
@@ -200,6 +212,7 @@ operator lookup step.
 - `py -3 -m py_compile tools\community_account_deletion_completion_receipt.py test\tools\community_account_deletion_completion_receipt_test.py`
 - `py -3 -m py_compile tools\community_account_deletion_cleanup_sequence.py test\tools\community_account_deletion_cleanup_sequence_test.py`
 - `py -3 -m py_compile tools\community_account_deletion_auth_package.py test\tools\community_account_deletion_auth_package_test.py`
+- `py -3 -m py_compile tools\community_account_deletion_auth_execution_receipt.py test\tools\community_account_deletion_auth_execution_receipt_test.py`
 - `py -3 -m py_compile tools\community_account_deletion_upload_plan.py test\tools\community_account_deletion_upload_plan_test.py`
 - `py -3 -m py_compile tools\community_deletion_web_url_check.py test\tools\community_deletion_web_url_check_test.py`
 - `py -3 tools\community_deletion_web_url_check.py --manifest docs\support\community-account-deletion-web-url.json --repo-root .`
@@ -210,7 +223,8 @@ operator lookup step.
   record review, operator approval, and production-project access are confirmed,
   then generate only the redacted completion receipt for the requester.
 - Execute trusted Firebase Auth deletion from the private package only after
-  owner access and production-project approval are confirmed.
+  owner access and production-project approval are confirmed, then archive the
+  redacted Auth execution receipt.
 - Execute public upload deletion only through the owner/admin upload deletion
   workflow after the private upload plan has no blocked rows.
 - Replace the `pendingOwnerUrl` manifest with a live HTTPS hosted private

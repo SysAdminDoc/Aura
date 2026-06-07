@@ -100,6 +100,11 @@ request-code lookup against the completed backend deletion receipt and builds
 the private Firebase Auth deletion package. The package contains the full UID
 and must never be shared with the requester or committed.
 
+`tools/community_account_deletion_auth_execution_receipt.py` validates private
+owner-approved Firebase Auth deletion evidence against the Auth package and
+emits a redacted receipt after post-delete lookup confirms the Auth user is not
+found.
+
 `tools/community_account_deletion_upload_plan.py` consumes the private Auth
 package plus a current RTDB export and creates a private public-upload deletion
 handoff plan. It enumerates owned uploads with valid `storagePath` handles and
@@ -184,22 +189,28 @@ blocks rows that need backfill or manual review.
     Console, Admin SDK, or CLI path for the production project. Archive the
     private Auth package and command evidence with backend evidence.
 
-16. If the requester asks to remove public uploads, build the private upload
+16. Build the redacted Auth execution receipt from the private owner evidence:
+
+   ```powershell
+   py -3 tools\community_account_deletion_auth_execution_receipt.py --auth-package .\account-deletion-auth-package.json --execution-evidence .\auth-execution-evidence.json --support-reference <ticket-id> --output .\account-deletion-auth-execution-receipt.json
+   ```
+
+17. If the requester asks to remove public uploads, build the private upload
     deletion handoff plan:
 
    ```powershell
    py -3 tools\community_account_deletion_upload_plan.py --database-export .\rtdb-export.json --auth-package .\account-deletion-auth-package.json --output .\account-deletion-upload-plan.json
    ```
 
-17. Use the owner/admin upload deletion workflow for every candidate upload and
+18. Use the owner/admin upload deletion workflow for every candidate upload and
     resolve any blocked rows through backfill or manual review before claiming
     public uploads were removed.
 
-18. Share only the completion receipt and requester-facing local cleanup
+19. Share only the completion receipt and requester-facing local cleanup
     instructions with the requester. Keep lookup, plan,
-    review, simulation, executor package, REST apply receipt, Auth package,
-    upload plan, database export, access token, full UID, and RTDB paths
-    private.
+    review, simulation, executor package, REST apply receipt, Auth package, raw
+    Auth execution evidence, upload plan, database export, access token, full
+    UID, and RTDB paths private.
 
 If the requester still has Aura installed, they can open `Settings` >
 `Community identity` > `Clear local` after support confirms backend completion.

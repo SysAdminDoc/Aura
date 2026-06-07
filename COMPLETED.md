@@ -327,6 +327,10 @@ next pass can resume quickly.
   `tools/community_deletion_web_url_check.py`, and backend tool tests so the
   hosted deletion URL remains explicitly `pendingOwnerUrl` until an HTTPS
   owner-published request URL is live and linked from policy/support docs.
+- Completed Cycle 89 Auth deletion execution receipt: added
+  `tools/community_account_deletion_auth_execution_receipt.py` and backend
+  tool tests to validate owner-approved Firebase Auth deletion evidence against
+  the private Auth package and emit a redacted post-delete receipt.
 
 ## 2026-06-05
 
