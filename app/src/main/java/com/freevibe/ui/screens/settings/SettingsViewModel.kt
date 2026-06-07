@@ -39,6 +39,12 @@ data class CommunityBlockActionState(
     val error: String? = null,
 )
 
+data class CommunityIdentityCleanupState(
+    val clearing: Boolean = false,
+    val message: String? = null,
+    val error: String? = null,
+)
+
 sealed interface ParallaxGalleryResult {
     data object Preparing : ParallaxGalleryResult
     data object Ready : ParallaxGalleryResult
@@ -154,6 +160,8 @@ class SettingsViewModel @Inject constructor(
         .stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
     private val _communityBlockAction = MutableStateFlow(CommunityBlockActionState())
     val communityBlockAction = _communityBlockAction.asStateFlow()
+    private val _communityIdentityCleanup = MutableStateFlow(CommunityIdentityCleanupState())
+    val communityIdentityCleanup = _communityIdentityCleanup.asStateFlow()
     private val _communityIdentitySummary = MutableStateFlow(communityIdentityProvider.currentIdentitySummary())
     val communityIdentitySummary = _communityIdentitySummary.asStateFlow()
 
@@ -335,6 +343,33 @@ class SettingsViewModel @Inject constructor(
 
     fun refreshCommunityIdentitySummary() {
         _communityIdentitySummary.value = communityIdentityProvider.currentIdentitySummary()
+    }
+
+    fun clearLocalCommunityIdentity() = viewModelScope.launch {
+        _communityIdentityCleanup.value = CommunityIdentityCleanupState(clearing = true)
+        val result = withContext(ioDispatcher) {
+            runCatching { communityIdentityProvider.clearLocalFallbackIdentity() }
+        }
+        result
+            .onSuccess { cleared ->
+                refreshCommunityIdentitySummary()
+                _communityIdentityCleanup.value = CommunityIdentityCleanupState(
+                    message = if (cleared) {
+                        "Local community identity cleared"
+                    } else {
+                        "No local community identity was stored"
+                    },
+                )
+            }
+            .onFailure { error ->
+                _communityIdentityCleanup.value = CommunityIdentityCleanupState(
+                    error = "Local cleanup failed: ${error.message ?: "try again"}",
+                )
+            }
+    }
+
+    fun clearCommunityIdentityCleanupState() {
+        _communityIdentityCleanup.value = CommunityIdentityCleanupState()
     }
 
     fun setFreesoundKey(key: String) = viewModelScope.launch {

@@ -19,6 +19,7 @@ import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.verify
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.flowOf
@@ -208,6 +209,33 @@ class SettingsViewModelTest {
         assertEquals("abcd1234", viewModel.communityIdentitySummary.value.identitySuffix)
         assertEquals("AURA-123456789ABC", viewModel.communityIdentitySummary.value.deletionRequestCode)
         assertTrue(viewModel.communityIdentitySummary.value.hasFirebaseIdentity)
+    }
+
+    @Test
+    fun `clearLocalCommunityIdentity clears fallback identity and refreshes summary`() = runTest(dispatcher) {
+        val identityProvider = mockk<CommunityIdentityProvider>()
+        every { identityProvider.currentIdentitySummary() } returnsMany listOf(
+            CommunityIdentitySummary(
+                authLabel = "Local identity",
+                identitySuffix = "local1234",
+            ),
+            CommunityIdentitySummary(),
+        )
+        every { identityProvider.clearLocalFallbackIdentity() } returns true
+
+        val viewModel = createViewModel(
+            cacheDir = createTempDirectory("settings-local-cleanup").toFile().also(tempDirs::add),
+            communityIdentityProviderOverride = identityProvider,
+        )
+
+        assertEquals("local1234", viewModel.communityIdentitySummary.value.identitySuffix)
+
+        viewModel.clearLocalCommunityIdentity()
+        advanceUntilIdle()
+
+        assertEquals("Not created", viewModel.communityIdentitySummary.value.identitySuffix)
+        assertEquals("Local community identity cleared", viewModel.communityIdentityCleanup.value.message)
+        verify(exactly = 1) { identityProvider.clearLocalFallbackIdentity() }
     }
 
     private fun createViewModel(

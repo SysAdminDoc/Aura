@@ -1,8 +1,8 @@
 # Autonomous Loop State
 
 **Assigned project:** `C:\Users\--\repos\Aura`
-**Current pass:** 2026-06-06 Cycle 84 account deletion local/Auth cleanup sequence
-**Last commit before pass:** `984cb66` (`feat(community): add deletion web intake`)
+**Current pass:** 2026-06-06 Cycle 85 in-app local community cleanup
+**Last commit before pass:** `5945058` (`feat(community): add deletion cleanup sequence`)
 
 ## 2026-06-05 Result
 
@@ -659,24 +659,46 @@
 - Cycle 84 verification: Python compile and backend tool unittest discovery
   passed locally.
 
+## Cycle 85 Result - 2026-06-06
+
+- Reworked `CommunityIdentityProvider` local fallback ID access to use a
+  synchronized cached accessor and added `clearLocalFallbackIdentity()`.
+- Added `CommunityIdentityCleanupState` and
+  `SettingsViewModel.clearLocalCommunityIdentity()` so Settings can clear only
+  the current device fallback identity, refresh the community identity summary,
+  and report success/no-op/failure messages.
+- Added `Clear local` to the Community identity dialog with a busy state and
+  wrapped button row.
+- Updated dialog copy to state that local cleanup does not delete backend RTDB,
+  Firebase Auth, public upload, Storage, or moderation records.
+- Extended `SettingsViewModelTest` to cover local cleanup delegation, summary
+  refresh, and success feedback.
+- Updated `docs/research/cycle-85-2026-06-06.md`,
+  `docs/support/community-account-deletion.md`,
+  `docs/community-account-deletion-policy.md`, `ROADMAP.md`, `COMPLETED.md`,
+  and `CHANGELOG.md`.
+- Cycle 85 verification: focused Android identity/settings JVM tests passed
+  locally; backend tool unittest discovery passed locally.
+
 ## Next Cycle
 
-Continue this same assigned project, Aura. Start Cycle 85 from the `ROADMAP.md`
-Continuation State and `docs/research/cycle-84-2026-06-06.md`. The account
+Continue this same assigned project, Aura. Start Cycle 86 from the `ROADMAP.md`
+Continuation State and `docs/research/cycle-85-2026-06-06.md`. The account
 deletion dry-run planner, read-only Settings identity surface, redacted
 shareable request draft, request-code lookup tool, review receipt gate, offline
 apply simulator, private executor package builder, and guarded REST executor
 are implemented; Cycle 82 added the redacted completion receipt after applied
 REST receipts; Cycle 83 added the private web-intake contract and validator;
-Cycle 84 added local/Auth cleanup sequencing after backend completion. In-app
-local cleanup, trusted Firebase Auth deletion, public upload deletion
-orchestration, and hosted private web URL publication remain open. Next add the
-in-app local cleanup affordance, trusted Firebase Auth deletion implementation
-planning, public upload deletion orchestration, hosted private web URL
-publication planning, a real production-project Firebase executor dry-run after
-owner access is confirmed, Cloud Functions implementation for the callable
-quota contract, or Android callable migration adapters. Commit and push
-completed work when the active project contract allows it.
+Cycle 84 added local/Auth cleanup sequencing after backend completion; Cycle 85
+added Settings > Community identity > Clear local for the current device
+fallback identity. Trusted Firebase Auth deletion, public upload deletion
+orchestration, and hosted private web URL publication remain open. Next add
+trusted Firebase Auth deletion implementation planning, public upload deletion
+orchestration, hosted private web URL publication planning, a real
+production-project Firebase executor dry-run after owner access is confirmed,
+Cloud Functions implementation for the callable quota contract, or Android
+callable migration adapters. Commit and push completed work when the active
+project contract allows it.
 
 ## Previous Cycle Prompt
 

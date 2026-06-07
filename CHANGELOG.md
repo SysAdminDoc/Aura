@@ -3,6 +3,7 @@
 All notable changes to Aura will be documented in this file.
 
 ## Unreleased
+- **In-app local community cleanup (Cycle 85)**: Settings > Community identity now offers `Clear local` for the current device fallback identity, refreshes the redacted summary after clearing, and keeps backend/Auth/upload deletion in the support chain.
 - **Account deletion cleanup sequence (Cycle 84)**: added a post-completion sequencing tool that requires a completed backend receipt before ordering requester local cleanup, operator Firebase Auth deletion, and public upload deletion handoff.
 - **Account deletion web intake (Cycle 83)**: added a private hosted-form contract and validator that hashes requester contact/statement fields, requires deletion/retention/public-upload attestations, and emits a redacted intake receipt before operator lookup.
 - **Account deletion completion receipt (Cycle 82)**: added a redacted receipt builder that validates applied REST receipts against private executor packages, rejects dry-run receipts, and keeps full UIDs, RTDB paths, database hosts, update payloads, and access tokens out of requester-facing artifacts.

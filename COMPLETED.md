@@ -307,6 +307,11 @@ next pass can resume quickly.
   to require a completed backend receipt before ordering requester local app
   cleanup, operator Firebase Auth deletion, and separate public upload deletion
   handoff.
+- Completed Cycle 85 in-app local community cleanup: Settings > Community
+  identity now exposes `Clear local` for the current device fallback identity,
+  refreshes the displayed identity summary after clearing, and keeps backend,
+  Firebase Auth, public upload, and moderation deletion in the support/operator
+  chain.
 
 ## 2026-06-05
 

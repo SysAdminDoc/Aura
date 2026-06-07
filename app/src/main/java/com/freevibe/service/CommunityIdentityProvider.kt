@@ -34,21 +34,24 @@ class CommunityIdentityProvider @Inject constructor(
         Settings.Secure.getString(context.contentResolver, Settings.Secure.ANDROID_ID) ?: "unknown"
     }
 
-    private val fallbackId: String by lazy {
-        prefs.getString(KEY_FALLBACK_ID, null)
-            ?: UUID.randomUUID().toString().also {
-                prefs.edit().putString(KEY_FALLBACK_ID, it).apply()
-            }
-    }
+    private var cachedFallbackId: String? = null
 
-    fun currentUserId(): String = auth?.currentUser?.uid ?: fallbackId
+    @Synchronized
+    private fun fallbackId(): String =
+        cachedFallbackId
+            ?: (prefs.getString(KEY_FALLBACK_ID, null)
+                ?: UUID.randomUUID().toString().also {
+                    prefs.edit().putString(KEY_FALLBACK_ID, it).apply()
+                }).also { cachedFallbackId = it }
+
+    fun currentUserId(): String = auth?.currentUser?.uid ?: fallbackId()
 
     fun currentFirebaseUid(): String? = auth?.currentUser?.uid
 
     fun currentUploaderLabel(): String =
         auth?.currentUser?.displayName?.takeIf { it.isNotBlank() }
             ?: auth?.currentUser?.uid?.take(8)
-            ?: "local-${fallbackId.take(6)}"
+            ?: "local-${fallbackId().take(6)}"
 
     fun currentAuthLabel(): String = when {
         auth?.currentUser?.isAnonymous == true -> "Anonymous Firebase identity"
@@ -72,10 +75,18 @@ class CommunityIdentityProvider @Inject constructor(
         context.resources.getIdentifier("default_web_client_id", "string", context.packageName) != 0
 
     fun knownIdentityIds(): List<String> =
-        listOf(auth?.currentUser?.uid, fallbackId, legacyDeviceId)
+        listOf(auth?.currentUser?.uid, fallbackId(), legacyDeviceId)
             .filterNotNull()
             .filter { it.isNotBlank() }
             .distinct()
+
+    @Synchronized
+    fun clearLocalFallbackIdentity(): Boolean {
+        val hadStoredFallback = prefs.contains(KEY_FALLBACK_ID)
+        cachedFallbackId = null
+        prefs.edit().remove(KEY_FALLBACK_ID).apply()
+        return hadStoredFallback
+    }
 
     suspend fun ensureSignedIn(): String {
         auth?.currentUser?.uid?.let { return it }
@@ -87,7 +98,7 @@ class CommunityIdentityProvider @Inject constructor(
             null
         }
 
-        return signedInUid?.takeIf { it.isNotBlank() } ?: fallbackId
+        return signedInUid?.takeIf { it.isNotBlank() } ?: fallbackId()
     }
 
     companion object {

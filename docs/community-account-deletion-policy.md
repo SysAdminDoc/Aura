@@ -131,6 +131,11 @@ create a Firebase anonymous account, and does not create the local fallback UUID
 solely to show an identity panel. Users without a Firebase identity see that no
 backend deletion request code is available yet.
 
+The same panel exposes `Clear local` for post-completion cleanup. It removes
+only the stored local fallback community identity from the current device and
+refreshes the displayed summary. It does not delete backend RTDB data, Firebase
+Auth users, public upload metadata, Storage objects, or moderation records.
+
 The request code is a routing handle for support/admin tooling, not proof of
 ownership by itself. A trusted deletion executor still needs to verify the
 request before applying the dry-run plan.
@@ -172,8 +177,8 @@ operator lookup step.
 - Run the guarded REST executor only after requester verification, retained
   record review, operator approval, and production-project access are confirmed,
   then generate only the redacted completion receipt for the requester.
-- Add the in-app local cleanup affordance and trusted Firebase Auth deletion
-  implementation after the sequencing contract is exercised with owner access.
+- Add trusted Firebase Auth deletion implementation after the sequencing
+  contract is exercised with owner access.
 - Publish the hosted private support route or web deletion page before Play
   production submission, using the validated web-intake field contract.
 - Decide whether future callable-backed vote deletion should decrement

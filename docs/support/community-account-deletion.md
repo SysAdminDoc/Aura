@@ -157,4 +157,12 @@ UID.
     review, simulation, executor package, REST apply receipt, database export,
     access token, full UID, and RTDB paths private.
 
+If the requester still has Aura installed, they can open `Settings` >
+`Community identity` > `Clear local` after support confirms backend completion.
+That clears only the local fallback community identity stored on the device and
+does not delete backend, Firebase Auth, public upload, or moderation records.
+If Aura is no longer installed, the equivalent local-device action is clearing
+Aura app data from Android system settings or reinstalling after support
+confirms completion.
+
 Do not request or publish a full Firebase UID in a public issue.

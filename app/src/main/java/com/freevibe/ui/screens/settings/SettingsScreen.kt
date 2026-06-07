@@ -127,6 +127,7 @@ fun SettingsScreen(
     val communityProviderEnabled by viewModel.communityProviderEnabled.collectAsStateWithLifecycle()
     val blockedCommunityCreators by viewModel.blockedCommunityCreators.collectAsStateWithLifecycle()
     val communityBlockAction by viewModel.communityBlockAction.collectAsStateWithLifecycle()
+    val communityIdentityCleanup by viewModel.communityIdentityCleanup.collectAsStateWithLifecycle()
     val communityIdentitySummary by viewModel.communityIdentitySummary.collectAsStateWithLifecycle()
     val showSketchyContent by viewModel.showSketchyContent.collectAsStateWithLifecycle()
     val showNsfwContent by viewModel.showNsfwContent.collectAsStateWithLifecycle()
@@ -256,6 +257,16 @@ fun SettingsScreen(
         communityBlockAction.error?.let {
             Toast.makeText(context, it, Toast.LENGTH_LONG).show()
             viewModel.clearCommunityBlockAction()
+        }
+    }
+    LaunchedEffect(communityIdentityCleanup.message, communityIdentityCleanup.error) {
+        communityIdentityCleanup.message?.let {
+            Toast.makeText(context, it, Toast.LENGTH_LONG).show()
+            viewModel.clearCommunityIdentityCleanupState()
+        }
+        communityIdentityCleanup.error?.let {
+            Toast.makeText(context, it, Toast.LENGTH_LONG).show()
+            viewModel.clearCommunityIdentityCleanupState()
         }
     }
 
@@ -543,7 +554,9 @@ fun SettingsScreen(
             if (showCommunityIdentity) {
                 CommunityIdentityDialog(
                     summary = communityIdentitySummary,
+                    cleanupBusy = communityIdentityCleanup.clearing,
                     onRefresh = viewModel::refreshCommunityIdentitySummary,
+                    onClearLocal = viewModel::clearLocalCommunityIdentity,
                     onCopyCode = { code -> copyCommunityDeletionCode(context, code) },
                     onShareRequest = { summary -> shareCommunityDeletionRequest(context, summary) },
                     onDismiss = { showCommunityIdentity = false },
@@ -1817,9 +1830,12 @@ fun SettingsScreen(
 }
 
 @Composable
+@OptIn(ExperimentalLayoutApi::class)
 private fun CommunityIdentityDialog(
     summary: CommunityIdentitySummary,
+    cleanupBusy: Boolean,
     onRefresh: () -> Unit,
+    onClearLocal: () -> Unit,
     onCopyCode: (String) -> Unit,
     onShareRequest: (CommunityIdentitySummary) -> Unit,
     onDismiss: () -> Unit,
@@ -1851,7 +1867,12 @@ private fun CommunityIdentityDialog(
                     )
                 }
                 Text(
-                    "Deletion planning covers vote markers, follows, block rows, shares, and local community caches. Public uploads and moderation records use the retained-data review path.",
+                    "Deletion planning covers vote markers, follows, block rows, shares, and local community caches. Public uploads, moderation records, and Firebase Auth deletion use the retained-data review path.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                Text(
+                    "Clear local only removes this device's fallback community identity. It does not delete backend, Auth, or public upload records.",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
@@ -1861,8 +1882,24 @@ private fun CommunityIdentityDialog(
             TextButton(onClick = onDismiss) { Text("Close") }
         },
         dismissButton = {
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            FlowRow(
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalArrangement = Arrangement.spacedBy(4.dp),
+            ) {
                 TextButton(onClick = onRefresh) { Text("Refresh") }
+                TextButton(
+                    onClick = onClearLocal,
+                    enabled = !cleanupBusy,
+                ) {
+                    if (cleanupBusy) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(16.dp),
+                            strokeWidth = 2.dp,
+                        )
+                    } else {
+                        Text("Clear local")
+                    }
+                }
                 if (summary.deletionRequestCode.isNotBlank()) {
                     TextButton(onClick = { onCopyCode(summary.deletionRequestCode) }) {
                         Text("Copy code")
