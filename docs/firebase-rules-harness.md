@@ -5,6 +5,10 @@ Aura now tracks Firebase deploy/test configuration for community backend rules:
 - `database.rules.json` for Realtime Database.
 - `storage.rules` for Cloud Storage upload blobs.
 - `firebase.json` for emulator/deploy rule file mapping.
+- `docs/community-backend-manifest.json` for deploy-target, CLI, script, and
+  backend file hash evidence.
+- `tools/community_backend_manifest.py` for deterministic manifest write/check
+  mode.
 - `test/firebase/database.rules.test.mjs` for Realtime Database emulator rules
   coverage.
 - `test/firebase/storage.rules.test.mjs` for Storage emulator rules coverage.
@@ -35,6 +39,12 @@ Run both suites together:
 npm run test:firebase-rules
 ```
 
+Verify the deployable backend manifest:
+
+```powershell
+py -3 tools\community_backend_manifest.py --mode check
+```
+
 These commands start local Firebase emulators through the project-local
 `firebase-tools` dependency and run Node's built-in test runner. A Firebase
 login is not required for local emulator execution; the CLI may still print an
@@ -48,6 +58,7 @@ runbook, the admin-claims runbook, or the workflow itself. When those files
 change, the job installs the pinned npm dependencies with `npm ci` and runs:
 
 ```bash
+python3 tools/community_backend_manifest.py --mode check
 npm run test:firebase-rules
 ```
 
@@ -108,3 +119,5 @@ risk until the upstream CLI dependency graph publishes a non-downgrade fix.
 
 - Define Cloud Storage lifecycle/orphan cleanup policy for abandoned upload
   objects.
+- Run and archive a real production-project `firebase deploy --dry-run` after
+  the owner confirms the project ID and access.

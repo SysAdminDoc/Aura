@@ -50,7 +50,9 @@ Do not enable enforcement until all of these are true:
   and has generated valid App Check metrics.
 - Realtime Database, Cloud Storage, and Authentication metrics show that normal
   traffic is verified.
-- The release owner has recorded the enforcement date and rollback plan.
+- The release owner has recorded the enforcement date and rollback plan in the
+  backend evidence packet described by
+  [`docs/community-backend-runbook.md`](community-backend-runbook.md).
 
 ## Remaining Abuse Controls
 

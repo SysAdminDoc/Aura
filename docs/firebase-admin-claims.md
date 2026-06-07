@@ -76,18 +76,15 @@ on the client until that user gets a fresh ID token. Three paths:
 ## Deploying the security rules
 
 The rules in `database.rules.json` are not deployed automatically. Deploy
-manually whenever they change:
+manually whenever they change. The full deploy, dry-run, evidence, and rollback
+procedure is in
+[`docs/community-backend-runbook.md`](community-backend-runbook.md).
 
 ```bash
 firebase login                                  # one-time
 firebase use freevibe-aura                     # project id; verify with `firebase projects:list`
-firebase deploy --only database                # uploads database.rules.json
-firebase deploy --only storage                 # uploads storage.rules
+firebase deploy --only database,storage        # uploads database.rules.json and storage.rules
 ```
-
-CI verification (optional): add a step that runs
-`firebase deploy --only database:rules --project=verify --dry-run` on
-every PR that touches `database.rules.json`.
 
 Cycles 57 and 58 add local Storage and Realtime Database emulator tests. Run
 them before deploying either Firebase rules file:
@@ -98,7 +95,9 @@ npm run test:firebase-rules
 ```
 
 See `docs/firebase-rules-harness.md` for the tracked RTDB/Storage policy and the
-current dev-tool audit note.
+current dev-tool audit note. Cycle 64 also adds
+`docs/community-backend-manifest.json`; regenerate and verify it with
+`tools/community_backend_manifest.py` whenever Firebase backend files change.
 
 The main `verify` workflow also runs `npm ci` and
 `npm run test:firebase-rules` when Firebase rules, config, tests, or this

@@ -50,6 +50,9 @@ jobs:
             package.json \
             package-lock.json \
             test/firebase \
+            tools/community_backend_manifest.py \
+            docs/community-backend-manifest.json \
+            docs/community-backend-runbook.md \
             docs/firebase-rules-harness.md \
             docs/firebase-admin-claims.md \
             .github/workflows/verify.yml | grep -q .; then
@@ -71,6 +74,10 @@ jobs:
         with:
           node-version: '20'
           cache: npm
+
+      - name: Community backend manifest
+        if: steps.firebase_rules_changes.outputs.changed == 'true'
+        run: python3 tools/community_backend_manifest.py --mode check
 
       - name: Install Firebase rules dependencies
         if: steps.firebase_rules_changes.outputs.changed == 'true'

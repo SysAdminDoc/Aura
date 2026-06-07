@@ -206,6 +206,12 @@ next pass can resume quickly.
   uploads, votes, follows, and profile edits; the backend migration runbook
   records request envelope, transaction sequence, error mapping, Android
   migration order, and verification requirements.
+- Completed Cycle 64 community backend deploy/rollback evidence: added a
+  deterministic Firebase backend manifest tool, committed the current backend
+  manifest, wired the manifest check into the Firebase rules CI job, and added
+  a deploy/rollback runbook covering preflight, production-project dry run,
+  deployment evidence, rollback, App Check enforcement rollback separation, and
+  release checklist entries.
 
 ## 2026-06-05
 
