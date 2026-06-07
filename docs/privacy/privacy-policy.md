@@ -6,6 +6,9 @@ wallpapers, ringtones, sounds, and optional community uploads.
 Aura has no ads, does not sell personal data, and does not use cross-app
 tracking.
 
+The release-reviewed manifest permission and Data safety matrix is tracked in
+[`docs/privacy/data-safety.md`](data-safety.md).
+
 ## Account Model
 
 Aura does not require an account for local browsing, downloaded content, local

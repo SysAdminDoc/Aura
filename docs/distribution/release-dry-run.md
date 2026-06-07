@@ -16,6 +16,7 @@ Manual branch runs:
 - Scan the packaged signed APK for nonblank provider credential values from the temporary release `local.properties`.
 - Check Fastlane text metadata, current versionCode changelog, and public privacy-policy URL before the signed release build.
 - Check that the same public privacy-policy URL is present in Settings, README, Fastlane metadata, and release docs before the signed release build.
+- Check that every manifest permission has a reviewed Data safety matrix row before the signed release build.
 - Check dependency notice, native compliance, and curated overlay drift gates.
 - Generate `SHA256SUMS.txt` and `RELEASE_NOTES.md`.
 - Run `tools/release_artifact_bundle_check.py` against the final `release/` directory.
@@ -48,6 +49,7 @@ Before the APK build, release dry runs also validate committed store metadata:
 ```bash
 python3 tools/store_metadata_preflight.py --repo-root .
 python3 tools/privacy_policy_link_check.py --policy docs/privacy/privacy-policy-link.json --repo-root .
+python3 tools/privacy_data_safety_check.py --policy docs/privacy/data-safety.json --repo-root .
 ```
 
 The text-mode check fails when title or description limits drift, the current
@@ -56,7 +58,10 @@ Fastlane full description loses the public privacy-policy URL. The optional
 `--require-assets` mode remains reserved for the screenshot and feature-graphic
 pipeline. The privacy link gate fails when the in-app Settings link, README,
 Fastlane metadata, release workflow, or this dry-run document loses the public
-privacy-policy URL contract.
+privacy-policy URL contract. The Data safety matrix fails when
+`AndroidManifest.xml` gains, removes, or changes a permission without a reviewed
+purpose, data type, collection/sharing, retention, deletion, denial, and Play
+declaration row.
 
 The release workflow validates the final directory before upload:
 

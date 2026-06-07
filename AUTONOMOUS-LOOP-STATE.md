@@ -1,8 +1,8 @@
 # Autonomous Loop State
 
 **Assigned project:** `C:\Users\--\repos\Aura`
-**Current pass:** 2026-06-07 Cycle 140 privacy policy link gate
-**Last commit before pass:** `813e243` (`ci(ai): gate on-device wallpaper generation`)
+**Current pass:** 2026-06-07 Cycle 141 manifest permission Data safety gate
+**Last commit before pass:** `5fea440` (`ci(privacy): gate public policy link`)
 
 ## 2026-06-05 Result
 
@@ -2014,11 +2014,31 @@
 - Cycle 140 verification: privacy-link policy check, backend tool tests, and a
   focused Settings Gradle unit-test compile pass succeeded.
 
+## Cycle 141 Result - 2026-06-07
+
+- Added `docs/privacy/data-safety.md` with a release-reviewed manifest
+  permission ledger and Data safety answer notes.
+- Added `docs/privacy/data-safety.json` with one structured row for each
+  manifest permission, including purpose, triggering user action, data types,
+  collection/sharing status, retention, deletion path, denial behavior, and
+  Play declaration posture.
+- Added `tools/privacy_data_safety_check.py` and focused tests to parse
+  `AndroidManifest.xml`, require exact permission and `maxSdkVersion` coverage,
+  require complete reviewed rows, and ensure the Markdown matrix lists every
+  permission.
+- Wired the Data safety matrix check into verify and release workflows before
+  Android setup or signed APK assembly.
+- Updated release workflow security policy, release signing docs, release
+  dry-run docs, supply-chain docs, privacy policy, research, roadmap,
+  changelog, completion, and loop-state docs.
+- Cycle 141 verification: Data safety matrix check and focused backend tests
+  passed.
+
 ## Next Cycle
 
-Continue this same assigned project, Aura. Start Cycle 141 from the
+Continue this same assigned project, Aura. Start Cycle 142 from the
 `ROADMAP.md` Continuation State and
-`docs/research/cycle-140-2026-06-07.md`. The account
+`docs/research/cycle-141-2026-06-07.md`. The account
 deletion dry-run planner, read-only Settings identity surface, redacted
 shareable request draft, request-code lookup tool, review receipt gate, offline
 apply simulator, private executor package builder, and guarded REST executor
@@ -2128,7 +2148,8 @@ added generated-file deletion on favorite removal; Cycle 138 added checked
 Fastlane store metadata text/version/privacy preflight and fixed the current
 short-description/privacy URL drift; Cycle 139 added a checked on-device
 wallpaper generation decision packet and production-source scanner; Cycle 140
-added a checked public privacy-policy link gate and Settings About entry.
+added a checked public privacy-policy link gate and Settings About entry; Cycle
+141 added a checked manifest permission Data safety matrix and release gate.
 Actual live callable invocation evidence, a live hosted HTTPS web deletion URL,
 direct RTDB rule tightening, App Check console evidence, production-project
 dry-run evidence, and owner/admin GitHub repository security-settings evidence
@@ -2141,9 +2162,10 @@ owner access is confirmed, collect owner/admin GitHub security settings
 evidence and generate the redacted receipt when access is available, or
 continue with signed release dry-run evidence capture on a suitable runner,
 the screenshot and feature-graphic pipeline for the remaining store metadata
-asset gap, Data safety matrix enforcement, or the next checkable backend,
-deploy, security, support, policy, or rules hardening artifact if owner-gated
-evidence is still unavailable.
+asset gap, expanded Data safety matrix enforcement for SDK/network/local-store
+surfaces, Play app-content declaration packet work, or the next checkable
+backend, deploy, security, support, policy, or rules hardening artifact if
+owner-gated evidence is still unavailable.
 Commit and push completed work when the active project contract allows it.
 
 ## Previous Cycle Prompt

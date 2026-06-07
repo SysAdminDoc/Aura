@@ -626,6 +626,12 @@ next pass can resume quickly.
   Privacy policy, a checked privacy-policy link contract, verify/release
   workflow enforcement, README/release doc alignment, and focused backend tests
   so the public policy URL cannot drift from the app or release preflight.
+- Completed Cycle 141 manifest permission Data safety gate: added
+  `docs/privacy/data-safety.md`, `docs/privacy/data-safety.json`,
+  `tools/privacy_data_safety_check.py`, focused tests, and verify/release
+  workflow enforcement so every manifest permission has reviewed purpose, data
+  type, collection/sharing, retention, deletion, denial, and Play declaration
+  rows before release.
 
 ## 2026-06-05
 

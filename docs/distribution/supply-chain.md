@@ -26,6 +26,7 @@ Aura is side-loaded through GitHub Releases and Obtainium, so release artifacts 
 | Network endpoint inventory | `docs/security/network-endpoints.json`, `docs/security/network-endpoints.md`, `tools/network_endpoint_inventory_check.py`, `.github/workflows/verify.yml` | Fails verification when app network-code URL hosts drift from the reviewed endpoint/auth/cache/fallback inventory. |
 | Store metadata preflight | `tools/store_metadata_preflight.py`, `.github/workflows/verify.yml`, `.github/workflows/release.yml` | Fails PR/main/release checks when Fastlane text metadata exceeds Play limits, loses the current versionCode changelog, reintroduces stale branding, or drops the public privacy-policy URL. Asset mode is available for the screenshot and feature-graphic pipeline. |
 | Privacy policy link gate | `docs/privacy/privacy-policy-link.json`, `tools/privacy_policy_link_check.py`, `.github/workflows/verify.yml`, `.github/workflows/release.yml` | Fails PR/main/release checks when the public privacy-policy URL is missing from Settings, Fastlane metadata, README, release dry-run docs, or the release workflow gate. |
+| Privacy Data safety matrix | `docs/privacy/data-safety.json`, `docs/privacy/data-safety.md`, `tools/privacy_data_safety_check.py`, `.github/workflows/verify.yml`, `.github/workflows/release.yml` | Fails PR/main/release checks when manifest permissions drift without reviewed purpose, data type, collection/sharing, retention, deletion, denial, and Play declaration rows. |
 | On-device wallpaper decision gate | `docs/ai/on-device-wallpaper-decision.json`, `tools/on_device_ai_decision_check.py`, `.github/workflows/verify.yml` | Keeps on-device wallpaper generation on hold until device baseline, delivery, battery/thermal, license, moderation, fallback, and FOSS-channel evidence is complete, and blocks early production runtime dependencies or model artifacts. |
 | Dependency Review | `.github/workflows/dependency-review.yml` | Runs on pull requests and fails high/critical vulnerable dependency additions. |
 | OpenSSF Scorecard | `.github/workflows/scorecard.yml` | Runs on main pushes, branch-protection changes, weekly schedule, and manual dispatch; keeps public result publishing disabled and uploads SARIF to code scanning. |
@@ -58,7 +59,7 @@ For each `v*` release:
 14. Confirm the release workflow ran `tools/provider_credential_release_check.py` after writing release `local.properties` and before `:app:assembleRelease`.
 15. Confirm the release workflow ran `tools/provider_credential_storage_check.py` before `:app:assembleRelease`.
 16. Confirm the release workflow ran `tools/cleartext_release_check.py` before `:app:assembleRelease`.
-17. Confirm the release workflow ran `tools/store_metadata_preflight.py` and `tools/privacy_policy_link_check.py` before `:app:assembleRelease`.
+17. Confirm the release workflow ran `tools/store_metadata_preflight.py`, `tools/privacy_policy_link_check.py`, and `tools/privacy_data_safety_check.py` before `:app:assembleRelease`.
 18. Confirm the release workflow ran `tools/provider_credential_apk_scan.py` after packaging the signed APK and before release uploads.
 19. Verify the APK locally with `apksigner verify --verbose --print-certs`.
 20. Compare the local SHA-256 values to `SHA256SUMS.txt`.
@@ -91,6 +92,7 @@ python3 tools/cleartext_release_check.py --repo-root .
 python3 tools/network_endpoint_inventory_check.py --inventory docs/security/network-endpoints.json --repo-root .
 python3 tools/store_metadata_preflight.py --repo-root .
 python3 tools/privacy_policy_link_check.py --policy docs/privacy/privacy-policy-link.json --repo-root .
+python3 tools/privacy_data_safety_check.py --policy docs/privacy/data-safety.json --repo-root .
 python3 tools/on_device_ai_decision_check.py --policy docs/ai/on-device-wallpaper-decision.json --repo-root .
 python3 -m unittest discover -s test/tools -p '*_test.py'
 ```
@@ -269,6 +271,7 @@ python3 tools/provider_credential_storage_check.py --policy docs/security/provid
 python3 tools/cleartext_release_check.py --repo-root .
 python3 tools/store_metadata_preflight.py --repo-root .
 python3 tools/privacy_policy_link_check.py --policy docs/privacy/privacy-policy-link.json --repo-root .
+python3 tools/privacy_data_safety_check.py --policy docs/privacy/data-safety.json --repo-root .
 ```
 
 The check fails if the wrapper distribution URL, SHA-256, URL validation, storage roots, or timeout drifts. When upgrading Gradle, update `distributionUrl`, `distributionSha256Sum`, `tools/gradle_wrapper_check.py`, and the focused wrapper tests in the same change after verifying the official Gradle checksum.

@@ -3,6 +3,7 @@
 All notable changes to Aura will be documented in this file.
 
 ## Unreleased
+- **Privacy Data safety matrix (Cycle 141)**: added a manifest-permission privacy ledger and verify/release gate that blocks permission drift without reviewed data type, purpose, retention, deletion, denial, and Play declaration rows.
 - **Privacy policy link gate (Cycle 140)**: added an in-app Settings privacy-policy link plus verify/release checks that keep the public policy URL aligned across Settings, README, Fastlane metadata, and release docs.
 - **On-device wallpaper decision gate (Cycle 139)**: added an evidence packet and verify-time guard that keeps local wallpaper generation on hold until device, delivery, battery/thermal, license, moderation, fallback, and FOSS-channel criteria are met.
 - **Store metadata preflight (Cycle 138)**: added a checked Fastlane text/version/privacy preflight, wired it into verify and release, shortened the Play short description, and added the public privacy-policy URL to full description metadata.

@@ -103,6 +103,9 @@ jobs:
       - name: Privacy policy link gate
         run: python3 tools/privacy_policy_link_check.py --policy docs/privacy/privacy-policy-link.json --repo-root .
 
+      - name: Privacy data safety matrix
+        run: python3 tools/privacy_data_safety_check.py --policy docs/privacy/data-safety.json --repo-root .
+
       - name: Build signed release APK
         run: ./gradlew :app:assembleRelease --stacktrace --no-daemon
 
