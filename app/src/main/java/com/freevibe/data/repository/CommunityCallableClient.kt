@@ -3,8 +3,10 @@ package com.freevibe.data.repository
 import com.freevibe.data.model.CommunityFollowInput
 import com.freevibe.data.model.CommunityQuotaPolicies
 import com.freevibe.data.model.CommunityReportInput
+import com.freevibe.data.model.CommunityUserBlockInput
 import com.freevibe.data.model.buildCommunityFollowCallablePayload
 import com.freevibe.data.model.buildCommunityReportCallablePayload
+import com.freevibe.data.model.buildCommunityUserBlockCallablePayload
 import com.freevibe.data.model.buildCommunityVoteCallablePayload
 import com.google.firebase.functions.FirebaseFunctions
 import com.google.firebase.functions.FirebaseFunctionsException
@@ -123,6 +125,21 @@ class CommunityCallableClient @Inject constructor(
             consumeLimitedUseAppCheckToken = policy.consumeLimitedUseAppCheckToken,
         )
         return invoker.call(request).toWriteResult(resourceIdField = "creatorId")
+    }
+
+    suspend fun setCommunityUserBlock(input: CommunityUserBlockInput): CommunityCallableWriteResult {
+        val policy = CommunityQuotaPolicies.userBlocks.callable
+        val operationPrefix = if (input.blocked) "block" else "unblock"
+        val request = CommunityCallableRequest(
+            functionName = policy.functionName,
+            data = buildCommunityCallableEnvelope(
+                payload = buildCommunityUserBlockCallablePayload(input),
+                operationId = communityOperationId(operationPrefix),
+                clientSentAt = System.currentTimeMillis(),
+            ),
+            consumeLimitedUseAppCheckToken = policy.consumeLimitedUseAppCheckToken,
+        )
+        return invoker.call(request).toWriteResult(resourceIdField = "blockedUid")
     }
 }
 

@@ -2,6 +2,7 @@ package com.freevibe.data.repository
 
 import com.freevibe.data.local.PreferencesManager
 import com.freevibe.data.model.CommunityBlockReason
+import com.freevibe.data.model.CommunityUserBlockInput
 import com.freevibe.data.model.buildCommunityUserBlockUpdates
 import com.freevibe.data.model.buildCommunityUserUnblockUpdates
 import com.freevibe.data.model.normalizeCommunityBlockedUserIds
@@ -38,6 +39,7 @@ class CommunityBlockRepository @Inject constructor(
     private val identityProvider: CommunityIdentityProvider,
     private val prefs: PreferencesManager,
     private val sourceMetrics: SourceMetrics,
+    private val callableClient: CommunityCallableClient,
 ) {
     private val database by lazy {
         try { FirebaseDatabase.getInstance().reference } catch (_: Exception) { null }
@@ -110,16 +112,13 @@ class CommunityBlockRepository @Inject constructor(
                 sourceMetrics.recordDisabled(SOURCE_COMMUNITY)
                 throw IllegalStateException(communityDisabledMessage())
             }
-            val db = database ?: throw IllegalStateException("Firebase Database not available")
-            val blockerUid = identityProvider.ensureSignedIn()
-            db.updateChildren(
-                buildCommunityUserBlockUpdates(
-                    blockerUid = blockerUid,
-                    blockedUid = blockedUid,
-                    createdAt = System.currentTimeMillis(),
-                    reason = reason,
-                ),
-            ).await()
+            identityProvider.ensureSignedIn()
+            if (!identityProvider.currentFirebaseUid().isNullOrBlank()) {
+                setCommunityUserBlockWithCallableOrNull(blockedUid, reason, blocked = true)?.let {
+                    return@runCatching Unit
+                }
+            }
+            blockUserWithDirectDatabase(blockedUid, reason)
             Unit
         }.onFailure { it.rethrowIfCancelled() }
     }
@@ -130,11 +129,63 @@ class CommunityBlockRepository @Inject constructor(
                 sourceMetrics.recordDisabled(SOURCE_COMMUNITY)
                 throw IllegalStateException(communityDisabledMessage())
             }
-            val db = database ?: throw IllegalStateException("Firebase Database not available")
-            val blockerUid = identityProvider.ensureSignedIn()
-            db.updateChildren(buildCommunityUserUnblockUpdates(blockerUid, blockedUid)).await()
+            identityProvider.ensureSignedIn()
+            if (!identityProvider.currentFirebaseUid().isNullOrBlank()) {
+                setCommunityUserBlockWithCallableOrNull(
+                    blockedUid = blockedUid,
+                    reason = CommunityBlockReason.OTHER,
+                    blocked = false,
+                )?.let {
+                    return@runCatching Unit
+                }
+            }
+            unblockUserWithDirectDatabase(blockedUid)
             Unit
         }.onFailure { it.rethrowIfCancelled() }
+    }
+
+    private suspend fun setCommunityUserBlockWithCallableOrNull(
+        blockedUid: String,
+        reason: CommunityBlockReason,
+        blocked: Boolean,
+    ): Boolean? =
+        try {
+            val result = callableClient.setCommunityUserBlock(
+                CommunityUserBlockInput(
+                    blockedUid = blockedUid,
+                    reason = reason,
+                    blocked = blocked,
+                ),
+            )
+            when {
+                result.status.equals("accepted", ignoreCase = true) -> true
+                result.status.equals("duplicate", ignoreCase = true) -> true
+                else -> throw IllegalStateException("Unexpected user block status: ${result.status}")
+            }
+        } catch (e: CommunityCallableException) {
+            if (e.isMissingEndpoint()) null else throw e
+        }
+
+    private suspend fun blockUserWithDirectDatabase(
+        blockedUid: String,
+        reason: CommunityBlockReason,
+    ) {
+        val db = database ?: throw IllegalStateException("Firebase Database not available")
+        val blockerUid = identityProvider.ensureSignedIn()
+        db.updateChildren(
+            buildCommunityUserBlockUpdates(
+                blockerUid = blockerUid,
+                blockedUid = blockedUid,
+                createdAt = System.currentTimeMillis(),
+                reason = reason,
+            ),
+        ).await()
+    }
+
+    private suspend fun unblockUserWithDirectDatabase(blockedUid: String) {
+        val db = database ?: throw IllegalStateException("Firebase Database not available")
+        val blockerUid = identityProvider.ensureSignedIn()
+        db.updateChildren(buildCommunityUserUnblockUpdates(blockerUid, blockedUid)).await()
     }
 
     private fun observeBlockedUserIds(currentUid: String): Flow<Set<String>> = callbackFlow {

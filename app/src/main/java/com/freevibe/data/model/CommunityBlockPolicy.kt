@@ -8,6 +8,25 @@ enum class CommunityBlockReason(val storageValue: String) {
     OTHER("OTHER"),
 }
 
+data class CommunityUserBlockInput(
+    val blockedUid: String,
+    val reason: CommunityBlockReason = CommunityBlockReason.OTHER,
+    val blocked: Boolean,
+)
+
+fun buildCommunityUserBlockCallablePayload(input: CommunityUserBlockInput): Map<String, Any> {
+    val safeBlocked = sanitizeCommunityOwnerKey(input.blockedUid)
+    require(safeBlocked.isNotBlank()) { "Blocked UID is required" }
+    val payload = mutableMapOf<String, Any>(
+        "blockedUid" to safeBlocked,
+        "blocked" to input.blocked,
+    )
+    if (input.blocked) {
+        payload["reason"] = input.reason.storageValue
+    }
+    return payload
+}
+
 fun communityUserBlockPath(blockerUid: String, blockedUid: String): String =
     "/community_user_blocks/${sanitizeCommunityOwnerKey(blockerUid)}/${sanitizeCommunityOwnerKey(blockedUid)}"
 

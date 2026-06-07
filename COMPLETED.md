@@ -464,6 +464,13 @@ next pass can resume quickly.
   writes through the callable when Firebase Auth is available, preserved direct
   RTDB fallback only for missing endpoint or missing Auth compatibility, and
   covered follow plus unfollow callable envelopes with focused unit tests.
+- Completed Cycle 111 Android user-block callable migration: added
+  `CommunityUserBlockInput` payload normalization, extended
+  `CommunityCallableClient` for `setCommunityUserBlock`, routed
+  `CommunityBlockRepository` block/unblock writes through the callable when
+  Firebase Auth is available, preserved direct RTDB fallback only for missing
+  endpoint or missing Auth compatibility, and covered block plus unblock
+  callable envelopes with focused unit tests.
 
 ## 2026-06-05
 

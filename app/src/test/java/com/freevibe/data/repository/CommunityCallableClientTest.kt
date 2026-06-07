@@ -1,8 +1,10 @@
 package com.freevibe.data.repository
 
+import com.freevibe.data.model.CommunityBlockReason
 import com.freevibe.data.model.CommunityFollowInput
 import com.freevibe.data.model.CommunityReportInput
 import com.freevibe.data.model.CommunityReportReason
+import com.freevibe.data.model.CommunityUserBlockInput
 import com.freevibe.data.model.ContentSource
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
@@ -150,6 +152,74 @@ class CommunityCallableClientTest {
         val payload = request.data["payload"] as Map<*, *>
         assertEquals("creator/one", payload["creatorId"])
         assertEquals(false, payload["following"])
+    }
+
+    @Test
+    fun `setCommunityUserBlock sends block state without limited use token request`() = runTest {
+        val invoker = RecordingCommunityCallableInvoker(
+            response = mapOf(
+                "operationId" to "block_test",
+                "status" to "accepted",
+                "targetPath" to "/community_user_blocks/user_1/blocked_one___",
+                "serverTimeMillis" to 123L,
+            ),
+        )
+        val client = CommunityCallableClient(invoker)
+
+        val result = client.setCommunityUserBlock(
+            CommunityUserBlockInput(
+                blockedUid = " blocked/one#[] ",
+                reason = CommunityBlockReason.HARASSMENT,
+                blocked = true,
+            ),
+        )
+
+        val request = requireNotNull(invoker.lastRequest)
+        assertEquals("setCommunityUserBlock", request.functionName)
+        assertFalse(request.consumeLimitedUseAppCheckToken)
+        assertEquals("blocked_one___", result.targetId())
+        assertEquals("accepted", result.status)
+
+        assertTrue((request.data["operationId"] as String).startsWith("block_"))
+        assertTrue((request.data["clientSentAt"] as Long) > 0L)
+        val payload = request.data["payload"] as Map<*, *>
+        assertEquals("blocked_one___", payload["blockedUid"])
+        assertEquals("HARASSMENT", payload["reason"])
+        assertEquals(true, payload["blocked"])
+        assertFalse(payload.containsKey("uid"))
+        assertFalse(payload.containsKey("blockerUid"))
+    }
+
+    @Test
+    fun `setCommunityUserBlock sends unblock operation without reason`() = runTest {
+        val invoker = RecordingCommunityCallableInvoker(
+            response = mapOf(
+                "operationId" to "unblock_test",
+                "status" to "duplicate",
+                "targetPath" to "/community_user_blocks/user_1/blocked_one",
+                "serverTimeMillis" to 123L,
+            ),
+        )
+        val client = CommunityCallableClient(invoker)
+
+        val result = client.setCommunityUserBlock(
+            CommunityUserBlockInput(
+                blockedUid = "blocked.one",
+                blocked = false,
+            ),
+        )
+
+        val request = requireNotNull(invoker.lastRequest)
+        assertEquals("setCommunityUserBlock", request.functionName)
+        assertFalse(request.consumeLimitedUseAppCheckToken)
+        assertEquals("blocked_one", result.targetId())
+        assertEquals("duplicate", result.status)
+
+        assertTrue((request.data["operationId"] as String).startsWith("unblock_"))
+        val payload = request.data["payload"] as Map<*, *>
+        assertEquals("blocked_one", payload["blockedUid"])
+        assertEquals(false, payload["blocked"])
+        assertFalse(payload.containsKey("reason"))
     }
 
     @Test

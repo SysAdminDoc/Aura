@@ -1,8 +1,8 @@
 # Autonomous Loop State
 
 **Assigned project:** `C:\Users\--\repos\Aura`
-**Current pass:** 2026-06-07 Cycle 110 Android follow callable migration
-**Last commit before pass:** `b7f56b7` (`feat(community): add Android vote callable adapter`)
+**Current pass:** 2026-06-07 Cycle 111 Android user-block callable migration
+**Last commit before pass:** `316ec6d` (`feat(community): add Android follow callable adapter`)
 
 ## 2026-06-05 Result
 
@@ -1331,11 +1331,36 @@
   wire-protocol coverage, owner-approved deploy evidence, direct RTDB rule
   tightening, and Firebase Console App Check evidence remain open.
 
+## Cycle 111 Result - 2026-06-07
+
+- Added `CommunityUserBlockInput` payload normalization for Android block and
+  unblock callable requests.
+- Extended `CommunityCallableClient` with `setCommunityUserBlock`, using
+  `CommunityQuotaPolicies.userBlocks` and standard App Check tokens.
+- Updated `CommunityBlockRepository.blockUser()` and `unblockUser()` to prefer
+  the `setCommunityUserBlock` callable when Firebase Auth is available,
+  preserve no-op duplicate responses as success, avoid direct RTDB fallback for
+  quota/App Check/validation errors, and keep the direct RTDB update path only
+  for missing callable endpoint or missing Firebase Auth compatibility.
+- Extended `CommunityCallableClientTest` coverage for block and unblock request
+  envelopes, desired-state payloads, reason handling, blocker-UID omission, and
+  non-limited-use token selection.
+- Updated `docs/research/cycle-111-2026-06-07.md`, `ROADMAP.md`,
+  `COMPLETED.md`, `CHANGELOG.md`, backend runbook, callable quota enforcement
+  doc, and loop state.
+- Cycle 111 verification: focused Android callable client and block policy
+  tests, callable contract check, generated notice lock checks, native
+  compliance lock check, dependency overlay check, dependency license policy
+  check, high-severity npm audit, diff hygiene, and attribution/ASCII scan
+  passed. Upload finalizer and profile Android callable migrations, full
+  callable wire-protocol coverage, owner-approved deploy evidence, direct RTDB
+  rule tightening, and Firebase Console App Check evidence remain open.
+
 ## Next Cycle
 
-Continue this same assigned project, Aura. Start Cycle 111 from the
+Continue this same assigned project, Aura. Start Cycle 112 from the
 `ROADMAP.md` Continuation State and
-`docs/research/cycle-110-2026-06-07.md`. The account
+`docs/research/cycle-111-2026-06-07.md`. The account
 deletion dry-run planner, read-only Settings identity surface, redacted
 shareable request draft, request-code lookup tool, review receipt gate, offline
 apply simulator, private executor package builder, and guarded REST executor
@@ -1398,10 +1423,13 @@ payload/client adapter and callable-first vote submission with compatibility
 fallback only for missing callable endpoint or missing Firebase Auth; Cycle 110
 added the Android follow callable payload/client adapter and callable-first
 follow/unfollow submission with compatibility fallback only for missing
-callable endpoint or missing Firebase Auth. Android callable migration for user
-blocks, upload finalizers, and profile edits, full callable wire-protocol
+callable endpoint or missing Firebase Auth; Cycle 111 added the Android
+user-block callable payload/client adapter and callable-first block/unblock
+submission with compatibility fallback only for missing callable endpoint or
+missing Firebase Auth. Android callable migration for upload finalizers and
+profile edits, full callable wire-protocol
 coverage, a live hosted HTTPS web deletion URL, and production-project dry-run
-evidence remain open. Next migrate Android user-block or profile writes to
+evidence remain open. Next migrate Android profile or upload finalizer writes to
 callable adapters, add full callable wire-protocol coverage when Auth and App
 Check emulator wiring is available, publish the hosted URL after owner
 approval, or run a real
