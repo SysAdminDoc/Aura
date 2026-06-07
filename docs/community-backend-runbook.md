@@ -149,6 +149,9 @@ must include:
 - Account deletion review receipt from
   `tools/community_account_deletion_review.py` before any future trusted apply
   step accepts a deletion plan.
+- Account deletion apply simulation receipt from
+  `tools/community_account_deletion_apply_simulator.py` when a reviewed plan is
+  tested against an exported RTDB snapshot.
 
 ## Sources
 

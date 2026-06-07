@@ -42,6 +42,11 @@ update is a null delete, and that retained public/moderation roots are still
 declared. It emits a redacted review receipt for private operator evidence; it
 does not apply any database changes.
 
+`tools/community_account_deletion_apply_simulator.py` applies the reviewed
+null-update plan to a local copy of the RTDB export, prunes empty objects, and
+emits a hashed simulation receipt. It does not contact Firebase and is only
+evidence for a future trusted executor.
+
 ## Operator Handling
 
 1. Receive the request draft through a private support channel.
@@ -64,9 +69,15 @@ does not apply any database changes.
    py -3 tools\community_account_deletion_review.py --lookup .\deletion-request-lookup.json --plan .\account-deletion-plan.json --request-code AURA-123456789ABC --output .\account-deletion-review.json
    ```
 
-6. Review retained public upload and moderation records against
+6. Simulate the reviewed null updates against the same export:
+
+   ```powershell
+   py -3 tools\community_account_deletion_apply_simulator.py --database-export .\rtdb-export.json --plan .\account-deletion-plan.json --review .\account-deletion-review.json --output .\account-deletion-simulation.json
+   ```
+
+7. Review retained public upload and moderation records against
    `docs/community-account-deletion-policy.md`.
-7. Apply changes only through the future trusted executor or callable
+8. Apply changes only through the future trusted executor or callable
    orchestrator.
 
 Do not request or publish a full Firebase UID in a public issue.

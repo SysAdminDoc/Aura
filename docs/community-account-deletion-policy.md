@@ -29,6 +29,16 @@ The review receipt validates one lookup match, matching sanitized UID keys,
 null-only update values, category coverage, required retained roots, and emits
 hashes plus a redacted UID-key suffix for private release evidence.
 
+Operators can then simulate the reviewed null updates against the same export:
+
+```powershell
+py -3 tools\community_account_deletion_apply_simulator.py --database-export .\rtdb-export.json --plan .\account-deletion-plan.json --review .\account-deletion-review.json --output .\account-deletion-simulation.json
+```
+
+The simulator verifies the review hash and plan hash, applies the null updates
+to a local copy, prunes empty objects, and emits a hashed receipt with deleted,
+missing-before, and remaining-path counts. It does not contact Firebase.
+
 ## Deleted Marker Paths
 
 The planner removes:
@@ -92,11 +102,13 @@ dry-run planner and review receipt.
 - `.\gradlew.bat --no-daemon --max-workers=2 :app:testDebugUnitTest --tests com.freevibe.service.CommunityIdentityProviderTest --tests com.freevibe.ui.screens.settings.SettingsViewModelTest`
 - `py -3 -m py_compile tools\community_deletion_request_lookup.py test\tools\community_deletion_request_lookup_test.py`
 - `py -3 -m py_compile tools\community_account_deletion_review.py test\tools\community_account_deletion_review_test.py`
+- `py -3 -m py_compile tools\community_account_deletion_apply_simulator.py test\tools\community_account_deletion_apply_simulator_test.py`
 
 ## Remaining Work
 
 - Add a trusted deletion executor after the Cloud Functions/backend deployment
-  surface exists. The local review receipt is an apply gate, not the executor.
+  surface exists. The local review receipt and simulator are apply gates, not
+  the executor.
 - Add local/Auth deletion and community cache cleanup after the trusted
   executor owns final sequencing.
 - Publish a hosted private support route or web deletion page before Play

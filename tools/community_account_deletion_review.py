@@ -29,6 +29,17 @@ REQUIRED_RETAINED_ROOTS = {
     "/community_sounds, /community_wallpapers, /owner_uploads, and Storage objects",
 }
 
+FORBIDDEN_UPDATE_PREFIXES = (
+    "/community_reports",
+    "/community_report_resolutions",
+    "/community_sounds",
+    "/community_takedown_receipts",
+    "/community_upload_deletions",
+    "/community_wallpapers",
+    "/moderation",
+    "/owner_uploads",
+)
+
 
 class ReviewError(ValueError):
     """Raised when account deletion review artifacts are inconsistent."""
@@ -68,6 +79,12 @@ def redact_uid_key(uid_key: str) -> str:
 def utc_now() -> str:
     now = dt.datetime.now(dt.timezone.utc).replace(microsecond=0)
     return now.isoformat().replace("+00:00", "Z")
+
+
+def is_retained_update_path(path: str) -> bool:
+    if path.startswith("/votes/") and path.endswith("/upvotes"):
+        return True
+    return any(path == prefix or path.startswith(f"{prefix}/") for prefix in FORBIDDEN_UPDATE_PREFIXES)
 
 
 def require_object(value: Any, label: str) -> dict[str, Any]:
@@ -137,6 +154,8 @@ def validate_plan(plan: Any) -> tuple[str, dict[str, None], dict[str, list[str]]
             raise ReviewError("Deletion plan update paths must be absolute RTDB paths")
         if update_value is not None:
             raise ReviewError("Deletion plan updates must only contain null values")
+        if is_retained_update_path(update_path):
+            raise ReviewError(f"Deletion plan attempts to delete a retained path: {update_path}")
         normalized_updates[update_path] = None
 
     categories = plan_object.get("categories")

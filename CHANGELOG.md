@@ -3,6 +3,7 @@
 All notable changes to Aura will be documented in this file.
 
 ## Unreleased
+- **Account deletion apply simulator (Cycle 79)**: added an offline backend simulator that verifies reviewed deletion plans, applies null updates to an RTDB export copy, and emits hashed receipts without contacting Firebase.
 - **Account deletion review gate (Cycle 78)**: added a backend review tool that cross-checks deletion request-code lookup output against dry-run RTDB null-update plans and emits redacted receipts before any future trusted apply step.
 - **Deletion request code lookup (Cycle 77)**: added a backend lookup tool that maps shared `AURA-` deletion request codes to candidate UID evidence in RTDB exports, with unit coverage and backend CI change detection.
 - **Community deletion request routing (Cycle 76)**: the Community identity dialog can now share a redacted deletion request draft, and support docs describe the private request/operator handling flow without exposing full Firebase UIDs.

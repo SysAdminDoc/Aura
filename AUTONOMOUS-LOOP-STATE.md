@@ -1,8 +1,8 @@
 # Autonomous Loop State
 
 **Assigned project:** `C:\Users\--\repos\Aura`
-**Current pass:** 2026-06-06 Cycle 78 account deletion review gate
-**Last commit before pass:** `01cca12` (`feat(community): add deletion request lookup`)
+**Current pass:** 2026-06-06 Cycle 79 account deletion apply simulator
+**Last commit before pass:** `4e9c61e` (`feat(community): add deletion review gate`)
 
 ## 2026-06-05 Result
 
@@ -515,19 +515,45 @@
 - Cycle 78 verification: Python compile and backend tool unittest discovery
   passed locally.
 
+## Cycle 79 Result - 2026-06-06
+
+- Added `tools/community_account_deletion_apply_simulator.py` to simulate
+  reviewed account deletion RTDB null updates against a copied database export
+  without contacting Firebase.
+- The simulator validates `readyForTrustedApply` review status, plan hash,
+  UID-key hash, retained roots, and update counts before applying local null
+  updates.
+- It emits a hashed simulation receipt with deleted, missing-before, remaining
+  path, plan, review, and snapshot hashes, and can optionally write the
+  simulated post-delete export for private operator review.
+- Tightened `tools/community_account_deletion_review.py` so account deletion
+  plans cannot delete retained aggregate vote counts, private moderation roots,
+  public upload metadata, or owner-upload indexes.
+- Added backend tool coverage in
+  `test/tools/community_account_deletion_apply_simulator_test.py`.
+- Wired the simulator into Firebase backend CI change detection.
+- Updated `docs/research/cycle-79-2026-06-06.md`,
+  `docs/support/community-account-deletion.md`,
+  `docs/community-account-deletion-policy.md`,
+  `docs/community-backend-runbook.md`, `ROADMAP.md`, `COMPLETED.md`, and
+  `CHANGELOG.md`.
+- Cycle 79 verification: Python compile and backend tool unittest discovery
+  passed locally.
+
 ## Next Cycle
 
-Continue this same assigned project, Aura. Start Cycle 79 from the `ROADMAP.md`
-Continuation State and `docs/research/cycle-78-2026-06-06.md`. The account
+Continue this same assigned project, Aura. Start Cycle 80 from the `ROADMAP.md`
+Continuation State and `docs/research/cycle-79-2026-06-06.md`. The account
 deletion dry-run planner, read-only Settings identity surface, redacted
-shareable request draft, request-code lookup tool, and review receipt gate are
-implemented, but trusted apply/orchestration, local/Auth deletion cleanup, and
-a hosted private web deletion request page remain open. Next add a trusted
-apply/orchestrator design or executor skeleton, hosted private web request
-plan/page, a real production-project Firebase backend dry run/orphan/backfill
-evidence pass after owner access is confirmed, Cloud Functions implementation
-for the callable quota contract, or Android callable migration adapters.
-Commit and push completed work when the active project contract allows it.
+shareable request draft, request-code lookup tool, review receipt gate, and
+offline apply simulator are implemented, but trusted apply/orchestration,
+local/Auth deletion cleanup, and a hosted private web deletion request page
+remain open. Next add a trusted executor or callable orchestrator skeleton,
+hosted private web request plan/page, a real production-project Firebase
+backend dry run/orphan/backfill evidence pass after owner access is confirmed,
+Cloud Functions implementation for the callable quota contract, or Android
+callable migration adapters. Commit and push completed work when the active
+project contract allows it.
 
 ## Previous Cycle Prompt
 

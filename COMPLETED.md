@@ -277,6 +277,11 @@ next pass can resume quickly.
   cross-check request-code lookup output against dry-run RTDB null-update plans,
   reject ambiguous or mismatched artifacts, and emit a redacted review receipt
   before any future trusted apply step.
+- Completed Cycle 79 account deletion apply simulator: added
+  `tools/community_account_deletion_apply_simulator.py` and backend tool tests
+  to verify review/plan hashes, reject retained-root deletes through the review
+  gate, simulate null updates against a copied RTDB export, prune empty objects,
+  and emit a hashed simulation receipt without contacting Firebase.
 
 ## 2026-06-05
 
