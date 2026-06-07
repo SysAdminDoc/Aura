@@ -155,6 +155,9 @@ must include:
 - Private account deletion executor package from
   `tools/community_account_deletion_executor_package.py` before any future
   trusted executor or callable applies RTDB updates.
+- Guarded REST executor dry-run/apply receipt from
+  `tools/community_account_deletion_rest_executor.py` when reviewed account
+  deletion RTDB updates are tested or applied.
 
 ## Sources
 

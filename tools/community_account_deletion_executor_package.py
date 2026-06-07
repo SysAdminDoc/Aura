@@ -95,6 +95,25 @@ def build_executor_package(
     }
 
 
+def validate_executor_package(package: Any) -> dict[str, Any]:
+    package_object = require_object(package, "Account deletion executor package")
+    if package_object.get("schemaVersion") != 1:
+        raise ReviewError("Account deletion executor package schemaVersion must be 1")
+    if package_object.get("packageStatus") != "readyForTrustedExecutor":
+        raise ReviewError("Account deletion executor package must be readyForTrustedExecutor")
+    normalize_request_code(require_non_empty_string(package_object.get("requestCode"), "Request code"))
+    updates = package_object.get("updates")
+    if not isinstance(updates, dict) or not updates:
+        raise ReviewError("Account deletion executor package updates must be a non-empty object")
+    if package_object.get("updatesHash") != sha256_json(updates):
+        raise ReviewError("Account deletion executor package updatesHash does not match updates")
+    require_non_empty_string(package_object.get("planHash"), "Plan hash")
+    require_non_empty_string(package_object.get("reviewHash"), "Review hash")
+    require_non_empty_string(package_object.get("simulationHash"), "Simulation hash")
+    require_non_empty_string(package_object.get("snapshotHash"), "Snapshot hash")
+    return package_object
+
+
 def dump_package(package: dict[str, Any]) -> str:
     return json.dumps(package, indent=2, sort_keys=True) + "\n"
 

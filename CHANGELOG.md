@@ -3,6 +3,7 @@
 All notable changes to Aura will be documented in this file.
 
 ## Unreleased
+- **Account deletion REST executor (Cycle 81)**: added a guarded RTDB REST executor with dry-run default, explicit request-code and plan-hash confirmations for apply mode, and unit coverage for PATCH and bearer-token handling.
 - **Account deletion executor package (Cycle 80)**: added a private package builder that validates account deletion plan, review, and simulation receipts before emitting the RTDB null-update payload for a future trusted executor.
 - **Account deletion apply simulator (Cycle 79)**: added an offline backend simulator that verifies reviewed deletion plans, applies null updates to an RTDB export copy, and emits hashed receipts without contacting Firebase.
 - **Account deletion review gate (Cycle 78)**: added a backend review tool that cross-checks deletion request-code lookup output against dry-run RTDB null-update plans and emits redacted receipts before any future trusted apply step.

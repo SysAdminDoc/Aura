@@ -50,6 +50,19 @@ The executor package validates all hashes again and contains the full RTDB
 multi-path update payload for the future trusted executor. It is private
 operator evidence and must not be published.
 
+The guarded REST executor defaults to dry-run:
+
+```powershell
+py -3 tools\community_account_deletion_rest_executor.py --package .\account-deletion-executor-package.json --database-url https://<database-name>.firebaseio.com --mode dry-run --output .\account-deletion-rest-dry-run.json
+```
+
+Apply mode requires explicit request-code and plan-hash confirmations plus an
+OAuth2 token in `FIREBASE_DATABASE_ACCESS_TOKEN` or `--access-token`:
+
+```powershell
+py -3 tools\community_account_deletion_rest_executor.py --package .\account-deletion-executor-package.json --database-url https://<database-name>.firebaseio.com --mode apply --confirm-request-code AURA-123456789ABC --confirm-plan-hash <planHash> --output .\account-deletion-rest-apply.json
+```
+
 ## Deleted Marker Paths
 
 The planner removes:
@@ -115,12 +128,12 @@ dry-run planner and review receipt.
 - `py -3 -m py_compile tools\community_account_deletion_review.py test\tools\community_account_deletion_review_test.py`
 - `py -3 -m py_compile tools\community_account_deletion_apply_simulator.py test\tools\community_account_deletion_apply_simulator_test.py`
 - `py -3 -m py_compile tools\community_account_deletion_executor_package.py test\tools\community_account_deletion_executor_package_test.py`
+- `py -3 -m py_compile tools\community_account_deletion_rest_executor.py test\tools\community_account_deletion_rest_executor_test.py`
 
 ## Remaining Work
 
-- Add a trusted deletion executor after the Cloud Functions/backend deployment
-  surface exists. The local review receipt, simulator, and executor package are
-  apply gates, not the executor.
+- Run the guarded REST executor only after requester verification, retained
+  record review, operator approval, and production-project access are confirmed.
 - Add local/Auth deletion and community cache cleanup after the trusted
   executor owns final sequencing.
 - Publish a hosted private support route or web deletion page before Play

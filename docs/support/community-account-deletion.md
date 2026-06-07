@@ -52,6 +52,11 @@ review receipt, and simulation receipt, then builds the private RTDB update
 package a future trusted executor can consume. The package contains full update
 paths and must not be published.
 
+`tools/community_account_deletion_rest_executor.py` is the guarded operator
+executor. It defaults to dry-run and only applies through the Realtime Database
+REST API when the operator provides a matching request code, matching plan hash,
+database URL, and OAuth2 access token.
+
 ## Operator Handling
 
 1. Receive the request draft through a private support channel.
@@ -86,9 +91,20 @@ paths and must not be published.
    py -3 tools\community_account_deletion_executor_package.py --plan .\account-deletion-plan.json --review .\account-deletion-review.json --simulation .\account-deletion-simulation.json --request-code AURA-123456789ABC --operator <private-ticket-or-initials> --output .\account-deletion-executor-package.json
    ```
 
-8. Review retained public upload and moderation records against
+8. Dry-run the guarded REST executor:
+
+   ```powershell
+   py -3 tools\community_account_deletion_rest_executor.py --package .\account-deletion-executor-package.json --database-url https://<database-name>.firebaseio.com --mode dry-run --output .\account-deletion-rest-dry-run.json
+   ```
+
+9. Review retained public upload and moderation records against
    `docs/community-account-deletion-policy.md`.
-9. Apply changes only through the future trusted executor or callable
-   orchestrator.
+10. Apply only after requester verification, retained-record review, and
+    operator approval:
+
+   ```powershell
+   $env:FIREBASE_DATABASE_ACCESS_TOKEN = "<OAuth2 access token>"
+   py -3 tools\community_account_deletion_rest_executor.py --package .\account-deletion-executor-package.json --database-url https://<database-name>.firebaseio.com --mode apply --confirm-request-code AURA-123456789ABC --confirm-plan-hash <planHash> --output .\account-deletion-rest-apply.json
+   ```
 
 Do not request or publish a full Firebase UID in a public issue.

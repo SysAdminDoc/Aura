@@ -286,6 +286,11 @@ next pass can resume quickly.
   `tools/community_account_deletion_executor_package.py` and backend tool tests
   to validate plan, review, and simulation receipts before producing the
   private RTDB null-update payload that a future trusted executor can consume.
+- Completed Cycle 81 account deletion REST executor: added
+  `tools/community_account_deletion_rest_executor.py` and backend tool tests
+  for a dry-run-default RTDB REST executor that requires matching request-code
+  and plan-hash confirmations plus an OAuth2 token before sending a multi-path
+  `PATCH`.
 
 ## 2026-06-05
 
