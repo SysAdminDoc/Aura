@@ -153,4 +153,43 @@ class CrashDiagnosticsTextTest {
         assertTrue(section.contains("Live WorkManager receipt: pending Settings diagnostics"))
         assertTrue(section.contains("Live Data Saver receipt: pending Settings diagnostics"))
     }
+
+    @Test
+    fun formatLiveBackgroundWorkReceiptsIncludesWorkInfoAndLastRunReceipts() {
+        val section = CrashDiagnosticsText.formatLiveBackgroundWorkReceipts(
+            BackgroundWorkDiagnostics(
+                network = BackgroundNetworkDiagnostics(
+                    activeNetworkMetered = false,
+                    restrictBackgroundStatus = "disabled",
+                ),
+                rows = listOf(
+                    BackgroundWorkStatusRow(
+                        label = "Auto wallpaper rotation",
+                        uniqueWorkName = "auto_wallpaper",
+                        workInfoStatus = "ENQUEUED=1",
+                        workInfoCount = 1,
+                        maxRunAttemptCount = 2,
+                        lastSuccessUtc = "2026-06-07T12:00:00Z",
+                        lastFailureUtc = "2026-06-07T11:00:00Z",
+                        lastErrorClass = "IOException",
+                        lastResult = "retry",
+                        lastDeferralReason = "network unavailable",
+                    ),
+                ),
+            ),
+        )
+
+        assertTrue(section.startsWith("## Background work live receipts"))
+        assertTrue(section.contains("meter=unmetered"))
+        assertTrue(section.contains("Data Saver=disabled"))
+        assertTrue(section.contains("auto_wallpaper"))
+        assertTrue(section.contains("WorkInfo=ENQUEUED=1"))
+        assertTrue(section.contains("records=1"))
+        assertTrue(section.contains("maxAttempts=2"))
+        assertTrue(section.contains("lastResult=retry"))
+        assertTrue(section.contains("lastSuccess=2026-06-07T12:00:00Z"))
+        assertTrue(section.contains("lastFailure=2026-06-07T11:00:00Z"))
+        assertTrue(section.contains("lastError=IOException"))
+        assertTrue(section.contains("deferral=network unavailable"))
+    }
 }

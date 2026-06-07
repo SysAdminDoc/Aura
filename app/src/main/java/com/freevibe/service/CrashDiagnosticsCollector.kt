@@ -36,6 +36,7 @@ class CrashDiagnosticsCollector @Inject constructor(
     @ApplicationContext private val context: Context,
     private val prefs: PreferencesManager,
     private val sourceMetrics: SourceMetrics,
+    private val backgroundWorkDiagnosticsReader: BackgroundWorkDiagnosticsReader,
 ) {
     fun readSummary(): CrashDiagnosticsSummary {
         val logFile = crashLogFile()
@@ -81,6 +82,9 @@ class CrashDiagnosticsCollector @Inject constructor(
                 rotateOnScreenOff = rotateOnScreenOff,
             ),
         )
+        val liveBackgroundWork = runCatching {
+            backgroundWorkDiagnosticsReader.read()
+        }.getOrNull()
 
         return buildString {
             appendLine("# Aura diagnostics bundle")
@@ -106,6 +110,10 @@ class CrashDiagnosticsCollector @Inject constructor(
             appendLine("- Video wallpaper FPS limit: ${if (videoFps > 0) videoFps else "unavailable"}")
             appendLine()
             appendLine(backgroundWork)
+            if (liveBackgroundWork != null) {
+                appendLine()
+                appendLine(CrashDiagnosticsText.formatLiveBackgroundWorkReceipts(liveBackgroundWork))
+            }
             appendLine()
             appendLine("## Last local crash")
             appendLine("- Last crash timestamp: ${summary.lastCrashAt ?: "none recorded"}")
@@ -286,5 +294,32 @@ internal object CrashDiagnosticsText {
         }
         appendLine("- Live WorkManager receipt: pending Settings diagnostics via unique-work status lookup.")
         appendLine("- Live Data Saver receipt: pending Settings diagnostics via restricted-background status.")
+    }.trimEnd()
+
+    fun formatLiveBackgroundWorkReceipts(status: BackgroundWorkDiagnostics): String = buildString {
+        appendLine("## Background work live receipts")
+        appendLine(
+            "- Network: meter=${status.network.activeNetworkMetered?.let { if (it) "metered" else "unmetered" } ?: "unknown"}; " +
+                "Data Saver=${status.network.restrictBackgroundStatus}" +
+                (status.network.readError?.let { "; readError=$it" } ?: ""),
+        )
+        if (status.rows.isEmpty()) {
+            appendLine("- No WorkInfo rows available.")
+        } else {
+            status.rows.forEach { row ->
+                appendLine(
+                    "- ${row.label} (`${row.uniqueWorkName}`): " +
+                        "WorkInfo=${row.workInfoStatus}; " +
+                        "records=${row.workInfoCount}; " +
+                        "maxAttempts=${row.maxRunAttemptCount ?: 0}; " +
+                        "lastResult=${row.lastResult ?: "none"}; " +
+                        "lastSuccess=${row.lastSuccessUtc ?: "none"}; " +
+                        "lastFailure=${row.lastFailureUtc ?: "none"}; " +
+                        "lastError=${row.lastErrorClass ?: "none"}; " +
+                        "deferral=${row.lastDeferralReason ?: "none"}" +
+                        (row.readError?.let { "; readError=$it" } ?: ""),
+                )
+            }
+        }
     }.trimEnd()
 }

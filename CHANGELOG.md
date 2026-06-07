@@ -3,6 +3,9 @@
 All notable changes to Aura will be documented in this file.
 
 ## Unreleased
+- **Background work support bundle live receipts (Cycle 158)**: merged live
+  WorkManager, Data Saver, and persisted worker receipt details into the copied
+  crash/support diagnostics bundle.
 - **Background work persisted receipts (Cycle 157)**: added local worker
   last-run receipt storage for background work success, retry, failure, error
   class, and deferral reason, then surfaced those receipts in Settings

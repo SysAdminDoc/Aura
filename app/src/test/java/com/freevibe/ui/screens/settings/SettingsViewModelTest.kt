@@ -356,6 +356,8 @@ class SettingsViewModelTest {
                 context = context,
                 prefs = prefs,
                 sourceMetrics = com.freevibe.service.SourceMetrics(),
+                backgroundWorkDiagnosticsReader = backgroundWorkDiagnosticsReaderOverride
+                    ?: FakeBackgroundWorkDiagnosticsReader(BackgroundWorkDiagnostics()),
             ),
             backgroundWorkDiagnosticsReader = backgroundWorkDiagnosticsReaderOverride
                 ?: FakeBackgroundWorkDiagnosticsReader(BackgroundWorkDiagnostics()),

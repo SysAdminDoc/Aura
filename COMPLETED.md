@@ -6,6 +6,11 @@ next pass can resume quickly.
 
 ## 2026-06-07
 
+- Completed Cycle 158 background work support bundle live receipts: wired
+  `CrashDiagnosticsCollector` to append live WorkManager state, metered/Data
+  Saver status, and persisted worker receipt details to copied/shared crash
+  diagnostics bundles when local reads succeed. Sharper platform-specific
+  deferral copy remains open.
 - Completed Cycle 157 background work persisted receipts: added
   `BackgroundWorkReceiptStore`, recorded success/retry/failure receipts from
   auto wallpaper, daily wallpaper, weather refresh, Aura Originals download,

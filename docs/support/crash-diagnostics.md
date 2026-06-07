@@ -29,8 +29,10 @@ For live scheduler state, use `Settings` > `Diagnostics` > `Background work`.
 That dialog reads WorkManager unique-work `WorkInfo` state counts plus
 `ConnectivityManager` metered/Data Saver status, and now includes persisted
 last result, success/failure timestamps, error class, and deferral reason from
-worker execution. The next diagnostics slice should decide whether to merge the
-live Settings snapshot into this support bundle.
+worker execution. The copied support bundle includes the same live background
+work receipt snapshot when it can be read locally. The remaining diagnostics
+gap is sharper platform-specific deferral copy for cases such as quota
+downgrade, low battery, missing permissions, and constraint delays.
 
 ## Redaction
 
