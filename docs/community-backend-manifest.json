@@ -27,9 +27,9 @@
       "sha256": "1456338faf77a98f6c4af7d42b8c365297526a2453351096802312f31cec0a32"
     },
     {
-      "bytes": 914,
+      "bytes": 935,
       "path": "package.json",
-      "sha256": "4d7d1fa308e50c6da7162269b069244e303f20348533083acf23a0185d8beb0a"
+      "sha256": "00c0cc302c4e7dfdb85d84b403830015b47fbd47590347c06fd1b52378785030"
     },
     {
       "bytes": 338694,
@@ -97,9 +97,9 @@
       "sha256": "8725200534fc5f4470b49804e0eed08a94eacea26cf34084d6c3ea28eb30e4eb"
     },
     {
-      "bytes": 9501,
+      "bytes": 9529,
       "path": "functions/src/voteHandler.ts",
-      "sha256": "91308d6e78197871fdc6708a9b70da1aa6d73a16f7f48572c8d151ca41f19ab6"
+      "sha256": "5dd7eaeaf03e878340d66c380fee7bf429ea236b2ac68c295a7c40b027535e1c"
     },
     {
       "bytes": 18998,
@@ -146,7 +146,7 @@
     "test:database-rules": "firebase emulators:exec --only database --project aura-rules-test \"node --test test/firebase/database.rules.test.mjs\"",
     "test:firebase-rules": "firebase emulators:exec --only database,storage --project aura-rules-test \"node --test test/firebase/*.rules.test.mjs\"",
     "test:functions": "npm --prefix functions test",
-    "test:functions-emulator": "npm --prefix functions run build && firebase emulators:exec --only database --project aura-rules-test \"node --test test/firebase/functions.*.test.mjs\"",
+    "test:functions-emulator": "npm --prefix functions run build && firebase emulators:exec --only database --project aura-rules-test \"node --test --test-concurrency=1 test/firebase/functions.*.test.mjs\"",
     "test:storage-rules": "firebase emulators:exec --only storage --project aura-rules-test \"node --test test/firebase/storage.rules.test.mjs\""
   },
   "schemaVersion": 1

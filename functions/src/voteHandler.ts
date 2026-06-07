@@ -72,7 +72,7 @@ export function createRecordCommunityVoteCallable(backend = new FirebaseVoteBack
 
 export async function recordCommunityVoteHandler(
   request: CallableRequestLike,
-  backend: VoteBackend,
+  backend: VoteBackend = new FirebaseVoteBackend(),
 ) {
   const uid = requireCallableIdentity(request, VOTE_SURFACE);
   const nowMillis = backend.nowMillis();

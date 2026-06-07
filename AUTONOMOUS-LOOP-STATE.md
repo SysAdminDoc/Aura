@@ -1,8 +1,8 @@
 # Autonomous Loop State
 
 **Assigned project:** `C:\Users\--\repos\Aura`
-**Current pass:** 2026-06-07 Cycle 102 report callable emulator coverage
-**Last commit before pass:** `2e7f199` (`feat(community): add sound upload callable handler`)
+**Current pass:** 2026-06-07 Cycle 103 vote callable emulator coverage
+**Last commit before pass:** `744d1d2` (`test(community): add report callable emulator coverage`)
 
 ## 2026-06-05 Result
 
@@ -1142,11 +1142,34 @@
   coverage, Android callable migration, owner-approved deploy evidence, direct
   RTDB rule tightening, and Firebase Console App Check evidence remain open.
 
+## Cycle 103 Result - 2026-06-07
+
+- Added `test/firebase/functions.vote.test.mjs` for RTDB-emulator-backed
+  `recordCommunityVoteHandler` persistence coverage.
+- Updated `recordCommunityVoteHandler()` so direct handler invocations can
+  default to the real Firebase backend when a fake backend is not provided.
+- Serialized `npm run test:functions-emulator` with
+  `node --test --test-concurrency=1` to prevent shared RTDB emulator cleanup
+  races across callable test files.
+- The emulator test verifies accepted vote tally writes, nested voter markers,
+  legacy voter markers, quota rows, dedupe markers, and repeat-vote
+  idempotency in the RTDB emulator.
+- Refreshed `docs/community-backend-manifest.json`.
+- Updated `docs/research/cycle-103-2026-06-07.md`, `ROADMAP.md`,
+  `COMPLETED.md`, `CHANGELOG.md`, backend runbook, and loop state.
+- Cycle 103 verification: expanded Functions emulator test suite, Functions
+  test suite, backend manifest check, callable contract manifest check,
+  high-severity npm audit, diff hygiene, and attribution/ASCII scans.
+  RTDB-emulator-backed handler persistence coverage for follow, block, sound
+  upload, and wallpaper upload handlers, full callable wire-protocol coverage,
+  Android callable migration, owner-approved deploy evidence, direct RTDB rule
+  tightening, and Firebase Console App Check evidence remain open.
+
 ## Next Cycle
 
-Continue this same assigned project, Aura. Start Cycle 103 from the
+Continue this same assigned project, Aura. Start Cycle 104 from the
 `ROADMAP.md` Continuation State and
-`docs/research/cycle-102-2026-06-07.md`. The account
+`docs/research/cycle-103-2026-06-07.md`. The account
 deletion dry-run planner, read-only Settings identity surface, redacted
 shareable request draft, request-code lookup tool, review receipt gate, offline
 apply simulator, private executor package builder, and guarded REST executor
@@ -1188,12 +1211,14 @@ tests; Cycle 101 added RTDB-emulator-backed `updateCreatorProfile` handler
 persistence coverage for profile, quota, dedupe, and unchanged-profile
 idempotency writes; Cycle 102 added RTDB-emulator-backed
 `submitCommunityReport` handler persistence coverage for report, quota,
-dedupe, and duplicate report writes. Android callable migration, broader
-callable emulator coverage, a live hosted HTTPS web deletion URL, and
-production-project dry-run evidence remain open. Next add RTDB-emulator-backed
-handler persistence coverage for `recordCommunityVote`, `setCreatorFollow`,
-`setCommunityUserBlock`, `finalizeCommunitySoundUpload`, and
-`finalizeCommunityWallpaperUpload`, add
+dedupe, and duplicate report writes; Cycle 103 added RTDB-emulator-backed
+`recordCommunityVote` handler persistence coverage for vote tally, nested
+voter, legacy voter, quota, dedupe, and repeat-vote idempotency writes.
+Android callable migration, broader callable emulator coverage, a live hosted
+HTTPS web deletion URL, and production-project dry-run evidence remain open.
+Next add RTDB-emulator-backed handler persistence coverage for
+`setCreatorFollow`, `setCommunityUserBlock`,
+`finalizeCommunitySoundUpload`, and `finalizeCommunityWallpaperUpload`, add
 full callable wire-protocol coverage when Auth/App Check emulator wiring is
 available, add Android report/vote/follow/block/upload/profile callable
 repository adapters, publish the hosted URL after owner approval, or run a real
