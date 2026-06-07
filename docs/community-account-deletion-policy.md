@@ -56,8 +56,8 @@ community votes, so slash/dot variants resolve to the stored key form.
 
 Settings > Community identity shows the current community auth label and a
 redacted identity suffix. When a Firebase identity already exists, it also shows
-an `AURA-` deletion request code that can be copied into a support or web
-deletion request.
+an `AURA-` deletion request code that can be copied or shared as a redacted
+request draft.
 
 Opening the panel is read-only. It does not call `ensureSignedIn()`, does not
 create a Firebase anonymous account, and does not create the local fallback UUID
@@ -67,6 +67,9 @@ backend deletion request code is available yet.
 The request code is a routing handle for support/admin tooling, not proof of
 ownership by itself. A trusted deletion executor still needs to verify the
 request before applying the dry-run plan.
+
+User and operator handling instructions live in
+[`docs/support/community-account-deletion.md`](support/community-account-deletion.md).
 
 ## Verification
 
@@ -80,6 +83,8 @@ request before applying the dry-run plan.
   surface exists.
 - Add local/Auth deletion and community cache cleanup after the trusted
   executor owns final sequencing.
+- Publish a hosted private support route or web deletion page before Play
+  production submission.
 - Decide whether future callable-backed vote deletion should decrement
   aggregate counts transactionally.
 

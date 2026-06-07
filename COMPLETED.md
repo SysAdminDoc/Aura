@@ -264,6 +264,10 @@ next pass can resume quickly.
   and a deletion request code when a Firebase identity exists; the summary path
   does not create a local fallback UUID or Firebase anonymous account just by
   opening Settings.
+- Completed Cycle 76 community deletion request routing: the identity dialog
+  now shares a redacted deletion request draft through the device share sheet,
+  `docs/support/community-account-deletion.md` defines user/operator handling,
+  and the README links the private request workflow.
 
 ## 2026-06-05
 

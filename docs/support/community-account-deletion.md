@@ -1,0 +1,49 @@
+# Community Account Deletion Requests
+
+Aura community identity is anonymous by default. The app can show a redacted
+identity suffix and request code after a Firebase community identity exists.
+
+## In-App Request Draft
+
+Open:
+
+`Settings` > `Community identity`
+
+If a Firebase identity exists, the dialog shows an `AURA-` deletion request
+code. Use `Copy code` to copy only the routing code, or `Share` to create a
+pre-filled request draft in the device share sheet.
+
+The draft includes:
+
+- Deletion request code.
+- Redacted identity suffix.
+- Auth state label.
+- A deletion request statement.
+
+The draft does not include the full Firebase UID. Support/admin tooling must
+map the request code privately and verify the request before applying any
+deletion plan.
+
+## Current Backend Status
+
+`tools/community_account_deletion_plan.py` can create a dry-run Realtime
+Database null-update plan for user marker paths from an exported RTDB JSON
+file. The plan is review-only until a trusted executor or callable
+orchestrator exists.
+
+The current planner covers vote markers, follows, creator profile rows, block
+rows, reverse indexes, and community share rows. Public uploads, Storage
+objects, owner-upload indexes, Auth deletion, and local app cache cleanup still
+require the trusted orchestrator path.
+
+## Operator Handling
+
+1. Receive the request draft through a private support channel.
+2. Verify the requester and confirm the request code maps to the intended UID.
+3. Run the dry-run planner against a current RTDB export.
+4. Review retained public upload and moderation records against
+   `docs/community-account-deletion-policy.md`.
+5. Apply changes only through the future trusted executor or callable
+   orchestrator.
+
+Do not request or publish a full Firebase UID in a public issue.

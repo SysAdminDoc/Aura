@@ -43,6 +43,7 @@ import androidx.core.content.ContextCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.freevibe.data.repository.CommunityBlockedUser
+import com.freevibe.service.COMMUNITY_DELETION_REQUEST_SUBJECT
 import com.freevibe.service.CommunityIdentitySummary
 import com.freevibe.service.CrashDiagnosticsSummary
 import com.freevibe.service.DailyWallpaperWorker
@@ -51,6 +52,7 @@ import com.freevibe.service.VIDEO_STATS_PREFS_NAME
 import com.freevibe.service.VideoWallpaperSelectionResult
 import com.freevibe.service.WeatherUpdateWorker
 import com.freevibe.service.VideoWallpaperService
+import com.freevibe.service.communityDeletionRequestBody
 import com.freevibe.service.effectiveVideoFpsLimit
 import com.freevibe.service.shouldUseVideoBatterySaver
 import com.freevibe.service.videoBatteryImpactSummary
@@ -543,6 +545,7 @@ fun SettingsScreen(
                     summary = communityIdentitySummary,
                     onRefresh = viewModel::refreshCommunityIdentitySummary,
                     onCopyCode = { code -> copyCommunityDeletionCode(context, code) },
+                    onShareRequest = { summary -> shareCommunityDeletionRequest(context, summary) },
                     onDismiss = { showCommunityIdentity = false },
                 )
             }
@@ -1818,6 +1821,7 @@ private fun CommunityIdentityDialog(
     summary: CommunityIdentitySummary,
     onRefresh: () -> Unit,
     onCopyCode: (String) -> Unit,
+    onShareRequest: (CommunityIdentitySummary) -> Unit,
     onDismiss: () -> Unit,
 ) {
     AlertDialog(
@@ -1862,6 +1866,9 @@ private fun CommunityIdentityDialog(
                 if (summary.deletionRequestCode.isNotBlank()) {
                     TextButton(onClick = { onCopyCode(summary.deletionRequestCode) }) {
                         Text("Copy code")
+                    }
+                    TextButton(onClick = { onShareRequest(summary) }) {
+                        Text("Share")
                     }
                 }
             }
@@ -2547,6 +2554,19 @@ private fun copyCommunityDeletionCode(context: Context, code: String) {
     val clipboard = context.getSystemService(ClipboardManager::class.java)
     clipboard.setPrimaryClip(ClipData.newPlainText("Aura deletion request code", code))
     Toast.makeText(context, "Deletion request code copied", Toast.LENGTH_SHORT).show()
+}
+
+private fun shareCommunityDeletionRequest(context: Context, summary: CommunityIdentitySummary) {
+    val intent = Intent(Intent.ACTION_SEND).apply {
+        type = "text/plain"
+        putExtra(Intent.EXTRA_SUBJECT, COMMUNITY_DELETION_REQUEST_SUBJECT)
+        putExtra(Intent.EXTRA_TEXT, communityDeletionRequestBody(summary))
+    }
+    try {
+        context.startActivity(Intent.createChooser(intent, "Share deletion request"))
+    } catch (_: Exception) {
+        Toast.makeText(context, "No app can share deletion requests", Toast.LENGTH_SHORT).show()
+    }
 }
 
 private fun shareCrashDiagnosticsBundle(context: Context, bundle: String) {
