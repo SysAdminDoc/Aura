@@ -102,9 +102,9 @@
       "sha256": "5dd7eaeaf03e878340d66c380fee7bf429ea236b2ac68c295a7c40b027535e1c"
     },
     {
-      "bytes": 18998,
+      "bytes": 19037,
       "path": "functions/src/wallpaperUploadHandler.ts",
-      "sha256": "c962e233c73f9bbaac9b65a6bd48c1d50e1fa57f2e84c4a50663ab36d55232e5"
+      "sha256": "653cccf82cd6ee76c90c65c52c321eb7ca67190c87ef43b470d4bf19c37b6f0c"
     }
   ],
   "firebaseCli": {

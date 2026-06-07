@@ -1,8 +1,8 @@
 # Autonomous Loop State
 
 **Assigned project:** `C:\Users\--\repos\Aura`
-**Current pass:** 2026-06-07 Cycle 106 sound upload callable emulator coverage
-**Last commit before pass:** `de69377` (`test(community): add block callable emulator coverage`)
+**Current pass:** 2026-06-07 Cycle 107 wallpaper upload callable emulator coverage
+**Last commit before pass:** `2584969` (`test(community): add sound upload emulator coverage`)
 
 ## 2026-06-05 Result
 
@@ -1230,11 +1230,35 @@
   owner-approved deploy evidence, direct RTDB rule tightening, and Firebase
   Console App Check evidence remain open.
 
+## Cycle 107 Result - 2026-06-07
+
+- Added `test/firebase/functions.wallpaper-upload.test.mjs` for
+  RTDB-emulator-backed `finalizeCommunityWallpaperUploadHandler` persistence
+  coverage.
+- Updated `finalizeCommunityWallpaperUploadHandler()` so direct handler
+  invocations can default to the real Firebase backend when a fake backend is
+  not provided.
+- The emulator test verifies accepted public metadata writes, owner-index
+  writes, server-derived uploader UID and timestamp fields, quota rows,
+  storage-path dedupe markers, and same-storage-path idempotency in the RTDB
+  emulator.
+- Refreshed `docs/community-backend-manifest.json`.
+- Updated `docs/research/cycle-107-2026-06-07.md`, `ROADMAP.md`,
+  `COMPLETED.md`, `CHANGELOG.md`, backend runbook, callable quota enforcement
+  doc, and loop state.
+- Cycle 107 verification: expanded Functions emulator test suite, Functions
+  test suite, backend manifest check, callable contract manifest check,
+  high-severity npm audit, diff hygiene, and attribution/ASCII scans. All seven
+  callable handler surfaces now have RTDB-emulator-backed persistence coverage.
+  Full callable wire-protocol coverage, Android callable migration,
+  owner-approved deploy evidence, direct RTDB rule tightening, and Firebase
+  Console App Check evidence remain open.
+
 ## Next Cycle
 
-Continue this same assigned project, Aura. Start Cycle 107 from the
+Continue this same assigned project, Aura. Start Cycle 108 from the
 `ROADMAP.md` Continuation State and
-`docs/research/cycle-106-2026-06-07.md`. The account
+`docs/research/cycle-107-2026-06-07.md`. The account
 deletion dry-run planner, read-only Settings identity surface, redacted
 shareable request draft, request-code lookup tool, review receipt gate, offline
 apply simulator, private executor package builder, and guarded REST executor
@@ -1287,12 +1311,14 @@ reverse-index rows, unblock removals, quota, dedupe, and missing-unblock
 idempotency writes; Cycle 106 added RTDB-emulator-backed
 `finalizeCommunitySoundUpload` handler persistence coverage for public
 metadata, owner index, quota, storage-path dedupe, and duplicate upload
-idempotency writes. Android callable migration, broader callable emulator
+idempotency writes; Cycle 107 added RTDB-emulator-backed
+`finalizeCommunityWallpaperUpload` handler persistence coverage for public
+metadata, owner index, quota, storage-path dedupe, and duplicate upload
+idempotency writes. Android callable migration, full callable wire-protocol
 coverage, a live hosted HTTPS web deletion URL, and production-project dry-run
-evidence remain open. Next add RTDB-emulator-backed handler persistence
-coverage for `finalizeCommunityWallpaperUpload`, add
-full callable wire-protocol coverage when Auth/App Check emulator wiring is
-available, add Android report/vote/follow/block/upload/profile callable
+evidence remain open. Next add full callable wire-protocol coverage when Auth
+and App Check emulator wiring is available, add Android
+report/vote/follow/block/upload/profile callable
 repository adapters, publish the hosted URL after owner approval, or run a real
 production-project Firebase executor dry-run after owner access is confirmed.
 Commit and push completed work when the active project contract allows it.

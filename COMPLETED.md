@@ -441,6 +441,11 @@ next pass can resume quickly.
   invocation for `finalizeCommunitySoundUploadHandler`, and verified public
   metadata, owner index, quota, storage-path dedupe, and duplicate upload
   idempotency through the RTDB emulator.
+- Completed Cycle 107 wallpaper upload callable emulator coverage: added
+  `test/firebase/functions.wallpaper-upload.test.mjs`, default real-backend
+  invocation for `finalizeCommunityWallpaperUploadHandler`, and verified public
+  metadata, owner index, quota, storage-path dedupe, and duplicate upload
+  idempotency through the RTDB emulator.
 
 ## 2026-06-05
 

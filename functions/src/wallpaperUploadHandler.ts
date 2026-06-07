@@ -119,7 +119,7 @@ export function createFinalizeCommunityWallpaperUploadCallable(backend = new Fir
 
 export async function finalizeCommunityWallpaperUploadHandler(
   request: CallableRequestLike,
-  backend: WallpaperUploadBackend,
+  backend: WallpaperUploadBackend = new FirebaseWallpaperUploadBackend(),
 ) {
   const uid = requireCallableIdentity(request, WALLPAPER_UPLOAD_SURFACE);
   const nowMillis = backend.nowMillis();
