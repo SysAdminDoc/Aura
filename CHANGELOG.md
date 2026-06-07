@@ -3,6 +3,7 @@
 All notable changes to Aura will be documented in this file.
 
 ## Unreleased
+- **Generated wallpaper disclosure (Cycle 133)**: added a persisted prompt/privacy disclosure gate before Stability requests plus a Settings review/reset path and privacy runbook.
 - **Provider key clear UX (Cycle 132)**: consolidated provider API-key dialogs around explicit Save, Clear, and Cancel actions, and extended the storage policy guard to fail if the Clear path disappears.
 - **Provider credential APK scan (Cycle 131)**: added a release-stage APK scanner for nonblank provider credential values and wired it after signed APK packaging before release uploads.
 - **Provider credential storage policy (Cycle 130)**: classified provider credentials, documented the app-private DataStore/no-Keystore decision, added a checked storage policy gate, and surfaced Freesound key clearing in Settings.

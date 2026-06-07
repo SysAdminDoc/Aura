@@ -340,6 +340,7 @@ class SettingsViewModelTest {
             every { prefs.pixabayProviderEnabled } returns flowOf(true)
             every { prefs.communityProviderEnabled } returns flowOf(true)
             every { prefs.generatedContentProviderEnabled } returns flowOf(true)
+            every { prefs.generatedContentDisclosureAccepted } returns flowOf(false)
             every { prefs.freesoundApiKey } returns flowOf("")
             every { prefs.schedulerCollectionId } returns flowOf(-1L)
             every { prefs.showSketchyContent } returns flowOf(false)

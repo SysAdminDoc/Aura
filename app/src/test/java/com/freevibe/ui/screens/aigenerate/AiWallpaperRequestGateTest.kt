@@ -14,6 +14,7 @@ class AiWallpaperRequestGateTest {
                 providerEnabled = false,
                 prompt = "",
                 apiKey = "",
+                disclosureAccepted = false,
             ),
         )
     }
@@ -26,6 +27,7 @@ class AiWallpaperRequestGateTest {
                 providerEnabled = true,
                 prompt = "",
                 apiKey = "",
+                disclosureAccepted = false,
             ),
         )
 
@@ -35,17 +37,32 @@ class AiWallpaperRequestGateTest {
                 providerEnabled = true,
                 prompt = "misty canyon",
                 apiKey = "",
+                disclosureAccepted = false,
             ),
         )
     }
 
     @Test
-    fun `enabled generated source accepts populated prompt and key`() {
+    fun `enabled generated source requires disclosure acceptance before request`() {
+        assertEquals(
+            GENERATED_CONTENT_DISCLOSURE_REQUIRED_MESSAGE,
+            generatedWallpaperRequestError(
+                providerEnabled = true,
+                prompt = "misty canyon",
+                apiKey = "sk-test",
+                disclosureAccepted = false,
+            ),
+        )
+    }
+
+    @Test
+    fun `enabled generated source accepts populated prompt key and disclosure`() {
         assertNull(
             generatedWallpaperRequestError(
                 providerEnabled = true,
                 prompt = "misty canyon",
                 apiKey = "sk-test",
+                disclosureAccepted = true,
             ),
         )
     }

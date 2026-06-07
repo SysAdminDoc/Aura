@@ -60,6 +60,7 @@ import com.freevibe.service.videoWallpaperMimeTypes
 import com.freevibe.ui.LiveWallpaperLaunchMode
 import com.freevibe.ui.components.GlassCard
 import com.freevibe.ui.components.HighlightPill
+import com.freevibe.ui.screens.aigenerate.GeneratedWallpaperDisclosureDialog
 import com.freevibe.ui.launchLiveWallpaperPicker
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -173,6 +174,7 @@ fun SettingsScreen(
     val freesoundApiKey by viewModel.freesoundApiKey.collectAsStateWithLifecycle()
     val stabilityAiKey by viewModel.stabilityAiKey.collectAsStateWithLifecycle()
     val generatedContentProviderEnabled by viewModel.generatedContentProviderEnabled.collectAsStateWithLifecycle()
+    val generatedContentDisclosureAccepted by viewModel.generatedContentDisclosureAccepted.collectAsStateWithLifecycle()
     val wallhavenProviderEnabled by viewModel.wallhavenProviderEnabled.collectAsStateWithLifecycle()
     val bingProviderEnabled by viewModel.bingProviderEnabled.collectAsStateWithLifecycle()
     val pexelsProviderEnabled by viewModel.pexelsProviderEnabled.collectAsStateWithLifecycle()
@@ -1339,6 +1341,7 @@ fun SettingsScreen(
                 )
             }
             var showStabilityKey by remember { mutableStateOf(false) }
+            var showGeneratedDisclosure by remember { mutableStateOf(false) }
             LaunchedEffect(generatedContentProviderEnabled) {
                 if (!generatedContentProviderEnabled) showStabilityKey = false
             }
@@ -1353,6 +1356,24 @@ fun SettingsScreen(
                 checked = generatedContentProviderEnabled,
                 onCheckedChange = { viewModel.setGeneratedContentProviderEnabled(it) },
             )
+            SettingsItem(
+                icon = Icons.Default.Info,
+                title = "Generated wallpaper disclosure",
+                subtitle = if (generatedContentDisclosureAccepted) {
+                    "Accepted; review prompt sharing, key use, and local storage"
+                } else {
+                    "Review prompt sharing, provider credits, and local storage"
+                },
+                onClick = { showGeneratedDisclosure = true },
+            )
+            if (showGeneratedDisclosure) {
+                GeneratedWallpaperDisclosureDialog(
+                    accepted = generatedContentDisclosureAccepted,
+                    onAccept = viewModel::acceptGeneratedContentDisclosure,
+                    onReset = viewModel::resetGeneratedContentDisclosure,
+                    onDismiss = { showGeneratedDisclosure = false },
+                )
+            }
             if (generatedContentProviderEnabled) {
                 SettingsItem(
                     icon = Icons.Default.Key,

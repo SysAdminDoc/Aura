@@ -589,6 +589,11 @@ next pass can resume quickly.
   `tools/provider_credential_storage_check.py` plus focused tests to require
   the explicit Clear path, and updated provider storage/privacy/supply-chain
   docs for the clearer user control.
+- Completed Cycle 133 generated wallpaper disclosure gate: added a persisted
+  generated-content disclosure flag, blocked Stability requests until prompt,
+  key, and disclosure acceptance are present, added the in-flow disclosure
+  dialog plus Settings review/reset entry, and documented prompt sharing,
+  provider key/credit use, and local generated-image storage.
 
 ## 2026-06-05
 

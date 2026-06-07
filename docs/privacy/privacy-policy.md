@@ -77,6 +77,10 @@ Pexels, Pixabay, Reddit, YouTube tooling, Open-Meteo, Firebase, and optional
 Stability image generation. Provider usage depends on enabled features,
 provider switches, and user actions.
 
+Generated wallpaper prompts are sent to Stability only after the user reviews
+and accepts the in-app disclosure. The generated wallpaper privacy runbook is
+tracked in [`docs/privacy/ai-generation.md`](ai-generation.md).
+
 ## Contact
 
 Use the project support channel or issue tracker for questions. Do not publish

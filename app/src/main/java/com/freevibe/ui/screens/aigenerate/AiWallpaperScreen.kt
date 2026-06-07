@@ -35,6 +35,7 @@ import androidx.compose.material.icons.filled.Key
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material.icons.filled.Wallpaper
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
@@ -50,6 +51,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -77,6 +79,53 @@ import com.freevibe.ui.components.GlassCard
 import com.freevibe.ui.components.HighlightPill
 import com.freevibe.ui.components.ShimmerBox
 
+@Composable
+fun GeneratedWallpaperDisclosureDialog(
+    accepted: Boolean,
+    onAccept: () -> Unit,
+    onReset: () -> Unit,
+    onDismiss: () -> Unit,
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Generated wallpaper disclosure") },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text(
+                    "Your prompt is sent to Stability to generate an image. The request uses your Stability key and may spend provider credits.",
+                    style = MaterialTheme.typography.bodySmall,
+                )
+                Text(
+                    "Generated images are stored locally in Aura so you can preview, save, apply, or delete them. Do not include private, identifying, or unsafe content in prompts.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = {
+                if (!accepted) onAccept()
+                onDismiss()
+            }) {
+                Text(if (accepted) "Done" else "Accept")
+            }
+        },
+        dismissButton = {
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                if (accepted) {
+                    TextButton(onClick = {
+                        onReset()
+                        onDismiss()
+                    }) {
+                        Text("Reset")
+                    }
+                }
+                TextButton(onClick = onDismiss) { Text("Cancel") }
+            }
+        },
+    )
+}
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AiWallpaperScreen(
@@ -86,6 +135,7 @@ fun AiWallpaperScreen(
     val state by viewModel.state.collectAsStateWithLifecycle()
     val apiKey by viewModel.stabilityAiKey.collectAsStateWithLifecycle()
     val generatedContentProviderEnabled by viewModel.generatedContentProviderEnabled.collectAsStateWithLifecycle()
+    val generatedContentDisclosureAccepted by viewModel.generatedContentDisclosureAccepted.collectAsStateWithLifecycle()
 
     // NX-13: intercept back while a generation is in flight so the user can
     // cancel a request that's burning their Stability AI credit. Without this
@@ -99,12 +149,16 @@ fun AiWallpaperScreen(
     var showApiKeyField by remember { mutableStateOf(false) }
     var apiKeyVisible by remember { mutableStateOf(false) }
     var showTargetMenu by remember { mutableStateOf(false) }
+    var showDisclosureDialog by remember { mutableStateOf(false) }
+    var generateAfterDisclosure by remember { mutableStateOf(false) }
 
     val snackbarHostState = remember { SnackbarHostState() }
 
     LaunchedEffect(apiKey, generatedContentProviderEnabled) {
         if (!generatedContentProviderEnabled) {
             showApiKeyField = false
+            showDisclosureDialog = false
+            generateAfterDisclosure = false
         } else if (apiKey.isBlank()) {
             showApiKeyField = true
         }
@@ -331,7 +385,17 @@ fun AiWallpaperScreen(
             Button(
                 onClick = {
                     if (generatedContentProviderEnabled) {
-                        viewModel.generate(localApiKey.ifBlank { apiKey })
+                        val requestKey = localApiKey.ifBlank { apiKey }
+                        if (
+                            state.prompt.isNotBlank() &&
+                            requestKey.isNotBlank() &&
+                            !generatedContentDisclosureAccepted
+                        ) {
+                            generateAfterDisclosure = true
+                            showDisclosureDialog = true
+                        } else {
+                            viewModel.generate(requestKey)
+                        }
                     }
                 },
                 modifier = Modifier
@@ -365,6 +429,28 @@ fun AiWallpaperScreen(
                     Spacer(Modifier.width(8.dp))
                     Text("Generate Wallpaper")
                 }
+            }
+
+            if (showDisclosureDialog) {
+                GeneratedWallpaperDisclosureDialog(
+                    accepted = generatedContentDisclosureAccepted,
+                    onAccept = {
+                        if (generateAfterDisclosure) {
+                            viewModel.acceptDisclosureAndGenerate(localApiKey.ifBlank { apiKey })
+                        } else {
+                            viewModel.acceptGeneratedContentDisclosure()
+                        }
+                        generateAfterDisclosure = false
+                    },
+                    onReset = {
+                        viewModel.resetGeneratedContentDisclosure()
+                        generateAfterDisclosure = false
+                    },
+                    onDismiss = {
+                        showDisclosureDialog = false
+                        generateAfterDisclosure = false
+                    },
+                )
             }
 
             // ── Generating shimmer placeholder ───────────────────────────

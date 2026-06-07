@@ -25,15 +25,19 @@ import javax.inject.Inject
 
 const val SOURCE_AI_GENERATED = "ai_generated"
 const val GENERATED_CONTENT_DISABLED_MESSAGE = "Generated wallpapers are disabled in Settings."
+const val GENERATED_CONTENT_DISCLOSURE_REQUIRED_MESSAGE =
+    "Review and accept the generated wallpaper disclosure before generating."
 
 fun generatedWallpaperRequestError(
     providerEnabled: Boolean,
     prompt: String,
     apiKey: String,
+    disclosureAccepted: Boolean,
 ): String? = when {
     !providerEnabled -> GENERATED_CONTENT_DISABLED_MESSAGE
     prompt.isBlank() -> "Describe your wallpaper to get started."
     apiKey.isBlank() -> "Enter your Stability AI key to generate images."
+    !disclosureAccepted -> GENERATED_CONTENT_DISCLOSURE_REQUIRED_MESSAGE
     else -> null
 }
 
@@ -71,6 +75,8 @@ class AiWallpaperViewModel @Inject constructor(
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), "")
     val generatedContentProviderEnabled: StateFlow<Boolean> = prefs.generatedContentProviderEnabled
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), true)
+    val generatedContentDisclosureAccepted: StateFlow<Boolean> = prefs.generatedContentDisclosureAccepted
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
 
     fun setPrompt(p: String) {
         _state.update { it.copy(prompt = p.take(500)) }
@@ -84,6 +90,21 @@ class AiWallpaperViewModel @Inject constructor(
         viewModelScope.launch { prefs.setStabilityKey(key) }
     }
 
+    fun acceptGeneratedContentDisclosure() {
+        viewModelScope.launch { prefs.setGeneratedContentDisclosureAccepted(true) }
+    }
+
+    fun resetGeneratedContentDisclosure() {
+        viewModelScope.launch { prefs.setGeneratedContentDisclosureAccepted(false) }
+    }
+
+    fun acceptDisclosureAndGenerate(apiKey: String) {
+        viewModelScope.launch {
+            prefs.setGeneratedContentDisclosureAccepted(true)
+            generate(apiKey, disclosureAcceptedOverride = true)
+        }
+    }
+
     fun clearError() {
         _state.update { it.copy(error = null) }
     }
@@ -92,13 +113,14 @@ class AiWallpaperViewModel @Inject constructor(
         _state.update { it.copy(applySuccess = null) }
     }
 
-    fun generate(apiKey: String) {
+    fun generate(apiKey: String, disclosureAcceptedOverride: Boolean? = null) {
         val current = _state.value
         val providerEnabled = generatedContentProviderEnabled.value
         val requestError = generatedWallpaperRequestError(
             providerEnabled = providerEnabled,
             prompt = current.prompt,
             apiKey = apiKey,
+            disclosureAccepted = disclosureAcceptedOverride ?: generatedContentDisclosureAccepted.value,
         )
         if (requestError != null) {
             if (!providerEnabled) sourceMetrics.recordDisabled(SOURCE_AI_GENERATED)

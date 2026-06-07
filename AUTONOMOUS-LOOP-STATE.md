@@ -1873,11 +1873,30 @@
   release-style local properties fixture, cleartext guard, and endpoint
   inventory scan passed.
 
+## Cycle 133 Result - 2026-06-07
+
+- Added a DataStore-backed generated wallpaper disclosure acceptance flag.
+- Blocked Stability generation requests until the generated-content provider is
+  enabled, prompt text is present, a Stability key is available, and the
+  disclosure is accepted.
+- Added a reusable generated wallpaper disclosure dialog to the generation flow
+  and Settings review/reset path.
+- Documented generated wallpaper prompt sharing, provider key/credit use, local
+  storage, diagnostics redaction expectations, and release checklist in
+  `docs/privacy/ai-generation.md`, and linked it from the privacy policy.
+- Updated roadmap, changelog, completion, research, and loop-state docs.
+- Cycle 133 verification: focused Android request-gate and Settings ViewModel
+  unit tests, backend tool tests, provider credential storage policy, GitHub
+  Actions allowlist, workflow permissions policy, workflow secret policy,
+  GitHub security workflow policy, Dependabot policy, Gradle wrapper policy,
+  provider credential release guard with a blank release-style local properties
+  fixture, cleartext guard, and endpoint inventory scan passed.
+
 ## Next Cycle
 
-Continue this same assigned project, Aura. Start Cycle 133 from the
+Continue this same assigned project, Aura. Start Cycle 134 from the
 `ROADMAP.md` Continuation State and
-`docs/research/cycle-132-2026-06-07.md`. The account
+`docs/research/cycle-133-2026-06-07.md`. The account
 deletion dry-run planner, read-only Settings identity surface, redacted
 shareable request draft, request-code lookup tool, review receipt gate, offline
 apply simulator, private executor package builder, and guarded REST executor
@@ -1975,7 +1994,9 @@ policy gates; Cycle 130 added a checked provider credential storage policy,
 documented the no-Keystore decision for current optional provider keys, and
 added the missing Freesound Settings clear control; Cycle 131 added a
 release-stage provider credential APK scan after signed APK packaging; Cycle
-132 added explicit provider key Clear actions and storage-policy coverage.
+132 added explicit provider key Clear actions and storage-policy coverage;
+Cycle 133 added a persisted generated wallpaper disclosure gate and Settings
+review/reset path before Stability requests.
 Actual live callable invocation evidence, a live hosted HTTPS web deletion URL,
 direct RTDB rule tightening, App Check console evidence, production-project
 dry-run evidence, and owner/admin GitHub repository security-settings evidence
@@ -1987,9 +2008,9 @@ deploy evidence, run a real production-project Firebase executor dry-run after
 owner access is confirmed, collect owner/admin GitHub security settings
 evidence and generate the redacted receipt when access is available, or
 continue with signed release dry-run evidence capture on a suitable runner,
-prompt/privacy disclosure hardening for generated wallpapers, or the next
-checkable backend, deploy, security, support, policy, or rules hardening
-artifact if owner-gated evidence is still unavailable.
+the AI-generated content report/flag path, or the next checkable backend,
+deploy, security, support, policy, or rules hardening artifact if owner-gated
+evidence is still unavailable.
 Commit and push completed work when the active project contract allows it.
 
 ## Previous Cycle Prompt

@@ -50,6 +50,7 @@ class PreferencesManager @Inject constructor(
     val freesoundApiKey: Flow<String> = get(Keys.FREESOUND_KEY, com.freevibe.BuildConfig.FREESOUND_API_KEY)
     val stabilityAiKey: Flow<String> = get(Keys.STABILITY_KEY, com.freevibe.BuildConfig.STABILITY_AI_KEY)
     val generatedContentProviderEnabled: Flow<Boolean> = get(Keys.GENERATED_CONTENT_PROVIDER_ENABLED, true)
+    val generatedContentDisclosureAccepted: Flow<Boolean> = get(Keys.GENERATED_CONTENT_DISCLOSURE_ACCEPTED, false)
     val wallhavenProviderEnabled: Flow<Boolean> = get(Keys.WALLHAVEN_PROVIDER_ENABLED, true)
     val bingProviderEnabled: Flow<Boolean> = get(Keys.BING_PROVIDER_ENABLED, true)
     val pexelsProviderEnabled: Flow<Boolean> = get(Keys.PEXELS_PROVIDER_ENABLED, true)
@@ -69,6 +70,8 @@ class PreferencesManager @Inject constructor(
     suspend fun setStabilityKey(key: String) = set(Keys.STABILITY_KEY, sanitizeApiKey(key))
     suspend fun setGeneratedContentProviderEnabled(enabled: Boolean) =
         set(Keys.GENERATED_CONTENT_PROVIDER_ENABLED, enabled)
+    suspend fun setGeneratedContentDisclosureAccepted(accepted: Boolean) =
+        set(Keys.GENERATED_CONTENT_DISCLOSURE_ACCEPTED, accepted)
     suspend fun setWallhavenProviderEnabled(enabled: Boolean) = set(Keys.WALLHAVEN_PROVIDER_ENABLED, enabled)
     suspend fun setBingProviderEnabled(enabled: Boolean) = set(Keys.BING_PROVIDER_ENABLED, enabled)
     suspend fun setPexelsProviderEnabled(enabled: Boolean) = set(Keys.PEXELS_PROVIDER_ENABLED, enabled)
@@ -244,6 +247,7 @@ class PreferencesManager @Inject constructor(
         val FREESOUND_KEY = stringPreferencesKey("freesound_api_key")
         val STABILITY_KEY = stringPreferencesKey("stability_ai_key")
         val GENERATED_CONTENT_PROVIDER_ENABLED = booleanPreferencesKey("generated_content_provider_enabled")
+        val GENERATED_CONTENT_DISCLOSURE_ACCEPTED = booleanPreferencesKey("generated_content_disclosure_accepted")
         val WALLHAVEN_PROVIDER_ENABLED = booleanPreferencesKey("wallhaven_provider_enabled")
         val BING_PROVIDER_ENABLED = booleanPreferencesKey("bing_provider_enabled")
         val PEXELS_PROVIDER_ENABLED = booleanPreferencesKey("pexels_provider_enabled")

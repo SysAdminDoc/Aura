@@ -148,6 +148,11 @@ class SettingsViewModel @Inject constructor(
         SharingStarted.WhileSubscribed(5000),
         true,
     )
+    val generatedContentDisclosureAccepted = prefs.generatedContentDisclosureAccepted.stateIn(
+        viewModelScope,
+        SharingStarted.WhileSubscribed(5000),
+        false,
+    )
     val wallhavenProviderEnabled = prefs.wallhavenProviderEnabled.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), true)
     val bingProviderEnabled = prefs.bingProviderEnabled.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), true)
     val pexelsProviderEnabled = prefs.pexelsProviderEnabled.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), true)
@@ -434,6 +439,10 @@ class SettingsViewModel @Inject constructor(
     fun setStabilityKey(key: String) = viewModelScope.launch { prefs.setStabilityKey(key) }
     fun setGeneratedContentProviderEnabled(enabled: Boolean) =
         viewModelScope.launch { prefs.setGeneratedContentProviderEnabled(enabled) }
+    fun acceptGeneratedContentDisclosure() =
+        viewModelScope.launch { prefs.setGeneratedContentDisclosureAccepted(true) }
+    fun resetGeneratedContentDisclosure() =
+        viewModelScope.launch { prefs.setGeneratedContentDisclosureAccepted(false) }
     fun setDarkModeSwitch(enabled: Boolean) = viewModelScope.launch { prefs.setDarkModeAutoSwitch(enabled) }
     fun setDarkModeWallpaperId(id: String) = viewModelScope.launch { prefs.setDarkModeWallpaperId(id) }
     fun setLightModeWallpaperId(id: String) = viewModelScope.launch { prefs.setLightModeWallpaperId(id) }
