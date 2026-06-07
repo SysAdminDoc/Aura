@@ -572,6 +572,13 @@ next pass can resume quickly.
   `tools/cleartext_release_check.py` with live and negative tests, wired verify
   and release workflows to run it before Android build work, and updated the
   endpoint/supply-chain docs for the HTTPS-only provider posture.
+- Completed Cycle 130 provider credential storage policy: added
+  `docs/security/provider-credential-storage.json`,
+  `docs/security/provider-credential-storage.md`,
+  `tools/provider_credential_storage_check.py`, focused policy tests, verify
+  and release workflow wiring, privacy/support/supply-chain docs, and the
+  missing Freesound Settings key clear control so provider credential storage
+  classification and backup/transfer exclusions stay checked.
 
 ## 2026-06-05
 

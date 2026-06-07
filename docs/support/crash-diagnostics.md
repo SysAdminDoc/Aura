@@ -29,4 +29,10 @@ The generated bundle redacts:
 The same request redactor is used before in-app source diagnostics store the
 last provider error detail for the current session.
 
+Provider credential storage is classified in
+[`docs/security/provider-credential-storage.md`](../security/provider-credential-storage.md).
+The checked policy keeps user-entered provider keys out of backups, device
+transfer, source diagnostics, and support bundles, but does not claim
+Keystore-backed at-rest protection for the current optional provider keys.
+
 Before opening a GitHub issue, paste the bundle into the `Crash or ANR report` issue template and fill in the reproduction fields.

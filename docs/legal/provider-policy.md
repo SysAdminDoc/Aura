@@ -16,7 +16,7 @@ fail when a `ContentSource` enum value lacks a disclosure row.
 | Freesound | Legacy | Sounds and bundled-source attribution | Creative Commons per sound | Sound page, uploader, license | Preserve attribution for saved and bundled sounds. |
 | Jamendo | Legacy | Music | Provider-defined music licensing | Artist, track, license, source page | Legacy records only. |
 | Audius | Legacy | Music | Provider-defined artist/content terms | Artist and source page | Legacy records only. |
-| ccMixter | Legacy | Creative Commons music | Creative Commons per track | Artist, license, source page | Legacy records only; HTTP fallback needs release approval. |
+| ccMixter | Legacy | Creative Commons music | Creative Commons per track | Artist, license, source page | Legacy records only; HTTPS-only API path, no HTTP fallback in release. |
 | Local device media | Local | User-selected media | User-controlled local content | Do not invent license/uploader data | User controls edit, apply, favorite, and delete. |
 | YouTube | Active | Sounds and video wallpapers | Provider-defined content terms | Watch/source link and creator context | Optional extractor/downloader features; respect legal-mode disablement. |
 | Pexels | Active | Photos and videos | Pexels License | Photographer/source page | Enhancement source; never sole required first-run inventory. |

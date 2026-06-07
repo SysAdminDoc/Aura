@@ -20,6 +20,7 @@ Aura is side-loaded through GitHub Releases and Obtainium, so release artifacts 
 | Gradle dependency verification | `gradle/verification-metadata.xml` | Records SHA-256 checksums for resolved Gradle plugins and app dependencies. |
 | Gradle wrapper policy | `gradle/wrapper/gradle-wrapper.properties`, `tools/gradle_wrapper_check.py`, `.github/workflows/verify.yml` | Pins the Gradle 8.12 wrapper distribution SHA-256, keeps URL validation enabled, and rejects wrapper distribution drift. |
 | Provider credential release guard | `tools/provider_credential_release_check.py`, `.github/workflows/verify.yml`, `.github/workflows/release.yml` | Fails release preflight when optional provider keys from `local.properties` would be bundled into `BuildConfig`; release CI writes blank provider defaults before signed APK builds. |
+| Provider credential storage policy | `docs/security/provider-credential-storage.json`, `docs/security/provider-credential-storage.md`, `tools/provider_credential_storage_check.py`, `.github/workflows/verify.yml`, `.github/workflows/release.yml` | Classifies each provider credential, documents the no-Keystore storage decision, proves DataStore backup/transfer exclusions, and checks Settings clear controls plus diagnostics/privacy disclosures. |
 | Cleartext release guard | `tools/cleartext_release_check.py`, `.github/workflows/verify.yml`, `.github/workflows/release.yml` | Fails release preflight when network security config enables cleartext, the manifest explicitly enables cleartext, or provider-network code reintroduces raw HTTP URLs or OkHttp HTTP scheme builders. |
 | Network endpoint inventory | `docs/security/network-endpoints.json`, `docs/security/network-endpoints.md`, `tools/network_endpoint_inventory_check.py`, `.github/workflows/verify.yml` | Fails verification when app network-code URL hosts drift from the reviewed endpoint/auth/cache/fallback inventory. |
 | Dependency Review | `.github/workflows/dependency-review.yml` | Runs on pull requests and fails high/critical vulnerable dependency additions. |
@@ -51,9 +52,10 @@ For each `v*` release:
 12. Spot-check `docs/legal/ffmpeg-source-correspondence.md` when any FFmpeg payload hash, version, configure evidence, or youtubedl-android FFmpeg coordinate changes.
 13. Confirm the release workflow ran `tools/release_artifact_bundle_check.py` before uploading artifacts.
 14. Confirm the release workflow ran `tools/provider_credential_release_check.py` after writing release `local.properties` and before `:app:assembleRelease`.
-15. Confirm the release workflow ran `tools/cleartext_release_check.py` before `:app:assembleRelease`.
-16. Verify the APK locally with `apksigner verify --verbose --print-certs`.
-17. Compare the local SHA-256 values to `SHA256SUMS.txt`.
+15. Confirm the release workflow ran `tools/provider_credential_storage_check.py` before `:app:assembleRelease`.
+16. Confirm the release workflow ran `tools/cleartext_release_check.py` before `:app:assembleRelease`.
+17. Verify the APK locally with `apksigner verify --verbose --print-certs`.
+18. Compare the local SHA-256 values to `SHA256SUMS.txt`.
 
 ## Release dry runs
 
@@ -78,6 +80,7 @@ python3 tools/github_actions_allowlist_check.py --policy docs/distribution/githu
 python3 tools/github_workflow_permissions_check.py --policy docs/distribution/github-workflow-permissions.json --repo-root .
 python3 tools/github_workflow_secrets_check.py --policy docs/distribution/github-workflow-secrets.json --repo-root .
 python3 tools/github_security_workflow_check.py --policy docs/distribution/github-security-workflows.json --repo-root .
+python3 tools/provider_credential_storage_check.py --policy docs/security/provider-credential-storage.json --repo-root .
 python3 tools/cleartext_release_check.py --repo-root .
 python3 tools/network_endpoint_inventory_check.py --inventory docs/security/network-endpoints.json --repo-root .
 python3 -m unittest discover -s test/tools -p '*_test.py'
@@ -253,6 +256,7 @@ The Gradle wrapper itself is pinned separately in `gradle/wrapper/gradle-wrapper
 ```bash
 python3 tools/gradle_wrapper_check.py --properties gradle/wrapper/gradle-wrapper.properties
 python3 tools/provider_credential_release_check.py --app-gradle app/build.gradle.kts --release-workflow .github/workflows/release.yml --local-properties local.properties
+python3 tools/provider_credential_storage_check.py --policy docs/security/provider-credential-storage.json --repo-root .
 python3 tools/cleartext_release_check.py --repo-root .
 ```
 
@@ -282,6 +286,18 @@ python3 tools/provider_credential_release_check.py --app-gradle app/build.gradle
 ```
 
 For local development, a nonblank ignored `local.properties` provider key fails by default. Use `--allow-nonblank-local-provider-keys` only for an explicitly internal build review; the command still returns a warning status and reports key names without printing values.
+
+## Provider credential storage policy
+
+User-entered Wallhaven, Pexels, Pixabay, Freesound, and Stability values are stored in app-private Jetpack DataStore and the DataStore file is excluded from cloud backup and device transfer. SoundCloud remains a blank-by-default public client ID in `BuildConfig` only. The reviewed decision is not to migrate the current optional provider keys to Android Keystore storage yet; `docs/security/provider-credential-storage.md` records that this is not strong at-rest protection, and Settings lets users clear each stored key by saving a blank value.
+
+PR/main verification and the release workflow run:
+
+```bash
+python3 tools/provider_credential_storage_check.py --policy docs/security/provider-credential-storage.json --repo-root .
+```
+
+The check fails when a credential row is missing from the policy or Markdown, a DataStore-backed key lacks a Settings clear control, the preferences DataStore file is no longer excluded from backup and device transfer, a `BuildConfig` provider default is no longer blank, or the privacy/support diagnostics disclosures drift from the reviewed storage decision.
 
 ## Cleartext release guard
 

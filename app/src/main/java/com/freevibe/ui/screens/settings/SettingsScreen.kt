@@ -118,6 +118,7 @@ fun SettingsScreen(
     val wallhavenApiKey by viewModel.wallhavenApiKey.collectAsStateWithLifecycle()
     val pexelsApiKey by viewModel.pexelsApiKey.collectAsStateWithLifecycle()
     val pixabayApiKey by viewModel.pixabayApiKey.collectAsStateWithLifecycle()
+    val freesoundApiKey by viewModel.freesoundApiKey.collectAsStateWithLifecycle()
     val stabilityAiKey by viewModel.stabilityAiKey.collectAsStateWithLifecycle()
     val generatedContentProviderEnabled by viewModel.generatedContentProviderEnabled.collectAsStateWithLifecycle()
     val wallhavenProviderEnabled by viewModel.wallhavenProviderEnabled.collectAsStateWithLifecycle()
@@ -317,9 +318,10 @@ fun SettingsScreen(
         wallhavenApiKey,
         pexelsApiKey,
         pixabayApiKey,
+        freesoundApiKey,
         stabilityAiKey,
     ) {
-        listOf(wallhavenApiKey, pexelsApiKey, pixabayApiKey, stabilityAiKey).count { it.isNotBlank() }
+        listOf(wallhavenApiKey, pexelsApiKey, pixabayApiKey, freesoundApiKey, stabilityAiKey).count { it.isNotBlank() }
     }
 
     Column(
@@ -1305,6 +1307,41 @@ fun SettingsScreen(
                     },
                     dismissButton = {
                         TextButton(onClick = { showPixabayKey = false }) { Text("Cancel") }
+                    },
+                )
+            }
+            var showFreesoundKey by remember { mutableStateOf(false) }
+            SettingsItem(
+                icon = Icons.Default.MusicNote,
+                title = "Freesound API Key",
+                subtitle = "Optional token for Freesound sound search",
+                onClick = { showFreesoundKey = true },
+            )
+            if (showFreesoundKey) {
+                var keyText by remember { mutableStateOf(freesoundApiKey) }
+                AlertDialog(
+                    onDismissRequest = { showFreesoundKey = false },
+                    title = { Text("Freesound API Key") },
+                    text = {
+                        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                            Text("Paste a Freesound API token for sound search.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            OutlinedTextField(
+                                value = keyText,
+                                onValueChange = { keyText = it },
+                                modifier = Modifier.fillMaxWidth(),
+                                placeholder = { Text("Paste API token here") },
+                                singleLine = true,
+                            )
+                        }
+                    },
+                    confirmButton = {
+                        TextButton(onClick = {
+                            viewModel.setFreesoundKey(keyText.trim())
+                            showFreesoundKey = false
+                        }) { Text("Save") }
+                    },
+                    dismissButton = {
+                        TextButton(onClick = { showFreesoundKey = false }) { Text("Cancel") }
                     },
                 )
             }

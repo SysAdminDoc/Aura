@@ -1,8 +1,8 @@
 # Autonomous Loop State
 
 **Assigned project:** `C:\Users\--\repos\Aura`
-**Current pass:** 2026-06-07 Cycle 129 cleartext release gate
-**Last commit before pass:** `affaac3` (`ci(security): add network endpoint inventory guard`)
+**Current pass:** 2026-06-07 Cycle 130 provider credential storage policy
+**Last commit before pass:** `dd8dcbd` (`ci(security): gate release cleartext traffic`)
 
 ## 2026-06-05 Result
 
@@ -1800,11 +1800,41 @@
   Dependabot policy, Gradle wrapper policy, provider credential release guard
   without local secret inspection, diff hygiene, and attribution scan passed.
 
+## Cycle 130 Result - 2026-06-07
+
+- Added `docs/security/provider-credential-storage.json` as the
+  machine-readable provider credential storage classification policy.
+- Added `docs/security/provider-credential-storage.md` to document the current
+  app-private DataStore storage decision, backup/device-transfer exclusions,
+  no-Keystore disclosure, credential classes, and user clear controls.
+- Added `tools/provider_credential_storage_check.py` and
+  `test/tools/provider_credential_storage_check_test.py` so policy/docs
+  coverage, DataStore preference keys, Settings clear controls, blank
+  `BuildConfig` defaults, backup/device-transfer exclusions, and
+  privacy/diagnostics disclosures stay checked.
+- Added the missing Freesound API-key row to Settings so every DataStore-backed
+  provider key has a visible edit/clear path.
+- Wired `.github/workflows/verify.yml` and `.github/workflows/release.yml` to
+  run the provider credential storage policy before Android build work, and
+  added the release workflow snippet to
+  `docs/distribution/github-security-workflows.json`.
+- Updated privacy, crash diagnostics, supply-chain, provider policy, research,
+  roadmap, changelog, completion, and loop-state docs.
+- Cycle 130 verification: provider storage guard compile, live provider
+  storage scan, focused provider storage tests, focused Settings unit
+  compile/test, backend tool tests, GitHub Actions allowlist, workflow
+  permissions policy, workflow secret policy, GitHub security workflow policy,
+  Dependabot policy, Gradle wrapper policy, provider credential release guard
+  with a blank release-style local properties fixture, cleartext guard,
+  endpoint inventory scan, diff hygiene, and attribution scan passed. The
+  workstation's ignored `local.properties` still contains nonblank local
+  provider keys, so it was not used as public-release evidence.
+
 ## Next Cycle
 
-Continue this same assigned project, Aura. Start Cycle 130 from the
+Continue this same assigned project, Aura. Start Cycle 131 from the
 `ROADMAP.md` Continuation State and
-`docs/research/cycle-129-2026-06-07.md`. The account
+`docs/research/cycle-130-2026-06-07.md`. The account
 deletion dry-run planner, read-only Settings identity surface, redacted
 shareable request draft, request-code lookup tool, review receipt gate, offline
 apply simulator, private executor package builder, and guarded REST executor
@@ -1898,7 +1928,9 @@ dotted provider-property assignment redaction; Cycle 127 added a shared request
 redactor for crash diagnostics and source metrics error details; Cycle 128
 added a checked network endpoint inventory runbook and literal-host scanner;
 Cycle 129 removed the ccMixter HTTP downgrade path and added release cleartext
-policy gates.
+policy gates; Cycle 130 added a checked provider credential storage policy,
+documented the no-Keystore decision for current optional provider keys, and
+added the missing Freesound Settings clear control.
 Actual live callable invocation evidence, a live hosted HTTPS web deletion URL,
 direct RTDB rule tightening, App Check console evidence, production-project
 dry-run evidence, and owner/admin GitHub repository security-settings evidence
@@ -1909,8 +1941,8 @@ hosted URL after owner approval, tighten direct RTDB write rules after callable
 deploy evidence, run a real production-project Firebase executor dry-run after
 owner access is confirmed, collect owner/admin GitHub security settings
 evidence and generate the redacted receipt when access is available, or
-continue with provider credential storage classification, signed APK strings
-scan on a suitable runner, or the next checkable backend, deploy, security,
+continue with signed APK strings scan on a suitable runner, provider key
+rotation/clear UX audit, or the next checkable backend, deploy, security,
 support, policy, or rules hardening artifact if owner-gated evidence is still
 unavailable.
 Commit and push completed work when the active project contract allows it.
