@@ -50,11 +50,13 @@ jobs:
             package.json \
             package-lock.json \
             test/firebase \
-            test/tools/community_storage_orphan_report_test.py \
+            test/tools \
             tools/community_backend_manifest.py \
+            tools/community_upload_backfill_plan.py \
             tools/community_storage_orphan_report.py \
             docs/community-backend-manifest.json \
             docs/community-backend-runbook.md \
+            docs/community-upload-backfill.md \
             docs/community-storage-lifecycle-policy.md \
             docs/firebase-rules-harness.md \
             docs/firebase-admin-claims.md \

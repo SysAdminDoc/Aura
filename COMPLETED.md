@@ -217,6 +217,11 @@ next pass can resume quickly.
   classification, CI execution for backend lifecycle/tool changes, and a policy
   runbook that blocks automatic deletes on committed upload prefixes while
   requiring two matching orphan reports before manual cleanup.
+- Completed Cycle 66 legacy upload backfill planning: added a dry-run RTDB
+  backfill planner for legacy community rows missing canonical `storagePath` and
+  owner indexes, unit coverage for Firebase Storage URL parsing and unsafe-row
+  blocking, CI path coverage for all backend tool tests, and a backfill runbook
+  with candidate requirements, apply gate, and evidence requirements.
 
 ## 2026-06-05
 

@@ -9,7 +9,8 @@ Cycle 60 adds private admin rights-confirmed takedown receipts for new rows with
 deletion handles. Cycle 61 adds an admin delete action that consumes those
 handles, removes the Storage object plus metadata rows, and records retry state.
 Cycle 65 adds the Storage lifecycle/orphan cleanup policy and offline orphan
-report tool. Legacy backfill remains follow-up work.
+report tool. Cycle 66 adds a dry-run legacy backfill plan for rows missing
+`storagePath` and owner indexes.
 
 ## New Metadata
 
@@ -76,8 +77,9 @@ failure text so the case can be retried without losing the handle evidence.
 
 ## Remaining Work
 
-- Add a backfill/admin script for older upload rows that lack `storagePath` and
-  `/owner_uploads` entries.
+- Use [`docs/community-upload-backfill.md`](community-upload-backfill.md) to
+  generate and review dry-run updates for older upload rows that lack
+  `storagePath` and `/owner_uploads` entries.
 - Decide whether votes, report records, and moderation audit rows are deleted,
   retained, or tombstoned when an upload is removed.
 - Run the two-report orphan cleanup gate from

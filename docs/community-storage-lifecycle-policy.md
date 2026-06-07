@@ -87,6 +87,10 @@ Rows listed in `legacyRowsMissingStoragePath` require backfill or manual review.
 Rows listed in `invalidMetadataStoragePaths` require metadata repair before
 owner/admin delete actions can rely on them.
 
+Use [`docs/community-upload-backfill.md`](community-upload-backfill.md) to build
+dry-run update plans for legacy rows that can safely derive a canonical
+`storagePath` from an existing Firebase Storage download URL.
+
 ## Future Temporary Prefix
 
 When upload repositories move to a callable finalization flow, add a non-public
