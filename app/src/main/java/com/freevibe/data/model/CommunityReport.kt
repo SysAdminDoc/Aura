@@ -18,6 +18,11 @@ enum class CommunityReportResolutionStatus(val storageValue: String) {
     RESTORED("RESTORED"),
 }
 
+enum class CommunityTakedownAction(val storageValue: String) {
+    HIDE("HIDE"),
+    DELETE("DELETE"),
+}
+
 data class CommunityReportRecord(
     val id: String,
     val contentId: String,
@@ -127,6 +132,84 @@ fun buildCommunityReportResolutionPayload(
     return mapOf(
         "reportId" to normalizedReportId,
         "status" to status.storageValue,
+        "resolverUid" to resolver,
+        "resolvedAt" to resolvedAt,
+        "note" to normalizeCommunityReportText(note),
+    )
+}
+
+fun communityTakedownUploadKind(
+    contentType: String,
+    contentSource: String,
+): CommunityUploadKind? {
+    if (!contentSource.trim().equals(ContentSource.COMMUNITY.name, ignoreCase = true)) return null
+    return when (contentType.trim().uppercase(Locale.ROOT)) {
+        CommunityUploadKind.SOUND.contentType -> CommunityUploadKind.SOUND
+        CommunityUploadKind.WALLPAPER.contentType -> CommunityUploadKind.WALLPAPER
+        else -> null
+    }
+}
+
+fun communityTakedownUploadIdFromContentId(
+    contentId: String,
+    kind: CommunityUploadKind,
+): String {
+    val candidate = contentId.trim().substringAfterLast("::")
+    val hasCommunityPrefix = candidate.startsWith(CommunityUploadKind.SOUND.publicIdPrefix) ||
+        candidate.startsWith(CommunityUploadKind.WALLPAPER.publicIdPrefix)
+    if (hasCommunityPrefix && !candidate.startsWith(kind.publicIdPrefix)) return ""
+    return sanitizeCommunityUploadKey(candidate)
+}
+
+fun buildCommunityTakedownReceiptPayload(
+    reportId: String,
+    contentId: String,
+    contentType: String,
+    contentSource: String,
+    reason: CommunityReportReason,
+    action: CommunityTakedownAction,
+    status: CommunityReportResolutionStatus,
+    uploadId: String,
+    metadataPath: String,
+    storagePath: String,
+    uploaderUid: String,
+    resolverUid: String,
+    resolvedAt: Long,
+    note: String = "",
+): Map<String, Any> {
+    val normalizedReportId = sanitizeCommunityReportKey(reportId)
+    require(normalizedReportId.isNotBlank()) { "Report ID is required" }
+    val kind = communityTakedownUploadKind(contentType, contentSource)
+        ?: throw IllegalArgumentException("Takedown receipt requires a community upload")
+    require(reason == CommunityReportReason.RIGHTS) { "Takedown receipt requires a rights report" }
+    require(status == CommunityReportResolutionStatus.HIDDEN) { "Takedown receipt requires a hidden report" }
+
+    val normalizedContentId = normalizeCommunityReportText(contentId, MAX_REPORT_CONTENT_ID)
+    require(normalizedContentId.isNotBlank()) { "Receipt content ID is required" }
+    val safeUploadId = sanitizeCommunityUploadKey(uploadId)
+    require(safeUploadId.isNotBlank()) { "Receipt upload ID is required" }
+    val expectedMetadataPath = communityUploadMetadataPath(kind, safeUploadId)
+    require(metadataPath.trim() == expectedMetadataPath) { "Receipt metadata path does not match upload" }
+    val normalizedStoragePath = storagePath.trim()
+    require(normalizedStoragePath.startsWith("${kind.ownerRoot}/")) { "Receipt storage path does not match upload type" }
+    val uploader = uploaderUid.trim()
+    require(uploader.isNotBlank()) { "Receipt uploader UID is required" }
+    val resolver = resolverUid.trim()
+    require(resolver.isNotBlank()) { "Resolver UID is required" }
+    require(resolvedAt > 0L) { "Receipt timestamp is required" }
+
+    return mapOf(
+        "reportId" to normalizedReportId,
+        "contentId" to normalizedContentId,
+        "contentType" to kind.contentType,
+        "contentSource" to ContentSource.COMMUNITY.name,
+        "reason" to reason.storageValue,
+        "action" to action.storageValue,
+        "status" to status.storageValue,
+        "uploadId" to safeUploadId,
+        "metadataPath" to expectedMetadataPath,
+        "storagePath" to normalizedStoragePath,
+        "uploaderUid" to uploader,
         "resolverUid" to resolver,
         "resolvedAt" to resolvedAt,
         "note" to normalizeCommunityReportText(note),

@@ -90,4 +90,87 @@ class CommunityReportTest {
         } catch (_: IllegalArgumentException) {
         }
     }
+
+    @Test
+    fun `buildCommunityTakedownReceiptPayload requires rights community upload handles`() {
+        val payload = buildCommunityTakedownReceiptPayload(
+            reportId = "report-1",
+            contentId = "SOUND::COMMUNITY::cu_sound_1",
+            contentType = "sound",
+            contentSource = "community",
+            reason = CommunityReportReason.RIGHTS,
+            action = CommunityTakedownAction.HIDE,
+            status = CommunityReportResolutionStatus.HIDDEN,
+            uploadId = "cu_sound_1",
+            metadataPath = "/community_sounds/sound_1",
+            storagePath = "sounds/uploader-1/sound.mp3",
+            uploaderUid = "uploader-1",
+            resolverUid = "admin-1",
+            resolvedAt = 456L,
+            note = " Confirmed\nrights issue ",
+        )
+
+        assertEquals("report-1", payload["reportId"])
+        assertEquals("SOUND::COMMUNITY::cu_sound_1", payload["contentId"])
+        assertEquals("SOUND", payload["contentType"])
+        assertEquals("COMMUNITY", payload["contentSource"])
+        assertEquals("RIGHTS", payload["reason"])
+        assertEquals("HIDE", payload["action"])
+        assertEquals("HIDDEN", payload["status"])
+        assertEquals("sound_1", payload["uploadId"])
+        assertEquals("/community_sounds/sound_1", payload["metadataPath"])
+        assertEquals("sounds/uploader-1/sound.mp3", payload["storagePath"])
+        assertEquals("Confirmed rights issue", payload["note"])
+    }
+
+    @Test
+    fun `buildCommunityTakedownReceiptPayload rejects non rights or mismatched handles`() {
+        assertEquals(
+            "",
+            communityTakedownUploadIdFromContentId(
+                contentId = "SOUND::COMMUNITY::cw_wall_1",
+                kind = CommunityUploadKind.SOUND,
+            ),
+        )
+
+        try {
+            buildCommunityTakedownReceiptPayload(
+                reportId = "report-1",
+                contentId = "WALLPAPER::COMMUNITY::cw_wall_1",
+                contentType = "WALLPAPER",
+                contentSource = "COMMUNITY",
+                reason = CommunityReportReason.SPAM,
+                action = CommunityTakedownAction.HIDE,
+                status = CommunityReportResolutionStatus.HIDDEN,
+                uploadId = "cw_wall_1",
+                metadataPath = "/community_wallpapers/wall_1",
+                storagePath = "wallpapers/uploader-1/wall.jpg",
+                uploaderUid = "uploader-1",
+                resolverUid = "admin-1",
+                resolvedAt = 456L,
+            )
+            fail("Expected non-rights receipt to throw")
+        } catch (_: IllegalArgumentException) {
+        }
+
+        try {
+            buildCommunityTakedownReceiptPayload(
+                reportId = "report-1",
+                contentId = "WALLPAPER::COMMUNITY::cw_wall_1",
+                contentType = "WALLPAPER",
+                contentSource = "COMMUNITY",
+                reason = CommunityReportReason.RIGHTS,
+                action = CommunityTakedownAction.HIDE,
+                status = CommunityReportResolutionStatus.HIDDEN,
+                uploadId = "cw_wall_1",
+                metadataPath = "/community_sounds/wall_1",
+                storagePath = "sounds/uploader-1/wall.mp3",
+                uploaderUid = "uploader-1",
+                resolverUid = "admin-1",
+                resolvedAt = 456L,
+            )
+            fail("Expected mismatched handle receipt to throw")
+        } catch (_: IllegalArgumentException) {
+        }
+    }
 }

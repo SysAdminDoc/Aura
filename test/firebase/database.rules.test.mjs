@@ -128,6 +128,26 @@ function reportPayload(reporterUid, overrides = {}) {
   };
 }
 
+function takedownReceiptPayload(overrides = {}) {
+  return {
+    reportId: 'report1',
+    contentId: 'SOUND::COMMUNITY::cu_sound1',
+    contentType: 'SOUND',
+    contentSource: 'COMMUNITY',
+    reason: 'RIGHTS',
+    action: 'HIDE',
+    status: 'HIDDEN',
+    uploadId: 'sound1',
+    metadataPath: '/community_sounds/sound1',
+    storagePath: 'sounds/sound-owner/sound1.mp3',
+    uploaderUid: 'sound-owner',
+    resolverUid: 'rules-admin',
+    resolvedAt: nowMs(),
+    note: 'Confirmed rights issue',
+    ...overrides,
+  };
+}
+
 function quotaPayload(overrides = {}) {
   const time = nowMs();
   return {
@@ -268,6 +288,44 @@ test('admin-only report resolution receipts reject regular clients', async () =>
   await assertSucceeds(admin.ref(resolutionPath).set(resolution));
   await assertFails(reporter.ref(resolutionPath).once('value'));
   await assertSucceeds(admin.ref(resolutionPath).once('value'));
+});
+
+test('admin-only takedown receipts must match current upload deletion handles', async () => {
+  const admin = adminDb();
+  const reporter = dbFor('reporter1');
+  const receiptPath = 'community_takedown_receipts/report1';
+  const receipt = takedownReceiptPayload();
+
+  await seed('community_sounds/sound1', soundMetadata('sound-owner', {
+    storagePath: 'sounds/sound-owner/sound1.mp3',
+  }));
+  await assertFails(reporter.ref(receiptPath).set(receipt));
+  await assertFails(admin.ref(receiptPath).set({ ...receipt, reason: 'SPAM' }));
+  await assertFails(admin.ref(receiptPath).set({ ...receipt, status: 'DISMISSED' }));
+  await assertFails(admin.ref(receiptPath).set({
+    ...receipt,
+    storagePath: 'sounds/sound-owner/stale.mp3',
+  }));
+  await assertFails(admin.ref(receiptPath).set({
+    ...receipt,
+    metadataPath: '/community_wallpapers/sound1',
+  }));
+  await assertSucceeds(admin.ref(receiptPath).set(receipt));
+  await assertFails(reporter.ref(receiptPath).once('value'));
+  await assertSucceeds(admin.ref(receiptPath).once('value'));
+
+  await seed('community_wallpapers/wall1', wallpaperMetadata('wall-owner', {
+    storagePath: 'wallpapers/wall-owner/wall1.jpg',
+  }));
+  await assertSucceeds(admin.ref('community_takedown_receipts/report2').set(takedownReceiptPayload({
+    reportId: 'report2',
+    contentId: 'WALLPAPER::COMMUNITY::cw_wall1',
+    contentType: 'WALLPAPER',
+    uploadId: 'wall1',
+    metadataPath: '/community_wallpapers/wall1',
+    storagePath: 'wallpapers/wall-owner/wall1.jpg',
+    uploaderUid: 'wall-owner',
+  })));
 });
 
 test('community quota and dedupe ledgers are admin-only', async () => {

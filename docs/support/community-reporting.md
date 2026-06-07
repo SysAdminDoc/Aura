@@ -22,6 +22,10 @@ source URL, license, uploader label, reporter UID, timestamp, and status.
 
 - `/community_reports/{reportId}` stores the private report intake record.
 - `/community_report_resolutions/{reportId}` stores admin resolution metadata.
+- `/community_takedown_receipts/{reportId}` stores private rights-confirmed
+  admin takedown receipts for community uploads when the resolver can prove the
+  current upload metadata row still has a matching `storagePath` deletion
+  handle and uploader UID.
 - `/moderation/{contentId}` remains the public feed hide list used by current
   moderation filters.
 - `/community_write_quotas/{uid}/{yyyyMMdd}/reports` and
@@ -47,6 +51,11 @@ Reporter UIDs are not public catalog data.
   removing the moderation entry.
 - Resolution writes mark reports hidden, dismissed, or restored with resolver
   UID, timestamp, and note metadata.
+- When an admin hides a `RIGHTS` report for a community sound or wallpaper, the
+  resolver also writes a private takedown receipt that records report ID,
+  content ID, upload ID, metadata path, Storage path, uploader UID, resolver
+  UID, timestamp, and note metadata. Receipts fail closed for non-rights
+  reports, mirrored/provider content, or upload rows missing deletion handles.
 - Report quota policy is defined in
   [`docs/community-quota-rate-limits.md`](../community-quota-rate-limits.md):
   10 reports per UID per day, 2-minute cooldown, and content-key/reason dedupe
@@ -58,10 +67,12 @@ Reporter UIDs are not public catalog data.
   Firebase console enforcement and callable backend quota enforcement still need
   the backend rollout pass before public production reliance.
 - Owner-delete storage handles are tracked in
-  [`docs/community-upload-deletion.md`](../community-upload-deletion.md), but
-  admin rights-confirmed takedown and public takedown request copy remain open.
+  [`docs/community-upload-deletion.md`](../community-upload-deletion.md), and
+  Cycle 60 adds private admin rights-confirmed takedown receipts for new rows
+  with deletion handles. Public takedown request copy remains open.
 - Cycle 58 adds Realtime Database emulator coverage for authenticated report
   creation, reporter UID validation, admin-only reads, admin status updates, and
-  admin-only resolution receipts.
+  admin-only resolution receipts. Cycle 60 extends that coverage to
+  rights-confirmed takedown receipt authorization and storage-handle matching.
 - Add report tabs or filters for closed reports if admins need historical
   review beyond the current open queue.

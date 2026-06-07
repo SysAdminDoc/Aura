@@ -122,6 +122,27 @@
         "note": { ".validate": "newData.isString() && newData.val().length <= 500" }
       }
     },
+    "community_takedown_receipts": {
+      ".read": "auth != null && auth.token.admin === true",
+      "$reportId": {
+        ".write": "auth != null && auth.token.admin === true",
+        ".validate": "newData.hasChildren(['reportId', 'contentId', 'contentType', 'contentSource', 'reason', 'action', 'status', 'uploadId', 'metadataPath', 'storagePath', 'uploaderUid', 'resolverUid', 'resolvedAt', 'note']) && newData.child('contentSource').val() === 'COMMUNITY' && newData.child('reason').val() === 'RIGHTS' && newData.child('status').val() === 'HIDDEN' && ((newData.child('contentType').val() === 'SOUND' && newData.child('metadataPath').val() === '/community_sounds/' + newData.child('uploadId').val() && newData.child('storagePath').val().beginsWith('sounds/') && root.child('community_sounds').child(newData.child('uploadId').val()).child('storagePath').val() === newData.child('storagePath').val() && root.child('community_sounds').child(newData.child('uploadId').val()).child('uploaderUid').val() === newData.child('uploaderUid').val()) || (newData.child('contentType').val() === 'WALLPAPER' && newData.child('metadataPath').val() === '/community_wallpapers/' + newData.child('uploadId').val() && newData.child('storagePath').val().beginsWith('wallpapers/') && root.child('community_wallpapers').child(newData.child('uploadId').val()).child('storagePath').val() === newData.child('storagePath').val() && root.child('community_wallpapers').child(newData.child('uploadId').val()).child('uploaderUid').val() === newData.child('uploaderUid').val()))",
+        "reportId": { ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 240" },
+        "contentId": { ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 240" },
+        "contentType": { ".validate": "newData.val() === 'SOUND' || newData.val() === 'WALLPAPER'" },
+        "contentSource": { ".validate": "newData.val() === 'COMMUNITY'" },
+        "reason": { ".validate": "newData.val() === 'RIGHTS'" },
+        "action": { ".validate": "newData.val() === 'HIDE' || newData.val() === 'DELETE'" },
+        "status": { ".validate": "newData.val() === 'HIDDEN'" },
+        "uploadId": { ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 240" },
+        "metadataPath": { ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 280" },
+        "storagePath": { ".validate": "newData.isString() && newData.val().length > 7 && newData.val().length <= 512" },
+        "uploaderUid": { ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 240" },
+        "resolverUid": { ".validate": "newData.isString() && newData.val() === auth.uid" },
+        "resolvedAt": { ".validate": "newData.isNumber() && newData.val() > 0" },
+        "note": { ".validate": "newData.isString() && newData.val().length <= 500" }
+      }
+    },
     "community_write_quotas": {
       ".read": "auth != null && auth.token.admin === true",
       "$uid": {

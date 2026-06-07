@@ -5,7 +5,9 @@ URLs. Cycle 56 adds owner-visible delete actions for new sound and wallpaper
 uploads that have those handles. Cycle 57 adds tracked Storage rules and
 emulator coverage for owner-only blob writes/deletes. Cycle 58 adds RTDB
 emulator coverage for public metadata and owner-index delete authorization.
-Legacy backfill, lifecycle cleanup, and admin takedown UX remain follow-up work.
+Cycle 60 adds private admin rights-confirmed takedown receipts for new rows with
+deletion handles. Legacy backfill, lifecycle cleanup, and full admin delete UX
+remain follow-up work.
 
 ## New Metadata
 
@@ -53,12 +55,25 @@ Both actions require confirmation before calling the repository delete method.
 Rows without Cycle 55 deletion handles, rows owned by another UID, and rows that
 cannot be read all fail closed and do not show the delete action.
 
+## Admin Takedown Receipts
+
+When an admin hides a `RIGHTS` report for a community sound or wallpaper, the
+report resolver reads the current public upload metadata row and writes
+`/community_takedown_receipts/{reportId}` only when it can record a matching
+`metadataPath`, `storagePath`, and uploader UID. Realtime Database rules require
+that receipt storage handles still match the current upload metadata row, and
+only custom-claim admins can read or write receipts.
+
+The current admin action hides content through the existing moderation list and
+records the receipt. It does not yet delete the Storage object or public
+metadata as part of the admin queue action.
+
 ## Remaining Work
 
-- Add admin rights-confirmed takedown actions that write a private resolution
-  reason before deleting or hiding public content.
 - Add a backfill/admin script for older upload rows that lack `storagePath` and
   `/owner_uploads` entries.
+- Add an admin delete action that consumes the receipt/deletion handle and
+  records retry state if blob or metadata removal fails.
 - Decide whether votes, report records, and moderation audit rows are deleted,
   retained, or tombstoned when an upload is removed.
 

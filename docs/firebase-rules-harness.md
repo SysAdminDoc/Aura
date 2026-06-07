@@ -64,8 +64,11 @@ covers:
 - private `/owner_uploads/{uid}` indexes readable and writable only by the owner
   or admins;
 - authenticated report creation with reporter UID validation;
-- admin-only report reads, report resolutions, quota ledgers, and dedupe
-  ledgers;
+- admin-only report reads, report resolutions, takedown receipts, quota
+  ledgers, and dedupe ledgers;
+- takedown receipt validation that requires the current community upload
+  metadata row to contain the same `storagePath` and uploader UID recorded in
+  the receipt;
 - app-matched `shared_collections/{token}` public reads, authenticated creator
   writes, owner/admin cleanup, and bounded payloads; and
 - denial for the old unused `collection_shares` path.
@@ -101,6 +104,5 @@ risk until the upstream CLI dependency graph publishes a non-downgrade fix.
 
 ## Remaining Work
 
-- Add admin takedown receipt tests once that flow is implemented.
 - Define Cloud Storage lifecycle/orphan cleanup policy for abandoned upload
   objects.

@@ -2,15 +2,22 @@ package com.freevibe.data.repository
 
 import com.freevibe.data.model.CommunityReportInput
 import com.freevibe.data.model.CommunityReportRecord
+import com.freevibe.data.model.CommunityReportReason
 import com.freevibe.data.model.CommunityReportResolutionStatus
+import com.freevibe.data.model.CommunityTakedownAction
 import com.freevibe.data.model.buildCommunityReportPayload
 import com.freevibe.data.model.buildCommunityReportResolutionPayload
+import com.freevibe.data.model.buildCommunityTakedownReceiptPayload
 import com.freevibe.data.model.communityReportReasonFromStorage
 import com.freevibe.data.model.communityReportStatusFromStorage
+import com.freevibe.data.model.communityTakedownUploadIdFromContentId
+import com.freevibe.data.model.communityTakedownUploadKind
+import com.freevibe.data.model.communityUploadMetadataPath
 import com.freevibe.data.model.sanitizeCommunityReportKey
 import com.freevibe.service.CommunityIdentityProvider
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
+import com.google.firebase.database.DatabaseReference
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ValueEventListener
 import kotlinx.coroutines.CancellationException
@@ -87,6 +94,7 @@ class CommunityReportRepository @Inject constructor(
         val reportKey = sanitizeCommunityReportKey(reportId)
         val resolverUid = identityProvider.ensureSignedIn()
         val resolvedAt = System.currentTimeMillis()
+        val reportSnapshot = db.child("community_reports").child(reportKey).get().await()
         val resolution = buildCommunityReportResolutionPayload(
             reportId = reportKey,
             status = status,
@@ -94,19 +102,74 @@ class CommunityReportRepository @Inject constructor(
             resolvedAt = resolvedAt,
             note = note,
         )
-        db.updateChildren(
-            mapOf(
-                "/community_reports/$reportKey/status" to status.storageValue,
-                "/community_reports/$reportKey/resolverUid" to resolverUid,
-                "/community_reports/$reportKey/resolvedAt" to resolvedAt,
-                "/community_report_resolutions/$reportKey" to resolution,
-            ),
-        ).await()
+        val updates = mutableMapOf<String, Any>(
+            "/community_reports/$reportKey/status" to status.storageValue,
+            "/community_reports/$reportKey/resolverUid" to resolverUid,
+            "/community_reports/$reportKey/resolvedAt" to resolvedAt,
+            "/community_report_resolutions/$reportKey" to resolution,
+        )
+        buildTakedownReceiptOrNull(
+            db = db,
+            reportKey = reportKey,
+            reportSnapshot = reportSnapshot,
+            status = status,
+            resolverUid = resolverUid,
+            resolvedAt = resolvedAt,
+            note = note,
+        )?.let { receipt ->
+            updates["/community_takedown_receipts/$reportKey"] = receipt
+        }
+        db.updateChildren(updates).await()
         Result.success(Unit)
     } catch (e: Exception) {
         e.rethrowIfCancelled()
         Result.failure(e)
     }
+}
+
+private suspend fun buildTakedownReceiptOrNull(
+    db: DatabaseReference,
+    reportKey: String,
+    reportSnapshot: DataSnapshot,
+    status: CommunityReportResolutionStatus,
+    resolverUid: String,
+    resolvedAt: Long,
+    note: String,
+): Map<String, Any>? {
+    if (status != CommunityReportResolutionStatus.HIDDEN || !reportSnapshot.exists()) return null
+    val reason = communityReportReasonFromStorage(reportSnapshot.child("reason").getValue(String::class.java))
+    if (reason != CommunityReportReason.RIGHTS) return null
+    val contentType = reportSnapshot.child("contentType").getValue(String::class.java).orEmpty()
+    val contentSource = reportSnapshot.child("contentSource").getValue(String::class.java).orEmpty()
+    val kind = communityTakedownUploadKind(contentType, contentSource) ?: return null
+    val contentId = reportSnapshot.child("contentId").getValue(String::class.java).orEmpty()
+    val uploadId = communityTakedownUploadIdFromContentId(contentId, kind)
+    if (uploadId.isBlank()) return null
+
+    val metadataSnapshot = db.child(kind.metadataRoot).child(uploadId).get().await()
+    if (!metadataSnapshot.exists()) return null
+    val storagePath = metadataSnapshot.child("storagePath").getValue(String::class.java).orEmpty()
+    val uploaderUid = metadataSnapshot.child("uploaderUid").getValue(String::class.java)
+        ?: metadataSnapshot.child("uploaderId").getValue(String::class.java)
+        ?: ""
+    if (storagePath.isBlank() || uploaderUid.isBlank()) return null
+
+    return buildCommunityTakedownReceiptPayload(
+        reportId = reportKey,
+        contentId = contentId,
+        contentType = contentType,
+        contentSource = contentSource,
+        reason = reason,
+        action = CommunityTakedownAction.HIDE,
+        status = status,
+        uploadId = uploadId,
+        metadataPath = communityUploadMetadataPath(kind, uploadId),
+        storagePath = storagePath,
+        uploaderUid = uploaderUid,
+        resolverUid = resolverUid,
+        resolvedAt = resolvedAt,
+        note = note,
+    )
 }
 
 private fun snapshotToCommunityReport(child: DataSnapshot): CommunityReportRecord? {

@@ -186,6 +186,12 @@ next pass can resume quickly.
   `firebase-rules` job to `.github/workflows/verify.yml` that installs Java 17,
   Node 20, pinned npm dependencies, and runs `npm run test:firebase-rules` when
   Firebase rules, config, tests, runbooks, or the workflow change.
+- Completed Cycle 60 rights takedown receipts: hiding a `RIGHTS` report for a
+  community sound or wallpaper now writes a private admin receipt with the
+  upload metadata path, Storage deletion handle, uploader UID, resolver UID,
+  timestamp, and note when the current upload row proves the deletion handle;
+  RTDB rules and emulator tests reject non-admin, non-rights, stale-handle, and
+  mismatched-path receipt writes.
 
 ## 2026-06-05
 
