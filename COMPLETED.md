@@ -552,6 +552,11 @@ next pass can resume quickly.
   workflow wiring, and release docs so optional provider keys from
   `local.properties` cannot be bundled into public release `BuildConfig`
   defaults without an explicit internal-build override warning.
+- Completed Cycle 126 diagnostics redaction fixture suite: extended
+  `CrashDiagnosticsText.sanitize()` for dotted provider-property assignment
+  names, added provider-specific crash-log sentinel fixtures for query/header
+  credentials, `local.properties`, file URIs, and app-private paths, and updated
+  support/issue-template copy.
 
 ## 2026-06-05
 

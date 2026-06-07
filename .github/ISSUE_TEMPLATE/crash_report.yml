@@ -11,7 +11,7 @@ body:
     id: diagnostics-bundle
     attributes:
       label: Sanitized diagnostics bundle
-      description: Paste the full bundle generated in Settings. It includes reproduction fields you can fill in before submitting.
+      description: Paste the full bundle generated in Settings. It redacts provider query/header keys, local provider-property assignments, app-private paths, and file URIs.
       placeholder: |
         # Aura diagnostics bundle
         Generated: ...

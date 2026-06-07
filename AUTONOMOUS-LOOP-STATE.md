@@ -1708,11 +1708,29 @@
   strings scan remains open because repeated release builds are memory-heavy on
   this Windows workstation.
 
+## Cycle 126 Result - 2026-06-07
+
+- Extended `CrashDiagnosticsText.sanitize()` so dotted provider credential
+  assignment names, including local provider properties ending in `key` or
+  `client.id`, redact values while keeping key names visible.
+- Added provider-specific `CrashDiagnosticsTextTest` fixtures covering
+  Wallhaven `apikey`, Pixabay `key`, Freesound `token`, SoundCloud
+  `client_id`, Pexels `Authorization: Bearer`, Settings `apiKey`,
+  `stability.ai.key`, `local.properties`, `file://`, and app-private paths.
+- Updated `docs/support/crash-diagnostics.md`,
+  `.github/ISSUE_TEMPLATE/crash_report.yml`,
+  `docs/research/cycle-126-2026-06-07.md`, `ROADMAP.md`, `COMPLETED.md`,
+  `CHANGELOG.md`, and loop state.
+- Cycle 126 verification:
+  `.\gradlew.bat --no-daemon --max-workers=2 ":app:testDebugUnitTest" --tests "com.freevibe.service.CrashDiagnosticsTextTest" --stacktrace`
+  passed after the expanded fixture caught and the implementation fixed the
+  missing dotted provider-property redaction.
+
 ## Next Cycle
 
-Continue this same assigned project, Aura. Start Cycle 126 from the
+Continue this same assigned project, Aura. Start Cycle 127 from the
 `ROADMAP.md` Continuation State and
-`docs/research/cycle-125-2026-06-07.md`. The account
+`docs/research/cycle-126-2026-06-07.md`. The account
 deletion dry-run planner, read-only Settings identity surface, redacted
 shareable request draft, request-code lookup tool, review receipt gate, offline
 apply simulator, private executor package builder, and guarded REST executor
@@ -1800,7 +1818,9 @@ Cycle 121 added a repository-wide GitHub Actions allowlist guard; Cycle 122
 added a repository-wide GitHub workflow permissions guard; Cycle 123 added a
 repository-wide GitHub workflow secret guard; Cycle 124 wired backend/tool
 unit tests into the always-on verify job before Android setup; Cycle 125 added
-a provider credential release guard for `BuildConfig` and `local.properties`.
+a provider credential release guard for `BuildConfig` and `local.properties`;
+Cycle 126 added provider-specific crash diagnostics redaction fixtures and
+dotted provider-property assignment redaction.
 Actual live callable invocation evidence, a live hosted HTTPS web deletion URL,
 direct RTDB rule tightening, App Check console evidence, production-project
 dry-run evidence, and owner/admin GitHub repository security-settings evidence

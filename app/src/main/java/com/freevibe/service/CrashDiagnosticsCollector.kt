@@ -146,7 +146,7 @@ internal object CrashDiagnosticsText {
     private val authorizationHeaderRegex = Regex("""(?i)\bauthorization\s*[:=]\s*Bearer\s+[A-Za-z0-9._~+/=-]+""")
     private val bearerRegex = Regex("""(?i)\bBearer\s+[A-Za-z0-9._~+/=-]+""")
     private val assignmentSecretRegex = Regex(
-        """(?i)\b(api[_-]?key|apikey|access[_-]?token|token|password|secret|client[_-]?id|authorization)\b\s*[:=]\s*["']?[^"',\s)&]+""",
+        """(?i)\b((?:[a-z0-9]+[._-])*(?:api[._-]?key|apikey|access[._-]?token|token|password|secret|client[._-]?id|authorization|key))\b\s*[:=]\s*["']?[^"',\s)&]+""",
     )
     private val querySecretRegex = Regex(
         """(?i)([?&](?:api[_-]?key|apikey|key|access[_-]?token|token|client[_-]?id|password|secret)=)[^&\s]+""",

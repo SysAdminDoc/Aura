@@ -20,7 +20,9 @@ The bundle is local until the user taps `Copy` or `Share`. Aura does not upload 
 The generated bundle redacts:
 
 - Bearer tokens and authorization headers.
-- API keys, tokens, passwords, secrets, and client IDs in assignment or query-string form.
+- Provider query-string values named `apikey`, `key`, `token`, and `client_id`.
+- API keys, tokens, passwords, secrets, client IDs, and dotted provider
+  property names in assignment form, including `local.properties` entries.
 - App-private Android paths under `com.freevibe`.
 - `file://` paths.
 
