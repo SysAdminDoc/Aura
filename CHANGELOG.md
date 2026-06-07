@@ -3,6 +3,10 @@
 All notable changes to Aura will be documented in this file.
 
 ## Unreleased
+- **Background work diagnostics bundle section (Cycle 155)**: added a local
+  crash/support bundle background-work section covering current unique work
+  names, inferred enabled state, network posture, constraints, and explicit
+  pending markers for live WorkInfo and Data Saver receipts.
 - **Background work network posture gate (Cycle 154)**: added a checked worker network posture packet for connected versus unmetered WorkManager constraints, Data Saver diagnostic gaps, metered-network behavior, privacy surfaces, release risk, workflow wiring, and source-backed tests.
 - **Background work scheduling ledger (Cycle 153)**: added a checked WorkManager scheduling packet for periodic auto wallpaper, daily wallpaper, weather refresh, Aura Originals download, and rotation trigger one-shots, including unique work names, enqueue policies, constraints, deferral reasons, workflow wiring, and source-backed tests.
 - **Rotation trigger foreground-service policy gate (Cycle 152)**: added a checked `specialUse` foreground-service policy packet for `RotationTriggerService`, Play Console declaration text, owner demo-video evidence, workflow wiring, and source safeguards.

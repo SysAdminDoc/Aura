@@ -120,4 +120,37 @@ class CrashDiagnosticsTextTest {
         assertTrue(tail.contains("line-100"))
         assertFalse(tail.contains("line-1\n"))
     }
+
+    @Test
+    fun formatBackgroundWorkSectionIncludesWorkNamesAndPendingReceipts() {
+        val section = CrashDiagnosticsText.formatBackgroundWorkSection(
+            rows = listOf(
+                BackgroundWorkDiagnosticsRow(
+                    label = "Auto wallpaper rotation",
+                    uniqueWorkName = "auto_wallpaper",
+                    enabledState = "enabled",
+                    networkPosture = "unmetered network",
+                    constraints = listOf("NetworkType.UNMETERED", "battery not low", "charging"),
+                ),
+                BackgroundWorkDiagnosticsRow(
+                    label = "Rotation trigger one-shot",
+                    uniqueWorkName = "rotation_trigger_oneshot",
+                    enabledState = "unlock enabled",
+                    networkPosture = "connected network",
+                    constraints = listOf("NetworkType.CONNECTED", "battery not low"),
+                ),
+            ),
+        )
+
+        assertTrue(section.startsWith("## Background work"))
+        assertTrue(section.contains("auto_wallpaper"))
+        assertTrue(section.contains("rotation_trigger_oneshot"))
+        assertTrue(section.contains("state=enabled"))
+        assertTrue(section.contains("network=unmetered network"))
+        assertTrue(section.contains("constraints=NetworkType.UNMETERED, battery not low, charging"))
+        assertTrue(section.contains("WorkInfo=pending Settings WorkInfo receipt"))
+        assertTrue(section.contains("Data Saver=pending ConnectivityManager Data Saver receipt"))
+        assertTrue(section.contains("Live WorkManager receipt: pending Settings diagnostics"))
+        assertTrue(section.contains("Live Data Saver receipt: pending Settings diagnostics"))
+    }
 }

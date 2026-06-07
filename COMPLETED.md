@@ -6,6 +6,13 @@ next pass can resume quickly.
 
 ## 2026-06-07
 
+- Completed Cycle 155 background work diagnostics bundle section: extended the
+  local crash/support bundle with a background-work section for
+  `auto_wallpaper`, `daily_wallpaper`, `weather_update`,
+  `aura_originals_download`, and `rotation_trigger_oneshot`, including inferred
+  enabled state, network posture, constraints, and explicit pending markers for
+  live WorkInfo and Data Saver receipts. Direct Settings diagnostics, last
+  success/failure receipts, and Data Saver API receipts remain open.
 - Completed Cycle 154 background work network posture gate: added
   `docs/background-work-network-posture.md`,
   `docs/background-work-network-posture.json`, and

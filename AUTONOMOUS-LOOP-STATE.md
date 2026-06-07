@@ -1,8 +1,8 @@
 # Autonomous Loop State
 
 **Assigned project:** `C:\Users\--\repos\Aura`
-**Current pass:** 2026-06-07 Cycle 154 background work network posture gate
-**Last commit before pass:** `56abf65` (`ci(background): gate scheduling ledger`)
+**Current pass:** 2026-06-07 Cycle 155 background work diagnostics bundle section
+**Last commit before pass:** `e808413` (`ci(background): gate network posture`)
 
 ## 2026-06-05 Result
 
@@ -2281,11 +2281,27 @@
   metadata consistency check, workflow security policy check, Python compile,
   focused tests, and full backend tool tests passed locally.
 
+## Cycle 155 Result - 2026-06-07
+
+- Extended `CrashDiagnosticsCollector` so the local crash/support bundle now
+  includes a background-work section for `auto_wallpaper`, `daily_wallpaper`,
+  `weather_update`, `aura_originals_download`, and
+  `rotation_trigger_oneshot`.
+- Added deterministic support text for inferred enabled state, connected versus
+  unmetered network posture, expected constraints, and explicit pending markers
+  for live WorkInfo and Data Saver receipts.
+- Updated `docs/support/crash-diagnostics.md` and added
+  `docs/research/cycle-155-2026-06-07.md` to document the support-bundle slice,
+  source-backed WorkManager/Data Saver APIs, and remaining live diagnostics
+  work.
+- Cycle 155 verification: focused `CrashDiagnosticsTextTest` passed locally
+  with Android Studio JBR.
+
 ## Next Cycle
 
-Continue this same assigned project, Aura. Start Cycle 155 from the
+Continue this same assigned project, Aura. Start Cycle 156 from the
 `ROADMAP.md` Continuation State and
-`docs/research/cycle-154-2026-06-07.md`. The account
+`docs/research/cycle-155-2026-06-07.md`. The account
 deletion dry-run planner, read-only Settings identity surface, redacted
 shareable request draft, request-code lookup tool, review receipt gate, offline
 apply simulator, private executor package builder, and guarded REST executor
@@ -2433,6 +2449,9 @@ Cycle 154 added a checked background work network posture gate for connected
 versus unmetered WorkManager constraints, metered-network behavior, Data Saver
 diagnostic gaps, privacy surfaces, release risk, release metadata/security
 workflow policy coverage, and verify/release workflow wiring.
+Cycle 155 added the diagnostics/support bundle background-work section with
+inferred enabled state, network posture, constraints, and explicit pending
+WorkInfo/Data Saver receipt markers.
 Actual live callable invocation evidence, a live hosted HTTPS web deletion URL,
 direct RTDB rule tightening, App Check console evidence, production-project
 dry-run evidence, and owner/admin GitHub repository security-settings evidence
@@ -2445,7 +2464,7 @@ owner access is confirmed, collect owner/admin GitHub security settings
 evidence and generate the redacted receipt when access is available, or
 continue with signed release dry-run evidence capture on a suitable runner,
 the screenshot and feature-graphic pipeline for the remaining store metadata
-asset gap, background-work Settings diagnostics/support-bundle receipts, release
+asset gap, background-work Settings diagnostics with live WorkInfo/Data Saver receipts, release
 artifact hardening, or the next checkable backend, deploy, security, support,
 policy, or rules hardening artifact if owner-gated evidence is still
 unavailable.

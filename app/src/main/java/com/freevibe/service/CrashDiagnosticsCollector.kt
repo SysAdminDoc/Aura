@@ -21,6 +21,16 @@ data class CrashDiagnosticsSummary(
     val hasCrashLog: Boolean = false,
 )
 
+internal data class BackgroundWorkDiagnosticsRow(
+    val label: String,
+    val uniqueWorkName: String,
+    val enabledState: String,
+    val networkPosture: String,
+    val constraints: List<String>,
+    val workInfoReceipt: String = "pending Settings WorkInfo receipt",
+    val dataSaverReceipt: String = "pending ConnectivityManager Data Saver receipt",
+)
+
 @Singleton
 class CrashDiagnosticsCollector @Inject constructor(
     @ApplicationContext private val context: Context,
@@ -45,8 +55,32 @@ class CrashDiagnosticsCollector @Inject constructor(
         val autoSource = readPref { prefs.autoWallpaperSource.first() }
         val schedulerSource = readPref { prefs.schedulerSource.first() }
         val schedulerEnabled = runCatching { prefs.schedulerEnabled.first() }.getOrDefault(false)
+        val autoWallpaperEnabled = runCatching { prefs.autoWallpaperEnabled.first() }.getOrDefault(false)
+        val requiresCharging = runCatching { prefs.autoWallpaperRequiresCharging.first() }.getOrDefault(false)
+        val requiresWiFiOnly = runCatching { prefs.autoWallpaperRequiresWiFiOnly.first() }.getOrDefault(false)
+        val requiresIdle = runCatching { prefs.autoWallpaperRequiresIdle.first() }.getOrDefault(false)
+        val rotateOnUnlock = runCatching { prefs.rotateOnUnlock.first() }.getOrDefault(false)
+        val rotateOnScreenOff = runCatching { prefs.rotateOnScreenOff.first() }.getOrDefault(false)
+        val weatherEffectsEnabled = runCatching { prefs.weatherEffectsEnabled.first() }.getOrDefault(false)
+        val dailyWallpaperEnabled = runCatching {
+            context.getSharedPreferences(WEATHER_WALLPAPER_PREFS, Context.MODE_PRIVATE)
+                .getBoolean(DAILY_WALLPAPER_ENABLED_KEY, false)
+        }.getOrDefault(false)
         val videoFps = runCatching { prefs.videoFpsLimit.first() }.getOrDefault(0)
         val generatedAt = timestampWithZone(System.currentTimeMillis())
+        val backgroundWork = CrashDiagnosticsText.formatBackgroundWorkSection(
+            backgroundWorkRows(
+                autoWallpaperEnabled = autoWallpaperEnabled,
+                schedulerEnabled = schedulerEnabled,
+                requiresCharging = requiresCharging,
+                requiresWiFiOnly = requiresWiFiOnly,
+                requiresIdle = requiresIdle,
+                dailyWallpaperEnabled = dailyWallpaperEnabled,
+                weatherEffectsEnabled = weatherEffectsEnabled,
+                rotateOnUnlock = rotateOnUnlock,
+                rotateOnScreenOff = rotateOnScreenOff,
+            ),
+        )
 
         return buildString {
             appendLine("# Aura diagnostics bundle")
@@ -70,6 +104,8 @@ class CrashDiagnosticsCollector @Inject constructor(
             appendLine("- Scheduler source: $schedulerSource")
             appendLine("- Scheduler enabled: $schedulerEnabled")
             appendLine("- Video wallpaper FPS limit: ${if (videoFps > 0) videoFps else "unavailable"}")
+            appendLine()
+            appendLine(backgroundWork)
             appendLine()
             appendLine("## Last local crash")
             appendLine("- Last crash timestamp: ${summary.lastCrashAt ?: "none recorded"}")
@@ -128,9 +164,71 @@ class CrashDiagnosticsCollector @Inject constructor(
     private suspend fun readPref(block: suspend () -> String): String =
         runCatching { block().ifBlank { "none" } }.getOrDefault("unavailable")
 
+    private fun backgroundWorkRows(
+        autoWallpaperEnabled: Boolean,
+        schedulerEnabled: Boolean,
+        requiresCharging: Boolean,
+        requiresWiFiOnly: Boolean,
+        requiresIdle: Boolean,
+        dailyWallpaperEnabled: Boolean,
+        weatherEffectsEnabled: Boolean,
+        rotateOnUnlock: Boolean,
+        rotateOnScreenOff: Boolean,
+    ): List<BackgroundWorkDiagnosticsRow> = listOf(
+        BackgroundWorkDiagnosticsRow(
+            label = "Auto wallpaper rotation",
+            uniqueWorkName = AutoWallpaperWorker.WORK_NAME,
+            enabledState = if (autoWallpaperEnabled || schedulerEnabled) "enabled" else "disabled",
+            networkPosture = if (requiresWiFiOnly) "unmetered network" else "connected network",
+            constraints = buildList {
+                add(if (requiresWiFiOnly) "NetworkType.UNMETERED" else "NetworkType.CONNECTED")
+                add("battery not low")
+                if (requiresCharging) add("charging")
+                if (requiresIdle) add("device idle")
+            },
+        ),
+        BackgroundWorkDiagnosticsRow(
+            label = "Daily wallpaper notification",
+            uniqueWorkName = DailyWallpaperWorker.WORK_NAME,
+            enabledState = if (dailyWallpaperEnabled) "enabled" else "disabled",
+            networkPosture = "connected network",
+            constraints = listOf("NetworkType.CONNECTED", "notification permission at runtime"),
+        ),
+        BackgroundWorkDiagnosticsRow(
+            label = "Weather wallpaper refresh",
+            uniqueWorkName = WeatherUpdateWorker.WORK_NAME,
+            enabledState = if (weatherEffectsEnabled) "enabled" else "disabled",
+            networkPosture = "connected network",
+            constraints = listOf("NetworkType.CONNECTED", "coarse or fine location permission"),
+        ),
+        BackgroundWorkDiagnosticsRow(
+            label = "Aura Originals download",
+            uniqueWorkName = AURA_ORIGINALS_WORK_NAME,
+            enabledState = "startup enqueue",
+            networkPosture = "unmetered network",
+            constraints = listOf("NetworkType.UNMETERED", "hash verification", "80 MB bundle cap"),
+        ),
+        BackgroundWorkDiagnosticsRow(
+            label = "Rotation trigger one-shot",
+            uniqueWorkName = ROTATION_TRIGGER_WORK_NAME,
+            enabledState = when {
+                rotateOnUnlock && rotateOnScreenOff -> "unlock and screen-off enabled"
+                rotateOnUnlock -> "unlock enabled"
+                rotateOnScreenOff -> "screen-off enabled"
+                else -> "disabled"
+            },
+            networkPosture = "connected network",
+            constraints = listOf("NetworkType.CONNECTED", "battery not low", "foreground-service trigger opt-in"),
+        ),
+    )
+
     companion object {
         const val CRASH_LOG_FILE_NAME = "crash.log"
         private const val MAX_CRASH_LOG_CHARS = 16_000
+        private const val WEATHER_WALLPAPER_PREFS = "freevibe_weather_wp"
+        private const val DAILY_WALLPAPER_ENABLED_KEY = "daily_wallpaper_enabled"
+        private const val AURA_ORIGINALS_WORK_NAME = "aura_originals_download"
+        private const val ROTATION_TRIGGER_WORK_NAME = "rotation_trigger_oneshot"
 
         fun timestampWithZone(timeMs: Long): String =
             SimpleDateFormat("yyyy-MM-dd HH:mm:ss Z", Locale.US).format(Date(timeMs))
@@ -169,4 +267,24 @@ internal object CrashDiagnosticsText {
         result = RequestRedactor.redact(result)
         return result.trimEnd()
     }
+
+    fun formatBackgroundWorkSection(rows: List<BackgroundWorkDiagnosticsRow>): String = buildString {
+        appendLine("## Background work")
+        if (rows.isEmpty()) {
+            appendLine("- No background work rows available.")
+        } else {
+            rows.forEach { row ->
+                appendLine(
+                    "- ${row.label} (`${row.uniqueWorkName}`): " +
+                        "state=${row.enabledState}; " +
+                        "network=${row.networkPosture}; " +
+                        "constraints=${row.constraints.joinToString(", ")}; " +
+                        "WorkInfo=${row.workInfoReceipt}; " +
+                        "Data Saver=${row.dataSaverReceipt}",
+                )
+            }
+        }
+        appendLine("- Live WorkManager receipt: pending Settings diagnostics via unique-work status lookup.")
+        appendLine("- Live Data Saver receipt: pending Settings diagnostics via restricted-background status.")
+    }.trimEnd()
 }
