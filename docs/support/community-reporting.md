@@ -32,6 +32,10 @@ source URL, license, uploader label, reporter UID, timestamp, and status.
 - `/community_write_quotas/{uid}/{yyyyMMdd}/reports` and
   `/community_write_dedupe/{uid}/reports/{dedupeKey}` are reserved admin-only
   ledgers for the App-Checked callable report quota rollout.
+- `/community_user_blocks/{blockerUid}/{blockedUid}` stores private user block
+  rows readable by the blocker and admins.
+- `/community_blocked_by/{blockedUid}/{blockerUid}` stores an admin-only reverse
+  index for abuse review and future cleanup.
 
 Only custom-claim admins can read report records or write resolution records.
 Reporter UIDs are not public catalog data.
@@ -73,6 +77,10 @@ Reporter UIDs are not public catalog data.
   `submitCommunityReport` must require Firebase Auth, App Check, a limited-use
   App Check token, server-derived UID, quota ledger updates, dedupe ledger
   updates, and the final `/community_reports/{reportId}` write.
+- The block-user policy is defined in
+  [`docs/community-block-user-policy.md`](../community-block-user-policy.md):
+  block state is private to the blocker and admins, while the reverse index is
+  admin-only.
 
 ## Remaining Follow-Up
 
@@ -90,4 +98,5 @@ Reporter UIDs are not public catalog data.
   rights-confirmed takedown receipt authorization and storage-handle matching.
 - Cycle 62 adds closed-report status filters for Hidden, Dismissed, and Restored
   review queues. Cycle 63 adds the callable quota enforcement contract for the
-  backend report submission migration.
+  backend report submission migration. Cycle 68 reserves the private block-user
+  data contract; UI filtering remains open.

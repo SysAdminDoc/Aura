@@ -25,6 +25,7 @@ Firebase Console App Check enforcement are deployed.
 | Wallpaper uploads | 5 | 10 minutes | Storage path | App-Checked callable + Storage rules |
 | Votes | 100 | 3 seconds | content ID | App-Checked callable + existing RTDB transaction |
 | Follows | 50 | 5 seconds | creator ID | App-Checked callable write |
+| User blocks | 100 | 1 second | blocked UID | App-Checked callable write |
 | Profile edits | 12 | 5 minutes | profile UID | App-Checked callable write |
 
 The matching code contract is `CommunityQuotaPolicies`. Unit tests verify every
@@ -50,9 +51,9 @@ Admin SDK job should own ledger updates.
 
 1. Keep the current direct RTDB/Storage writes while App Check request metrics
    are monitored for Realtime Database, Cloud Storage, and Authentication.
-2. Add Cloud Functions callable endpoints for reports, votes, follows, profile
-   edits, and upload metadata finalization. Configure each callable with App
-   Check enforcement and Firebase Auth checks according to the
+2. Add Cloud Functions callable endpoints for reports, votes, follows, user
+   blocks, profile edits, and upload metadata finalization. Configure each
+   callable with App Check enforcement and Firebase Auth checks according to the
    [callable quota contract](community-callable-quota-enforcement.md).
 3. In each callable, derive the UID from Firebase Auth, verify the surface
    policy from `CommunityQuotaPolicies`, update the quota ledger transactionally,
@@ -81,7 +82,7 @@ Admin SDK job should own ledger updates.
 ## Remaining Implementation Work
 
 - Add the callable backend project and wire Android repositories to the Cycle 63
-  callable contract.
+  callable contract, including the Cycle 68 user-block row.
 - Define quota reset timezone in code and backend deployment config.
 - Decide whether blocked quota attempts should create private moderation events.
 - Continue owner-delete and rights-confirmed takedown flows after Cycle 55's

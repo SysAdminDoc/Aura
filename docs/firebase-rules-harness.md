@@ -85,6 +85,8 @@ covers:
 - private `/community_upload_deletions/{publicId}` tombstones that allow
   owner-created `OWNER_DELETE` rows, admin-created takedown rows, admin-only
   reads, owner-prefix Storage path validation, and admin-only updates;
+- private `community_user_blocks` rows readable by the blocker/admins plus
+  admin-only `community_blocked_by` reverse indexes;
 - app-matched `shared_collections/{token}` public reads, authenticated creator
   writes, owner/admin cleanup, and bounded payloads; and
 - denial for the old unused `collection_shares` path.

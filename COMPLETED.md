@@ -226,6 +226,10 @@ next pass can resume quickly.
   deletes now remove public metadata plus owner indexes while writing private
   admin-only tombstones with owner-scoped Storage handles, RTDB rules/emulator
   coverage, and a deletion retention policy for removed uploads.
+- Completed Cycle 68 community block-user policy: reserved private
+  `/community_user_blocks` rows and admin-only `/community_blocked_by` reverse
+  indexes, added typed block policy helpers, emulator coverage, callable quota
+  metadata, and a block-user runbook.
 
 ## 2026-06-05
 

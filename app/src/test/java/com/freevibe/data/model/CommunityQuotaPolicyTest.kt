@@ -15,6 +15,7 @@ class CommunityQuotaPolicyTest {
             "wallpaper_uploads",
             "votes",
             "follows",
+            "user_blocks",
             "profile_edits",
         )
 
@@ -80,6 +81,7 @@ class CommunityQuotaPolicyTest {
         assertTrue(CommunityQuotaPolicies.wallpaperUploads.callable.consumeLimitedUseAppCheckToken)
         assertFalse(CommunityQuotaPolicies.votes.callable.consumeLimitedUseAppCheckToken)
         assertFalse(CommunityQuotaPolicies.follows.callable.consumeLimitedUseAppCheckToken)
+        assertFalse(CommunityQuotaPolicies.userBlocks.callable.consumeLimitedUseAppCheckToken)
         assertFalse(CommunityQuotaPolicies.profileEdits.callable.consumeLimitedUseAppCheckToken)
     }
 
@@ -99,6 +101,10 @@ class CommunityQuotaPolicyTest {
             CommunityQuotaPolicies.votes.callable.finalWritePaths,
         )
         assertEquals(listOf("/creator_follows/{uid}/{creatorId}"), CommunityQuotaPolicies.follows.callable.finalWritePaths)
+        assertEquals(
+            listOf("/community_user_blocks/{uid}/{blockedUid}", "/community_blocked_by/{blockedUid}/{uid}"),
+            CommunityQuotaPolicies.userBlocks.callable.finalWritePaths,
+        )
         assertEquals(listOf("/creator_profiles/{uid}"), CommunityQuotaPolicies.profileEdits.callable.finalWritePaths)
     }
 }

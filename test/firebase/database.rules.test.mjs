@@ -187,6 +187,16 @@ function dedupePayload(overrides = {}) {
   };
 }
 
+function userBlockPayload({ blockerUid, blockedUid, overrides = {} }) {
+  return {
+    blockerUid,
+    blockedUid,
+    createdAt: nowMs(),
+    reason: 'SPAM',
+    ...overrides,
+  };
+}
+
 function collectionPayload(createdByUid = 'collection-owner', overrides = {}) {
   return {
     version: 1,
@@ -440,6 +450,37 @@ test('community quota and dedupe ledgers are admin-only', async () => {
   await assertSucceeds(admin.ref(dedupePath).set(dedupePayload()));
   await assertFails(user.ref(quotaPath).once('value'));
   await assertSucceeds(admin.ref(quotaPath).once('value'));
+});
+
+test('community user block lists stay private and maintain an admin reverse index', async () => {
+  const blocker = dbFor('blocker1');
+  const blocked = dbFor('blocked1');
+  const other = dbFor('block-other');
+  const admin = adminDb();
+  const listPath = 'community_user_blocks/blocker1/blocked1';
+  const reversePath = 'community_blocked_by/blocked1/blocker1';
+  const payload = userBlockPayload({ blockerUid: 'blocker1', blockedUid: 'blocked1' });
+
+  await assertFails(unauthenticatedDb().ref(listPath).set(payload));
+  await assertFails(other.ref(listPath).set(payload));
+  await assertSucceeds(blocker.ref(listPath).set(payload));
+  await assertSucceeds(blocker.ref(listPath).once('value'));
+  await assertFails(blocked.ref(listPath).once('value'));
+  await assertSucceeds(admin.ref(listPath).once('value'));
+
+  await assertFails(blocker.ref('community_user_blocks/blocker1/blocked-mismatch').set(payload));
+  await assertFails(blocker.ref('community_user_blocks/blocker1/blocker1').set(
+    userBlockPayload({ blockerUid: 'blocker1', blockedUid: 'blocker1' }),
+  ));
+
+  await assertSucceeds(blocker.ref(reversePath).set(payload));
+  await assertFails(blocker.ref(reversePath).once('value'));
+  await assertFails(blocked.ref(reversePath).once('value'));
+  await assertSucceeds(admin.ref(reversePath).once('value'));
+  await assertFails(other.ref(reversePath).set(payload));
+
+  await assertSucceeds(blocker.ref(listPath).remove());
+  await assertSucceeds(blocker.ref(reversePath).remove());
 });
 
 test('collection share tokens use the app path, public reads, and bounded payloads', async () => {

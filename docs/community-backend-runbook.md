@@ -136,6 +136,9 @@ must include:
 - Deletion retention status from
   [`docs/community-deletion-retention-policy.md`](community-deletion-retention-policy.md),
   including tombstone-path evidence for owner deletes or admin takedowns.
+- Block-user rollout status from
+  [`docs/community-block-user-policy.md`](community-block-user-policy.md),
+  including callable migration and feed-filtering state.
 
 ## Sources
 

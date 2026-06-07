@@ -128,6 +128,23 @@ object CommunityQuotaPolicies {
         ),
     )
 
+    val userBlocks = CommunityQuotaPolicy(
+        surfaceKey = "user_blocks",
+        dailyLimit = 100,
+        minIntervalMillis = SECOND_MILLIS,
+        dedupeKey = "blockedUid",
+        enforcement = setOf(CommunityQuotaEnforcement.APP_CHECKED_CALLABLE),
+        callable = CommunityQuotaCallableContract(
+            functionName = "setCommunityUserBlock",
+            payloadSchema = "CommunityUserBlockInput",
+            finalWritePaths = listOf(
+                "/community_user_blocks/{uid}/{blockedUid}",
+                "/community_blocked_by/{blockedUid}/{uid}",
+            ),
+            consumeLimitedUseAppCheckToken = false,
+        ),
+    )
+
     val profileEdits = CommunityQuotaPolicy(
         surfaceKey = "profile_edits",
         dailyLimit = 12,
@@ -148,6 +165,7 @@ object CommunityQuotaPolicies {
         wallpaperUploads,
         votes,
         follows,
+        userBlocks,
         profileEdits,
     )
 }

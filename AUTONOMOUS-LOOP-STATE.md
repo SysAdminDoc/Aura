@@ -1,8 +1,8 @@
 # Autonomous Loop State
 
 **Assigned project:** `C:\Users\--\repos\Aura`
-**Current pass:** 2026-06-06 Cycle 67 community deletion tombstones
-**Last commit before pass:** `d2e68c8` (`feat(community): add upload backfill planner`)
+**Current pass:** 2026-06-06 Cycle 68 community block-user policy
+**Last commit before pass:** `f664fc8` (`feat(community): add deletion tombstones`)
 
 ## 2026-06-05 Result
 
@@ -320,6 +320,21 @@
   `docs/research/cycle-67-2026-06-06.md`; updated upload deletion, rules
   harness, backend runbook, roadmap, changelog, and completed docs.
 - Cycle 67 verification: focused `CommunityUploadOwnershipTest`; `py -3 -m json.tool database.rules.json`; `py -3 tools\community_backend_manifest.py --mode check`; `node --check test\firebase\database.rules.test.mjs`; `npm run test:firebase-rules`.
+- Completed Cycle 68 community block-user policy.
+- Added `CommunityBlockPolicy.kt` and focused tests for block payload path
+  generation plus self-block rejection.
+- Added `user_blocks` to `CommunityQuotaPolicies` with a
+  `setCommunityUserBlock` callable contract and final writes for the private
+  block list plus admin reverse index.
+- Reserved `/community_user_blocks/{blockerUid}/{blockedUid}` and
+  `/community_blocked_by/{blockedUid}/{blockerUid}` in RTDB rules.
+- Added Firebase emulator coverage for anonymous/cross-user rejection, private
+  blocker reads, admin reverse-index reads, mismatched payload rejection,
+  self-block rejection, and unblock deletes.
+- Added `docs/community-block-user-policy.md` and
+  `docs/research/cycle-68-2026-06-06.md`; updated reporting, quota, callable,
+  rules harness, backend runbook, roadmap, changelog, and completed docs.
+- Cycle 68 verification: focused `CommunityBlockPolicyTest` plus `CommunityQuotaPolicyTest`; `py -3 -m json.tool database.rules.json`; `py -3 tools\community_backend_manifest.py --mode check`; `node --check test\firebase\database.rules.test.mjs`; `npm run test:firebase-rules`.
 
 ## Still Open
 
@@ -330,19 +345,19 @@
 - Real production-project Firebase backend dry-run evidence after owner access is confirmed.
 - Real exported Storage/RTDB orphan reports after owner access is confirmed.
 - Real production RTDB legacy backfill plan after owner access is confirmed.
-- Public takedown copy, block-user policy, vote marker privacy/account deletion semantics, and deployable callable backend implementation.
+- Public takedown copy, block-user UI/filtering, vote marker privacy/account deletion semantics, and deployable callable backend implementation.
 
 ## Next Cycle
 
-Continue this same assigned project, Aura. Start Cycle 68 from the `ROADMAP.md`
-Continuation State and `docs/research/cycle-67-2026-06-06.md`. The community
-upload deletion path now has private owner/admin tombstones and a retention
-policy. Next add block-user policy, public takedown copy, vote marker
-privacy/account deletion semantics, a real production-project Firebase backend
-dry run/orphan/backfill evidence pass after owner access is confirmed, Cloud
-Functions implementation for the callable quota contract, or Android callable
-migration adapters. Commit and push completed work when the active project
-contract allows it.
+Continue this same assigned project, Aura. Start Cycle 69 from the `ROADMAP.md`
+Continuation State and `docs/research/cycle-68-2026-06-06.md`. The community
+upload deletion path has private tombstones, and block-user data paths are now
+reserved with rules coverage. Next add public takedown copy, block-user
+UI/filtering, vote marker privacy/account deletion semantics, a real
+production-project Firebase backend dry run/orphan/backfill evidence pass after
+owner access is confirmed, Cloud Functions implementation for the callable
+quota contract, or Android callable migration adapters. Commit and push
+completed work when the active project contract allows it.
 
 ## Previous Cycle Prompt
 

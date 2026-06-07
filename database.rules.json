@@ -206,6 +206,32 @@
         ".write": "auth != null && auth.uid === $followerUid"
       }
     },
+    "community_user_blocks": {
+      "$blockerUid": {
+        ".read": "auth != null && (auth.uid === $blockerUid || auth.token.admin === true)",
+        ".write": "auth != null && (auth.uid === $blockerUid || auth.token.admin === true)",
+        "$blockedUid": {
+          ".validate": "newData.hasChildren(['blockerUid', 'blockedUid', 'createdAt', 'reason']) && newData.child('blockerUid').val() === $blockerUid && newData.child('blockedUid').val() === $blockedUid && $blockerUid !== $blockedUid",
+          "blockerUid": { ".validate": "newData.isString() && newData.val() === $blockerUid" },
+          "blockedUid": { ".validate": "newData.isString() && newData.val() === $blockedUid" },
+          "createdAt": { ".validate": "newData.isNumber() && newData.val() > 0 && newData.val() <= now" },
+          "reason": { ".validate": "newData.val() === 'SPAM' || newData.val() === 'HARASSMENT' || newData.val() === 'SAFETY' || newData.val() === 'RIGHTS' || newData.val() === 'OTHER'" }
+        }
+      }
+    },
+    "community_blocked_by": {
+      "$blockedUid": {
+        ".read": "auth != null && auth.token.admin === true",
+        "$blockerUid": {
+          ".write": "auth != null && (auth.uid === $blockerUid || auth.token.admin === true)",
+          ".validate": "newData.hasChildren(['blockerUid', 'blockedUid', 'createdAt', 'reason']) && newData.child('blockerUid').val() === $blockerUid && newData.child('blockedUid').val() === $blockedUid && $blockerUid !== $blockedUid",
+          "blockerUid": { ".validate": "newData.isString() && newData.val() === $blockerUid" },
+          "blockedUid": { ".validate": "newData.isString() && newData.val() === $blockedUid" },
+          "createdAt": { ".validate": "newData.isNumber() && newData.val() > 0 && newData.val() <= now" },
+          "reason": { ".validate": "newData.val() === 'SPAM' || newData.val() === 'HARASSMENT' || newData.val() === 'SAFETY' || newData.val() === 'RIGHTS' || newData.val() === 'OTHER'" }
+        }
+      }
+    },
     "shared_collections": {
       "$token": {
         ".read": true,

@@ -27,6 +27,7 @@ contract loses auth, App Check, ledger, or final-write coverage.
 | Wallpaper uploads | `finalizeCommunityWallpaperUpload` | `CommunityWallpaperUploadMetadata` | `/community_wallpapers/{uploadId}`, `/owner_uploads/{uid}/wallpapers/{uploadId}` | Yes |
 | Votes | `recordCommunityVote` | `CommunityVoteInput` | `/votes/{contentId}`, `/voters/{contentId}/{uid}` | No |
 | Follows | `setCreatorFollow` | `CommunityFollowInput` | `/creator_follows/{uid}/{creatorId}` | No |
+| User blocks | `setCommunityUserBlock` | `CommunityUserBlockInput` | `/community_user_blocks/{uid}/{blockedUid}`, `/community_blocked_by/{blockedUid}/{uid}` | No |
 | Profile edits | `updateCreatorProfile` | `CreatorProfileUpdateInput` | `/creator_profiles/{uid}` | No |
 
 Every callable also owns these protected ledgers for its surface:
@@ -53,7 +54,7 @@ UID, profile UID, or owner index UID unless the caller has an admin claim.
 1. Require Firebase Auth and App Check on every callable.
 2. Use limited-use App Check token consumption for reports and upload
    finalizers. Those surfaces publish or create moderation records and are
-   lower-volume than votes/follows/profile edits.
+   lower-volume than votes/follows/user blocks/profile edits.
 3. Normalize the payload with the same bounds used by Android and Firebase
    rules.
 4. Derive the policy row from `surfaceKey`; never accept a policy or limit from
@@ -95,8 +96,8 @@ response when the server provides an existing target.
    error mapping.
 3. Migrate reports first because reports do not require a binary upload
    progress flow.
-4. Migrate votes and follows next while keeping the existing local optimistic UI
-   state.
+4. Migrate votes, follows, and user blocks next while keeping the existing
+   local optimistic UI state.
 5. Migrate upload metadata finalization after Storage rules and owner indexes
    are verified. Storage upload bytes still go through Firebase Storage; the
    callable owns the public metadata and owner-index final write.

@@ -3,6 +3,7 @@
 All notable changes to Aura will be documented in this file.
 
 ## Unreleased
+- **Community block-user policy (Cycle 68)**: reserved private user block lists and admin reverse indexes in RTDB rules, added emulator coverage, and extended the callable quota contract with `setCommunityUserBlock`.
 - **Community deletion tombstones (Cycle 67)**: owner and admin upload deletes now write private deletion tombstones with owner-scoped Storage handles, RTDB rules coverage, and a retention policy for deleted upload evidence.
 - **Legacy upload backfill planning (Cycle 66)**: added a dry-run RTDB backfill planner for legacy community uploads missing `storagePath` and owner indexes, with tests for URL parsing, update generation, and unsafe-row blocking.
 - **Community Storage lifecycle policy (Cycle 65)**: added an offline orphan-report tool and unittest, documented the no-auto-delete policy for committed upload prefixes, and defined the two-report manual cleanup gate.
