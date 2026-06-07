@@ -11,11 +11,11 @@ handler-backed sound upload finalizer. Cycle 99 adds the handler-backed
 wallpaper upload finalizer. Cycle 100 adds the handler-backed profile edit
 callable and refines profile dedupe to include the normalized public profile
 hash. Cycle 108 adds the first Android callable migration adapter for report
-submission, and Cycle 109 adds the Android vote callable migration adapter.
-Every exported callable now has a handler core, while production enforcement
-still waits for full callable wire-protocol coverage, the remaining Android
-write migrations, owner-approved deploy evidence, and App Check console
-evidence.
+submission, Cycle 109 adds the Android vote callable migration adapter, and
+Cycle 110 adds the Android follow callable migration adapter. Every exported
+callable now has a handler core, while production enforcement still waits for
+full callable wire-protocol coverage, the remaining Android write migrations,
+owner-approved deploy evidence, and App Check console evidence.
 
 ## Contract Source
 
@@ -180,9 +180,19 @@ Cycle 109 added:
   with direct RTDB fallback only for missing callable endpoint or missing Auth
   compatibility.
 
-Report and vote submissions are the Android write surfaces with callable client
-code today. Follows, user blocks, upload finalizers, and profile edits still
-write through their existing direct repository paths.
+Cycle 110 added:
+
+- `CommunityFollowInput` payload normalization for Android follow and unfollow
+  callable requests.
+- `CommunityCallableClient.setCreatorFollow()` using
+  `CommunityQuotaPolicies.follows`.
+- Callable-first `CreatorProfileRepository.followCreator()` and
+  `unfollowCreator()` when Firebase Auth is available, with direct RTDB
+  fallback only for missing callable endpoint or missing Auth compatibility.
+
+Report, vote, and follow submissions are the Android write surfaces with
+callable client code today. User blocks, upload finalizers, and profile edits
+still write through their existing direct repository paths.
 
 ## Request Envelope
 
@@ -245,7 +255,7 @@ response when the server provides an existing target.
    error mapping.
 3. Migrate reports first because reports do not require a binary upload
    progress flow.
-4. Migrate votes, follows, and user blocks next while keeping the existing
+4. Migrate user blocks next while keeping the existing
    local optimistic UI state.
 5. Migrate upload metadata finalization after Storage rules and owner indexes
    are verified. Storage upload bytes still go through Firebase Storage; the

@@ -1,8 +1,8 @@
 # Autonomous Loop State
 
 **Assigned project:** `C:\Users\--\repos\Aura`
-**Current pass:** 2026-06-07 Cycle 109 Android vote callable migration
-**Last commit before pass:** `fbb3fc4` (`feat(community): add Android report callable adapter`)
+**Current pass:** 2026-06-07 Cycle 110 Android follow callable migration
+**Last commit before pass:** `b7f56b7` (`feat(community): add Android vote callable adapter`)
 
 ## 2026-06-05 Result
 
@@ -1306,11 +1306,36 @@
   owner-approved deploy evidence, direct RTDB rule tightening, and Firebase
   Console App Check evidence remain open.
 
+## Cycle 110 Result - 2026-06-07
+
+- Added `CommunityFollowInput` payload normalization for Android follow and
+  unfollow callable requests.
+- Extended `CommunityCallableClient` with `setCreatorFollow`, using
+  `CommunityQuotaPolicies.follows` and standard App Check tokens.
+- Updated `CreatorProfileRepository.followCreator()` and `unfollowCreator()` to
+  prefer the `setCreatorFollow` callable when Firebase Auth is available,
+  preserve no-op duplicate responses as success, avoid direct RTDB fallback for
+  quota/App Check/validation errors, and keep the direct RTDB write/remove path
+  only for missing callable endpoint or missing Firebase Auth compatibility.
+- Extended `CommunityCallableClientTest` coverage for follow and unfollow
+  request envelopes, text normalization, desired-state payloads, and
+  non-limited-use token selection.
+- Updated `docs/research/cycle-110-2026-06-07.md`, `ROADMAP.md`,
+  `COMPLETED.md`, `CHANGELOG.md`, backend runbook, callable quota enforcement
+  doc, and loop state.
+- Cycle 110 verification: focused Android callable client tests, callable
+  contract check, generated notice lock checks, native compliance lock check,
+  dependency overlay check, dependency license policy check, high-severity npm
+  audit, diff hygiene, and attribution/ASCII scan passed. Block, upload
+  finalizer, and profile Android callable migrations, full callable
+  wire-protocol coverage, owner-approved deploy evidence, direct RTDB rule
+  tightening, and Firebase Console App Check evidence remain open.
+
 ## Next Cycle
 
-Continue this same assigned project, Aura. Start Cycle 110 from the
+Continue this same assigned project, Aura. Start Cycle 111 from the
 `ROADMAP.md` Continuation State and
-`docs/research/cycle-109-2026-06-07.md`. The account
+`docs/research/cycle-110-2026-06-07.md`. The account
 deletion dry-run planner, read-only Settings identity surface, redacted
 shareable request draft, request-code lookup tool, review receipt gate, offline
 apply simulator, private executor package builder, and guarded REST executor
@@ -1370,13 +1395,16 @@ idempotency writes; Cycle 108 added the Android report callable client adapter
 and callable-first report submission with a compatibility direct-write fallback
 until deploy evidence is available; Cycle 109 added the Android vote callable
 payload/client adapter and callable-first vote submission with compatibility
-fallback only for missing callable endpoint or missing Firebase Auth. Android
-callable migration for follows, user blocks, upload finalizers, and profile
-edits, full callable wire-protocol coverage, a live hosted HTTPS web deletion
-URL, and production-project dry-run evidence remain open. Next migrate Android
-follow or user-block writes to callable adapters, add full callable
-wire-protocol coverage when Auth and App Check emulator wiring is available,
-publish the hosted URL after owner approval, or run a real
+fallback only for missing callable endpoint or missing Firebase Auth; Cycle 110
+added the Android follow callable payload/client adapter and callable-first
+follow/unfollow submission with compatibility fallback only for missing
+callable endpoint or missing Firebase Auth. Android callable migration for user
+blocks, upload finalizers, and profile edits, full callable wire-protocol
+coverage, a live hosted HTTPS web deletion URL, and production-project dry-run
+evidence remain open. Next migrate Android user-block or profile writes to
+callable adapters, add full callable wire-protocol coverage when Auth and App
+Check emulator wiring is available, publish the hosted URL after owner
+approval, or run a real
 production-project Firebase executor dry-run after owner access is confirmed.
 Commit and push completed work when the active project contract allows it.
 

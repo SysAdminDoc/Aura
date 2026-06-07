@@ -3,6 +3,7 @@
 All notable changes to Aura will be documented in this file.
 
 ## Unreleased
+- **Android follow callable migration (Cycle 110)**: added Android follow/unfollow payload normalization, extended the shared callable client for `setCreatorFollow`, routed creator follow state changes through the callable when Firebase Auth is available, and preserved direct RTDB fallback only for compatibility cases.
 - **Android vote callable migration (Cycle 109)**: added Android vote payload normalization, extended the shared callable client for `recordCommunityVote`, routed vote submissions through the callable when Firebase Auth is available, and preserved direct RTDB fallback only for compatibility cases.
 - **Android report callable migration (Cycle 108)**: added the Android Cloud Functions client dependency, a shared callable request/response adapter, limited-use App Check token selection for report submissions, callable report payload tests, and callable-first report submission with a compatibility fallback while deploy evidence is pending.
 - **Wallpaper upload callable emulator coverage (Cycle 107)**: added RTDB-emulator-backed `finalizeCommunityWallpaperUpload` handler coverage for public metadata, owner index, quota, storage-path dedupe, and duplicate upload idempotency through the real Admin SDK backend.

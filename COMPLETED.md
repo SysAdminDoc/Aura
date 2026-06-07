@@ -458,6 +458,12 @@ next pass can resume quickly.
   callable when Firebase Auth is available, preserved direct RTDB fallback only
   for missing endpoint or missing Auth compatibility, and covered the vote
   callable envelope with focused unit tests.
+- Completed Cycle 110 Android follow callable migration: added
+  `CommunityFollowInput` payload normalization, extended `CommunityCallableClient`
+  for `setCreatorFollow`, routed `CreatorProfileRepository` follow/unfollow
+  writes through the callable when Firebase Auth is available, preserved direct
+  RTDB fallback only for missing endpoint or missing Auth compatibility, and
+  covered follow plus unfollow callable envelopes with focused unit tests.
 
 ## 2026-06-05
 

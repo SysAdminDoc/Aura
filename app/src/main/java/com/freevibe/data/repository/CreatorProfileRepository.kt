@@ -1,6 +1,7 @@
 package com.freevibe.data.repository
 
 import com.freevibe.data.local.PreferencesManager
+import com.freevibe.data.model.CommunityFollowInput
 import com.freevibe.data.model.ContentSource
 import com.freevibe.data.model.Sound
 import com.freevibe.data.model.Wallpaper
@@ -61,6 +62,7 @@ class CreatorProfileRepository @Inject constructor(
     private val prefs: PreferencesManager,
     private val sourceMetrics: SourceMetrics,
     private val communityBlockRepo: CommunityBlockRepository,
+    private val callableClient: CommunityCallableClient,
 ) {
     private val database by lazy {
         try { FirebaseDatabase.getInstance().reference } catch (_: Exception) { null }
@@ -112,20 +114,13 @@ class CreatorProfileRepository @Inject constructor(
     suspend fun followCreator(creatorId: String, label: String): Result<Unit> = withContext(Dispatchers.IO) {
         runCatching {
             ensureCommunityEnabled()
-            val db = database ?: throw IllegalStateException("Firebase Database not available")
-            val currentUserId = voteRepo.sanitizeKey(identityProvider.ensureSignedIn())
-            val safeCreatorId = voteRepo.sanitizeKey(creatorId)
-            db.child("creator_follows")
-                .child(currentUserId)
-                .child(safeCreatorId)
-                .setValue(
-                    mapOf(
-                        "creatorId" to creatorId,
-                        "label" to label,
-                        "followedAt" to System.currentTimeMillis(),
-                    )
-                )
-                .await()
+            identityProvider.ensureSignedIn()
+            if (!identityProvider.currentFirebaseUid().isNullOrBlank()) {
+                setCreatorFollowWithCallableOrNull(creatorId, label, following = true)?.let {
+                    return@runCatching Unit
+                }
+            }
+            followCreatorWithDirectDatabase(creatorId, label)
             Unit
         }.onFailure { it.rethrowIfCancelled() }
     }
@@ -133,12 +128,61 @@ class CreatorProfileRepository @Inject constructor(
     suspend fun unfollowCreator(creatorId: String): Result<Unit> = withContext(Dispatchers.IO) {
         runCatching {
             ensureCommunityEnabled()
-            val db = database ?: throw IllegalStateException("Firebase Database not available")
-            val currentUserId = voteRepo.sanitizeKey(identityProvider.ensureSignedIn())
-            val safeCreatorId = voteRepo.sanitizeKey(creatorId)
-            db.child("creator_follows").child(currentUserId).child(safeCreatorId).removeValue().await()
+            identityProvider.ensureSignedIn()
+            if (!identityProvider.currentFirebaseUid().isNullOrBlank()) {
+                setCreatorFollowWithCallableOrNull(creatorId, label = "", following = false)?.let {
+                    return@runCatching Unit
+                }
+            }
+            unfollowCreatorWithDirectDatabase(creatorId)
             Unit
         }.onFailure { it.rethrowIfCancelled() }
+    }
+
+    private suspend fun setCreatorFollowWithCallableOrNull(
+        creatorId: String,
+        label: String,
+        following: Boolean,
+    ): Boolean? =
+        try {
+            val result = callableClient.setCreatorFollow(
+                CommunityFollowInput(
+                    creatorId = creatorId,
+                    label = label,
+                    following = following,
+                ),
+            )
+            when {
+                result.status.equals("accepted", ignoreCase = true) -> true
+                result.status.equals("duplicate", ignoreCase = true) -> true
+                else -> throw IllegalStateException("Unexpected creator follow status: ${result.status}")
+            }
+        } catch (e: CommunityCallableException) {
+            if (e.isMissingEndpoint()) null else throw e
+        }
+
+    private suspend fun followCreatorWithDirectDatabase(creatorId: String, label: String) {
+        val db = database ?: throw IllegalStateException("Firebase Database not available")
+        val currentUserId = voteRepo.sanitizeKey(identityProvider.ensureSignedIn())
+        val safeCreatorId = voteRepo.sanitizeKey(creatorId)
+        db.child("creator_follows")
+            .child(currentUserId)
+            .child(safeCreatorId)
+            .setValue(
+                mapOf(
+                    "creatorId" to creatorId,
+                    "label" to label,
+                    "followedAt" to System.currentTimeMillis(),
+                ),
+            )
+            .await()
+    }
+
+    private suspend fun unfollowCreatorWithDirectDatabase(creatorId: String) {
+        val db = database ?: throw IllegalStateException("Firebase Database not available")
+        val currentUserId = voteRepo.sanitizeKey(identityProvider.ensureSignedIn())
+        val safeCreatorId = voteRepo.sanitizeKey(creatorId)
+        db.child("creator_follows").child(currentUserId).child(safeCreatorId).removeValue().await()
     }
 
     private suspend fun getFollowedCreatorIds(): Set<String> {

@@ -1,5 +1,6 @@
 package com.freevibe.data.repository
 
+import com.freevibe.data.model.CommunityFollowInput
 import com.freevibe.data.model.CommunityReportInput
 import com.freevibe.data.model.CommunityReportReason
 import com.freevibe.data.model.ContentSource
@@ -83,6 +84,72 @@ class CommunityCallableClientTest {
         assertTrue((request.data["clientSentAt"] as Long) > 0L)
         val payload = request.data["payload"] as Map<*, *>
         assertEquals("SOUND::COMMUNITY::cu_1", payload["contentId"])
+    }
+
+    @Test
+    fun `setCreatorFollow sends desired state without limited use token request`() = runTest {
+        val invoker = RecordingCommunityCallableInvoker(
+            response = mapOf(
+                "operationId" to "follow_test",
+                "status" to "accepted",
+                "targetPath" to "/creator_follows/user_1/creator_id_1",
+                "serverTimeMillis" to 123L,
+            ),
+        )
+        val client = CommunityCallableClient(invoker)
+
+        val result = client.setCreatorFollow(
+            CommunityFollowInput(
+                creatorId = " creator/id#1 ",
+                label = " Creator\nName ",
+                following = true,
+            ),
+        )
+
+        val request = requireNotNull(invoker.lastRequest)
+        assertEquals("setCreatorFollow", request.functionName)
+        assertFalse(request.consumeLimitedUseAppCheckToken)
+        assertEquals("creator_id_1", result.targetId())
+        assertEquals("accepted", result.status)
+
+        assertTrue((request.data["operationId"] as String).startsWith("follow_"))
+        assertTrue((request.data["clientSentAt"] as Long) > 0L)
+        val payload = request.data["payload"] as Map<*, *>
+        assertEquals("creator/id#1", payload["creatorId"])
+        assertEquals("Creator Name", payload["label"])
+        assertEquals(true, payload["following"])
+    }
+
+    @Test
+    fun `setCreatorFollow sends unfollow operation when desired state is false`() = runTest {
+        val invoker = RecordingCommunityCallableInvoker(
+            response = mapOf(
+                "operationId" to "unfollow_test",
+                "status" to "duplicate",
+                "targetPath" to "/creator_follows/user_1/creator_one",
+                "serverTimeMillis" to 123L,
+            ),
+        )
+        val client = CommunityCallableClient(invoker)
+
+        val result = client.setCreatorFollow(
+            CommunityFollowInput(
+                creatorId = "creator/one",
+                label = "",
+                following = false,
+            ),
+        )
+
+        val request = requireNotNull(invoker.lastRequest)
+        assertEquals("setCreatorFollow", request.functionName)
+        assertFalse(request.consumeLimitedUseAppCheckToken)
+        assertEquals("creator_one", result.targetId())
+        assertEquals("duplicate", result.status)
+
+        assertTrue((request.data["operationId"] as String).startsWith("unfollow_"))
+        val payload = request.data["payload"] as Map<*, *>
+        assertEquals("creator/one", payload["creatorId"])
+        assertEquals(false, payload["following"])
     }
 
     @Test
