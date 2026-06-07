@@ -12,13 +12,10 @@ import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.RequestBody
 import okhttp3.RequestBody.Companion.toRequestBody
 import java.io.File
+import java.net.URI
 import java.util.UUID
 import javax.inject.Inject
 import javax.inject.Singleton
-
-// Hoisted out of the per-call hot path. `\\s+` was being compiled on every successful
-// generation just to mine 5 tag words from the prompt.
-private val WHITESPACE_RE = "\\s+".toRegex()
 
 enum class AiStyle(val label: String, val preset: String) {
     PHOTOGRAPHIC("Photo", "photographic"),
@@ -93,11 +90,6 @@ class AiWallpaperRepository @Inject constructor(
             // races against eviction. The cap is 50 files; older PNGs go first.
             runCatching { pruneOldFilesInternal(MAX_GENERATED_FILES) }
 
-            val promptWords = prompt.split(WHITESPACE_RE)
-                .map { it.lowercase().filter { c -> c.isLetterOrDigit() } }
-                .filter { it.length > 2 }
-                .take(5)
-
             Result.success(
                 Wallpaper(
                     id = id,
@@ -107,11 +99,7 @@ class AiWallpaperRepository @Inject constructor(
                     width = 576,
                     height = 1024,
                     category = "AI Generated",
-                    tags = buildList {
-                        add("ai-generated")
-                        if (style.preset.isNotEmpty()) add(style.preset)
-                        addAll(promptWords)
-                    },
+                    tags = generatedWallpaperTags(style),
                     uploaderName = "AI",
                 ),
             )
@@ -126,6 +114,28 @@ class AiWallpaperRepository @Inject constructor(
     /** Delete generated images beyond the most recent [maxCount] to reclaim storage. */
     suspend fun pruneOldFiles(maxCount: Int = MAX_GENERATED_FILES) = withContext(Dispatchers.IO) {
         pruneOldFilesInternal(maxCount)
+    }
+
+    suspend fun deleteGeneratedWallpaper(locator: String): Boolean = withContext(Dispatchers.IO) {
+        val file = generatedWallpaperFile(locator) ?: return@withContext false
+        runCatching { file.delete() }.getOrDefault(false)
+    }
+
+    private fun generatedWallpaperFile(locator: String): File? {
+        val file = runCatching {
+            val uri = URI(locator)
+            when (uri.scheme) {
+                "file" -> File(uri)
+                null -> File(locator)
+                else -> return null
+            }
+        }.getOrNull() ?: return null
+        val root = dir.canonicalFile
+        val candidate = file.canonicalFile
+        val rootPath = root.path + File.separator
+        if (!candidate.path.startsWith(rootPath)) return null
+        if (!candidate.isFile || candidate.extension.lowercase() != "png") return null
+        return candidate
     }
 
     /** Same as [pruneOldFiles] but already on the IO dispatcher (no extra withContext). */
@@ -144,6 +154,11 @@ class AiWallpaperRepository @Inject constructor(
     companion object {
         /** Hard cap on stored generated wallpapers. Surfaced for tests. */
         internal const val MAX_GENERATED_FILES = 50
+
+        internal fun generatedWallpaperTags(style: AiStyle): List<String> = buildList {
+            add("ai-generated")
+            if (style.preset.isNotEmpty()) add(style.preset)
+        }
 
         /**
          * Map HTTP error codes from Stability AI to actionable user messages. Lives in

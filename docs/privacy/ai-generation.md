@@ -46,9 +46,15 @@ actions:
 ## Local Storage
 
 Generated images are written to app-private local storage under the generated
-wallpaper cache. Users can save generated results to Favorites, apply them as
-wallpapers, or delete app data through Android system settings. Aura prunes the
-generated wallpaper cache to the most recent local outputs.
+wallpaper cache. Users can save generated results to Favorites or apply them as
+wallpapers. New generated favorites use a generic `Generated wallpaper` name and
+store only non-prompt tags such as `ai-generated` and the selected style preset.
+Prompt words are not copied into favorite names or tags.
+
+Removing a saved generated wallpaper from Favorites also removes its app-private
+generated PNG after the Undo window closes. Aura still prunes the generated
+wallpaper cache to the most recent local outputs, and users can delete all app
+data through Android system settings.
 
 ## Generated Content Reports
 
@@ -86,3 +92,6 @@ community upload metadata and do not expose reporter identity publicly.
   for confirmation before another request.
 - Confirm 402 and 429 Stability responses include provider account/cooldown
   actions.
+- Confirm generated favorites do not store prompt text in name or tags.
+- Confirm removing a saved generated wallpaper deletes its generated PNG after
+  the Undo window closes.

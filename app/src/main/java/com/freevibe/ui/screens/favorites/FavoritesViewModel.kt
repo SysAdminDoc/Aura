@@ -3,11 +3,13 @@ package com.freevibe.ui.screens.favorites
 import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.freevibe.data.model.ContentSource
 import com.freevibe.data.model.FavoriteEntity
 import com.freevibe.data.model.favoriteIdentity
 import com.freevibe.data.model.stableKey
 import com.freevibe.data.remote.toWallpaper
 import com.freevibe.data.remote.toSound
+import com.freevibe.data.repository.AiWallpaperRepository
 import com.freevibe.data.repository.FavoritesRepository
 import com.freevibe.service.BatchDownloadService
 import com.freevibe.service.FavoritesExporter
@@ -23,6 +25,7 @@ class FavoritesViewModel @Inject constructor(
     private val exporter: FavoritesExporter,
     private val selectedContent: SelectedContentHolder,
     private val batchDownloadService: BatchDownloadService,
+    private val aiWallpaperRepository: AiWallpaperRepository,
 ) : ViewModel() {
     val wallpapers = favoritesRepo.getWallpapers().stateIn(
         viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList()
@@ -36,6 +39,17 @@ class FavoritesViewModel @Inject constructor(
 
     fun removeFavorite(entity: FavoriteEntity) = viewModelScope.launch { favoritesRepo.remove(entity.favoriteIdentity()) }
     fun restoreFavorite(entity: FavoriteEntity) = viewModelScope.launch { favoritesRepo.add(entity) }
+    fun deleteGeneratedWallpaperFiles(entities: List<FavoriteEntity>) = viewModelScope.launch {
+        entities
+            .filter { it.type.equals("WALLPAPER", ignoreCase = true) }
+            .filter { it.source.equals(ContentSource.AI_GENERATED.name, ignoreCase = true) }
+            .forEach { entity ->
+                aiWallpaperRepository.deleteGeneratedWallpaper(entity.fullUrl)
+                if (entity.thumbnailUrl != entity.fullUrl) {
+                    aiWallpaperRepository.deleteGeneratedWallpaper(entity.thumbnailUrl)
+                }
+            }
+    }
     fun markSourceUnavailable(entity: FavoriteEntity, reason: String? = null) = viewModelScope.launch {
         favoritesRepo.markSourceUnavailable(entity.favoriteIdentity(), reason)
     }

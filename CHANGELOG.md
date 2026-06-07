@@ -3,6 +3,7 @@
 All notable changes to Aura will be documented in this file.
 
 ## Unreleased
+- **Prompt metadata retention cleanup (Cycle 137)**: stopped saving generated wallpaper prompt text in favorite names/tags and added generated PNG cleanup after generated favorite removal.
 - **Generated request cost guardrails (Cycle 136)**: added generated wallpaper session request counting, in-flight request rejection, duplicate prompt/style confirmation, and Stability account/cooldown error copy.
 - **Stability key policy sentinel (Cycle 135)**: tightened the provider credential storage guard so the Stability key must remain a DataStore-backed paid-sensitive secret with blank release defaults, explicit Clear control, and `stability.ai.key` redaction coverage.
 - **Generated content reporting (Cycle 134)**: added generated wallpaper report actions, generated-content reason categories, backend reason allowlist support, and privacy/reporting runbook updates.

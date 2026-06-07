@@ -145,4 +145,24 @@ class AiWallpaperRequestGateTest {
         assertEquals("Aura generated wallpaper", input.uploaderName)
         assertFalse(input.toString().contains("sk-secret"))
     }
+
+    @Test
+    fun `generated wallpaper favorite entity does not retain prompt text`() {
+        val wallpaper = Wallpaper(
+            id = "generated-1",
+            source = ContentSource.AI_GENERATED,
+            thumbnailUrl = "file:///cache/thumb.png",
+            fullUrl = "file:///cache/full.png",
+            width = 1024,
+            height = 1792,
+            tags = listOf("ai-generated", "photographic", "private", "bedroom"),
+        )
+
+        val favorite = generatedWallpaperFavoriteEntity(wallpaper)
+
+        assertEquals("Generated wallpaper", favorite.name)
+        assertEquals("ai-generated,photographic", favorite.tags)
+        assertFalse(favorite.toString().contains("private"))
+        assertFalse(favorite.toString().contains("bedroom"))
+    }
 }

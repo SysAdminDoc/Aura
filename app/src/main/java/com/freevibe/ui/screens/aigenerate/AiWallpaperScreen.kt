@@ -577,7 +577,7 @@ fun AiWallpaperScreen(
                             horizontalArrangement = Arrangement.spacedBy(8.dp),
                         ) {
                             OutlinedButton(
-                                onClick = { viewModel.saveToFavorites(state.prompt) },
+                                onClick = { viewModel.saveToFavorites() },
                                 modifier = Modifier.weight(1f),
                                 enabled = !state.isSaved && !state.isApplying,
                             ) {

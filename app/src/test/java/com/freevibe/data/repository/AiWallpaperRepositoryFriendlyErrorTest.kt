@@ -76,4 +76,16 @@ class AiWallpaperRepositoryFriendlyErrorTest {
         val msg = AiWallpaperRepository.friendlyErrorMessage(401, null)
         assertTrue("Null error body should not be appended: $msg", msg.endsWith("."))
     }
+
+    @Test
+    fun `generated wallpaper tags omit prompt words`() {
+        assertEquals(
+            listOf("ai-generated", "photographic"),
+            AiWallpaperRepository.generatedWallpaperTags(AiStyle.PHOTOGRAPHIC),
+        )
+        assertEquals(
+            listOf("ai-generated"),
+            AiWallpaperRepository.generatedWallpaperTags(AiStyle.NONE),
+        )
+    }
 }

@@ -1,8 +1,8 @@
 # Autonomous Loop State
 
 **Assigned project:** `C:\Users\--\repos\Aura`
-**Current pass:** 2026-06-07 Cycle 136 generated request cost guardrails
-**Last commit before pass:** `d304a05` (`ci(security): pin stability key policy`)
+**Current pass:** 2026-06-07 Cycle 137 prompt metadata retention cleanup
+**Last commit before pass:** `f542ebe` (`feat(wallpapers): guard generated request retries`)
 
 ## 2026-06-05 Result
 
@@ -1947,11 +1947,25 @@
 - Cycle 136 verification: focused generated wallpaper request-gate and
   Stability error-copy unit tests passed.
 
+## Cycle 137 Result - 2026-06-07
+
+- Stopped mining prompt words into generated wallpaper tags.
+- Saved generated favorites with the generic `Generated wallpaper` name and
+  sanitized tags limited to reviewed non-prompt generated values.
+- Deleted generated PNG files when AI-generated wallpaper favorites are removed
+  through the wallpaper favorite toggle.
+- Deleted generated PNG files after Favorites bulk-delete Undo closes without a
+  restore.
+- Updated generated wallpaper privacy docs, research, roadmap, changelog,
+  completion, and loop-state docs.
+- Cycle 137 verification: focused generated wallpaper prompt-retention tests
+  and AI-generated favorite removal cleanup tests passed.
+
 ## Next Cycle
 
-Continue this same assigned project, Aura. Start Cycle 137 from the
+Continue this same assigned project, Aura. Start Cycle 138 from the
 `ROADMAP.md` Continuation State and
-`docs/research/cycle-136-2026-06-07.md`. The account
+`docs/research/cycle-137-2026-06-07.md`. The account
 deletion dry-run planner, read-only Settings identity surface, redacted
 shareable request draft, request-code lookup tool, review receipt gate, offline
 apply simulator, private executor package builder, and guarded REST executor
@@ -2056,7 +2070,8 @@ report actions and callable reason support; Cycle 135 added a Stability
 paid-secret sentinel to the provider credential storage guard; Cycle 136 added
 generated wallpaper session request counting, duplicate prompt/style
 confirmation, in-flight request rejection, and Stability account/cooldown error
-copy.
+copy; Cycle 137 removed prompt-derived names/tags from generated favorites and
+added generated-file deletion on favorite removal.
 Actual live callable invocation evidence, a live hosted HTTPS web deletion URL,
 direct RTDB rule tightening, App Check console evidence, production-project
 dry-run evidence, and owner/admin GitHub repository security-settings evidence
@@ -2067,10 +2082,10 @@ hosted URL after owner approval, tighten direct RTDB write rules after callable
 deploy evidence, run a real production-project Firebase executor dry-run after
 owner access is confirmed, collect owner/admin GitHub security settings
 evidence and generate the redacted receipt when access is available, or
-continue with prompt metadata retention/deletion policy, signed release dry-run
-evidence capture on a suitable runner, or the next checkable backend, deploy,
-security, support, policy, or rules hardening artifact if owner-gated evidence
-is still unavailable.
+continue with the on-device AI wallpaper decision gate, signed release dry-run
+evidence capture on a suitable runner, store listing metadata preflight, or the
+next checkable backend, deploy, security, support, policy, or rules hardening
+artifact if owner-gated evidence is still unavailable.
 Commit and push completed work when the active project contract allows it.
 
 ## Previous Cycle Prompt

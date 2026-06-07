@@ -18,6 +18,7 @@ import com.freevibe.data.model.sanitizeCommunityOwnerKey
 import com.freevibe.data.model.sourceUnavailableReasonForFailure
 import com.freevibe.data.model.stableKey
 import com.freevibe.data.repository.CollectionRepository
+import com.freevibe.data.repository.AiWallpaperRepository
 import com.freevibe.data.repository.CommunityBlockRepository
 import com.freevibe.data.repository.CommunityReportRepository
 import com.freevibe.data.repository.FavoritesRepository
@@ -86,6 +87,7 @@ class WallpapersViewModel @Inject constructor(
     private val selectedContent: SelectedContentHolder,
     private val historyManager: WallpaperHistoryManager,
     private val offlineFavorites: OfflineFavoritesManager,
+    private val aiWallpaperRepository: AiWallpaperRepository,
     private val searchHistoryRepo: SearchHistoryRepository,
     private val prefs: PreferencesManager,
     private val colorExtractor: ColorExtractor,
@@ -566,6 +568,12 @@ class WallpapersViewModel @Inject constructor(
                 offlineFavorites.cacheOffline(entity, wallpaper.fullUrl)
             } else {
                 offlineFavorites.removeOffline(entity)
+                if (wallpaper.source == ContentSource.AI_GENERATED) {
+                    aiWallpaperRepository.deleteGeneratedWallpaper(wallpaper.fullUrl)
+                    if (wallpaper.thumbnailUrl != wallpaper.fullUrl) {
+                        aiWallpaperRepository.deleteGeneratedWallpaper(wallpaper.thumbnailUrl)
+                    }
+                }
             }
             _state.update { it.copy(applySuccess = if (isFav) "Removed from favorites" else "Added to favorites") }
         }

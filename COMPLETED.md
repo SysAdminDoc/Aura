@@ -608,6 +608,10 @@ next pass can resume quickly.
   generation rejection, local session request counting, same prompt/style
   duplicate confirmation after successful generation, Stability account and
   cooldown error copy, and generated wallpaper privacy/runbook updates.
+- Completed Cycle 137 prompt metadata retention cleanup: stopped storing prompt
+  words in generated wallpaper tags or favorite names, sanitized generated
+  favorite tags to non-prompt values, deleted generated PNG files after favorite
+  removal, and updated generated wallpaper privacy docs.
 
 ## 2026-06-05
 

@@ -14,6 +14,7 @@ import com.freevibe.data.model.WallpaperCollectionEntity
 import com.freevibe.data.model.favoriteIdentity
 import com.freevibe.data.model.stableKey
 import com.freevibe.data.repository.CollectionRepository
+import com.freevibe.data.repository.AiWallpaperRepository
 import com.freevibe.data.repository.CommunityBlockRepository
 import com.freevibe.data.repository.CommunityReportRepository
 import com.freevibe.data.repository.FavoritesRepository
@@ -589,6 +590,46 @@ class WallpapersViewModelTest {
     }
 
     @Test
+    fun `toggleFavorite deletes generated wallpaper file when removing saved AI wallpaper`() = runTest(dispatcher) {
+        val wallpaperRepo = mockk<WallpaperRepository>()
+        val redditRepo = mockk<RedditRepository>()
+        val favoritesRepo = mockk<FavoritesRepository>()
+        val aiWallpaperRepo = mockk<AiWallpaperRepository>()
+        val wallpaper = wallpaper(
+            id = "generated-1",
+            color = "#101820",
+            source = ContentSource.AI_GENERATED,
+            fullUrl = "file:///data/user/0/com.freevibe/files/ai_wallpapers/generated-1.png",
+        ).copy(
+            thumbnailUrl = "file:///data/user/0/com.freevibe/files/ai_wallpapers/generated-1.png",
+        )
+
+        stubCommonDependencies(
+            wallpaperRepo = wallpaperRepo,
+            redditRepo = redditRepo,
+        )
+        every { favoritesRepo.allIdentities() } returns flowOf(emptySet<FavoriteIdentity>())
+        every { favoritesRepo.isFavorite(any()) } returns flowOf(true)
+        coEvery { favoritesRepo.toggle(any(), true) } just runs
+        coEvery { aiWallpaperRepo.deleteGeneratedWallpaper(any()) } returns true
+
+        val viewModel = createViewModel(
+            wallpaperRepo = wallpaperRepo,
+            redditRepo = redditRepo,
+            favoritesRepoOverride = favoritesRepo,
+            aiWallpaperRepoOverride = aiWallpaperRepo,
+        )
+        every { favoritesRepo.isFavorite(any()) } returns flowOf(true)
+
+        viewModel.toggleFavorite(wallpaper)
+        advanceUntilIdle()
+
+        coVerify(exactly = 1) {
+            aiWallpaperRepo.deleteGeneratedWallpaper(wallpaper.fullUrl)
+        }
+    }
+
+    @Test
     fun `downloadWallpaper marks saved favorite unavailable when provider returns removed status`() = runTest(dispatcher) {
         val wallpaperRepo = mockk<WallpaperRepository>()
         val redditRepo = mockk<RedditRepository>()
@@ -777,6 +818,7 @@ class WallpapersViewModelTest {
         reportRepoOverride: CommunityReportRepository? = null,
         communityBlockRepoOverride: CommunityBlockRepository? = null,
         wallpaperUploadRepoOverride: WallpaperUploadRepository? = null,
+        aiWallpaperRepoOverride: AiWallpaperRepository? = null,
         wallhavenProviderEnabled: Boolean = true,
         redditProviderEnabled: Boolean = true,
         pexelsProviderEnabled: Boolean = true,
@@ -840,6 +882,7 @@ class WallpapersViewModelTest {
             selectedContent = selectedContent,
             historyManager = mockk<WallpaperHistoryManager>(relaxed = true),
             offlineFavorites = mockk<OfflineFavoritesManager>(relaxed = true),
+            aiWallpaperRepository = aiWallpaperRepoOverride ?: mockk<AiWallpaperRepository>(relaxed = true),
             searchHistoryRepo = searchHistoryRepo,
             prefs = prefs,
             colorExtractor = mockk(relaxed = true),

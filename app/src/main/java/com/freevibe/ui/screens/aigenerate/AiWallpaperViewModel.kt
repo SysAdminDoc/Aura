@@ -99,6 +99,26 @@ fun generatedWallpaperReportInput(
     uploaderName = "Aura generated wallpaper",
 )
 
+private val GENERATED_WALLPAPER_SAFE_TAGS =
+    setOf("ai-generated") + AiStyle.entries.mapNotNull { it.preset.takeIf(String::isNotBlank) }
+
+fun generatedWallpaperFavoriteEntity(wallpaper: Wallpaper): FavoriteEntity = FavoriteEntity(
+    id = wallpaper.id,
+    source = ContentSource.AI_GENERATED.name,
+    type = "WALLPAPER",
+    thumbnailUrl = wallpaper.thumbnailUrl,
+    fullUrl = wallpaper.fullUrl,
+    name = "Generated wallpaper",
+    width = wallpaper.width,
+    height = wallpaper.height,
+    tags = wallpaper.tags
+        .filter { it in GENERATED_WALLPAPER_SAFE_TAGS }
+        .joinToString(",")
+        .ifBlank { "ai-generated" },
+    category = "AI Generated",
+    uploaderName = "AI",
+)
+
 data class AiWallpaperUiState(
     val prompt: String = "",
     val selectedStyle: AiStyle = AiStyle.PHOTOGRAPHIC,
@@ -298,24 +318,10 @@ class AiWallpaperViewModel @Inject constructor(
         }
     }
 
-    fun saveToFavorites(prompt: String) {
+    fun saveToFavorites() {
         val wallpaper = _state.value.result ?: return
         viewModelScope.launch {
-            favoritesRepo.add(
-                FavoriteEntity(
-                    id = wallpaper.id,
-                    source = ContentSource.AI_GENERATED.name,
-                    type = "WALLPAPER",
-                    thumbnailUrl = wallpaper.thumbnailUrl,
-                    fullUrl = wallpaper.fullUrl,
-                    name = "AI: ${prompt.take(60).ifBlank { "Generated wallpaper" }}",
-                    width = wallpaper.width,
-                    height = wallpaper.height,
-                    tags = wallpaper.tags.joinToString(","),
-                    category = "AI Generated",
-                    uploaderName = "AI",
-                )
-            )
+            favoritesRepo.add(generatedWallpaperFavoriteEntity(wallpaper))
             _state.update { it.copy(isSaved = true) }
         }
     }

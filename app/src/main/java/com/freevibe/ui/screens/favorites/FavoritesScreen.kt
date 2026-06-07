@@ -139,6 +139,8 @@ fun FavoritesScreen(
                                     )
                                     if (result == SnackbarResult.ActionPerformed) {
                                         snapshotItems.forEach { viewModel.restoreFavorite(it) }
+                                    } else {
+                                        viewModel.deleteGeneratedWallpaperFiles(snapshotItems)
                                     }
                                 }
                             },
