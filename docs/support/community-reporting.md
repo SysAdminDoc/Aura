@@ -2,9 +2,10 @@
 
 Cycles 51 through 54 add the first private report queue for Aura community and
 mirrored provider content. Cycle 63 defines the callable quota contract that
-will move report submission behind App-Checked backend enforcement. Reports are
-separate from local hide/downvote behavior and feed admin hide/restore actions
-through the existing moderation hide list.
+will move report submission behind App-Checked backend enforcement, and Cycle
+94 adds the first handler-backed `submitCommunityReport` Functions
+implementation. Reports are separate from local hide/downvote behavior and feed
+admin hide/restore actions through the existing moderation hide list.
 
 ## Report Reasons
 
@@ -79,7 +80,10 @@ Reporter UIDs are not public catalog data.
   [`docs/community-callable-quota-enforcement.md`](../community-callable-quota-enforcement.md):
   `submitCommunityReport` must require Firebase Auth, App Check, a limited-use
   App Check token, server-derived UID, quota ledger updates, dedupe ledger
-  updates, and the final `/community_reports/{reportId}` write.
+  updates, and the final `/community_reports/{reportId}` write. Cycle 94 adds
+  the handler core and focused Functions tests; Emulator Suite coverage,
+  Android migration, and owner-approved deploy evidence are still required
+  before production reliance.
 - The block-user policy is defined in
   [`docs/community-block-user-policy.md`](../community-block-user-policy.md):
   block state is private to the blocker and admins, while the reverse index is
@@ -87,9 +91,10 @@ Reporter UIDs are not public catalog data.
 
 ## Remaining Follow-Up
 
-- App Check client providers and the report quota policy are tracked, but
-  Firebase console enforcement and callable backend quota enforcement still need
-  the backend rollout pass before public production reliance.
+- App Check client providers, the report quota policy, and the first report
+  callable handler are tracked, but Emulator Suite coverage, Android migration,
+  Firebase console enforcement, and owner-approved deploy evidence are still
+  required before public production reliance.
 - Owner-delete storage handles are tracked in
   [`docs/community-upload-deletion.md`](../community-upload-deletion.md), and
   Cycle 60 adds private admin rights-confirmed takedown receipts for new rows
@@ -103,4 +108,5 @@ Reporter UIDs are not public catalog data.
 - Cycle 62 adds closed-report status filters for Hidden, Dismissed, and Restored
   review queues. Cycle 63 adds the callable quota enforcement contract for the
   backend report submission migration. Cycle 68 reserves the private block-user
-  data contract; UI filtering remains open.
+  data contract. Cycle 94 adds the handler-backed report callable; UI migration
+  and emulator-backed callable coverage remain open.

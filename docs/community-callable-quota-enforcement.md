@@ -1,10 +1,11 @@
 # Community Callable Quota Enforcement
 
 Cycle 63 turns the Cycle 54 quota policy into a backend contract for callable
-functions. Cycle 93 adds the first checked Cloud Functions project scaffold.
-The exported callables currently fail closed until each surface has a write
-handler and emulator-backed tests; this document is the implementation contract
-that the backend and Android repository migration must follow.
+functions. Cycle 93 adds the first checked Cloud Functions project scaffold,
+and Cycle 94 adds the first handler-backed callable for community reports. The
+remaining exported callables currently fail closed until each surface has a
+write handler and emulator-backed tests; this document is the implementation
+contract that the backend and Android repository migration must follow.
 
 ## Contract Source
 
@@ -64,8 +65,20 @@ Cycle 93 added:
   limited-use token choices, UTC day boundaries, duplicate handling, cooldown,
   and daily-limit decisions.
 
-Do not deploy the scaffold as production enforcement until at least one surface
-has a real write handler, Emulator Suite coverage, and Android migration code.
+Cycle 94 added:
+
+- `functions/src/reportHandler.ts` implements `submitCommunityReport` handler
+  logic with server-derived reporter UID, envelope validation, report payload
+  normalization, HTTPS source URL validation, UTC quota reservation, duplicate
+  handling, and final `/community_reports/{reportId}` plus dedupe-marker writes.
+- `functions/test/submitCommunityReport.test.cjs` covers accepted, duplicate,
+  cooldown, daily-limit, unauthenticated, missing-App-Check, reporter-override,
+  and insecure-source-URL cases.
+
+Do not claim production callable enforcement until the report handler has
+Emulator Suite coverage, Android migration code, owner-approved deploy evidence,
+and Firebase Console App Check evidence. The six non-report exports remain
+fail-closed.
 
 ## Request Envelope
 

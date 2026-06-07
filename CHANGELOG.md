@@ -3,6 +3,7 @@
 All notable changes to Aura will be documented in this file.
 
 ## Unreleased
+- **Community report callable handler (Cycle 94)**: implemented the `submitCommunityReport` Functions handler core with Auth/App Check identity enforcement, server-derived reporter UID, HTTPS/source validation, UTC quota reservation, dedupe handling, and focused unit coverage.
 - **Cloud Functions scaffold (Cycle 93)**: added a Node 20 TypeScript `functions/` project with App Check/Auth fail-closed callable exports, a manifest-synced callable contract mirror, a UTC quota decision engine, backend manifest coverage, and CI tests.
 - **Hosted deletion page template gate (Cycle 92)**: added checked publishable copy and a validator for the hosted account deletion request page before the owner assigns a live HTTPS URL.
 - **Callable contract manifest gate (Cycle 91)**: added a backend JSON manifest and validator for the community callable quota contract, including UTC quota-day boundary, App Check/Auth requirements, final write paths, and CI coverage.

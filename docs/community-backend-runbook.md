@@ -2,9 +2,10 @@
 
 Cycle 64 defines the deployable evidence packet for Aura community backend
 rules. The backend surface currently includes Firebase Realtime Database rules,
-Cloud Storage rules, a fail-closed Cloud Functions scaffold, local Emulator
-Suite tests, Functions unit tests, and a deterministic manifest of the files
-that affect backend deployment.
+Cloud Storage rules, a Cloud Functions scaffold with handler-backed report
+submission and fail-closed pending callables, local Emulator Suite tests,
+Functions unit tests, and a deterministic manifest of the files that affect
+backend deployment.
 
 ## Backend Manifest
 
@@ -171,8 +172,9 @@ must include:
   submission or after any web deletion URL change.
 - Hosted account deletion page copy check from
   `tools/community_deletion_web_page_check.py` before owner publication.
-- Functions scaffold status from `npm run test:functions` until real callable
-  write handlers and emulator coverage replace the fail-closed exports.
+- Functions report-handler status from `npm run test:functions` and the
+  remaining fail-closed callable export list until emulator coverage replaces
+  the pending handler status.
 - Account deletion review receipt from
   `tools/community_account_deletion_review.py` before any future trusted apply
   step accepts a deletion plan.

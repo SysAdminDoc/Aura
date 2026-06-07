@@ -349,6 +349,12 @@ next pass can resume quickly.
   seven contracted community surfaces, a manifest-synced callable contract
   mirror, a UTC quota decision engine, Functions unit tests, backend manifest
   coverage, and CI change detection.
+- Completed Cycle 94 community report callable handler: implemented
+  `submitCommunityReport` handler logic with Firebase Auth/App Check identity
+  enforcement, server-derived reporter UID, report payload normalization,
+  HTTPS source validation, UTC quota reservation, duplicate handling, and
+  focused Functions tests for accepted, duplicate, cooldown, daily-limit,
+  unauthenticated, and missing-App-Check paths.
 
 ## 2026-06-05
 

@@ -62,14 +62,19 @@
       "sha256": "5394e08997e13c82664fa524fd8372bfce8cc2f14f339fdbf32bcf594e69b771"
     },
     {
-      "bytes": 1143,
+      "bytes": 1165,
       "path": "functions/src/index.ts",
-      "sha256": "cc45f53390383828deb1be1ed5c30ffabddfa4358e16c929a4d625f1dc2865b5"
+      "sha256": "a7e518a447d2ebdcc977c865e7f4111dc77be2b5b6990e54f86868ebe0a013ab"
     },
     {
       "bytes": 5421,
       "path": "functions/src/quotaEngine.ts",
       "sha256": "e050ecd2d4dc61c85cb9bb596f386f62b0f291cde1ceb16d5fd2198cf8ea2200"
+    },
+    {
+      "bytes": 11195,
+      "path": "functions/src/reportHandler.ts",
+      "sha256": "edf32b224da730756e21862b21952a325f04c822672199e4e97d09a9d750702e"
     }
   ],
   "firebaseCli": {

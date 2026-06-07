@@ -1,8 +1,8 @@
 # Autonomous Loop State
 
 **Assigned project:** `C:\Users\--\repos\Aura`
-**Current pass:** 2026-06-07 Cycle 93 Cloud Functions scaffold
-**Last commit before pass:** `515d8c8` (`feat(community): add deletion web page gate`)
+**Current pass:** 2026-06-07 Cycle 94 community report callable handler
+**Last commit before pass:** `8a26896` (`feat(community): add functions scaffold`)
 
 ## 2026-06-05 Result
 
@@ -892,10 +892,35 @@
   dependency chain still reports moderate transitive `uuid` advisories; forced
   audit remediation would downgrade Firebase Admin across a breaking boundary.
 
+## Cycle 94 Result - 2026-06-07
+
+- Added `functions/src/reportHandler.ts` and switched
+  `submitCommunityReport` from fail-closed scaffold to a handler-backed
+  callable.
+- The handler requires Firebase Auth and App Check, rejects client-supplied
+  `reporterUid`, validates the common envelope, normalizes report payload
+  fields, requires HTTPS source URLs when present, derives dedupe keys
+  server-side, reserves UTC quota through the backend adapter, and writes the
+  report plus dedupe marker after quota acceptance.
+- Added `functions/test/submitCommunityReport.test.cjs` for accepted,
+  duplicate, cooldown, daily-limit, unauthenticated, missing-App-Check,
+  reporter-override, and insecure-source-URL paths.
+- Refreshed `docs/community-backend-manifest.json`.
+- Updated `docs/research/cycle-94-2026-06-07.md`,
+  `docs/community-callable-quota-enforcement.md`,
+  `docs/community-quota-rate-limits.md`,
+  `docs/community-backend-runbook.md`,
+  `docs/support/community-reporting.md`, `ROADMAP.md`, `COMPLETED.md`, and
+  `CHANGELOG.md`.
+- Cycle 94 verification: Functions test suite, backend manifest check,
+  callable contract manifest check, diff hygiene, and attribution/ASCII scans.
+  Emulator-backed callable invocation, Android report migration, owner-approved
+  deploy evidence, and Firebase Console App Check evidence remain open.
+
 ## Next Cycle
 
-Continue this same assigned project, Aura. Start Cycle 94 from the `ROADMAP.md`
-Continuation State and `docs/research/cycle-93-2026-06-07.md`. The account
+Continue this same assigned project, Aura. Start Cycle 95 from the `ROADMAP.md`
+Continuation State and `docs/research/cycle-94-2026-06-07.md`. The account
 deletion dry-run planner, read-only Settings identity surface, redacted
 shareable request draft, request-code lookup tool, review receipt gate, offline
 apply simulator, private executor package builder, and guarded REST executor
@@ -915,14 +940,16 @@ owner/admin public-upload deletion workflow evidence after clean plans; Cycle
 boundary; Cycle 92 added checked hosted deletion page copy for owner
 publication; Cycle 93 added the Node 20 Cloud Functions scaffold, fail-closed
 community callable exports, a manifest-synced Functions contract mirror, and a
-UTC quota decision engine. Real callable write handlers, Android callable
-migration, a live hosted HTTPS web deletion URL, and production-project dry-run
-evidence remain open. Next add the first real callable write handler with
-emulator-backed accepted, duplicate, cooldown, daily-limit, unauthenticated,
-and missing-App-Check tests; add Android callable repository adapters; publish
-the hosted URL after owner approval; or run a real production-project Firebase
-executor dry-run after owner access is confirmed. Commit and push completed
-work when the active project contract allows it.
+UTC quota decision engine; Cycle 94 added the handler-backed
+`submitCommunityReport` callable with focused quota, dedupe, Auth, App Check,
+and payload validation tests. Emulator-backed callable invocation, Android
+callable migration, a live hosted HTTPS web deletion URL, and
+production-project dry-run evidence remain open. Next add emulator-backed
+coverage for `submitCommunityReport`, add Android report callable repository
+adapters, implement the next real callable write handler, publish the hosted
+URL after owner approval, or run a real production-project Firebase executor
+dry-run after owner access is confirmed. Commit and push completed work when
+the active project contract allows it.
 
 ## Previous Cycle Prompt
 
