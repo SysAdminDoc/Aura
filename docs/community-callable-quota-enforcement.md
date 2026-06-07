@@ -17,11 +17,13 @@ Android user-block callable migration adapter, Cycle 112 adds the Android
 sound upload finalizer callable migration adapter, Cycle 113 adds the Android
 wallpaper upload finalizer callable migration adapter, and Cycle 114 adds the
 Android profile edit callable migration adapter. Cycle 115 adds the checked
-Android callable wire-protocol manifest. Every exported callable now has a
-handler core, Android client adapter, and machine-checked Android envelope
-coverage, while production enforcement still waits for owner-approved deploy
-evidence, App Check console evidence, live callable invocation evidence, and
-direct RTDB rule tightening.
+Android callable wire-protocol manifest, and Cycle 116 adds the redacted live
+callable rollout receipt gate. Every exported callable now has a handler core,
+Android client adapter, machine-checked Android envelope coverage, and a
+checked receipt format for future live invocation evidence, while production
+enforcement still waits for owner-approved deploy evidence, App Check console
+evidence, actual live callable invocation evidence, and direct RTDB rule
+tightening.
 
 ## Contract Source
 
@@ -261,6 +263,19 @@ Cycle 115 added:
 - Backend CI execution for the wire-protocol guard before the broader backend
   tool test sweep.
 
+Cycle 116 added:
+
+- `docs/community-callable-rollout-evidence.md` as the private-evidence and
+  redacted-receipt runbook for future live callable rollout proof.
+- `tools/community_callable_rollout_receipt.py` to validate owner-provided
+  private live invocation evidence against the callable contract and Android
+  wire-protocol manifests, then emit a receipt that hashes project IDs,
+  operation IDs, resource IDs, private evidence references, and caller UID
+  hashes.
+- Backend tool tests that reject missing surface evidence, token-mode drift,
+  operation-prefix drift, manifest-hash drift, invalid Functions App Check
+  state, and duplicate receipt surfaces.
+
 Report, vote, follow, user-block, sound upload finalization, wallpaper upload
 finalization, and profile edit writes are the Android write surfaces with
 callable client code and checked Android wire-protocol coverage today.
@@ -341,6 +356,8 @@ response when the server provides an existing target.
   or deployment-manifest edit.
 - Run `tools/community_callable_wire_protocol_check.py` after any callable
   contract or Android callable-client edit.
+- Run `tools/community_callable_rollout_receipt.py` after owner-approved live
+  callable invocation evidence is collected.
 - Run `npm --prefix functions test` after any Functions source or contract edit.
 - Run `npm run test:functions-emulator` after any emulator-backed handler
   persistence test or root backend script edit.

@@ -55,6 +55,7 @@ jobs:
             tools/community_backend_manifest.py \
             tools/community_callable_contract_check.py \
             tools/community_callable_wire_protocol_check.py \
+            tools/community_callable_rollout_receipt.py \
             tools/community_account_deletion_plan.py \
             tools/community_deletion_request_lookup.py \
             tools/community_deletion_web_intake.py \
@@ -76,6 +77,7 @@ jobs:
             docs/community-backend-runbook.md \
             docs/community-callable-contract.json \
             docs/community-callable-wire-protocol.json \
+            docs/community-callable-rollout-evidence.md \
             docs/community-account-deletion-policy.md \
             docs/privacy/privacy-policy.md \
             docs/support/community-account-deletion-web-page.md \

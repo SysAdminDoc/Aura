@@ -9,6 +9,8 @@ wallpaper upload, and profile edit callable client adapters, checked Android
 callable wire-protocol coverage, local Emulator Suite tests, Functions unit
 tests, and a deterministic manifest of the files that affect backend
 deployment.
+Cycle 116 adds a redacted callable rollout receipt tool for future
+owner-provided live invocation evidence.
 
 ## Backend Manifest
 
@@ -150,6 +152,9 @@ must include:
   backend contract files change.
 - Callable wire-protocol manifest check result when callable policy, quota,
   Android callable client, or Android callable test files change.
+- Callable rollout receipt status from
+  `tools/community_callable_rollout_receipt.py` after owner-approved live
+  callable invocation evidence exists.
 - Functions unit test result when `functions/`, `firebase.json`, or callable
   contract files change.
 - Firebase rules test result.
@@ -197,6 +202,10 @@ must include:
   vote, follow, user-block, sound-upload, wallpaper-upload, and profile-edit
   client method names, payload builders, request envelopes, App Check token
   choices, operation prefixes, response resource IDs, and focused client tests.
+- Redacted live callable rollout receipt from
+  `tools/community_callable_rollout_receipt.py` after private owner evidence
+  proves all seven callable surfaces were invoked against the target Firebase
+  project.
 - Account deletion review receipt from
   `tools/community_account_deletion_review.py` before any future trusted apply
   step accepts a deletion plan.

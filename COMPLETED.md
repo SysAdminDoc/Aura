@@ -500,6 +500,13 @@ next pass can resume quickly.
   the backend callable contract, Android client methods, payload builders,
   shared request envelope, App Check token choices, operation prefixes,
   response resource IDs, and focused client tests.
+- Completed Cycle 116 callable rollout evidence receipt: added
+  `docs/community-callable-rollout-evidence.md`,
+  `tools/community_callable_rollout_receipt.py`, and backend tool tests so
+  future owner-provided live callable invocation evidence can be validated
+  against the callable contract and wire-protocol manifests, then reduced to a
+  redacted receipt that omits raw project IDs, operation IDs, resource IDs,
+  command output, credentials, and tokens.
 
 ## 2026-06-05
 
