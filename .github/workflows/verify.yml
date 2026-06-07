@@ -168,6 +168,9 @@ jobs:
       - name: GitHub workflow permissions policy
         run: python3 tools/github_workflow_permissions_check.py --policy docs/distribution/github-workflow-permissions.json --repo-root .
 
+      - name: GitHub workflow secret policy
+        run: python3 tools/github_workflow_secrets_check.py --policy docs/distribution/github-workflow-secrets.json --repo-root .
+
       - name: Dependabot update policy
         run: python3 tools/dependabot_config_check.py --config .github/dependabot.yml
 

@@ -1,8 +1,8 @@
 # Autonomous Loop State
 
 **Assigned project:** `C:\Users\--\repos\Aura`
-**Current pass:** 2026-06-07 Cycle 122 GitHub workflow permissions guard
-**Last commit before pass:** `d790081` (`test(security): add actions allowlist guard`)
+**Current pass:** 2026-06-07 Cycle 123 GitHub workflow secret guard
+**Last commit before pass:** `7031e88` (`test(security): add workflow permissions guard`)
 
 ## 2026-06-05 Result
 
@@ -1635,11 +1635,36 @@
   dependency license policy check, high-severity Functions npm audit, diff
   hygiene, and attribution/ASCII scans passed.
 
+## Cycle 123 Result - 2026-06-07
+
+- Added `docs/distribution/github-workflow-secrets.json` with reviewed workflow
+  files, forbidden token shortcuts, and release signing secret/env-name pairs.
+- Added `tools/github_workflow_secrets_check.py` to reject missing or
+  unexpected workflow files, unreviewed secret references, unreviewed
+  environment aliases, forbidden token patterns, non-env secret expressions,
+  and unused policy entries.
+- Added `test/tools/github_workflow_secrets_check_test.py` coverage for the
+  live workflow set and drift cases around unreviewed secrets, forbidden token
+  references, alias drift, missing workflows, and unused policy entries.
+- Wired `.github/workflows/verify.yml` so the workflow secret policy check runs
+  before Android setup.
+- Updated `docs/distribution/supply-chain.md`,
+  `docs/research/cycle-123-2026-06-07.md`, `ROADMAP.md`, `COMPLETED.md`,
+  `CHANGELOG.md`, and loop state.
+- Cycle 123 verification: GitHub workflow secret policy check, focused
+  secret-policy tests, backend tool tests, GitHub workflow permissions policy
+  check, GitHub Actions allowlist check, Gradle wrapper policy check,
+  Dependabot policy check, GitHub security workflow policy check, callable
+  wire-protocol check, callable contract check, dependency notice lock checks,
+  native lock check, dependency overlay check, dependency license policy check,
+  high-severity Functions npm audit, diff hygiene, and attribution/ASCII scans
+  passed.
+
 ## Next Cycle
 
-Continue this same assigned project, Aura. Start Cycle 123 from the
+Continue this same assigned project, Aura. Start Cycle 124 from the
 `ROADMAP.md` Continuation State and
-`docs/research/cycle-122-2026-06-07.md`. The account
+`docs/research/cycle-123-2026-06-07.md`. The account
 deletion dry-run planner, read-only Settings identity surface, redacted
 shareable request draft, request-code lookup tool, review receipt gate, offline
 apply simulator, private executor package builder, and guarded REST executor
@@ -1724,7 +1749,8 @@ coverage for GitHub Actions, Gradle, root npm, and Functions npm; Cycle 119
 added a redacted receipt gate for future owner/admin GitHub evidence; Cycle
 120 pinned the Gradle wrapper ZIP checksum and added a wrapper policy guard;
 Cycle 121 added a repository-wide GitHub Actions allowlist guard; Cycle 122
-added a repository-wide GitHub workflow permissions guard.
+added a repository-wide GitHub workflow permissions guard; Cycle 123 added a
+repository-wide GitHub workflow secret guard.
 Actual live callable invocation evidence, a live hosted HTTPS web deletion URL,
 direct RTDB rule tightening, App Check console evidence, production-project
 dry-run evidence, and owner/admin GitHub repository security-settings evidence

@@ -538,6 +538,11 @@ next pass can resume quickly.
   `tools/github_workflow_permissions_check.py`, and backend tool tests so
   workflow events, top-level permissions, job-level permissions, expected jobs,
   and expected workflow files are checked before Android setup in verify.
+- Completed Cycle 123 GitHub workflow secret guard: added
+  `docs/distribution/github-workflow-secrets.json`,
+  `tools/github_workflow_secrets_check.py`, and backend tool tests so workflow
+  secret references are limited to reviewed release signing secrets and
+  forbidden token shortcuts fail verification.
 
 ## 2026-06-05
 
