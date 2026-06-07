@@ -524,6 +524,10 @@ next pass can resume quickly.
   owner/admin branch-protection, Dependabot, code-scanning, secret-scanning,
   and release-attestation evidence can be validated before emitting a redacted
   receipt.
+- Completed Cycle 120 Gradle wrapper checksum guard: added
+  `distributionSha256Sum` for the reviewed Gradle 8.12 bin ZIP, plus
+  `tools/gradle_wrapper_check.py` and backend tool tests so wrapper URL,
+  checksum, URL validation, storage roots, and timeout drift fail verification.
 
 ## 2026-06-05
 

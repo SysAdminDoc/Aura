@@ -165,6 +165,9 @@ jobs:
       - name: Dependabot update policy
         run: python3 tools/dependabot_config_check.py --config .github/dependabot.yml
 
+      - name: Gradle wrapper policy
+        run: python3 tools/gradle_wrapper_check.py --properties gradle/wrapper/gradle-wrapper.properties
+
       - name: Set up JDK 17
         uses: actions/setup-java@v4
         with:

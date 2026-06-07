@@ -18,6 +18,7 @@ Aura is side-loaded through GitHub Releases and Obtainium, so release artifacts 
 | FFmpeg source correspondence checklist | `docs/legal/ffmpeg-source-correspondence.md` | Records resolved FFmpeg AAR/payload hashes, embedded version/configure evidence, source candidates, and remaining owner actions for source correspondence. |
 | Artifact attestation | `.github/workflows/release.yml` | Uses `actions/attest@v4` against `release/SHA256SUMS.txt` so release artifact digests are bound to the GitHub Actions build. |
 | Gradle dependency verification | `gradle/verification-metadata.xml` | Records SHA-256 checksums for resolved Gradle plugins and app dependencies. |
+| Gradle wrapper policy | `gradle/wrapper/gradle-wrapper.properties`, `tools/gradle_wrapper_check.py`, `.github/workflows/verify.yml` | Pins the Gradle 8.12 wrapper distribution SHA-256, keeps URL validation enabled, and rejects wrapper distribution drift. |
 | Dependency Review | `.github/workflows/dependency-review.yml` | Runs on pull requests and fails high/critical vulnerable dependency additions. |
 | OpenSSF Scorecard | `.github/workflows/scorecard.yml` | Runs on main pushes, branch-protection changes, weekly schedule, and manual dispatch; keeps public result publishing disabled and uploads SARIF to code scanning. |
 | GitHub security workflow policy | `docs/distribution/github-security-workflows.json`, `tools/github_security_workflow_check.py`, `.github/workflows/verify.yml` | Fails verification when dependency review, scorecard, or release workflow security controls drift or add unsafe trigger/permission escape hatches. |
@@ -225,6 +226,14 @@ When FFmpeg payload facts change, refresh `docs/legal/ffmpeg-source-corresponden
 ## Gradle dependency verification
 
 Gradle checksum metadata is committed at `gradle/verification-metadata.xml`. Regenerate it only during a dependency-resolution maintenance pass, not by hand.
+
+The Gradle wrapper itself is pinned separately in `gradle/wrapper/gradle-wrapper.properties` with the official SHA-256 for `gradle-8.12-bin.zip`. PR/main verification runs:
+
+```bash
+python3 tools/gradle_wrapper_check.py --properties gradle/wrapper/gradle-wrapper.properties
+```
+
+The check fails if the wrapper distribution URL, SHA-256, URL validation, storage roots, or timeout drifts. When upgrading Gradle, update `distributionUrl`, `distributionSha256Sum`, `tools/gradle_wrapper_check.py`, and the focused wrapper tests in the same change after verifying the official Gradle checksum.
 
 Use Android Studio's bundled JBR:
 

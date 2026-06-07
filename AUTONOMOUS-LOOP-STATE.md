@@ -1,8 +1,8 @@
 # Autonomous Loop State
 
 **Assigned project:** `C:\Users\--\repos\Aura`
-**Current pass:** 2026-06-07 Cycle 119 GitHub security settings receipt
-**Last commit before pass:** `8c63864` (`test(security): add dependabot policy guard`)
+**Current pass:** 2026-06-07 Cycle 120 Gradle wrapper checksum guard
+**Last commit before pass:** `8713b0e` (`test(security): add settings receipt guard`)
 
 ## 2026-06-05 Result
 
@@ -1563,11 +1563,35 @@
   App Check evidence, and owner/admin GitHub security settings evidence remain
   open.
 
+## Cycle 120 Result - 2026-06-07
+
+- Added `distributionSha256Sum` to
+  `gradle/wrapper/gradle-wrapper.properties` for the reviewed Gradle 8.12 bin
+  ZIP checksum.
+- Added `tools/gradle_wrapper_check.py` to validate the wrapper distribution
+  URL, SHA-256, URL validation setting, storage roots, and network timeout.
+- Added `test/tools/gradle_wrapper_check_test.py` coverage for the live wrapper
+  and drift cases around missing checksum, checksum drift, `-all`
+  distribution drift, disabled URL validation, and low network timeout.
+- Wired `.github/workflows/verify.yml` so the Gradle wrapper policy check runs
+  before Android setup.
+- Updated `docs/distribution/supply-chain.md`,
+  `docs/research/cycle-120-2026-06-07.md`, `ROADMAP.md`, `COMPLETED.md`,
+  `CHANGELOG.md`, and loop state.
+- Cycle 120 verification: Gradle wrapper policy check, focused wrapper policy
+  tests, backend tool tests, Dependabot policy check, GitHub security workflow
+  policy check, callable wire-protocol check, callable contract check,
+  dependency notice lock checks, native lock check, dependency overlay check,
+  dependency license policy check, high-severity Functions npm audit, diff
+  hygiene, and attribution/ASCII scans passed. Future Gradle upgrades must
+  update the wrapper URL, checksum, policy constant, tests, and related
+  dependency-verification metadata together.
+
 ## Next Cycle
 
-Continue this same assigned project, Aura. Start Cycle 120 from the
+Continue this same assigned project, Aura. Start Cycle 121 from the
 `ROADMAP.md` Continuation State and
-`docs/research/cycle-119-2026-06-07.md`. The account
+`docs/research/cycle-120-2026-06-07.md`. The account
 deletion dry-run planner, read-only Settings identity surface, redacted
 shareable request draft, request-code lookup tool, review receipt gate, offline
 apply simulator, private executor package builder, and guarded REST executor
@@ -1648,11 +1672,13 @@ client surfaces; Cycle 116 added a redacted receipt gate for future
 owner-provided live callable rollout evidence; Cycle 117 added a checked
 GitHub security workflow policy guard for Dependency Review, OpenSSF Scorecard,
 and Release workflow drift; Cycle 118 added checked Dependabot version-update
-coverage for GitHub Actions, Gradle, root npm, and Functions npm. Actual live
-callable invocation evidence, a live hosted HTTPS web deletion URL, direct
-RTDB rule tightening, App Check console evidence, production-project dry-run
-evidence, and owner/admin GitHub repository security-settings evidence remain
-open; Cycle 119 added a redacted receipt gate for that future GitHub evidence.
+coverage for GitHub Actions, Gradle, root npm, and Functions npm; Cycle 119
+added a redacted receipt gate for future owner/admin GitHub evidence; Cycle
+120 pinned the Gradle wrapper ZIP checksum and added a wrapper policy guard.
+Actual live callable invocation evidence, a live hosted HTTPS web deletion URL,
+direct RTDB rule tightening, App Check console evidence, production-project
+dry-run evidence, and owner/admin GitHub repository security-settings evidence
+remain open.
 Next collect owner-approved live callable invocation evidence and generate the
 redacted rollout receipt when deploy/App Check access is available, publish the
 hosted URL after owner approval, tighten direct RTDB write rules after callable
