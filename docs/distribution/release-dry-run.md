@@ -25,6 +25,9 @@ Manual branch runs:
   target audience, content rating notes, Data safety, UGC, generated content,
   sensitive permissions, and explicit owner actions before the signed release
   build.
+- Check that GitHub/Obtainium/Izzy/F-Droid channel status, anti-feature notes,
+  manifest permissions, reviewed network services, and proprietary dependency
+  markers remain disclosed before the signed release build.
 - Check dependency notice, native compliance, and curated overlay drift gates.
 - Generate `SHA256SUMS.txt` and `RELEASE_NOTES.md`.
 - Run `tools/release_artifact_bundle_check.py` against the final `release/` directory.
@@ -60,6 +63,7 @@ python3 tools/privacy_policy_link_check.py --policy docs/privacy/privacy-policy-
 python3 tools/privacy_data_safety_check.py --policy docs/privacy/data-safety.json --repo-root .
 python3 tools/community_guidelines_consent_check.py --repo-root .
 python3 tools/play_app_content_packet_check.py --policy docs/distribution/play-app-content.json --repo-root .
+python3 tools/alt_store_metadata_check.py --policy docs/distribution/alt-store-metadata.json --repo-root .
 ```
 
 The text-mode check fails when title or description limits drift, the current
@@ -81,6 +85,10 @@ The Play App content packet fails when the owner-ready declaration file loses
 required sections, source URLs, evidence paths, no-ads/privacy alignment,
 target-audience guardrails, UGC/generated-content controls, sensitive
 permission rows, or required owner actions.
+The alternative-store disclosure matrix fails when channel statuses,
+anti-feature notes, manifest permissions, reviewed network services,
+proprietary dependency markers, or Izzy/F-Droid submission notes drift from the
+current full-build decision.
 
 The release workflow validates the final directory before upload:
 

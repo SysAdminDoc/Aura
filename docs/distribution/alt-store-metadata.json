@@ -1,0 +1,311 @@
+{
+  "schemaVersion": 1,
+  "policyKind": "altStoreDisclosureMatrix",
+  "packageName": "com.freevibe",
+  "docsPath": "docs/distribution/alt-store-metadata.md",
+  "decision": "full-build-for-github-obtainium-izzy-fdroid-mainline-blocked",
+  "requiredEvidencePaths": [
+    "app/build.gradle.kts",
+    "settings.gradle.kts",
+    "app/src/main/AndroidManifest.xml",
+    "docs/distribution/channel-strategy.md",
+    "docs/distribution/developer-verification.md",
+    "docs/privacy/data-safety.json",
+    "docs/security/network-endpoints.json",
+    "tools/fdroid_preflight.py",
+    "fastlane/metadata/android/en-US/full_description.txt"
+  ],
+  "channels": [
+    {
+      "id": "github-releases",
+      "name": "GitHub Releases",
+      "status": "supported",
+      "artifact": "Signed universal APK from release workflow",
+      "disclosure": "Primary public install/update path with checksums, release notes, and artifact attestation."
+    },
+    {
+      "id": "obtainium",
+      "name": "Obtainium",
+      "status": "supported",
+      "artifact": "Same GitHub Release APK selected by obtainium.json",
+      "disclosure": "Uses upstream GitHub tags and APK assets; users receive the same signed full build."
+    },
+    {
+      "id": "izzyondroid",
+      "name": "IzzyOnDroid",
+      "status": "candidate",
+      "artifact": "Same signed GitHub Release APK after owner submission",
+      "disclosure": "Candidate listing must disclose proprietary dependencies, non-free network services, sensitive permissions, UGC moderation, and optional provider keys."
+    },
+    {
+      "id": "fdroid-mainline",
+      "name": "F-Droid mainline",
+      "status": "blocked",
+      "artifact": "No current artifact",
+      "disclosure": "Blocked until a real FOSS flavor removes or isolates Firebase, Google Services, and Play Services ML Kit dependencies."
+    }
+  ],
+  "antiFeatures": [
+    {
+      "id": "NonFreeDep",
+      "applies": true,
+      "details": {
+        "en-US": "The full build depends on Firebase libraries, the Google Services Gradle plugin, and Google Play services ML Kit subject segmentation."
+      },
+      "evidenceRefs": [
+        "app/build.gradle.kts",
+        "settings.gradle.kts",
+        "docs/distribution/channel-strategy.md"
+      ]
+    },
+    {
+      "id": "NonFreeNet",
+      "applies": true,
+      "details": {
+        "en-US": "Community features use Firebase Auth, Realtime Database, Storage, Functions, and App Check. Remote providers include Wallhaven, Bing, Pexels, Pixabay, Reddit, Freesound, SoundCloud, Audius, ccMixter, Open-Meteo, Stability, and YouTube extraction paths."
+      },
+      "evidenceRefs": [
+        "docs/security/network-endpoints.json",
+        "docs/privacy/data-safety.json",
+        "docs/distribution/channel-strategy.md"
+      ]
+    },
+    {
+      "id": "Tracking",
+      "applies": false,
+      "details": {
+        "en-US": "Aura does not use automatic analytics or crash reporting. Diagnostics export is local-only and user-initiated."
+      },
+      "evidenceRefs": [
+        "docs/privacy/privacy-policy.md"
+      ]
+    },
+    {
+      "id": "Ads",
+      "applies": false,
+      "details": {
+        "en-US": "Aura has no ads, ad SDKs, subscriptions, or in-app purchases."
+      },
+      "evidenceRefs": [
+        "docs/privacy/privacy-policy.md",
+        "fastlane/metadata/android/en-US/full_description.txt"
+      ]
+    },
+    {
+      "id": "TetheredNet",
+      "applies": false,
+      "details": {
+        "en-US": "The full build is not entirely dependent on one irreplaceable service; provider switches and local/bundled flows leave core personalization usable when individual services are disabled."
+      },
+      "evidenceRefs": [
+        "docs/legal/provider-runtime-controls.md",
+        "docs/distribution/channel-strategy.md"
+      ]
+    }
+  ],
+  "proprietaryDependencyMarkers": [
+    {
+      "id": "google-services-plugin",
+      "path": "app/build.gradle.kts",
+      "marker": "com.google.gms.google-services",
+      "disclosure": "Google Services Gradle plugin is part of the current full build."
+    },
+    {
+      "id": "firebase-bom",
+      "path": "app/build.gradle.kts",
+      "marker": "firebase-bom",
+      "disclosure": "Firebase BoM coordinates community Auth, RTDB, Storage, Functions, and App Check libraries."
+    },
+    {
+      "id": "firebase-auth",
+      "path": "app/build.gradle.kts",
+      "marker": "com.google.firebase:firebase-auth",
+      "disclosure": "Anonymous Firebase identity backs community features."
+    },
+    {
+      "id": "firebase-database",
+      "path": "app/build.gradle.kts",
+      "marker": "com.google.firebase:firebase-database",
+      "disclosure": "Realtime Database backs community metadata, votes, reports, follows, blocks, and shares."
+    },
+    {
+      "id": "firebase-storage",
+      "path": "app/build.gradle.kts",
+      "marker": "com.google.firebase:firebase-storage",
+      "disclosure": "Firebase Storage stores community upload blobs."
+    },
+    {
+      "id": "firebase-functions",
+      "path": "app/build.gradle.kts",
+      "marker": "libs.firebase.functions",
+      "disclosure": "Callable Functions are the planned enforced write path for community actions."
+    },
+    {
+      "id": "firebase-app-check",
+      "path": "app/build.gradle.kts",
+      "marker": "libs.firebase.appcheck.playintegrity",
+      "disclosure": "Play Integrity App Check providers are installed for release community calls."
+    },
+    {
+      "id": "play-services-mlkit-subject-segmentation",
+      "path": "app/build.gradle.kts",
+      "marker": "play-services-mlkit-subject-segmentation",
+      "disclosure": "Google Play services ML Kit subject segmentation powers subject-aware wallpaper features."
+    }
+  ],
+  "permissions": [
+    {
+      "name": "android.permission.SET_WALLPAPER",
+      "purpose": "Apply selected images as device wallpapers.",
+      "disclosure": "Needed for the core wallpaper personalization flow."
+    },
+    {
+      "name": "android.permission.WRITE_SETTINGS",
+      "purpose": "Assign ringtone, notification, and alarm sounds when the user chooses an apply action.",
+      "disclosure": "Protected system setting used only after explicit user action."
+    },
+    {
+      "name": "com.android.alarm.permission.SET_ALARM",
+      "purpose": "Offer alarm sound assignment where supported by the device.",
+      "disclosure": "Used only for sound apply flows."
+    },
+    {
+      "name": "android.permission.RECORD_AUDIO",
+      "purpose": "Record a local sound clip for optional community sound upload.",
+      "disclosure": "Requested only when the user starts recording."
+    },
+    {
+      "name": "android.permission.INTERNET",
+      "purpose": "Load remote wallpaper, sound, video, weather, community, and provider metadata.",
+      "disclosure": "Required for online providers and community features."
+    },
+    {
+      "name": "android.permission.ACCESS_NETWORK_STATE",
+      "purpose": "Detect network availability for online provider and background work behavior.",
+      "disclosure": "Used to avoid poor network behavior and report source state."
+    },
+    {
+      "name": "android.permission.WRITE_EXTERNAL_STORAGE",
+      "purpose": "Legacy Android storage compatibility for saving media on older OS versions.",
+      "disclosure": "Scoped by platform version; modern flows use scoped storage."
+    },
+    {
+      "name": "android.permission.RECEIVE_BOOT_COMPLETED",
+      "purpose": "Restore scheduled wallpaper and background behaviors after reboot.",
+      "disclosure": "Used for user-configured schedule continuity."
+    },
+    {
+      "name": "android.permission.FOREGROUND_SERVICE",
+      "purpose": "Run active media and wallpaper operations that require foreground service behavior.",
+      "disclosure": "Supports visible long-running user actions."
+    },
+    {
+      "name": "android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK",
+      "purpose": "Support foreground audio preview/playback service behavior.",
+      "disclosure": "Used for active audio playback controls."
+    },
+    {
+      "name": "android.permission.FOREGROUND_SERVICE_SPECIAL_USE",
+      "purpose": "Support special-use foreground service behavior for wallpaper/media features.",
+      "disclosure": "Declared for platform foreground-service review."
+    },
+    {
+      "name": "android.permission.POST_NOTIFICATIONS",
+      "purpose": "Show foreground service, download, and scheduled wallpaper notifications.",
+      "disclosure": "Requested only where the OS requires notification permission."
+    },
+    {
+      "name": "android.permission.ACCESS_COARSE_LOCATION",
+      "purpose": "Enable optional weather wallpaper effects using approximate location.",
+      "disclosure": "Optional weather feature; shared only with the reviewed weather endpoint when enabled."
+    },
+    {
+      "name": "android.permission.READ_CONTACTS",
+      "purpose": "Let the user choose contacts for per-contact ringtone assignment.",
+      "disclosure": "Contacts stay local to the device."
+    },
+    {
+      "name": "android.permission.WRITE_CONTACTS",
+      "purpose": "Assign a selected ringtone to a chosen contact.",
+      "disclosure": "Used only after explicit contact ringtone action."
+    }
+  ],
+  "networkServices": [
+    {
+      "id": "wallhaven-api",
+      "disclosure": "Wallpaper search provider; optional API key and provider switch."
+    },
+    {
+      "id": "bing-daily",
+      "disclosure": "Bing Daily wallpaper provider; provider switch and cache fallback."
+    },
+    {
+      "id": "pexels-api",
+      "disclosure": "Photo/video provider; optional key defaults are blank for public releases."
+    },
+    {
+      "id": "pixabay-api",
+      "disclosure": "Photo/video provider; optional key defaults are blank for public releases."
+    },
+    {
+      "id": "reddit-json",
+      "disclosure": "Wallpaper/video discovery provider using public JSON endpoints and configured subreddits."
+    },
+    {
+      "id": "openverse-audio",
+      "disclosure": "Legacy audio provider path retained for compatibility."
+    },
+    {
+      "id": "freesound-v2",
+      "disclosure": "Audio provider and attribution compatibility path with optional user key."
+    },
+    {
+      "id": "soundcloud-api",
+      "disclosure": "Legacy/link-only audio provider path requiring optional user client ID."
+    },
+    {
+      "id": "audius-api",
+      "disclosure": "Dormant audio provider compatibility path."
+    },
+    {
+      "id": "ccmixter-api",
+      "disclosure": "Dormant HTTPS-only CC music provider compatibility path."
+    },
+    {
+      "id": "open-meteo-api",
+      "disclosure": "Weather effects provider used only for optional weather wallpapers."
+    },
+    {
+      "id": "stability-api",
+      "disclosure": "Generated wallpaper provider used only after disclosure acceptance and user key/action."
+    },
+    {
+      "id": "youtube-newpipe",
+      "disclosure": "YouTube search/extraction path for sounds and videos; provider switch available."
+    },
+    {
+      "id": "aura-collection-links",
+      "disclosure": "Local deep-link namespace for shared collection imports."
+    },
+    {
+      "id": "firebase-community",
+      "disclosure": "Firebase community backend for anonymous identity, uploads, votes, reports, follows, blocks, profiles, and moderation."
+    }
+  ],
+  "izzySubmission": {
+    "status": "ownerSubmissionRequired",
+    "notes": [
+      "Use the signed GitHub Release APK and checksum.",
+      "Include anti-feature details at least in en-US.",
+      "Disclose Firebase/Google Play services dependencies and remote provider network services.",
+      "Do not claim F-Droid mainline readiness until the FOSS flavor criteria pass."
+    ]
+  },
+  "sourceUrls": [
+    "https://f-droid.org/docs/Inclusion_Policy/",
+    "https://f-droid.org/en/docs/Anti-Features/",
+    "https://f-droid.org/en/docs/All_About_Descriptions_Graphics_and_Screenshots/",
+    "https://izzyondroid.org/docs/general/YamlMetadata/",
+    "https://apt.izzysoft.de/fdroid/index/apk"
+  ]
+}

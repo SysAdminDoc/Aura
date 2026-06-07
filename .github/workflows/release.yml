@@ -112,6 +112,9 @@ jobs:
       - name: Play App content packet
         run: python3 tools/play_app_content_packet_check.py --policy docs/distribution/play-app-content.json --repo-root .
 
+      - name: Alternative-store disclosure matrix
+        run: python3 tools/alt_store_metadata_check.py --policy docs/distribution/alt-store-metadata.json --repo-root .
+
       - name: Build signed release APK
         run: ./gradlew :app:assembleRelease --stacktrace --no-daemon
 

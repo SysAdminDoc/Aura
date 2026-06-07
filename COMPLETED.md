@@ -662,6 +662,13 @@ next pass can resume quickly.
   path, repository and UI gates for community feeds/uploads/votes/reports/
   blocks/follows/profiles/startup identity warm-up, documentation, and
   `tools/community_guidelines_consent_check.py` verify/release enforcement.
+- Completed Cycle 147 alternative-store disclosure gate: added
+  `docs/distribution/alt-store-metadata.md`,
+  `docs/distribution/alt-store-metadata.json`, and
+  `tools/alt_store_metadata_check.py` so GitHub/Obtainium/Izzy/F-Droid channel
+  status, anti-feature notes, manifest permission disclosures, reviewed
+  network services, proprietary dependency markers, and Izzy submission notes
+  are checked before verify/release workflows continue.
 
 ## 2026-06-05
 
