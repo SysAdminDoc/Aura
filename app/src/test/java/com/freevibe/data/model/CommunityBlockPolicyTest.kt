@@ -44,4 +44,24 @@ class CommunityBlockPolicyTest {
         } catch (_: IllegalArgumentException) {
         }
     }
+
+    @Test
+    fun `buildCommunityUserUnblockUpdates clears private list and reverse index`() {
+        assertEquals(
+            mapOf(
+                "/community_user_blocks/blocker_1/blocked_2" to null,
+                "/community_blocked_by/blocked_2/blocker_1" to null,
+            ),
+            buildCommunityUserUnblockUpdates("blocker/1", "blocked.2"),
+        )
+    }
+
+    @Test
+    fun `isCommunityUserBlocked matches sanitized uid or legacy uploader id`() {
+        val blocked = setOf("blocked.2")
+
+        assertEquals(true, isCommunityUserBlocked("blocked/2", null, blocked))
+        assertEquals(true, isCommunityUserBlocked(null, "blocked/2", blocked))
+        assertEquals(false, isCommunityUserBlocked("other", "legacy", blocked))
+    }
 }

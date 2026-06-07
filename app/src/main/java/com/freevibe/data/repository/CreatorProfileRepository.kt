@@ -60,6 +60,7 @@ class CreatorProfileRepository @Inject constructor(
     private val favoritesRepo: FavoritesRepository,
     private val prefs: PreferencesManager,
     private val sourceMetrics: SourceMetrics,
+    private val communityBlockRepo: CommunityBlockRepository,
 ) {
     private val database by lazy {
         try { FirebaseDatabase.getInstance().reference } catch (_: Exception) { null }
@@ -70,7 +71,8 @@ class CreatorProfileRepository @Inject constructor(
         val currentUserId = identityProvider.ensureSignedIn()
         val knownIds = identityProvider.knownIdentityIds().toSet() + currentUserId
         val followed = getFollowedCreatorIds()
-        val uploads = fetchCommunityUploads(limit)
+        val blockedCreatorIds = communityBlockRepo.blockedUserIdsOnce()
+        val uploads = filterCreatorUploadsForBlockedUsers(fetchCommunityUploads(limit), blockedCreatorIds)
         val localFavoritesCount = favoritesRepo.count().first()
         val rankedCreators = aggregateCreatorStats(
             uploads = uploads,
@@ -232,6 +234,16 @@ class CreatorProfileRepository @Inject constructor(
         )
     }
 }
+
+internal fun filterCreatorUploadsForBlockedUsers(
+    uploads: List<CreatorUploadRef>,
+    blockedCreatorIds: Set<String>,
+): List<CreatorUploadRef> =
+    if (blockedCreatorIds.isEmpty()) {
+        uploads
+    } else {
+        uploads.filterNot { com.freevibe.data.model.isCommunityUserBlocked(it.creatorId, it.creatorId, blockedCreatorIds) }
+    }
 
 internal fun aggregateCreatorStats(
     uploads: List<CreatorUploadRef>,

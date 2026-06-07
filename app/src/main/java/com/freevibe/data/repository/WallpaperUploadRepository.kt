@@ -17,6 +17,7 @@ import com.freevibe.data.model.Wallpaper
 import com.freevibe.data.model.buildCommunityOwnerUploadIndexPayload
 import com.freevibe.data.model.buildCommunityUploadDeleteUpdates
 import com.freevibe.data.model.communityOwnerUploadIndexPath
+import com.freevibe.data.model.isCommunityUserBlocked
 import com.freevibe.data.model.sanitizeCommunityUploadKey
 import com.freevibe.data.model.validateCommunityUploadRights
 import com.freevibe.service.ColorExtractor
@@ -72,6 +73,7 @@ class WallpaperUploadRepository @Inject constructor(
     private val colorExtractor: ColorExtractor,
     private val prefs: PreferencesManager,
     private val sourceMetrics: SourceMetrics,
+    private val communityBlockRepo: CommunityBlockRepository,
 ) {
     private data class WallpaperUploadInfo(
         val baseName: String,
@@ -284,8 +286,9 @@ class WallpaperUploadRepository @Inject constructor(
             return@withContext SearchResult(emptyList(), 0, 1, false)
         }
         val ref = wallpapersRef ?: return@withContext SearchResult(emptyList(), 0, 1, false)
+        val blockedUploaderIds = communityBlockRepo.blockedUserIdsOnce()
         val snapshot = ref.orderByChild("uploadedAt").limitToLast(limit).get().await()
-        val wallpapers = snapshot.children.mapNotNull(::snapshotToWallpaper)
+        val wallpapers = snapshot.children.mapNotNull { child -> snapshotToWallpaper(child, blockedUploaderIds) }
             .sortedWith(
                 compareByDescending<Wallpaper> { wallpaper ->
                     snapshot.child(wallpaper.id.removePrefix("cw_")).child("votes").getValue(Int::class.java) ?: 0
@@ -305,7 +308,7 @@ class WallpaperUploadRepository @Inject constructor(
 
     private fun communityDisabledMessage(): String = "Community source is disabled in Settings"
 
-    private fun snapshotToWallpaper(child: DataSnapshot): Wallpaper? {
+    private fun snapshotToWallpaper(child: DataSnapshot, blockedUploaderIds: Set<String> = emptySet()): Wallpaper? {
         val key = child.key ?: return null
         val votes = child.child("votes").getValue(Int::class.java) ?: 0
         if (!shouldDisplayCommunityWallpaper(votes)) return null
@@ -313,7 +316,9 @@ class WallpaperUploadRepository @Inject constructor(
             ?: child.child("downloadUrl").getValue(String::class.java)
             ?: return null
         val thumbnailUrl = child.child("thumbnailUrl").getValue(String::class.java) ?: fullUrl
+        val uploaderUid = child.child("uploaderUid").getValue(String::class.java).orEmpty()
         val uploaderId = child.child("uploaderId").getValue(String::class.java).orEmpty()
+        if (isCommunityUserBlocked(uploaderUid, uploaderId, blockedUploaderIds)) return null
         val uploaderLabel = child.child("uploaderLabel").getValue(String::class.java).orEmpty()
         val license = child.child("license").getValue(String::class.java).orEmpty()
         val sourceUrl = child.child("sourceUrl").getValue(String::class.java).orEmpty()
@@ -331,7 +336,7 @@ class WallpaperUploadRepository @Inject constructor(
             fileType = child.child("fileType").getValue(String::class.java).orEmpty(),
             sourcePageUrl = sourceUrl,
             license = license,
-            uploaderName = uploaderLabel.ifBlank { uploaderId.take(8) },
+            uploaderName = uploaderLabel.ifBlank { uploaderUid.ifBlank { uploaderId }.take(8) },
         )
     }
 

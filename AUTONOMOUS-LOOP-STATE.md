@@ -345,7 +345,7 @@
 - Real production-project Firebase backend dry-run evidence after owner access is confirmed.
 - Real exported Storage/RTDB orphan reports after owner access is confirmed.
 - Real production RTDB legacy backfill plan after owner access is confirmed.
-- Block-user UI/filtering, vote marker privacy/account deletion semantics, and deployable callable backend implementation.
+- Visible block-user UI, vote marker privacy/account deletion semantics, and deployable callable backend implementation.
 
 ## Cycle 69 Result - 2026-06-06
 
@@ -360,16 +360,30 @@
   `ROADMAP.md`, `COMPLETED.md`, and `CHANGELOG.md`.
 - Cycle 69 verification: focused `CommunityPolicyCopyTest` passed locally.
 
+## Cycle 70 Result - 2026-06-06
+
+- Added `CommunityBlockRepository` for private block-list reads plus block and
+  unblock writes that maintain the admin reverse index.
+- Added no-sign-in block-list filtering: public community browsing does not
+  create a Firebase identity only to filter feeds.
+- Community sound feeds, community wallpaper feeds, and creator profile lists
+  now hide blocked uploaders/creators when a Firebase UID already exists.
+- Updated `docs/research/cycle-70-2026-06-06.md`,
+  `docs/community-block-user-policy.md`, `ROADMAP.md`, `COMPLETED.md`, and
+  `CHANGELOG.md`.
+- Cycle 70 verification: focused `CommunityBlockPolicyTest` plus
+  `CreatorProfileRepositoryTest` passed locally.
+
 ## Next Cycle
 
-Continue this same assigned project, Aura. Start Cycle 70 from the `ROADMAP.md`
-Continuation State and `docs/research/cycle-69-2026-06-06.md`. Public
-takedown copy is now visible in upload, report, and owner-delete flows. Next
-add block-user UI/filtering, vote marker privacy/account deletion semantics, a
-real production-project Firebase backend dry run/orphan/backfill evidence pass
-after owner access is confirmed, Cloud Functions implementation for the
-callable quota contract, or Android callable migration adapters. Commit and
-push completed work when the active project contract allows it.
+Continue this same assigned project, Aura. Start Cycle 71 from the `ROADMAP.md`
+Continuation State and `docs/research/cycle-70-2026-06-06.md`. Block-list
+repository support and feed/profile filtering are now in place. Next add
+visible block/unblock entry points, vote marker privacy/account deletion
+semantics, a real production-project Firebase backend dry run/orphan/backfill
+evidence pass after owner access is confirmed, Cloud Functions implementation
+for the callable quota contract, or Android callable migration adapters. Commit
+and push completed work when the active project contract allows it.
 
 ## Previous Cycle Prompt
 

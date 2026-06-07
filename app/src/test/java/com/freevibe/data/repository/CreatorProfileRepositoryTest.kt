@@ -47,6 +47,18 @@ class CreatorProfileRepositoryTest {
         assertEquals(listOf("c", "b", "a"), stats.map { it.creatorId })
     }
 
+    @Test
+    fun `filterCreatorUploadsForBlockedUsers removes blocked creators`() {
+        val uploads = listOf(
+            upload("s1", "creator_a", "Alex", "sound", votes = 3),
+            upload("s2", "creator.b", "Blair", "sound", votes = 5),
+        )
+
+        val visible = filterCreatorUploadsForBlockedUsers(uploads, setOf("creator/b"))
+
+        assertEquals(listOf("creator_a"), visible.map { it.creatorId })
+    }
+
     private fun upload(
         id: String,
         creatorId: String,

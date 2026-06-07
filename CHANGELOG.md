@@ -3,6 +3,7 @@
 All notable changes to Aura will be documented in this file.
 
 ## Unreleased
+- **Community block-user filtering (Cycle 70)**: added Android block-list repository reads/writes, kept public browsing from creating an identity solely for filtering, and filtered community sound feeds, wallpaper feeds, and creator profile lists by private block state.
 - **Public takedown copy (Cycle 69)**: community upload dialogs now disclose public listing behavior and rights-takedown outcomes, report dialogs explain the private rights-takedown route, and owner-delete confirmations describe public metadata/index removal plus private moderation record retention.
 - **Community block-user policy (Cycle 68)**: reserved private user block lists and admin reverse indexes in RTDB rules, added emulator coverage, and extended the callable quota contract with `setCommunityUserBlock`.
 - **Community deletion tombstones (Cycle 67)**: owner and admin upload deletes now write private deletion tombstones with owner-scoped Storage handles, RTDB rules coverage, and a retention policy for deleted upload evidence.

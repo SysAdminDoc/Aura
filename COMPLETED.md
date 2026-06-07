@@ -235,6 +235,11 @@ next pass can resume quickly.
   outcomes, the report dialog explains the private rights-takedown route, owner
   delete confirmations describe public metadata/index removal plus retained
   private records, and reusable policy copy has focused unit coverage.
+- Completed Cycle 70 community block-user filtering: added Android block-list
+  repository reads, block/unblock update methods, no-sign-in filtering reads for
+  public browsing, community sound/wallpaper feed filtering, creator profile
+  list filtering, and focused unit coverage for unblock paths and blocked
+  creator/uploader matching.
 
 ## 2026-06-05
 

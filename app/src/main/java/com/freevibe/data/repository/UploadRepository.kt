@@ -13,6 +13,7 @@ import com.freevibe.data.model.Sound
 import com.freevibe.data.model.buildCommunityOwnerUploadIndexPayload
 import com.freevibe.data.model.buildCommunityUploadDeleteUpdates
 import com.freevibe.data.model.communityOwnerUploadIndexPath
+import com.freevibe.data.model.isCommunityUserBlocked
 import com.freevibe.data.model.sanitizeCommunityUploadKey
 import com.freevibe.data.model.validateCommunityUploadRights
 import com.freevibe.service.CommunityIdentityProvider
@@ -27,7 +28,9 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -60,6 +63,7 @@ class UploadRepository @Inject constructor(
     private val identityProvider: CommunityIdentityProvider,
     private val prefs: PreferencesManager,
     private val sourceMetrics: SourceMetrics,
+    private val communityBlockRepo: CommunityBlockRepository,
 ) {
     private data class UploadFileInfo(
         val baseName: String,
@@ -269,45 +273,63 @@ class UploadRepository @Inject constructor(
         } else {
             uploadsRefInstance.limitToLast(limit)
         }
+        val blockedUploaderIds = mutableSetOf<String>()
+        var lastSnapshot: DataSnapshot? = null
+
+        fun emitSounds(snapshot: DataSnapshot) {
+            val blocked = blockedUploaderIds.toSet()
+            val votesByKey = snapshot.children.associate { child ->
+                (child.key ?: "") to (child.child("votes").getValue(Int::class.java) ?: 0)
+            }
+            val sounds = snapshot.children.mapNotNull { child ->
+                val key = child.key ?: return@mapNotNull null
+                val votes = child.child("votes").getValue(Int::class.java) ?: 0
+                if (!shouldDisplayCommunityUpload(votes)) return@mapNotNull null
+                val nameVal = child.child("name").getValue(String::class.java) ?: return@mapNotNull null
+                val downloadUrl = child.child("downloadUrl").getValue(String::class.java) ?: return@mapNotNull null
+                val cat = child.child("category").getValue(String::class.java) ?: ""
+                val uploaderUid = child.child("uploaderUid").getValue(String::class.java).orEmpty()
+                val uploaderId = child.child("uploaderId").getValue(String::class.java).orEmpty()
+                if (isCommunityUserBlocked(uploaderUid, uploaderId, blocked)) return@mapNotNull null
+                val uploaderLabel = child.child("uploaderLabel").getValue(String::class.java) ?: ""
+                val license = child.child("license").getValue(String::class.java)?.ifBlank { null } ?: "User Upload"
+                val sourceUrl = child.child("sourceUrl").getValue(String::class.java).orEmpty()
+                val tags = child.child("tags").children.mapNotNull { it.getValue(String::class.java) }
+                val fileType = child.child("fileType").getValue(String::class.java) ?: ""
+
+                Sound(
+                    id = "cu_$key",
+                    source = ContentSource.COMMUNITY,
+                    name = nameVal,
+                    description = cat,
+                    previewUrl = downloadUrl,
+                    downloadUrl = downloadUrl,
+                    duration = 0.0,
+                    fileType = fileType,
+                    tags = tags,
+                    license = license,
+                    uploaderName = uploaderLabel.ifBlank { uploaderUid.ifBlank { uploaderId }.take(8) },
+                    sourcePageUrl = sourceUrl,
+                )
+            }.sortedByDescending { sound ->
+                votesByKey[sound.id.removePrefix("cu_")] ?: 0
+            }.take(limit)
+
+            trySend(sounds)
+        }
+
+        val blockJob = launch {
+            communityBlockRepo.blockedUserIds().collect { blockedIds ->
+                blockedUploaderIds.clear()
+                blockedUploaderIds.addAll(blockedIds)
+                lastSnapshot?.let(::emitSounds)
+            }
+        }
 
         val listener = object : ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot) {
-                val votesByKey = snapshot.children.associate { child ->
-                    (child.key ?: "") to (child.child("votes").getValue(Int::class.java) ?: 0)
-                }
-                val sounds = snapshot.children.mapNotNull { child ->
-                    val key = child.key ?: return@mapNotNull null
-                    val votes = child.child("votes").getValue(Int::class.java) ?: 0
-                    if (!shouldDisplayCommunityUpload(votes)) return@mapNotNull null
-                    val nameVal = child.child("name").getValue(String::class.java) ?: return@mapNotNull null
-                    val downloadUrl = child.child("downloadUrl").getValue(String::class.java) ?: return@mapNotNull null
-                    val cat = child.child("category").getValue(String::class.java) ?: ""
-                    val uploaderId = child.child("uploaderId").getValue(String::class.java) ?: ""
-                    val uploaderLabel = child.child("uploaderLabel").getValue(String::class.java) ?: ""
-                    val license = child.child("license").getValue(String::class.java)?.ifBlank { null } ?: "User Upload"
-                    val sourceUrl = child.child("sourceUrl").getValue(String::class.java).orEmpty()
-                    val tags = child.child("tags").children.mapNotNull { it.getValue(String::class.java) }
-                    val fileType = child.child("fileType").getValue(String::class.java) ?: ""
-
-                    Sound(
-                        id = "cu_$key",
-                        source = ContentSource.COMMUNITY,
-                        name = nameVal,
-                        description = cat,
-                        previewUrl = downloadUrl,
-                        downloadUrl = downloadUrl,
-                        duration = 0.0,
-                        fileType = fileType,
-                        tags = tags,
-                        license = license,
-                        uploaderName = uploaderLabel.ifBlank { uploaderId.take(8) },
-                        sourcePageUrl = sourceUrl,
-                    )
-                }.sortedByDescending { sound ->
-                    votesByKey[sound.id.removePrefix("cu_")] ?: 0
-                }.take(limit)
-
-                trySend(sounds)
+                lastSnapshot = snapshot
+                emitSounds(snapshot)
             }
 
             override fun onCancelled(error: DatabaseError) {
@@ -316,7 +338,10 @@ class UploadRepository @Inject constructor(
         }
 
         ref.addValueEventListener(listener)
-        awaitClose { ref.removeEventListener(listener) }
+        awaitClose {
+            blockJob.cancel()
+            ref.removeEventListener(listener)
+        }
     }
 
     private suspend fun isCommunityProviderEnabled(): Boolean = prefs.communityProviderEnabled.first()

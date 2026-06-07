@@ -34,6 +34,8 @@ class CommunityIdentityProvider @Inject constructor(
 
     fun currentUserId(): String = auth?.currentUser?.uid ?: fallbackId
 
+    fun currentFirebaseUid(): String? = auth?.currentUser?.uid
+
     fun currentUploaderLabel(): String =
         auth?.currentUser?.displayName?.takeIf { it.isNotBlank() }
             ?: auth?.currentUser?.uid?.take(8)
