@@ -1,8 +1,8 @@
 # Autonomous Loop State
 
 **Assigned project:** `C:\Users\--\repos\Aura`
-**Current pass:** 2026-06-06 Cycle 73 report/profile block actions
-**Last commit before pass:** `b9ce19b` (`feat(community): add blocked creators review`)
+**Current pass:** 2026-06-06 Cycle 74 account deletion dry-run planner
+**Last commit before pass:** `bc556ac` (`feat(community): add report profile block actions`)
 
 ## 2026-06-05 Result
 
@@ -345,8 +345,8 @@
 - Real production-project Firebase backend dry-run evidence after owner access is confirmed.
 - Real exported Storage/RTDB orphan reports after owner access is confirmed.
 - Real production RTDB legacy backfill plan after owner access is confirmed.
-- Vote marker privacy/account deletion semantics and deployable callable backend
-  implementation.
+- Trusted account deletion apply/orchestrator, user-visible deletion request
+  surface, and deployable callable backend implementation.
 
 ## Cycle 69 Result - 2026-06-06
 
@@ -426,16 +426,34 @@
   model tests passed locally; backend manifest check and Firebase rules suite
   passed locally.
 
+## Cycle 74 Result - 2026-06-06
+
+- Added `tools/community_account_deletion_plan.py` to build deterministic RTDB
+  null-update plans for a Firebase UID from an exported database JSON.
+- The planner covers nested and legacy vote markers, outbound/inbound follows,
+  creator profiles, outbound/inbound block rows, block reverse indexes, and
+  app/legacy community share rows.
+- The account deletion policy now documents retained aggregate vote counts,
+  retained moderation/report audit roots, and why public uploads stay on the
+  owner/admin upload deletion workflow.
+- Added backend tool tests and wired the new planner/doc into Firebase backend
+  CI change detection and runbook references.
+- Updated `docs/research/cycle-74-2026-06-06.md`, `ROADMAP.md`,
+  `COMPLETED.md`, and `CHANGELOG.md`.
+- Cycle 74 verification: Python compile for the planner and backend tool
+  unittest discovery passed locally.
+
 ## Next Cycle
 
-Continue this same assigned project, Aura. Start Cycle 74 from the `ROADMAP.md`
-Continuation State and `docs/research/cycle-73-2026-06-06.md`. Detail-screen,
-Settings, creator-profile, and report-card block entry points are now in place.
-Next add vote marker privacy/account deletion semantics, a real
-production-project Firebase backend dry run/orphan/backfill evidence pass after
-owner access is confirmed, Cloud Functions implementation for the callable
-quota contract, or Android callable migration adapters. Commit and push
-completed work when the active project contract allows it.
+Continue this same assigned project, Aura. Start Cycle 75 from the `ROADMAP.md`
+Continuation State and `docs/research/cycle-74-2026-06-06.md`. The account
+deletion dry-run planner now covers private marker paths but does not apply
+changes. Next add a trusted apply/orchestrator design, user-visible
+identity/deletion request surface, a real production-project Firebase backend
+dry run/orphan/backfill evidence pass after owner access is confirmed, Cloud
+Functions implementation for the callable quota contract, or Android callable
+migration adapters. Commit and push completed work when the active project
+contract allows it.
 
 ## Previous Cycle Prompt
 

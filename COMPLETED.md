@@ -253,6 +253,12 @@ next pass can resume quickly.
   optional uploader UID metadata, report rules validate that field, admin report
   cards can block reported community uploaders, and creator profile rows expose
   confirmed block actions with immediate dashboard filtering.
+- Completed Cycle 74 account deletion dry-run planning: added
+  `tools/community_account_deletion_plan.py`, backend tool coverage, and
+  `docs/community-account-deletion-policy.md` for vote markers, follows,
+  creator profiles, block indexes, collection shares, retained aggregate vote
+  counts, retained moderation audit records, and public upload workflow
+  boundaries.
 
 ## 2026-06-05
 

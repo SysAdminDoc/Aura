@@ -139,6 +139,10 @@ must include:
 - Block-user rollout status from
   [`docs/community-block-user-policy.md`](community-block-user-policy.md),
   including callable migration and feed-filtering state.
+- Account deletion dry-run status from
+  [`docs/community-account-deletion-policy.md`](community-account-deletion-policy.md),
+  including the reviewed plan hash when an account deletion request is tested
+  or processed.
 
 ## Sources
 

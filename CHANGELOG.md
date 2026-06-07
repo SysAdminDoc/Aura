@@ -3,6 +3,7 @@
 All notable changes to Aura will be documented in this file.
 
 ## Unreleased
+- **Account deletion dry-run planner (Cycle 74)**: added a backend tool and policy doc that plan RTDB marker deletion for vote markers, follows, creator profiles, block indexes, and community shares while retaining aggregate counts and moderation audit records.
 - **Report/profile block actions (Cycle 73)**: community reports now carry optional uploader UID metadata, admin report cards can block reported community uploaders, and creator profile rows expose confirmed block actions that immediately remove matching creator rows.
 - **Blocked creators review (Cycle 72)**: Settings now shows blocked community creators with reason/timestamp metadata and per-row unblock actions backed by `CommunityBlockRepository`.
 - **Visible block creator actions (Cycle 71)**: community sound and wallpaper detail surfaces now expose confirmed block actions when uploader identity is available, write through `CommunityBlockRepository`, and remove matching uploader rows from the current UI state.

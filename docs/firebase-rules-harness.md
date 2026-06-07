@@ -59,6 +59,7 @@ change, the job installs the pinned npm dependencies with `npm ci` and runs:
 
 ```bash
 python3 tools/community_backend_manifest.py --mode check
+python3 -m unittest discover -s test/tools -p '*_test.py'
 npm run test:firebase-rules
 ```
 

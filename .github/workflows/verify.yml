@@ -52,10 +52,12 @@ jobs:
             test/firebase \
             test/tools \
             tools/community_backend_manifest.py \
+            tools/community_account_deletion_plan.py \
             tools/community_upload_backfill_plan.py \
             tools/community_storage_orphan_report.py \
             docs/community-backend-manifest.json \
             docs/community-backend-runbook.md \
+            docs/community-account-deletion-policy.md \
             docs/community-upload-backfill.md \
             docs/community-storage-lifecycle-policy.md \
             docs/firebase-rules-harness.md \
