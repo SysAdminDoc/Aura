@@ -112,7 +112,7 @@ export const COMMUNITY_CALLABLE_SURFACES: readonly CommunityCallableSurface[] = 
     surfaceKey: "follows",
     dailyLimit: 50,
     minIntervalMillis: 5 * SECOND_MILLIS,
-    dedupeKey: "creatorId",
+    dedupeKey: "creatorId + desired state",
     enforcement: ["APP_CHECKED_CALLABLE"],
     quotaLedgerPath: "/community_write_quotas/{uid}/{yyyyMMdd}/follows",
     dedupeLedgerPath: "/community_write_dedupe/{uid}/follows/{dedupeKey}",

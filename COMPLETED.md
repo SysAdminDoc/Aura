@@ -363,6 +363,14 @@ next pass can resume quickly.
   legacy voter-marker mirroring, and focused Functions tests for accepted,
   duplicate, cooldown, daily-limit, unauthenticated, missing-App-Check, and
   invalid-content-ID paths.
+- Completed Cycle 96 creator follow callable handler: refined the follow
+  dedupe contract from creator-only to creator-plus-desired-state, implemented
+  `setCreatorFollow` handler logic with Firebase Auth/App Check identity
+  enforcement, follow/unfollow payload normalization, no-op state idempotency
+  before quota reservation, UTC quota checks, action-specific dedupe handling,
+  final follow-row set/remove writes, and focused Functions tests for accepted
+  follow, accepted unfollow, duplicate no-ops, same-state dedupe, cooldown,
+  daily-limit, unauthenticated, missing-App-Check, and invalid payload paths.
 
 ## 2026-06-05
 

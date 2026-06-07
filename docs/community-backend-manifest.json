@@ -57,14 +57,19 @@
       "sha256": "0e24830e6f9ee6c37845ab7ef0f73826374c9d4ab6cb57bd53cdc8fbdff484f1"
     },
     {
-      "bytes": 6662,
+      "bytes": 6678,
       "path": "functions/src/communityContract.ts",
-      "sha256": "5394e08997e13c82664fa524fd8372bfce8cc2f14f339fdbf32bcf594e69b771"
+      "sha256": "0cf4f109f9b8b487b6a723e983fd66e27f4dd4775c60364508bff22c15bf6eaa"
     },
     {
-      "bytes": 1183,
+      "bytes": 9976,
+      "path": "functions/src/followHandler.ts",
+      "sha256": "1dc72892e9fc042b2c97b769c499ffeb771fd3b5a6e16047bb53cd84f358e74b"
+    },
+    {
+      "bytes": 1200,
       "path": "functions/src/index.ts",
-      "sha256": "ad427f3c36f7c292e1881301861194b90dbeb077f3295d28b2acfc5c0e4f2dfa"
+      "sha256": "a22ffd1f5e6cb26f33046a36a5d39dce14064d359e2964bbe8331fce559abae0"
     },
     {
       "bytes": 5421,

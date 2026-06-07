@@ -6,10 +6,11 @@ and records the backend sequence in
 [`docs/community-callable-quota-enforcement.md`](community-callable-quota-enforcement.md).
 Cycle 93 adds a fail-closed Cloud Functions scaffold and pure quota decision
 engine. Cycle 94 adds the first handler-backed callable for community reports.
-Cycle 95 adds the handler-backed vote callable. This design does not claim
-production enforcement until emulator-backed callable coverage, Android
-migration, owner-approved deploy evidence, and Firebase Console App Check
-enforcement are complete.
+Cycle 95 adds the handler-backed vote callable. Cycle 96 adds the
+handler-backed follow callable and refines follow dedupe to include the desired
+state. This design does not claim production enforcement until emulator-backed
+callable coverage, Android migration, owner-approved deploy evidence, and
+Firebase Console App Check enforcement are complete.
 
 ## Goals
 
@@ -28,7 +29,7 @@ enforcement are complete.
 | Sound uploads | 3 | 15 minutes | Storage path | App-Checked callable + Storage rules |
 | Wallpaper uploads | 5 | 10 minutes | Storage path | App-Checked callable + Storage rules |
 | Votes | 100 | 3 seconds | content ID | App-Checked callable + existing RTDB transaction |
-| Follows | 50 | 5 seconds | creator ID | App-Checked callable write |
+| Follows | 50 | 5 seconds | creator ID + desired state | App-Checked callable write |
 | User blocks | 100 | 1 second | blocked UID | App-Checked callable write |
 | Profile edits | 12 | 5 minutes | profile UID | App-Checked callable write |
 
@@ -88,9 +89,9 @@ Admin SDK job should own ledger updates.
 ## Remaining Implementation Work
 
 - Add Emulator Suite coverage and Android migration for
-  `submitCommunityReport` and `recordCommunityVote`, then implement the
-  remaining callable write handlers from the Cycle 63 callable contract,
-  including the Cycle 68 user-block row.
+  `submitCommunityReport`, `recordCommunityVote`, and `setCreatorFollow`, then
+  implement the remaining callable write handlers from the Cycle 63 callable
+  contract, including the Cycle 68 user-block row.
 - Keep quota reset days on the manifest-pinned UTC boundary unless the backend
   deployment config deliberately changes it with policy review.
 - Decide whether blocked quota attempts should create private moderation events.

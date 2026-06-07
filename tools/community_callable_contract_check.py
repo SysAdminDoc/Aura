@@ -67,7 +67,7 @@ EXPECTED_SURFACES: dict[str, dict[str, Any]] = {
     "follows": {
         "dailyLimit": 50,
         "minIntervalMillis": 5000,
-        "dedupeKey": "creatorId",
+        "dedupeKey": "creatorId + desired state",
         "enforcement": ["APP_CHECKED_CALLABLE"],
         "functionName": "setCreatorFollow",
         "payloadSchema": "CommunityFollowInput",

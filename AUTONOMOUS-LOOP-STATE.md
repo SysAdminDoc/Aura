@@ -1,8 +1,8 @@
 # Autonomous Loop State
 
 **Assigned project:** `C:\Users\--\repos\Aura`
-**Current pass:** 2026-06-07 Cycle 95 community vote callable handler
-**Last commit before pass:** `81340b4` (`feat(community): add report callable handler`)
+**Current pass:** 2026-06-07 Cycle 96 creator follow callable handler
+**Last commit before pass:** `d332f87` (`feat(community): add vote callable handler`)
 
 ## 2026-06-05 Result
 
@@ -942,10 +942,39 @@
   migration, owner-approved deploy evidence, direct RTDB rule tightening, and
   Firebase Console App Check evidence remain open.
 
+## Cycle 96 Result - 2026-06-07
+
+- Refined the follows quota contract from `creatorId` to
+  `creatorId + desired state` in the Android policy table, backend JSON
+  manifest, Functions contract mirror, validator expectations, and quota
+  runbook so follow and unfollow retries do not block each other.
+- Added `functions/src/followHandler.ts` and switched `setCreatorFollow` from
+  fail-closed scaffold to a handler-backed callable.
+- The handler requires Firebase Auth and App Check, rejects client-supplied
+  follower UID overrides, validates the common envelope, normalizes creator ID,
+  path key, label, and desired state, returns duplicate no-op states before
+  quota reservation, uses action-specific dedupe keys, checks UTC quota, and
+  sets or removes the final follow row with a server-owned dedupe marker.
+- Added `functions/test/setCreatorFollow.test.cjs` for accepted follow,
+  accepted unfollow, duplicate no-op states, same-state dedupe, cooldown,
+  daily-limit, unauthenticated, missing-App-Check, and invalid payload paths.
+- Refreshed `docs/community-backend-manifest.json`.
+- Updated `docs/research/cycle-96-2026-06-07.md`,
+  `docs/community-callable-quota-enforcement.md`,
+  `docs/community-quota-rate-limits.md`,
+  `docs/community-backend-runbook.md`, `ROADMAP.md`, `COMPLETED.md`, and
+  `CHANGELOG.md`.
+- Cycle 96 verification: Functions test suite, backend manifest check,
+  callable contract manifest check, callable contract unittest, focused Android
+  quota policy test, high-severity npm audit, diff hygiene, and
+  attribution/ASCII scans. Emulator-backed callable invocation, Android follow
+  migration, owner-approved deploy evidence, direct RTDB rule tightening, and
+  Firebase Console App Check evidence remain open.
+
 ## Next Cycle
 
-Continue this same assigned project, Aura. Start Cycle 96 from the `ROADMAP.md`
-Continuation State and `docs/research/cycle-95-2026-06-07.md`. The account
+Continue this same assigned project, Aura. Start Cycle 97 from the `ROADMAP.md`
+Continuation State and `docs/research/cycle-96-2026-06-07.md`. The account
 deletion dry-run planner, read-only Settings identity surface, redacted
 shareable request draft, request-code lookup tool, review receipt gate, offline
 apply simulator, private executor package builder, and guarded REST executor
@@ -969,15 +998,18 @@ UTC quota decision engine; Cycle 94 added the handler-backed
 `submitCommunityReport` callable with focused quota, dedupe, Auth, App Check,
 and payload validation tests; Cycle 95 added the handler-backed
 `recordCommunityVote` callable with focused existing-vote idempotency, quota,
-dedupe, Auth, App Check, and content-ID validation tests. Emulator-backed
-callable invocation, Android callable migration, a live hosted HTTPS web
-deletion URL, and production-project dry-run evidence remain open. Next add
-emulator-backed coverage for `submitCommunityReport` and
-`recordCommunityVote`, add Android report/vote callable repository adapters,
-implement the next real callable write handler, publish the hosted URL after
-owner approval, or run a real production-project Firebase executor dry-run
-after owner access is confirmed. Commit and push completed work when the
-active project contract allows it.
+dedupe, Auth, App Check, and content-ID validation tests; Cycle 96 added the
+handler-backed `setCreatorFollow` callable with focused follow/unfollow
+idempotency, action-specific dedupe, quota, Auth, App Check, and payload
+validation tests. Emulator-backed callable invocation, Android callable
+migration, a live hosted HTTPS web deletion URL, and production-project dry-run
+evidence remain open. Next add emulator-backed coverage for
+`submitCommunityReport`, `recordCommunityVote`, and `setCreatorFollow`, add
+Android report/vote/follow callable repository adapters, implement the next
+real callable write handler, publish the hosted URL after owner approval, or
+run a real production-project Firebase executor dry-run after owner access is
+confirmed. Commit and push completed work when the active project contract
+allows it.
 
 ## Previous Cycle Prompt
 

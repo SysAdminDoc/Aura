@@ -3,7 +3,9 @@
 Cycle 63 turns the Cycle 54 quota policy into a backend contract for callable
 functions. Cycle 93 adds the first checked Cloud Functions project scaffold,
 Cycle 94 adds the first handler-backed callable for community reports, and
-Cycle 95 adds the handler-backed vote callable. The remaining exported
+Cycle 95 adds the handler-backed vote callable. Cycle 96 adds the
+handler-backed creator follow callable and refines follow dedupe to include the
+desired state. The remaining exported
 callables currently fail closed until each surface has a write handler and
 emulator-backed tests; this document is the implementation contract that the
 backend and Android repository migration must follow.
@@ -86,10 +88,20 @@ Cycle 95 added:
   existing-voter duplicate, active-dedupe duplicate, cooldown, daily-limit,
   unauthenticated, missing-App-Check, and invalid-content-ID cases.
 
-Do not claim production callable enforcement until the report and vote handlers
-have Emulator Suite coverage, Android migration code, owner-approved deploy
-evidence, and Firebase Console App Check evidence. The five non-report/non-vote
-exports remain fail-closed.
+Cycle 96 added:
+
+- `functions/src/followHandler.ts` implements `setCreatorFollow` handler logic
+  with follow/unfollow payload normalization, server-derived follower UID,
+  no-op state idempotency before quota reservation, action-specific dedupe keys,
+  UTC quota checks, and final follow row set/remove writes.
+- `functions/test/setCreatorFollow.test.cjs` covers accepted follow, accepted
+  unfollow, no-op duplicates, same-state dedupe, cooldown, daily-limit,
+  unauthenticated, missing-App-Check, and invalid payload cases.
+
+Do not claim production callable enforcement until the report, vote, and follow
+handlers have Emulator Suite coverage, Android migration code, owner-approved
+deploy evidence, and Firebase Console App Check evidence. The four
+non-report/non-vote/non-follow exports remain fail-closed.
 
 ## Request Envelope
 

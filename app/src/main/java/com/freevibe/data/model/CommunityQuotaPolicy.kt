@@ -118,7 +118,7 @@ object CommunityQuotaPolicies {
         surfaceKey = "follows",
         dailyLimit = 50,
         minIntervalMillis = 5 * SECOND_MILLIS,
-        dedupeKey = "creatorId",
+        dedupeKey = "creatorId + desired state",
         enforcement = setOf(CommunityQuotaEnforcement.APP_CHECKED_CALLABLE),
         callable = CommunityQuotaCallableContract(
             functionName = "setCreatorFollow",
