@@ -33,6 +33,10 @@ URL to the database limit before upload, and RTDB rules reject non-HTTPS values.
 
 - Sound and wallpaper upload dialogs keep the upload action disabled until the
   uploader checks the rights confirmation box.
+- Upload dialogs now tell uploaders that community uploads become public
+  listings, that license/source/uploader/tag metadata is stored with the
+  listing, and that confirmed rights reports can hide or delete the community
+  upload plus its uploaded media file.
 - Upload repositories validate the selected license and attestation before
   reading or uploading media.
 - RTDB rules require the selected license, true attestation, attestation
@@ -46,9 +50,7 @@ URL to the database limit before upload, and RTDB rules reject non-HTTPS values.
 
 ## Remaining Follow-Up
 
-- Add report and takedown actions that include rights, safety, and
-  source-removed reasons.
-- Add an admin queue that can hide, delete, restore, and record a resolution
-  reason without exposing reporter identity.
-- Add public copy explaining community visibility and takedown expectations in
-  the upload flow once the report queue exists.
+- Complete legacy/backfill coverage for older community rows that lack
+  canonical deletion handles or owner indexes.
+- Move upload finalization behind callable quota/App Check enforcement before
+  relying on production-scale moderation controls.

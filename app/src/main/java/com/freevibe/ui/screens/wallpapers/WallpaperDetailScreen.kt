@@ -46,6 +46,8 @@ import com.freevibe.ui.components.CommunityReportDialog
 import com.freevibe.ui.components.GlassCard
 import com.freevibe.ui.components.HighlightPill
 import com.freevibe.ui.components.SourceBadge
+import com.freevibe.ui.policy.CommunityUploadPolicyKind
+import com.freevibe.ui.policy.communityOwnerDeleteConfirmationCopy
 import com.freevibe.ui.launchLiveWallpaperPicker
 import coil.compose.AsyncImagePainter
 import coil.compose.SubcomposeAsyncImage
@@ -716,7 +718,7 @@ fun WallpaperDetailScreen(
                 AlertDialog(
                     onDismissRequest = { showDeleteUploadDialog = false },
                     title = { Text("Delete upload?") },
-                    text = { Text("This removes your community wallpaper and its uploaded image file.") },
+                    text = { Text(communityOwnerDeleteConfirmationCopy(CommunityUploadPolicyKind.WALLPAPER)) },
                     confirmButton = {
                         TextButton(
                             onClick = {

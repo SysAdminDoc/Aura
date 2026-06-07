@@ -57,6 +57,7 @@ import com.freevibe.data.model.stableKey
 import com.freevibe.data.repository.matchesHiddenIds
 import com.freevibe.service.SeasonalTheme
 import com.freevibe.ui.components.CompactSearchField
+import com.freevibe.ui.components.CommunityPolicyNotice
 import com.freevibe.ui.components.CountBadge
 import com.freevibe.ui.components.DownloadProgressBar
 import com.freevibe.ui.components.GlassCard
@@ -65,6 +66,8 @@ import com.freevibe.ui.components.SearchHistoryDropdown
 import com.freevibe.ui.components.ShimmerBox
 import com.freevibe.ui.components.ShimmerWallpaperGrid
 import com.freevibe.ui.components.SourceBadge
+import com.freevibe.ui.policy.CommunityUploadPolicyKind
+import com.freevibe.ui.policy.communityUploadPolicyCopy
 
 // #9: Wallhaven supported colors
 private val WALLHAVEN_COLORS = listOf(
@@ -1468,6 +1471,7 @@ private fun WallpaperUploadDialog(
     var sourceUrl by remember { mutableStateOf("") }
     var rightsAttested by remember { mutableStateOf(false) }
     var tagsText by remember { mutableStateOf("") }
+    val policyCopy = remember { communityUploadPolicyCopy(CommunityUploadPolicyKind.WALLPAPER) }
     val categories = listOf(
         "other" to "General",
         "amoled" to "AMOLED",
@@ -1541,6 +1545,10 @@ private fun WallpaperUploadDialog(
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth(),
                 )
+                CommunityPolicyNotice(
+                    title = policyCopy.publicTitle,
+                    body = "${policyCopy.publicBody} ${policyCopy.takedownBody}",
+                )
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     verticalAlignment = Alignment.CenterVertically,
@@ -1552,7 +1560,7 @@ private fun WallpaperUploadDialog(
                         enabled = !isUploading,
                     )
                     Text(
-                        "I own or have rights to share this wallpaper under the selected license.",
+                        policyCopy.attestation,
                         style = MaterialTheme.typography.bodySmall,
                         modifier = Modifier.weight(1f),
                     )

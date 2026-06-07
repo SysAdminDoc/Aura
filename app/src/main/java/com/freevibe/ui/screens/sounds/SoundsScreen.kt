@@ -60,8 +60,11 @@ import com.freevibe.ui.components.AuraStateCard
 import com.freevibe.ui.components.CompactSearchField
 import com.freevibe.ui.components.CountBadge
 import com.freevibe.ui.components.GlassCard
+import com.freevibe.ui.components.CommunityPolicyNotice
 import com.freevibe.ui.components.SearchHistoryDropdown
 import com.freevibe.ui.components.ShimmerSoundList
+import com.freevibe.ui.policy.CommunityUploadPolicyKind
+import com.freevibe.ui.policy.communityUploadPolicyCopy
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.flowOf
 import kotlin.math.sin
@@ -1442,6 +1445,7 @@ private fun UploadDialog(
     var sourceUrl by remember { mutableStateOf("") }
     var rightsAttested by remember { mutableStateOf(false) }
     var tagsText by remember { mutableStateOf("") }
+    val policyCopy = remember { communityUploadPolicyCopy(CommunityUploadPolicyKind.SOUND) }
     val categories = listOf("ringtone" to "Ringtone", "notification" to "Notification", "alarm" to "Alarm")
     val parsedTags = remember(tagsText) {
         tagsText.split(',', '#')
@@ -1501,6 +1505,10 @@ private fun UploadDialog(
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth(),
                 )
+                CommunityPolicyNotice(
+                    title = policyCopy.publicTitle,
+                    body = "${policyCopy.publicBody} ${policyCopy.takedownBody}",
+                )
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     verticalAlignment = Alignment.CenterVertically,
@@ -1512,7 +1520,7 @@ private fun UploadDialog(
                         enabled = !isUploading,
                     )
                     Text(
-                        "I own or have rights to share this sound under the selected license.",
+                        policyCopy.attestation,
                         style = MaterialTheme.typography.bodySmall,
                         modifier = Modifier.weight(1f),
                     )

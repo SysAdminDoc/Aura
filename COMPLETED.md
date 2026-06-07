@@ -230,6 +230,11 @@ next pass can resume quickly.
   `/community_user_blocks` rows and admin-only `/community_blocked_by` reverse
   indexes, added typed block policy helpers, emulator coverage, callable quota
   metadata, and a block-user runbook.
+- Completed Cycle 69 public takedown copy: community sound and wallpaper upload
+  dialogs now disclose public listing behavior and confirmed rights-takedown
+  outcomes, the report dialog explains the private rights-takedown route, owner
+  delete confirmations describe public metadata/index removal plus retained
+  private records, and reusable policy copy has focused unit coverage.
 
 ## 2026-06-05
 

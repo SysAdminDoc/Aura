@@ -44,6 +44,9 @@ Reporter UIDs are not public catalog data.
 
 - Sound and wallpaper detail screens expose a report action for remote/provider
   content.
+- The report dialog identifies `Rights or license` as the takedown request
+  route, explains that reports are private to admins, and tells users that
+  confirmed rights reports can hide or delete community uploads.
 - Report submission requires the Community source switch to be enabled because
   the queue uses the same Firebase-backed community surface.
 - ViewModels submit the current source, license, uploader, and HTTPS source URL
@@ -91,7 +94,8 @@ Reporter UIDs are not public catalog data.
   [`docs/community-upload-deletion.md`](../community-upload-deletion.md), and
   Cycle 60 adds private admin rights-confirmed takedown receipts for new rows
   with deletion handles. Cycle 61 adds admin delete actions that consume those
-  receipts and record retry state. Public takedown request copy remains open.
+  receipts and record retry state. Cycle 69 adds public takedown request copy
+  to upload, report, and owner-delete dialogs.
 - Cycle 58 adds Realtime Database emulator coverage for authenticated report
   creation, reporter UID validation, admin-only reads, admin status updates, and
   admin-only resolution receipts. Cycle 60 extends that coverage to

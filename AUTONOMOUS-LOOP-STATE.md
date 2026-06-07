@@ -345,19 +345,31 @@
 - Real production-project Firebase backend dry-run evidence after owner access is confirmed.
 - Real exported Storage/RTDB orphan reports after owner access is confirmed.
 - Real production RTDB legacy backfill plan after owner access is confirmed.
-- Public takedown copy, block-user UI/filtering, vote marker privacy/account deletion semantics, and deployable callable backend implementation.
+- Block-user UI/filtering, vote marker privacy/account deletion semantics, and deployable callable backend implementation.
+
+## Cycle 69 Result - 2026-06-06
+
+- Added reusable community public-listing/takedown policy copy and focused unit
+  coverage.
+- Sound and wallpaper upload dialogs now disclose public listing metadata and
+  confirmed rights-takedown outcomes before attestation.
+- The shared report dialog now explains the private rights-takedown route, and
+  owner-delete confirmations now describe public metadata/index removal plus
+  retained private moderation records.
+- Updated `docs/research/cycle-69-2026-06-06.md`, rights/reporting docs,
+  `ROADMAP.md`, `COMPLETED.md`, and `CHANGELOG.md`.
+- Cycle 69 verification: focused `CommunityPolicyCopyTest` passed locally.
 
 ## Next Cycle
 
-Continue this same assigned project, Aura. Start Cycle 69 from the `ROADMAP.md`
-Continuation State and `docs/research/cycle-68-2026-06-06.md`. The community
-upload deletion path has private tombstones, and block-user data paths are now
-reserved with rules coverage. Next add public takedown copy, block-user
-UI/filtering, vote marker privacy/account deletion semantics, a real
-production-project Firebase backend dry run/orphan/backfill evidence pass after
-owner access is confirmed, Cloud Functions implementation for the callable
-quota contract, or Android callable migration adapters. Commit and push
-completed work when the active project contract allows it.
+Continue this same assigned project, Aura. Start Cycle 70 from the `ROADMAP.md`
+Continuation State and `docs/research/cycle-69-2026-06-06.md`. Public
+takedown copy is now visible in upload, report, and owner-delete flows. Next
+add block-user UI/filtering, vote marker privacy/account deletion semantics, a
+real production-project Firebase backend dry run/orphan/backfill evidence pass
+after owner access is confirmed, Cloud Functions implementation for the
+callable quota contract, or Android callable migration adapters. Commit and
+push completed work when the active project contract allows it.
 
 ## Previous Cycle Prompt
 

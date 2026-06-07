@@ -45,6 +45,8 @@ import com.freevibe.data.model.isSourceUnavailable
 import com.freevibe.data.model.soundLicenseCapabilities
 import com.freevibe.data.model.stableKey
 import com.freevibe.ui.components.CommunityReportDialog
+import com.freevibe.ui.policy.CommunityUploadPolicyKind
+import com.freevibe.ui.policy.communityOwnerDeleteConfirmationCopy
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
@@ -202,7 +204,7 @@ fun SoundDetailScreen(
         AlertDialog(
             onDismissRequest = { showDeleteUploadDialog = false },
             title = { Text("Delete upload?") },
-            text = { Text("This removes your community sound and its uploaded audio file.") },
+            text = { Text(communityOwnerDeleteConfirmationCopy(CommunityUploadPolicyKind.SOUND)) },
             confirmButton = {
                 TextButton(
                     onClick = {
