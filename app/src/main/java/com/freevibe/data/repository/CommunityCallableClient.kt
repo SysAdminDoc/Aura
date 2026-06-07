@@ -3,6 +3,7 @@ package com.freevibe.data.repository
 import com.freevibe.data.model.CommunityQuotaPolicies
 import com.freevibe.data.model.CommunityReportInput
 import com.freevibe.data.model.buildCommunityReportCallablePayload
+import com.freevibe.data.model.buildCommunityVoteCallablePayload
 import com.google.firebase.functions.FirebaseFunctions
 import com.google.firebase.functions.FirebaseFunctionsException
 import com.google.firebase.functions.HttpsCallableOptions
@@ -91,6 +92,20 @@ class CommunityCallableClient @Inject constructor(
             consumeLimitedUseAppCheckToken = policy.consumeLimitedUseAppCheckToken,
         )
         return invoker.call(request).toWriteResult(resourceIdField = "reportId")
+    }
+
+    suspend fun recordCommunityVote(contentId: String): CommunityCallableWriteResult {
+        val policy = CommunityQuotaPolicies.votes.callable
+        val request = CommunityCallableRequest(
+            functionName = policy.functionName,
+            data = buildCommunityCallableEnvelope(
+                payload = buildCommunityVoteCallablePayload(contentId),
+                operationId = communityOperationId("vote"),
+                clientSentAt = System.currentTimeMillis(),
+            ),
+            consumeLimitedUseAppCheckToken = policy.consumeLimitedUseAppCheckToken,
+        )
+        return invoker.call(request).toWriteResult(resourceIdField = "voteId")
     }
 }
 

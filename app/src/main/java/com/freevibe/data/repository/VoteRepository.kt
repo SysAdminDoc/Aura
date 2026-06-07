@@ -79,6 +79,7 @@ private fun expandHiddenIds(ids: Set<String>): Set<String> = buildSet(ids.size *
 class VoteRepository @Inject constructor(
     @ApplicationContext private val context: Context,
     private val identityProvider: CommunityIdentityProvider,
+    private val callableClient: CommunityCallableClient,
 ) {
     private val db by lazy {
         try { FirebaseDatabase.getInstance().reference } catch (_: Exception) { null }
@@ -226,11 +227,35 @@ class VoteRepository @Inject constructor(
     }
 
     suspend fun upvote(contentId: String): Boolean {
+        val safeId = sanitizeKey(contentId)
+        identityProvider.ensureSignedIn()
+        if (hasVoted(safeId, alreadySanitized = true)) return false
+
+        if (!identityProvider.currentFirebaseUid().isNullOrBlank()) {
+            upvoteWithCallableOrNull(contentId)?.let { return it }
+        }
+
+        return upvoteWithDirectDatabase(safeId)
+    }
+
+    private suspend fun upvoteWithCallableOrNull(contentId: String): Boolean? =
+        try {
+            callableClient.recordCommunityVote(contentId).status.equals("accepted", ignoreCase = true)
+        } catch (e: CommunityCallableException) {
+            if (e.isMissingEndpoint()) {
+                null
+            } else {
+                if (com.freevibe.BuildConfig.DEBUG) {
+                    Log.w("VoteRepo", "recordCommunityVote failed: ${e.message}")
+                }
+                false
+            }
+        }
+
+    private suspend fun upvoteWithDirectDatabase(safeId: String): Boolean {
         val votesRefInstance = votesRef ?: return false
         val votersRefInstance = votersRef
-        val safeId = sanitizeKey(contentId)
         val voterId = sanitizeKey(identityProvider.ensureSignedIn())
-        if (hasVoted(safeId, alreadySanitized = true)) return false
         return suspendCancellableCoroutine { continuation ->
             votesRefInstance.child(safeId).runTransaction(object : Transaction.Handler {
                 override fun doTransaction(data: MutableData): Transaction.Result {

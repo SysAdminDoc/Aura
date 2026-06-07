@@ -452,6 +452,12 @@ next pass can resume quickly.
   calls, callable report payload tests that omit server-owned fields, and
   callable-first `CommunityReportRepository.submitReport()` with a compatibility
   fallback while deploy evidence and direct-rule tightening remain pending.
+- Completed Cycle 109 Android vote callable migration: added Android
+  `CommunityVoteInput` payload normalization, extended `CommunityCallableClient`
+  for `recordCommunityVote`, routed `VoteRepository.upvote()` through the
+  callable when Firebase Auth is available, preserved direct RTDB fallback only
+  for missing endpoint or missing Auth compatibility, and covered the vote
+  callable envelope with focused unit tests.
 
 ## 2026-06-05
 

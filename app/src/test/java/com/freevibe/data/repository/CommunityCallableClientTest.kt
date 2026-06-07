@@ -60,6 +60,32 @@ class CommunityCallableClientTest {
     }
 
     @Test
+    fun `recordCommunityVote sends envelope without limited use token request`() = runTest {
+        val invoker = RecordingCommunityCallableInvoker(
+            response = mapOf(
+                "operationId" to "vote_test",
+                "status" to "accepted",
+                "targetPath" to "/votes/SOUND::COMMUNITY::cu_1",
+                "serverTimeMillis" to 123L,
+            ),
+        )
+        val client = CommunityCallableClient(invoker)
+
+        val result = client.recordCommunityVote(" SOUND::COMMUNITY::cu/1 ")
+
+        val request = requireNotNull(invoker.lastRequest)
+        assertEquals("recordCommunityVote", request.functionName)
+        assertFalse(request.consumeLimitedUseAppCheckToken)
+        assertEquals("SOUND::COMMUNITY::cu_1", result.targetId())
+        assertEquals("accepted", result.status)
+
+        assertTrue((request.data["operationId"] as String).startsWith("vote_"))
+        assertTrue((request.data["clientSentAt"] as Long) > 0L)
+        val payload = request.data["payload"] as Map<*, *>
+        assertEquals("SOUND::COMMUNITY::cu_1", payload["contentId"])
+    }
+
+    @Test
     fun `buildCommunityCallableEnvelope validates operation metadata`() {
         val envelope = buildCommunityCallableEnvelope(
             payload = mapOf("contentId" to "item_1"),

@@ -1,8 +1,8 @@
 # Autonomous Loop State
 
 **Assigned project:** `C:\Users\--\repos\Aura`
-**Current pass:** 2026-06-07 Cycle 108 Android report callable migration
-**Last commit before pass:** `df60faf` (`test(community): add wallpaper upload emulator coverage`)
+**Current pass:** 2026-06-07 Cycle 109 Android vote callable migration
+**Last commit before pass:** `fbb3fc4` (`feat(community): add Android report callable adapter`)
 
 ## 2026-06-05 Result
 
@@ -1282,11 +1282,35 @@
   callable wire-protocol coverage, owner-approved deploy evidence, direct RTDB
   rule tightening, and Firebase Console App Check evidence remain open.
 
+## Cycle 109 Result - 2026-06-07
+
+- Added `CommunityVoteInput` payload normalization for Android callable vote
+  requests, matching the backend content ID bounds and Firebase key handling.
+- Extended `CommunityCallableClient` with `recordCommunityVote`, using
+  `CommunityQuotaPolicies.votes` and standard App Check tokens.
+- Updated `VoteRepository.upvote()` to prefer the `recordCommunityVote`
+  callable when Firebase Auth is available, return false for duplicate or
+  blocked callable outcomes without bypassing quota/App Check errors, and
+  preserve the direct RTDB transaction only for missing callable endpoint or
+  missing Firebase Auth compatibility.
+- Extended `CommunityCallableClientTest` coverage for vote request envelopes,
+  content ID normalization, and non-limited-use token selection.
+- Updated `docs/research/cycle-109-2026-06-07.md`, `ROADMAP.md`,
+  `COMPLETED.md`, `CHANGELOG.md`, backend runbook, callable quota enforcement
+  doc, and loop state.
+- Cycle 109 verification: focused Android callable client tests, callable
+  contract check, generated notice lock checks, native compliance lock check,
+  dependency overlay check, dependency license policy check, high-severity npm
+  audit, and diff hygiene passed. Follow, block, upload finalizer, and profile
+  Android callable migrations, full callable wire-protocol coverage,
+  owner-approved deploy evidence, direct RTDB rule tightening, and Firebase
+  Console App Check evidence remain open.
+
 ## Next Cycle
 
-Continue this same assigned project, Aura. Start Cycle 109 from the
+Continue this same assigned project, Aura. Start Cycle 110 from the
 `ROADMAP.md` Continuation State and
-`docs/research/cycle-108-2026-06-07.md`. The account
+`docs/research/cycle-109-2026-06-07.md`. The account
 deletion dry-run planner, read-only Settings identity surface, redacted
 shareable request draft, request-code lookup tool, review receipt gate, offline
 apply simulator, private executor package builder, and guarded REST executor
@@ -1344,13 +1368,15 @@ idempotency writes; Cycle 107 added RTDB-emulator-backed
 metadata, owner index, quota, storage-path dedupe, and duplicate upload
 idempotency writes; Cycle 108 added the Android report callable client adapter
 and callable-first report submission with a compatibility direct-write fallback
-until deploy evidence is available. Android callable migration for votes,
-follows, user blocks, upload finalizers, and profile edits, full callable
-wire-protocol coverage, a live hosted HTTPS web deletion URL, and
-production-project dry-run evidence remain open. Next migrate Android vote or
-follow writes to callable adapters, add full callable wire-protocol coverage
-when Auth and App Check emulator wiring is available, publish the hosted URL
-after owner approval, or run a real
+until deploy evidence is available; Cycle 109 added the Android vote callable
+payload/client adapter and callable-first vote submission with compatibility
+fallback only for missing callable endpoint or missing Firebase Auth. Android
+callable migration for follows, user blocks, upload finalizers, and profile
+edits, full callable wire-protocol coverage, a live hosted HTTPS web deletion
+URL, and production-project dry-run evidence remain open. Next migrate Android
+follow or user-block writes to callable adapters, add full callable
+wire-protocol coverage when Auth and App Check emulator wiring is available,
+publish the hosted URL after owner approval, or run a real
 production-project Firebase executor dry-run after owner access is confirmed.
 Commit and push completed work when the active project contract allows it.
 
