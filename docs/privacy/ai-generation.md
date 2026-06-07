@@ -56,6 +56,14 @@ generated PNG after the Undo window closes. Aura still prunes the generated
 wallpaper cache to the most recent local outputs, and users can delete all app
 data through Android system settings.
 
+## On-device Generation
+
+Aura does not currently generate wallpapers on device. `docs/ai/on-device-wallpaper-decision.md`
+keeps local generation on hold until device coverage, model delivery,
+battery/thermal behavior, licensing, moderation, user-choice, and FOSS-channel
+evidence is complete. Stability BYO-key generation remains the only supported
+generation path.
+
 ## Generated Content Reports
 
 Generated wallpaper results and saved generated wallpaper favorites expose a
@@ -95,3 +103,5 @@ community upload metadata and do not expose reporter identity publicly.
 - Confirm generated favorites do not store prompt text in name or tags.
 - Confirm removing a saved generated wallpaper deletes its generated PNG after
   the Undo window closes.
+- Confirm on-device wallpaper generation remains disabled unless the decision
+  gate has approved evidence.

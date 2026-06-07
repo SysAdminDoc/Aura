@@ -3,6 +3,7 @@
 All notable changes to Aura will be documented in this file.
 
 ## Unreleased
+- **On-device wallpaper decision gate (Cycle 139)**: added an evidence packet and verify-time guard that keeps local wallpaper generation on hold until device, delivery, battery/thermal, license, moderation, fallback, and FOSS-channel criteria are met.
 - **Store metadata preflight (Cycle 138)**: added a checked Fastlane text/version/privacy preflight, wired it into verify and release, shortened the Play short description, and added the public privacy-policy URL to full description metadata.
 - **Prompt metadata retention cleanup (Cycle 137)**: stopped saving generated wallpaper prompt text in favorite names/tags and added generated PNG cleanup after generated favorite removal.
 - **Generated request cost guardrails (Cycle 136)**: added generated wallpaper session request counting, in-flight request rejection, duplicate prompt/style confirmation, and Stability account/cooldown error copy.

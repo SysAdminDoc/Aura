@@ -1,8 +1,8 @@
 # Autonomous Loop State
 
 **Assigned project:** `C:\Users\--\repos\Aura`
-**Current pass:** 2026-06-07 Cycle 138 store metadata preflight
-**Last commit before pass:** `2aca01a` (`feat(wallpapers): stop retaining generated prompts`)
+**Current pass:** 2026-06-07 Cycle 139 on-device wallpaper decision gate
+**Last commit before pass:** `158d0db` (`ci(store): check listing metadata preflight`)
 
 ## 2026-06-05 Result
 
@@ -1980,11 +1980,29 @@
   workflow policy checks, provider/network/security policy checks, and
   cleartext/endpoint/dependabot/wrapper guards passed.
 
+## Cycle 139 Result - 2026-06-07
+
+- Added `docs/ai/on-device-wallpaper-decision.json` and
+  `docs/ai/on-device-wallpaper-decision.md` with the current `hold` decision.
+- Required evidence for device baseline, model delivery/storage,
+  latency/battery/thermal behavior, license redistribution, moderation and
+  reporting, hosted/BYO fallback, and FOSS-channel impact before local
+  wallpaper generation can move toward production.
+- Added `tools/on_device_ai_decision_check.py` and focused tests to validate
+  the decision packet, reject premature approval, require HTTPS sources and
+  evidence refs, and block early production on-device runtime dependencies or
+  model artifacts.
+- Wired the guard into the verify workflow before Android setup.
+- Updated generated wallpaper privacy docs, supply-chain docs, research,
+  roadmap, changelog, completion, and loop-state docs.
+- Cycle 139 verification: on-device decision policy check and backend tool
+  tests passed.
+
 ## Next Cycle
 
-Continue this same assigned project, Aura. Start Cycle 139 from the
+Continue this same assigned project, Aura. Start Cycle 140 from the
 `ROADMAP.md` Continuation State and
-`docs/research/cycle-138-2026-06-07.md`. The account
+`docs/research/cycle-139-2026-06-07.md`. The account
 deletion dry-run planner, read-only Settings identity surface, redacted
 shareable request draft, request-code lookup tool, review receipt gate, offline
 apply simulator, private executor package builder, and guarded REST executor
@@ -2092,7 +2110,8 @@ confirmation, in-flight request rejection, and Stability account/cooldown error
 copy; Cycle 137 removed prompt-derived names/tags from generated favorites and
 added generated-file deletion on favorite removal; Cycle 138 added checked
 Fastlane store metadata text/version/privacy preflight and fixed the current
-short-description/privacy URL drift.
+short-description/privacy URL drift; Cycle 139 added a checked on-device
+wallpaper generation decision packet and production-source scanner.
 Actual live callable invocation evidence, a live hosted HTTPS web deletion URL,
 direct RTDB rule tightening, App Check console evidence, production-project
 dry-run evidence, and owner/admin GitHub repository security-settings evidence
@@ -2103,11 +2122,10 @@ hosted URL after owner approval, tighten direct RTDB write rules after callable
 deploy evidence, run a real production-project Firebase executor dry-run after
 owner access is confirmed, collect owner/admin GitHub security settings
 evidence and generate the redacted receipt when access is available, or
-continue with the on-device AI wallpaper decision gate, signed release dry-run
-evidence capture on a suitable runner, the screenshot and feature-graphic
-pipeline for the remaining store metadata asset gap, or the next checkable
-backend, deploy, security, support, policy, or rules hardening artifact if
-owner-gated evidence is still unavailable.
+continue with signed release dry-run evidence capture on a suitable runner,
+the screenshot and feature-graphic pipeline for the remaining store metadata
+asset gap, or the next checkable backend, deploy, security, support, policy, or
+rules hardening artifact if owner-gated evidence is still unavailable.
 Commit and push completed work when the active project contract allows it.
 
 ## Previous Cycle Prompt

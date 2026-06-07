@@ -617,6 +617,11 @@ next pass can resume quickly.
   workflow wiring, release workflow policy coverage, a Play-compliant short
   description, and a public privacy-policy URL in Fastlane metadata. The tested
   asset mode remains pending real screenshot/feature-graphic capture.
+- Completed Cycle 139 on-device wallpaper decision gate: added the checked
+  decision packet, verify-time policy scanner, focused backend tests, and
+  generated wallpaper privacy note that keep local generation on hold until
+  device, model-delivery, battery/thermal, licensing, moderation, fallback, and
+  FOSS-channel evidence is complete.
 
 ## 2026-06-05
 

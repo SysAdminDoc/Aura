@@ -25,6 +25,7 @@ Aura is side-loaded through GitHub Releases and Obtainium, so release artifacts 
 | Cleartext release guard | `tools/cleartext_release_check.py`, `.github/workflows/verify.yml`, `.github/workflows/release.yml` | Fails release preflight when network security config enables cleartext, the manifest explicitly enables cleartext, or provider-network code reintroduces raw HTTP URLs or OkHttp HTTP scheme builders. |
 | Network endpoint inventory | `docs/security/network-endpoints.json`, `docs/security/network-endpoints.md`, `tools/network_endpoint_inventory_check.py`, `.github/workflows/verify.yml` | Fails verification when app network-code URL hosts drift from the reviewed endpoint/auth/cache/fallback inventory. |
 | Store metadata preflight | `tools/store_metadata_preflight.py`, `.github/workflows/verify.yml`, `.github/workflows/release.yml` | Fails PR/main/release checks when Fastlane text metadata exceeds Play limits, loses the current versionCode changelog, reintroduces stale branding, or drops the public privacy-policy URL. Asset mode is available for the screenshot and feature-graphic pipeline. |
+| On-device wallpaper decision gate | `docs/ai/on-device-wallpaper-decision.json`, `tools/on_device_ai_decision_check.py`, `.github/workflows/verify.yml` | Keeps on-device wallpaper generation on hold until device baseline, delivery, battery/thermal, license, moderation, fallback, and FOSS-channel evidence is complete, and blocks early production runtime dependencies or model artifacts. |
 | Dependency Review | `.github/workflows/dependency-review.yml` | Runs on pull requests and fails high/critical vulnerable dependency additions. |
 | OpenSSF Scorecard | `.github/workflows/scorecard.yml` | Runs on main pushes, branch-protection changes, weekly schedule, and manual dispatch; keeps public result publishing disabled and uploads SARIF to code scanning. |
 | GitHub Actions allowlist | `docs/distribution/github-actions-allowlist.json`, `tools/github_actions_allowlist_check.py`, `.github/workflows/verify.yml` | Fails verification when workflow files use unreviewed actions, local actions, unpinned refs, forbidden floating refs, or unexpected workflow files. |
@@ -88,6 +89,7 @@ python3 tools/provider_credential_storage_check.py --policy docs/security/provid
 python3 tools/cleartext_release_check.py --repo-root .
 python3 tools/network_endpoint_inventory_check.py --inventory docs/security/network-endpoints.json --repo-root .
 python3 tools/store_metadata_preflight.py --repo-root .
+python3 tools/on_device_ai_decision_check.py --policy docs/ai/on-device-wallpaper-decision.json --repo-root .
 python3 -m unittest discover -s test/tools -p '*_test.py'
 ```
 

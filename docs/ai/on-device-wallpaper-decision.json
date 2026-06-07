@@ -1,0 +1,91 @@
+{
+  "schemaVersion": 1,
+  "policyKind": "onDeviceAiWallpaperDecision",
+  "decisionDate": "2026-06-07",
+  "decision": "hold",
+  "summary": "Do not implement on-device wallpaper generation until device coverage, delivery, performance, license, moderation, and channel-impact evidence are complete.",
+  "hostedFallback": "Stability BYO-key generation remains the only supported wallpaper generation path.",
+  "decisionDoc": "docs/ai/on-device-wallpaper-decision.md",
+  "criteria": [
+    {
+      "id": "device-baseline",
+      "status": "needsEvidence",
+      "requiredEvidence": [
+        "Supported Android API and ABI floor",
+        "Minimum SoC/NPU generation matrix",
+        "CPU/GPU fallback decision and user-visible unsupported-device copy"
+      ]
+    },
+    {
+      "id": "model-size-storage",
+      "status": "needsEvidence",
+      "requiredEvidence": [
+        "Model artifact size by delivery mode",
+        "On-demand download size and free-space guard",
+        "Cache eviction and backup exclusion plan"
+      ]
+    },
+    {
+      "id": "latency-battery-thermal",
+      "status": "needsEvidence",
+      "requiredEvidence": [
+        "512x512 and 9:16 generation latency across at least three devices",
+        "Battery delta for five consecutive generations",
+        "Thermal throttling and cancellation behavior"
+      ]
+    },
+    {
+      "id": "license-redistribution",
+      "status": "needsEvidence",
+      "requiredEvidence": [
+        "Model license redistribution review",
+        "Runtime and native library license review",
+        "Release notice and native compliance packet impact"
+      ]
+    },
+    {
+      "id": "moderation-reporting",
+      "status": "needsEvidence",
+      "requiredEvidence": [
+        "Prompt and output safety filter plan",
+        "Generated-content report routing",
+        "Unsafe-output deletion and retention behavior"
+      ]
+    },
+    {
+      "id": "fallback-user-choice",
+      "status": "needsEvidence",
+      "requiredEvidence": [
+        "Explicit hosted versus on-device mode selection",
+        "Disclosure copy for local model download and device resource use",
+        "No automatic switch that burns Stability credits or downloads large models"
+      ]
+    },
+    {
+      "id": "foss-channel-impact",
+      "status": "needsEvidence",
+      "requiredEvidence": [
+        "F-Droid and IzzyOnDroid packaging impact",
+        "Proprietary runtime or model anti-feature review",
+        "FOSS flavor decision if Play AI Pack or vendor runtime is required"
+      ]
+    }
+  ],
+  "forbiddenImplementationSignals": [
+    "safetensors",
+    "com.google.ai.edge.litert",
+    "com.android.ai-pack",
+    "ai_packs",
+    "qnn",
+    "onnxruntime",
+    "mnn"
+  ],
+  "sourceUrls": [
+    "https://github.com/xororz/local-dream",
+    "https://www.qualcomm.com/news/onq/2023/02/worlds-first-on-device-demonstration-of-stable-diffusion-on-android",
+    "https://www.qualcomm.com/content/dam/qcomm-martech/dm-assets/documents/Unlocking-on-device-generative-AI-with-an-NPU-and-heterogeneous-computing.pdf",
+    "https://developers.google.com/edge/litert/android",
+    "https://developers.google.com/edge/litert/next/npu",
+    "https://developer.android.com/ai/gemini-nano"
+  ]
+}
