@@ -1,8 +1,9 @@
 # Community Account Deletion Policy
 
-Cycle 74 defines the first dry-run deletion contract for Aura community
-identity data. It focuses on user-identifying RTDB marker paths that can be
-removed without deleting public uploads or moderation evidence out of sequence.
+Cycle 74 defined the first dry-run deletion contract for Aura community
+identity data. Cycle 75 added the first user-visible request surface. The
+contract focuses on user-identifying RTDB marker paths that can be removed
+without deleting public uploads or moderation evidence out of sequence.
 
 ## Scope
 
@@ -51,17 +52,34 @@ community votes, so slash/dot variants resolve to the stored key form.
   workflow so Storage blobs, metadata rows, owner indexes, and tombstones remain
   consistent.
 
+## User-Facing Request Surface
+
+Settings > Community identity shows the current community auth label and a
+redacted identity suffix. When a Firebase identity already exists, it also shows
+an `AURA-` deletion request code that can be copied into a support or web
+deletion request.
+
+Opening the panel is read-only. It does not call `ensureSignedIn()`, does not
+create a Firebase anonymous account, and does not create the local fallback UUID
+solely to show an identity panel. Users without a Firebase identity see that no
+backend deletion request code is available yet.
+
+The request code is a routing handle for support/admin tooling, not proof of
+ownership by itself. A trusted deletion executor still needs to verify the
+request before applying the dry-run plan.
+
 ## Verification
 
 - `py -3 -m py_compile tools\community_account_deletion_plan.py test\tools\community_account_deletion_plan_test.py`
 - `py -3 -m unittest discover -s test/tools -p '*_test.py'`
+- `.\gradlew.bat --no-daemon --max-workers=2 :app:testDebugUnitTest --tests com.freevibe.service.CommunityIdentityProviderTest --tests com.freevibe.ui.screens.settings.SettingsViewModelTest`
 
 ## Remaining Work
 
 - Add a trusted deletion executor after the Cloud Functions/backend deployment
   surface exists.
-- Add a user-visible identity/deletion request surface with a redacted UID or
-  deletion code.
+- Add local/Auth deletion and community cache cleanup after the trusted
+  executor owns final sequencing.
 - Decide whether future callable-backed vote deletion should decrement
   aggregate counts transactionally.
 

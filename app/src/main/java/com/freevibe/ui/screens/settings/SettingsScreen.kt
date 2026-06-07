@@ -43,6 +43,7 @@ import androidx.core.content.ContextCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.freevibe.data.repository.CommunityBlockedUser
+import com.freevibe.service.CommunityIdentitySummary
 import com.freevibe.service.CrashDiagnosticsSummary
 import com.freevibe.service.DailyWallpaperWorker
 import com.freevibe.service.SourceMetrics
@@ -124,6 +125,7 @@ fun SettingsScreen(
     val communityProviderEnabled by viewModel.communityProviderEnabled.collectAsStateWithLifecycle()
     val blockedCommunityCreators by viewModel.blockedCommunityCreators.collectAsStateWithLifecycle()
     val communityBlockAction by viewModel.communityBlockAction.collectAsStateWithLifecycle()
+    val communityIdentitySummary by viewModel.communityIdentitySummary.collectAsStateWithLifecycle()
     val showSketchyContent by viewModel.showSketchyContent.collectAsStateWithLifecycle()
     val showNsfwContent by viewModel.showNsfwContent.collectAsStateWithLifecycle()
     val videoFpsOverlayEnabled by viewModel.videoFpsOverlayEnabled.collectAsStateWithLifecycle()
@@ -286,6 +288,7 @@ fun SettingsScreen(
     var showYtSoundEditor by remember { mutableStateOf(false) }
     var showYtBlockedEditor by remember { mutableStateOf(false) }
     var showBlockedCreators by remember { mutableStateOf(false) }
+    var showCommunityIdentity by remember { mutableStateOf(false) }
     var showDarkModeWallpaperPicker by remember { mutableStateOf(false) }
     var showLightModeWallpaperPicker by remember { mutableStateOf(false) }
     var showCrashDiagnostics by remember { mutableStateOf(false) }
@@ -503,6 +506,15 @@ fun SettingsScreen(
             if (communityProviderEnabled) {
                 SettingsItem(
                     icon = Icons.Default.Person,
+                    title = "Community identity",
+                    subtitle = communityIdentitySubtitle(communityIdentitySummary),
+                    onClick = {
+                        viewModel.refreshCommunityIdentitySummary()
+                        showCommunityIdentity = true
+                    },
+                )
+                SettingsItem(
+                    icon = Icons.Default.Person,
                     title = "Creator profile",
                     subtitle = "Uploads, votes, follows, and leaderboard",
                     onClick = onCreatorProfileClick,
@@ -525,6 +537,14 @@ fun SettingsScreen(
                         onClick = onCommunityReportsClick,
                     )
                 }
+            }
+            if (showCommunityIdentity) {
+                CommunityIdentityDialog(
+                    summary = communityIdentitySummary,
+                    onRefresh = viewModel::refreshCommunityIdentitySummary,
+                    onCopyCode = { code -> copyCommunityDeletionCode(context, code) },
+                    onDismiss = { showCommunityIdentity = false },
+                )
             }
             if (showBlockedCreators) {
                 BlockedCreatorsDialog(
@@ -1794,6 +1814,62 @@ fun SettingsScreen(
 }
 
 @Composable
+private fun CommunityIdentityDialog(
+    summary: CommunityIdentitySummary,
+    onRefresh: () -> Unit,
+    onCopyCode: (String) -> Unit,
+    onDismiss: () -> Unit,
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Community identity") },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                Text(
+                    summary.authLabel,
+                    style = MaterialTheme.typography.titleSmall,
+                )
+                Text(
+                    "Identity suffix: ${communityIdentitySuffixLabel(summary)}",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                if (summary.deletionRequestCode.isNotBlank()) {
+                    Text(
+                        "Deletion request code: ${summary.deletionRequestCode}",
+                        style = MaterialTheme.typography.bodyMedium,
+                    )
+                } else {
+                    Text(
+                        "No backend deletion request code is available until a Firebase identity exists.",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+                Text(
+                    "Deletion planning covers vote markers, follows, block rows, shares, and local community caches. Public uploads and moderation records use the retained-data review path.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = onDismiss) { Text("Close") }
+        },
+        dismissButton = {
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                TextButton(onClick = onRefresh) { Text("Refresh") }
+                if (summary.deletionRequestCode.isNotBlank()) {
+                    TextButton(onClick = { onCopyCode(summary.deletionRequestCode) }) {
+                        Text("Copy code")
+                    }
+                }
+            }
+        },
+    )
+}
+
+@Composable
 private fun BlockedCreatorsDialog(
     blockedCreators: List<CommunityBlockedUser>,
     actionState: CommunityBlockActionState,
@@ -1884,6 +1960,16 @@ private fun blockedCreatorSubtitle(blocked: CommunityBlockedUser): String {
         blockedAt?.let { "Blocked: $it" },
     ).joinToString(" - ")
 }
+
+private fun communityIdentitySubtitle(summary: CommunityIdentitySummary): String =
+    if (summary.hasFirebaseIdentity) {
+        "${summary.authLabel} - ${communityIdentitySuffixLabel(summary)}"
+    } else {
+        "No Firebase identity created"
+    }
+
+private fun communityIdentitySuffixLabel(summary: CommunityIdentitySummary): String =
+    if (summary.identitySuffix == "Not created") summary.identitySuffix else "...${summary.identitySuffix}"
 
 @Composable
 private fun IntervalPickerDialog(
@@ -2455,6 +2541,12 @@ private fun copyCrashDiagnosticsBundle(context: Context, bundle: String) {
     val clipboard = context.getSystemService(ClipboardManager::class.java)
     clipboard.setPrimaryClip(ClipData.newPlainText("Aura diagnostics", bundle))
     Toast.makeText(context, "Diagnostics copied", Toast.LENGTH_SHORT).show()
+}
+
+private fun copyCommunityDeletionCode(context: Context, code: String) {
+    val clipboard = context.getSystemService(ClipboardManager::class.java)
+    clipboard.setPrimaryClip(ClipData.newPlainText("Aura deletion request code", code))
+    Toast.makeText(context, "Deletion request code copied", Toast.LENGTH_SHORT).show()
 }
 
 private fun shareCrashDiagnosticsBundle(context: Context, bundle: String) {

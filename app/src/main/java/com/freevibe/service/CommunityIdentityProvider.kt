@@ -5,9 +5,18 @@ import android.provider.Settings
 import com.google.firebase.auth.FirebaseAuth
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.tasks.await
+import java.security.MessageDigest
+import java.util.Locale
 import java.util.UUID
 import javax.inject.Inject
 import javax.inject.Singleton
+
+data class CommunityIdentitySummary(
+    val authLabel: String = "Local identity",
+    val identitySuffix: String = "Not created",
+    val deletionRequestCode: String = "",
+    val hasFirebaseIdentity: Boolean = false,
+)
 
 @Singleton
 class CommunityIdentityProvider @Inject constructor(
@@ -47,6 +56,18 @@ class CommunityIdentityProvider @Inject constructor(
         else -> "Local identity"
     }
 
+    fun currentIdentitySummary(): CommunityIdentitySummary {
+        val firebaseUid = currentFirebaseUid()
+        val localFallbackId = prefs.getString(KEY_FALLBACK_ID, null)
+        val displayId = firebaseUid ?: localFallbackId
+        return CommunityIdentitySummary(
+            authLabel = currentAuthLabel(),
+            identitySuffix = displayId?.let(::communityIdentitySuffix) ?: "Not created",
+            deletionRequestCode = firebaseUid?.let(::communityDeletionRequestCode).orEmpty(),
+            hasFirebaseIdentity = !firebaseUid.isNullOrBlank(),
+        )
+    }
+
     fun hasGoogleOAuthClient(): Boolean =
         context.resources.getIdentifier("default_web_client_id", "string", context.packageName) != 0
 
@@ -72,4 +93,18 @@ class CommunityIdentityProvider @Inject constructor(
     companion object {
         private const val KEY_FALLBACK_ID = "fallback_id"
     }
+}
+
+internal fun communityIdentitySuffix(identityId: String): String =
+    identityId.trim().takeLast(8).ifBlank { "Not created" }
+
+internal fun communityDeletionRequestCode(identityId: String): String {
+    val normalized = identityId.trim()
+    if (normalized.isBlank()) return ""
+    val digest = MessageDigest.getInstance("SHA-256")
+        .digest(normalized.toByteArray())
+        .joinToString("") { "%02x".format(it) }
+        .take(12)
+        .uppercase(Locale.ROOT)
+    return "AURA-$digest"
 }

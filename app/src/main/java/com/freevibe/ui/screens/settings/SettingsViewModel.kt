@@ -10,6 +10,8 @@ import com.freevibe.data.repository.CommunityBlockRepository
 import com.freevibe.data.repository.VoteRepository
 import com.freevibe.di.IoDispatcher
 import com.freevibe.service.AutoWallpaperWorker
+import com.freevibe.service.CommunityIdentityProvider
+import com.freevibe.service.CommunityIdentitySummary
 import com.freevibe.service.CrashDiagnosticsCollector
 import com.freevibe.service.CrashDiagnosticsSummary
 import com.freevibe.service.OfflineFavoritesManager
@@ -57,6 +59,7 @@ class SettingsViewModel @Inject constructor(
     private val crashDiagnosticsCollector: CrashDiagnosticsCollector,
     private val voteRepo: VoteRepository,
     private val communityBlockRepo: CommunityBlockRepository,
+    private val communityIdentityProvider: CommunityIdentityProvider,
     @IoDispatcher private val ioDispatcher: CoroutineDispatcher,
 ) : ViewModel() {
 
@@ -151,6 +154,8 @@ class SettingsViewModel @Inject constructor(
         .stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
     private val _communityBlockAction = MutableStateFlow(CommunityBlockActionState())
     val communityBlockAction = _communityBlockAction.asStateFlow()
+    private val _communityIdentitySummary = MutableStateFlow(communityIdentityProvider.currentIdentitySummary())
+    val communityIdentitySummary = _communityIdentitySummary.asStateFlow()
 
     fun setShowSketchy(show: Boolean) = viewModelScope.launch { prefs.setShowSketchy(show) }
     fun setShowNsfw(show: Boolean) = viewModelScope.launch { prefs.setShowNsfw(show) }
@@ -326,6 +331,10 @@ class SettingsViewModel @Inject constructor(
 
     fun clearCommunityBlockAction() {
         _communityBlockAction.value = CommunityBlockActionState()
+    }
+
+    fun refreshCommunityIdentitySummary() {
+        _communityIdentitySummary.value = communityIdentityProvider.currentIdentitySummary()
     }
 
     fun setFreesoundKey(key: String) = viewModelScope.launch {

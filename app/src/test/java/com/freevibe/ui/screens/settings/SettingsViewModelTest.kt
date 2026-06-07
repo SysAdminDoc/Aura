@@ -8,6 +8,8 @@ import com.freevibe.data.model.CommunityBlockReason
 import com.freevibe.data.repository.CommunityBlockedUser
 import com.freevibe.data.repository.CommunityBlockRepository
 import com.freevibe.data.repository.VoteRepository
+import com.freevibe.service.CommunityIdentityProvider
+import com.freevibe.service.CommunityIdentitySummary
 import com.freevibe.service.CrashDiagnosticsCollector
 import com.freevibe.service.OfflineFavoritesManager
 import com.freevibe.service.VideoWallpaperSelectionResult
@@ -180,6 +182,34 @@ class SettingsViewModelTest {
         coVerify(exactly = 1) { blockRepo.unblockUser("creator_1") }
     }
 
+    @Test
+    fun `refreshCommunityIdentitySummary exposes redacted identity request code`() = runTest(dispatcher) {
+        val identityProvider = mockk<CommunityIdentityProvider>()
+        every { identityProvider.currentIdentitySummary() } returnsMany listOf(
+            CommunityIdentitySummary(),
+            CommunityIdentitySummary(
+                authLabel = "Anonymous Firebase identity",
+                identitySuffix = "abcd1234",
+                deletionRequestCode = "AURA-123456789ABC",
+                hasFirebaseIdentity = true,
+            ),
+        )
+
+        val viewModel = createViewModel(
+            cacheDir = createTempDirectory("settings-identity").toFile().also(tempDirs::add),
+            communityIdentityProviderOverride = identityProvider,
+        )
+
+        assertEquals("Not created", viewModel.communityIdentitySummary.value.identitySuffix)
+
+        viewModel.refreshCommunityIdentitySummary()
+
+        assertEquals("Anonymous Firebase identity", viewModel.communityIdentitySummary.value.authLabel)
+        assertEquals("abcd1234", viewModel.communityIdentitySummary.value.identitySuffix)
+        assertEquals("AURA-123456789ABC", viewModel.communityIdentitySummary.value.deletionRequestCode)
+        assertTrue(viewModel.communityIdentitySummary.value.hasFirebaseIdentity)
+    }
+
     private fun createViewModel(
         cacheDir: File,
         offlineFavoritesSize: Long = 0L,
@@ -188,6 +218,7 @@ class SettingsViewModelTest {
         wallpaperCacheManagerOverride: WallpaperCacheManager? = null,
         videoWallpaperStorageOverride: VideoWallpaperStorage? = null,
         communityBlockRepoOverride: CommunityBlockRepository? = null,
+        communityIdentityProviderOverride: CommunityIdentityProvider? = null,
         isAdmin: Boolean = false,
     ): SettingsViewModel {
         val context = mockk<Context>(relaxed = true).also {
@@ -218,6 +249,9 @@ class SettingsViewModelTest {
         val communityBlockRepo = communityBlockRepoOverride ?: mockk<CommunityBlockRepository>(relaxed = true).also {
             every { it.blockedUsers() } returns flowOf(emptyList())
         }
+        val communityIdentityProvider = communityIdentityProviderOverride ?: mockk<CommunityIdentityProvider>(relaxed = true).also {
+            every { it.currentIdentitySummary() } returns CommunityIdentitySummary()
+        }
         return SettingsViewModel(
             context = context,
             prefs = prefs,
@@ -235,6 +269,7 @@ class SettingsViewModelTest {
             ),
             voteRepo = voteRepo,
             communityBlockRepo = communityBlockRepo,
+            communityIdentityProvider = communityIdentityProvider,
             ioDispatcher = dispatcher,
         )
     }

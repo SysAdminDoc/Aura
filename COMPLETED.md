@@ -259,6 +259,11 @@ next pass can resume quickly.
   creator profiles, block indexes, collection shares, retained aggregate vote
   counts, retained moderation audit records, and public upload workflow
   boundaries.
+- Completed Cycle 75 community identity request surface: Settings now shows a
+  read-only community identity dialog with auth type, redacted identity suffix,
+  and a deletion request code when a Firebase identity exists; the summary path
+  does not create a local fallback UUID or Firebase anonymous account just by
+  opening Settings.
 
 ## 2026-06-05
 

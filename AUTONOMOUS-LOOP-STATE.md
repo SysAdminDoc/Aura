@@ -1,8 +1,8 @@
 # Autonomous Loop State
 
 **Assigned project:** `C:\Users\--\repos\Aura`
-**Current pass:** 2026-06-06 Cycle 74 account deletion dry-run planner
-**Last commit before pass:** `bc556ac` (`feat(community): add report profile block actions`)
+**Current pass:** 2026-06-06 Cycle 75 community identity request surface
+**Last commit before pass:** `e300d88` (`feat(community): add account deletion planner`)
 
 ## 2026-06-05 Result
 
@@ -345,8 +345,9 @@
 - Real production-project Firebase backend dry-run evidence after owner access is confirmed.
 - Real exported Storage/RTDB orphan reports after owner access is confirmed.
 - Real production RTDB legacy backfill plan after owner access is confirmed.
-- Trusted account deletion apply/orchestrator, user-visible deletion request
-  surface, and deployable callable backend implementation.
+- Trusted account deletion apply/orchestrator, web/email deletion request
+  routing, local/Auth deletion cleanup, and deployable callable backend
+  implementation.
 
 ## Cycle 69 Result - 2026-06-06
 
@@ -443,17 +444,34 @@
 - Cycle 74 verification: Python compile for the planner and backend tool
   unittest discovery passed locally.
 
+## Cycle 75 Result - 2026-06-06
+
+- Added `CommunityIdentitySummary` and read-only summary helpers to
+  `CommunityIdentityProvider`.
+- The summary path reads only the existing Firebase UID or existing local
+  fallback ID, so Settings does not create a local fallback UUID or Firebase
+  anonymous account just by opening the community identity panel.
+- Settings now has a `Community identity` row and dialog showing auth type,
+  redacted identity suffix, copyable deletion request code when a Firebase
+  identity exists, and retained-data policy copy.
+- Updated `docs/research/cycle-75-2026-06-06.md`,
+  `docs/community-account-deletion-policy.md`, `ROADMAP.md`, `COMPLETED.md`,
+  and `CHANGELOG.md`.
+- Cycle 75 verification: focused `CommunityIdentityProviderTest` and
+  `SettingsViewModelTest` passed locally with Android Studio JBR.
+
 ## Next Cycle
 
-Continue this same assigned project, Aura. Start Cycle 75 from the `ROADMAP.md`
-Continuation State and `docs/research/cycle-74-2026-06-06.md`. The account
-deletion dry-run planner now covers private marker paths but does not apply
-changes. Next add a trusted apply/orchestrator design, user-visible
-identity/deletion request surface, a real production-project Firebase backend
-dry run/orphan/backfill evidence pass after owner access is confirmed, Cloud
-Functions implementation for the callable quota contract, or Android callable
-migration adapters. Commit and push completed work when the active project
-contract allows it.
+Continue this same assigned project, Aura. Start Cycle 76 from the `ROADMAP.md`
+Continuation State and `docs/research/cycle-75-2026-06-06.md`. The account
+deletion dry-run planner and read-only Settings identity request surface are
+implemented, but trusted apply/orchestration, local/Auth deletion cleanup, and
+web/email request routing remain open. Next add a trusted apply/orchestrator
+design, web/email deletion request route, a real production-project Firebase
+backend dry run/orphan/backfill evidence pass after owner access is confirmed,
+Cloud Functions implementation for the callable quota contract, or Android
+callable migration adapters. Commit and push completed work when the active
+project contract allows it.
 
 ## Previous Cycle Prompt
 
