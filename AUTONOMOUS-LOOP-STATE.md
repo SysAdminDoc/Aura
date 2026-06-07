@@ -1,8 +1,8 @@
 # Autonomous Loop State
 
 **Assigned project:** `C:\Users\--\repos\Aura`
-**Current pass:** 2026-06-06 Cycle 87 account deletion upload handoff plan
-**Last commit before pass:** `0286357` (`feat(community): add deletion auth package`)
+**Current pass:** 2026-06-07 Cycle 88 account deletion web URL gate
+**Last commit before pass:** `62d5fbc` (`feat(community): add deletion upload handoff`)
 
 ## 2026-06-05 Result
 
@@ -729,10 +729,36 @@
 - Cycle 87 verification: Python compile and backend tool unittest discovery
   passed locally.
 
+## Cycle 88 Result - 2026-06-07
+
+- Added `docs/privacy/privacy-policy.md` with Aura data categories, no-ads and
+  no-tracking statements, retained-record disclosure, deletion handling
+  boundaries, and the current pending owner-publication status for the hosted
+  deletion URL.
+- Added `docs/support/community-account-deletion-web-url.json` as the canonical
+  hosted deletion URL publication manifest.
+- Added `tools/community_deletion_web_url_check.py` to validate both
+  `pendingOwnerUrl` and `published` states. Pending state requires an empty URL
+  and privacy-policy pending text; published state requires an HTTPS URL linked
+  from both policy and support intake docs.
+- Added backend tool coverage in
+  `test/tools/community_deletion_web_url_check_test.py` for pending, published,
+  missing support link, and non-HTTPS cases.
+- Wired the URL manifest validator into Firebase backend CI change detection
+  and the backend release checklist.
+- Updated `docs/research/cycle-88-2026-06-07.md`,
+  `docs/support/community-account-deletion.md`,
+  `docs/support/community-account-deletion-web-intake.md`,
+  `docs/community-account-deletion-policy.md`,
+  `docs/community-backend-runbook.md`, `ROADMAP.md`, `COMPLETED.md`, and
+  `CHANGELOG.md`.
+- Cycle 88 verification: Python compile, URL manifest check, backend
+  tool unittest discovery, diff hygiene, and attribution/ASCII scans.
+
 ## Next Cycle
 
-Continue this same assigned project, Aura. Start Cycle 88 from the `ROADMAP.md`
-Continuation State and `docs/research/cycle-87-2026-06-06.md`. The account
+Continue this same assigned project, Aura. Start Cycle 89 from the `ROADMAP.md`
+Continuation State and `docs/research/cycle-88-2026-06-07.md`. The account
 deletion dry-run planner, read-only Settings identity surface, redacted
 shareable request draft, request-code lookup tool, review receipt gate, offline
 apply simulator, private executor package builder, and guarded REST executor
@@ -742,15 +768,17 @@ Cycle 84 added local/Auth cleanup sequencing after backend completion; Cycle 85
 added Settings > Community identity > Clear local for the current device
 fallback identity; Cycle 86 added private Firebase Auth deletion packages after
 lookup and backend completion evidence match; Cycle 87 added private
-public-upload handoff plans for owned upload rows and blocked handle review.
-Owner-approved Auth deletion execution evidence, public upload deletion
-execution evidence after a clean upload plan, and hosted private web URL
-publication remain open. Next add owner-approved Firebase Auth deletion
-execution evidence, public upload deletion execution evidence, hosted private
-web URL publication planning, a real production-project Firebase executor
-dry-run after owner access is confirmed, Cloud Functions implementation for the
-callable quota contract, or Android callable migration adapters. Commit and
-push completed work when the active project contract allows it.
+public-upload handoff plans for owned upload rows and blocked handle review;
+Cycle 88 added the privacy-policy-backed hosted URL manifest gate for pending
+owner publication. Owner-approved Auth deletion execution evidence, public
+upload deletion execution evidence after a clean upload plan, a live hosted
+HTTPS web deletion URL, and production-project dry-run evidence remain open.
+Next add owner-approved Firebase Auth deletion execution evidence, public upload
+deletion execution evidence, hosted URL publication after owner approval, a real
+production-project Firebase executor dry-run after owner access is confirmed,
+Cloud Functions implementation for the callable quota contract, or Android
+callable migration adapters. Commit and push completed work when the active
+project contract allows it.
 
 ## Previous Cycle Prompt
 

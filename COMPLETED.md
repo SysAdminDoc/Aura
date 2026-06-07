@@ -321,6 +321,12 @@ next pass can resume quickly.
   enumerate owned public upload rows from a current RTDB export, block rows
   with missing or mismatched `storagePath` handles, and hand candidates to the
   owner/admin upload deletion workflow without deleting anything directly.
+- Completed Cycle 88 account deletion web URL gate: added
+  `docs/privacy/privacy-policy.md`,
+  `docs/support/community-account-deletion-web-url.json`,
+  `tools/community_deletion_web_url_check.py`, and backend tool tests so the
+  hosted deletion URL remains explicitly `pendingOwnerUrl` until an HTTPS
+  owner-published request URL is live and linked from policy/support docs.
 
 ## 2026-06-05
 

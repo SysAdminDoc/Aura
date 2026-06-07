@@ -3,6 +3,7 @@
 All notable changes to Aura will be documented in this file.
 
 ## Unreleased
+- **Account deletion web URL gate (Cycle 88)**: added a privacy-policy-backed hosted deletion URL manifest and validator that keeps the web request route in an explicit pending owner-publication state until a live HTTPS URL is linked from policy and support docs.
 - **Account deletion upload handoff (Cycle 87)**: added a private upload deletion planner that consumes the Auth package, enumerates owned public sound/wallpaper uploads with valid Storage handles, and blocks rows needing backfill or manual review before owner/admin deletion workflow execution.
 - **Account deletion Auth package (Cycle 86)**: added a private Firebase Auth deletion package builder that requires matching request-code lookup and backend completion evidence before exposing the full UID to owner-approved Auth deletion.
 - **In-app local community cleanup (Cycle 85)**: Settings > Community identity now offers `Clear local` for the current device fallback identity, refreshes the redacted summary after clearing, and keeps backend/Auth/upload deletion in the support chain.

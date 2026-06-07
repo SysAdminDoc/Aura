@@ -9,11 +9,22 @@ Users who cannot open Aura can submit the same `AURA-` request code through a
 private hosted support surface. The field contract, privacy boundaries, and
 validation command live in
 [`community-account-deletion-web-intake.md`](community-account-deletion-web-intake.md).
+The current publication state for the hosted URL lives in
+[`community-account-deletion-web-url.json`](community-account-deletion-web-url.json);
+it remains `pendingOwnerUrl` until the owner publishes an HTTPS request page and
+links it from both the privacy policy and support intake document.
 
 Validate private web form exports before operator lookup:
 
 ```powershell
 py -3 tools\community_deletion_web_intake.py --request .\web-intake-request.json --support-reference <ticket-id> --output .\web-intake-receipt.json
+```
+
+Validate the hosted URL publication manifest before Play submission or after
+any URL/status change:
+
+```powershell
+py -3 tools\community_deletion_web_url_check.py --manifest docs\support\community-account-deletion-web-url.json --repo-root .
 ```
 
 The receipt hashes contact and statement fields and does not include raw

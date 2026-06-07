@@ -38,6 +38,7 @@ Run from the repo root:
 git status --short --branch
 npm ci
 py -3 tools\community_backend_manifest.py --mode check
+py -3 tools\community_deletion_web_url_check.py --manifest docs\support\community-account-deletion-web-url.json --repo-root .
 npm run test:firebase-rules
 npx firebase --version
 ```
@@ -149,6 +150,9 @@ must include:
 - Web-intake receipt from `tools/community_deletion_web_intake.py` when support
   receives the request through the hosted private web form instead of the
   in-app share draft.
+- Hosted account deletion web URL manifest status from
+  `tools/community_deletion_web_url_check.py` before Play production
+  submission or after any web deletion URL change.
 - Account deletion review receipt from
   `tools/community_account_deletion_review.py` before any future trusted apply
   step accepts a deletion plan.

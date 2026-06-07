@@ -167,6 +167,11 @@ User and operator handling instructions live in
 [`docs/support/community-account-deletion.md`](support/community-account-deletion.md).
 Hosted private web intake requirements live in
 [`docs/support/community-account-deletion-web-intake.md`](support/community-account-deletion-web-intake.md).
+Hosted URL publication status lives in
+[`docs/support/community-account-deletion-web-url.json`](support/community-account-deletion-web-url.json)
+and is validated by `tools/community_deletion_web_url_check.py`. The current
+manifest can stay in `pendingOwnerUrl` only while the public URL is empty and
+the privacy policy clearly states pending owner publication.
 Operators can use `tools/community_deletion_request_lookup.py` with a current
 RTDB export to map a request code to candidate UID evidence before running the
 dry-run planner and review receipt.
@@ -196,6 +201,8 @@ operator lookup step.
 - `py -3 -m py_compile tools\community_account_deletion_cleanup_sequence.py test\tools\community_account_deletion_cleanup_sequence_test.py`
 - `py -3 -m py_compile tools\community_account_deletion_auth_package.py test\tools\community_account_deletion_auth_package_test.py`
 - `py -3 -m py_compile tools\community_account_deletion_upload_plan.py test\tools\community_account_deletion_upload_plan_test.py`
+- `py -3 -m py_compile tools\community_deletion_web_url_check.py test\tools\community_deletion_web_url_check_test.py`
+- `py -3 tools\community_deletion_web_url_check.py --manifest docs\support\community-account-deletion-web-url.json --repo-root .`
 
 ## Remaining Work
 
@@ -206,8 +213,9 @@ operator lookup step.
   owner access and production-project approval are confirmed.
 - Execute public upload deletion only through the owner/admin upload deletion
   workflow after the private upload plan has no blocked rows.
-- Publish the hosted private support route or web deletion page before Play
-  production submission, using the validated web-intake field contract.
+- Replace the `pendingOwnerUrl` manifest with a live HTTPS hosted private
+  support route or web deletion page before Play production submission, then
+  reference that URL from the privacy policy and support intake document.
 - Decide whether future callable-backed vote deletion should decrement
   aggregate counts transactionally.
 

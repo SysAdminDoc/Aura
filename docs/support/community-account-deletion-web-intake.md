@@ -68,11 +68,22 @@ After that, continue with the private operator flow in
 
 ## Hosting Notes
 
-- Publish the web resource URL from the privacy policy before Play production
-  submission.
+- Publication status lives in
+  [`community-account-deletion-web-url.json`](community-account-deletion-web-url.json).
+- While the manifest status is `pendingOwnerUrl`, keep `publicUrl` empty and
+  keep the privacy policy text marked as pending owner publication.
+- Before Play production submission, publish the web resource URL, set the
+  manifest status to `published`, and reference the HTTPS URL from both the
+  privacy policy and this support intake document.
 - Use HTTPS only.
 - Rate-limit submissions by IP/contact in the hosting layer.
 - Store raw form exports only in the private support system, not in the repo.
 - Show the same retained-record and public-upload caveats as the in-app request
   draft.
 - Do not ask users to paste full Firebase UIDs into public issues.
+
+Validate the publication manifest after any status or URL change:
+
+```powershell
+py -3 tools\community_deletion_web_url_check.py --manifest docs\support\community-account-deletion-web-url.json --repo-root .
+```
