@@ -216,7 +216,7 @@ jobs:
 
       - name: Upload unit-test reports on failure
         if: failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: unit-test-reports
           path: app/build/reports/tests/testDebugUnitTest
@@ -225,7 +225,7 @@ jobs:
 
       - name: Upload lint report on failure
         if: failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: lint-report
           path: app/build/reports/lint-results-debug.html
