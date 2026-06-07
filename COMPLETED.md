@@ -340,6 +340,10 @@ next pass can resume quickly.
   `tools/community_callable_contract_check.py`, and backend tool tests so the
   callable quota contract is machine-checkable and quota reset days are pinned
   to UTC before the Cloud Functions project is added.
+- Completed Cycle 92 hosted deletion page template gate: added
+  `docs/support/community-account-deletion-web-page.md`,
+  `tools/community_deletion_web_page_check.py`, and backend tool tests so the
+  owner has checked publishable page copy before assigning a live HTTPS URL.
 
 ## 2026-06-05
 

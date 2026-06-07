@@ -56,6 +56,7 @@ jobs:
             tools/community_account_deletion_plan.py \
             tools/community_deletion_request_lookup.py \
             tools/community_deletion_web_intake.py \
+            tools/community_deletion_web_page_check.py \
             tools/community_account_deletion_review.py \
             tools/community_account_deletion_apply_simulator.py \
             tools/community_account_deletion_executor_package.py \
@@ -74,6 +75,7 @@ jobs:
             docs/community-callable-contract.json \
             docs/community-account-deletion-policy.md \
             docs/privacy/privacy-policy.md \
+            docs/support/community-account-deletion-web-page.md \
             docs/support/community-account-deletion-web-url.json \
             docs/community-upload-backfill.md \
             docs/community-storage-lifecycle-policy.md \
@@ -110,6 +112,10 @@ jobs:
       - name: Community account deletion web URL manifest
         if: steps.firebase_rules_changes.outputs.changed == 'true'
         run: python3 tools/community_deletion_web_url_check.py --manifest docs/support/community-account-deletion-web-url.json --repo-root .
+
+      - name: Community account deletion web page
+        if: steps.firebase_rules_changes.outputs.changed == 'true'
+        run: python3 tools/community_deletion_web_page_check.py --page docs/support/community-account-deletion-web-page.md
 
       - name: Community backend tool tests
         if: steps.firebase_rules_changes.outputs.changed == 'true'

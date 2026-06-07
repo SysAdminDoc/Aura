@@ -13,6 +13,8 @@ The current publication state for the hosted URL lives in
 [`community-account-deletion-web-url.json`](community-account-deletion-web-url.json);
 it remains `pendingOwnerUrl` until the owner publishes an HTTPS request page and
 links it from both the privacy policy and support intake document.
+Publishable page copy lives in
+[`community-account-deletion-web-page.md`](community-account-deletion-web-page.md).
 
 Validate private web form exports before operator lookup:
 
@@ -25,6 +27,12 @@ any URL/status change:
 
 ```powershell
 py -3 tools\community_deletion_web_url_check.py --manifest docs\support\community-account-deletion-web-url.json --repo-root .
+```
+
+Validate the hosted page copy before publication:
+
+```powershell
+py -3 tools\community_deletion_web_page_check.py --page docs\support\community-account-deletion-web-page.md
 ```
 
 The receipt hashes contact and statement fields and does not include raw

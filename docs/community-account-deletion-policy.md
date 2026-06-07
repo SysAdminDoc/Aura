@@ -191,6 +191,9 @@ User and operator handling instructions live in
 [`docs/support/community-account-deletion.md`](support/community-account-deletion.md).
 Hosted private web intake requirements live in
 [`docs/support/community-account-deletion-web-intake.md`](support/community-account-deletion-web-intake.md).
+Hosted page publication copy lives in
+[`docs/support/community-account-deletion-web-page.md`](support/community-account-deletion-web-page.md)
+and is validated by `tools/community_deletion_web_page_check.py`.
 Hosted URL publication status lives in
 [`docs/support/community-account-deletion-web-url.json`](support/community-account-deletion-web-url.json)
 and is validated by `tools/community_deletion_web_url_check.py`. The current
@@ -229,6 +232,8 @@ operator lookup step.
 - `py -3 -m py_compile tools\community_account_deletion_upload_execution_receipt.py test\tools\community_account_deletion_upload_execution_receipt_test.py`
 - `py -3 -m py_compile tools\community_deletion_web_url_check.py test\tools\community_deletion_web_url_check_test.py`
 - `py -3 tools\community_deletion_web_url_check.py --manifest docs\support\community-account-deletion-web-url.json --repo-root .`
+- `py -3 -m py_compile tools\community_deletion_web_page_check.py test\tools\community_deletion_web_page_check_test.py`
+- `py -3 tools\community_deletion_web_page_check.py --page docs\support\community-account-deletion-web-page.md`
 
 ## Remaining Work
 

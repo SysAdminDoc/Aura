@@ -70,6 +70,8 @@ After that, continue with the private operator flow in
 
 - Publication status lives in
   [`community-account-deletion-web-url.json`](community-account-deletion-web-url.json).
+- Publishable page copy lives in
+  [`community-account-deletion-web-page.md`](community-account-deletion-web-page.md).
 - While the manifest status is `pendingOwnerUrl`, keep `publicUrl` empty and
   keep the privacy policy text marked as pending owner publication.
 - Before Play production submission, publish the web resource URL, set the
@@ -86,4 +88,10 @@ Validate the publication manifest after any status or URL change:
 
 ```powershell
 py -3 tools\community_deletion_web_url_check.py --manifest docs\support\community-account-deletion-web-url.json --repo-root .
+```
+
+Validate the hosted page copy before publication:
+
+```powershell
+py -3 tools\community_deletion_web_page_check.py --page docs\support\community-account-deletion-web-page.md
 ```

@@ -1,8 +1,8 @@
 # Autonomous Loop State
 
 **Assigned project:** `C:\Users\--\repos\Aura`
-**Current pass:** 2026-06-07 Cycle 91 callable contract manifest gate
-**Last commit before pass:** `3880eaf` (`feat(community): add upload deletion receipt`)
+**Current pass:** 2026-06-07 Cycle 92 hosted deletion page template gate
+**Last commit before pass:** `9ae6c70` (`feat(community): add callable contract gate`)
 
 ## 2026-06-05 Result
 
@@ -836,10 +836,36 @@
   tests, callable manifest check, backend tool unittest discovery, diff hygiene,
   and attribution/ASCII scans.
 
+## Cycle 92 Result - 2026-06-07
+
+- Added `docs/support/community-account-deletion-web-page.md` with publishable
+  hosted account deletion page copy for owner publication.
+- The page template includes Aura branding, app-independent deletion request
+  copy, required `AURA-` request code, web-intake field names, retained-record
+  disclosure, public-upload caveat, and privacy-policy link requirement.
+- Added `tools/community_deletion_web_page_check.py` to validate required page
+  terms, required form fields, app-independent request copy, and forbidden
+  sensitive identifier/secret requests.
+- Added backend tool coverage in
+  `test/tools/community_deletion_web_page_check_test.py` for the valid template
+  plus missing field, sensitive identifier, and app-dependent request path
+  rejection.
+- Wired the hosted page validator into Firebase backend CI change detection.
+- Updated `docs/research/cycle-92-2026-06-07.md`,
+  `docs/support/community-account-deletion-web-intake.md`,
+  `docs/support/community-account-deletion.md`,
+  `docs/privacy/privacy-policy.md`,
+  `docs/community-account-deletion-policy.md`,
+  `docs/community-backend-runbook.md`, `ROADMAP.md`, `COMPLETED.md`, and
+  `CHANGELOG.md`.
+- Cycle 92 verification: Python compile, focused hosted page tests, hosted
+  page check, backend tool unittest discovery, diff hygiene, and
+  attribution/ASCII scans passed.
+
 ## Next Cycle
 
-Continue this same assigned project, Aura. Start Cycle 92 from the `ROADMAP.md`
-Continuation State and `docs/research/cycle-91-2026-06-07.md`. The account
+Continue this same assigned project, Aura. Start Cycle 93 from the `ROADMAP.md`
+Continuation State and `docs/research/cycle-92-2026-06-07.md`. The account
 deletion dry-run planner, read-only Settings identity surface, redacted
 shareable request draft, request-code lookup tool, review receipt gate, offline
 apply simulator, private executor package builder, and guarded REST executor
@@ -856,7 +882,8 @@ owner-approved private deletion evidence after post-delete not-found
 verification; Cycle 90 added a redacted upload execution receipt for
 owner/admin public-upload deletion workflow evidence after clean plans; Cycle
 91 added a machine-checked callable contract manifest with UTC quota-day
-boundary. Cloud Functions implementation, Android callable migration, a live
+boundary; Cycle 92 added checked hosted deletion page copy for owner
+publication. Cloud Functions implementation, Android callable migration, a live
 hosted HTTPS web deletion URL, and production-project dry-run evidence remain
 open. Next add the Cloud Functions project for the Cycle 63/91 callable
 contract, Android callable repository adapters, hosted URL publication after

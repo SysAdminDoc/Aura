@@ -40,6 +40,7 @@ npm ci
 py -3 tools\community_backend_manifest.py --mode check
 py -3 tools\community_callable_contract_check.py --contract docs\community-callable-contract.json
 py -3 tools\community_deletion_web_url_check.py --manifest docs\support\community-account-deletion-web-url.json --repo-root .
+py -3 tools\community_deletion_web_page_check.py --page docs\support\community-account-deletion-web-page.md
 npm run test:firebase-rules
 npx firebase --version
 ```
@@ -156,6 +157,8 @@ must include:
 - Hosted account deletion web URL manifest status from
   `tools/community_deletion_web_url_check.py` before Play production
   submission or after any web deletion URL change.
+- Hosted account deletion page copy check from
+  `tools/community_deletion_web_page_check.py` before owner publication.
 - Account deletion review receipt from
   `tools/community_account_deletion_review.py` before any future trusted apply
   step accepts a deletion plan.

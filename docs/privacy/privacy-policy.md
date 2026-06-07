@@ -45,6 +45,8 @@ Support deletion handling is documented in
 The hosted web deletion request URL is pending owner publication before Play
 production submission. The field contract is tracked in
 [`docs/support/community-account-deletion-web-intake.md`](../support/community-account-deletion-web-intake.md),
+publishable page copy is tracked in
+[`docs/support/community-account-deletion-web-page.md`](../support/community-account-deletion-web-page.md),
 and publication status is tracked in
 [`docs/support/community-account-deletion-web-url.json`](../support/community-account-deletion-web-url.json).
 The URL manifest must move from `pendingOwnerUrl` to `published` only after an
