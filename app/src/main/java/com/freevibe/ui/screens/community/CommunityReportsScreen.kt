@@ -18,10 +18,12 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Block
 import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Report
 import androidx.compose.material.icons.filled.Restore
 import androidx.compose.material.icons.filled.VerifiedUser
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -40,11 +42,15 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.freevibe.data.model.CommunityReportReason
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewModelScope
@@ -62,6 +68,7 @@ import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import java.util.Locale
 import javax.inject.Inject
 
 @Immutable
@@ -104,6 +111,31 @@ class CommunityReportsViewModel @Inject constructor(
     fun restore(report: CommunityReportRecord) {
         resolve(report, CommunityReportResolutionStatus.RESTORED, "Restored from report queue") {
             voteRepo.moderateUnhide(report.contentId)
+        }
+    }
+
+    fun deleteUpload(report: CommunityReportRecord) {
+        viewModelScope.launch {
+            _state.update { it.copy(actionInFlightReportId = report.id, error = null, message = null) }
+            runCatching {
+                voteRepo.moderateHide(report.contentId)
+                reportRepo.deleteReportedCommunityUpload(report.id, "Deleted after rights review").getOrThrow()
+            }.onSuccess {
+                _state.update {
+                    it.copy(
+                        actionInFlightReportId = null,
+                        message = "Upload deleted",
+                    )
+                }
+            }.onFailure { error ->
+                if (error is kotlinx.coroutines.CancellationException) throw error
+                _state.update {
+                    it.copy(
+                        actionInFlightReportId = null,
+                        error = error.message ?: "Upload delete failed",
+                    )
+                }
+            }
         }
     }
 
@@ -221,6 +253,11 @@ fun CommunityReportsScreen(
                             onHide = { viewModel.hide(report) },
                             onDismiss = { viewModel.dismiss(report) },
                             onRestore = { viewModel.restore(report) },
+                            onDeleteUpload = if (report.canDeleteCommunityUpload()) {
+                                { viewModel.deleteUpload(report) }
+                            } else {
+                                null
+                            },
                         )
                     }
                 }
@@ -236,7 +273,32 @@ private fun ReportCard(
     onHide: () -> Unit,
     onDismiss: () -> Unit,
     onRestore: () -> Unit,
+    onDeleteUpload: (() -> Unit)?,
 ) {
+    var showDeleteConfirm by remember(report.id) { mutableStateOf(false) }
+    if (showDeleteConfirm && onDeleteUpload != null) {
+        AlertDialog(
+            onDismissRequest = { if (!busy) showDeleteConfirm = false },
+            title = { Text("Delete upload?") },
+            text = { Text("This removes the community upload file and catalog row after recording a private takedown receipt.") },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        showDeleteConfirm = false
+                        onDeleteUpload()
+                    },
+                    enabled = !busy,
+                ) {
+                    Text("Delete")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDeleteConfirm = false }, enabled = !busy) {
+                    Text("Cancel")
+                }
+            },
+        )
+    }
     Card(
         shape = RoundedCornerShape(8.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer),
@@ -286,6 +348,17 @@ private fun ReportCard(
                     Text("Restore")
                 }
             }
+            if (onDeleteUpload != null) {
+                OutlinedButton(
+                    onClick = { showDeleteConfirm = true },
+                    enabled = !busy,
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
+                    Icon(Icons.Default.Delete, contentDescription = null, modifier = Modifier.size(16.dp))
+                    Spacer(Modifier.size(6.dp))
+                    Text("Delete upload")
+                }
+            }
         }
     }
 }
@@ -301,3 +374,8 @@ private fun ReportFact(label: String, value: String) {
         overflow = TextOverflow.Ellipsis,
     )
 }
+
+private fun CommunityReportRecord.canDeleteCommunityUpload(): Boolean =
+    reason == CommunityReportReason.RIGHTS &&
+        contentSource.equals("COMMUNITY", ignoreCase = true) &&
+        contentType.uppercase(Locale.ROOT) in setOf("SOUND", "WALLPAPER")

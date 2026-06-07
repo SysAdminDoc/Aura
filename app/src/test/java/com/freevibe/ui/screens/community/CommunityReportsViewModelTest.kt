@@ -104,6 +104,27 @@ class CommunityReportsViewModelTest {
     }
 
     @Test
+    fun `delete upload hides content and deletes reported community upload`() = runTest(dispatcher) {
+        val report = testReport()
+        val reportRepo = mockk<CommunityReportRepository>()
+        val voteRepo = mockk<VoteRepository>()
+        every { voteRepo.isAdmin } returns true
+        every { reportRepo.reports() } returns flowOf(listOf(report))
+        coEvery { voteRepo.moderateHide(report.contentId) } returns Unit
+        coEvery { reportRepo.deleteReportedCommunityUpload(report.id, any()) } returns Result.success(Unit)
+
+        val viewModel = CommunityReportsViewModel(reportRepo, voteRepo)
+
+        viewModel.deleteUpload(report)
+        advanceUntilIdle()
+
+        assertEquals("Upload deleted", viewModel.state.value.message)
+        coVerify { voteRepo.moderateHide(report.contentId) }
+        coVerify { reportRepo.deleteReportedCommunityUpload(report.id, any()) }
+        coVerify(exactly = 0) { reportRepo.resolveReport(report.id, any(), any()) }
+    }
+
+    @Test
     fun `non admin does not subscribe to private reports feed`() = runTest(dispatcher) {
         val reportRepo = mockk<CommunityReportRepository>()
         val voteRepo = mockk<VoteRepository>()
@@ -114,6 +135,7 @@ class CommunityReportsViewModelTest {
 
         assertEquals(emptyList<CommunityReportRecord>(), viewModel.reports.value)
         coVerify(exactly = 0) { reportRepo.resolveReport(any(), any(), any()) }
+        coVerify(exactly = 0) { reportRepo.deleteReportedCommunityUpload(any(), any()) }
     }
 
     private fun testReport() = CommunityReportRecord(

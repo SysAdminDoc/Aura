@@ -69,6 +69,8 @@ covers:
 - takedown receipt validation that requires the current community upload
   metadata row to contain the same `storagePath` and uploader UID recorded in
   the receipt;
+- delete receipt state transitions for `STARTED`, `SUCCEEDED`, and `FAILED`
+  retry evidence after the initial handle-matched receipt is created;
 - app-matched `shared_collections/{token}` public reads, authenticated creator
   writes, owner/admin cleanup, and bounded payloads; and
 - denial for the old unused `collection_shares` path.

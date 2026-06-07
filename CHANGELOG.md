@@ -3,6 +3,7 @@
 All notable changes to Aura will be documented in this file.
 
 ## Unreleased
+- **Admin upload delete actions (Cycle 61)**: custom-claim admins can delete qualifying rights-reported community uploads from the report queue; the flow records a `DELETE` takedown receipt, hides the content, deletes the Storage object, removes upload metadata/index rows, and marks the receipt succeeded or failed for retry evidence.
 - **Rights takedown receipts (Cycle 60)**: hiding a rights report for a community sound or wallpaper now records a private admin takedown receipt with the current upload metadata path, Storage deletion handle, uploader UID, resolver UID, timestamp, and RTDB rules/emulator coverage that reject stale or mismatched handles.
 - **Firebase rules CI gate (Cycle 59)**: the main verify workflow now detects Firebase rules/config/test/runbook changes, installs pinned npm tooling, and runs the combined RTDB + Storage emulator suite.
 - **RTDB rules harness (Cycle 58)**: added Realtime Database emulator config and tests for community upload metadata, owner upload indexes, reports, report resolutions, quota/dedupe ledgers, and collection shares; aligned collection share rules to `shared_collections` with `createdByUid`; and made `database.rules.json` emulator/deploy-compatible.

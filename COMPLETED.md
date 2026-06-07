@@ -192,6 +192,11 @@ next pass can resume quickly.
   timestamp, and note when the current upload row proves the deletion handle;
   RTDB rules and emulator tests reject non-admin, non-rights, stale-handle, and
   mismatched-path receipt writes.
+- Completed Cycle 61 admin upload delete actions: qualifying rights reports now
+  expose a confirmed `Delete upload` admin action that records a `DELETE`
+  receipt, hides the content ID, deletes the Storage object, removes public
+  upload metadata plus the owner index, and updates the receipt to `SUCCEEDED`
+  or `FAILED` for retry evidence.
 
 ## 2026-06-05
 

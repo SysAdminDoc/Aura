@@ -56,6 +56,10 @@ Reporter UIDs are not public catalog data.
   content ID, upload ID, metadata path, Storage path, uploader UID, resolver
   UID, timestamp, and note metadata. Receipts fail closed for non-rights
   reports, mirrored/provider content, or upload rows missing deletion handles.
+- For qualifying rights reports, admins can also choose `Delete upload`. The
+  delete path records a `DELETE` takedown receipt, hides the content ID through
+  moderation, removes the Storage object and upload metadata/index rows, and
+  marks the receipt `SUCCEEDED` or `FAILED` for retry evidence.
 - Report quota policy is defined in
   [`docs/community-quota-rate-limits.md`](../community-quota-rate-limits.md):
   10 reports per UID per day, 2-minute cooldown, and content-key/reason dedupe
@@ -69,7 +73,8 @@ Reporter UIDs are not public catalog data.
 - Owner-delete storage handles are tracked in
   [`docs/community-upload-deletion.md`](../community-upload-deletion.md), and
   Cycle 60 adds private admin rights-confirmed takedown receipts for new rows
-  with deletion handles. Public takedown request copy remains open.
+  with deletion handles. Cycle 61 adds admin delete actions that consume those
+  receipts and record retry state. Public takedown request copy remains open.
 - Cycle 58 adds Realtime Database emulator coverage for authenticated report
   creation, reporter UID validation, admin-only reads, admin status updates, and
   admin-only resolution receipts. Cycle 60 extends that coverage to

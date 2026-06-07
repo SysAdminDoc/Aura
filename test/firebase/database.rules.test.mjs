@@ -314,6 +314,29 @@ test('admin-only takedown receipts must match current upload deletion handles', 
   await assertFails(reporter.ref(receiptPath).once('value'));
   await assertSucceeds(admin.ref(receiptPath).once('value'));
 
+  const deleteReceiptPath = 'community_takedown_receipts/delete1';
+  await assertFails(admin.ref(deleteReceiptPath).set(takedownReceiptPayload({
+    reportId: 'delete1',
+    action: 'DELETE',
+  })));
+  await assertSucceeds(admin.ref(deleteReceiptPath).set(takedownReceiptPayload({
+    reportId: 'delete1',
+    action: 'DELETE',
+    deleteState: 'STARTED',
+  })));
+  await assertSucceeds(admin.ref('community_sounds/sound1').remove());
+  await assertSucceeds(admin.ref(deleteReceiptPath).update({
+    deleteState: 'SUCCEEDED',
+    deletedAt: nowMs(),
+    storageDeleted: true,
+    metadataDeleted: true,
+  }));
+  await assertFails(admin.ref('community_takedown_receipts/delete2').set(takedownReceiptPayload({
+    reportId: 'delete2',
+    action: 'DELETE',
+    deleteState: 'STARTED',
+  })));
+
   await seed('community_wallpapers/wall1', wallpaperMetadata('wall-owner', {
     storagePath: 'wallpapers/wall-owner/wall1.jpg',
   }));
