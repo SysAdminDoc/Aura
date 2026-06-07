@@ -579,6 +579,11 @@ next pass can resume quickly.
   and release workflow wiring, privacy/support/supply-chain docs, and the
   missing Freesound Settings key clear control so provider credential storage
   classification and backup/transfer exclusions stay checked.
+- Completed Cycle 131 provider credential APK scan: added
+  `tools/provider_credential_apk_scan.py`, focused fixture tests, release
+  workflow wiring after signed APK packaging, release workflow policy coverage,
+  and release runbook updates so packaged APKs are scanned for nonblank
+  provider credential values before uploads or tagged publication.
 
 ## 2026-06-05
 

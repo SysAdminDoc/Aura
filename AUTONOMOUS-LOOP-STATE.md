@@ -1,8 +1,8 @@
 # Autonomous Loop State
 
 **Assigned project:** `C:\Users\--\repos\Aura`
-**Current pass:** 2026-06-07 Cycle 130 provider credential storage policy
-**Last commit before pass:** `dd8dcbd` (`ci(security): gate release cleartext traffic`)
+**Current pass:** 2026-06-07 Cycle 131 provider credential APK scan
+**Last commit before pass:** `f0c0ccb` (`ci(security): check provider credential storage`)
 
 ## 2026-06-05 Result
 
@@ -1830,11 +1830,34 @@
   workstation's ignored `local.properties` still contains nonblank local
   provider keys, so it was not used as public-release evidence.
 
+## Cycle 131 Result - 2026-06-07
+
+- Added `tools/provider_credential_apk_scan.py` to scan release APK zip entries
+  for any nonblank provider credential values from a reviewed
+  `local.properties` file.
+- Added `test/tools/provider_credential_apk_scan_test.py` coverage for blank
+  release properties, clean nonblank fixtures, embedded sentinel detection,
+  multi-APK scanning, missing-file rejection, and no-secret-value error output.
+- Wired `.github/workflows/release.yml` to run the provider credential APK scan
+  after signed APK packaging and before notice generation, checksums, uploads,
+  or tagged publication.
+- Added the release workflow snippet to
+  `docs/distribution/github-security-workflows.json` so workflow policy
+  validation fails if the scan is removed.
+- Updated release signing, release dry-run, supply-chain, research, roadmap,
+  changelog, completion, and loop-state docs.
+- Cycle 131 verification: provider APK scanner compile, focused scanner tests,
+  backend tool tests, GitHub Actions allowlist, workflow permissions policy,
+  workflow secret policy, GitHub security workflow policy, Dependabot policy,
+  Gradle wrapper policy, provider credential release guard with a blank
+  release-style local properties fixture, provider credential storage policy,
+  cleartext guard, and endpoint inventory scan passed.
+
 ## Next Cycle
 
-Continue this same assigned project, Aura. Start Cycle 131 from the
+Continue this same assigned project, Aura. Start Cycle 132 from the
 `ROADMAP.md` Continuation State and
-`docs/research/cycle-130-2026-06-07.md`. The account
+`docs/research/cycle-131-2026-06-07.md`. The account
 deletion dry-run planner, read-only Settings identity surface, redacted
 shareable request draft, request-code lookup tool, review receipt gate, offline
 apply simulator, private executor package builder, and guarded REST executor
@@ -1930,7 +1953,8 @@ added a checked network endpoint inventory runbook and literal-host scanner;
 Cycle 129 removed the ccMixter HTTP downgrade path and added release cleartext
 policy gates; Cycle 130 added a checked provider credential storage policy,
 documented the no-Keystore decision for current optional provider keys, and
-added the missing Freesound Settings clear control.
+added the missing Freesound Settings clear control; Cycle 131 added a
+release-stage provider credential APK scan after signed APK packaging.
 Actual live callable invocation evidence, a live hosted HTTPS web deletion URL,
 direct RTDB rule tightening, App Check console evidence, production-project
 dry-run evidence, and owner/admin GitHub repository security-settings evidence
@@ -1941,10 +1965,10 @@ hosted URL after owner approval, tighten direct RTDB write rules after callable
 deploy evidence, run a real production-project Firebase executor dry-run after
 owner access is confirmed, collect owner/admin GitHub security settings
 evidence and generate the redacted receipt when access is available, or
-continue with signed APK strings scan on a suitable runner, provider key
-rotation/clear UX audit, or the next checkable backend, deploy, security,
-support, policy, or rules hardening artifact if owner-gated evidence is still
-unavailable.
+continue with provider key rotation/clear UX audit, signed release dry-run
+evidence capture on a suitable runner, or the next checkable backend, deploy,
+security, support, policy, or rules hardening artifact if owner-gated evidence
+is still unavailable.
 Commit and push completed work when the active project contract allows it.
 
 ## Previous Cycle Prompt

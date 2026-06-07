@@ -134,6 +134,9 @@ jobs:
             echo "release_label=$RELEASE_LABEL"
           } >> "$GITHUB_OUTPUT"
 
+      - name: Provider credential APK scan
+        run: python3 tools/provider_credential_apk_scan.py --local-properties local.properties --apk "${{ steps.package.outputs.apk_path }}"
+
       - name: Generate third-party notices
         run: |
           ./gradlew :app:releaseOssLicensesTask --stacktrace --no-daemon

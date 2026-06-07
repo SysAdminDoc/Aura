@@ -20,6 +20,7 @@ Aura is side-loaded through GitHub Releases and Obtainium, so release artifacts 
 | Gradle dependency verification | `gradle/verification-metadata.xml` | Records SHA-256 checksums for resolved Gradle plugins and app dependencies. |
 | Gradle wrapper policy | `gradle/wrapper/gradle-wrapper.properties`, `tools/gradle_wrapper_check.py`, `.github/workflows/verify.yml` | Pins the Gradle 8.12 wrapper distribution SHA-256, keeps URL validation enabled, and rejects wrapper distribution drift. |
 | Provider credential release guard | `tools/provider_credential_release_check.py`, `.github/workflows/verify.yml`, `.github/workflows/release.yml` | Fails release preflight when optional provider keys from `local.properties` would be bundled into `BuildConfig`; release CI writes blank provider defaults before signed APK builds. |
+| Provider credential APK scan | `tools/provider_credential_apk_scan.py`, `.github/workflows/release.yml` | Scans packaged signed APKs for any nonblank provider values from release `local.properties` before notices, checksums, uploads, or tagged publication. |
 | Provider credential storage policy | `docs/security/provider-credential-storage.json`, `docs/security/provider-credential-storage.md`, `tools/provider_credential_storage_check.py`, `.github/workflows/verify.yml`, `.github/workflows/release.yml` | Classifies each provider credential, documents the no-Keystore storage decision, proves DataStore backup/transfer exclusions, and checks Settings clear controls plus diagnostics/privacy disclosures. |
 | Cleartext release guard | `tools/cleartext_release_check.py`, `.github/workflows/verify.yml`, `.github/workflows/release.yml` | Fails release preflight when network security config enables cleartext, the manifest explicitly enables cleartext, or provider-network code reintroduces raw HTTP URLs or OkHttp HTTP scheme builders. |
 | Network endpoint inventory | `docs/security/network-endpoints.json`, `docs/security/network-endpoints.md`, `tools/network_endpoint_inventory_check.py`, `.github/workflows/verify.yml` | Fails verification when app network-code URL hosts drift from the reviewed endpoint/auth/cache/fallback inventory. |
@@ -54,8 +55,9 @@ For each `v*` release:
 14. Confirm the release workflow ran `tools/provider_credential_release_check.py` after writing release `local.properties` and before `:app:assembleRelease`.
 15. Confirm the release workflow ran `tools/provider_credential_storage_check.py` before `:app:assembleRelease`.
 16. Confirm the release workflow ran `tools/cleartext_release_check.py` before `:app:assembleRelease`.
-17. Verify the APK locally with `apksigner verify --verbose --print-certs`.
-18. Compare the local SHA-256 values to `SHA256SUMS.txt`.
+17. Confirm the release workflow ran `tools/provider_credential_apk_scan.py` after packaging the signed APK and before release uploads.
+18. Verify the APK locally with `apksigner verify --verbose --print-certs`.
+19. Compare the local SHA-256 values to `SHA256SUMS.txt`.
 
 ## Release dry runs
 
@@ -286,6 +288,18 @@ python3 tools/provider_credential_release_check.py --app-gradle app/build.gradle
 ```
 
 For local development, a nonblank ignored `local.properties` provider key fails by default. Use `--allow-nonblank-local-provider-keys` only for an explicitly internal build review; the command still returns a warning status and reports key names without printing values.
+
+After release APK packaging, the release workflow scans the signed APK for any
+nonblank provider values from the temporary release `local.properties`:
+
+```bash
+python3 tools/provider_credential_apk_scan.py --local-properties local.properties --apk "$RELEASE_DIR/Aura-vX.Y.Z-versionCode-N-universal-release.apk"
+```
+
+Public release runs should report zero checked provider values because the
+workflow writes blank defaults. Internal local runs with explicit provider
+values must keep the APK scan in the review packet, and the scanner reports
+only property names and APK entries if a value is found.
 
 ## Provider credential storage policy
 
