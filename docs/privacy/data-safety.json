@@ -4,6 +4,7 @@
   "manifest": "app/src/main/AndroidManifest.xml",
   "docsPath": "docs/privacy/data-safety.md",
   "privacyPolicy": "docs/privacy/privacy-policy.md",
+  "networkEndpointInventory": "docs/security/network-endpoints.json",
   "permissions": [
     {
       "name": "android.permission.SET_WALLPAPER",
@@ -200,6 +201,143 @@
       "deletionPath": "Change the contact ringtone through Aura or Android Contacts/settings.",
       "denialBehavior": "Aura cannot assign the selected ringtone to the contact.",
       "playDeclaration": "Sensitive permission; targeted per-contact ringtone feature."
+    }
+  ],
+  "networkSurfaces": [
+    {
+      "endpointId": "wallhaven-api",
+      "dataTypes": ["Search queries", "Provider response metadata"],
+      "collectionStatus": "featureDependentCollection",
+      "sharingStatus": "sharedWithSelectedProviders",
+      "userControl": "Wallhaven source switch and optional API key controls.",
+      "retention": "Wallpaper metadata and returned image URLs can be cached locally.",
+      "deletionPath": "Clear caches, disable the provider, or clear app data."
+    },
+    {
+      "endpointId": "bing-daily",
+      "dataTypes": ["Locale/market parameters", "Provider response metadata"],
+      "collectionStatus": "featureDependentCollection",
+      "sharingStatus": "sharedWithSelectedProviders",
+      "userControl": "Bing provider switch and wallpaper source selection.",
+      "retention": "Wallpaper metadata and image URLs can be cached locally.",
+      "deletionPath": "Clear caches, disable the provider, or clear app data."
+    },
+    {
+      "endpointId": "pexels-api",
+      "dataTypes": ["Search queries", "Provider response metadata"],
+      "collectionStatus": "featureDependentCollection",
+      "sharingStatus": "sharedWithSelectedProviders",
+      "userControl": "Pexels source switch and optional API key controls.",
+      "retention": "Provider media URLs can be cached in feed and offline media paths.",
+      "deletionPath": "Clear caches, remove downloads, disable the provider, or clear app data."
+    },
+    {
+      "endpointId": "pixabay-api",
+      "dataTypes": ["Search queries", "Provider response metadata"],
+      "collectionStatus": "featureDependentCollection",
+      "sharingStatus": "sharedWithSelectedProviders",
+      "userControl": "Pixabay source switch and optional API key controls.",
+      "retention": "Provider metadata can be cached for 24 hours and media can be cached offline by user action.",
+      "deletionPath": "Clear caches, remove downloads, disable the provider, or clear app data."
+    },
+    {
+      "endpointId": "reddit-json",
+      "dataTypes": ["Subreddit names", "Search queries", "Provider response metadata"],
+      "collectionStatus": "featureDependentCollection",
+      "sharingStatus": "sharedWithSelectedProviders",
+      "userControl": "Reddit source switch and subreddit settings.",
+      "retention": "Returned image URLs can be cached in feed and offline media paths.",
+      "deletionPath": "Clear caches, remove downloads, disable the provider, or clear app data."
+    },
+    {
+      "endpointId": "openverse-audio",
+      "dataTypes": ["Search queries", "Provider response metadata"],
+      "collectionStatus": "featureDependentCollection",
+      "sharingStatus": "sharedWithSelectedProviders",
+      "userControl": "Sound browsing controls and local cache cleanup.",
+      "retention": "Returned preview URLs can be cached as favorites or offline sound media.",
+      "deletionPath": "Remove favorites/downloads, clear caches, or clear app data."
+    },
+    {
+      "endpointId": "freesound-v2",
+      "dataTypes": ["Search queries", "Provider response metadata"],
+      "collectionStatus": "featureDependentCollection",
+      "sharingStatus": "sharedWithSelectedProviders",
+      "userControl": "Freesound API key controls and local sound cleanup.",
+      "retention": "Returned previews can be cached as favorite or offline sound media.",
+      "deletionPath": "Remove favorites/downloads, clear caches, clear the key, or clear app data."
+    },
+    {
+      "endpointId": "soundcloud-api",
+      "dataTypes": ["Search queries", "Provider response metadata"],
+      "collectionStatus": "featureDependentCollection",
+      "sharingStatus": "sharedWithSelectedProviders",
+      "userControl": "SoundCloud client ID controls and local sound cleanup.",
+      "retention": "Stream URLs can be cached as favorite or offline sound media.",
+      "deletionPath": "Remove favorites/downloads, clear caches, clear the client ID, or clear app data."
+    },
+    {
+      "endpointId": "audius-api",
+      "dataTypes": ["Search queries", "Provider response metadata"],
+      "collectionStatus": "featureDependentCollection",
+      "sharingStatus": "sharedWithSelectedProviders",
+      "userControl": "Sound browsing controls and local cache cleanup.",
+      "retention": "Returned stream URLs can be cached as favorite or offline sound media.",
+      "deletionPath": "Remove favorites/downloads, clear caches, or clear app data."
+    },
+    {
+      "endpointId": "ccmixter-api",
+      "dataTypes": ["Search queries", "Provider response metadata"],
+      "collectionStatus": "featureDependentCollection",
+      "sharingStatus": "sharedWithSelectedProviders",
+      "userControl": "Sound browsing controls and local cache cleanup.",
+      "retention": "Returned download URLs can be cached as favorite or offline sound media.",
+      "deletionPath": "Remove favorites/downloads, clear caches, or clear app data."
+    },
+    {
+      "endpointId": "open-meteo-api",
+      "dataTypes": ["Approximate location", "Weather data"],
+      "collectionStatus": "featureDependentCollection",
+      "sharingStatus": "sharedWithWeatherProvider",
+      "userControl": "Weather effects toggle and Android location permission.",
+      "retention": "Last coarse coordinates and weather state are stored locally for the live wallpaper service.",
+      "deletionPath": "Disable weather effects, revoke location permission, or clear app data."
+    },
+    {
+      "endpointId": "stability-api",
+      "dataTypes": ["Generated wallpaper prompts", "Provider API key", "Generated images"],
+      "collectionStatus": "userInitiatedCollection",
+      "sharingStatus": "sharedWithSelectedProviders",
+      "userControl": "Generated wallpaper source switch, first-use disclosure, and Stability key controls.",
+      "retention": "Generated image bytes are app-private and pruned to the most recent local outputs.",
+      "deletionPath": "Remove generated favorites, clear generated files, clear the key, or clear app data."
+    },
+    {
+      "endpointId": "youtube-newpipe",
+      "dataTypes": ["Video IDs", "Provider response metadata"],
+      "collectionStatus": "featureDependentCollection",
+      "sharingStatus": "sharedWithSelectedProviders",
+      "userControl": "YouTube source switch, sound query settings, and local cache cleanup.",
+      "retention": "Resolved stream URLs are short-lived in memory and can be cached offline by user action.",
+      "deletionPath": "Remove favorites/downloads, clear caches, disable the provider, or clear app data."
+    },
+    {
+      "endpointId": "aura-collection-links",
+      "dataTypes": ["Collection import links"],
+      "collectionStatus": "notCollected",
+      "sharingStatus": "notShared",
+      "userControl": "User chooses whether to import a collection link.",
+      "retention": "No app-initiated network data is created by this endpoint row.",
+      "deletionPath": "Delete imported collections or clear app data."
+    },
+    {
+      "endpointId": "firebase-community",
+      "dataTypes": ["Firebase UID", "Community uploads", "Votes", "Follows", "Reports", "Blocks", "Creator profiles", "Storage uploads", "Callable payloads"],
+      "collectionStatus": "userInitiatedCollection",
+      "sharingStatus": "sharedWhenUploaded",
+      "userControl": "Community source switch, upload/report/delete flows, and account deletion request tools.",
+      "retention": "Public upload metadata can remain public; private moderation, quota, report, and deletion evidence is retained for operator review.",
+      "deletionPath": "Use owner delete actions, support deletion request flow, local cleanup, or clear app data depending on data type."
     }
   ],
   "sourceUrls": [

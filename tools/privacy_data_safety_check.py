@@ -25,6 +25,15 @@ REQUIRED_PERMISSION_FIELDS = {
     "denialBehavior",
     "playDeclaration",
 }
+REQUIRED_NETWORK_SURFACE_FIELDS = {
+    "endpointId",
+    "dataTypes",
+    "collectionStatus",
+    "sharingStatus",
+    "userControl",
+    "retention",
+    "deletionPath",
+}
 SUPPORTED_COLLECTION_STATUSES = {
     "localOnly",
     "notCollected",
@@ -151,6 +160,56 @@ def validate_permission_rows(manifest_permissions: dict[str, int | None], rows_r
     return rows
 
 
+def validate_network_surfaces(repo_root: Path, policy: dict[str, Any], docs_text: str) -> list[dict[str, Any]]:
+    inventory_path = policy.get("networkEndpointInventory")
+    if inventory_path is None:
+        return []
+    inventory_relative = require_string(inventory_path, "networkEndpointInventory")
+    inventory = require_object(read_json(repo_root / inventory_relative), "network endpoint inventory")
+    endpoints_raw = inventory.get("endpoints")
+    if not isinstance(endpoints_raw, list) or not endpoints_raw:
+        raise PrivacyDataSafetyError("network endpoint inventory endpoints must be a non-empty list")
+    endpoint_ids = {require_string(require_object(endpoint, "endpoint").get("id"), "endpoint.id") for endpoint in endpoints_raw}
+
+    surfaces_raw = policy.get("networkSurfaces")
+    if not isinstance(surfaces_raw, list) or not surfaces_raw:
+        raise PrivacyDataSafetyError("networkSurfaces must be a non-empty list when networkEndpointInventory is set")
+    surfaces: list[dict[str, Any]] = []
+    surface_ids: set[str] = set()
+    for index, raw_surface in enumerate(surfaces_raw):
+        surface = require_object(raw_surface, f"networkSurfaces[{index}]")
+        missing = sorted(REQUIRED_NETWORK_SURFACE_FIELDS - set(surface))
+        if missing:
+            raise PrivacyDataSafetyError(f"networkSurfaces[{index}] missing fields: {', '.join(missing)}")
+        endpoint_id = require_string(surface.get("endpointId"), f"networkSurfaces[{index}].endpointId")
+        if endpoint_id in surface_ids:
+            raise PrivacyDataSafetyError(f"duplicate network surface row: {endpoint_id}")
+        surface_ids.add(endpoint_id)
+        require_string_list(surface.get("dataTypes"), f"{endpoint_id}.dataTypes")
+        collection_status = require_string(surface.get("collectionStatus"), f"{endpoint_id}.collectionStatus")
+        if collection_status not in SUPPORTED_COLLECTION_STATUSES:
+            raise PrivacyDataSafetyError(f"{endpoint_id}.collectionStatus is unsupported")
+        sharing_status = require_string(surface.get("sharingStatus"), f"{endpoint_id}.sharingStatus")
+        if sharing_status not in SUPPORTED_SHARING_STATUSES:
+            raise PrivacyDataSafetyError(f"{endpoint_id}.sharingStatus is unsupported")
+        for field in REQUIRED_NETWORK_SURFACE_FIELDS - {"endpointId", "dataTypes", "collectionStatus", "sharingStatus"}:
+            require_string(surface.get(field), f"{endpoint_id}.{field}")
+        if endpoint_id not in docs_text:
+            raise PrivacyDataSafetyError(f"data-safety docs are missing network endpoint row for {endpoint_id}")
+        surfaces.append(surface)
+
+    if surface_ids != endpoint_ids:
+        missing = sorted(endpoint_ids - surface_ids)
+        extra = sorted(surface_ids - endpoint_ids)
+        details = []
+        if missing:
+            details.append(f"missing network rows: {', '.join(missing)}")
+        if extra:
+            details.append(f"extra network rows: {', '.join(extra)}")
+        raise PrivacyDataSafetyError(f"networkSurfaces do not match endpoint inventory ({'; '.join(details)})")
+    return surfaces
+
+
 def validate_policy(repo_root: Path, policy: dict[str, Any]) -> dict[str, Any]:
     if policy.get("schemaVersion") != 1:
         raise PrivacyDataSafetyError("privacy data-safety schemaVersion must be 1")
@@ -169,6 +228,7 @@ def validate_policy(repo_root: Path, policy: dict[str, Any]) -> dict[str, Any]:
         name = require_string(row.get("name"), "permission.name")
         if name not in docs_text:
             raise PrivacyDataSafetyError(f"{docs_path} is missing permission row for {name}")
+    network_surfaces = validate_network_surfaces(repo_root, policy, docs_text)
     for required_term in ("no ads", "cross-app tracking", "anonymous firebase identity", "generated wallpaper prompts"):
         if required_term not in " ".join(privacy_text.split()):
             raise PrivacyDataSafetyError(f"{privacy_policy_path} is missing privacy term: {required_term}")
@@ -189,6 +249,7 @@ def validate_policy(repo_root: Path, policy: dict[str, Any]) -> dict[str, Any]:
         "status": "ok",
         "manifestPermissionCount": len(manifest_permissions),
         "matrixPermissionCount": len(rows),
+        "networkSurfaceCount": len(network_surfaces),
         "sensitiveOrSharedRowCount": sensitive_count,
         "sourceUrlCount": len(source_urls),
     }

@@ -632,6 +632,11 @@ next pass can resume quickly.
   workflow enforcement so every manifest permission has reviewed purpose, data
   type, collection/sharing, retention, deletion, denial, and Play declaration
   rows before release.
+- Completed Cycle 142 network Data safety surface gate: extended
+  `docs/privacy/data-safety.json`, `docs/privacy/data-safety.md`, and
+  `tools/privacy_data_safety_check.py` so every reviewed endpoint in
+  `docs/security/network-endpoints.json` has a matching privacy row with data
+  type, collection/sharing, user-control, retention, and deletion coverage.
 
 ## 2026-06-05
 

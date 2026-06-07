@@ -47,9 +47,21 @@ def minimal_policy() -> dict[str, object]:
         "manifest": "app/src/main/AndroidManifest.xml",
         "docsPath": "docs/privacy/data-safety.md",
         "privacyPolicy": "docs/privacy/privacy-policy.md",
+        "networkEndpointInventory": "docs/security/network-endpoints.json",
         "permissions": [
             minimal_permission("android.permission.INTERNET"),
             minimal_permission("android.permission.WRITE_EXTERNAL_STORAGE", 28),
+        ],
+        "networkSurfaces": [
+            {
+                "endpointId": "test-api",
+                "dataTypes": ["Search queries"],
+                "collectionStatus": "featureDependentCollection",
+                "sharingStatus": "sharedWithSelectedProviders",
+                "userControl": "Provider switch.",
+                "retention": "Cache.",
+                "deletionPath": "Clear cache.",
+            }
         ],
         "sourceUrls": ["https://support.google.com/googleplay/android-developer/answer/10787469"],
     }
@@ -67,11 +79,15 @@ def seed_repo(repo: Path) -> Path:
     )
     write(
         repo / "docs/privacy/data-safety.md",
-        "`android.permission.INTERNET`\n`android.permission.WRITE_EXTERNAL_STORAGE`\n",
+        "`android.permission.INTERNET`\n`android.permission.WRITE_EXTERNAL_STORAGE`\n`test-api`\n",
     )
     write(
         repo / "docs/privacy/privacy-policy.md",
         "No ads. No cross-app tracking. Anonymous Firebase identity. Generated wallpaper prompts.\n",
+    )
+    write(
+        repo / "docs/security/network-endpoints.json",
+        '{"schemaVersion": 1, "policyKind": "networkEndpointInventory", "endpoints": [{"id": "test-api"}]}\n',
     )
     return repo
 
@@ -82,6 +98,7 @@ class PrivacyDataSafetyCheckTest(unittest.TestCase):
 
         self.assertEqual("ok", result["status"])
         self.assertEqual(result["manifestPermissionCount"], result["matrixPermissionCount"])
+        self.assertGreaterEqual(result["networkSurfaceCount"], 1)
         self.assertGreaterEqual(result["sensitiveOrSharedRowCount"], 1)
 
     def test_rejects_missing_permission_row(self) -> None:
@@ -134,6 +151,34 @@ class PrivacyDataSafetyCheckTest(unittest.TestCase):
             repo = seed_repo(Path(tmpdir))
             policy = copy.deepcopy(minimal_policy())
             policy["sourceUrls"] = ["http://example.com"]
+
+            with self.assertRaises(PrivacyDataSafetyError):
+                validate_policy(repo, policy)
+
+    def test_rejects_missing_network_surface_row(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            repo = seed_repo(Path(tmpdir))
+            policy = minimal_policy()
+            policy["networkSurfaces"] = []
+
+            with self.assertRaises(PrivacyDataSafetyError):
+                validate_policy(repo, policy)
+
+    def test_rejects_extra_network_surface_row(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            repo = seed_repo(Path(tmpdir))
+            policy = minimal_policy()
+            policy["networkSurfaces"].append(  # type: ignore[union-attr]
+                {
+                    "endpointId": "extra-api",
+                    "dataTypes": ["Diagnostics"],
+                    "collectionStatus": "localOnly",
+                    "sharingStatus": "notShared",
+                    "userControl": "None.",
+                    "retention": "None.",
+                    "deletionPath": "None.",
+                }
+            )
 
             with self.assertRaises(PrivacyDataSafetyError):
                 validate_policy(repo, policy)

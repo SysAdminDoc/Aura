@@ -41,6 +41,30 @@ without a reviewed privacy and store-disclosure row.
 - Aura has no ads, does not sell personal data, and does not use cross-app
   tracking.
 
+## Network Surface Ledger
+
+`tools/privacy_data_safety_check.py` also reconciles this matrix with
+`docs/security/network-endpoints.json`. Every endpoint ID in that inventory
+must have a matching `networkSurfaces` row in `docs/privacy/data-safety.json`.
+
+| Endpoint | Data safety row | User control |
+| --- | --- | --- |
+| `wallhaven-api` | Search queries and provider response metadata shared with Wallhaven when enabled. | Wallhaven source switch and optional key controls. |
+| `bing-daily` | Locale/market parameters and provider response metadata shared with Bing when enabled. | Bing source switch and wallpaper source selection. |
+| `pexels-api` | Search queries and provider response metadata shared with Pexels when enabled. | Pexels source switch and optional key controls. |
+| `pixabay-api` | Search queries and provider response metadata shared with Pixabay when enabled. | Pixabay source switch and optional key controls. |
+| `reddit-json` | Subreddit names, search queries, and provider response metadata shared with Reddit when enabled. | Reddit source switch and subreddit settings. |
+| `openverse-audio` | Search queries and provider response metadata shared with Openverse during sound browsing. | Sound browsing controls and local cache cleanup. |
+| `freesound-v2` | Search queries and provider response metadata shared with Freesound during sound browsing. | Freesound key controls and local sound cleanup. |
+| `soundcloud-api` | Search queries and provider response metadata shared with SoundCloud during sound browsing. | SoundCloud client ID controls and local sound cleanup. |
+| `audius-api` | Search queries and provider response metadata shared with Audius during sound browsing. | Sound browsing controls and local cache cleanup. |
+| `ccmixter-api` | Search queries and provider response metadata shared with ccMixter during sound browsing. | Sound browsing controls and local cache cleanup. |
+| `open-meteo-api` | Approximate location shared with Open-Meteo only when weather effects are enabled. | Weather effects toggle and Android location permission. |
+| `stability-api` | Prompt, key-authenticated request metadata, and generated output handled through Stability when the user starts generation. | Generated wallpaper switch, disclosure, and Stability key controls. |
+| `youtube-newpipe` | Video IDs and provider response metadata shared with YouTube tooling during enabled YouTube flows. | YouTube source switch and sound query settings. |
+| `aura-collection-links` | No app-initiated network collection; links are import locators. | User chooses whether to import a collection link. |
+| `firebase-community` | Firebase UID, community uploads, votes, follows, reports, blocks, profile edits, storage uploads, and callable payloads. | Community source switch, upload/report/delete flows, and support deletion tools. |
+
 ## Release Checklist
 
 - Run `python3 tools/privacy_data_safety_check.py --policy docs/privacy/data-safety.json --repo-root .`.
@@ -49,6 +73,8 @@ without a reviewed privacy and store-disclosure row.
   metadata changes.
 - Keep `docs/privacy/privacy-policy.md`, Play Data safety answers, and
   Fastlane full description consistent with this matrix.
+- Keep `docs/security/network-endpoints.json` and the `networkSurfaces` rows in
+  `docs/privacy/data-safety.json` in lockstep.
 
 ## Sources
 

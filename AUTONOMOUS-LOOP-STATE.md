@@ -1,8 +1,8 @@
 # Autonomous Loop State
 
 **Assigned project:** `C:\Users\--\repos\Aura`
-**Current pass:** 2026-06-07 Cycle 141 manifest permission Data safety gate
-**Last commit before pass:** `5fea440` (`ci(privacy): gate public policy link`)
+**Current pass:** 2026-06-07 Cycle 142 network Data safety surface gate
+**Last commit before pass:** `a5c5deb` (`ci(privacy): gate data safety permissions`)
 
 ## 2026-06-05 Result
 
@@ -2034,11 +2034,26 @@
 - Cycle 141 verification: Data safety matrix check and focused backend tests
   passed.
 
+## Cycle 142 Result - 2026-06-07
+
+- Added `networkEndpointInventory` and `networkSurfaces` coverage to
+  `docs/privacy/data-safety.json`.
+- Added a Network Surface Ledger to `docs/privacy/data-safety.md`.
+- Extended `tools/privacy_data_safety_check.py` so every endpoint ID in
+  `docs/security/network-endpoints.json` must have one matching privacy row.
+- Required data types, collection/sharing status, user control, retention, and
+  deletion path for each reviewed network surface.
+- Extended focused tests for missing and extra network surface rows.
+- Updated release dry-run docs, supply-chain docs, research, roadmap,
+  changelog, completion, and loop-state docs.
+- Cycle 142 verification: expanded Data safety matrix check and focused backend
+  tests passed.
+
 ## Next Cycle
 
-Continue this same assigned project, Aura. Start Cycle 142 from the
+Continue this same assigned project, Aura. Start Cycle 143 from the
 `ROADMAP.md` Continuation State and
-`docs/research/cycle-141-2026-06-07.md`. The account
+`docs/research/cycle-142-2026-06-07.md`. The account
 deletion dry-run planner, read-only Settings identity surface, redacted
 shareable request draft, request-code lookup tool, review receipt gate, offline
 apply simulator, private executor package builder, and guarded REST executor
@@ -2149,7 +2164,9 @@ Fastlane store metadata text/version/privacy preflight and fixed the current
 short-description/privacy URL drift; Cycle 139 added a checked on-device
 wallpaper generation decision packet and production-source scanner; Cycle 140
 added a checked public privacy-policy link gate and Settings About entry; Cycle
-141 added a checked manifest permission Data safety matrix and release gate.
+141 added a checked manifest permission Data safety matrix and release gate;
+Cycle 142 extended the Data safety matrix gate to every reviewed network
+endpoint ID.
 Actual live callable invocation evidence, a live hosted HTTPS web deletion URL,
 direct RTDB rule tightening, App Check console evidence, production-project
 dry-run evidence, and owner/admin GitHub repository security-settings evidence
@@ -2162,10 +2179,10 @@ owner access is confirmed, collect owner/admin GitHub security settings
 evidence and generate the redacted receipt when access is available, or
 continue with signed release dry-run evidence capture on a suitable runner,
 the screenshot and feature-graphic pipeline for the remaining store metadata
-asset gap, expanded Data safety matrix enforcement for SDK/network/local-store
-surfaces, Play app-content declaration packet work, or the next checkable
-backend, deploy, security, support, policy, or rules hardening artifact if
-owner-gated evidence is still unavailable.
+asset gap, expanded Data safety matrix enforcement for SDK/local-store/
+diagnostics/Firebase surfaces, Play app-content declaration packet work, or the
+next checkable backend, deploy, security, support, policy, or rules hardening
+artifact if owner-gated evidence is still unavailable.
 Commit and push completed work when the active project contract allows it.
 
 ## Previous Cycle Prompt
