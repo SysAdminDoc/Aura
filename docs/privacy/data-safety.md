@@ -1,11 +1,13 @@
 # Privacy Data Safety Matrix
 
 This matrix is the release-reviewed source of truth for Aura manifest
-permissions, network data surfaces, and local storage surfaces.
+permissions, network data surfaces, local storage surfaces, and SDK data
+surfaces.
 `tools/privacy_data_safety_check.py` compares this document's JSON contract
 with `app/src/main/AndroidManifest.xml`, `docs/security/network-endpoints.json`,
-and source-backed local storage rows so new privacy-relevant surfaces cannot
-ship without reviewed store-disclosure coverage.
+Gradle dependency files, and source-backed local storage and SDK rows so new
+privacy-relevant surfaces cannot ship without reviewed store-disclosure
+coverage.
 
 ## Permission Ledger
 
@@ -89,6 +91,22 @@ transient cache.
 | `share-out-temp-files` | Temporary collection export JSON and share artifacts. | User chooses share recipient; clear cache/app data or uninstall removes app-side temp files. | Transient cache. |
 | `aura-originals-files` | Downloaded Aura Originals bundled audio files. | Wi-Fi worker constraints and clear app data/uninstall for local cleanup. | Included by current backup/transfer rules. |
 
+## SDK Surface Ledger
+
+`sdkSurfaces` rows in `docs/privacy/data-safety.json` must cite current Gradle
+dependency markers and existing source paths. These rows cover SDK-backed
+collection, sharing, attestation, and local-processing surfaces that may not
+map one-to-one to a manifest permission or reviewed network endpoint.
+
+| Surface | Data safety row | User control | Release posture |
+| --- | --- | --- | --- |
+| `firebase-auth-sdk` | Firebase UID, anonymous authentication state, and deletion request code for community identity. | Community source switch, account deletion request tools, and local fallback identity clear control. | Disclose anonymous Firebase identity when community features are enabled. |
+| `firebase-realtime-database-sdk` | Community votes, reports, blocks, creator profiles, collection shares, and related Firebase UID metadata. | Community source switch, explicit community actions, owner delete flows, and account deletion request tools. | Disclose community account, app interaction, report, and public profile/share data. |
+| `firebase-storage-sdk` | Community sound/image uploads, storage upload handles, and report attachments. | Explicit upload/report actions, owner delete flows, and account deletion request tools. | Disclose user-generated media handled by Firebase Storage. |
+| `firebase-functions-sdk` | Callable payloads, operation IDs, quota/dedupe metadata, and community write metadata. | Community source switch plus report, vote, follow, block, upload, and profile actions. | Disclose callable-backed community writes and quota metadata. |
+| `firebase-app-check-sdk` | App integrity tokens, app/device attestation signals, and debug App Check tokens outside release artifacts. | Community features can be disabled; debug tokens remain developer-only. | Disclose service-provider abuse-prevention processing for Firebase-backed community features. |
+| `play-services-mlkit-subject-segmentation-sdk` | User-selected images processed locally, segmentation masks, and Play services module-install request metadata. | User-selected smart crop/parallax actions with normal-crop fallback. | Disclose Play services ML Kit/module-install dependency; Aura does not upload image bytes for subject segmentation. |
+
 ## Release Checklist
 
 - Run `python3 tools/privacy_data_safety_check.py --policy docs/privacy/data-safety.json --repo-root .`.
@@ -101,6 +119,8 @@ transient cache.
   `docs/privacy/data-safety.json` in lockstep.
 - Keep app-private source paths and the `localStorageSurfaces` rows in
   `docs/privacy/data-safety.json` in lockstep with backup/transfer rules.
+- Keep Gradle dependency markers, SDK source paths, and the `sdkSurfaces` rows
+  in `docs/privacy/data-safety.json` in lockstep.
 
 ## Sources
 

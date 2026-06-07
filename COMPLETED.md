@@ -643,6 +643,13 @@ next pass can resume quickly.
   have source-backed privacy rows covering DataStore, Room, SharedPreferences,
   diagnostics logs, media files, generated wallpapers, offline favorites,
   cache/share artifacts, deletion paths, and backup/transfer posture.
+- Completed Cycle 144 SDK Data safety surface gate: extended
+  `docs/privacy/data-safety.json`, `docs/privacy/data-safety.md`, and
+  `tools/privacy_data_safety_check.py` so Firebase Auth, Realtime Database,
+  Storage, Functions, App Check, and Play services ML Kit/module install rows
+  are checked against Gradle dependency markers, source paths, data types,
+  collection/sharing, retention, deletion, user controls, and Play declaration
+  notes.
 
 ## 2026-06-05
 

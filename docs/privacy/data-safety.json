@@ -5,6 +5,10 @@
   "docsPath": "docs/privacy/data-safety.md",
   "privacyPolicy": "docs/privacy/privacy-policy.md",
   "networkEndpointInventory": "docs/security/network-endpoints.json",
+  "dependencyFiles": [
+    "app/build.gradle.kts",
+    "gradle/libs.versions.toml"
+  ],
   "permissions": [
     {
       "name": "android.permission.SET_WALLPAPER",
@@ -533,6 +537,114 @@
       "retention": "Verified Aura Originals files remain local after download so bundled sounds work offline.",
       "deletionPath": "Clear Aura app data or uninstall.",
       "backupStatus": "includedInBackupOrTransfer"
+    }
+  ],
+  "sdkSurfaces": [
+    {
+      "surfaceId": "firebase-auth-sdk",
+      "dependencyMarkers": ["com.google.firebase:firebase-auth"],
+      "sourcePaths": [
+        "app/src/main/java/com/freevibe/service/CommunityIdentityProvider.kt",
+        "app/src/main/java/com/freevibe/data/repository/VoteRepository.kt",
+        "docs/support/community-account-deletion.md"
+      ],
+      "dataTypes": ["Firebase UID", "Anonymous authentication state", "Deletion request code"],
+      "collectionStatus": "featureDependentCollection",
+      "sharingStatus": "sharedWithServiceProviders",
+      "userControl": "Community source switch, account deletion request tools, and local fallback identity clear control.",
+      "retention": "Anonymous Firebase identity remains with Firebase until an owner-approved deletion workflow removes it; local fallback identity is app-private.",
+      "deletionPath": "Use the community account deletion request flow for Firebase identity and Settings > Community identity > Clear local for local fallback identity.",
+      "playDeclaration": "Disclose anonymous Firebase identity as community account/user ID data when community features are enabled."
+    },
+    {
+      "surfaceId": "firebase-realtime-database-sdk",
+      "dependencyMarkers": ["com.google.firebase:firebase-database"],
+      "sourcePaths": [
+        "app/src/main/java/com/freevibe/data/repository/VoteRepository.kt",
+        "app/src/main/java/com/freevibe/data/repository/CommunityReportRepository.kt",
+        "app/src/main/java/com/freevibe/data/repository/CommunityBlockRepository.kt",
+        "app/src/main/java/com/freevibe/data/repository/CreatorProfileRepository.kt",
+        "app/src/main/java/com/freevibe/service/CollectionExporter.kt",
+        "docs/firebase-rules-harness.md"
+      ],
+      "dataTypes": ["Firebase UID", "Community votes", "Reports", "Blocks", "Creator profiles", "Collection share metadata"],
+      "collectionStatus": "userInitiatedCollection",
+      "sharingStatus": "sharedWithServiceProviders",
+      "userControl": "Community source switch, vote/report/block/profile/share actions, owner delete flows, and account deletion request tools.",
+      "retention": "Public and private RTDB rows follow the community deletion, moderation, quota, and retention policies.",
+      "deletionPath": "Use owner delete actions, account deletion request flow, support moderation routes, or clear local app data depending on row type.",
+      "playDeclaration": "Disclose community account, user-generated content, app interactions, reports, and public profile/share metadata."
+    },
+    {
+      "surfaceId": "firebase-storage-sdk",
+      "dependencyMarkers": ["com.google.firebase:firebase-storage"],
+      "sourcePaths": [
+        "app/src/main/java/com/freevibe/data/repository/UploadRepository.kt",
+        "app/src/main/java/com/freevibe/data/repository/WallpaperUploadRepository.kt",
+        "app/src/main/java/com/freevibe/data/repository/CommunityReportRepository.kt",
+        "app/src/main/java/com/freevibe/data/repository/CommunityUploadDeletionHelpers.kt",
+        "docs/community-storage-lifecycle-policy.md"
+      ],
+      "dataTypes": ["Voice or sound recordings", "User-provided photos", "Storage upload handles", "Community report attachments"],
+      "collectionStatus": "userInitiatedCollection",
+      "sharingStatus": "sharedWithServiceProviders",
+      "userControl": "Explicit community upload, report attachment, owner delete, and account deletion request flows.",
+      "retention": "Committed upload objects remain in Firebase Storage until owner/admin deletion or account-deletion handling; temporary local files remain cache-backed before upload.",
+      "deletionPath": "Use owner delete actions, account deletion request flow, moderation support route, or operator upload execution receipt workflow.",
+      "playDeclaration": "Disclose community-uploaded media and report evidence as user-generated content handled by Firebase Storage."
+    },
+    {
+      "surfaceId": "firebase-functions-sdk",
+      "dependencyMarkers": ["firebase-functions"],
+      "sourcePaths": [
+        "app/src/main/java/com/freevibe/data/repository/CommunityCallableClient.kt",
+        "app/src/main/java/com/freevibe/data/model/CommunityQuotaPolicy.kt",
+        "docs/community-callable-quota-enforcement.md",
+        "docs/community-backend-runbook.md"
+      ],
+      "dataTypes": ["Firebase UID", "Callable payloads", "Operation IDs", "Quota and dedupe metadata", "Community write metadata"],
+      "collectionStatus": "userInitiatedCollection",
+      "sharingStatus": "sharedWithServiceProviders",
+      "userControl": "Community source switch, report/vote/follow/block/upload/profile actions, and account deletion request tools.",
+      "retention": "Callable request metadata is retained only through the backend community write, quota, dedupe, and moderation ledgers described in backend runbooks.",
+      "deletionPath": "Use owner delete actions, account deletion request flow, support moderation routes, or clear local app data depending on data type.",
+      "playDeclaration": "Disclose callable-backed community writes and quota metadata under community account, app interactions, and user-generated content."
+    },
+    {
+      "surfaceId": "firebase-app-check-sdk",
+      "dependencyMarkers": ["firebase-appcheck-playintegrity", "firebase-appcheck-debug"],
+      "sourcePaths": [
+        "app/src/main/java/com/freevibe/FreeVibeApp.kt",
+        "app/src/debug/java/com/freevibe/service/AppCheckInstaller.kt",
+        "app/src/release/java/com/freevibe/service/AppCheckInstaller.kt",
+        "docs/community-app-check-rollout.md"
+      ],
+      "dataTypes": ["App integrity tokens", "App/device attestation signals", "Debug App Check token"],
+      "collectionStatus": "featureDependentCollection",
+      "sharingStatus": "sharedWithServiceProviders",
+      "userControl": "Community features can be disabled; debug tokens stay developer-only and are not release artifacts.",
+      "retention": "Firebase App Check and Play Integrity retain attestation evidence under provider policies; Aura does not store App Check tokens locally.",
+      "deletionPath": "Disable community features, uninstall Aura, or use provider/account controls where applicable.",
+      "playDeclaration": "Disclose Firebase App Check/Play Integrity service-provider processing for abuse prevention on Firebase-backed community features."
+    },
+    {
+      "surfaceId": "play-services-mlkit-subject-segmentation-sdk",
+      "dependencyMarkers": [
+        "play-services-mlkit-subject-segmentation",
+        "play-services-base"
+      ],
+      "sourcePaths": [
+        "app/src/main/java/com/freevibe/service/SmartCropDetector.kt",
+        "app/src/main/java/com/freevibe/service/ParallaxWallpaperService.kt",
+        "docs/distribution/channel-strategy.md"
+      ],
+      "dataTypes": ["User-provided photos", "Local segmentation masks", "Model module install request metadata"],
+      "collectionStatus": "featureDependentCollection",
+      "sharingStatus": "sharedWithServiceProviders",
+      "userControl": "Smart crop/parallax actions are user-selected and fall back to normal cropping if the unbundled model is unavailable.",
+      "retention": "Image processing is local to the device; Play services module delivery metadata follows Google Play services behavior and is not stored by Aura.",
+      "deletionPath": "Disable or replace parallax/live wallpaper content, clear app data, or uninstall.",
+      "playDeclaration": "Disclose Play services ML Kit/module-install dependency; Aura does not upload image bytes for subject segmentation."
     }
   ],
   "sourceUrls": [

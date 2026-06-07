@@ -1,8 +1,8 @@
 # Autonomous Loop State
 
 **Assigned project:** `C:\Users\--\repos\Aura`
-**Current pass:** 2026-06-07 Cycle 143 local storage Data safety surface gate
-**Last commit before pass:** `f73b9ab` (`ci(privacy): gate network data safety`)
+**Current pass:** 2026-06-07 Cycle 144 SDK Data safety surface gate
+**Last commit before pass:** `4eacfef` (`ci(privacy): gate local data safety`)
 
 ## 2026-06-05 Result
 
@@ -2069,11 +2069,30 @@
 - Cycle 143 verification: expanded Data safety matrix check, Python compile,
   and focused backend tests passed.
 
+## Cycle 144 Result - 2026-06-07
+
+- Added `dependencyFiles` and `sdkSurfaces` coverage to
+  `docs/privacy/data-safety.json`.
+- Added an SDK Surface Ledger to `docs/privacy/data-safety.md`.
+- Extended `tools/privacy_data_safety_check.py` so every SDK row must include
+  dependency markers found in tracked Gradle files, existing source paths, data
+  types, collection/sharing status, user control, retention, deletion path, and
+  Play declaration notes.
+- Covered Firebase Auth, Firebase Realtime Database, Firebase Storage,
+  Firebase Functions, Firebase App Check, and Play services ML Kit subject
+  segmentation/module install surfaces.
+- Extended focused tests for missing SDK dependency markers, missing SDK source
+  paths, and missing SDK docs rows.
+- Updated release dry-run docs, supply-chain docs, research, roadmap,
+  changelog, completion, and loop-state docs.
+- Cycle 144 verification: expanded Data safety matrix check, Python compile,
+  and focused backend tests passed.
+
 ## Next Cycle
 
-Continue this same assigned project, Aura. Start Cycle 144 from the
+Continue this same assigned project, Aura. Start Cycle 145 from the
 `ROADMAP.md` Continuation State and
-`docs/research/cycle-143-2026-06-07.md`. The account
+`docs/research/cycle-144-2026-06-07.md`. The account
 deletion dry-run planner, read-only Settings identity surface, redacted
 shareable request draft, request-code lookup tool, review receipt gate, offline
 apply simulator, private executor package builder, and guarded REST executor
@@ -2187,7 +2206,9 @@ added a checked public privacy-policy link gate and Settings About entry; Cycle
 141 added a checked manifest permission Data safety matrix and release gate;
 Cycle 142 extended the Data safety matrix gate to every reviewed network
 endpoint ID; Cycle 143 extended the same gate to source-backed local storage
-surfaces with deletion and backup/transfer posture.
+surfaces with deletion and backup/transfer posture; Cycle 144 extended the
+same gate to Gradle-marker-backed SDK surfaces for Firebase Auth, RTDB,
+Storage, Functions, App Check, and Play services ML Kit/module install.
 Actual live callable invocation evidence, a live hosted HTTPS web deletion URL,
 direct RTDB rule tightening, App Check console evidence, production-project
 dry-run evidence, and owner/admin GitHub repository security-settings evidence
@@ -2200,8 +2221,7 @@ owner access is confirmed, collect owner/admin GitHub security settings
 evidence and generate the redacted receipt when access is available, or
 continue with signed release dry-run evidence capture on a suitable runner,
 the screenshot and feature-graphic pipeline for the remaining store metadata
-asset gap, expanded Data safety matrix enforcement for SDK/Firebase surfaces,
-Play app-content declaration packet work, or the
+asset gap, Play app-content declaration packet work, or the
 next checkable backend, deploy, security, support, policy, or rules hardening
 artifact if owner-gated evidence is still unavailable.
 Commit and push completed work when the active project contract allows it.

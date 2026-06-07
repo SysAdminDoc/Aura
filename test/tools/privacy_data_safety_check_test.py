@@ -48,6 +48,7 @@ def minimal_policy() -> dict[str, object]:
         "docsPath": "docs/privacy/data-safety.md",
         "privacyPolicy": "docs/privacy/privacy-policy.md",
         "networkEndpointInventory": "docs/security/network-endpoints.json",
+        "dependencyFiles": ["app/build.gradle.kts", "gradle/libs.versions.toml"],
         "permissions": [
             minimal_permission("android.permission.INTERNET"),
             minimal_permission("android.permission.WRITE_EXTERNAL_STORAGE", 28),
@@ -77,6 +78,20 @@ def minimal_policy() -> dict[str, object]:
                 "backupStatus": "excludedFromBackupAndTransfer",
             }
         ],
+        "sdkSurfaces": [
+            {
+                "surfaceId": "test-sdk",
+                "dependencyMarkers": ["com.example:test-sdk"],
+                "sourcePaths": ["app/src/main/java/TestSdk.kt"],
+                "dataTypes": ["App interactions"],
+                "collectionStatus": "featureDependentCollection",
+                "sharingStatus": "sharedWithServiceProviders",
+                "userControl": "Feature switch.",
+                "retention": "Provider retention.",
+                "deletionPath": "Disable feature.",
+                "playDeclaration": "Reviewed.",
+            }
+        ],
         "sourceUrls": ["https://support.google.com/googleplay/android-developer/answer/10787469"],
     }
 
@@ -93,7 +108,13 @@ def seed_repo(repo: Path) -> Path:
     )
     write(
         repo / "docs/privacy/data-safety.md",
-        "`android.permission.INTERNET`\n`android.permission.WRITE_EXTERNAL_STORAGE`\n`test-api`\n`test-store`\n",
+        (
+            "`android.permission.INTERNET`\n"
+            "`android.permission.WRITE_EXTERNAL_STORAGE`\n"
+            "`test-api`\n"
+            "`test-store`\n"
+            "`test-sdk`\n"
+        ),
     )
     write(
         repo / "docs/privacy/privacy-policy.md",
@@ -103,7 +124,10 @@ def seed_repo(repo: Path) -> Path:
         repo / "docs/security/network-endpoints.json",
         '{"schemaVersion": 1, "policyKind": "networkEndpointInventory", "endpoints": [{"id": "test-api"}]}\n',
     )
+    write(repo / "app/build.gradle.kts", 'implementation("com.example:test-sdk:1.0")\n')
+    write(repo / "gradle/libs.versions.toml", 'test-sdk = { group = "com.example", name = "test-sdk" }\n')
     write(repo / "app/src/main/java/TestStore.kt", "class TestStore\n")
+    write(repo / "app/src/main/java/TestSdk.kt", "class TestSdk\n")
     return repo
 
 
@@ -115,6 +139,7 @@ class PrivacyDataSafetyCheckTest(unittest.TestCase):
         self.assertEqual(result["manifestPermissionCount"], result["matrixPermissionCount"])
         self.assertGreaterEqual(result["networkSurfaceCount"], 1)
         self.assertGreaterEqual(result["localStorageSurfaceCount"], 1)
+        self.assertGreaterEqual(result["sdkSurfaceCount"], 1)
         self.assertGreaterEqual(result["sensitiveOrSharedRowCount"], 1)
 
     def test_rejects_missing_permission_row(self) -> None:
@@ -225,6 +250,41 @@ class PrivacyDataSafetyCheckTest(unittest.TestCase):
             repo = seed_repo(Path(tmpdir))
             policy = minimal_policy()
             policy["localStorageSurfaces"][0]["backupStatus"] = "unknown"  # type: ignore[index]
+
+            with self.assertRaises(PrivacyDataSafetyError):
+                validate_policy(repo, policy)
+
+    def test_rejects_missing_sdk_dependency_marker(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            repo = seed_repo(Path(tmpdir))
+            policy = minimal_policy()
+            policy["sdkSurfaces"][0]["dependencyMarkers"] = ["com.example:missing-sdk"]  # type: ignore[index]
+
+            with self.assertRaises(PrivacyDataSafetyError):
+                validate_policy(repo, policy)
+
+    def test_rejects_missing_sdk_source_path(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            repo = seed_repo(Path(tmpdir))
+            policy = minimal_policy()
+            policy["sdkSurfaces"][0]["sourcePaths"] = ["app/src/main/java/MissingSdk.kt"]  # type: ignore[index]
+
+            with self.assertRaises(PrivacyDataSafetyError):
+                validate_policy(repo, policy)
+
+    def test_rejects_docs_without_sdk_row(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            repo = seed_repo(Path(tmpdir))
+            policy = minimal_policy()
+            write(
+                repo / "docs/privacy/data-safety.md",
+                (
+                    "`android.permission.INTERNET`\n"
+                    "`android.permission.WRITE_EXTERNAL_STORAGE`\n"
+                    "`test-api`\n"
+                    "`test-store`\n"
+                ),
+            )
 
             with self.assertRaises(PrivacyDataSafetyError):
                 validate_policy(repo, policy)

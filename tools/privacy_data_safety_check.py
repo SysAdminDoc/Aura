@@ -46,6 +46,18 @@ REQUIRED_LOCAL_STORAGE_FIELDS = {
     "deletionPath",
     "backupStatus",
 }
+REQUIRED_SDK_SURFACE_FIELDS = {
+    "surfaceId",
+    "dependencyMarkers",
+    "sourcePaths",
+    "dataTypes",
+    "collectionStatus",
+    "sharingStatus",
+    "userControl",
+    "retention",
+    "deletionPath",
+    "playDeclaration",
+}
 SUPPORTED_COLLECTION_STATUSES = {
     "localOnly",
     "notCollected",
@@ -58,6 +70,7 @@ SUPPORTED_SHARING_STATUSES = {
     "sharedWithSelectedProviders",
     "sharedWithWeatherProvider",
     "userDirectedShare",
+    "sharedWithServiceProviders",
 }
 SUPPORTED_BACKUP_STATUSES = {
     "excludedFromBackupAndTransfer",
@@ -278,6 +291,63 @@ def validate_local_storage_surfaces(repo_root: Path, policy: dict[str, Any], doc
     return surfaces
 
 
+def validate_sdk_surfaces(repo_root: Path, policy: dict[str, Any], docs_text: str) -> list[dict[str, Any]]:
+    surfaces_raw = policy.get("sdkSurfaces")
+    if not isinstance(surfaces_raw, list) or not surfaces_raw:
+        raise PrivacyDataSafetyError("sdkSurfaces must be a non-empty list")
+
+    dependency_files = require_string_list(policy.get("dependencyFiles"), "dependencyFiles")
+    dependency_text_parts = [
+        read_text(repo_root, dependency_file, f"dependency file {dependency_file}")
+        for dependency_file in dependency_files
+    ]
+    dependency_text = "\n".join(dependency_text_parts)
+
+    surfaces: list[dict[str, Any]] = []
+    surface_ids: set[str] = set()
+    for index, raw_surface in enumerate(surfaces_raw):
+        surface = require_object(raw_surface, f"sdkSurfaces[{index}]")
+        missing = sorted(REQUIRED_SDK_SURFACE_FIELDS - set(surface))
+        if missing:
+            raise PrivacyDataSafetyError(f"sdkSurfaces[{index}] missing fields: {', '.join(missing)}")
+        surface_id = require_string(surface.get("surfaceId"), f"sdkSurfaces[{index}].surfaceId")
+        if surface_id in surface_ids:
+            raise PrivacyDataSafetyError(f"duplicate SDK surface row: {surface_id}")
+        surface_ids.add(surface_id)
+
+        for field in REQUIRED_SDK_SURFACE_FIELDS - {
+            "surfaceId",
+            "dependencyMarkers",
+            "sourcePaths",
+            "dataTypes",
+            "collectionStatus",
+            "sharingStatus",
+        }:
+            require_string(surface.get(field), f"{surface_id}.{field}")
+        require_string_list(surface.get("dataTypes"), f"{surface_id}.dataTypes")
+
+        dependency_markers = require_string_list(surface.get("dependencyMarkers"), f"{surface_id}.dependencyMarkers")
+        for marker in dependency_markers:
+            if marker not in dependency_text:
+                raise PrivacyDataSafetyError(f"{surface_id}.dependencyMarkers entry is missing from dependency files: {marker}")
+
+        source_paths = require_string_list(surface.get("sourcePaths"), f"{surface_id}.sourcePaths")
+        for source_path in source_paths:
+            if not (repo_root / source_path).is_file():
+                raise PrivacyDataSafetyError(f"{surface_id}.sourcePaths entry is missing: {source_path}")
+
+        collection_status = require_string(surface.get("collectionStatus"), f"{surface_id}.collectionStatus")
+        if collection_status not in SUPPORTED_COLLECTION_STATUSES:
+            raise PrivacyDataSafetyError(f"{surface_id}.collectionStatus is unsupported")
+        sharing_status = require_string(surface.get("sharingStatus"), f"{surface_id}.sharingStatus")
+        if sharing_status not in SUPPORTED_SHARING_STATUSES:
+            raise PrivacyDataSafetyError(f"{surface_id}.sharingStatus is unsupported")
+        if surface_id not in docs_text:
+            raise PrivacyDataSafetyError(f"data-safety docs are missing SDK surface row for {surface_id}")
+        surfaces.append(surface)
+    return surfaces
+
+
 def validate_policy(repo_root: Path, policy: dict[str, Any]) -> dict[str, Any]:
     if policy.get("schemaVersion") != 1:
         raise PrivacyDataSafetyError("privacy data-safety schemaVersion must be 1")
@@ -298,6 +368,7 @@ def validate_policy(repo_root: Path, policy: dict[str, Any]) -> dict[str, Any]:
             raise PrivacyDataSafetyError(f"{docs_path} is missing permission row for {name}")
     network_surfaces = validate_network_surfaces(repo_root, policy, docs_text)
     local_storage_surfaces = validate_local_storage_surfaces(repo_root, policy, docs_text)
+    sdk_surfaces = validate_sdk_surfaces(repo_root, policy, docs_text)
     for required_term in ("no ads", "cross-app tracking", "anonymous firebase identity", "generated wallpaper prompts"):
         if required_term not in " ".join(privacy_text.split()):
             raise PrivacyDataSafetyError(f"{privacy_policy_path} is missing privacy term: {required_term}")
@@ -320,6 +391,7 @@ def validate_policy(repo_root: Path, policy: dict[str, Any]) -> dict[str, Any]:
         "matrixPermissionCount": len(rows),
         "networkSurfaceCount": len(network_surfaces),
         "localStorageSurfaceCount": len(local_storage_surfaces),
+        "sdkSurfaceCount": len(sdk_surfaces),
         "sensitiveOrSharedRowCount": sensitive_count,
         "sourceUrlCount": len(source_urls),
     }
