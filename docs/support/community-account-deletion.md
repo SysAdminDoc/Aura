@@ -84,6 +84,11 @@ completion receipt and records the remaining local device cleanup, Firebase
 Auth deletion, and public upload deletion sequencing without exposing the full
 UID.
 
+`tools/community_account_deletion_auth_package.py` validates the private
+request-code lookup against the completed backend deletion receipt and builds
+the private Firebase Auth deletion package. The package contains the full UID
+and must never be shared with the requester or committed.
+
 ## Operator Handling
 
 1. Receive the request draft through a private support channel.
@@ -152,10 +157,21 @@ UID.
    py -3 tools\community_account_deletion_cleanup_sequence.py --completion-receipt .\account-deletion-completion-receipt.json --support-reference <ticket-id> --output .\account-deletion-cleanup-sequence.json
    ```
 
-14. Share only the completion receipt and requester-facing local cleanup
+14. Build the private Auth deletion package only after backend completion and
+    private UID reverification:
+
+   ```powershell
+   py -3 tools\community_account_deletion_auth_package.py --lookup .\deletion-request-lookup.json --completion-receipt .\account-deletion-completion-receipt.json --request-code AURA-123456789ABC --support-reference <ticket-id> --operator <private-ticket-or-initials> --output .\account-deletion-auth-package.json
+   ```
+
+15. Delete the Firebase Auth user only through an owner-approved Firebase
+    Console, Admin SDK, or CLI path for the production project. Archive the
+    private Auth package and command evidence with backend evidence.
+
+16. Share only the completion receipt and requester-facing local cleanup
     instructions with the requester. Keep lookup, plan,
-    review, simulation, executor package, REST apply receipt, database export,
-    access token, full UID, and RTDB paths private.
+    review, simulation, executor package, REST apply receipt, Auth package,
+    database export, access token, full UID, and RTDB paths private.
 
 If the requester still has Aura installed, they can open `Settings` >
 `Community identity` > `Clear local` after support confirms backend completion.

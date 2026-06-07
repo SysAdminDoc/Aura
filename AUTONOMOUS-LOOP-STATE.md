@@ -1,8 +1,8 @@
 # Autonomous Loop State
 
 **Assigned project:** `C:\Users\--\repos\Aura`
-**Current pass:** 2026-06-06 Cycle 85 in-app local community cleanup
-**Last commit before pass:** `5945058` (`feat(community): add deletion cleanup sequence`)
+**Current pass:** 2026-06-06 Cycle 86 account deletion Auth package
+**Last commit before pass:** `78d8d66` (`feat(community): add local identity cleanup`)
 
 ## 2026-06-05 Result
 
@@ -680,10 +680,34 @@
 - Cycle 85 verification: focused Android identity/settings JVM tests passed
   locally; backend tool unittest discovery passed locally.
 
+## Cycle 86 Result - 2026-06-06
+
+- Added `tools/community_account_deletion_auth_package.py` to build the private
+  Firebase Auth deletion package after account deletion backend completion.
+- The package builder validates request-code lookup, requires exactly one match,
+  validates the completed backend receipt through the cleanup sequence gate,
+  checks support reference, and verifies that the private UID derives the
+  requested `AURA-` code.
+- The private package includes full UID, safe UID, UID hash, redacted suffix,
+  completion receipt hash, lookup evidence hash, operator, and an execution
+  warning.
+- Added backend tool coverage in
+  `test/tools/community_account_deletion_auth_package_test.py` for the happy
+  path, backend-completion gating, completion request-code mismatch, and
+  UID/code mismatch rejection.
+- Wired the Auth package tool into Firebase backend CI change detection.
+- Updated `docs/research/cycle-86-2026-06-06.md`,
+  `docs/support/community-account-deletion.md`,
+  `docs/community-account-deletion-policy.md`,
+  `docs/community-backend-runbook.md`, `ROADMAP.md`, `COMPLETED.md`, and
+  `CHANGELOG.md`.
+- Cycle 86 verification: Python compile and backend tool unittest discovery
+  passed locally.
+
 ## Next Cycle
 
-Continue this same assigned project, Aura. Start Cycle 86 from the `ROADMAP.md`
-Continuation State and `docs/research/cycle-85-2026-06-06.md`. The account
+Continue this same assigned project, Aura. Start Cycle 87 from the `ROADMAP.md`
+Continuation State and `docs/research/cycle-86-2026-06-06.md`. The account
 deletion dry-run planner, read-only Settings identity surface, redacted
 shareable request draft, request-code lookup tool, review receipt gate, offline
 apply simulator, private executor package builder, and guarded REST executor
@@ -691,14 +715,15 @@ are implemented; Cycle 82 added the redacted completion receipt after applied
 REST receipts; Cycle 83 added the private web-intake contract and validator;
 Cycle 84 added local/Auth cleanup sequencing after backend completion; Cycle 85
 added Settings > Community identity > Clear local for the current device
-fallback identity. Trusted Firebase Auth deletion, public upload deletion
-orchestration, and hosted private web URL publication remain open. Next add
-trusted Firebase Auth deletion implementation planning, public upload deletion
-orchestration, hosted private web URL publication planning, a real
-production-project Firebase executor dry-run after owner access is confirmed,
-Cloud Functions implementation for the callable quota contract, or Android
-callable migration adapters. Commit and push completed work when the active
-project contract allows it.
+fallback identity; Cycle 86 added private Firebase Auth deletion packages after
+lookup and backend completion evidence match. Owner-approved Auth deletion
+execution evidence, public upload deletion orchestration, and hosted private
+web URL publication remain open. Next add owner-approved Firebase Auth deletion
+execution evidence, public upload deletion orchestration, hosted private web
+URL publication planning, a real production-project Firebase executor dry-run
+after owner access is confirmed, Cloud Functions implementation for the
+callable quota contract, or Android callable migration adapters. Commit and
+push completed work when the active project contract allows it.
 
 ## Previous Cycle Prompt
 

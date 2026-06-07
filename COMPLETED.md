@@ -312,6 +312,10 @@ next pass can resume quickly.
   refreshes the displayed identity summary after clearing, and keeps backend,
   Firebase Auth, public upload, and moderation deletion in the support/operator
   chain.
+- Completed Cycle 86 account deletion Auth package: added
+  `tools/community_account_deletion_auth_package.py` and backend tool tests to
+  build a private Firebase Auth deletion package only after request-code lookup
+  and backend completion evidence match.
 
 ## 2026-06-05
 

@@ -169,6 +169,9 @@ must include:
   `tools/community_account_deletion_cleanup_sequence.py` after backend
   completion and before Firebase Auth deletion or requester local-cleanup
   instructions are handled.
+- Private Firebase Auth deletion package from
+  `tools/community_account_deletion_auth_package.py` before deleting the Auth
+  user through an owner-approved Firebase Console, Admin SDK, or CLI path.
 
 ## Sources
 
