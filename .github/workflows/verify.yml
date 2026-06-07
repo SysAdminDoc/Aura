@@ -19,7 +19,7 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           fetch-depth: 0
 
@@ -157,7 +157,7 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: GitHub security workflow policy
         run: python3 tools/github_security_workflow_check.py --policy docs/distribution/github-security-workflows.json --repo-root .
