@@ -12,7 +12,9 @@ This packet does not change runtime behavior. It makes the current posture
 explicit and checks it against scheduler source. Cycle 156 added the first
 Settings receipt slice: `Settings` > `Diagnostics` > `Background work` now
 reads active metered-network state and Data Saver restricted-background status
-from `ConnectivityManager`.
+from `ConnectivityManager`. Cycle 159 added action hints that combine those
+network receipts with worker last-run receipts in Settings and copied support
+bundles.
 
 ## Network posture matrix
 
@@ -28,16 +30,17 @@ from `ConnectivityManager`.
 
 Android exposes Data Saver state through `ConnectivityManager`, including
 metered-network checks and background restriction status. Aura now shows those
-values in Settings diagnostics; support bundles still record the inferred
-network posture added in Cycle 155. Until worker-level last-run receipts land,
-the release posture is:
+values in Settings diagnostics and support bundles. When Data Saver reports
+restricted background data, diagnostics now tell the user to allow unrestricted
+data for Aura or use Wi-Fi before refreshing the receipt. The release posture
+is:
 
 - larger first-run Aura Originals downloads require unmetered network;
 - auto wallpaper can be user-tightened to unmetered network through the
   existing Wi-Fi-only setting;
 - daily wallpaper, weather refresh, and explicit rotation trigger attempts use
-  connected-network constraints and must be labeled as metered/Data Saver
-  candidates in future diagnostics;
+  connected-network constraints and diagnostics label them as metered/Data
+  Saver candidates when the live network receipt indicates a restriction;
 - Data safety and endpoint inventory rows remain the privacy surface for which
   remote services can be contacted by each worker.
 

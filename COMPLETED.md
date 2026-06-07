@@ -6,6 +6,13 @@ next pass can resume quickly.
 
 ## 2026-06-07
 
+- Completed Cycle 159 background work action hints: added a computed
+  `actionHint` to live background-work diagnostics, surfaced it in Settings and
+  copied/shared support bundles, tightened worker receipt copy for source,
+  network/provider, permission, apply, and Aura Originals validation cases, and
+  updated the scheduling/network/support docs. Direct OS scheduler evidence for
+  quota, low battery, Doze/App Standby, and constraint-delay causes remains
+  open.
 - Completed Cycle 158 background work support bundle live receipts: wired
   `CrashDiagnosticsCollector` to append live WorkManager state, metered/Data
   Saver status, and persisted worker receipt details to copied/shared crash

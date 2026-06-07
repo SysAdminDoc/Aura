@@ -54,7 +54,7 @@ class AuraOriginalsDownloader @AssistedInject constructor(
         receiptStore.recordWorkerResult(
             uniqueWorkName = UNIQUE_WORK_NAME,
             resultClassName = result.javaClass.simpleName,
-            retryReason = "bundle download pending, hash mismatch, or network unavailable",
+            retryReason = "Aura Originals download will retry because HTTPS download, size, hash, or file-write validation did not complete",
         )
         result
     }

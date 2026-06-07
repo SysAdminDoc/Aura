@@ -11,7 +11,8 @@
     "lastErrorClass",
     "currentWorkInfoState",
     "constraints",
-    "deferralReasons"
+    "deferralReasons",
+    "actionHint"
   ],
   "workItems": [
     {

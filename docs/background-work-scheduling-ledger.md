@@ -24,8 +24,9 @@ release docs, and verify/release workflow wiring.
 
 ## Deferral reasons
 
-Settings and support diagnostics still need to expose these user-actionable
-states from WorkInfo and local receipts:
+Settings and support diagnostics expose user-actionable hints for these states
+where Aura can infer them from WorkInfo, metered/Data Saver receipts, and local
+worker receipts:
 
 - Connected network is unavailable.
 - Unmetered network is unavailable for Wi-Fi-only or Aura Originals work.
@@ -46,13 +47,18 @@ Cycle 156 added `Settings` > `Diagnostics` > `Background work`, which reads
 current `WorkInfo.State` counts for every unique work name and shows active
 metered/Data Saver state. Cycle 157 added persisted worker receipts for last
 success UTC, last failure UTC, last error class, last result, and last deferral
-reason. The full Cycle 14 P0 item remains open until Settings diagnostics and
-support bundles also expose, for every unique work name:
+reason. Cycle 158 merged those live receipts into copied support bundles. Cycle
+159 added an `actionHint` row that translates Data Saver restrictions,
+metered-only waits, source failures, hash/download validation failures,
+permission cues, and retry/backoff state into user or support next steps. The
+full Cycle 14 P0 item remains open until Settings diagnostics and support
+bundles also expose, for every unique work name:
 
 - enabled state;
 - declared constraints;
-- sharper user-actionable deferral reason text where the worker can identify a
-  specific platform cause.
+- direct OS scheduler evidence for quota downgrade, low battery,
+  Doze/App Standby, and constraint-delay causes that WorkManager does not expose
+  through the current local receipt layer.
 
 The P1 unique-work policy matrix is closed by this packet because the ledger
 now records unique work names, work type, enqueue policy, interval, initial

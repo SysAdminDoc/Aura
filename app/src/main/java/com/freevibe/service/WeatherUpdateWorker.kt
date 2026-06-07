@@ -63,7 +63,7 @@ class WeatherUpdateWorker @AssistedInject constructor(
             receiptStore.recordRetry(
                 uniqueWorkName = WORK_NAME,
                 errorClass = "IOException",
-                deferralReason = "weather endpoint or network I/O failed",
+                deferralReason = "weather endpoint or network I/O failed; check connection and Open-Meteo availability",
             )
             Result.retry()
         } catch (e: Exception) {
@@ -71,7 +71,7 @@ class WeatherUpdateWorker @AssistedInject constructor(
             receiptStore.recordFailure(
                 uniqueWorkName = WORK_NAME,
                 errorClass = e.javaClass.simpleName,
-                deferralReason = "weather worker failed before storing a refresh",
+                deferralReason = "weather worker crashed before storing a refresh; verify location permission and include diagnostics bundle",
             )
             Result.failure()
         }

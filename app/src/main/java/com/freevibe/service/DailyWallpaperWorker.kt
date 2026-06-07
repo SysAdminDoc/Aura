@@ -147,7 +147,7 @@ class DailyWallpaperWorker @AssistedInject constructor(
             receiptStore.recordRetry(
                 uniqueWorkName = WORK_NAME,
                 errorClass = e.javaClass.simpleName,
-                deferralReason = "daily wallpaper worker failed and requested retry",
+                deferralReason = "daily wallpaper worker failed; check Reddit provider availability and network state",
             )
             Result.retry()
         }

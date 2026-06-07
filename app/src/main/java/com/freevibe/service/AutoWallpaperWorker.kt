@@ -49,14 +49,14 @@ class AutoWallpaperWorker @AssistedInject constructor(
             receiptStore.recordWorkerResult(
                 uniqueWorkName = receiptWorkName,
                 resultClassName = result.javaClass.simpleName,
-                retryReason = "wallpaper source unavailable, constraints deferred, or apply failed",
+                retryReason = "wallpaper source returned no usable item or apply failed; check selected source, saved collection, and wallpaper permission",
             )
             result
         } catch (_: java.io.IOException) {
             receiptStore.recordRetry(
                 uniqueWorkName = receiptWorkName,
                 errorClass = "IOException",
-                deferralReason = "network or remote source I/O failed",
+                deferralReason = "network or remote wallpaper source I/O failed; check connection and provider availability",
             )
             Result.retry()
         } catch (e: Exception) {
@@ -64,7 +64,7 @@ class AutoWallpaperWorker @AssistedInject constructor(
             receiptStore.recordFailure(
                 uniqueWorkName = receiptWorkName,
                 errorClass = e.javaClass.simpleName,
-                deferralReason = "worker failed before completing wallpaper rotation",
+                deferralReason = "wallpaper rotation worker crashed before completing; include diagnostics bundle",
             )
             Result.failure()
         }

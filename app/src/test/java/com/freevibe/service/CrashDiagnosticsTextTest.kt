@@ -174,6 +174,7 @@ class CrashDiagnosticsTextTest {
                         lastErrorClass = "IOException",
                         lastResult = "retry",
                         lastDeferralReason = "network unavailable",
+                        actionHint = "Check connection and provider availability; WorkManager will retry with exponential backoff.",
                     ),
                 ),
             ),
@@ -191,5 +192,6 @@ class CrashDiagnosticsTextTest {
         assertTrue(section.contains("lastFailure=2026-06-07T11:00:00Z"))
         assertTrue(section.contains("lastError=IOException"))
         assertTrue(section.contains("deferral=network unavailable"))
+        assertTrue(section.contains("action=Check connection and provider availability"))
     }
 }

@@ -316,7 +316,8 @@ internal object CrashDiagnosticsText {
                         "lastSuccess=${row.lastSuccessUtc ?: "none"}; " +
                         "lastFailure=${row.lastFailureUtc ?: "none"}; " +
                         "lastError=${row.lastErrorClass ?: "none"}; " +
-                        "deferral=${row.lastDeferralReason ?: "none"}" +
+                        "deferral=${row.lastDeferralReason ?: "none"}; " +
+                        "action=${row.actionHint ?: "none"}" +
                         (row.readError?.let { "; readError=$it" } ?: ""),
                 )
             }

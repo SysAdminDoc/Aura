@@ -42,4 +42,68 @@ class BackgroundWorkDiagnosticsReaderTest {
         )
         assertEquals("unknown(99)", restrictBackgroundStatusLabel(99))
     }
+
+    @Test
+    fun backgroundWorkActionHintPrioritizesDataSaverRestriction() {
+        val hint = backgroundWorkActionHint(
+            row = BackgroundWorkStatusRow(
+                label = "Daily wallpaper notification",
+                uniqueWorkName = DailyWallpaperWorker.WORK_NAME,
+                workInfoStatus = "ENQUEUED=1",
+                lastResult = "retry",
+                lastDeferralReason = "no eligible Reddit daily wallpaper was available",
+            ),
+            network = BackgroundNetworkDiagnostics(
+                activeNetworkMetered = true,
+                restrictBackgroundStatus = "enabled",
+            ),
+        )
+
+        assertEquals(
+            "Data Saver is restricting background data; allow unrestricted data for Aura or use Wi-Fi, then refresh diagnostics.",
+            hint,
+        )
+    }
+
+    @Test
+    fun backgroundWorkActionHintExplainsUnmeteredDownloadWait() {
+        val hint = backgroundWorkActionHint(
+            row = BackgroundWorkStatusRow(
+                label = "Aura Originals download",
+                uniqueWorkName = "aura_originals_download",
+                workInfoStatus = "ENQUEUED=1",
+            ),
+            network = BackgroundNetworkDiagnostics(
+                activeNetworkMetered = true,
+                restrictBackgroundStatus = "disabled",
+            ),
+        )
+
+        assertEquals(
+            "Waiting for Wi-Fi or another unmetered network before this larger download can run.",
+            hint,
+        )
+    }
+
+    @Test
+    fun backgroundWorkActionHintExplainsSourceSpecificDeferral() {
+        val hint = backgroundWorkActionHint(
+            row = BackgroundWorkStatusRow(
+                label = "Daily wallpaper notification",
+                uniqueWorkName = DailyWallpaperWorker.WORK_NAME,
+                workInfoStatus = "RUNNING=1",
+                lastResult = "retry",
+                lastDeferralReason = "no eligible Reddit daily wallpaper was available",
+            ),
+            network = BackgroundNetworkDiagnostics(
+                activeNetworkMetered = false,
+                restrictBackgroundStatus = "disabled",
+            ),
+        )
+
+        assertEquals(
+            "No safe Reddit wallpaper was available; review subreddit settings or wait for the next daily run.",
+            hint,
+        )
+    }
 }

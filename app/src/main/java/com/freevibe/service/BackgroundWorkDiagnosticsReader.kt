@@ -6,6 +6,7 @@ import android.os.Build
 import androidx.work.WorkInfo
 import androidx.work.WorkManager
 import dagger.hilt.android.qualifiers.ApplicationContext
+import java.util.Locale
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -32,6 +33,7 @@ data class BackgroundWorkStatusRow(
     val lastErrorClass: String? = null,
     val lastResult: String? = null,
     val lastDeferralReason: String? = null,
+    val actionHint: String? = null,
     val readError: String? = null,
 )
 
@@ -46,6 +48,7 @@ class AndroidBackgroundWorkDiagnosticsReader @Inject constructor(
 ) : BackgroundWorkDiagnosticsReader {
 
     override suspend fun read(): BackgroundWorkDiagnostics {
+        val network = readNetworkDiagnostics()
         val managerResult = runCatching { WorkManager.getInstance(context) }
         val rows = BACKGROUND_WORK_ITEMS.map { item ->
             managerResult.fold(
@@ -65,9 +68,11 @@ class AndroidBackgroundWorkDiagnosticsReader @Inject constructor(
                     )
                 },
             )
+        }.map { row ->
+            row.copy(actionHint = backgroundWorkActionHint(row, network))
         }
         return BackgroundWorkDiagnostics(
-            network = readNetworkDiagnostics(),
+            network = network,
             rows = rows,
         )
     }
@@ -160,3 +165,65 @@ internal fun restrictBackgroundStatusLabel(status: Int): String = when (status) 
     ConnectivityManager.RESTRICT_BACKGROUND_STATUS_ENABLED -> "enabled"
     else -> "unknown($status)"
 }
+
+internal fun backgroundWorkActionHint(
+    row: BackgroundWorkStatusRow,
+    network: BackgroundNetworkDiagnostics,
+): String? {
+    row.readError?.let {
+        return "Refresh diagnostics; include the support bundle if WorkInfo still cannot be read."
+    }
+
+    if (network.restrictBackgroundStatus == "enabled" && row.usesNetwork()) {
+        return "Data Saver is restricting background data; allow unrestricted data for Aura or use Wi-Fi, then refresh diagnostics."
+    }
+    if (network.activeNetworkMetered == true && row.requiresUnmeteredNetwork()) {
+        return "Waiting for Wi-Fi or another unmetered network before this larger download can run."
+    }
+
+    val reason = row.lastDeferralReason.orEmpty().lowercase(Locale.ROOT)
+    if (reason.contains("no eligible reddit")) {
+        return "No safe Reddit wallpaper was available; review subreddit settings or wait for the next daily run."
+    }
+    if (reason.contains("hash") || reason.contains("bundle")) {
+        return "Aura Originals will retry; repeated failures point to a bundle download, size, hash, or file-write validation problem."
+    }
+    if (reason.contains("network") || reason.contains("remote") || row.lastErrorClass == "IOException") {
+        return "Check connection and provider availability; WorkManager will retry with exponential backoff."
+    }
+    if (reason.contains("permission")) {
+        return "Review the listed Android permission, then refresh diagnostics after granting or changing it."
+    }
+    if (reason.contains("apply")) {
+        return "Open the wallpaper source and try a manual apply; if manual apply fails too, include this support bundle."
+    }
+
+    val lastResult = row.lastResult.orEmpty().lowercase(Locale.ROOT)
+    if (lastResult == "retry") {
+        return "WorkManager scheduled a retry; check network, source settings, battery, charging, and Wi-Fi-only constraints."
+    }
+    if (lastResult == "failure") {
+        return "The worker failed instead of retrying; include the support bundle with the last error class."
+    }
+    if (row.workInfoStatus.contains("ENQUEUED")) {
+        return "Waiting for the next run window or constraints such as network, battery, charging, idle, or unmetered network."
+    }
+    return null
+}
+
+private fun BackgroundWorkStatusRow.usesNetwork(): Boolean = uniqueWorkName in NETWORK_WORK_NAMES
+
+private fun BackgroundWorkStatusRow.requiresUnmeteredNetwork(): Boolean =
+    uniqueWorkName == AURA_ORIGINALS_UNIQUE_WORK_NAME ||
+        lastDeferralReason.orEmpty().contains("unmetered", ignoreCase = true) ||
+        lastDeferralReason.orEmpty().contains("Wi-Fi", ignoreCase = true)
+
+private const val AURA_ORIGINALS_UNIQUE_WORK_NAME = "aura_originals_download"
+
+private val NETWORK_WORK_NAMES = setOf(
+    AutoWallpaperWorker.WORK_NAME,
+    DailyWallpaperWorker.WORK_NAME,
+    WeatherUpdateWorker.WORK_NAME,
+    AURA_ORIGINALS_UNIQUE_WORK_NAME,
+    "rotation_trigger_oneshot",
+)

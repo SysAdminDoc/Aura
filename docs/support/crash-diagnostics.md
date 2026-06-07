@@ -30,9 +30,11 @@ That dialog reads WorkManager unique-work `WorkInfo` state counts plus
 `ConnectivityManager` metered/Data Saver status, and now includes persisted
 last result, success/failure timestamps, error class, and deferral reason from
 worker execution. The copied support bundle includes the same live background
-work receipt snapshot when it can be read locally. The remaining diagnostics
-gap is sharper platform-specific deferral copy for cases such as quota
-downgrade, low battery, missing permissions, and constraint delays.
+work receipt snapshot when it can be read locally. Each row also includes an
+action hint that translates Data Saver, metered-network, source, hash,
+permission, and retry/backoff receipts into the next user or support step. The
+remaining diagnostics gap is direct OS scheduler evidence for cases such as
+quota downgrade, low battery, and Doze/App Standby maintenance-window delays.
 
 ## Redaction
 

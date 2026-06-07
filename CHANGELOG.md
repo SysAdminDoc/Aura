@@ -3,6 +3,10 @@
 All notable changes to Aura will be documented in this file.
 
 ## Unreleased
+- **Background work action hints (Cycle 159)**: added Settings and support
+  bundle action hints for Data Saver restrictions, metered waits, source
+  failures, network/provider errors, Aura Originals validation retries,
+  permission cues, apply failures, and WorkManager retry/failure states.
 - **Background work support bundle live receipts (Cycle 158)**: merged live
   WorkManager, Data Saver, and persisted worker receipt details into the copied
   crash/support diagnostics bundle.

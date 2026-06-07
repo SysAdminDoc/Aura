@@ -2835,6 +2835,17 @@ private fun BackgroundWorkDiagnosticRow(row: BackgroundWorkStatusRow) {
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
+            row.actionHint?.let { hint ->
+                Text(
+                    "Action: $hint",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = if (row.lastResult == "success") {
+                        MaterialTheme.colorScheme.onSurfaceVariant
+                    } else {
+                        MaterialTheme.colorScheme.error
+                    },
+                )
+            }
             row.readError?.let { error ->
                 Text(
                     "Read error: $error",
