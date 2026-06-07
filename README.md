@@ -33,6 +33,12 @@ cd Aura
 
 Open in Android Studio and run. Core browsing works out of the box; optional provider keys can be added later in Settings or `local.properties`.
 
+## Privacy
+
+Aura has no ads, no subscription, and no cross-app tracking. The public privacy
+policy is tracked at [docs/privacy/privacy-policy.md](https://github.com/SysAdminDoc/Aura/blob/main/docs/privacy/privacy-policy.md);
+the same link is available in Settings > About > Privacy policy.
+
 ## Features
 
 | Feature | Description |

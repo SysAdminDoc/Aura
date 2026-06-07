@@ -1,0 +1,35 @@
+{
+  "schemaVersion": 1,
+  "policyKind": "privacyPolicyLink",
+  "publicUrl": "https://github.com/SysAdminDoc/Aura/blob/main/docs/privacy/privacy-policy.md",
+  "policyDoc": "docs/privacy/privacy-policy.md",
+  "settingsScreen": "app/src/main/java/com/freevibe/ui/screens/settings/SettingsScreen.kt",
+  "fastlaneFullDescription": "fastlane/metadata/android/en-US/full_description.txt",
+  "readme": "README.md",
+  "verifyWorkflow": ".github/workflows/verify.yml",
+  "releaseWorkflow": ".github/workflows/release.yml",
+  "releaseDryRunDoc": "docs/distribution/release-dry-run.md",
+  "requiredPolicyHeadings": [
+    "## Account Model",
+    "## Data Stored On The Device",
+    "## Community Data",
+    "## Account Deletion",
+    "## Diagnostics",
+    "## Third-Party Services",
+    "## Contact"
+  ],
+  "requiredPolicyTerms": [
+    "No ads",
+    "cross-app tracking",
+    "API keys entered by the user",
+    "anonymous Firebase identity",
+    "Generated wallpaper prompts",
+    "Stability",
+    "not upload itself automatically",
+    "hosted web deletion request URL"
+  ],
+  "sourceUrls": [
+    "https://support.google.com/googleplay/android-developer/answer/10144311",
+    "https://support.google.com/googleplay/android-developer/answer/10787469"
+  ]
+}

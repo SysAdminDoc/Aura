@@ -1,8 +1,8 @@
 # Autonomous Loop State
 
 **Assigned project:** `C:\Users\--\repos\Aura`
-**Current pass:** 2026-06-07 Cycle 139 on-device wallpaper decision gate
-**Last commit before pass:** `158d0db` (`ci(store): check listing metadata preflight`)
+**Current pass:** 2026-06-07 Cycle 140 privacy policy link gate
+**Last commit before pass:** `813e243` (`ci(ai): gate on-device wallpaper generation`)
 
 ## 2026-06-05 Result
 
@@ -1998,11 +1998,27 @@
 - Cycle 139 verification: on-device decision policy check and backend tool
   tests passed.
 
+## Cycle 140 Result - 2026-06-07
+
+- Added Settings > About > Privacy policy, opening the public policy URL tracked
+  in `docs/privacy/privacy-policy.md`.
+- Added `docs/privacy/privacy-policy-link.json` and
+  `tools/privacy_policy_link_check.py` to verify the public privacy-policy URL
+  remains HTTPS and appears in Settings, README, Fastlane metadata, verify and
+  release workflows, and release dry-run docs.
+- Wired the privacy-link gate into verify and release workflows before Android
+  setup or signed APK assembly.
+- Updated release workflow security policy, release signing docs, release
+  dry-run docs, supply-chain docs, README, privacy policy wording, research,
+  roadmap, changelog, completion, and loop-state docs.
+- Cycle 140 verification: privacy-link policy check, backend tool tests, and a
+  focused Settings Gradle unit-test compile pass succeeded.
+
 ## Next Cycle
 
-Continue this same assigned project, Aura. Start Cycle 140 from the
+Continue this same assigned project, Aura. Start Cycle 141 from the
 `ROADMAP.md` Continuation State and
-`docs/research/cycle-139-2026-06-07.md`. The account
+`docs/research/cycle-140-2026-06-07.md`. The account
 deletion dry-run planner, read-only Settings identity surface, redacted
 shareable request draft, request-code lookup tool, review receipt gate, offline
 apply simulator, private executor package builder, and guarded REST executor
@@ -2111,7 +2127,8 @@ copy; Cycle 137 removed prompt-derived names/tags from generated favorites and
 added generated-file deletion on favorite removal; Cycle 138 added checked
 Fastlane store metadata text/version/privacy preflight and fixed the current
 short-description/privacy URL drift; Cycle 139 added a checked on-device
-wallpaper generation decision packet and production-source scanner.
+wallpaper generation decision packet and production-source scanner; Cycle 140
+added a checked public privacy-policy link gate and Settings About entry.
 Actual live callable invocation evidence, a live hosted HTTPS web deletion URL,
 direct RTDB rule tightening, App Check console evidence, production-project
 dry-run evidence, and owner/admin GitHub repository security-settings evidence
@@ -2124,8 +2141,9 @@ owner access is confirmed, collect owner/admin GitHub security settings
 evidence and generate the redacted receipt when access is available, or
 continue with signed release dry-run evidence capture on a suitable runner,
 the screenshot and feature-graphic pipeline for the remaining store metadata
-asset gap, or the next checkable backend, deploy, security, support, policy, or
-rules hardening artifact if owner-gated evidence is still unavailable.
+asset gap, Data safety matrix enforcement, or the next checkable backend,
+deploy, security, support, policy, or rules hardening artifact if owner-gated
+evidence is still unavailable.
 Commit and push completed work when the active project contract allows it.
 
 ## Previous Cycle Prompt

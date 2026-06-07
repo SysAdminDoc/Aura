@@ -68,6 +68,15 @@ import java.text.DateFormat
 import java.util.Date
 import java.util.Locale
 
+private const val AURA_SOURCE_URL = "https://github.com/SysAdminDoc/Aura"
+private const val AURA_PRIVACY_POLICY_URL = "https://github.com/SysAdminDoc/Aura/blob/main/docs/privacy/privacy-policy.md"
+
+private fun openExternalUrl(context: Context, url: String) {
+    try {
+        context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)))
+    } catch (_: Exception) {}
+}
+
 @Composable
 private fun ProviderApiKeyDialog(
     title: String,
@@ -1567,11 +1576,13 @@ fun SettingsScreen(
                 icon = Icons.Default.Code,
                 title = "Source code",
                 subtitle = "Browse the project on GitHub",
-                onClick = {
-                    try {
-                        context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/SysAdminDoc/Aura")))
-                    } catch (_: Exception) {}
-                },
+                onClick = { openExternalUrl(context, AURA_SOURCE_URL) },
+            )
+            SettingsItem(
+                icon = Icons.Default.Security,
+                title = "Privacy policy",
+                subtitle = "Review data use, diagnostics, community deletion, and generated wallpaper handling",
+                onClick = { openExternalUrl(context, AURA_PRIVACY_POLICY_URL) },
             )
             SettingsItem(
                 icon = Icons.Default.Description,

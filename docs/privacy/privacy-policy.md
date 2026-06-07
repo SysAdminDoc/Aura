@@ -3,7 +3,8 @@
 Aura is an open-source Android personalization app for wallpapers, video
 wallpapers, ringtones, sounds, and optional community uploads.
 
-Aura does not include ads, sell personal data, or use cross-app tracking.
+Aura has no ads, does not sell personal data, and does not use cross-app
+tracking.
 
 ## Account Model
 

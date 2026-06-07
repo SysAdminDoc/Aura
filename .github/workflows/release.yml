@@ -100,6 +100,9 @@ jobs:
       - name: Store metadata preflight
         run: python3 tools/store_metadata_preflight.py --repo-root .
 
+      - name: Privacy policy link gate
+        run: python3 tools/privacy_policy_link_check.py --policy docs/privacy/privacy-policy-link.json --repo-root .
+
       - name: Build signed release APK
         run: ./gradlew :app:assembleRelease --stacktrace --no-daemon
 

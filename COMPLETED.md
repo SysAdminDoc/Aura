@@ -622,6 +622,10 @@ next pass can resume quickly.
   generated wallpaper privacy note that keep local generation on hold until
   device, model-delivery, battery/thermal, licensing, moderation, fallback, and
   FOSS-channel evidence is complete.
+- Completed Cycle 140 public privacy policy link gate: added Settings > About >
+  Privacy policy, a checked privacy-policy link contract, verify/release
+  workflow enforcement, README/release doc alignment, and focused backend tests
+  so the public policy URL cannot drift from the app or release preflight.
 
 ## 2026-06-05
 

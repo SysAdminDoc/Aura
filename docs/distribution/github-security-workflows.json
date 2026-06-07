@@ -54,6 +54,7 @@
         "python3 tools/provider_credential_apk_scan.py",
         "python3 tools/cleartext_release_check.py",
         "python3 tools/store_metadata_preflight.py",
+        "python3 tools/privacy_policy_link_check.py",
         "python3 tools/dependency_notice_lock.py --mode check",
         "python3 tools/native_compliance_inventory.py --mode check-lock",
         "python3 tools/dependency_overlay_check.py --overlay",
