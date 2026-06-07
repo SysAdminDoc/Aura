@@ -414,6 +414,43 @@ class WallpapersViewModelTest {
     }
 
     @Test
+    fun `reportWallpaper submits generated content report when community source is disabled`() = runTest(dispatcher) {
+        val wallpaperRepo = mockk<WallpaperRepository>()
+        val redditRepo = mockk<RedditRepository>()
+        val reportRepo = mockk<CommunityReportRepository>()
+        stubCommonDependencies(wallpaperRepo, redditRepo)
+        coEvery { reportRepo.submitReport(any()) } returns Result.success("report-1")
+
+        val viewModel = createViewModel(
+            wallpaperRepo = wallpaperRepo,
+            redditRepo = redditRepo,
+            reportRepoOverride = reportRepo,
+            communityProviderEnabled = false,
+        )
+        val wallpaper = wallpaper(id = "generated-1", source = ContentSource.AI_GENERATED, color = "#223344")
+            .copy(fullUrl = "file:///cache/generated-1.png")
+
+        viewModel.reportWallpaper(wallpaper, CommunityReportReason.OFFENSIVE, "offensive output")
+        advanceUntilIdle()
+
+        assertEquals("Report submitted", viewModel.state.value.applySuccess)
+        coVerify {
+            reportRepo.submitReport(
+                match {
+                    it.contentId == wallpaper.stableKey() &&
+                        it.contentType == "WALLPAPER" &&
+                        it.contentSource == ContentSource.AI_GENERATED &&
+                        it.reason == CommunityReportReason.OFFENSIVE &&
+                        it.sourceUrl == "" &&
+                        it.license == "Generated wallpaper" &&
+                        it.uploaderName == "Aura generated wallpaper" &&
+                        it.uploaderUid == ""
+                },
+            )
+        }
+    }
+
+    @Test
     fun `blockCommunityWallpaper writes block and removes matching uploader wallpapers`() = runTest(dispatcher) {
         val wallpaperRepo = mockk<WallpaperRepository>()
         val redditRepo = mockk<RedditRepository>()

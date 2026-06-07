@@ -8,8 +8,26 @@ enum class CommunityReportReason(val storageValue: String, val label: String) {
     SOURCE_REMOVED("SOURCE_REMOVED", "Source removed"),
     SAFETY("SAFETY", "Safety issue"),
     SPAM("SPAM", "Spam"),
+    OFFENSIVE("OFFENSIVE", "Offensive"),
+    UNSAFE("UNSAFE", "Unsafe"),
+    DECEPTIVE("DECEPTIVE", "Deceptive"),
     OTHER("OTHER", "Other"),
 }
+
+val COMMUNITY_REPORT_REASONS = listOf(
+    CommunityReportReason.RIGHTS,
+    CommunityReportReason.SOURCE_REMOVED,
+    CommunityReportReason.SAFETY,
+    CommunityReportReason.SPAM,
+    CommunityReportReason.OTHER,
+)
+
+val GENERATED_CONTENT_REPORT_REASONS = listOf(
+    CommunityReportReason.OFFENSIVE,
+    CommunityReportReason.UNSAFE,
+    CommunityReportReason.DECEPTIVE,
+    CommunityReportReason.OTHER,
+)
 
 enum class CommunityReportResolutionStatus(val storageValue: String) {
     OPEN("OPEN"),

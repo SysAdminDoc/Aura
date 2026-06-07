@@ -594,6 +594,12 @@ next pass can resume quickly.
   key, and disclosure acceptance are present, added the in-flow disclosure
   dialog plus Settings review/reset entry, and documented prompt sharing,
   provider key/credit use, and local generated-image storage.
+- Completed Cycle 134 generated-content report path: added generated wallpaper
+  report actions for fresh results and saved generated favorites, introduced
+  Offensive/Unsafe/Deceptive/Other generated-content reasons, extended the
+  callable report reason allowlist, allowed AI-generated reports independent of
+  the Community source switch, and documented retention, moderation response,
+  and provider-key/local-path exclusions.
 
 ## 2026-06-05
 

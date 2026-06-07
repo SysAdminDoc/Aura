@@ -7,6 +7,19 @@ import org.junit.Test
 class CommunityReportTest {
 
     @Test
+    fun `generated content reports expose required policy categories`() {
+        assertEquals(
+            listOf(
+                CommunityReportReason.OFFENSIVE,
+                CommunityReportReason.UNSAFE,
+                CommunityReportReason.DECEPTIVE,
+                CommunityReportReason.OTHER,
+            ),
+            GENERATED_CONTENT_REPORT_REASONS,
+        )
+    }
+
+    @Test
     fun `buildCommunityReportPayload normalizes report metadata`() {
         val payload = buildCommunityReportPayload(
             input = CommunityReportInput(

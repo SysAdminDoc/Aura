@@ -1892,11 +1892,35 @@
   provider credential release guard with a blank release-style local properties
   fixture, cleartext guard, and endpoint inventory scan passed.
 
+## Cycle 134 Result - 2026-06-07
+
+- Added generated-content report reasons for Offensive, Unsafe, Deceptive, and
+  Other generated wallpaper reports.
+- Exposed report actions for freshly generated wallpaper results and saved
+  generated wallpaper favorites.
+- Routed generated reports through the existing private report queue without
+  including Stability keys, other provider keys, local generated-image file
+  paths, or prompt text unless the user writes prompt text in the note.
+- Allowed generated wallpaper reports independently of the Community source
+  switch while preserving the existing Community switch guard for non-generated
+  provider/community reports.
+- Extended the Functions `submitCommunityReport` reason allowlist and focused
+  backend test coverage for generated-content reports.
+- Updated privacy, support, research, roadmap, changelog, completion, and
+  loop-state docs.
+- Cycle 134 verification: focused Android CommunityReport, AI wallpaper request
+  gate/report payload, and WallpapersViewModel unit tests; Functions build and
+  tests; backend tool tests; GitHub Actions allowlist; workflow permissions
+  policy; workflow secret policy; GitHub security workflow policy; Dependabot
+  policy; Gradle wrapper policy; provider credential release guard with a blank
+  release-style local properties fixture; provider credential storage policy;
+  cleartext guard; and endpoint inventory scan passed.
+
 ## Next Cycle
 
-Continue this same assigned project, Aura. Start Cycle 134 from the
+Continue this same assigned project, Aura. Start Cycle 135 from the
 `ROADMAP.md` Continuation State and
-`docs/research/cycle-133-2026-06-07.md`. The account
+`docs/research/cycle-134-2026-06-07.md`. The account
 deletion dry-run planner, read-only Settings identity surface, redacted
 shareable request draft, request-code lookup tool, review receipt gate, offline
 apply simulator, private executor package builder, and guarded REST executor
@@ -1996,7 +2020,8 @@ added the missing Freesound Settings clear control; Cycle 131 added a
 release-stage provider credential APK scan after signed APK packaging; Cycle
 132 added explicit provider key Clear actions and storage-policy coverage;
 Cycle 133 added a persisted generated wallpaper disclosure gate and Settings
-review/reset path before Stability requests.
+review/reset path before Stability requests; Cycle 134 added generated-content
+report actions and callable reason support.
 Actual live callable invocation evidence, a live hosted HTTPS web deletion URL,
 direct RTDB rule tightening, App Check console evidence, production-project
 dry-run evidence, and owner/admin GitHub repository security-settings evidence
@@ -2008,9 +2033,9 @@ deploy evidence, run a real production-project Firebase executor dry-run after
 owner access is confirmed, collect owner/admin GitHub security settings
 evidence and generate the redacted receipt when access is available, or
 continue with signed release dry-run evidence capture on a suitable runner,
-the AI-generated content report/flag path, or the next checkable backend,
-deploy, security, support, policy, or rules hardening artifact if owner-gated
-evidence is still unavailable.
+BYO Stability key hardening, or the next checkable backend, deploy, security,
+support, policy, or rules hardening artifact if owner-gated evidence is still
+unavailable.
 Commit and push completed work when the active project contract allows it.
 
 ## Previous Cycle Prompt

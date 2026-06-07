@@ -2,12 +2,16 @@ package com.freevibe.ui.screens.aigenerate
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.freevibe.data.model.CommunityReportInput
+import com.freevibe.data.model.CommunityReportReason
 import com.freevibe.data.model.ContentSource
 import com.freevibe.data.model.FavoriteEntity
 import com.freevibe.data.model.Wallpaper
 import com.freevibe.data.model.WallpaperTarget
+import com.freevibe.data.model.stableKey
 import com.freevibe.data.repository.AiStyle
 import com.freevibe.data.repository.AiWallpaperRepository
+import com.freevibe.data.repository.CommunityReportRepository
 import com.freevibe.data.repository.FavoritesRepository
 import com.freevibe.data.local.PreferencesManager
 import com.freevibe.service.SourceMetrics
@@ -41,6 +45,21 @@ fun generatedWallpaperRequestError(
     else -> null
 }
 
+fun generatedWallpaperReportInput(
+    wallpaper: Wallpaper,
+    reason: CommunityReportReason,
+    note: String = "",
+): CommunityReportInput = CommunityReportInput(
+    contentId = wallpaper.stableKey(),
+    contentType = "WALLPAPER",
+    contentSource = ContentSource.AI_GENERATED,
+    reason = reason,
+    note = note,
+    sourceUrl = "",
+    license = "Generated wallpaper",
+    uploaderName = "Aura generated wallpaper",
+)
+
 data class AiWallpaperUiState(
     val prompt: String = "",
     val selectedStyle: AiStyle = AiStyle.PHOTOGRAPHIC,
@@ -56,6 +75,7 @@ data class AiWallpaperUiState(
 class AiWallpaperViewModel @Inject constructor(
     private val repo: AiWallpaperRepository,
     private val favoritesRepo: FavoritesRepository,
+    private val reportRepo: CommunityReportRepository,
     private val wallpaperApplier: WallpaperApplier,
     private val prefs: PreferencesManager,
     private val sourceMetrics: SourceMetrics,
@@ -204,6 +224,18 @@ class AiWallpaperViewModel @Inject constructor(
                 )
             )
             _state.update { it.copy(isSaved = true) }
+        }
+    }
+
+    fun reportGeneratedWallpaper(wallpaper: Wallpaper, reason: CommunityReportReason, note: String = "") {
+        viewModelScope.launch {
+            reportRepo.submitReport(generatedWallpaperReportInput(wallpaper, reason, note))
+                .onSuccess {
+                    _state.update { it.copy(applySuccess = "Report submitted") }
+                }
+                .onFailure { error ->
+                    _state.update { it.copy(error = "Report failed: ${error.message ?: "try again"}") }
+                }
         }
     }
 }

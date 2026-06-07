@@ -18,6 +18,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.freevibe.data.model.COMMUNITY_REPORT_REASONS
 import com.freevibe.data.model.CommunityReportReason
 import com.freevibe.ui.policy.COMMUNITY_REPORT_TAKEDOWN_COPY
 
@@ -28,8 +29,11 @@ fun CommunityReportDialog(
     onDismiss: () -> Unit,
     onSubmit: (CommunityReportReason, String) -> Unit,
     modifier: Modifier = Modifier,
+    reasons: List<CommunityReportReason> = COMMUNITY_REPORT_REASONS,
+    body: String = COMMUNITY_REPORT_TAKEDOWN_COPY,
 ) {
-    var selectedReason by remember { mutableStateOf(CommunityReportReason.RIGHTS) }
+    val initialReason = reasons.firstOrNull() ?: CommunityReportReason.OTHER
+    var selectedReason by remember(reasons) { mutableStateOf(initialReason) }
     var note by remember { mutableStateOf("") }
 
     AlertDialog(
@@ -42,7 +46,7 @@ fun CommunityReportDialog(
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                     verticalArrangement = Arrangement.spacedBy(8.dp),
                 ) {
-                    CommunityReportReason.entries.forEach { reason ->
+                    reasons.forEach { reason ->
                         FilterChip(
                             selected = selectedReason == reason,
                             onClick = { selectedReason = reason },
@@ -50,11 +54,13 @@ fun CommunityReportDialog(
                         )
                     }
                 }
-                Text(
-                    COMMUNITY_REPORT_TAKEDOWN_COPY,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
+                if (body.isNotBlank()) {
+                    Text(
+                        body,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
                 OutlinedTextField(
                     value = note,
                     onValueChange = { note = it.take(500) },

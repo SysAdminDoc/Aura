@@ -26,7 +26,16 @@ const REPORT_KEY_REGEX = /[.#$[\]/]/g;
 const WHITESPACE_REGEX = /\s+/g;
 const CONTROL_REGEX = /[\u0000-\u001F\u007F]/g;
 const CONTENT_TYPE_REGEX = /^[A-Z_]{3,40}$/;
-const VALID_REASONS = new Set(["RIGHTS", "SOURCE_REMOVED", "SAFETY", "SPAM", "OTHER"]);
+const VALID_REASONS = new Set([
+  "RIGHTS",
+  "SOURCE_REMOVED",
+  "SAFETY",
+  "SPAM",
+  "OFFENSIVE",
+  "UNSAFE",
+  "DECEPTIVE",
+  "OTHER",
+]);
 const VALID_CONTENT_SOURCES = new Set([
   "WALLHAVEN",
   "PICSUM",

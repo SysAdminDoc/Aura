@@ -34,13 +34,34 @@ wallpaper cache. Users can save generated results to Favorites, apply them as
 wallpapers, or delete app data through Android system settings. Aura prunes the
 generated wallpaper cache to the most recent local outputs.
 
+## Generated Content Reports
+
+Generated wallpaper results and saved generated wallpaper favorites expose a
+Report action. Report categories are Offensive, Unsafe, Deceptive, and Other.
+
+Reports use Aura's private Firebase-backed report queue. A generated-content
+report includes the generated wallpaper content ID, content type, source,
+selected reason, optional user note, and a generic generated-wallpaper label.
+Reports do not include the user's Stability key, provider keys for other
+services, prompt text unless the user writes it in the note, or local file
+paths for generated images.
+
+Report records are private to admins and retained for moderation and release
+review. Admins can dismiss, hide, or restore reports through the existing
+Community reports review queue. Generated-content reports do not create public
+community upload metadata and do not expose reporter identity publicly.
+
 ## Release Checklist
 
 - Confirm the generated wallpaper disclosure appears before the first request
   on a fresh install.
 - Confirm canceling the disclosure does not call Stability.
 - Confirm Settings can review and reset the disclosure acceptance.
+- Confirm generated wallpaper results and saved generated wallpaper favorites
+  expose the generated-content report action.
+- Confirm generated-content reports cover Offensive, Unsafe, Deceptive, and
+  Other reasons.
 - Confirm diagnostics and source metrics still redact provider keys and request
   details before sharing.
-- Confirm generated-content reporting remains tracked separately until the
-  in-app generated-content report path ships.
+- Confirm generated-content reports omit Stability keys, local file paths, and
+  prompt text unless the user enters prompt text in the report note.

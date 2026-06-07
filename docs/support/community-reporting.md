@@ -2,14 +2,17 @@
 
 Cycles 51 through 54 add the first private report queue for Aura community and
 mirrored provider content. Cycle 63 defines the callable quota contract that
-will move report submission behind App-Checked backend enforcement, and Cycle
-94 adds the first handler-backed `submitCommunityReport` Functions
-implementation. Reports are separate from local hide/downvote behavior and feed
-admin hide/restore actions through the existing moderation hide list.
+will move report submission behind App-Checked backend enforcement, Cycle 94
+adds the first handler-backed `submitCommunityReport` Functions implementation,
+and Cycle 134 extends the same private queue to generated wallpaper reports.
+Reports are separate from local hide/downvote behavior and feed admin
+hide/restore actions through the existing moderation hide list.
 
 ## Report Reasons
 
 Users can report content for:
+
+Community and mirrored/provider content:
 
 - Rights or license
 - Source removed
@@ -17,8 +20,17 @@ Users can report content for:
 - Spam
 - Other
 
+Generated wallpapers:
+
+- Offensive
+- Unsafe
+- Deceptive
+- Other
+
 Reports store the content key, content type, source, reason, optional note,
 source URL, license, uploader label, reporter UID, timestamp, and status.
+Generated-content reports store an empty source URL, a generic generated label,
+and no provider key or local file path.
 
 ## Storage Paths
 
@@ -45,13 +57,21 @@ Reporter UIDs are not public catalog data.
 
 - Sound and wallpaper detail screens expose a report action for remote/provider
   content.
+- Generated wallpaper results and saved generated wallpaper favorites expose a
+  report action with Offensive, Unsafe, Deceptive, and Other reasons.
 - The report dialog identifies `Rights or license` as the takedown request
   route, explains that reports are private to admins, and tells users that
   confirmed rights reports can hide or delete community uploads.
-- Report submission requires the Community source switch to be enabled because
-  the queue uses the same Firebase-backed community surface.
+- Community/provider report submission requires the Community source switch to
+  be enabled because those reports use the same Firebase-backed community
+  surface. Generated-content reports remain available independently so users can
+  flag generated output without enabling the community feed.
 - ViewModels submit the current source, license, uploader, and HTTPS source URL
   context with each report.
+- Generated-content reports submit the generated wallpaper identity, source,
+  reason, optional note, and generic generated-wallpaper metadata; Stability
+  keys, local generated-image file paths, and prompt text are omitted unless the
+  user writes prompt text in the note.
 - Custom-claim admins see Settings > Community reports, which lists open
   reports with reason, content key, source, license, uploader, source URL, and
   reporter suffix context.
@@ -108,5 +128,7 @@ Reporter UIDs are not public catalog data.
 - Cycle 62 adds closed-report status filters for Hidden, Dismissed, and Restored
   review queues. Cycle 63 adds the callable quota enforcement contract for the
   backend report submission migration. Cycle 68 reserves the private block-user
-  data contract. Cycle 94 adds the handler-backed report callable; UI migration
-  and emulator-backed callable coverage remain open.
+  data contract. Cycle 94 adds the handler-backed report callable. Cycle 134
+  adds generated-content UI/report reason support and extends the callable
+  reason allowlist. Emulator-backed callable coverage and owner-approved deploy
+  evidence remain open.

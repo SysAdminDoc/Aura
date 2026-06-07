@@ -81,6 +81,10 @@ Generated wallpaper prompts are sent to Stability only after the user reviews
 and accepts the in-app disclosure. The generated wallpaper privacy runbook is
 tracked in [`docs/privacy/ai-generation.md`](ai-generation.md).
 
+Generated wallpaper reports use Aura's private Firebase-backed report queue and
+do not include Stability keys, other provider keys, local generated-image file
+paths, or prompt text unless the user writes prompt text in the report note.
+
 ## Contact
 
 Use the project support channel or issue tracker for questions. Do not publish

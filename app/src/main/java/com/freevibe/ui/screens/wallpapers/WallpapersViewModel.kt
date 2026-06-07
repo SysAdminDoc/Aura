@@ -615,7 +615,8 @@ class WallpapersViewModel @Inject constructor(
     }
 
     fun reportWallpaper(wallpaper: Wallpaper, reason: CommunityReportReason, note: String = "") {
-        if (!communityProviderEnabled.value) {
+        val isGeneratedWallpaper = wallpaper.source == ContentSource.AI_GENERATED
+        if (!isGeneratedWallpaper && !communityProviderEnabled.value) {
             sourceMetrics.recordDisabled(SOURCE_COMMUNITY)
             _state.update { it.copy(error = communityDisabledMessage()) }
             return
@@ -628,10 +629,10 @@ class WallpapersViewModel @Inject constructor(
                     contentSource = wallpaper.source,
                     reason = reason,
                     note = note,
-                    sourceUrl = reportSourceUrl(wallpaper.sourcePageUrl, wallpaper.fullUrl),
-                    license = wallpaper.license,
-                    uploaderName = wallpaper.uploaderName,
-                    uploaderUid = wallpaper.communityUploaderId,
+                    sourceUrl = if (isGeneratedWallpaper) "" else reportSourceUrl(wallpaper.sourcePageUrl, wallpaper.fullUrl),
+                    license = if (isGeneratedWallpaper) "Generated wallpaper" else wallpaper.license,
+                    uploaderName = if (isGeneratedWallpaper) "Aura generated wallpaper" else wallpaper.uploaderName,
+                    uploaderUid = if (isGeneratedWallpaper) "" else wallpaper.communityUploaderId,
                 ),
             ).onSuccess {
                 _state.update { it.copy(applySuccess = "Report submitted") }

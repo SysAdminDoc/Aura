@@ -32,6 +32,7 @@ import androidx.compose.material.icons.filled.BrokenImage
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.Key
+import androidx.compose.material.icons.filled.Report
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material.icons.filled.Wallpaper
@@ -73,8 +74,10 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.compose.AsyncImagePainter
 import coil.compose.SubcomposeAsyncImage
 import coil.compose.SubcomposeAsyncImageContent
+import com.freevibe.data.model.GENERATED_CONTENT_REPORT_REASONS
 import com.freevibe.data.model.WallpaperTarget
 import com.freevibe.data.repository.AiStyle
+import com.freevibe.ui.components.CommunityReportDialog
 import com.freevibe.ui.components.GlassCard
 import com.freevibe.ui.components.HighlightPill
 import com.freevibe.ui.components.ShimmerBox
@@ -151,14 +154,20 @@ fun AiWallpaperScreen(
     var showTargetMenu by remember { mutableStateOf(false) }
     var showDisclosureDialog by remember { mutableStateOf(false) }
     var generateAfterDisclosure by remember { mutableStateOf(false) }
+    var showGeneratedReportDialog by remember { mutableStateOf(false) }
 
     val snackbarHostState = remember { SnackbarHostState() }
+
+    LaunchedEffect(state.result?.id) {
+        showGeneratedReportDialog = false
+    }
 
     LaunchedEffect(apiKey, generatedContentProviderEnabled) {
         if (!generatedContentProviderEnabled) {
             showApiKeyField = false
             showDisclosureDialog = false
             generateAfterDisclosure = false
+            showGeneratedReportDialog = false
         } else if (apiKey.isBlank()) {
             showApiKeyField = true
         }
@@ -579,6 +588,32 @@ fun AiWallpaperScreen(
                                     )
                                 }
                             }
+                        }
+
+                        OutlinedButton(
+                            onClick = { showGeneratedReportDialog = true },
+                            modifier = Modifier.fillMaxWidth(),
+                            enabled = !state.isApplying,
+                        ) {
+                            Icon(
+                                Icons.Default.Report,
+                                contentDescription = null,
+                                modifier = Modifier.size(16.dp),
+                            )
+                            Spacer(Modifier.width(6.dp))
+                            Text("Report generated content")
+                        }
+
+                        if (showGeneratedReportDialog) {
+                            CommunityReportDialog(
+                                title = "Report generated wallpaper",
+                                onDismiss = { showGeneratedReportDialog = false },
+                                onSubmit = { reason, note ->
+                                    viewModel.reportGeneratedWallpaper(wallpaper, reason, note)
+                                },
+                                reasons = GENERATED_CONTENT_REPORT_REASONS,
+                                body = "Reports are sent for generated-content review. Stability keys and local file paths are not included.",
+                            )
                         }
                     }
                 }

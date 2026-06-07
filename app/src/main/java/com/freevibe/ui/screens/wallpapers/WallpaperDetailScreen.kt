@@ -34,7 +34,9 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.freevibe.data.model.COMMUNITY_REPORT_REASONS
 import com.freevibe.data.model.ContentSource
+import com.freevibe.data.model.GENERATED_CONTENT_REPORT_REASONS
 import com.freevibe.data.model.Wallpaper
 import com.freevibe.data.model.WallpaperCollectionEntity
 import com.freevibe.data.model.WallpaperTarget
@@ -47,6 +49,7 @@ import com.freevibe.ui.components.GlassCard
 import com.freevibe.ui.components.HighlightPill
 import com.freevibe.ui.components.SourceBadge
 import com.freevibe.ui.policy.CommunityUploadPolicyKind
+import com.freevibe.ui.policy.COMMUNITY_REPORT_TAKEDOWN_COPY
 import com.freevibe.ui.policy.communityBlockConfirmationCopy
 import com.freevibe.ui.policy.communityOwnerDeleteConfirmationCopy
 import com.freevibe.ui.launchLiveWallpaperPicker
@@ -224,6 +227,7 @@ fun WallpaperDetailScreen(
     var showBlockCreatorDialog by remember(wp.stableKey()) { mutableStateOf(false) }
     var showDeleteUploadDialog by remember(wp.stableKey()) { mutableStateOf(false) }
     var showDetailsPanel by remember { mutableStateOf(false) }
+    val isGeneratedWallpaper = wp.source == ContentSource.AI_GENERATED
     val canReportWallpaper = wp.source != ContentSource.LOCAL
     val canDeleteUpload by produceState(false, wp.stableKey(), communityProviderEnabled) {
         value = if (communityProviderEnabled) viewModel.canDeleteCommunityWallpaper(wp) else false
@@ -723,9 +727,15 @@ fun WallpaperDetailScreen(
 
             if (showReportDialog) {
                 CommunityReportDialog(
-                    title = "Report wallpaper",
+                    title = if (isGeneratedWallpaper) "Report generated wallpaper" else "Report wallpaper",
                     onDismiss = { showReportDialog = false },
                     onSubmit = { reason, note -> viewModel.reportWallpaper(wp, reason, note) },
+                    reasons = if (isGeneratedWallpaper) GENERATED_CONTENT_REPORT_REASONS else COMMUNITY_REPORT_REASONS,
+                    body = if (isGeneratedWallpaper) {
+                        "Reports are sent for generated-content review. Provider keys and local file paths are not included."
+                    } else {
+                        COMMUNITY_REPORT_TAKEDOWN_COPY
+                    },
                 )
             }
 

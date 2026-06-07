@@ -102,6 +102,36 @@ test("accepted report writes payload, quota, and dedupe marker", async () => {
   );
 });
 
+test("accepted generated content report writes generated reason", async () => {
+  const backend = new FakeReportBackend();
+  const result = await submitCommunityReportHandler(
+    validRequest({
+      contentId: "WALLPAPER::AI_GENERATED::generated-1",
+      contentType: "wallpaper",
+      contentSource: "ai_generated",
+      reason: "offensive",
+      sourceUrl: "",
+      license: "Generated wallpaper",
+      uploaderName: "Aura generated wallpaper",
+      uploaderUid: "",
+    }),
+    backend,
+  );
+
+  assert.equal(result.status, "accepted");
+  const report = backend.reports.get("reportA");
+  assert.equal(report.contentSource, "AI_GENERATED");
+  assert.equal(report.reason, "OFFENSIVE");
+  assert.equal(report.sourceUrl, "");
+  assert.equal(report.license, "Generated wallpaper");
+  assert.equal(report.uploaderName, "Aura generated wallpaper");
+  assert.equal(report.uploaderUid, "");
+  assert.equal(
+    backend.dedupe.get("reporter1/reports/WALLPAPER::AI_GENERATED::generated-1_OFFENSIVE").targetPath,
+    "/community_reports/reportA",
+  );
+});
+
 test("active dedupe marker returns duplicate without writing a second report", async () => {
   const backend = new FakeReportBackend();
   backend.dedupe.set(
