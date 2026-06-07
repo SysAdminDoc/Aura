@@ -112,7 +112,9 @@ class SourceMetrics @Inject constructor() {
         e.total.incrementAndGet()
         e.failure.incrementAndGet()
         e.lastErrorClass = error.javaClass.simpleName
-        e.lastErrorMessage = error.message?.take(200)
+        e.lastErrorMessage = error.message
+            ?.let(RequestRedactor::redact)
+            ?.take(200)
         e.lastFailureAtMs = System.currentTimeMillis()
         _version.update { it + 1 }
     }

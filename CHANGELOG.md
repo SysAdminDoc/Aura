@@ -3,6 +3,7 @@
 All notable changes to Aura will be documented in this file.
 
 ## Unreleased
+- **Request redaction contract (Cycle 127)**: added a shared request redactor for provider query/header/local-property credentials, reused it in crash diagnostics, and redacted source-metrics failure details before Settings displays them.
 - **Diagnostics redaction fixtures (Cycle 126)**: added provider-specific crash diagnostics fixtures for Wallhaven, Pixabay, Freesound, SoundCloud, Pexels, Settings, `local.properties`, file URIs, and app-private paths, and tightened assignment redaction for dotted provider properties.
 - **Provider credential release guard (Cycle 125)**: added a release preflight that verifies Gradle provider-key defaults are blank, release CI writes blank optional provider keys before signed builds, and nonblank local provider keys fail unless explicitly allowed for an internal-build review.
 - **Always-on backend tool tests (Cycle 124)**: wired the lightweight `test/tools` Python suite into the always-on verify job before Android setup, so policy and support-tool drift tests run on every push, pull request, and manual verify run.

@@ -1726,11 +1726,32 @@
   passed after the expanded fixture caught and the implementation fixed the
   missing dotted provider-property redaction.
 
+## Cycle 127 Result - 2026-06-07
+
+- Added `RequestRedactor` as the shared request redaction contract for bearer
+  headers, bare bearer tokens, provider query values, and assignment-style
+  provider credentials including dotted `local.properties` names.
+- Moved `CrashDiagnosticsText.sanitize()` provider-secret redaction onto
+  `RequestRedactor` after app-private path and file URI redaction.
+- Updated `SourceMetrics.recordFailure()` to redact error messages before
+  storing the 200-character snapshot detail displayed by Settings source
+  diagnostics.
+- Added focused `RequestRedactorTest` coverage for provider query/header/local
+  property credentials and request formatter host/path/status output.
+- Added focused `SourceMetricsTest` coverage proving authenticated provider
+  URLs and header/local property values are redacted before snapshot storage.
+- Updated `docs/support/crash-diagnostics.md`,
+  `docs/research/cycle-127-2026-06-07.md`, `ROADMAP.md`, `COMPLETED.md`,
+  `CHANGELOG.md`, and loop state.
+- Cycle 127 verification:
+  `.\gradlew.bat --no-daemon --max-workers=2 ":app:testDebugUnitTest" --tests "com.freevibe.service.RequestRedactorTest" --tests "com.freevibe.service.SourceMetricsTest" --tests "com.freevibe.service.CrashDiagnosticsTextTest" --stacktrace`
+  passed.
+
 ## Next Cycle
 
-Continue this same assigned project, Aura. Start Cycle 127 from the
+Continue this same assigned project, Aura. Start Cycle 128 from the
 `ROADMAP.md` Continuation State and
-`docs/research/cycle-126-2026-06-07.md`. The account
+`docs/research/cycle-127-2026-06-07.md`. The account
 deletion dry-run planner, read-only Settings identity surface, redacted
 shareable request draft, request-code lookup tool, review receipt gate, offline
 apply simulator, private executor package builder, and guarded REST executor
@@ -1820,7 +1841,8 @@ repository-wide GitHub workflow secret guard; Cycle 124 wired backend/tool
 unit tests into the always-on verify job before Android setup; Cycle 125 added
 a provider credential release guard for `BuildConfig` and `local.properties`;
 Cycle 126 added provider-specific crash diagnostics redaction fixtures and
-dotted provider-property assignment redaction.
+dotted provider-property assignment redaction; Cycle 127 added a shared request
+redactor for crash diagnostics and source metrics error details.
 Actual live callable invocation evidence, a live hosted HTTPS web deletion URL,
 direct RTDB rule tightening, App Check console evidence, production-project
 dry-run evidence, and owner/admin GitHub repository security-settings evidence

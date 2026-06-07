@@ -2,6 +2,7 @@ package com.freevibe.service
 
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
@@ -41,6 +42,27 @@ class SourceMetricsTest {
         assertEquals("IOException", s.lastErrorClass)
         assertEquals("timeout", s.lastErrorMessage)
         assertEquals(0.0, s.successRatio, 0.001)
+    }
+
+    @Test
+    fun `recordFailure redacts provider credentials before snapshot storage`() {
+        val m = SourceMetrics()
+        m.recordFailure(
+            "wallhaven",
+            IOException(
+                "GET https://wallhaven.cc/api/v1/search?apikey=WALLHAVEN_SECRET&q=forest failed; " +
+                    "Authorization: Bearer PEXELS_SECRET; local.properties stability.ai.key=STABILITY_SECRET",
+            ),
+        )
+
+        val message = m.snapshot("wallhaven")!!.lastErrorMessage!!
+
+        assertFalse(message.contains("WALLHAVEN_SECRET"))
+        assertFalse(message.contains("PEXELS_SECRET"))
+        assertFalse(message.contains("STABILITY_SECRET"))
+        assertTrue(message.contains("apikey=<redacted>"))
+        assertTrue(message.contains("authorization=<redacted>"))
+        assertTrue(message.contains("stability.ai.key=<redacted>"))
     }
 
     @Test

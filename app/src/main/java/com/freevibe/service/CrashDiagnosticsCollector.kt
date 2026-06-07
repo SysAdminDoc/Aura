@@ -143,14 +143,6 @@ internal object CrashDiagnosticsText {
         """(?:/data/(?:user/\d+/|data/)com\.freevibe|/storage/emulated/\d+/Android/data/com\.freevibe)[^\s)'">]*""",
     )
     private val fileUriRegex = Regex("""file://[^\s)'">]+""")
-    private val authorizationHeaderRegex = Regex("""(?i)\bauthorization\s*[:=]\s*Bearer\s+[A-Za-z0-9._~+/=-]+""")
-    private val bearerRegex = Regex("""(?i)\bBearer\s+[A-Za-z0-9._~+/=-]+""")
-    private val assignmentSecretRegex = Regex(
-        """(?i)\b((?:[a-z0-9]+[._-])*(?:api[._-]?key|apikey|access[._-]?token|token|password|secret|client[._-]?id|authorization|key))\b\s*[:=]\s*["']?[^"',\s)&]+""",
-    )
-    private val querySecretRegex = Regex(
-        """(?i)([?&](?:api[_-]?key|apikey|key|access[_-]?token|token|client[_-]?id|password|secret)=)[^&\s]+""",
-    )
 
     fun formatCrashEntry(timestampLabel: String, threadName: String, throwable: Throwable): String {
         val sw = StringWriter()
@@ -174,14 +166,7 @@ internal object CrashDiagnosticsText {
         }
         result = appPrivatePathRegex.replace(result, "<app-private-path>")
         result = fileUriRegex.replace(result, "file://<redacted-path>")
-        result = authorizationHeaderRegex.replace(result, "authorization=<redacted>")
-        result = bearerRegex.replace(result, "Bearer <redacted>")
-        result = assignmentSecretRegex.replace(result) { match ->
-            "${match.groupValues[1]}=<redacted>"
-        }
-        result = querySecretRegex.replace(result) { match ->
-            "${match.groupValues[1]}<redacted>"
-        }
+        result = RequestRedactor.redact(result)
         return result.trimEnd()
     }
 }

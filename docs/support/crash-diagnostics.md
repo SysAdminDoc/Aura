@@ -26,4 +26,7 @@ The generated bundle redacts:
 - App-private Android paths under `com.freevibe`.
 - `file://` paths.
 
+The same request redactor is used before in-app source diagnostics store the
+last provider error detail for the current session.
+
 Before opening a GitHub issue, paste the bundle into the `Crash or ANR report` issue template and fill in the reproduction fields.

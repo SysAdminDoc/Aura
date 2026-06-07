@@ -557,6 +557,11 @@ next pass can resume quickly.
   names, added provider-specific crash-log sentinel fixtures for query/header
   credentials, `local.properties`, file URIs, and app-private paths, and updated
   support/issue-template copy.
+- Completed Cycle 127 redacted request logging contract: added
+  `RequestRedactor`, moved crash diagnostics provider-secret redaction onto the
+  shared helper, redacted `SourceMetrics` failure messages before Settings can
+  display them, and covered provider query/header/local-property credentials
+  plus request formatting with focused service tests.
 
 ## 2026-06-05
 
