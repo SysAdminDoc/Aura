@@ -547,6 +547,11 @@ next pass can resume quickly.
   `python3 -m unittest discover -s test/tools -p '*_test.py'` into the
   always-on verify job before Android setup so policy and support-tool drift
   tests run on every push, pull request, and manual verify run.
+- Completed Cycle 125 provider credential release guard: added
+  `tools/provider_credential_release_check.py`, focused tests, verify/release
+  workflow wiring, and release docs so optional provider keys from
+  `local.properties` cannot be bundled into public release `BuildConfig`
+  defaults without an explicit internal-build override warning.
 
 ## 2026-06-05
 

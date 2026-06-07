@@ -12,6 +12,7 @@ Manual branch runs:
 - Generate `THIRD-PARTY-NOTICES.md`.
 - Archive raw Google OSS inputs as `GOOGLE-OSS-RAW-INPUTS.zip`.
 - Generate `NATIVE-COMPLIANCE.md`.
+- Check that optional provider credentials are blank before the signed release build.
 - Check dependency notice, native compliance, and curated overlay drift gates.
 - Generate `SHA256SUMS.txt` and `RELEASE_NOTES.md`.
 - Run `tools/release_artifact_bundle_check.py` against the final `release/` directory.

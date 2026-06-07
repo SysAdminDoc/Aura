@@ -19,6 +19,7 @@ Aura is side-loaded through GitHub Releases and Obtainium, so release artifacts 
 | Artifact attestation | `.github/workflows/release.yml` | Uses `actions/attest@v4` against `release/SHA256SUMS.txt` so release artifact digests are bound to the GitHub Actions build. |
 | Gradle dependency verification | `gradle/verification-metadata.xml` | Records SHA-256 checksums for resolved Gradle plugins and app dependencies. |
 | Gradle wrapper policy | `gradle/wrapper/gradle-wrapper.properties`, `tools/gradle_wrapper_check.py`, `.github/workflows/verify.yml` | Pins the Gradle 8.12 wrapper distribution SHA-256, keeps URL validation enabled, and rejects wrapper distribution drift. |
+| Provider credential release guard | `tools/provider_credential_release_check.py`, `.github/workflows/verify.yml`, `.github/workflows/release.yml` | Fails release preflight when optional provider keys from `local.properties` would be bundled into `BuildConfig`; release CI writes blank provider defaults before signed APK builds. |
 | Dependency Review | `.github/workflows/dependency-review.yml` | Runs on pull requests and fails high/critical vulnerable dependency additions. |
 | OpenSSF Scorecard | `.github/workflows/scorecard.yml` | Runs on main pushes, branch-protection changes, weekly schedule, and manual dispatch; keeps public result publishing disabled and uploads SARIF to code scanning. |
 | GitHub Actions allowlist | `docs/distribution/github-actions-allowlist.json`, `tools/github_actions_allowlist_check.py`, `.github/workflows/verify.yml` | Fails verification when workflow files use unreviewed actions, local actions, unpinned refs, forbidden floating refs, or unexpected workflow files. |
@@ -47,8 +48,9 @@ For each `v*` release:
 11. Spot-check `NATIVE-COMPLIANCE.md` for youtubedl-android library, youtubedl-android ffmpeg, yt-dlp, Python, QuickJS, FFmpeg, and NewPipeExtractor evidence.
 12. Spot-check `docs/legal/ffmpeg-source-correspondence.md` when any FFmpeg payload hash, version, configure evidence, or youtubedl-android FFmpeg coordinate changes.
 13. Confirm the release workflow ran `tools/release_artifact_bundle_check.py` before uploading artifacts.
-14. Verify the APK locally with `apksigner verify --verbose --print-certs`.
-15. Compare the local SHA-256 values to `SHA256SUMS.txt`.
+14. Confirm the release workflow ran `tools/provider_credential_release_check.py` after writing release `local.properties` and before `:app:assembleRelease`.
+15. Verify the APK locally with `apksigner verify --verbose --print-certs`.
+16. Compare the local SHA-256 values to `SHA256SUMS.txt`.
 
 ## Release dry runs
 
@@ -245,6 +247,7 @@ The Gradle wrapper itself is pinned separately in `gradle/wrapper/gradle-wrapper
 
 ```bash
 python3 tools/gradle_wrapper_check.py --properties gradle/wrapper/gradle-wrapper.properties
+python3 tools/provider_credential_release_check.py --app-gradle app/build.gradle.kts --release-workflow .github/workflows/release.yml --local-properties local.properties
 ```
 
 The check fails if the wrapper distribution URL, SHA-256, URL validation, storage roots, or timeout drifts. When upgrading Gradle, update `distributionUrl`, `distributionSha256Sum`, `tools/gradle_wrapper_check.py`, and the focused wrapper tests in the same change after verifying the official Gradle checksum.
@@ -261,6 +264,18 @@ Then review and commit the resulting diff. Future dependency changes should upda
 Do not use `--dependency-verification=off` in CI or release workflows. If checksum verification fails, investigate dependency drift instead of suppressing it.
 
 Clean runners can resolve additional metadata files that a local cache does not surface. If CI fails on missing module/POM checksums, refresh metadata with the same command above plus `--refresh-dependencies`, then review the generated XML diff before committing it.
+
+## Provider credential release guard
+
+Provider API keys and client IDs are optional user-controlled settings. Public release builds must not bundle local Pexels, Pixabay, Freesound, SoundCloud, or Stability values into `BuildConfig`.
+
+PR/main verification checks the Gradle wiring and release workflow wiring. Release CI runs the same guard after writing its temporary `local.properties`, which must keep these provider values blank:
+
+```bash
+python3 tools/provider_credential_release_check.py --app-gradle app/build.gradle.kts --release-workflow .github/workflows/release.yml --local-properties local.properties
+```
+
+For local development, a nonblank ignored `local.properties` provider key fails by default. Use `--allow-nonblank-local-provider-keys` only for an explicitly internal build review; the command still returns a warning status and reports key names without printing values.
 
 ## SBOM scope
 

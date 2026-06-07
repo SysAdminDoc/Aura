@@ -27,14 +27,15 @@ Do not commit `freevibe.jks`, `local.properties`, copied APKs, or generated base
 
 1. Restores the release keystore from GitHub secrets.
 2. Writes a temporary `local.properties` with signing paths and blank optional provider keys.
-3. Runs `./gradlew :app:assembleRelease --stacktrace --no-daemon`.
-4. Copies the signed universal APK to `release/Aura-vX.Y.Z-versionCode-N-universal-release.apk`.
-5. Generates `THIRD-PARTY-NOTICES.md`, `GOOGLE-OSS-RAW-INPUTS.zip`, and `NATIVE-COMPLIANCE.md`.
-6. Runs `apksigner verify --verbose --print-certs`.
-7. Fails if `aapt dump badging` reports `application-debuggable`.
-8. Creates a GitHub artifact attestation for the checksum file.
-9. Publishes `SHA256SUMS.txt` and release notes containing versionName, versionCode, APK SHA-256, signing certificate SHA-256, artifact attestation URL, and Android developer verification status.
-10. Runs `tools/release_artifact_bundle_check.py` against the final `release/` directory before upload or publication.
+3. Runs `tools/provider_credential_release_check.py` to confirm optional provider keys are blank before they can be bundled into `BuildConfig`.
+4. Runs `./gradlew :app:assembleRelease --stacktrace --no-daemon`.
+5. Copies the signed universal APK to `release/Aura-vX.Y.Z-versionCode-N-universal-release.apk`.
+6. Generates `THIRD-PARTY-NOTICES.md`, `GOOGLE-OSS-RAW-INPUTS.zip`, and `NATIVE-COMPLIANCE.md`.
+7. Runs `apksigner verify --verbose --print-certs`.
+8. Fails if `aapt dump badging` reports `application-debuggable`.
+9. Creates a GitHub artifact attestation for the checksum file.
+10. Publishes `SHA256SUMS.txt` and release notes containing versionName, versionCode, APK SHA-256, signing certificate SHA-256, artifact attestation URL, and Android developer verification status.
+11. Runs `tools/release_artifact_bundle_check.py` against the final `release/` directory before upload or publication.
 
 Manual `workflow_dispatch` runs upload the same files as workflow artifacts for dry-run inspection. Tag runs also attach the APK, third-party notices, raw Google OSS input archive, native compliance packet, and checksum file to the GitHub Release. The dry-run procedure lives in [release-dry-run.md](release-dry-run.md), and raw input archive retention is documented in [raw-oss-input-retention.md](raw-oss-input-retention.md).
 
@@ -44,8 +45,11 @@ Use Android Studio's bundled JBR on Windows:
 
 ```powershell
 $env:JAVA_HOME = "C:/Program Files/Android/Android Studio/jbr"
+python tools\provider_credential_release_check.py --app-gradle app\build.gradle.kts --release-workflow .github\workflows\release.yml --local-properties local.properties
 .\gradlew.bat :app:assembleRelease --stacktrace --no-daemon
 ```
+
+The provider credential check fails if ignored `local.properties` contains nonblank Pexels, Pixabay, Freesound, SoundCloud, or Stability values. Only use `--allow-nonblank-local-provider-keys` for an explicitly internal build review; public GitHub, Obtainium, and Izzy builds must keep those defaults blank and rely on user-entered settings.
 
 Verify the local APK:
 

@@ -1,8 +1,8 @@
 # Autonomous Loop State
 
 **Assigned project:** `C:\Users\--\repos\Aura`
-**Current pass:** 2026-06-07 Cycle 124 always-on backend tool tests
-**Last commit before pass:** `2e52a04` (`test(security): add workflow secret guard`)
+**Current pass:** 2026-06-07 Cycle 125 provider credential release guard
+**Last commit before pass:** `30584f9` (`ci(security): run backend tool tests in verify`)
 
 ## 2026-06-05 Result
 
@@ -1678,11 +1678,41 @@
   dependency license policy check, high-severity Functions npm audit, diff
   hygiene, and attribution/ASCII scans passed.
 
+## Cycle 125 Result - 2026-06-07
+
+- Added `tools/provider_credential_release_check.py` to validate blank provider
+  `BuildConfig` defaults, blank release workflow provider-key writes, local
+  nonblank provider key rejection, and explicit internal override warnings.
+- Added `test/tools/provider_credential_release_check_test.py` coverage for the
+  live Gradle/workflow policy, nonblank local provider key rejection, explicit
+  internal override warning, missing blank release workflow assignment, and
+  nonblank `BuildConfig` default drift.
+- Wired `.github/workflows/verify.yml` to run the provider credential release
+  guard before Android setup.
+- Wired `.github/workflows/release.yml` to run the provider credential release
+  guard after writing release `local.properties` and before
+  `:app:assembleRelease`.
+- Added the provider guard command to
+  `docs/distribution/github-security-workflows.json` so release workflow policy
+  validation fails if the guard is removed.
+- Updated release signing, release dry-run, supply-chain, roadmap, changelog,
+  completion, and loop-state docs.
+- Cycle 125 verification: provider credential release guard check, focused
+  provider guard tests, backend tool tests, GitHub workflow secret policy check,
+  GitHub workflow permissions policy check, GitHub Actions allowlist check,
+  Gradle wrapper policy check, Dependabot policy check, GitHub security
+  workflow policy check, callable wire-protocol check, callable contract check,
+  dependency notice lock checks, native lock check, dependency overlay check,
+  dependency license policy check, high-severity Functions npm audit, diff
+  hygiene, and attribution/ASCII scans passed. Full signed APK dry-run plus APK
+  strings scan remains open because repeated release builds are memory-heavy on
+  this Windows workstation.
+
 ## Next Cycle
 
-Continue this same assigned project, Aura. Start Cycle 125 from the
+Continue this same assigned project, Aura. Start Cycle 126 from the
 `ROADMAP.md` Continuation State and
-`docs/research/cycle-124-2026-06-07.md`. The account
+`docs/research/cycle-125-2026-06-07.md`. The account
 deletion dry-run planner, read-only Settings identity surface, redacted
 shareable request draft, request-code lookup tool, review receipt gate, offline
 apply simulator, private executor package builder, and guarded REST executor
@@ -1769,7 +1799,8 @@ added a redacted receipt gate for future owner/admin GitHub evidence; Cycle
 Cycle 121 added a repository-wide GitHub Actions allowlist guard; Cycle 122
 added a repository-wide GitHub workflow permissions guard; Cycle 123 added a
 repository-wide GitHub workflow secret guard; Cycle 124 wired backend/tool
-unit tests into the always-on verify job before Android setup.
+unit tests into the always-on verify job before Android setup; Cycle 125 added
+a provider credential release guard for `BuildConfig` and `local.properties`.
 Actual live callable invocation evidence, a live hosted HTTPS web deletion URL,
 direct RTDB rule tightening, App Check console evidence, production-project
 dry-run evidence, and owner/admin GitHub repository security-settings evidence

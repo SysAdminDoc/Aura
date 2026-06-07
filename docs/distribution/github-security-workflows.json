@@ -49,6 +49,7 @@
         "id-token: write",
         "attestations: write",
         "artifact-metadata: write",
+        "python3 tools/provider_credential_release_check.py",
         "python3 tools/dependency_notice_lock.py --mode check",
         "python3 tools/native_compliance_inventory.py --mode check-lock",
         "python3 tools/dependency_overlay_check.py --overlay",
