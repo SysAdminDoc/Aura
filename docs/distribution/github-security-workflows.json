@@ -54,6 +54,7 @@
         "python3 tools/provider_credential_apk_scan.py",
         "python3 tools/cleartext_release_check.py",
         "python3 tools/store_metadata_preflight.py",
+        "python3 tools/store_asset_pipeline_check.py",
         "python3 tools/privacy_policy_link_check.py",
         "python3 tools/privacy_data_safety_check.py",
         "python3 tools/community_guidelines_consent_check.py",

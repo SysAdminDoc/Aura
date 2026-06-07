@@ -21,6 +21,7 @@
     "docs/distribution/play-app-content.json",
     "docs/distribution/alt-store-metadata.json",
     "docs/distribution/sbom-readiness.json",
+    "docs/distribution/store-assets.json",
     "docs/distribution/release-dry-run.md",
     "docs/distribution/release-signing.md",
     "docs/distribution/supply-chain.md",
@@ -33,11 +34,13 @@
     "docs/distribution/channel-strategy.md",
     "docs/distribution/alt-store-metadata.md",
     "docs/distribution/sbom-readiness.md",
+    "docs/distribution/store-assets.md",
     "docs/distribution/developer-verification.md",
     "docs/distribution/supply-chain.md"
   ],
   "requiredPreflightCommands": [
     "tools/store_metadata_preflight.py",
+    "tools/store_asset_pipeline_check.py",
     "tools/privacy_policy_link_check.py",
     "tools/privacy_data_safety_check.py",
     "tools/community_guidelines_consent_check.py",

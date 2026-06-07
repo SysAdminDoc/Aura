@@ -1,0 +1,68 @@
+{
+  "schemaVersion": 1,
+  "policyKind": "storeAssetPipeline",
+  "status": "capturePending",
+  "packageName": "com.freevibe",
+  "docsPath": "docs/distribution/store-assets.md",
+  "metadataRoot": "fastlane/metadata/android/en-US",
+  "assetModeCommand": "tools/store_metadata_preflight.py --repo-root . --require-assets --min-phone-screenshots 4",
+  "requirements": {
+    "iconPath": "fastlane/metadata/android/en-US/images/icon.png",
+    "iconDimensions": [512, 512],
+    "featureGraphicPath": "fastlane/metadata/android/en-US/images/featureGraphic.png",
+    "featureGraphicDimensions": [1024, 500],
+    "phoneScreenshotDirectory": "fastlane/metadata/android/en-US/images/phoneScreenshots",
+    "phoneScreenshotMinCount": 4,
+    "phoneScreenshotMinShortSide": 1080,
+    "phoneScreenshotAspect": "9:16",
+    "noAlpha": true,
+    "actualInAppUiRequired": true
+  },
+  "plannedShots": [
+    {
+      "id": "wallpapers",
+      "targetPath": "fastlane/metadata/android/en-US/images/phoneScreenshots/01-wallpapers.png",
+      "surface": "Wallpapers",
+      "coverage": "Browse wallpaper sources with provider controls visible where relevant.",
+      "altText": "Aura wallpaper browsing grid with source-aware controls."
+    },
+    {
+      "id": "video-wallpapers",
+      "targetPath": "fastlane/metadata/android/en-US/images/phoneScreenshots/02-video-wallpapers.png",
+      "surface": "Video wallpapers",
+      "coverage": "Show local video wallpaper library, crop/apply context, or recovery state without third-party branding.",
+      "altText": "Aura video wallpaper library and editing flow."
+    },
+    {
+      "id": "sounds-editor",
+      "targetPath": "fastlane/metadata/android/en-US/images/phoneScreenshots/03-sounds-editor.png",
+      "surface": "Sounds and editor",
+      "coverage": "Show sound discovery or editor controls with license/source context visible.",
+      "altText": "Aura sounds screen with editing and source controls."
+    },
+    {
+      "id": "settings-favorites-community",
+      "targetPath": "fastlane/metadata/android/en-US/images/phoneScreenshots/04-settings-favorites-community.png",
+      "surface": "Settings, favorites, or community",
+      "coverage": "Show privacy/provider/community controls, saved local content, or community moderation affordances.",
+      "altText": "Aura settings and saved content controls."
+    }
+  ],
+  "forbiddenTerms": [
+    "download now",
+    "install now",
+    "play now",
+    "try now",
+    "#1",
+    "best",
+    "top",
+    "sale",
+    "discount",
+    "million downloads"
+  ],
+  "sourceUrls": [
+    "https://support.google.com/googleplay/android-developer/answer/9866151",
+    "https://f-droid.org/en/docs/All_About_Descriptions_Graphics_and_Screenshots/",
+    "https://docs.fastlane.tools/actions/supply/"
+  ]
+}

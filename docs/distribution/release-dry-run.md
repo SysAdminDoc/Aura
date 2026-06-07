@@ -15,6 +15,9 @@ Manual branch runs:
 - Check that optional provider credentials are blank before the signed release build.
 - Scan the packaged signed APK for nonblank provider credential values from the temporary release `local.properties`.
 - Check Fastlane text metadata, current versionCode changelog, and public privacy-policy URL before the signed release build.
+- Check the store asset capture plan, planned screenshots, feature-graphic
+  requirements, alt text, and future asset-mode command before the signed
+  release build.
 - Check that the same public privacy-policy URL is present in Settings, README, Fastlane metadata, and release docs before the signed release build.
 - Check that every manifest permission, reviewed network endpoint,
   source-backed local storage surface, and SDK data surface has a Data safety
@@ -65,6 +68,7 @@ Before the APK build, release dry runs also validate committed store metadata:
 
 ```bash
 python3 tools/store_metadata_preflight.py --repo-root .
+python3 tools/store_asset_pipeline_check.py --policy docs/distribution/store-assets.json --repo-root .
 python3 tools/privacy_policy_link_check.py --policy docs/privacy/privacy-policy-link.json --repo-root .
 python3 tools/privacy_data_safety_check.py --policy docs/privacy/data-safety.json --repo-root .
 python3 tools/community_guidelines_consent_check.py --repo-root .
@@ -100,6 +104,15 @@ current full-build decision.
 The release metadata consistency gate fails when package/version metadata,
 Fastlane text, README links, privacy URLs, preflight commands, packet package
 names, or expected release artifact documentation drift apart.
+The store asset pipeline gate fails when the capture-pending status, Fastlane
+image paths, four planned phone screenshot slots, feature-graphic dimensions,
+alt text, source URLs, or workflow wiring drift apart. After real assets are
+committed, the future asset-mode command is:
+
+```bash
+python3 tools/store_metadata_preflight.py --repo-root . --require-assets --min-phone-screenshots 4
+```
+
 The SBOM readiness gate fails when the deferred-until-N-1 decision, current
 evidence paths, future SBOM artifact names, future scope, source URLs, release
 docs, or workflow wiring drift apart.

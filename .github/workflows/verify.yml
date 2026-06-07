@@ -192,6 +192,9 @@ jobs:
       - name: Store metadata preflight
         run: python3 tools/store_metadata_preflight.py --repo-root .
 
+      - name: Store asset pipeline
+        run: python3 tools/store_asset_pipeline_check.py --policy docs/distribution/store-assets.json --repo-root .
+
       - name: Privacy policy link gate
         run: python3 tools/privacy_policy_link_check.py --policy docs/privacy/privacy-policy-link.json --repo-root .
 

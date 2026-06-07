@@ -25,6 +25,7 @@ Aura is side-loaded through GitHub Releases and Obtainium, so release artifacts 
 | Cleartext release guard | `tools/cleartext_release_check.py`, `.github/workflows/verify.yml`, `.github/workflows/release.yml` | Fails release preflight when network security config enables cleartext, the manifest explicitly enables cleartext, or provider-network code reintroduces raw HTTP URLs or OkHttp HTTP scheme builders. |
 | Network endpoint inventory | `docs/security/network-endpoints.json`, `docs/security/network-endpoints.md`, `tools/network_endpoint_inventory_check.py`, `.github/workflows/verify.yml` | Fails verification when app network-code URL hosts drift from the reviewed endpoint/auth/cache/fallback inventory. |
 | Store metadata preflight | `tools/store_metadata_preflight.py`, `.github/workflows/verify.yml`, `.github/workflows/release.yml` | Fails PR/main/release checks when Fastlane text metadata exceeds Play limits, loses the current versionCode changelog, reintroduces stale branding, or drops the public privacy-policy URL. Asset mode is available for the screenshot and feature-graphic pipeline. |
+| Store asset pipeline | `docs/distribution/store-assets.json`, `docs/distribution/store-assets.md`, `tools/store_asset_pipeline_check.py`, `.github/workflows/verify.yml`, `.github/workflows/release.yml` | Fails PR/main/release checks when the capture-pending screenshot/feature-graphic plan, Fastlane image paths, planned screenshot slots, alt text, source URLs, or future asset-mode command drift before real assets land. |
 | Privacy policy link gate | `docs/privacy/privacy-policy-link.json`, `tools/privacy_policy_link_check.py`, `.github/workflows/verify.yml`, `.github/workflows/release.yml` | Fails PR/main/release checks when the public privacy-policy URL is missing from Settings, Fastlane metadata, README, release dry-run docs, or the release workflow gate. |
 | Privacy Data safety matrix | `docs/privacy/data-safety.json`, `docs/privacy/data-safety.md`, `tools/privacy_data_safety_check.py`, `.github/workflows/verify.yml`, `.github/workflows/release.yml` | Fails PR/main/release checks when manifest permissions, reviewed network endpoint IDs, source-backed local storage surfaces, or SDK dependency/data surfaces drift without matching data type, collection/sharing, retention, deletion, user-control, backup posture, and Play declaration rows. |
 | Community guidelines consent | `docs/legal/community-guidelines.md`, `tools/community_guidelines_consent_check.py`, `.github/workflows/verify.yml`, `.github/workflows/release.yml` | Fails PR/main/release checks when the guidelines doc, versioned DataStore key, consent dialog, Settings entry, community screens, repository gates, or Play packet UGC evidence drift apart. |
@@ -64,7 +65,7 @@ For each `v*` release:
 14. Confirm the release workflow ran `tools/provider_credential_release_check.py` after writing release `local.properties` and before `:app:assembleRelease`.
 15. Confirm the release workflow ran `tools/provider_credential_storage_check.py` before `:app:assembleRelease`.
 16. Confirm the release workflow ran `tools/cleartext_release_check.py` before `:app:assembleRelease`.
-17. Confirm the release workflow ran `tools/store_metadata_preflight.py`, `tools/privacy_policy_link_check.py`, `tools/privacy_data_safety_check.py`, `tools/community_guidelines_consent_check.py`, `tools/play_app_content_packet_check.py`, `tools/alt_store_metadata_check.py`, `tools/release_metadata_consistency_check.py`, and `tools/sbom_readiness_check.py` before `:app:assembleRelease`.
+17. Confirm the release workflow ran `tools/store_metadata_preflight.py`, `tools/store_asset_pipeline_check.py`, `tools/privacy_policy_link_check.py`, `tools/privacy_data_safety_check.py`, `tools/community_guidelines_consent_check.py`, `tools/play_app_content_packet_check.py`, `tools/alt_store_metadata_check.py`, `tools/release_metadata_consistency_check.py`, and `tools/sbom_readiness_check.py` before `:app:assembleRelease`.
 18. Confirm the release workflow ran `tools/provider_credential_apk_scan.py` after packaging the signed APK and before release uploads.
 19. Verify the APK locally with `apksigner verify --verbose --print-certs`.
 20. Compare the local SHA-256 values to `SHA256SUMS.txt`.
@@ -96,6 +97,7 @@ python3 tools/provider_credential_storage_check.py --policy docs/security/provid
 python3 tools/cleartext_release_check.py --repo-root .
 python3 tools/network_endpoint_inventory_check.py --inventory docs/security/network-endpoints.json --repo-root .
 python3 tools/store_metadata_preflight.py --repo-root .
+python3 tools/store_asset_pipeline_check.py --policy docs/distribution/store-assets.json --repo-root .
 python3 tools/privacy_policy_link_check.py --policy docs/privacy/privacy-policy-link.json --repo-root .
 python3 tools/privacy_data_safety_check.py --policy docs/privacy/data-safety.json --repo-root .
 python3 tools/community_guidelines_consent_check.py --repo-root .
@@ -280,6 +282,7 @@ python3 tools/provider_credential_release_check.py --app-gradle app/build.gradle
 python3 tools/provider_credential_storage_check.py --policy docs/security/provider-credential-storage.json --repo-root .
 python3 tools/cleartext_release_check.py --repo-root .
 python3 tools/store_metadata_preflight.py --repo-root .
+python3 tools/store_asset_pipeline_check.py --policy docs/distribution/store-assets.json --repo-root .
 python3 tools/privacy_policy_link_check.py --policy docs/privacy/privacy-policy-link.json --repo-root .
 python3 tools/privacy_data_safety_check.py --policy docs/privacy/data-safety.json --repo-root .
 python3 tools/community_guidelines_consent_check.py --repo-root .

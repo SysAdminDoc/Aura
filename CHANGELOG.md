@@ -3,6 +3,7 @@
 All notable changes to Aura will be documented in this file.
 
 ## Unreleased
+- **Store asset pipeline gate (Cycle 150)**: added a checked screenshot and feature-graphic capture plan covering Fastlane image paths, four planned phone screenshots, alt text, Play/F-Droid source rules, future asset-mode enforcement, and verify/release workflow wiring.
 - **SBOM readiness gate (Cycle 149)**: added a checked SBOM readiness packet that keeps generation deferred until the N-1 toolchain upgrade while enforcing the current release evidence floor, future CycloneDX/SPDX artifact names, scope, sources, and workflow wiring.
 - **Release metadata consistency gate (Cycle 148)**: added a checked release metadata packet that reconciles app package/version values, Fastlane text, README links, privacy URLs, Play/alternative-store packets, release preflight commands, and expected GitHub release artifacts.
 - **Alternative-store disclosure gate (Cycle 147)**: added a checked GitHub/Obtainium/Izzy/F-Droid disclosure packet covering channel status, anti-feature notes, manifest permissions, reviewed network services, proprietary dependency markers, and Izzy submission notes.

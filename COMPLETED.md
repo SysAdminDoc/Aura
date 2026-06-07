@@ -683,6 +683,13 @@ next pass can resume quickly.
   current release evidence floor, future CycloneDX/SPDX artifact names, scope,
   source URLs, and verify/release workflow wiring are checked before release
   build work continues.
+- Completed Cycle 150 store asset pipeline gate: added
+  `docs/distribution/store-assets.md`,
+  `docs/distribution/store-assets.json`, and
+  `tools/store_asset_pipeline_check.py` so the capture-pending screenshot and
+  feature-graphic plan, Fastlane image paths, four planned phone screenshot
+  slots, alt text, source URLs, future asset-mode command, and verify/release
+  workflow wiring are checked while actual image capture remains open.
 
 ## 2026-06-05
 

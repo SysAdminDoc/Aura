@@ -28,7 +28,7 @@ Do not commit `freevibe.jks`, `local.properties`, copied APKs, or generated base
 1. Restores the release keystore from GitHub secrets.
 2. Writes a temporary `local.properties` with signing paths and blank optional provider keys.
 3. Runs `tools/provider_credential_release_check.py` to confirm optional provider keys are blank before they can be bundled into `BuildConfig`.
-4. Runs the provider credential storage, cleartext release, store metadata preflight, privacy-policy link, Data safety matrix, community guidelines consent, Play App content, alternative-store disclosure, release metadata consistency, and SBOM readiness checks.
+4. Runs the provider credential storage, cleartext release, store metadata preflight, store asset pipeline, privacy-policy link, Data safety matrix, community guidelines consent, Play App content, alternative-store disclosure, release metadata consistency, and SBOM readiness checks.
 5. Runs `./gradlew :app:assembleRelease --stacktrace --no-daemon`.
 6. Copies the signed universal APK to `release/Aura-vX.Y.Z-versionCode-N-universal-release.apk`.
 7. Runs `tools/provider_credential_apk_scan.py` against the packaged APK and temporary release `local.properties`.
@@ -49,6 +49,7 @@ Use Android Studio's bundled JBR on Windows:
 $env:JAVA_HOME = "C:/Program Files/Android/Android Studio/jbr"
 python tools\provider_credential_release_check.py --app-gradle app\build.gradle.kts --release-workflow .github\workflows\release.yml --local-properties local.properties
 python tools\store_metadata_preflight.py --repo-root .
+python tools/store_asset_pipeline_check.py --policy docs/distribution/store-assets.json --repo-root .
 python tools\privacy_policy_link_check.py --policy docs\privacy\privacy-policy-link.json --repo-root .
 python tools\privacy_data_safety_check.py --policy docs\privacy\data-safety.json --repo-root .
 python tools\community_guidelines_consent_check.py --repo-root .

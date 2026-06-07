@@ -23,7 +23,8 @@ disclosures, and GitHub Release artifacts. The machine-readable contract is
   `changelogs/112.txt` are the store text surface.
 - `README.md` must keep links to the privacy policy, release signing, channel
   strategy, alternative-store disclosures, release metadata consistency, SBOM
-  readiness, developer verification, and supply-chain docs.
+  readiness, store asset planning, developer verification, and supply-chain
+  docs.
 - `docs/privacy/privacy-policy-link.json`,
   `docs/distribution/play-app-content.json`, and
   `docs/distribution/alt-store-metadata.json` must keep the same package and
@@ -35,6 +36,7 @@ Verify and release workflows must keep these release-facing gates before
 Android build or release publication work:
 
 - `tools/store_metadata_preflight.py`
+- `tools/store_asset_pipeline_check.py`
 - `tools/privacy_policy_link_check.py`
 - `tools/privacy_data_safety_check.py`
 - `tools/community_guidelines_consent_check.py`
@@ -61,7 +63,7 @@ Release dry runs and tagged releases must document these expected artifacts:
 Before any public release:
 
 1. Run `py -3 tools\release_metadata_consistency_check.py --policy docs\distribution\release-metadata-consistency.json --repo-root .`.
-2. Run the store metadata, privacy, Data safety, community guidelines, Play App content, alternative-store, and SBOM readiness gates listed above.
+2. Run the store metadata, store asset pipeline, privacy, Data safety, community guidelines, Play App content, alternative-store, and SBOM readiness gates listed above.
 3. Confirm the current `versionCode` changelog mentions the current `versionName`.
 4. Confirm the GitHub Release or dry-run artifact contains the expected release files.
 
