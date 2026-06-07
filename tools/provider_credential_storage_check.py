@@ -134,6 +134,8 @@ def validate_policy(repo_root: Path, policy: dict[str, Any]) -> dict[str, Any]:
         raise ProviderCredentialStorageError(f"{data_extraction_rules_path} must cover cloud backup and device transfer")
     if "api keys entered by the user" not in privacy_policy_text:
         raise ProviderCredentialStorageError("privacy policy must disclose user-entered API key storage")
+    if "ProviderApiKeyDialog(" not in settings_screen_text or 'Text("Clear")' not in settings_screen_text:
+        raise ProviderCredentialStorageError("Settings screen must expose an explicit provider key Clear action")
 
     credentials_raw = policy.get("credentials")
     if not isinstance(credentials_raw, list) or not credentials_raw:

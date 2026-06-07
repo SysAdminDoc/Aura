@@ -25,7 +25,8 @@ blocks, or manages creator/community data.
 User-entered provider API keys are stored in app-private Jetpack DataStore and
 the preferences DataStore file is excluded from cloud backup and device
 transfer. These keys are not protected by Android Keystore-backed encrypted
-storage; users can clear each saved key in Settings by saving a blank value.
+storage; users can clear each saved key in Settings with the key dialog's Clear
+action or by saving a blank value.
 
 ## Community Data
 

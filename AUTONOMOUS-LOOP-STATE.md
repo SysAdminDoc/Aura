@@ -1,8 +1,8 @@
 # Autonomous Loop State
 
 **Assigned project:** `C:\Users\--\repos\Aura`
-**Current pass:** 2026-06-07 Cycle 131 provider credential APK scan
-**Last commit before pass:** `f0c0ccb` (`ci(security): check provider credential storage`)
+**Current pass:** 2026-06-07 Cycle 132 provider key clear UX
+**Last commit before pass:** `9cbddfc` (`ci(security): scan release apk for provider keys`)
 
 ## 2026-06-05 Result
 
@@ -1853,11 +1853,31 @@
   release-style local properties fixture, provider credential storage policy,
   cleartext guard, and endpoint inventory scan passed.
 
+## Cycle 132 Result - 2026-06-07
+
+- Added a shared `ProviderApiKeyDialog` for Settings provider key entry with
+  Save, Clear, and Cancel actions.
+- Routed Wallhaven, Pexels, Pixabay, Freesound, and Stability key dialogs
+  through the shared dialog so every stored provider key has an explicit Clear
+  action instead of relying only on saving a blank value.
+- Extended `tools/provider_credential_storage_check.py` and
+  `test/tools/provider_credential_storage_check_test.py` so the policy fails if
+  the Settings provider-key Clear action disappears.
+- Updated provider credential storage policy/docs, privacy copy, supply-chain
+  docs, research, roadmap, changelog, completion, and loop state.
+- Cycle 132 verification: provider storage guard compile, live provider
+  storage scan, focused provider storage tests, backend tool tests, focused
+  Settings unit compile/test, GitHub Actions allowlist, workflow permissions
+  policy, workflow secret policy, GitHub security workflow policy, Dependabot
+  policy, Gradle wrapper policy, provider credential release guard with a blank
+  release-style local properties fixture, cleartext guard, and endpoint
+  inventory scan passed.
+
 ## Next Cycle
 
-Continue this same assigned project, Aura. Start Cycle 132 from the
+Continue this same assigned project, Aura. Start Cycle 133 from the
 `ROADMAP.md` Continuation State and
-`docs/research/cycle-131-2026-06-07.md`. The account
+`docs/research/cycle-132-2026-06-07.md`. The account
 deletion dry-run planner, read-only Settings identity surface, redacted
 shareable request draft, request-code lookup tool, review receipt gate, offline
 apply simulator, private executor package builder, and guarded REST executor
@@ -1954,7 +1974,8 @@ Cycle 129 removed the ccMixter HTTP downgrade path and added release cleartext
 policy gates; Cycle 130 added a checked provider credential storage policy,
 documented the no-Keystore decision for current optional provider keys, and
 added the missing Freesound Settings clear control; Cycle 131 added a
-release-stage provider credential APK scan after signed APK packaging.
+release-stage provider credential APK scan after signed APK packaging; Cycle
+132 added explicit provider key Clear actions and storage-policy coverage.
 Actual live callable invocation evidence, a live hosted HTTPS web deletion URL,
 direct RTDB rule tightening, App Check console evidence, production-project
 dry-run evidence, and owner/admin GitHub repository security-settings evidence
@@ -1965,10 +1986,10 @@ hosted URL after owner approval, tighten direct RTDB write rules after callable
 deploy evidence, run a real production-project Firebase executor dry-run after
 owner access is confirmed, collect owner/admin GitHub security settings
 evidence and generate the redacted receipt when access is available, or
-continue with provider key rotation/clear UX audit, signed release dry-run
-evidence capture on a suitable runner, or the next checkable backend, deploy,
-security, support, policy, or rules hardening artifact if owner-gated evidence
-is still unavailable.
+continue with signed release dry-run evidence capture on a suitable runner,
+prompt/privacy disclosure hardening for generated wallpapers, or the next
+checkable backend, deploy, security, support, policy, or rules hardening
+artifact if owner-gated evidence is still unavailable.
 Commit and push completed work when the active project contract allows it.
 
 ## Previous Cycle Prompt

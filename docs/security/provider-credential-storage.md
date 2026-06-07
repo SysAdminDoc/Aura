@@ -16,7 +16,8 @@ device transfer.
 This is not strong at-rest protection against a compromised or rooted device.
 The disclosure is intentional for the current release posture: users can leave
 provider keys blank, enter them only for providers they choose to use, and clear
-stored values by saving a blank value in Settings. Revisit a Keystore migration
+stored values with the explicit Settings `Clear` action or by saving a blank
+value. Revisit a Keystore migration
 before treating any provider credential as required, account-bound, or
 non-user-rotatable.
 
@@ -34,12 +35,12 @@ non-user-rotatable.
 
 | ID | Provider | Classification | Runtime storage | Release default | User control |
 | --- | --- | --- | --- | --- | --- |
-| `wallhaven-api-key` | Wallhaven | `optionalQuotaKey` | DataStore key `wallhaven_api_key`; no bundled BuildConfig field. | Blank. | Settings > API Keys > Wallhaven API Key; save blank to clear. |
-| `pexels-api-key` | Pexels | `optionalQuotaKey` | DataStore key `pexels_api_key`, defaulting to `BuildConfig.PEXELS_API_KEY`. | Blank in public release workflow. | Settings > API Keys > Pexels API Key; save blank to clear. |
-| `pixabay-api-key` | Pixabay | `optionalQuotaKey` | DataStore key `pixabay_api_key`, defaulting to `BuildConfig.PIXABAY_API_KEY`. | Blank in public release workflow. | Settings > API Keys > Pixabay API Key; save blank to clear. |
-| `freesound-api-key` | Freesound | `optionalQuotaKey` | DataStore key `freesound_api_key`, defaulting to `BuildConfig.FREESOUND_API_KEY`. | Blank in public release workflow. | Settings > API Keys > Freesound API Key; save blank to clear. |
+| `wallhaven-api-key` | Wallhaven | `optionalQuotaKey` | DataStore key `wallhaven_api_key`; no bundled BuildConfig field. | Blank. | Settings > API Keys > Wallhaven API Key; Clear or save blank to remove. |
+| `pexels-api-key` | Pexels | `optionalQuotaKey` | DataStore key `pexels_api_key`, defaulting to `BuildConfig.PEXELS_API_KEY`. | Blank in public release workflow. | Settings > API Keys > Pexels API Key; Clear or save blank to remove. |
+| `pixabay-api-key` | Pixabay | `optionalQuotaKey` | DataStore key `pixabay_api_key`, defaulting to `BuildConfig.PIXABAY_API_KEY`. | Blank in public release workflow. | Settings > API Keys > Pixabay API Key; Clear or save blank to remove. |
+| `freesound-api-key` | Freesound | `optionalQuotaKey` | DataStore key `freesound_api_key`, defaulting to `BuildConfig.FREESOUND_API_KEY`. | Blank in public release workflow. | Settings > API Keys > Freesound API Key; Clear or save blank to remove. |
 | `soundcloud-client-id` | SoundCloud | `publicClientId` | BuildConfig-only `SOUNDCLOUD_CLIENT_ID`; no DataStore key. | Blank in public release workflow. | No Settings field; blank public default makes the dormant source return no results. |
-| `stability-ai-key` | Stability AI | `paidSensitiveSecret` | DataStore key `stability_ai_key`, defaulting to `BuildConfig.STABILITY_AI_KEY`. | Blank in public release workflow. | Settings > API Keys > Stability AI API Key and generated wallpaper key field; save blank to clear. |
+| `stability-ai-key` | Stability AI | `paidSensitiveSecret` | DataStore key `stability_ai_key`, defaulting to `BuildConfig.STABILITY_AI_KEY`. | Blank in public release workflow. | Settings > API Keys > Stability AI API Key and generated wallpaper key field; Clear or save blank to remove. |
 
 ## Guard
 
@@ -51,6 +52,7 @@ py -3 tools\provider_credential_storage_check.py --policy docs\security\provider
 
 The guard fails if a credential row is missing from this runbook, if a
 DataStore preference key is not declared in `PreferencesManager`, if a Settings
-label is missing for a DataStore-backed credential, if Gradle release defaults
-drift away from blank provider values, if DataStore backup exclusions disappear,
-or if diagnostics/privacy docs stop describing redaction and device storage.
+label or explicit Clear action is missing for DataStore-backed credentials, if
+Gradle release defaults drift away from blank provider values, if DataStore
+backup exclusions disappear, or if diagnostics/privacy docs stop describing
+redaction and device storage.

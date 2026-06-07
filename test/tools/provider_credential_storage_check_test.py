@@ -59,6 +59,15 @@ class ProviderCredentialStorageCheckTest(unittest.TestCase):
         with self.assertRaises(ProviderCredentialStorageError):
             validate_policy(REPO_ROOT, policy)
 
+    def test_rejects_missing_settings_clear_control(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            repo = seed_repo(Path(tmpdir))
+            policy = minimal_policy()
+            write(repo / "SettingsScreen.kt", 'Text("Pexels API Key")\n')
+
+            with self.assertRaises(ProviderCredentialStorageError):
+                validate_policy(repo, policy)
+
     def test_rejects_nonblank_gradle_release_default(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
             repo = seed_repo(Path(tmpdir))
@@ -124,7 +133,7 @@ def minimal_policy() -> dict[str, object]:
 def seed_repo(repo: Path) -> Path:
     write(repo / "docs.md", "pexels-api-key\nPexels\noptionalQuotaKey\nnot strong at-rest protection\n")
     write(repo / "PreferencesManager.kt", 'val PEXELS_KEY = stringPreferencesKey("pexels_api_key")\n')
-    write(repo / "SettingsScreen.kt", 'Text("Pexels API Key")\n')
+    write(repo / "SettingsScreen.kt", 'ProviderApiKeyDialog(\nText("Pexels API Key")\nText("Clear")\n')
     write(repo / "build.gradle.kts", 'buildConfigField("String", "PEXELS_API_KEY", "\\"${localProps.getProperty("pexels.api.key", "")}\\"")\n')
     write(repo / "backup.xml", '<full-backup-content><exclude domain="file" path="datastore/freevibe_prefs.preferences_pb" /></full-backup-content>\n')
     write(

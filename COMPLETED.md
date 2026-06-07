@@ -584,6 +584,11 @@ next pass can resume quickly.
   workflow wiring after signed APK packaging, release workflow policy coverage,
   and release runbook updates so packaged APKs are scanned for nonblank
   provider credential values before uploads or tagged publication.
+- Completed Cycle 132 provider key clear UX: consolidated Settings provider
+  key dialogs around Save, Clear, and Cancel actions, extended
+  `tools/provider_credential_storage_check.py` plus focused tests to require
+  the explicit Clear path, and updated provider storage/privacy/supply-chain
+  docs for the clearer user control.
 
 ## 2026-06-05
 

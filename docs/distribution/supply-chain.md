@@ -21,7 +21,7 @@ Aura is side-loaded through GitHub Releases and Obtainium, so release artifacts 
 | Gradle wrapper policy | `gradle/wrapper/gradle-wrapper.properties`, `tools/gradle_wrapper_check.py`, `.github/workflows/verify.yml` | Pins the Gradle 8.12 wrapper distribution SHA-256, keeps URL validation enabled, and rejects wrapper distribution drift. |
 | Provider credential release guard | `tools/provider_credential_release_check.py`, `.github/workflows/verify.yml`, `.github/workflows/release.yml` | Fails release preflight when optional provider keys from `local.properties` would be bundled into `BuildConfig`; release CI writes blank provider defaults before signed APK builds. |
 | Provider credential APK scan | `tools/provider_credential_apk_scan.py`, `.github/workflows/release.yml` | Scans packaged signed APKs for any nonblank provider values from release `local.properties` before notices, checksums, uploads, or tagged publication. |
-| Provider credential storage policy | `docs/security/provider-credential-storage.json`, `docs/security/provider-credential-storage.md`, `tools/provider_credential_storage_check.py`, `.github/workflows/verify.yml`, `.github/workflows/release.yml` | Classifies each provider credential, documents the no-Keystore storage decision, proves DataStore backup/transfer exclusions, and checks Settings clear controls plus diagnostics/privacy disclosures. |
+| Provider credential storage policy | `docs/security/provider-credential-storage.json`, `docs/security/provider-credential-storage.md`, `tools/provider_credential_storage_check.py`, `.github/workflows/verify.yml`, `.github/workflows/release.yml` | Classifies each provider credential, documents the no-Keystore storage decision, proves DataStore backup/transfer exclusions, and checks explicit Settings clear controls plus diagnostics/privacy disclosures. |
 | Cleartext release guard | `tools/cleartext_release_check.py`, `.github/workflows/verify.yml`, `.github/workflows/release.yml` | Fails release preflight when network security config enables cleartext, the manifest explicitly enables cleartext, or provider-network code reintroduces raw HTTP URLs or OkHttp HTTP scheme builders. |
 | Network endpoint inventory | `docs/security/network-endpoints.json`, `docs/security/network-endpoints.md`, `tools/network_endpoint_inventory_check.py`, `.github/workflows/verify.yml` | Fails verification when app network-code URL hosts drift from the reviewed endpoint/auth/cache/fallback inventory. |
 | Dependency Review | `.github/workflows/dependency-review.yml` | Runs on pull requests and fails high/critical vulnerable dependency additions. |
@@ -303,7 +303,7 @@ only property names and APK entries if a value is found.
 
 ## Provider credential storage policy
 
-User-entered Wallhaven, Pexels, Pixabay, Freesound, and Stability values are stored in app-private Jetpack DataStore and the DataStore file is excluded from cloud backup and device transfer. SoundCloud remains a blank-by-default public client ID in `BuildConfig` only. The reviewed decision is not to migrate the current optional provider keys to Android Keystore storage yet; `docs/security/provider-credential-storage.md` records that this is not strong at-rest protection, and Settings lets users clear each stored key by saving a blank value.
+User-entered Wallhaven, Pexels, Pixabay, Freesound, and Stability values are stored in app-private Jetpack DataStore and the DataStore file is excluded from cloud backup and device transfer. SoundCloud remains a blank-by-default public client ID in `BuildConfig` only. The reviewed decision is not to migrate the current optional provider keys to Android Keystore storage yet; `docs/security/provider-credential-storage.md` records that this is not strong at-rest protection, and Settings lets users clear each stored key with an explicit Clear action or by saving a blank value.
 
 PR/main verification and the release workflow run:
 
@@ -311,7 +311,7 @@ PR/main verification and the release workflow run:
 python3 tools/provider_credential_storage_check.py --policy docs/security/provider-credential-storage.json --repo-root .
 ```
 
-The check fails when a credential row is missing from the policy or Markdown, a DataStore-backed key lacks a Settings clear control, the preferences DataStore file is no longer excluded from backup and device transfer, a `BuildConfig` provider default is no longer blank, or the privacy/support diagnostics disclosures drift from the reviewed storage decision.
+The check fails when a credential row is missing from the policy or Markdown, a DataStore-backed key lacks a Settings label or explicit Clear action, the preferences DataStore file is no longer excluded from backup and device transfer, a `BuildConfig` provider default is no longer blank, or the privacy/support diagnostics disclosures drift from the reviewed storage decision.
 
 ## Cleartext release guard
 

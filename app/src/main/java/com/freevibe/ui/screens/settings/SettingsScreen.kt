@@ -67,6 +67,58 @@ import java.text.DateFormat
 import java.util.Date
 import java.util.Locale
 
+@Composable
+private fun ProviderApiKeyDialog(
+    title: String,
+    description: String,
+    value: String,
+    placeholder: String,
+    onSave: (String) -> Unit,
+    onDismiss: () -> Unit,
+) {
+    var keyText by remember(value) { mutableStateOf(value) }
+    val canClear = keyText.isNotBlank() || value.isNotBlank()
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(title) },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text(
+                    description,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                OutlinedTextField(
+                    value = keyText,
+                    onValueChange = { keyText = it },
+                    modifier = Modifier.fillMaxWidth(),
+                    placeholder = { Text(placeholder) },
+                    singleLine = true,
+                )
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = {
+                onSave(keyText.trim())
+                onDismiss()
+            }) { Text("Save") }
+        },
+        dismissButton = {
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                TextButton(
+                    enabled = canClear,
+                    onClick = {
+                        onSave("")
+                        onDismiss()
+                    },
+                ) { Text("Clear") }
+                TextButton(onClick = onDismiss) { Text("Cancel") }
+            }
+        },
+    )
+}
+
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 fun SettingsScreen(
@@ -1180,18 +1232,13 @@ fun SettingsScreen(
                 onCheckedChange = { viewModel.setWallhavenProviderEnabled(it) },
             )
             if (showWallhavenKey) {
-                var keyText by remember { mutableStateOf(wallhavenApiKey) }
-                AlertDialog(
-                    onDismissRequest = { showWallhavenKey = false },
-                    title = { Text("Wallhaven API Key") },
-                    text = {
-                        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                            Text("Get your key at wallhaven.cc/settings", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                            OutlinedTextField(value = keyText, onValueChange = { keyText = it }, modifier = Modifier.fillMaxWidth(), placeholder = { Text("Paste API key") }, singleLine = true)
-                        }
-                    },
-                    confirmButton = { TextButton(onClick = { viewModel.setWallhavenKey(keyText.trim()); showWallhavenKey = false }) { Text("Save") } },
-                    dismissButton = { TextButton(onClick = { showWallhavenKey = false }) { Text("Cancel") } },
+                ProviderApiKeyDialog(
+                    title = "Wallhaven API Key",
+                    description = "Get your key at wallhaven.cc/settings",
+                    value = wallhavenApiKey,
+                    placeholder = "Paste API key",
+                    onSave = viewModel::setWallhavenKey,
+                    onDismiss = { showWallhavenKey = false },
                 )
             }
             // Wallhaven SafeSearch toggles. Without an API key both remain UI-visible
@@ -1237,31 +1284,13 @@ fun SettingsScreen(
                 onClick = { showPexelsKey = true },
             )
             if (showPexelsKey) {
-                var keyText by remember { mutableStateOf(pexelsApiKey) }
-                AlertDialog(
-                    onDismissRequest = { showPexelsKey = false },
-                    title = { Text("Pexels API Key") },
-                    text = {
-                        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                            Text("Get a free key at pexels.com/api/new", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                            OutlinedTextField(
-                                value = keyText,
-                                onValueChange = { keyText = it },
-                                modifier = Modifier.fillMaxWidth(),
-                                placeholder = { Text("Paste API key here") },
-                                singleLine = true,
-                            )
-                        }
-                    },
-                    confirmButton = {
-                        TextButton(onClick = {
-                            viewModel.setPexelsKey(keyText.trim())
-                            showPexelsKey = false
-                        }) { Text("Save") }
-                    },
-                    dismissButton = {
-                        TextButton(onClick = { showPexelsKey = false }) { Text("Cancel") }
-                    },
+                ProviderApiKeyDialog(
+                    title = "Pexels API Key",
+                    description = "Get a free key at pexels.com/api/new",
+                    value = pexelsApiKey,
+                    placeholder = "Paste API key here",
+                    onSave = viewModel::setPexelsKey,
+                    onDismiss = { showPexelsKey = false },
                 )
             }
             var showPixabayKey by remember { mutableStateOf(false) }
@@ -1283,31 +1312,13 @@ fun SettingsScreen(
                 onClick = { showPixabayKey = true },
             )
             if (showPixabayKey) {
-                var keyText by remember { mutableStateOf(pixabayApiKey) }
-                AlertDialog(
-                    onDismissRequest = { showPixabayKey = false },
-                    title = { Text("Pixabay API Key") },
-                    text = {
-                        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                            Text("Get a free key at pixabay.com/api/docs", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                            OutlinedTextField(
-                                value = keyText,
-                                onValueChange = { keyText = it },
-                                modifier = Modifier.fillMaxWidth(),
-                                placeholder = { Text("Paste API key here") },
-                                singleLine = true,
-                            )
-                        }
-                    },
-                    confirmButton = {
-                        TextButton(onClick = {
-                            viewModel.setPixabayKey(keyText.trim())
-                            showPixabayKey = false
-                        }) { Text("Save") }
-                    },
-                    dismissButton = {
-                        TextButton(onClick = { showPixabayKey = false }) { Text("Cancel") }
-                    },
+                ProviderApiKeyDialog(
+                    title = "Pixabay API Key",
+                    description = "Get a free key at pixabay.com/api/docs",
+                    value = pixabayApiKey,
+                    placeholder = "Paste API key here",
+                    onSave = viewModel::setPixabayKey,
+                    onDismiss = { showPixabayKey = false },
                 )
             }
             var showFreesoundKey by remember { mutableStateOf(false) }
@@ -1318,31 +1329,13 @@ fun SettingsScreen(
                 onClick = { showFreesoundKey = true },
             )
             if (showFreesoundKey) {
-                var keyText by remember { mutableStateOf(freesoundApiKey) }
-                AlertDialog(
-                    onDismissRequest = { showFreesoundKey = false },
-                    title = { Text("Freesound API Key") },
-                    text = {
-                        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                            Text("Paste a Freesound API token for sound search.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                            OutlinedTextField(
-                                value = keyText,
-                                onValueChange = { keyText = it },
-                                modifier = Modifier.fillMaxWidth(),
-                                placeholder = { Text("Paste API token here") },
-                                singleLine = true,
-                            )
-                        }
-                    },
-                    confirmButton = {
-                        TextButton(onClick = {
-                            viewModel.setFreesoundKey(keyText.trim())
-                            showFreesoundKey = false
-                        }) { Text("Save") }
-                    },
-                    dismissButton = {
-                        TextButton(onClick = { showFreesoundKey = false }) { Text("Cancel") }
-                    },
+                ProviderApiKeyDialog(
+                    title = "Freesound API Key",
+                    description = "Paste a Freesound API token for sound search.",
+                    value = freesoundApiKey,
+                    placeholder = "Paste API token here",
+                    onSave = viewModel::setFreesoundKey,
+                    onDismiss = { showFreesoundKey = false },
                 )
             }
             var showStabilityKey by remember { mutableStateOf(false) }
@@ -1369,31 +1362,13 @@ fun SettingsScreen(
                 )
             }
             if (generatedContentProviderEnabled && showStabilityKey) {
-                var keyText by remember { mutableStateOf(stabilityAiKey) }
-                AlertDialog(
-                    onDismissRequest = { showStabilityKey = false },
-                    title = { Text("Stability AI API Key") },
-                    text = {
-                        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                            Text("Get a free key at stability.ai/account/keys", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                            OutlinedTextField(
-                                value = keyText,
-                                onValueChange = { keyText = it },
-                                modifier = Modifier.fillMaxWidth(),
-                                placeholder = { Text("Paste API key here") },
-                                singleLine = true,
-                            )
-                        }
-                    },
-                    confirmButton = {
-                        TextButton(onClick = {
-                            viewModel.setStabilityKey(keyText.trim())
-                            showStabilityKey = false
-                        }) { Text("Save") }
-                    },
-                    dismissButton = {
-                        TextButton(onClick = { showStabilityKey = false }) { Text("Cancel") }
-                    },
+                ProviderApiKeyDialog(
+                    title = "Stability AI API Key",
+                    description = "Get a free key at stability.ai/account/keys",
+                    value = stabilityAiKey,
+                    placeholder = "Paste API key here",
+                    onSave = viewModel::setStabilityKey,
+                    onDismiss = { showStabilityKey = false },
                 )
             }
         }
