@@ -156,10 +156,10 @@ class AiWallpaperRepository @Inject constructor(
         internal fun friendlyErrorMessage(code: Int, errorBody: String?): String {
             val base = when (code) {
                 401 -> "Stability AI key is invalid or expired. Update it in the key field."
-                402 -> "Stability AI account is out of credits. Top up at platform.stability.ai."
+                402 -> "Stability AI account is out of credits. Top up or check billing at platform.stability.ai/account."
                 403 -> "Prompt was rejected by Stability AI's content policy. Try rewording."
                 422 -> "Prompt could not be processed. Try a shorter or simpler description."
-                429 -> "Stability AI rate limit hit. Wait a minute and try again."
+                429 -> "Stability AI rate limit hit. Wait 60 seconds, then check platform.stability.ai/account if it keeps happening."
                 in 500..599 -> "Stability AI server error ($code). Try again shortly."
                 else -> "Generation failed (HTTP $code)."
             }

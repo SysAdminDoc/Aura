@@ -3,6 +3,7 @@ package com.freevibe.ui.screens.aigenerate
 import com.freevibe.data.model.CommunityReportReason
 import com.freevibe.data.model.ContentSource
 import com.freevibe.data.model.Wallpaper
+import com.freevibe.data.repository.AiStyle
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
@@ -67,6 +68,53 @@ class AiWallpaperRequestGateTest {
                 prompt = "misty canyon",
                 apiKey = "sk-test",
                 disclosureAccepted = true,
+            ),
+        )
+    }
+
+    @Test
+    fun `active generation blocks duplicate submits before another request`() {
+        assertEquals(
+            GENERATED_CONTENT_IN_FLIGHT_MESSAGE,
+            generatedWallpaperRequestError(
+                providerEnabled = true,
+                prompt = "misty canyon",
+                apiKey = "sk-test",
+                disclosureAccepted = true,
+                isGenerating = true,
+            ),
+        )
+    }
+
+    @Test
+    fun `duplicate confirmation matches normalized prompt and style`() {
+        val last = generatedWallpaperRequestSignature(
+            prompt = "Misty canyon at dawn",
+            style = AiStyle.PHOTOGRAPHIC,
+        )
+
+        val confirmation = duplicateGenerationConfirmation(
+            prompt = "  misty   canyon at dawn  ",
+            style = AiStyle.PHOTOGRAPHIC,
+            lastSuccessfulRequest = last,
+        )
+
+        assertEquals("misty canyon at dawn", confirmation?.promptPreview)
+        assertEquals("Photo", confirmation?.styleLabel)
+    }
+
+    @Test
+    fun `duplicate confirmation ignores different style`() {
+        val last = generatedWallpaperRequestSignature(
+            prompt = "Misty canyon at dawn",
+            style = AiStyle.PHOTOGRAPHIC,
+        )
+
+        assertNull(
+            duplicateGenerationConfirmation(
+                prompt = "Misty canyon at dawn",
+                style = AiStyle.CINEMATIC,
+                lastSuccessfulRequest = last,
             ),
         )
     }

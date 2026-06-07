@@ -21,6 +21,7 @@ class AiWallpaperRepositoryFriendlyErrorTest {
     fun `402 yields credits message`() {
         val msg = AiWallpaperRepository.friendlyErrorMessage(402, null)
         assertTrue("Expected credits message, got: $msg", msg.contains("credits", ignoreCase = true))
+        assertTrue("Expected account action, got: $msg", msg.contains("platform.stability.ai/account"))
     }
 
     @Test
@@ -39,6 +40,8 @@ class AiWallpaperRepositoryFriendlyErrorTest {
     fun `429 yields rate limit message`() {
         val msg = AiWallpaperRepository.friendlyErrorMessage(429, null)
         assertTrue("Expected rate-limit message, got: $msg", msg.contains("rate limit", ignoreCase = true))
+        assertTrue("Expected cooldown guidance, got: $msg", msg.contains("60 seconds"))
+        assertTrue("Expected account action, got: $msg", msg.contains("platform.stability.ai/account"))
     }
 
     @Test

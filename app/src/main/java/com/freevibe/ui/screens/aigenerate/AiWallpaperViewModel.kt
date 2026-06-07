@@ -31,14 +31,53 @@ const val SOURCE_AI_GENERATED = "ai_generated"
 const val GENERATED_CONTENT_DISABLED_MESSAGE = "Generated wallpapers are disabled in Settings."
 const val GENERATED_CONTENT_DISCLOSURE_REQUIRED_MESSAGE =
     "Review and accept the generated wallpaper disclosure before generating."
+const val GENERATED_CONTENT_IN_FLIGHT_MESSAGE =
+    "Generation already in progress. Wait for it to finish before starting another Stability request."
+
+private val GENERATED_PROMPT_WHITESPACE_RE = "\\s+".toRegex()
+
+data class GeneratedWallpaperRequestSignature(
+    val normalizedPrompt: String,
+    val style: AiStyle,
+)
+
+data class DuplicateGenerationConfirmation(
+    val promptPreview: String,
+    val styleLabel: String,
+)
+
+fun generatedWallpaperRequestSignature(
+    prompt: String,
+    style: AiStyle,
+): GeneratedWallpaperRequestSignature? {
+    val normalizedPrompt = prompt.trim().replace(GENERATED_PROMPT_WHITESPACE_RE, " ").lowercase()
+    if (normalizedPrompt.isBlank()) return null
+    return GeneratedWallpaperRequestSignature(normalizedPrompt, style)
+}
+
+fun duplicateGenerationConfirmation(
+    prompt: String,
+    style: AiStyle,
+    lastSuccessfulRequest: GeneratedWallpaperRequestSignature?,
+): DuplicateGenerationConfirmation? {
+    val current = generatedWallpaperRequestSignature(prompt, style) ?: return null
+    if (current != lastSuccessfulRequest) return null
+    val preview = prompt.trim().replace(GENERATED_PROMPT_WHITESPACE_RE, " ").take(80)
+    return DuplicateGenerationConfirmation(
+        promptPreview = preview.ifBlank { "Generated wallpaper" },
+        styleLabel = style.label,
+    )
+}
 
 fun generatedWallpaperRequestError(
     providerEnabled: Boolean,
     prompt: String,
     apiKey: String,
     disclosureAccepted: Boolean,
+    isGenerating: Boolean = false,
 ): String? = when {
     !providerEnabled -> GENERATED_CONTENT_DISABLED_MESSAGE
+    isGenerating -> GENERATED_CONTENT_IN_FLIGHT_MESSAGE
     prompt.isBlank() -> "Describe your wallpaper to get started."
     apiKey.isBlank() -> "Enter your Stability AI key to generate images."
     !disclosureAccepted -> GENERATED_CONTENT_DISCLOSURE_REQUIRED_MESSAGE
@@ -69,6 +108,8 @@ data class AiWallpaperUiState(
     val applySuccess: String? = null,
     val isSaved: Boolean = false,
     val error: String? = null,
+    val sessionGenerationCount: Int = 0,
+    val pendingDuplicateConfirmation: DuplicateGenerationConfirmation? = null,
 )
 
 @HiltViewModel
@@ -89,6 +130,7 @@ class AiWallpaperViewModel @Inject constructor(
     // billing endpoint won't refund the credit, but it stops the spinner from
     // re-surfacing on resume and frees the OkHttp connection promptly.
     private var generationJob: Job? = null
+    private var lastSuccessfulGeneration: GeneratedWallpaperRequestSignature? = null
 
     // API key is read from DataStore so changes in Settings propagate live.
     val stabilityAiKey: StateFlow<String> = prefs.stabilityAiKey
@@ -99,11 +141,11 @@ class AiWallpaperViewModel @Inject constructor(
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
 
     fun setPrompt(p: String) {
-        _state.update { it.copy(prompt = p.take(500)) }
+        _state.update { it.copy(prompt = p.take(500), pendingDuplicateConfirmation = null) }
     }
 
     fun setStyle(s: AiStyle) {
-        _state.update { it.copy(selectedStyle = s) }
+        _state.update { it.copy(selectedStyle = s, pendingDuplicateConfirmation = null) }
     }
 
     fun saveApiKey(key: String) {
@@ -133,33 +175,84 @@ class AiWallpaperViewModel @Inject constructor(
         _state.update { it.copy(applySuccess = null) }
     }
 
-    fun generate(apiKey: String, disclosureAcceptedOverride: Boolean? = null) {
+    fun generate(
+        apiKey: String,
+        disclosureAcceptedOverride: Boolean? = null,
+        allowDuplicate: Boolean = false,
+    ) {
         val current = _state.value
         val providerEnabled = generatedContentProviderEnabled.value
+        val generationActive = current.isGenerating || generationJob?.isActive == true
         val requestError = generatedWallpaperRequestError(
             providerEnabled = providerEnabled,
             prompt = current.prompt,
             apiKey = apiKey,
             disclosureAccepted = disclosureAcceptedOverride ?: generatedContentDisclosureAccepted.value,
+            isGenerating = generationActive,
         )
         if (requestError != null) {
             if (!providerEnabled) sourceMetrics.recordDisabled(SOURCE_AI_GENERATED)
             _state.update { it.copy(error = requestError) }
             return
         }
+
+        val duplicateConfirmation = if (allowDuplicate) {
+            null
+        } else {
+            duplicateGenerationConfirmation(
+                prompt = current.prompt,
+                style = current.selectedStyle,
+                lastSuccessfulRequest = lastSuccessfulGeneration,
+            )
+        }
+        if (duplicateConfirmation != null) {
+            _state.update {
+                it.copy(
+                    pendingDuplicateConfirmation = duplicateConfirmation,
+                    error = null,
+                )
+            }
+            return
+        }
+
         generationJob?.cancel()
+        val requestSignature = generatedWallpaperRequestSignature(current.prompt, current.selectedStyle)
         generationJob = viewModelScope.launch {
-            _state.update { it.copy(isGenerating = true, error = null, result = null, isSaved = false) }
+            _state.update {
+                it.copy(
+                    isGenerating = true,
+                    error = null,
+                    result = null,
+                    isSaved = false,
+                    pendingDuplicateConfirmation = null,
+                )
+            }
             repo.generate(
                 prompt = current.prompt,
                 style = current.selectedStyle,
                 apiKey = apiKey,
             ).onSuccess { wallpaper ->
-                _state.update { it.copy(isGenerating = false, result = wallpaper) }
+                lastSuccessfulGeneration = requestSignature
+                _state.update {
+                    it.copy(
+                        isGenerating = false,
+                        result = wallpaper,
+                        sessionGenerationCount = it.sessionGenerationCount + 1,
+                    )
+                }
             }.onFailure { e ->
                 _state.update { it.copy(isGenerating = false, error = e.message ?: "Generation failed") }
             }
         }
+    }
+
+    fun confirmDuplicateGeneration(apiKey: String) {
+        _state.update { it.copy(pendingDuplicateConfirmation = null) }
+        generate(apiKey = apiKey, allowDuplicate = true)
+    }
+
+    fun dismissDuplicateGeneration() {
+        _state.update { it.copy(pendingDuplicateConfirmation = null) }
     }
 
     /**

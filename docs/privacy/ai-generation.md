@@ -10,6 +10,8 @@ wallpaper disclosure. The disclosure states that:
 
 - The user's prompt is sent to Stability to generate an image.
 - The request uses the user's Stability key and may spend provider credits.
+- Provider pricing and rate limits can change, so repeated generations should
+  be checked against the user's Stability account.
 - Generated images are stored locally in Aura for preview, save, apply, and
   delete workflows.
 - Users should not include private, identifying, or unsafe content in prompts.
@@ -26,6 +28,20 @@ key to the Stability image generation endpoint.
 Aura does not send local favorites, downloads, Firebase identity values,
 provider keys for other services, crash diagnostics, or community account
 deletion data with the generation request.
+
+## Credits, Rate Limits, and Duplicate Requests
+
+Aura treats generated wallpaper requests as potentially billable provider
+actions:
+
+- The Generate button is disabled while a request is in progress, and the
+  ViewModel rejects a second direct request while the first coroutine is active.
+- The screen shows a local session request count. This count is device-local and
+  resets with the app process; it is not a provider billing balance.
+- If the same prompt and style already produced a wallpaper in the current
+  session, Aura asks for confirmation before sending another Stability request.
+- Out-of-credit and rate-limit errors point users to the Stability account page
+  and a cooldown rather than retrying automatically.
 
 ## Local Storage
 
@@ -65,3 +81,8 @@ community upload metadata and do not expose reporter identity publicly.
   details before sharing.
 - Confirm generated-content reports omit Stability keys, local file paths, and
   prompt text unless the user enters prompt text in the report note.
+- Confirm rapid taps or direct ViewModel calls create only one active request.
+- Confirm repeating the same prompt and style after a successful generation asks
+  for confirmation before another request.
+- Confirm 402 and 429 Stability responses include provider account/cooldown
+  actions.

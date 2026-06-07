@@ -1,8 +1,8 @@
 # Autonomous Loop State
 
 **Assigned project:** `C:\Users\--\repos\Aura`
-**Current pass:** 2026-06-07 Cycle 135 Stability key policy sentinel
-**Last commit before pass:** `ef18720` (`feat(wallpapers): add generated content reporting`)
+**Current pass:** 2026-06-07 Cycle 136 generated request cost guardrails
+**Last commit before pass:** `d304a05` (`ci(security): pin stability key policy`)
 
 ## 2026-06-05 Result
 
@@ -1933,11 +1933,25 @@
   credential storage policy scan, and provider credential release guard with a
   blank release-style local properties fixture passed.
 
+## Cycle 136 Result - 2026-06-07
+
+- Added ViewModel-level in-flight request rejection so rapid direct calls cannot
+  cancel and replace an active Stability generation request.
+- Added local session request counting and visible generated wallpaper credit
+  copy.
+- Added same prompt/style duplicate detection after a successful generation and
+  a confirmation dialog before sending another matching Stability request.
+- Updated 402 and 429 Stability error copy with account/cooldown actions.
+- Updated generated wallpaper privacy/runbook docs, research, roadmap,
+  changelog, completion, and loop-state docs.
+- Cycle 136 verification: focused generated wallpaper request-gate and
+  Stability error-copy unit tests passed.
+
 ## Next Cycle
 
-Continue this same assigned project, Aura. Start Cycle 136 from the
+Continue this same assigned project, Aura. Start Cycle 137 from the
 `ROADMAP.md` Continuation State and
-`docs/research/cycle-135-2026-06-07.md`. The account
+`docs/research/cycle-136-2026-06-07.md`. The account
 deletion dry-run planner, read-only Settings identity surface, redacted
 shareable request draft, request-code lookup tool, review receipt gate, offline
 apply simulator, private executor package builder, and guarded REST executor
@@ -2039,7 +2053,10 @@ release-stage provider credential APK scan after signed APK packaging; Cycle
 Cycle 133 added a persisted generated wallpaper disclosure gate and Settings
 review/reset path before Stability requests; Cycle 134 added generated-content
 report actions and callable reason support; Cycle 135 added a Stability
-paid-secret sentinel to the provider credential storage guard.
+paid-secret sentinel to the provider credential storage guard; Cycle 136 added
+generated wallpaper session request counting, duplicate prompt/style
+confirmation, in-flight request rejection, and Stability account/cooldown error
+copy.
 Actual live callable invocation evidence, a live hosted HTTPS web deletion URL,
 direct RTDB rule tightening, App Check console evidence, production-project
 dry-run evidence, and owner/admin GitHub repository security-settings evidence
@@ -2050,11 +2067,10 @@ hosted URL after owner approval, tighten direct RTDB write rules after callable
 deploy evidence, run a real production-project Firebase executor dry-run after
 owner access is confirmed, collect owner/admin GitHub security settings
 evidence and generate the redacted receipt when access is available, or
-continue with signed release dry-run evidence capture on a suitable runner,
-AI credit/rate-limit duplicate-generation guardrails, prompt metadata
-retention/deletion policy, or the next checkable backend, deploy, security,
-support, policy, or rules hardening artifact if owner-gated evidence is still
-unavailable.
+continue with prompt metadata retention/deletion policy, signed release dry-run
+evidence capture on a suitable runner, or the next checkable backend, deploy,
+security, support, policy, or rules hardening artifact if owner-gated evidence
+is still unavailable.
 Commit and push completed work when the active project contract allows it.
 
 ## Previous Cycle Prompt

@@ -604,6 +604,10 @@ next pass can resume quickly.
   credential storage guard with an exact Stability paid-sensitive DataStore
   sentinel, required blank release defaults, redaction terms, and Clear-control
   documentation, added focused tests, and updated security/supply-chain docs.
+- Completed Cycle 136 generated request cost guardrails: added in-flight
+  generation rejection, local session request counting, same prompt/style
+  duplicate confirmation after successful generation, Stability account and
+  cooldown error copy, and generated wallpaper privacy/runbook updates.
 
 ## 2026-06-05
 

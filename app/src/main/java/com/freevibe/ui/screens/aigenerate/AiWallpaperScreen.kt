@@ -99,6 +99,11 @@ fun GeneratedWallpaperDisclosureDialog(
                     style = MaterialTheme.typography.bodySmall,
                 )
                 Text(
+                    "Provider pricing and rate limits can change; review your Stability account page before repeated generations.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                Text(
                     "Generated images are stored locally in Aura so you can preview, save, apply, or delete them. Do not include private, identifying, or unsafe content in prompts.",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -440,6 +445,13 @@ fun AiWallpaperScreen(
                 }
             }
 
+            Text(
+                "One request may spend Stability credits. Session requests: ${state.sessionGenerationCount}. Duplicate prompt/style retries ask before another request.",
+                modifier = Modifier.padding(horizontal = 14.dp),
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+
             if (showDisclosureDialog) {
                 GeneratedWallpaperDisclosureDialog(
                     accepted = generatedContentDisclosureAccepted,
@@ -458,6 +470,45 @@ fun AiWallpaperScreen(
                     onDismiss = {
                         showDisclosureDialog = false
                         generateAfterDisclosure = false
+                    },
+                )
+            }
+
+            state.pendingDuplicateConfirmation?.let { duplicate ->
+                AlertDialog(
+                    onDismissRequest = { viewModel.dismissDuplicateGeneration() },
+                    title = { Text("Generate again?") },
+                    text = {
+                        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                            Text(
+                                "This prompt and ${duplicate.styleLabel} style already produced a wallpaper this session.",
+                                style = MaterialTheme.typography.bodySmall,
+                            )
+                            Text(
+                                "Running it again may spend another Stability credit charge.",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                            Text(
+                                duplicate.promptPreview,
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                        }
+                    },
+                    confirmButton = {
+                        TextButton(
+                            onClick = {
+                                viewModel.confirmDuplicateGeneration(localApiKey.ifBlank { apiKey })
+                            },
+                        ) {
+                            Text("Generate Again")
+                        }
+                    },
+                    dismissButton = {
+                        TextButton(onClick = { viewModel.dismissDuplicateGeneration() }) {
+                            Text("Cancel")
+                        }
                     },
                 )
             }
