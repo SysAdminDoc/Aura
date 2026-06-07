@@ -600,6 +600,10 @@ next pass can resume quickly.
   callable report reason allowlist, allowed AI-generated reports independent of
   the Community source switch, and documented retention, moderation response,
   and provider-key/local-path exclusions.
+- Completed Cycle 135 BYO Stability key hardening: extended the provider
+  credential storage guard with an exact Stability paid-sensitive DataStore
+  sentinel, required blank release defaults, redaction terms, and Clear-control
+  documentation, added focused tests, and updated security/supply-chain docs.
 
 ## 2026-06-05
 

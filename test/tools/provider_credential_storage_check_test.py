@@ -30,6 +30,7 @@ class ProviderCredentialStorageCheckTest(unittest.TestCase):
         self.assertEqual(5, result["dataStoreCredentialCount"])
         self.assertEqual(5, result["buildConfigCredentialCount"])
         self.assertEqual(1, result["paidSensitiveCredentialCount"])
+        self.assertEqual("ok", result["stabilityCredentialStatus"])
 
     def test_rejects_missing_backup_exclusion(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -91,6 +92,22 @@ class ProviderCredentialStorageCheckTest(unittest.TestCase):
 
             with self.assertRaises(ProviderCredentialStorageError):
                 validate_policy(repo, policy)
+
+    def test_rejects_stability_classification_drift(self) -> None:
+        policy = copy.deepcopy(live_policy())
+        stability = next(row for row in policy["credentials"] if row["id"] == "stability-ai-key")  # type: ignore[index]
+        stability["classification"] = "optionalQuotaKey"  # type: ignore[index]
+
+        with self.assertRaises(ProviderCredentialStorageError):
+            validate_policy(REPO_ROOT, policy)
+
+    def test_rejects_missing_stability_redaction_term(self) -> None:
+        policy = copy.deepcopy(live_policy())
+        stability = next(row for row in policy["credentials"] if row["id"] == "stability-ai-key")  # type: ignore[index]
+        stability["redactionTerms"] = ["key", "api keys", "local.properties"]  # type: ignore[index]
+
+        with self.assertRaises(ProviderCredentialStorageError):
+            validate_policy(REPO_ROOT, policy)
 
 
 def minimal_policy() -> dict[str, object]:

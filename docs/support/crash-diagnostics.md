@@ -22,7 +22,8 @@ The generated bundle redacts:
 - Bearer tokens and authorization headers.
 - Provider query-string values named `apikey`, `key`, `token`, and `client_id`.
 - API keys, tokens, passwords, secrets, client IDs, and dotted provider
-  property names in assignment form, including `local.properties` entries.
+  property names in assignment form, including `local.properties` entries such
+  as `stability.ai.key`.
 - App-private Android paths under `com.freevibe`.
 - `file://` paths.
 

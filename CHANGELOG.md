@@ -3,6 +3,7 @@
 All notable changes to Aura will be documented in this file.
 
 ## Unreleased
+- **Stability key policy sentinel (Cycle 135)**: tightened the provider credential storage guard so the Stability key must remain a DataStore-backed paid-sensitive secret with blank release defaults, explicit Clear control, and `stability.ai.key` redaction coverage.
 - **Generated content reporting (Cycle 134)**: added generated wallpaper report actions, generated-content reason categories, backend reason allowlist support, and privacy/reporting runbook updates.
 - **Generated wallpaper disclosure (Cycle 133)**: added a persisted prompt/privacy disclosure gate before Stability requests plus a Settings review/reset path and privacy runbook.
 - **Provider key clear UX (Cycle 132)**: consolidated provider API-key dialogs around explicit Save, Clear, and Cancel actions, and extended the storage policy guard to fail if the Clear path disappears.

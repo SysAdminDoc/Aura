@@ -1,8 +1,8 @@
 # Autonomous Loop State
 
 **Assigned project:** `C:\Users\--\repos\Aura`
-**Current pass:** 2026-06-07 Cycle 132 provider key clear UX
-**Last commit before pass:** `9cbddfc` (`ci(security): scan release apk for provider keys`)
+**Current pass:** 2026-06-07 Cycle 135 Stability key policy sentinel
+**Last commit before pass:** `ef18720` (`feat(wallpapers): add generated content reporting`)
 
 ## 2026-06-05 Result
 
@@ -1916,11 +1916,28 @@
   release-style local properties fixture; provider credential storage policy;
   cleartext guard; and endpoint inventory scan passed.
 
+## Cycle 135 Result - 2026-06-07
+
+- Extended `tools/provider_credential_storage_check.py` with an exact
+  `stability-ai-key` sentinel for Stability's paid-sensitive credential
+  posture.
+- Required Stability to remain a DataStore-backed `paidSensitiveSecret` with
+  blank `STABILITY_AI_KEY` / `stability.ai.key` public release defaults,
+  explicit Clear control documentation, `stability.ai.key` redaction coverage,
+  and the documented no-Keystore decision.
+- Added focused policy tests for Stability classification drift and missing
+  redaction coverage.
+- Updated provider credential storage policy, crash diagnostics, supply-chain,
+  research, roadmap, changelog, completion, and loop-state docs.
+- Cycle 135 verification: focused provider credential tool tests, live provider
+  credential storage policy scan, and provider credential release guard with a
+  blank release-style local properties fixture passed.
+
 ## Next Cycle
 
-Continue this same assigned project, Aura. Start Cycle 135 from the
+Continue this same assigned project, Aura. Start Cycle 136 from the
 `ROADMAP.md` Continuation State and
-`docs/research/cycle-134-2026-06-07.md`. The account
+`docs/research/cycle-135-2026-06-07.md`. The account
 deletion dry-run planner, read-only Settings identity surface, redacted
 shareable request draft, request-code lookup tool, review receipt gate, offline
 apply simulator, private executor package builder, and guarded REST executor
@@ -2021,7 +2038,8 @@ release-stage provider credential APK scan after signed APK packaging; Cycle
 132 added explicit provider key Clear actions and storage-policy coverage;
 Cycle 133 added a persisted generated wallpaper disclosure gate and Settings
 review/reset path before Stability requests; Cycle 134 added generated-content
-report actions and callable reason support.
+report actions and callable reason support; Cycle 135 added a Stability
+paid-secret sentinel to the provider credential storage guard.
 Actual live callable invocation evidence, a live hosted HTTPS web deletion URL,
 direct RTDB rule tightening, App Check console evidence, production-project
 dry-run evidence, and owner/admin GitHub repository security-settings evidence
@@ -2033,7 +2051,8 @@ deploy evidence, run a real production-project Firebase executor dry-run after
 owner access is confirmed, collect owner/admin GitHub security settings
 evidence and generate the redacted receipt when access is available, or
 continue with signed release dry-run evidence capture on a suitable runner,
-BYO Stability key hardening, or the next checkable backend, deploy, security,
+AI credit/rate-limit duplicate-generation guardrails, prompt metadata
+retention/deletion policy, or the next checkable backend, deploy, security,
 support, policy, or rules hardening artifact if owner-gated evidence is still
 unavailable.
 Commit and push completed work when the active project contract allows it.

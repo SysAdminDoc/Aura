@@ -26,6 +26,16 @@ REQUIRED_CREDENTIAL_FIELDS = {
 }
 SUPPORTED_CLASSIFICATIONS = {"optionalQuotaKey", "publicClientId", "paidSensitiveSecret"}
 SUPPORTED_STORAGE = {"dataStore", "buildConfigOnly"}
+STABILITY_CREDENTIAL_ID = "stability-ai-key"
+STABILITY_REQUIREMENTS = {
+    "provider": "Stability AI",
+    "classification": "paidSensitiveSecret",
+    "storage": "dataStore",
+    "preferenceKey": "stability_ai_key",
+    "buildConfigField": "STABILITY_AI_KEY",
+    "gradleProperty": "stability.ai.key",
+    "settingsLabel": "Stability AI API Key",
+}
 
 
 class ProviderCredentialStorageError(ValueError):
@@ -145,6 +155,7 @@ def validate_policy(repo_root: Path, policy: dict[str, Any]) -> dict[str, Any]:
     data_store_count = 0
     build_config_count = 0
     paid_sensitive_count = 0
+    stability_credential: dict[str, Any] | None = None
     for index, raw_credential in enumerate(credentials_raw):
         credential = require_object(raw_credential, f"credentials[{index}]")
         missing = sorted(REQUIRED_CREDENTIAL_FIELDS - set(credential))
@@ -196,10 +207,14 @@ def validate_policy(repo_root: Path, policy: dict[str, Any]) -> dict[str, Any]:
             paid_sensitive_count += 1
             if "not strong at-rest protection" not in docs_text:
                 raise ProviderCredentialStorageError(f"{docs_path} must disclose no strong at-rest protection")
+        if credential_id == STABILITY_CREDENTIAL_ID:
+            stability_credential = credential
 
         for term in redaction_terms:
             if term.lower() not in diagnostics_doc_text:
                 raise ProviderCredentialStorageError(f"{diagnostics_doc_path} is missing redaction term {term}")
+
+    validate_stability_credential(stability_credential)
 
     return {
         "policyKind": policy["policyKind"],
@@ -208,9 +223,28 @@ def validate_policy(repo_root: Path, policy: dict[str, Any]) -> dict[str, Any]:
         "dataStoreCredentialCount": data_store_count,
         "buildConfigCredentialCount": build_config_count,
         "paidSensitiveCredentialCount": paid_sensitive_count,
+        "stabilityCredentialStatus": "ok",
         "dataStoreFile": data_store_file,
         "status": "ok",
     }
+
+
+def validate_stability_credential(credential: dict[str, Any] | None) -> None:
+    if credential is None:
+        raise ProviderCredentialStorageError(f"{STABILITY_CREDENTIAL_ID} credential row is required")
+    for field, expected in STABILITY_REQUIREMENTS.items():
+        if credential.get(field) != expected:
+            raise ProviderCredentialStorageError(
+                f"{STABILITY_CREDENTIAL_ID}.{field} must be {expected}"
+            )
+    if credential.get("releaseDefault") != "blank":
+        raise ProviderCredentialStorageError(f"{STABILITY_CREDENTIAL_ID}.releaseDefault must be blank")
+    redaction_terms = credential.get("redactionTerms")
+    if not isinstance(redaction_terms, list) or "stability.ai.key" not in redaction_terms:
+        raise ProviderCredentialStorageError(f"{STABILITY_CREDENTIAL_ID} must redact stability.ai.key")
+    user_control = credential.get("userControl")
+    if not isinstance(user_control, str) or "Clear" not in user_control:
+        raise ProviderCredentialStorageError(f"{STABILITY_CREDENTIAL_ID} must document explicit Clear control")
 
 
 def main() -> int:

@@ -311,7 +311,7 @@ PR/main verification and the release workflow run:
 python3 tools/provider_credential_storage_check.py --policy docs/security/provider-credential-storage.json --repo-root .
 ```
 
-The check fails when a credential row is missing from the policy or Markdown, a DataStore-backed key lacks a Settings label or explicit Clear action, the preferences DataStore file is no longer excluded from backup and device transfer, a `BuildConfig` provider default is no longer blank, or the privacy/support diagnostics disclosures drift from the reviewed storage decision.
+The check fails when a credential row is missing from the policy or Markdown, a DataStore-backed key lacks a Settings label or explicit Clear action, the preferences DataStore file is no longer excluded from backup and device transfer, a `BuildConfig` provider default is no longer blank, or the privacy/support diagnostics disclosures drift from the reviewed storage decision. It also treats Stability as the paid-sensitive sentinel credential and fails if the Stability row stops using DataStore, loses its blank `STABILITY_AI_KEY` release default, loses `stability.ai.key` redaction coverage, or no longer documents explicit Clear control.
 
 ## Cleartext release guard
 

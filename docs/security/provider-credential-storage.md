@@ -56,3 +56,9 @@ label or explicit Clear action is missing for DataStore-backed credentials, if
 Gradle release defaults drift away from blank provider values, if DataStore
 backup exclusions disappear, or if diagnostics/privacy docs stop describing
 redaction and device storage.
+
+The guard also treats `stability-ai-key` as the paid-sensitive sentinel row. It
+fails if Stability stops being a DataStore-backed `paidSensitiveSecret`, if the
+`STABILITY_AI_KEY` / `stability.ai.key` release default is no longer blank, if
+`stability.ai.key` is missing from redaction coverage, or if the explicit Clear
+control is no longer documented.
