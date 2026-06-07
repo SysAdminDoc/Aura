@@ -3,6 +3,7 @@
 All notable changes to Aura will be documented in this file.
 
 ## Unreleased
+- **Report callable emulator coverage (Cycle 102)**: added RTDB-emulator-backed `submitCommunityReport` handler coverage for report, quota, dedupe, and duplicate report writes through the real Admin SDK backend.
 - **Profile callable emulator coverage (Cycle 101)**: added `npm run test:functions-emulator` and an RTDB-emulator-backed profile handler test that verifies profile, quota, dedupe, and unchanged-profile idempotency writes through the real Admin SDK backend, then wired the script into the Firebase backend CI lane.
 - **Creator profile callable handler (Cycle 100)**: implemented the `updateCreatorProfile` Functions handler with Auth/App Check enforcement, server-derived profile UID and timestamps, display-copy normalization, normalized-profile dedupe, quota checks, and focused unit coverage.
 - **Community wallpaper upload callable handler (Cycle 99)**: implemented the `finalizeCommunityWallpaperUpload` Functions handler with Auth/App Check enforcement, server-allocated upload IDs, wallpaper metadata normalization, Storage path ownership checks, storage-path dedupe, public metadata and owner-index writes, and focused unit coverage.

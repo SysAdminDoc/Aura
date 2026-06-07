@@ -111,7 +111,7 @@ export function createSubmitCommunityReportCallable(backend = new FirebaseSubmit
 
 export async function submitCommunityReportHandler(
   request: CallableRequestLike,
-  backend: SubmitReportBackend,
+  backend: SubmitReportBackend = new FirebaseSubmitReportBackend(),
 ) {
   const reporterUid = requireCallableIdentity(request, REPORT_SURFACE);
   const nowMillis = backend.nowMillis();
