@@ -1747,11 +1747,36 @@
   `.\gradlew.bat --no-daemon --max-workers=2 ":app:testDebugUnitTest" --tests "com.freevibe.service.RequestRedactorTest" --tests "com.freevibe.service.SourceMetricsTest" --tests "com.freevibe.service.CrashDiagnosticsTextTest" --stacktrace`
   passed.
 
+## Cycle 128 Result - 2026-06-07
+
+- Added `docs/security/network-endpoints.json` as the reviewed endpoint
+  manifest for app network surfaces.
+- Added `docs/security/network-endpoints.md` as the release-review runbook
+  covering host, scheme, auth location, data sent, media cache, rate/cache
+  policy, fallback behavior, kill switch, and owner for each surface.
+- Added `tools/network_endpoint_inventory_check.py` to validate inventory
+  schema, Markdown coverage, source roots, and literal HTTP(S) hosts in
+  network-facing Kotlin source.
+- Added `test/tools/network_endpoint_inventory_check_test.py` with live-repo
+  coverage plus negative tests for unreviewed hosts, missing endpoint fields,
+  and stale docs.
+- Wired `.github/workflows/verify.yml` to run the endpoint inventory scanner
+  before Android setup.
+- Updated `docs/distribution/supply-chain.md`,
+  `docs/research/cycle-128-2026-06-07.md`, `ROADMAP.md`, `COMPLETED.md`,
+  `CHANGELOG.md`, and loop state.
+- Cycle 128 verification: network inventory tool compile, live endpoint
+  inventory scan, focused network inventory tests, full backend/tool unittest
+  suite, GitHub Actions allowlist, workflow permissions policy, workflow secret
+  policy, GitHub security workflow policy, Dependabot policy, Gradle wrapper
+  policy, provider credential release guard without local secret inspection,
+  diff hygiene, and attribution scan passed.
+
 ## Next Cycle
 
-Continue this same assigned project, Aura. Start Cycle 128 from the
+Continue this same assigned project, Aura. Start Cycle 129 from the
 `ROADMAP.md` Continuation State and
-`docs/research/cycle-127-2026-06-07.md`. The account
+`docs/research/cycle-128-2026-06-07.md`. The account
 deletion dry-run planner, read-only Settings identity surface, redacted
 shareable request draft, request-code lookup tool, review receipt gate, offline
 apply simulator, private executor package builder, and guarded REST executor
@@ -1842,7 +1867,8 @@ unit tests into the always-on verify job before Android setup; Cycle 125 added
 a provider credential release guard for `BuildConfig` and `local.properties`;
 Cycle 126 added provider-specific crash diagnostics redaction fixtures and
 dotted provider-property assignment redaction; Cycle 127 added a shared request
-redactor for crash diagnostics and source metrics error details.
+redactor for crash diagnostics and source metrics error details; Cycle 128
+added a checked network endpoint inventory runbook and literal-host scanner.
 Actual live callable invocation evidence, a live hosted HTTPS web deletion URL,
 direct RTDB rule tightening, App Check console evidence, production-project
 dry-run evidence, and owner/admin GitHub repository security-settings evidence

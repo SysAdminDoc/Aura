@@ -1,0 +1,279 @@
+{
+  "schemaVersion": 1,
+  "policyKind": "networkEndpointInventory",
+  "docsPath": "docs/security/network-endpoints.md",
+  "scan": {
+    "sourceRoots": [
+      "app/src/main/java/com/freevibe/di",
+      "app/src/main/java/com/freevibe/data/remote",
+      "app/src/main/java/com/freevibe/data/repository",
+      "app/src/main/java/com/freevibe/service"
+    ]
+  },
+  "endpoints": [
+    {
+      "id": "wallhaven-api",
+      "hosts": ["wallhaven.cc"],
+      "schemes": ["https"],
+      "surface": "Wallhaven wallpapers",
+      "authLocation": "optional query parameter: apikey",
+      "dataSent": "search query, sorting, category, purity, resolution, ratio, color, and page parameters",
+      "mediaCached": "wallpaper metadata and returned image URLs can be cached by WallpaperCacheManager",
+      "rateLimitCachePolicy": "cache fallback for wallpaper results; no host-specific backoff yet",
+      "fallbackBehavior": "returns stale cache where available; provider can be disabled by user",
+      "killSwitch": "wallhaven_provider_enabled",
+      "releaseOwner": "maintainer",
+      "sourceFiles": [
+        "app/src/main/java/com/freevibe/di/AppModule.kt",
+        "app/src/main/java/com/freevibe/data/remote/wallhaven/WallhavenApi.kt",
+        "app/src/main/java/com/freevibe/data/repository/WallpaperRepository.kt"
+      ]
+    },
+    {
+      "id": "bing-daily",
+      "hosts": ["www.bing.com", "www2.bing.com", "cn.bing.com"],
+      "schemes": ["https"],
+      "surface": "Bing Daily wallpaper feed",
+      "authLocation": "none",
+      "dataSent": "market, index, count, and response format parameters",
+      "mediaCached": "wallpaper metadata and image URLs can be cached by WallpaperCacheManager",
+      "rateLimitCachePolicy": "cache fallback and retry across reviewed Bing host fallbacks",
+      "fallbackBehavior": "tries fallback Bing hosts for retryable DNS, timeout, connect, and TLS errors",
+      "killSwitch": "bing_provider_enabled",
+      "releaseOwner": "maintainer",
+      "sourceFiles": [
+        "app/src/main/java/com/freevibe/data/remote/bing/BingDailyApi.kt",
+        "app/src/main/java/com/freevibe/data/repository/WallpaperRepository.kt"
+      ]
+    },
+    {
+      "id": "pexels-api",
+      "hosts": ["api.pexels.com"],
+      "schemes": ["https"],
+      "surface": "Pexels photo and video provider",
+      "authLocation": "Authorization header",
+      "dataSent": "search query, orientation, size, page, and per-page parameters",
+      "mediaCached": "provider media URLs can be cached in feed and offline media paths",
+      "rateLimitCachePolicy": "cache fallback for wallpaper results; provider docs require quota-aware use",
+      "fallbackBehavior": "Pexels is Discover enhancement-only when no base inventory is loaded",
+      "killSwitch": "pexels_provider_enabled",
+      "releaseOwner": "maintainer",
+      "sourceFiles": [
+        "app/src/main/java/com/freevibe/data/remote/pexels/PexelsApi.kt",
+        "app/src/main/java/com/freevibe/data/repository/WallpaperRepository.kt"
+      ]
+    },
+    {
+      "id": "pixabay-api",
+      "hosts": ["pixabay.com", "i.vimeocdn.com"],
+      "schemes": ["https"],
+      "surface": "Pixabay photo and video provider",
+      "authLocation": "query parameter: key",
+      "dataSent": "search query, media type, orientation, safe-search, order, category, and page parameters",
+      "mediaCached": "24-hour request cache for provider metadata; returned media URLs can be cached offline",
+      "rateLimitCachePolicy": "429 Retry-After or X-RateLimit-Reset backoff up to 24 hours with stale-cache fallback",
+      "fallbackBehavior": "returns stale cache or empty result during backoff when possible",
+      "killSwitch": "pixabay_provider_enabled",
+      "releaseOwner": "maintainer",
+      "sourceFiles": [
+        "app/src/main/java/com/freevibe/data/remote/pixabay/PixabayApi.kt",
+        "app/src/main/java/com/freevibe/data/repository/WallpaperRepository.kt"
+      ]
+    },
+    {
+      "id": "reddit-json",
+      "hosts": ["www.reddit.com", "i.redd.it", "i.imgur.com"],
+      "schemes": ["https"],
+      "surface": "Reddit wallpaper JSON and returned image URLs",
+      "authLocation": "none",
+      "dataSent": "subreddit name, search query, sort, limit, after cursor, time range, and raw_json flag",
+      "mediaCached": "returned image URLs can be cached as wallpaper feed and offline media",
+      "rateLimitCachePolicy": "no host-specific backoff yet; source metrics record failures",
+      "fallbackBehavior": "provider can be disabled by user",
+      "killSwitch": "reddit_provider_enabled",
+      "releaseOwner": "maintainer",
+      "sourceFiles": [
+        "app/src/main/java/com/freevibe/data/remote/reddit/RedditApi.kt",
+        "app/src/main/java/com/freevibe/data/repository/RedditRepository.kt"
+      ]
+    },
+    {
+      "id": "openverse-audio",
+      "hosts": ["api.openverse.org"],
+      "schemes": ["https"],
+      "surface": "Openverse audio search provider",
+      "authLocation": "none",
+      "dataSent": "search query, page, page size, and mature flag",
+      "mediaCached": "returned preview URLs can be cached as favorite or offline sound media",
+      "rateLimitCachePolicy": "anonymous quota noted in API wrapper; no app-specific backoff",
+      "fallbackBehavior": "source metrics record failures",
+      "killSwitch": "none",
+      "releaseOwner": "maintainer",
+      "sourceFiles": [
+        "app/src/main/java/com/freevibe/di/AppModule.kt",
+        "app/src/main/java/com/freevibe/data/remote/freesound/FreesoundApi.kt"
+      ]
+    },
+    {
+      "id": "freesound-v2",
+      "hosts": ["freesound.org"],
+      "schemes": ["https"],
+      "surface": "Freesound v2 API, preview URLs, and source pages",
+      "authLocation": "query parameter: token",
+      "dataSent": "search query, fields, page, page size, filter, and sort parameters",
+      "mediaCached": "returned previews can be cached as favorite or offline sound media",
+      "rateLimitCachePolicy": "OkHttp RateLimitInterceptor retries 429 for freesound.org only",
+      "fallbackBehavior": "source metrics record failures; bundled Freesound picks remain local metadata",
+      "killSwitch": "none",
+      "releaseOwner": "maintainer",
+      "sourceFiles": [
+        "app/src/main/java/com/freevibe/data/remote/freesound/FreesoundV2Api.kt",
+        "app/src/main/java/com/freevibe/data/repository/FreesoundV2Repository.kt",
+        "app/src/main/java/com/freevibe/service/BundledContentProvider.kt",
+        "app/src/main/java/com/freevibe/service/SoundUrlResolver.kt"
+      ]
+    },
+    {
+      "id": "soundcloud-api",
+      "hosts": ["api-v2.soundcloud.com", "soundcloud.com"],
+      "schemes": ["https"],
+      "surface": "SoundCloud search, stream, and source page URLs",
+      "authLocation": "query parameter: client_id",
+      "dataSent": "search query, license filter, duration bounds, limit, offset, and client ID",
+      "mediaCached": "stream URLs can be cached as favorite or offline sound media",
+      "rateLimitCachePolicy": "no host-specific backoff yet; source metrics record failures",
+      "fallbackBehavior": "returns empty result when client ID is blank",
+      "killSwitch": "none",
+      "releaseOwner": "maintainer",
+      "sourceFiles": [
+        "app/src/main/java/com/freevibe/data/remote/soundcloud/SoundCloudApi.kt",
+        "app/src/main/java/com/freevibe/data/repository/SoundCloudRepository.kt"
+      ]
+    },
+    {
+      "id": "audius-api",
+      "hosts": ["api.audius.co", "audius.co"],
+      "schemes": ["https"],
+      "surface": "Audius search and source page URLs",
+      "authLocation": "none",
+      "dataSent": "search query and limit",
+      "mediaCached": "returned stream URLs can be cached as favorite or offline sound media",
+      "rateLimitCachePolicy": "no host-specific backoff yet; source metrics record failures",
+      "fallbackBehavior": "source metrics record failures",
+      "killSwitch": "none",
+      "releaseOwner": "maintainer",
+      "sourceFiles": [
+        "app/src/main/java/com/freevibe/data/remote/audius/AudiusApi.kt",
+        "app/src/main/java/com/freevibe/data/repository/AudiusRepository.kt"
+      ]
+    },
+    {
+      "id": "ccmixter-api",
+      "hosts": ["ccmixter.org"],
+      "schemes": ["https", "http"],
+      "surface": "ccMixter API and fallback direct query URLs",
+      "authLocation": "none",
+      "dataSent": "search term, limit, sort, and response format",
+      "mediaCached": "returned download URLs can be cached as favorite or offline sound media",
+      "rateLimitCachePolicy": "no host-specific backoff yet; source metrics record failures",
+      "fallbackBehavior": "repository has an HTTP fallback path; network security config currently permits cleartext for ccmixter.org",
+      "killSwitch": "none",
+      "releaseOwner": "maintainer",
+      "sourceFiles": [
+        "app/src/main/java/com/freevibe/data/remote/ccmixter/CcMixterApi.kt",
+        "app/src/main/java/com/freevibe/data/repository/CcMixterRepository.kt",
+        "app/src/main/res/xml/network_security_config.xml"
+      ]
+    },
+    {
+      "id": "open-meteo-api",
+      "hosts": ["api.open-meteo.com"],
+      "schemes": ["https"],
+      "surface": "Weather effects current weather lookup",
+      "authLocation": "none",
+      "dataSent": "latitude, longitude, and current_weather flag",
+      "mediaCached": "no media cache",
+      "rateLimitCachePolicy": "scheduled WorkManager cadence; no host-specific backoff",
+      "fallbackBehavior": "weather effects degrade to no current weather overlay",
+      "killSwitch": "weather_effects_enabled",
+      "releaseOwner": "maintainer",
+      "sourceFiles": [
+        "app/src/main/java/com/freevibe/data/remote/weather/OpenMeteoApi.kt"
+      ]
+    },
+    {
+      "id": "stability-api",
+      "hosts": ["api.stability.ai"],
+      "schemes": ["https"],
+      "surface": "Generated wallpaper image generation",
+      "authLocation": "Authorization bearer header",
+      "dataSent": "prompt, aspect ratio, output format, optional style preset, and optional negative prompt parameters",
+      "mediaCached": "generated image bytes are written to app-private files and pruned to the 50 most recent",
+      "rateLimitCachePolicy": "no retry/backoff; user controls their own provider key and credit budget",
+      "fallbackBehavior": "generation fails with mapped provider error copy",
+      "killSwitch": "generated_content_provider_enabled",
+      "releaseOwner": "maintainer",
+      "sourceFiles": [
+        "app/src/main/java/com/freevibe/data/remote/stability/StabilityAiApi.kt",
+        "app/src/main/java/com/freevibe/data/repository/AiWallpaperRepository.kt"
+      ]
+    },
+    {
+      "id": "youtube-newpipe",
+      "hosts": ["www.youtube.com"],
+      "schemes": ["https"],
+      "surface": "YouTube page URL passed to NewPipe/yt-dlp extraction",
+      "authLocation": "none",
+      "dataSent": "video ID in watch URL",
+      "mediaCached": "resolved stream URLs are cached briefly in memory and can be cached offline by user action",
+      "rateLimitCachePolicy": "short in-memory stream TTL; legal-mode switch can disable the source",
+      "fallbackBehavior": "legal-mode and provider switches block active use when disabled",
+      "killSwitch": "youtube_provider_enabled",
+      "releaseOwner": "maintainer",
+      "sourceFiles": [
+        "app/src/main/java/com/freevibe/data/repository/YouTubeRepository.kt"
+      ]
+    },
+    {
+      "id": "aura-collection-links",
+      "hosts": ["aura.app"],
+      "schemes": ["https"],
+      "surface": "Collection import deep-link allowlist",
+      "authLocation": "none",
+      "dataSent": "none by app-initiated network; links are parsed as import locators",
+      "mediaCached": "no media cache",
+      "rateLimitCachePolicy": "not applicable",
+      "fallbackBehavior": "invalid links are rejected by import validation",
+      "killSwitch": "none",
+      "releaseOwner": "maintainer",
+      "sourceFiles": [
+        "app/src/main/java/com/freevibe/service/CollectionExporter.kt"
+      ]
+    },
+    {
+      "id": "firebase-community",
+      "hosts": [
+        "firebaseio.com",
+        "firebasestorage.googleapis.com",
+        "identitytoolkit.googleapis.com",
+        "firebaseappcheck.googleapis.com",
+        "firebaseinstallations.googleapis.com",
+        "cloudfunctions.net"
+      ],
+      "schemes": ["https"],
+      "surface": "Firebase Auth, Realtime Database, Storage, App Check, Installations, and callable Functions",
+      "authLocation": "Firebase SDK credentials and App Check tokens",
+      "dataSent": "anonymous/Firebase UID, community upload metadata, reports, votes, follows, blocks, profile edits, storage uploads, and callable payloads",
+      "mediaCached": "community upload media can be cached by user action; Firebase SDK also manages its own transport caches",
+      "rateLimitCachePolicy": "callable quota and dedupe ledgers enforce community write quotas",
+      "fallbackBehavior": "community paths fail closed when Auth, App Check, or callable prerequisites are unavailable",
+      "killSwitch": "community_provider_enabled",
+      "releaseOwner": "maintainer",
+      "sourceFiles": [
+        "app/google-services.json",
+        "app/src/main/java/com/freevibe/data/repository",
+        "app/src/main/java/com/freevibe/service/CommunityCallableClient.kt"
+      ]
+    }
+  ]
+}

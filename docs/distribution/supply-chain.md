@@ -20,6 +20,7 @@ Aura is side-loaded through GitHub Releases and Obtainium, so release artifacts 
 | Gradle dependency verification | `gradle/verification-metadata.xml` | Records SHA-256 checksums for resolved Gradle plugins and app dependencies. |
 | Gradle wrapper policy | `gradle/wrapper/gradle-wrapper.properties`, `tools/gradle_wrapper_check.py`, `.github/workflows/verify.yml` | Pins the Gradle 8.12 wrapper distribution SHA-256, keeps URL validation enabled, and rejects wrapper distribution drift. |
 | Provider credential release guard | `tools/provider_credential_release_check.py`, `.github/workflows/verify.yml`, `.github/workflows/release.yml` | Fails release preflight when optional provider keys from `local.properties` would be bundled into `BuildConfig`; release CI writes blank provider defaults before signed APK builds. |
+| Network endpoint inventory | `docs/security/network-endpoints.json`, `docs/security/network-endpoints.md`, `tools/network_endpoint_inventory_check.py`, `.github/workflows/verify.yml` | Fails verification when app network-code URL hosts drift from the reviewed endpoint/auth/cache/fallback inventory. |
 | Dependency Review | `.github/workflows/dependency-review.yml` | Runs on pull requests and fails high/critical vulnerable dependency additions. |
 | OpenSSF Scorecard | `.github/workflows/scorecard.yml` | Runs on main pushes, branch-protection changes, weekly schedule, and manual dispatch; keeps public result publishing disabled and uploads SARIF to code scanning. |
 | GitHub Actions allowlist | `docs/distribution/github-actions-allowlist.json`, `tools/github_actions_allowlist_check.py`, `.github/workflows/verify.yml` | Fails verification when workflow files use unreviewed actions, local actions, unpinned refs, forbidden floating refs, or unexpected workflow files. |
@@ -75,6 +76,7 @@ python3 tools/github_actions_allowlist_check.py --policy docs/distribution/githu
 python3 tools/github_workflow_permissions_check.py --policy docs/distribution/github-workflow-permissions.json --repo-root .
 python3 tools/github_workflow_secrets_check.py --policy docs/distribution/github-workflow-secrets.json --repo-root .
 python3 tools/github_security_workflow_check.py --policy docs/distribution/github-security-workflows.json --repo-root .
+python3 tools/network_endpoint_inventory_check.py --inventory docs/security/network-endpoints.json --repo-root .
 python3 -m unittest discover -s test/tools -p '*_test.py'
 ```
 

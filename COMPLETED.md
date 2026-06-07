@@ -562,6 +562,11 @@ next pass can resume quickly.
   shared helper, redacted `SourceMetrics` failure messages before Settings can
   display them, and covered provider query/header/local-property credentials
   plus request formatting with focused service tests.
+- Completed Cycle 128 network endpoint inventory runbook: added
+  `docs/security/network-endpoints.json`, `docs/security/network-endpoints.md`,
+  `tools/network_endpoint_inventory_check.py`, live tool tests, supply-chain
+  docs, and verify workflow wiring so hard-coded app network hosts require
+  reviewed endpoint/auth/cache/fallback inventory coverage.
 
 ## 2026-06-05
 
