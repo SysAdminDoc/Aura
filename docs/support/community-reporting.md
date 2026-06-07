@@ -1,9 +1,10 @@
 # Community Reporting
 
 Cycles 51 through 54 add the first private report queue for Aura community and
-mirrored provider content. Reports are separate from local hide/downvote
-behavior and feed admin hide/restore actions through the existing moderation
-hide list.
+mirrored provider content. Cycle 63 defines the callable quota contract that
+will move report submission behind App-Checked backend enforcement. Reports are
+separate from local hide/downvote behavior and feed admin hide/restore actions
+through the existing moderation hide list.
 
 ## Report Reasons
 
@@ -67,6 +68,11 @@ Reporter UIDs are not public catalog data.
   [`docs/community-quota-rate-limits.md`](../community-quota-rate-limits.md):
   10 reports per UID per day, 2-minute cooldown, and content-key/reason dedupe
   once App-Checked callable enforcement is deployed.
+- The callable migration contract is defined in
+  [`docs/community-callable-quota-enforcement.md`](../community-callable-quota-enforcement.md):
+  `submitCommunityReport` must require Firebase Auth, App Check, a limited-use
+  App Check token, server-derived UID, quota ledger updates, dedupe ledger
+  updates, and the final `/community_reports/{reportId}` write.
 
 ## Remaining Follow-Up
 
@@ -83,4 +89,5 @@ Reporter UIDs are not public catalog data.
   admin-only resolution receipts. Cycle 60 extends that coverage to
   rights-confirmed takedown receipt authorization and storage-handle matching.
 - Cycle 62 adds closed-report status filters for Hidden, Dismissed, and Restored
-  review queues.
+  review queues. Cycle 63 adds the callable quota enforcement contract for the
+  backend report submission migration.

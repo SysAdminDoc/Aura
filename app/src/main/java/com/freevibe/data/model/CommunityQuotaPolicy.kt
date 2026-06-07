@@ -9,18 +9,31 @@ enum class CommunityQuotaEnforcement {
     STORAGE_RULES,
 }
 
+data class CommunityQuotaCallableContract(
+    val functionName: String,
+    val payloadSchema: String,
+    val finalWritePaths: List<String>,
+    val consumeLimitedUseAppCheckToken: Boolean,
+    val requiresAuth: Boolean = true,
+    val requiresAppCheck: Boolean = true,
+)
+
 data class CommunityQuotaPolicy(
     val surfaceKey: String,
     val dailyLimit: Int,
     val minIntervalMillis: Long,
     val dedupeKey: String,
     val enforcement: Set<CommunityQuotaEnforcement>,
+    val callable: CommunityQuotaCallableContract,
 ) {
     val quotaLedgerPath: String
         get() = "/community_write_quotas/{uid}/{yyyyMMdd}/$surfaceKey"
 
     val dedupeLedgerPath: String
         get() = "/community_write_dedupe/{uid}/$surfaceKey/{dedupeKey}"
+
+    val callableWritePaths: List<String>
+        get() = callable.finalWritePaths + quotaLedgerPath + dedupeLedgerPath
 
     val storageBacked: Boolean
         get() = CommunityQuotaEnforcement.STORAGE_RULES in enforcement
@@ -33,6 +46,12 @@ object CommunityQuotaPolicies {
         minIntervalMillis = 2 * MINUTE_MILLIS,
         dedupeKey = "contentKey + reason",
         enforcement = setOf(CommunityQuotaEnforcement.APP_CHECKED_CALLABLE),
+        callable = CommunityQuotaCallableContract(
+            functionName = "submitCommunityReport",
+            payloadSchema = "CommunityReportInput",
+            finalWritePaths = listOf("/community_reports/{reportId}"),
+            consumeLimitedUseAppCheckToken = true,
+        ),
     )
 
     val soundUploads = CommunityQuotaPolicy(
@@ -43,6 +62,15 @@ object CommunityQuotaPolicies {
         enforcement = setOf(
             CommunityQuotaEnforcement.APP_CHECKED_CALLABLE,
             CommunityQuotaEnforcement.STORAGE_RULES,
+        ),
+        callable = CommunityQuotaCallableContract(
+            functionName = "finalizeCommunitySoundUpload",
+            payloadSchema = "CommunitySoundUploadMetadata",
+            finalWritePaths = listOf(
+                "/community_sounds/{uploadId}",
+                "/owner_uploads/{uid}/sounds/{uploadId}",
+            ),
+            consumeLimitedUseAppCheckToken = true,
         ),
     )
 
@@ -55,6 +83,15 @@ object CommunityQuotaPolicies {
             CommunityQuotaEnforcement.APP_CHECKED_CALLABLE,
             CommunityQuotaEnforcement.STORAGE_RULES,
         ),
+        callable = CommunityQuotaCallableContract(
+            functionName = "finalizeCommunityWallpaperUpload",
+            payloadSchema = "CommunityWallpaperUploadMetadata",
+            finalWritePaths = listOf(
+                "/community_wallpapers/{uploadId}",
+                "/owner_uploads/{uid}/wallpapers/{uploadId}",
+            ),
+            consumeLimitedUseAppCheckToken = true,
+        ),
     )
 
     val votes = CommunityQuotaPolicy(
@@ -66,6 +103,15 @@ object CommunityQuotaPolicies {
             CommunityQuotaEnforcement.APP_CHECKED_CALLABLE,
             CommunityQuotaEnforcement.RTDB_TRANSACTION,
         ),
+        callable = CommunityQuotaCallableContract(
+            functionName = "recordCommunityVote",
+            payloadSchema = "CommunityVoteInput",
+            finalWritePaths = listOf(
+                "/votes/{contentId}",
+                "/voters/{contentId}/{uid}",
+            ),
+            consumeLimitedUseAppCheckToken = false,
+        ),
     )
 
     val follows = CommunityQuotaPolicy(
@@ -74,6 +120,12 @@ object CommunityQuotaPolicies {
         minIntervalMillis = 5 * SECOND_MILLIS,
         dedupeKey = "creatorId",
         enforcement = setOf(CommunityQuotaEnforcement.APP_CHECKED_CALLABLE),
+        callable = CommunityQuotaCallableContract(
+            functionName = "setCreatorFollow",
+            payloadSchema = "CommunityFollowInput",
+            finalWritePaths = listOf("/creator_follows/{uid}/{creatorId}"),
+            consumeLimitedUseAppCheckToken = false,
+        ),
     )
 
     val profileEdits = CommunityQuotaPolicy(
@@ -82,6 +134,12 @@ object CommunityQuotaPolicies {
         minIntervalMillis = 5 * MINUTE_MILLIS,
         dedupeKey = "profileUid",
         enforcement = setOf(CommunityQuotaEnforcement.APP_CHECKED_CALLABLE),
+        callable = CommunityQuotaCallableContract(
+            functionName = "updateCreatorProfile",
+            payloadSchema = "CreatorProfileUpdateInput",
+            finalWritePaths = listOf("/creator_profiles/{uid}"),
+            consumeLimitedUseAppCheckToken = false,
+        ),
     )
 
     val all: List<CommunityQuotaPolicy> = listOf(

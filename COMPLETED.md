@@ -200,6 +200,12 @@ next pass can resume quickly.
 - Completed Cycle 62 closed report review filters: the admin report queue now
   switches between Open, Hidden, Dismissed, and Restored status feeds, including
   from the empty state, so closed moderation outcomes remain reviewable.
+- Completed Cycle 63 callable quota enforcement contract: quota policies now
+  name each App-Checked callable, payload schema, final write path set, protected
+  ledger path set, and limited-use App Check token decision for reports,
+  uploads, votes, follows, and profile edits; the backend migration runbook
+  records request envelope, transaction sequence, error mapping, Android
+  migration order, and verification requirements.
 
 ## 2026-06-05
 

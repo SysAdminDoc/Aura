@@ -1,8 +1,11 @@
 # Community Quota and Rate-Limit Design
 
 Cycle 54 defines the first enforceable quota contract for Aura community writes.
-It does not claim production enforcement until the callable backend and Firebase
-Console App Check enforcement are deployed.
+Cycle 63 adds callable function contract metadata to `CommunityQuotaPolicies`
+and records the backend sequence in
+[`docs/community-callable-quota-enforcement.md`](community-callable-quota-enforcement.md).
+This design does not claim production enforcement until the callable backend and
+Firebase Console App Check enforcement are deployed.
 
 ## Goals
 
@@ -25,7 +28,9 @@ Console App Check enforcement are deployed.
 | Profile edits | 12 | 5 minutes | profile UID | App-Checked callable write |
 
 The matching code contract is `CommunityQuotaPolicies`. Unit tests verify every
-required surface has a limit, cooldown, dedupe key, and callable enforcement row.
+required surface has a limit, cooldown, dedupe key, callable enforcement row,
+function name, payload schema, final write path set, and protected ledger path
+set.
 
 ## Backend Ledgers
 
@@ -47,7 +52,8 @@ Admin SDK job should own ledger updates.
    are monitored for Realtime Database, Cloud Storage, and Authentication.
 2. Add Cloud Functions callable endpoints for reports, votes, follows, profile
    edits, and upload metadata finalization. Configure each callable with App
-   Check enforcement and Firebase Auth checks.
+   Check enforcement and Firebase Auth checks according to the
+   [callable quota contract](community-callable-quota-enforcement.md).
 3. In each callable, derive the UID from Firebase Auth, verify the surface
    policy from `CommunityQuotaPolicies`, update the quota ledger transactionally,
    write or reject the community action, and write a dedupe marker when accepted.
@@ -74,7 +80,8 @@ Admin SDK job should own ledger updates.
 
 ## Remaining Implementation Work
 
-- Add the callable backend project and wire Android repositories to it.
+- Add the callable backend project and wire Android repositories to the Cycle 63
+  callable contract.
 - Define quota reset timezone in code and backend deployment config.
 - Decide whether blocked quota attempts should create private moderation events.
 - Continue owner-delete and rights-confirmed takedown flows after Cycle 55's
