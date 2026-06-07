@@ -8,6 +8,10 @@ import com.freevibe.data.model.CommunityBlockReason
 import com.freevibe.data.repository.CommunityBlockedUser
 import com.freevibe.data.repository.CommunityBlockRepository
 import com.freevibe.data.repository.VoteRepository
+import com.freevibe.service.BackgroundNetworkDiagnostics
+import com.freevibe.service.BackgroundWorkDiagnostics
+import com.freevibe.service.BackgroundWorkDiagnosticsReader
+import com.freevibe.service.BackgroundWorkStatusRow
 import com.freevibe.service.CommunityIdentityProvider
 import com.freevibe.service.CommunityIdentitySummary
 import com.freevibe.service.CrashDiagnosticsCollector
@@ -238,6 +242,59 @@ class SettingsViewModelTest {
         verify(exactly = 1) { identityProvider.clearLocalFallbackIdentity() }
     }
 
+    @Test
+    fun `refreshBackgroundWorkDiagnostics publishes WorkInfo and network receipts`() = runTest(dispatcher) {
+        val reader = FakeBackgroundWorkDiagnosticsReader(
+            BackgroundWorkDiagnostics(
+                network = BackgroundNetworkDiagnostics(
+                    activeNetworkMetered = true,
+                    restrictBackgroundStatus = "enabled",
+                ),
+                rows = listOf(
+                    BackgroundWorkStatusRow(
+                        label = "Auto wallpaper rotation",
+                        uniqueWorkName = "auto_wallpaper",
+                        workInfoStatus = "ENQUEUED=1",
+                        workInfoCount = 1,
+                        maxRunAttemptCount = 2,
+                    ),
+                ),
+            ),
+        )
+        val viewModel = createViewModel(
+            cacheDir = createTempDirectory("settings-background-diagnostics").toFile().also(tempDirs::add),
+            backgroundWorkDiagnosticsReaderOverride = reader,
+        )
+
+        advanceUntilIdle()
+
+        assertEquals("enabled", viewModel.backgroundWorkDiagnostics.value.network.restrictBackgroundStatus)
+        assertEquals(true, viewModel.backgroundWorkDiagnostics.value.network.activeNetworkMetered)
+        assertEquals("auto_wallpaper", viewModel.backgroundWorkDiagnostics.value.rows.single().uniqueWorkName)
+        assertEquals("ENQUEUED=1", viewModel.backgroundWorkDiagnostics.value.rows.single().workInfoStatus)
+
+        reader.snapshot = BackgroundWorkDiagnostics(
+            network = BackgroundNetworkDiagnostics(
+                activeNetworkMetered = false,
+                restrictBackgroundStatus = "disabled",
+            ),
+            rows = listOf(
+                BackgroundWorkStatusRow(
+                    label = "Weather wallpaper refresh",
+                    uniqueWorkName = "weather_update",
+                    workInfoStatus = "No WorkInfo records",
+                ),
+            ),
+        )
+        viewModel.refreshBackgroundWorkDiagnostics()
+        advanceUntilIdle()
+
+        assertEquals("disabled", viewModel.backgroundWorkDiagnostics.value.network.restrictBackgroundStatus)
+        assertEquals(false, viewModel.backgroundWorkDiagnostics.value.network.activeNetworkMetered)
+        assertEquals("weather_update", viewModel.backgroundWorkDiagnostics.value.rows.single().uniqueWorkName)
+        assertEquals("No WorkInfo records", viewModel.backgroundWorkDiagnostics.value.rows.single().workInfoStatus)
+    }
+
     private fun createViewModel(
         cacheDir: File,
         offlineFavoritesSize: Long = 0L,
@@ -247,6 +304,7 @@ class SettingsViewModelTest {
         videoWallpaperStorageOverride: VideoWallpaperStorage? = null,
         communityBlockRepoOverride: CommunityBlockRepository? = null,
         communityIdentityProviderOverride: CommunityIdentityProvider? = null,
+        backgroundWorkDiagnosticsReaderOverride: BackgroundWorkDiagnosticsReader? = null,
         isAdmin: Boolean = false,
     ): SettingsViewModel {
         val context = mockk<Context>(relaxed = true).also {
@@ -295,6 +353,8 @@ class SettingsViewModelTest {
                 prefs = prefs,
                 sourceMetrics = com.freevibe.service.SourceMetrics(),
             ),
+            backgroundWorkDiagnosticsReader = backgroundWorkDiagnosticsReaderOverride
+                ?: FakeBackgroundWorkDiagnosticsReader(BackgroundWorkDiagnostics()),
             voteRepo = voteRepo,
             communityBlockRepo = communityBlockRepo,
             communityIdentityProvider = communityIdentityProvider,
@@ -339,6 +399,8 @@ class SettingsViewModelTest {
             every { prefs.pexelsProviderEnabled } returns flowOf(true)
             every { prefs.pixabayProviderEnabled } returns flowOf(true)
             every { prefs.communityProviderEnabled } returns flowOf(true)
+            every { prefs.communityGuidelinesAccepted } returns flowOf(false)
+            every { prefs.communityGuidelinesAcceptedVersion } returns flowOf(0)
             every { prefs.generatedContentProviderEnabled } returns flowOf(true)
             every { prefs.generatedContentDisclosureAccepted } returns flowOf(false)
             every { prefs.freesoundApiKey } returns flowOf("")
@@ -358,6 +420,12 @@ class SettingsViewModelTest {
             every { prefs.lightModeWallpaperId } returns flowOf("") // Phase 6.2 light slot
             every { prefs.stabilityAiKey } returns flowOf("")       // Phase 3.1 AI
         }
+
+    private class FakeBackgroundWorkDiagnosticsReader(
+        var snapshot: BackgroundWorkDiagnostics,
+    ) : BackgroundWorkDiagnosticsReader {
+        override suspend fun read(): BackgroundWorkDiagnostics = snapshot
+    }
 
     private fun waitForIdle(
         timeoutMs: Long = 2000L,

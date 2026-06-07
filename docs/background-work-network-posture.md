@@ -9,26 +9,28 @@ surface listed in [background-work-scheduling-ledger.md](background-work-schedul
 Status: `networkPostureCheckedSettingsPending`.
 
 This packet does not change runtime behavior. It makes the current posture
-explicit, checks it against scheduler source, and leaves the Settings
-diagnostics work open where direct `ConnectivityManager` Data Saver receipts
-are still missing.
+explicit and checks it against scheduler source. Cycle 156 added the first
+Settings receipt slice: `Settings` > `Diagnostics` > `Background work` now
+reads active metered-network state and Data Saver restricted-background status
+from `ConnectivityManager`.
 
 ## Network posture matrix
 
 | Work | Unique work | Network posture | Metered behavior | Data Saver posture |
 | --- | --- | --- | --- | --- |
-| Auto wallpaper rotation | `auto_wallpaper` | Connected by default; unmetered when Wi-Fi-only is enabled | User-selectable | Pending Settings receipt for active metered/Data Saver state |
-| Daily wallpaper notification | `daily_wallpaper` | Connected | Allowed for Reddit metadata and thumbnail fetch | Pending Settings receipt |
-| Weather effect refresh | `weather_update` | Connected | Allowed for lightweight Open-Meteo refresh | Pending Settings receipt |
-| Aura Originals download | `aura_originals_download` | Unmetered | Blocked | Current larger-transfer-safe posture |
-| Rotation trigger one-shot | `rotation_trigger_oneshot` | Connected plus battery-not-low | Allowed for explicit user/automation-triggered attempts | Pending Settings receipt and expedited-quota labeling |
+| Auto wallpaper rotation | `auto_wallpaper` | Connected by default; unmetered when Wi-Fi-only is enabled | User-selectable | Settings reads active metered/Data Saver state |
+| Daily wallpaper notification | `daily_wallpaper` | Connected | Allowed for Reddit metadata and thumbnail fetch | Settings reads active metered/Data Saver state |
+| Weather effect refresh | `weather_update` | Connected | Allowed for lightweight Open-Meteo refresh | Settings reads active metered/Data Saver state |
+| Aura Originals download | `aura_originals_download` | Unmetered | Blocked | Current larger-transfer-safe posture; Settings reads active metered/Data Saver state |
+| Rotation trigger one-shot | `rotation_trigger_oneshot` | Connected plus battery-not-low | Allowed for explicit user/automation-triggered attempts | Settings reads active metered/Data Saver state; expedited-quota labeling remains open |
 
 ## Data Saver handling
 
 Android exposes Data Saver state through `ConnectivityManager`, including
-metered-network checks and background restriction status. Aura does not yet
-record those values in Settings diagnostics or support bundles. Until that
-next slice lands, the release posture is:
+metered-network checks and background restriction status. Aura now shows those
+values in Settings diagnostics; support bundles still record the inferred
+network posture added in Cycle 155. Until worker-level last-run receipts land,
+the release posture is:
 
 - larger first-run Aura Originals downloads require unmetered network;
 - auto wallpaper can be user-tightened to unmetered network through the

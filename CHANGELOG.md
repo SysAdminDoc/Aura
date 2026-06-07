@@ -3,6 +3,10 @@
 All notable changes to Aura will be documented in this file.
 
 ## Unreleased
+- **Background work Settings diagnostics (Cycle 156)**: added a local
+  `Settings` > `Diagnostics` > `Background work` dialog backed by WorkManager
+  unique-work `WorkInfo` state counts and `ConnectivityManager` metered/Data
+  Saver receipts.
 - **Background work diagnostics bundle section (Cycle 155)**: added a local
   crash/support bundle background-work section covering current unique work
   names, inferred enabled state, network posture, constraints, and explicit

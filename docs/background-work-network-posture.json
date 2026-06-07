@@ -23,7 +23,7 @@
         "setAutoWallpaperRequiresIdle"
       ],
       "meteredPolicy": "Metered network is allowed only when the user has not enabled Wi-Fi-only rotation.",
-      "dataSaverPolicy": "No direct ConnectivityManager Data Saver receipt yet; Settings diagnostics must label metered/Data Saver state in the next slice.",
+      "dataSaverPolicy": "Settings diagnostics now read ConnectivityManager metered/Data Saver status; support-bundle live merge remains pending.",
       "privacySurface": "Remote wallpaper provider fetches already map through Data safety network endpoint rows.",
       "releaseRisk": "Medium"
     },
@@ -44,7 +44,7 @@
         "DailyWallpaperWorker.cancel"
       ],
       "meteredPolicy": "Metered network is currently allowed for the small daily Reddit metadata and thumbnail fetch.",
-      "dataSaverPolicy": "No direct ConnectivityManager Data Saver receipt yet; future diagnostics should label Data Saver as a possible background delay.",
+      "dataSaverPolicy": "Settings diagnostics now read ConnectivityManager metered/Data Saver status; persisted worker deferral text remains pending.",
       "privacySurface": "Reddit endpoint and notification behavior are covered by network endpoint and Data safety rows.",
       "releaseRisk": "Medium"
     },
@@ -65,7 +65,7 @@
         "ACCESS_COARSE_LOCATION"
       ],
       "meteredPolicy": "Metered network is currently allowed for lightweight Open-Meteo refreshes.",
-      "dataSaverPolicy": "No direct ConnectivityManager Data Saver receipt yet; future diagnostics should label Data Saver as a possible background delay.",
+      "dataSaverPolicy": "Settings diagnostics now read ConnectivityManager metered/Data Saver status; persisted worker deferral text remains pending.",
       "privacySurface": "Weather endpoint and location data use are covered by network endpoint and Data safety rows.",
       "releaseRisk": "Medium"
     },
@@ -107,7 +107,7 @@
         "RotationTriggerService.enqueueRotation"
       ],
       "meteredPolicy": "Metered network is allowed for explicit user/automation-triggered one-shot rotations.",
-      "dataSaverPolicy": "No direct ConnectivityManager Data Saver receipt yet; future diagnostics should label Data Saver and expedited quota fallback separately.",
+      "dataSaverPolicy": "Settings diagnostics now read ConnectivityManager metered/Data Saver status; expedited quota fallback labeling remains pending.",
       "privacySurface": "Provider fetches inherit the selected wallpaper source's network/Data safety rows.",
       "releaseRisk": "Medium"
     }

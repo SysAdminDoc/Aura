@@ -6,6 +6,12 @@ next pass can resume quickly.
 
 ## 2026-06-07
 
+- Completed Cycle 156 background work Settings diagnostics: added an injectable
+  `BackgroundWorkDiagnosticsReader`, Hilt binding, Settings ViewModel state,
+  and `Settings` > `Diagnostics` > `Background work` dialog that reads
+  WorkManager unique-work `WorkInfo` state counts plus `ConnectivityManager`
+  metered/Data Saver status. Persisted worker last success/failure/error
+  receipts and user-actionable deferral text remain open.
 - Completed Cycle 155 background work diagnostics bundle section: extended the
   local crash/support bundle with a background-work section for
   `auto_wallpaper`, `daily_wallpaper`, `weather_update`,

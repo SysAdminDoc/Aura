@@ -42,14 +42,15 @@ states from WorkInfo and local receipts:
 
 ## Settings and support gaps
 
-The full Cycle 14 P0 item remains open until Settings diagnostics and support
-bundles expose, for every unique work name:
+Cycle 156 added `Settings` > `Diagnostics` > `Background work`, which reads
+current `WorkInfo.State` counts for every unique work name and shows active
+metered/Data Saver state. The full Cycle 14 P0 item remains open until Settings
+diagnostics and support bundles also expose, for every unique work name:
 
 - enabled state;
 - last success UTC;
 - last failure UTC;
 - last error class;
-- current `WorkInfo.State`;
 - declared constraints;
 - user-actionable deferral reason text.
 

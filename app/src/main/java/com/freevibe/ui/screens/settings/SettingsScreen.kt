@@ -44,6 +44,8 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.freevibe.data.repository.CommunityBlockedUser
 import com.freevibe.service.COMMUNITY_DELETION_REQUEST_SUBJECT
+import com.freevibe.service.BackgroundWorkDiagnostics
+import com.freevibe.service.BackgroundWorkStatusRow
 import com.freevibe.service.CommunityIdentitySummary
 import com.freevibe.service.CrashDiagnosticsSummary
 import com.freevibe.service.DailyWallpaperWorker
@@ -203,6 +205,7 @@ fun SettingsScreen(
     val cacheUsage by viewModel.cacheUsage.collectAsStateWithLifecycle()
     val diagnostics by viewModel.diagnostics.collectAsStateWithLifecycle()
     val crashDiagnostics by viewModel.crashDiagnostics.collectAsStateWithLifecycle()
+    val backgroundWorkDiagnostics by viewModel.backgroundWorkDiagnostics.collectAsStateWithLifecycle()
     val videoWallpaperSelectionResult by viewModel.videoWallpaperSelectionResult.collectAsStateWithLifecycle()
     val videoBatteryDashboard by rememberVideoBatteryDashboardState(
         context = context,
@@ -372,6 +375,7 @@ fun SettingsScreen(
     var showCommunityGuidelines by remember { mutableStateOf(false) }
     var showDarkModeWallpaperPicker by remember { mutableStateOf(false) }
     var showLightModeWallpaperPicker by remember { mutableStateOf(false) }
+    var showBackgroundWorkDiagnostics by remember { mutableStateOf(false) }
     var showCrashDiagnostics by remember { mutableStateOf(false) }
     var crashDiagnosticsBusy by remember { mutableStateOf(false) }
     var touchEffectStrength by remember {
@@ -1470,6 +1474,15 @@ fun SettingsScreen(
                 },
             )
             SettingsItem(
+                icon = Icons.Default.Schedule,
+                title = "Background work",
+                subtitle = backgroundWorkDiagnosticsSubtitle(backgroundWorkDiagnostics),
+                onClick = {
+                    viewModel.refreshBackgroundWorkDiagnostics()
+                    showBackgroundWorkDiagnostics = true
+                },
+            )
+            SettingsItem(
                 icon = Icons.Default.MonitorHeart,
                 title = "Source diagnostics",
                 subtitle = if (diagnostics.isEmpty()) {
@@ -1478,6 +1491,46 @@ fun SettingsScreen(
                     "${diagnostics.size} active sources tracked this session"
                 },
                 onClick = { showDiagnostics = true },
+            )
+        }
+        if (showBackgroundWorkDiagnostics) {
+            val snapshot = backgroundWorkDiagnostics
+            AlertDialog(
+                onDismissRequest = { showBackgroundWorkDiagnostics = false },
+                title = { Text("Background work") },
+                text = {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .heightIn(max = 420.dp)
+                            .verticalScroll(rememberScrollState()),
+                        verticalArrangement = Arrangement.spacedBy(12.dp),
+                    ) {
+                        Text(
+                            "Local WorkManager status and Data Saver state for scheduled wallpaper, weather, and bundled-content jobs.",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                        BackgroundWorkDiagnosticsSummary(snapshot)
+                        if (snapshot.rows.isEmpty()) {
+                            Text(
+                                "No background-work rows are available.",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                        } else {
+                            snapshot.rows.forEach { row ->
+                                BackgroundWorkDiagnosticRow(row)
+                            }
+                        }
+                    }
+                },
+                confirmButton = {
+                    TextButton(onClick = { showBackgroundWorkDiagnostics = false }) { Text("Close") }
+                },
+                dismissButton = {
+                    TextButton(onClick = { viewModel.refreshBackgroundWorkDiagnostics() }) { Text("Refresh") }
+                },
             )
         }
         if (showDiagnostics) {
@@ -2645,6 +2698,122 @@ private fun SettingsToggle(
                 onCheckedChange = onCheckedChange,
                 colors = SwitchDefaults.colors(checkedTrackColor = MaterialTheme.colorScheme.primary),
             )
+        }
+    }
+}
+
+private fun backgroundWorkDiagnosticsSubtitle(status: BackgroundWorkDiagnostics): String {
+    if (status.rows.isEmpty()) return "Check WorkManager and Data Saver state"
+    val receiptCount = status.rows.count { it.workInfoCount > 0 && it.readError == null }
+    return "$receiptCount WorkInfo receipts • ${meteredNetworkLabel(status.network.activeNetworkMetered)} • Data Saver ${status.network.restrictBackgroundStatus}"
+}
+
+private fun meteredNetworkLabel(activeNetworkMetered: Boolean?): String = when (activeNetworkMetered) {
+    true -> "metered"
+    false -> "unmetered"
+    null -> "meter unknown"
+}
+
+@Composable
+@OptIn(ExperimentalLayoutApi::class)
+private fun BackgroundWorkDiagnosticsSummary(status: BackgroundWorkDiagnostics) {
+    val network = status.network
+    FlowRow(
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        DiagnosticMetricPill("Rows", status.rows.size.toString(), MaterialTheme.colorScheme.primary)
+        DiagnosticMetricPill(
+            "Receipts",
+            status.rows.count { it.workInfoCount > 0 && it.readError == null }.toString(),
+            MaterialTheme.colorScheme.secondary,
+        )
+        DiagnosticMetricPill(
+            "Network",
+            meteredNetworkLabel(network.activeNetworkMetered),
+            MaterialTheme.colorScheme.tertiary,
+        )
+        DiagnosticMetricPill(
+            "Data Saver",
+            network.restrictBackgroundStatus,
+            if (network.restrictBackgroundStatus == "enabled") {
+                MaterialTheme.colorScheme.error
+            } else {
+                MaterialTheme.colorScheme.tertiary
+            },
+        )
+    }
+    network.readError?.let { error ->
+        Text(
+            "Network diagnostics read failed: $error",
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.error,
+        )
+    }
+}
+
+@Composable
+private fun BackgroundWorkDiagnosticRow(row: BackgroundWorkStatusRow) {
+    val hasError = row.readError != null
+    val hasReceipt = row.workInfoCount > 0
+    val tint = when {
+        hasError -> MaterialTheme.colorScheme.error
+        hasReceipt -> MaterialTheme.colorScheme.primary
+        else -> MaterialTheme.colorScheme.tertiary
+    }
+    Surface(
+        color = MaterialTheme.colorScheme.surface.copy(alpha = 0.78f),
+        shape = RoundedCornerShape(12.dp),
+        border = androidx.compose.foundation.BorderStroke(1.dp, tint.copy(alpha = 0.24f)),
+    ) {
+        Column(
+            modifier = Modifier.padding(14.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(row.label, style = MaterialTheme.typography.titleSmall)
+                    Text(
+                        row.uniqueWorkName,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+                HighlightPill(
+                    label = when {
+                        hasError -> "Read failed"
+                        hasReceipt -> "Receipt found"
+                        else -> "No receipt"
+                    },
+                    icon = when {
+                        hasError -> Icons.Default.Error
+                        hasReceipt -> Icons.Default.CheckCircle
+                        else -> Icons.Default.Schedule
+                    },
+                    tint = tint,
+                )
+            }
+            Text(
+                row.workInfoStatus,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            Text(
+                "${row.workInfoCount} records • max attempts ${row.maxRunAttemptCount ?: 0}",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            row.readError?.let { error ->
+                Text(
+                    "Read error: $error",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.error,
+                )
+            }
         }
     }
 }

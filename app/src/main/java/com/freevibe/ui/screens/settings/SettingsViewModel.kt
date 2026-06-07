@@ -10,6 +10,8 @@ import com.freevibe.data.repository.CommunityBlockRepository
 import com.freevibe.data.repository.VoteRepository
 import com.freevibe.di.IoDispatcher
 import com.freevibe.service.AutoWallpaperWorker
+import com.freevibe.service.BackgroundWorkDiagnostics
+import com.freevibe.service.BackgroundWorkDiagnosticsReader
 import com.freevibe.service.CommunityIdentityProvider
 import com.freevibe.service.CommunityIdentitySummary
 import com.freevibe.service.CrashDiagnosticsCollector
@@ -63,6 +65,7 @@ class SettingsViewModel @Inject constructor(
     private val videoWallpaperStorage: VideoWallpaperStorage,
     private val sourceMetrics: SourceMetrics,
     private val crashDiagnosticsCollector: CrashDiagnosticsCollector,
+    private val backgroundWorkDiagnosticsReader: BackgroundWorkDiagnosticsReader,
     private val voteRepo: VoteRepository,
     private val communityBlockRepo: CommunityBlockRepository,
     private val communityIdentityProvider: CommunityIdentityProvider,
@@ -197,10 +200,14 @@ class SettingsViewModel @Inject constructor(
     val cacheUsage: StateFlow<CacheUsageState> = _cacheUsage.asStateFlow()
     private val _crashDiagnostics = MutableStateFlow(CrashDiagnosticsSummary())
     val crashDiagnostics: StateFlow<CrashDiagnosticsSummary> = _crashDiagnostics.asStateFlow()
+    private val _backgroundWorkDiagnostics = MutableStateFlow(BackgroundWorkDiagnostics())
+    val backgroundWorkDiagnostics: StateFlow<BackgroundWorkDiagnostics> =
+        _backgroundWorkDiagnostics.asStateFlow()
 
     init {
         refreshCacheUsage()
         refreshCrashDiagnostics()
+        refreshBackgroundWorkDiagnostics()
     }
 
     fun setAutoWallpaper(enabled: Boolean) = viewModelScope.launch {
@@ -275,6 +282,12 @@ class SettingsViewModel @Inject constructor(
 
     suspend fun buildCrashDiagnosticsBundle(): String = withContext(ioDispatcher) {
         crashDiagnosticsCollector.buildBundle()
+    }
+
+    fun refreshBackgroundWorkDiagnostics() = viewModelScope.launch {
+        _backgroundWorkDiagnostics.value = withContext(ioDispatcher) {
+            backgroundWorkDiagnosticsReader.read()
+        }
     }
 
     fun clearWallpaperHistory() = viewModelScope.launch {

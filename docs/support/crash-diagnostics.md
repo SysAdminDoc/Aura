@@ -23,12 +23,13 @@ The bundle is local until the user taps `Copy` or `Share`. Aura does not upload 
 The background-work section records each known unique work name, the current
 enabled state Aura can infer from local settings, the expected network posture,
 and the constraints that explain common deferrals. This is support context, not
-a live scheduler audit: direct WorkManager `WorkInfo` rows and Android Data
-Saver status are still pending Settings diagnostics work.
+a live scheduler audit.
 
-The next diagnostics slice should add live status from WorkManager unique-work
-lookups and `ConnectivityManager` metered/Data Saver APIs, then merge those
-receipts into both Settings and this support bundle.
+For live scheduler state, use `Settings` > `Diagnostics` > `Background work`.
+That dialog reads WorkManager unique-work `WorkInfo` state counts plus
+`ConnectivityManager` metered/Data Saver status. The next diagnostics slice
+should persist last success/failure/error receipts from worker execution and
+decide whether to merge the live Settings snapshot into this support bundle.
 
 ## Redaction
 

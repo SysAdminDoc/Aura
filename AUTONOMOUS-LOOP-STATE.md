@@ -1,8 +1,8 @@
 # Autonomous Loop State
 
 **Assigned project:** `C:\Users\--\repos\Aura`
-**Current pass:** 2026-06-07 Cycle 155 background work diagnostics bundle section
-**Last commit before pass:** `e808413` (`ci(background): gate network posture`)
+**Current pass:** 2026-06-07 Cycle 156 background work Settings diagnostics
+**Last commit before pass:** `e8c81fc` (`feat(diagnostics): add background work bundle section`)
 
 ## 2026-06-05 Result
 
@@ -2297,11 +2297,27 @@
 - Cycle 155 verification: focused `CrashDiagnosticsTextTest` passed locally
   with Android Studio JBR.
 
+## Cycle 156 Result - 2026-06-07
+
+- Added `BackgroundWorkDiagnosticsReader` and a Hilt binding so Settings can
+  read WorkManager unique-work `WorkInfo` state counts and
+  `ConnectivityManager` metered/Data Saver status without adding WorkManager
+  test infrastructure.
+- Added `Settings` > `Diagnostics` > `Background work` with one row per
+  unique work name, record counts, max run attempts, read errors, active
+  metered-network status, and Data Saver restricted-background status.
+- Updated `docs/background-work-network-posture.md`,
+  `docs/background-work-scheduling-ledger.md`, `docs/support/crash-diagnostics.md`,
+  and `docs/research/cycle-156-2026-06-07.md` for the landed Settings receipt
+  slice and remaining persisted worker receipt gaps.
+- Cycle 156 verification: focused `BackgroundWorkDiagnosticsReaderTest` and
+  `SettingsViewModelTest` passed locally with Android Studio JBR.
+
 ## Next Cycle
 
-Continue this same assigned project, Aura. Start Cycle 156 from the
+Continue this same assigned project, Aura. Start Cycle 157 from the
 `ROADMAP.md` Continuation State and
-`docs/research/cycle-155-2026-06-07.md`. The account
+`docs/research/cycle-156-2026-06-07.md`. The account
 deletion dry-run planner, read-only Settings identity surface, redacted
 shareable request draft, request-code lookup tool, review receipt gate, offline
 apply simulator, private executor package builder, and guarded REST executor
@@ -2452,6 +2468,9 @@ workflow policy coverage, and verify/release workflow wiring.
 Cycle 155 added the diagnostics/support bundle background-work section with
 inferred enabled state, network posture, constraints, and explicit pending
 WorkInfo/Data Saver receipt markers.
+Cycle 156 added live Settings background-work diagnostics with WorkManager
+unique-work `WorkInfo` state counts and `ConnectivityManager` metered/Data
+Saver status.
 Actual live callable invocation evidence, a live hosted HTTPS web deletion URL,
 direct RTDB rule tightening, App Check console evidence, production-project
 dry-run evidence, and owner/admin GitHub repository security-settings evidence
@@ -2464,7 +2483,7 @@ owner access is confirmed, collect owner/admin GitHub security settings
 evidence and generate the redacted receipt when access is available, or
 continue with signed release dry-run evidence capture on a suitable runner,
 the screenshot and feature-graphic pipeline for the remaining store metadata
-asset gap, background-work Settings diagnostics with live WorkInfo/Data Saver receipts, release
+asset gap, persisted background-work last-run/error receipts and deferral text, release
 artifact hardening, or the next checkable backend, deploy, security, support,
 policy, or rules hardening artifact if owner-gated evidence is still
 unavailable.
