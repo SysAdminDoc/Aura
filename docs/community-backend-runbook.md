@@ -172,6 +172,9 @@ must include:
 - Private Firebase Auth deletion package from
   `tools/community_account_deletion_auth_package.py` before deleting the Auth
   user through an owner-approved Firebase Console, Admin SDK, or CLI path.
+- Private account deletion upload handoff plan from
+  `tools/community_account_deletion_upload_plan.py` before claiming public
+  uploads were removed for a deleted account request.
 
 ## Sources
 

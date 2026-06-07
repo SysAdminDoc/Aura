@@ -15,6 +15,7 @@ from tools.community_account_deletion_review import (
     ReviewError,
     redact_uid_key,
     require_non_empty_string,
+    require_object,
     sha256_json,
     sha256_text,
     utc_now,
@@ -84,6 +85,32 @@ def build_auth_deletion_package(
         "deleteCommandTemplate": "Delete this Firebase Authentication user with the owner-approved Firebase Console, Admin SDK, or CLI for the production project.",
         "executorWarning": "Private package: contains the full Firebase UID. Do not publish; use only after requester verification and backend completion evidence are archived.",
     }
+
+
+def validate_auth_deletion_package(package: Any) -> dict[str, Any]:
+    package_object = require_object(package, "Account deletion Auth package")
+    if package_object.get("schemaVersion") != 1:
+        raise ReviewError("Account deletion Auth package schemaVersion must be 1")
+    if package_object.get("packageKind") != "communityAccountDeletionAuthDelete":
+        raise ReviewError("Account deletion Auth package has the wrong packageKind")
+    if package_object.get("packageStatus") != "readyForAuthDeletion":
+        raise ReviewError("Account deletion Auth package must be readyForAuthDeletion")
+
+    request_code = normalize_request_code(
+        require_non_empty_string(package_object.get("requestCode"), "Request code")
+    )
+    uid = require_non_empty_string(package_object.get("uid"), "Auth package uid")
+    if deletion_request_code(uid) != request_code:
+        raise ReviewError("Account deletion Auth package uid does not derive the request code")
+    if package_object.get("uidHash") != sha256_text(uid):
+        raise ReviewError("Account deletion Auth package uidHash does not match uid")
+
+    require_non_empty_string(package_object.get("safeUid"), "Auth package safeUid")
+    require_non_empty_string(package_object.get("completionReceiptHash"), "Auth package completionReceiptHash")
+    require_non_empty_string(package_object.get("lookupEvidenceHash"), "Auth package lookupEvidenceHash")
+    require_non_empty_string(package_object.get("supportReference"), "Auth package supportReference")
+    require_non_empty_string(package_object.get("operator"), "Auth package operator")
+    return package_object
 
 
 def dump_auth_deletion_package(package: dict[str, Any]) -> str:

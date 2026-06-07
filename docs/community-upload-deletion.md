@@ -11,7 +11,9 @@ handles, removes the Storage object plus metadata rows, and records retry state.
 Cycle 65 adds the Storage lifecycle/orphan cleanup policy and offline orphan
 report tool. Cycle 66 adds a dry-run legacy backfill plan for rows missing
 `storagePath` and owner indexes. Cycle 67 adds private deletion tombstones and a
-retention policy for removed uploads.
+retention policy for removed uploads. Cycle 87 adds a private account-deletion
+upload handoff plan for requesters who ask support to remove public uploads
+after backend account deletion completion.
 
 ## New Metadata
 
@@ -92,6 +94,10 @@ markers away from public read paths.
 - Use [`docs/community-upload-backfill.md`](community-upload-backfill.md) to
   generate and review dry-run updates for older upload rows that lack
   `storagePath` and `/owner_uploads` entries.
+- Use `tools/community_account_deletion_upload_plan.py` after a private Auth
+  deletion package is built to enumerate public uploads owned by the deleted
+  account request and block rows that still need handle backfill or manual
+  review.
 - Migrate vote marker privacy and account-deletion semantics before claiming
   deleted upload vote data is minimized.
 - Run the two-report orphan cleanup gate from

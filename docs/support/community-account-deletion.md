@@ -89,6 +89,11 @@ request-code lookup against the completed backend deletion receipt and builds
 the private Firebase Auth deletion package. The package contains the full UID
 and must never be shared with the requester or committed.
 
+`tools/community_account_deletion_upload_plan.py` consumes the private Auth
+package plus a current RTDB export and creates a private public-upload deletion
+handoff plan. It enumerates owned uploads with valid `storagePath` handles and
+blocks rows that need backfill or manual review.
+
 ## Operator Handling
 
 1. Receive the request draft through a private support channel.
@@ -168,10 +173,22 @@ and must never be shared with the requester or committed.
     Console, Admin SDK, or CLI path for the production project. Archive the
     private Auth package and command evidence with backend evidence.
 
-16. Share only the completion receipt and requester-facing local cleanup
+16. If the requester asks to remove public uploads, build the private upload
+    deletion handoff plan:
+
+   ```powershell
+   py -3 tools\community_account_deletion_upload_plan.py --database-export .\rtdb-export.json --auth-package .\account-deletion-auth-package.json --output .\account-deletion-upload-plan.json
+   ```
+
+17. Use the owner/admin upload deletion workflow for every candidate upload and
+    resolve any blocked rows through backfill or manual review before claiming
+    public uploads were removed.
+
+18. Share only the completion receipt and requester-facing local cleanup
     instructions with the requester. Keep lookup, plan,
     review, simulation, executor package, REST apply receipt, Auth package,
-    database export, access token, full UID, and RTDB paths private.
+    upload plan, database export, access token, full UID, and RTDB paths
+    private.
 
 If the requester still has Aura installed, they can open `Settings` >
 `Community identity` > `Clear local` after support confirms backend completion.

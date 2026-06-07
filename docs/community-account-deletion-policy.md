@@ -97,6 +97,17 @@ evidence. It does not delete the Auth user by itself; the actual deletion must
 use an owner-approved Firebase Console, Admin SDK, or CLI path for the
 production project.
 
+If the requester also asks to remove public uploads, operators can build the
+private upload deletion handoff plan:
+
+```powershell
+py -3 tools\community_account_deletion_upload_plan.py --database-export .\rtdb-export.json --auth-package .\account-deletion-auth-package.json --output .\account-deletion-upload-plan.json
+```
+
+The upload plan lists owned sound/wallpaper rows with valid Storage handles and
+blocks rows that need backfill or manual review. It does not delete Storage
+objects or RTDB metadata by itself.
+
 ## Deleted Marker Paths
 
 The planner removes:
@@ -184,6 +195,7 @@ operator lookup step.
 - `py -3 -m py_compile tools\community_account_deletion_completion_receipt.py test\tools\community_account_deletion_completion_receipt_test.py`
 - `py -3 -m py_compile tools\community_account_deletion_cleanup_sequence.py test\tools\community_account_deletion_cleanup_sequence_test.py`
 - `py -3 -m py_compile tools\community_account_deletion_auth_package.py test\tools\community_account_deletion_auth_package_test.py`
+- `py -3 -m py_compile tools\community_account_deletion_upload_plan.py test\tools\community_account_deletion_upload_plan_test.py`
 
 ## Remaining Work
 
@@ -192,6 +204,8 @@ operator lookup step.
   then generate only the redacted completion receipt for the requester.
 - Execute trusted Firebase Auth deletion from the private package only after
   owner access and production-project approval are confirmed.
+- Execute public upload deletion only through the owner/admin upload deletion
+  workflow after the private upload plan has no blocked rows.
 - Publish the hosted private support route or web deletion page before Play
   production submission, using the validated web-intake field contract.
 - Decide whether future callable-backed vote deletion should decrement

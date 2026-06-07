@@ -3,6 +3,7 @@
 All notable changes to Aura will be documented in this file.
 
 ## Unreleased
+- **Account deletion upload handoff (Cycle 87)**: added a private upload deletion planner that consumes the Auth package, enumerates owned public sound/wallpaper uploads with valid Storage handles, and blocks rows needing backfill or manual review before owner/admin deletion workflow execution.
 - **Account deletion Auth package (Cycle 86)**: added a private Firebase Auth deletion package builder that requires matching request-code lookup and backend completion evidence before exposing the full UID to owner-approved Auth deletion.
 - **In-app local community cleanup (Cycle 85)**: Settings > Community identity now offers `Clear local` for the current device fallback identity, refreshes the redacted summary after clearing, and keeps backend/Auth/upload deletion in the support chain.
 - **Account deletion cleanup sequence (Cycle 84)**: added a post-completion sequencing tool that requires a completed backend receipt before ordering requester local cleanup, operator Firebase Auth deletion, and public upload deletion handoff.

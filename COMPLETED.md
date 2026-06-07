@@ -316,6 +316,11 @@ next pass can resume quickly.
   `tools/community_account_deletion_auth_package.py` and backend tool tests to
   build a private Firebase Auth deletion package only after request-code lookup
   and backend completion evidence match.
+- Completed Cycle 87 account deletion upload handoff plan: added
+  `tools/community_account_deletion_upload_plan.py` and backend tool tests to
+  enumerate owned public upload rows from a current RTDB export, block rows
+  with missing or mismatched `storagePath` handles, and hand candidates to the
+  owner/admin upload deletion workflow without deleting anything directly.
 
 ## 2026-06-05
 
