@@ -72,9 +72,9 @@
       "sha256": "1dc72892e9fc042b2c97b769c499ffeb771fd3b5a6e16047bb53cd84f358e74b"
     },
     {
-      "bytes": 1255,
+      "bytes": 1297,
       "path": "functions/src/index.ts",
-      "sha256": "5a520326f2dcbe1476766a7cb2cd4296a88c710790b913514bf8115b2b6fa65e"
+      "sha256": "57c5e331d927f3076c72fc4b5cf223e11ce7d050473a750da2ee450a1b10364b"
     },
     {
       "bytes": 5421,
@@ -95,6 +95,11 @@
       "bytes": 9501,
       "path": "functions/src/voteHandler.ts",
       "sha256": "91308d6e78197871fdc6708a9b70da1aa6d73a16f7f48572c8d151ca41f19ab6"
+    },
+    {
+      "bytes": 18998,
+      "path": "functions/src/wallpaperUploadHandler.ts",
+      "sha256": "c962e233c73f9bbaac9b65a6bd48c1d50e1fa57f2e84c4a50663ab36d55232e5"
     }
   ],
   "firebaseCli": {

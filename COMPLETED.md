@@ -390,6 +390,16 @@ next pass can resume quickly.
   `/owner_uploads/{uid}/sounds/{uploadId}` index writes, and focused Functions
   tests for accepted finalization, active dedupe, cooldown, daily-limit,
   unauthenticated, missing-App-Check, and invalid ownership/payload paths.
+- Completed Cycle 99 community wallpaper upload callable handler: implemented
+  `finalizeCommunityWallpaperUpload` handler logic with Firebase Auth/App Check
+  identity enforcement, server-allocated upload IDs, wallpaper metadata
+  normalization, Storage path ownership checks under `wallpapers/{uid}/...`,
+  HTTPS URL validation, dimension/file-size/file-type checks, storage-path
+  dedupe, UTC quota checks, public `/community_wallpapers/{uploadId}` metadata
+  writes, private `/owner_uploads/{uid}/wallpapers/{uploadId}` index writes,
+  and focused Functions tests for accepted finalization, active dedupe,
+  cooldown, daily-limit, unauthenticated, missing-App-Check, and invalid
+  ownership/payload paths.
 
 ## 2026-06-05
 
