@@ -29,3 +29,7 @@ CODEX_CHANGELOG.md
 *.bak
 __pycache__/
 *.pyc
+
+# Markdown files local-only (except README)
+*.md
+!README.md
