@@ -3491,13 +3491,6 @@ Net-new items from the fourth research pass (2026-06-10). Focused on: transitive
 
 ### P0 — Security and compliance fixes
 
-- [ ] P0 — **Add Open-Meteo attribution to comply with CC-BY 4.0 terms**
-  Why: Open-Meteo free tier requires CC-BY 4.0 attribution with a link. Open-Meteo appears only in `OpenMeteoApi.kt`/`AppModule.kt`/`WeatherUpdateWorker.kt` -- no user-visible attribution found. Missing attribution violates the terms of service for Aura's weather feature.
-  Evidence: Open-Meteo terms (https://open-meteo.com/en/terms); grep for "open-meteo" / "Open-Meteo" in UI code returns zero hits outside API/worker.
-  Touches: `SettingsScreen.kt` weather section (attribution text + link), `LicensesScreen.kt` / `ProviderDisclosure.kt` (data source row), `docs/legal/provider-policy.md`.
-  Acceptance: weather-enabled state shows "Weather data by Open-Meteo.com" with a tappable link in Settings or weather info; Licenses screen lists Open-Meteo with CC-BY 4.0; no attribution needed when weather is disabled.
-  Complexity: S
-
 ### P1 — Reliability and dependency currency
 
 - [ ] P1 — **Provider health watchdog surfacing persistent source failure**

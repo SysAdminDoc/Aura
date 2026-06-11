@@ -1345,6 +1345,7 @@ internal fun sourceDisplayName(source: ContentSource): String = when (source) {
     ContentSource.COMMUNITY -> "Community"
     ContentSource.BUNDLED -> "Aura Picks"
     ContentSource.AI_GENERATED -> "AI Generated"
+    ContentSource.OPEN_METEO -> "Open-Meteo"
 }
 
 internal fun formatCompactCount(value: Int): String {

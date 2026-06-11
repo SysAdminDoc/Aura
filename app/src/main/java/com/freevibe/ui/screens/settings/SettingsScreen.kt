@@ -27,6 +27,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.OpenInNew
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -73,6 +74,7 @@ import java.util.Locale
 
 private const val AURA_SOURCE_URL = "https://github.com/SysAdminDoc/Aura"
 private const val AURA_PRIVACY_POLICY_URL = "https://github.com/SysAdminDoc/Aura/blob/main/docs/privacy/privacy-policy.md"
+private const val OPEN_METEO_LICENCE_URL = "https://open-meteo.com/en/licence"
 
 private fun openExternalUrl(context: Context, url: String) {
     try {
@@ -927,6 +929,41 @@ fun SettingsScreen(
                     }
                 },
             )
+            if (weatherEffects) {
+                Surface(
+                    onClick = { openExternalUrl(context, OPEN_METEO_LICENCE_URL) },
+                    color = MaterialTheme.colorScheme.surfaceContainer,
+                    contentColor = MaterialTheme.colorScheme.onSurface,
+                    shape = RoundedCornerShape(8.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp),
+                ) {
+                    Row(
+                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 10.dp),
+                        horizontalArrangement = Arrangement.spacedBy(10.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Icon(
+                            Icons.AutoMirrored.Filled.OpenInNew,
+                            contentDescription = null,
+                            modifier = Modifier.size(16.dp),
+                            tint = MaterialTheme.colorScheme.primary,
+                        )
+                        Column(Modifier.weight(1f)) {
+                            Text(
+                                "Weather data by Open-Meteo.com",
+                                style = MaterialTheme.typography.labelLarge,
+                            )
+                            Text(
+                                "Licensed under CC BY 4.0",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                        }
+                    }
+                }
+            }
             SettingsToggle(
                 icon = Icons.Default.Brightness4,
                 title = "Auto-switch wallpaper for dark mode",

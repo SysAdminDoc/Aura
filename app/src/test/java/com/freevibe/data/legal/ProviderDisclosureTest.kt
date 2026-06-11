@@ -30,6 +30,16 @@ class ProviderDisclosureTest {
     }
 
     @Test
+    fun `open meteo disclosure carries cc by attribution requirements`() {
+        val disclosure = providerDisclosuresBySource.getValue(ContentSource.OPEN_METEO)
+
+        assertEquals("Open-Meteo", disclosure.displayName)
+        assertTrue(disclosure.termsUrl.contains("open-meteo.com"))
+        assertTrue(disclosure.licenseSummary.contains("CC BY 4.0"))
+        assertTrue(disclosure.attribution.contains("Open-Meteo.com"))
+    }
+
+    @Test
     fun `provider runtime controls cover every content source exactly once`() {
         val coveredSources = providerRuntimeControls.map { it.source }
 

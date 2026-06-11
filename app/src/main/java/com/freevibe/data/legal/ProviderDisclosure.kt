@@ -280,6 +280,18 @@ val providerDisclosures = listOf(
         userActions = "Generate, favorite, export, and apply under user control.",
         storeDisclosure = "Optional AI generation through user-configured provider access.",
     ),
+    ProviderDisclosure(
+        source = ContentSource.OPEN_METEO,
+        displayName = "Open-Meteo",
+        content = "Weather data for optional weather wallpaper effects",
+        status = ProviderStatus.ACTIVE,
+        termsUrl = "https://open-meteo.com/en/licence",
+        licenseSummary = "Weather API data under CC BY 4.0",
+        attribution = "Show Weather data by Open-Meteo.com with a CC BY 4.0 licence link when weather effects are enabled.",
+        cachePolicy = "Store only the latest weather effect state needed by the live wallpaper service.",
+        userActions = "Enable weather effects, grant approximate location, disable weather effects, and clear app data.",
+        storeDisclosure = "Third-party weather source receiving approximate coordinates only for optional weather effects.",
+    ),
 )
 
 val providerDisclosuresBySource: Map<ContentSource, ProviderDisclosure> =
@@ -445,6 +457,14 @@ val providerRuntimeControls = listOf(
         currentControl = "Settings exposes a generated-wallpapers source flag in addition to the provider key.",
         disabledBehavior = "Disabled mode hides generation entry points and blocks Stability requests before provider-key validation while saved generated outputs can remain visible.",
         followUp = "Carry the flag into channel-specific distribution defaults when store profiles are added.",
+    ),
+    ProviderRuntimeControl(
+        source = ContentSource.OPEN_METEO,
+        surfaces = "Weather effects toggle, WeatherUpdateWorker, and weather live wallpaper prefs.",
+        status = ProviderRuntimeControlStatus.COVERED,
+        currentControl = "Settings exposes weather effects as an explicit opt-in before scheduling Open-Meteo refreshes.",
+        disabledBehavior = "Disabled mode cancels weather refresh work and stops Open-Meteo requests while non-weather wallpaper overlays remain available.",
+        followUp = "Keep the separate stored-coordinate wipe and precision-minimization work tracked in ROADMAP.md.",
     ),
 )
 
