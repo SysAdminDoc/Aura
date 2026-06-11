@@ -476,7 +476,7 @@ fun VideoCropScreen(
                 },
                 modifier = Modifier.fillMaxWidth().padding(16.dp).height(52.dp),
                 enabled = !isCropping && dimensionsReady,
-                shape = RoundedCornerShape(12.dp),
+                shape = RoundedCornerShape(8.dp),
             ) {
                 if (isCropping) {
                     CircularProgressIndicator(Modifier.size(20.dp), strokeWidth = 2.dp, color = Color.White)
@@ -485,7 +485,7 @@ fun VideoCropScreen(
                 } else {
                     Icon(Icons.Default.Crop, null, Modifier.size(20.dp))
                     Spacer(Modifier.width(8.dp))
-                    Text("Save Loop & Apply")
+                    Text("Save loop and apply")
                 }
             }
         }

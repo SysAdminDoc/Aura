@@ -252,7 +252,7 @@ private fun LicenseCard(lic: OssLicense) {
             } catch (_: Exception) {}
         },
         color = MaterialTheme.colorScheme.surfaceContainer,
-        shape = RoundedCornerShape(12.dp),
+        shape = RoundedCornerShape(8.dp),
     ) {
         Row(
             Modifier.fillMaxWidth().padding(14.dp),
