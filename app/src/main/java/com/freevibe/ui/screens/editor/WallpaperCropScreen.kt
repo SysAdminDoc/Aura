@@ -245,7 +245,7 @@ fun WallpaperCropScreen(
                         )
                     },
                     shape = RoundedCornerShape(8.dp),
-                    modifier = Modifier.height(32.dp),
+                    modifier = Modifier.heightIn(min = 40.dp),
                 )
                 val presets = listOf("Free" to null, "9:16" to (9f / 16f), "16:9" to (16f / 9f), "1:1" to 1f)
                 presets.forEach { (label, ratio) ->
@@ -281,7 +281,7 @@ fun WallpaperCropScreen(
                         },
                         label = { Text(label, style = MaterialTheme.typography.labelSmall) },
                         shape = RoundedCornerShape(8.dp),
-                        modifier = Modifier.height(32.dp),
+                        modifier = Modifier.heightIn(min = 40.dp),
                     )
                 }
             }
@@ -297,25 +297,25 @@ fun WallpaperCropScreen(
                     onClick = {
                         viewModel.applyCropped(WallpaperTarget.HOME, viewportSize.width, viewportSize.height)
                     },
-                    modifier = Modifier.weight(1f),
+                    modifier = Modifier.weight(1f).heightIn(min = 48.dp),
                     enabled = !state.isApplying && state.bitmap != null,
-                    shape = RoundedCornerShape(10.dp),
+                    shape = RoundedCornerShape(8.dp),
                 ) { Text("Home") }
                 OutlinedButton(
                     onClick = {
                         viewModel.applyCropped(WallpaperTarget.LOCK, viewportSize.width, viewportSize.height)
                     },
-                    modifier = Modifier.weight(1f),
+                    modifier = Modifier.weight(1f).heightIn(min = 48.dp),
                     enabled = !state.isApplying && state.bitmap != null,
-                    shape = RoundedCornerShape(10.dp),
+                    shape = RoundedCornerShape(8.dp),
                 ) { Text("Lock") }
                 Button(
                     onClick = {
                         viewModel.applyCropped(WallpaperTarget.BOTH, viewportSize.width, viewportSize.height)
                     },
-                    modifier = Modifier.weight(1f),
+                    modifier = Modifier.weight(1f).heightIn(min = 48.dp),
                     enabled = !state.isApplying && state.bitmap != null,
-                    shape = RoundedCornerShape(10.dp),
+                    shape = RoundedCornerShape(8.dp),
                 ) {
                     if (state.isApplying) CircularProgressIndicator(Modifier.size(18.dp), strokeWidth = 2.dp)
                     else Text("Both")

@@ -116,7 +116,7 @@ fun WallpaperEditorScreen(
             dismissButton = {
                 TextButton(onClick = { showDiscardConfirm = false }) { Text("Keep editing") }
             },
-            shape = RoundedCornerShape(10.dp),
+            shape = RoundedCornerShape(8.dp),
         )
     }
 
@@ -303,21 +303,21 @@ fun WallpaperEditorScreen(
             ) {
                 OutlinedButton(
                     onClick = { viewModel.apply(WallpaperTarget.HOME) },
-                    modifier = Modifier.weight(1f),
+                    modifier = Modifier.weight(1f).heightIn(min = 48.dp),
                     enabled = !state.isApplying,
-                    shape = RoundedCornerShape(10.dp),
+                    shape = RoundedCornerShape(8.dp),
                 ) { Text("Home") }
                 OutlinedButton(
                     onClick = { viewModel.apply(WallpaperTarget.LOCK) },
-                    modifier = Modifier.weight(1f),
+                    modifier = Modifier.weight(1f).heightIn(min = 48.dp),
                     enabled = !state.isApplying,
-                    shape = RoundedCornerShape(10.dp),
+                    shape = RoundedCornerShape(8.dp),
                 ) { Text("Lock") }
                 Button(
                     onClick = { viewModel.apply(WallpaperTarget.BOTH) },
-                    modifier = Modifier.weight(1f),
+                    modifier = Modifier.weight(1f).heightIn(min = 48.dp),
                     enabled = !state.isApplying,
-                    shape = RoundedCornerShape(10.dp),
+                    shape = RoundedCornerShape(8.dp),
                 ) {
                     if (state.isApplying) CircularProgressIndicator(Modifier.size(18.dp), strokeWidth = 2.dp)
                     else Text("Both")

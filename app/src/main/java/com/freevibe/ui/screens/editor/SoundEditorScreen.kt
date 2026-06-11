@@ -121,7 +121,7 @@ fun SoundEditorScreen(
             dismissButton = {
                 TextButton(onClick = { showSoundDiscardConfirm = false }) { Text("Keep editing") }
             },
-            shape = RoundedCornerShape(10.dp),
+            shape = RoundedCornerShape(8.dp),
         )
     }
 
@@ -200,7 +200,7 @@ fun SoundEditorScreen(
                 Box(Modifier.fillMaxWidth().height(200.dp), contentAlignment = Alignment.Center) {
                     Surface(
                         color = MaterialTheme.colorScheme.surfaceContainer,
-                        shape = RoundedCornerShape(12.dp),
+                        shape = RoundedCornerShape(8.dp),
                         modifier = Modifier.fillMaxWidth(),
                     ) {
                         Column(
@@ -285,7 +285,7 @@ fun SoundEditorScreen(
                         onClick = { viewModel.togglePlayback() },
                         modifier = Modifier
                             .size(64.dp)
-                            .clip(RoundedCornerShape(12.dp))
+                            .clip(RoundedCornerShape(8.dp))
                             .background(MaterialTheme.colorScheme.primaryContainer),
                     ) {
                         Icon(
@@ -319,7 +319,7 @@ fun SoundEditorScreen(
                             },
                             onValueChangeFinished = { fadeInUndoSaved = false },
                             valueRange = 0f..(state.trimDurationMs / 2f).coerceAtLeast(100f),
-                            modifier = Modifier.height(32.dp),
+                            modifier = Modifier.heightIn(min = 40.dp),
                         )
                     }
                     // Fade Out
@@ -338,7 +338,7 @@ fun SoundEditorScreen(
                             },
                             onValueChangeFinished = { fadeOutUndoSaved = false },
                             valueRange = 0f..(state.trimDurationMs / 2f).coerceAtLeast(100f),
-                            modifier = Modifier.height(32.dp),
+                            modifier = Modifier.heightIn(min = 40.dp),
                         )
                     }
                 }
@@ -393,7 +393,7 @@ private fun TrimGuidance(trimDurationMs: Long) {
         modifier = Modifier.fillMaxWidth(),
         color = containerColor,
         contentColor = contentColor,
-        shape = RoundedCornerShape(12.dp),
+        shape = RoundedCornerShape(8.dp),
     ) {
         Row(
             modifier = Modifier.padding(horizontal = 14.dp, vertical = 12.dp),
@@ -415,7 +415,7 @@ private fun ApplyBtn(text: String, modifier: Modifier, isLoading: Boolean, onCli
         onClick = onClick,
         modifier = modifier.height(48.dp),
         enabled = !isLoading,
-        shape = RoundedCornerShape(12.dp),
+        shape = RoundedCornerShape(8.dp),
         colors = ButtonDefaults.buttonColors(
             containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
             contentColor = MaterialTheme.colorScheme.onSurface,
@@ -448,7 +448,7 @@ private fun WaveformView(
 
     Box(
         modifier = modifier
-            .clip(RoundedCornerShape(12.dp))
+            .clip(RoundedCornerShape(8.dp))
             .background(MaterialTheme.colorScheme.surfaceContainer)
     ) {
         Canvas(
