@@ -323,10 +323,10 @@ fun SoundsScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 10.dp, vertical = 6.dp),
-                shape = RoundedCornerShape(12.dp),
+                shape = RoundedCornerShape(8.dp),
                 contentPadding = PaddingValues(horizontal = 10.dp, vertical = 10.dp),
                 highlightHeight = 56.dp,
-                shadowElevation = 6.dp,
+                shadowElevation = 2.dp,
             ) {
                 Box {
                     Row(
@@ -896,10 +896,10 @@ private fun SoundCollectionCard(
         modifier = Modifier
             .width(168.dp)
             .height(104.dp),
-        shape = RoundedCornerShape(12.dp),
+        shape = RoundedCornerShape(8.dp),
         color = MaterialTheme.colorScheme.surfaceContainer.copy(alpha = 0.78f),
         border = BorderStroke(1.dp, accent.copy(alpha = 0.26f)),
-        shadowElevation = 4.dp,
+        shadowElevation = 2.dp,
     ) {
         Column(
             modifier = Modifier
@@ -908,9 +908,9 @@ private fun SoundCollectionCard(
             verticalArrangement = Arrangement.SpaceBetween,
         ) {
             Surface(
-                shape = RoundedCornerShape(10.dp),
+                shape = RoundedCornerShape(8.dp),
                 color = accent.copy(alpha = 0.16f),
-                modifier = Modifier.size(34.dp),
+                modifier = Modifier.size(40.dp),
             ) {
                 Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     Icon(
@@ -993,13 +993,13 @@ private fun SoundCard(
     }
     Surface(
         color = if (isPlaying) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.34f) else MaterialTheme.colorScheme.surfaceContainer.copy(alpha = 0.72f),
-        shape = RoundedCornerShape(12.dp),
+        shape = RoundedCornerShape(8.dp),
         border = BorderStroke(
             1.dp,
             if (isPlaying) MaterialTheme.colorScheme.primary.copy(alpha = 0.28f)
             else MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.24f),
         ),
-        shadowElevation = if (isPlaying) 6.dp else 2.dp,
+        shadowElevation = if (isPlaying) 3.dp else 1.dp,
         modifier = Modifier.combinedClickable(onClick = onClick, onLongClick = onLongPress),
     ) {
         Column(Modifier.fillMaxWidth().padding(vertical = 10.dp, horizontal = 12.dp)) {
@@ -1091,7 +1091,7 @@ private fun SoundCard(
                             items(badges, key = { badge -> "${sound.stableKey()}_$badge" }) { badge ->
                                 Surface(
                                     color = MaterialTheme.colorScheme.primary.copy(alpha = 0.08f),
-                                    shape = RoundedCornerShape(10.dp),
+                                    shape = RoundedCornerShape(8.dp),
                                 ) {
                                     Text(
                                         badge,
@@ -1138,9 +1138,9 @@ private fun SoundCard(
                     onUpvote?.let {
                         OutlinedButton(
                             onClick = it,
-                            shape = RoundedCornerShape(10.dp),
+                            shape = RoundedCornerShape(8.dp),
                             contentPadding = PaddingValues(horizontal = 10.dp, vertical = 0.dp),
-                            modifier = Modifier.height(34.dp),
+                            modifier = Modifier.heightIn(min = 40.dp),
                         ) {
                             Icon(Icons.Default.ThumbUp, contentDescription = null, modifier = Modifier.size(15.dp))
                             Spacer(Modifier.width(5.dp))
@@ -1153,9 +1153,9 @@ private fun SoundCard(
                     onDownvote?.let {
                         TextButton(
                             onClick = it,
-                            shape = RoundedCornerShape(10.dp),
+                            shape = RoundedCornerShape(8.dp),
                             contentPadding = PaddingValues(horizontal = 10.dp, vertical = 0.dp),
-                            modifier = Modifier.height(34.dp),
+                            modifier = Modifier.heightIn(min = 40.dp),
                         ) {
                             Icon(Icons.Default.VisibilityOff, contentDescription = null, modifier = Modifier.size(15.dp))
                             Spacer(Modifier.width(5.dp))
@@ -1337,8 +1337,8 @@ private fun QuickApplySheet(
             if (!canApply) {
                 Surface(
                     color = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.55f),
-                    shape = RoundedCornerShape(10.dp),
-                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.error.copy(alpha = 0.18f)),
+                    shape = RoundedCornerShape(8.dp),
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.error.copy(alpha = 0.22f)),
                 ) {
                     Row(
                         Modifier.fillMaxWidth().padding(12.dp),
@@ -1363,8 +1363,8 @@ private fun QuickApplySheet(
             if (policyMessages.isNotEmpty()) {
                 Surface(
                     color = MaterialTheme.colorScheme.tertiaryContainer.copy(alpha = 0.52f),
-                    shape = RoundedCornerShape(10.dp),
-                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.tertiary.copy(alpha = 0.18f)),
+                    shape = RoundedCornerShape(8.dp),
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.tertiary.copy(alpha = 0.22f)),
                 ) {
                     Row(
                         Modifier.fillMaxWidth().padding(12.dp),
@@ -1410,7 +1410,7 @@ private fun QuickApplyRow(label: String, icon: androidx.compose.ui.graphics.vect
     Surface(
         onClick = onClick,
         enabled = enabled,
-        shape = RoundedCornerShape(10.dp),
+        shape = RoundedCornerShape(8.dp),
         color = MaterialTheme.colorScheme.surfaceContainer.copy(alpha = 0.45f),
         border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.2f)),
     ) {
@@ -1464,14 +1464,14 @@ private fun RecordingDialog(
             }
         },
         confirmButton = {
-            Button(onClick = onStop, shape = RoundedCornerShape(10.dp)) {
+            Button(onClick = onStop, shape = RoundedCornerShape(8.dp), modifier = Modifier.heightIn(min = 48.dp)) {
                 Icon(Icons.Default.Stop, contentDescription = null, modifier = Modifier.size(16.dp))
                 Spacer(Modifier.width(6.dp))
                 Text("Stop")
             }
         },
         dismissButton = {
-            TextButton(onClick = onDiscard, shape = RoundedCornerShape(10.dp)) {
+            TextButton(onClick = onDiscard, shape = RoundedCornerShape(8.dp), modifier = Modifier.heightIn(min = 48.dp)) {
                 Text("Discard")
             }
         },
@@ -1599,14 +1599,16 @@ private fun UploadDialog(
                     )
                 },
                 enabled = !isUploading && name.isNotBlank() && rightsAttested,
-                shape = RoundedCornerShape(10.dp),
+                shape = RoundedCornerShape(8.dp),
+                modifier = Modifier.heightIn(min = 48.dp),
             ) { Text("Upload") }
         },
         dismissButton = {
             TextButton(
                 onClick = onDismiss,
                 enabled = !isUploading,
-                shape = RoundedCornerShape(10.dp),
+                shape = RoundedCornerShape(8.dp),
+                modifier = Modifier.heightIn(min = 48.dp),
             ) { Text("Cancel") }
         },
     )
