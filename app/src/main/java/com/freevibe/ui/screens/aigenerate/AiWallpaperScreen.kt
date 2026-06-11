@@ -208,16 +208,16 @@ fun AiWallpaperScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 10.dp),
-                shape = RoundedCornerShape(12.dp),
+                shape = RoundedCornerShape(8.dp),
                 contentPadding = PaddingValues(horizontal = 10.dp, vertical = 10.dp),
-                highlightHeight = 100.dp,
-                shadowElevation = 6.dp,
+                highlightHeight = 76.dp,
+                shadowElevation = 2.dp,
             ) {
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier.fillMaxWidth(),
                 ) {
-                    IconButton(onClick = onBack, modifier = Modifier.size(36.dp)) {
+                    IconButton(onClick = onBack, modifier = Modifier.size(48.dp)) {
                         Icon(
                             Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = "Back",
@@ -241,7 +241,7 @@ fun AiWallpaperScreen(
                     }
                     IconButton(
                         onClick = { showApiKeyField = !showApiKeyField },
-                        modifier = Modifier.size(36.dp),
+                        modifier = Modifier.size(48.dp),
                         enabled = generatedContentProviderEnabled,
                     ) {
                         Icon(
@@ -267,10 +267,10 @@ fun AiWallpaperScreen(
                 exit = fadeOut() + shrinkVertically(),
             ) {
                 GlassCard(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 10.dp),
-                    shape = RoundedCornerShape(12.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 10.dp),
+                    shape = RoundedCornerShape(8.dp),
                     contentPadding = PaddingValues(horizontal = 14.dp, vertical = 12.dp),
                 ) {
                     Text(
@@ -330,7 +330,7 @@ fun AiWallpaperScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 10.dp),
-                shape = RoundedCornerShape(12.dp),
+                shape = RoundedCornerShape(8.dp),
                 contentPadding = PaddingValues(horizontal = 14.dp, vertical = 12.dp),
             ) {
                 Text(
@@ -368,7 +368,7 @@ fun AiWallpaperScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 10.dp),
-                shape = RoundedCornerShape(12.dp),
+                shape = RoundedCornerShape(8.dp),
                 contentPadding = PaddingValues(horizontal = 14.dp, vertical = 12.dp),
             ) {
                 Text(
@@ -441,7 +441,7 @@ fun AiWallpaperScreen(
                         modifier = Modifier.size(18.dp),
                     )
                     Spacer(Modifier.width(8.dp))
-                    Text("Generate Wallpaper")
+                    Text("Generate wallpaper")
                 }
             }
 
@@ -520,8 +520,8 @@ fun AiWallpaperScreen(
                         .fillMaxWidth()
                         .padding(horizontal = 10.dp)
                         .aspectRatio(9f / 16f)
-                        .clip(RoundedCornerShape(12.dp)),
-                    shape = RoundedCornerShape(12.dp),
+                        .clip(RoundedCornerShape(8.dp)),
+                    shape = RoundedCornerShape(8.dp),
                 )
             }
 
@@ -544,14 +544,14 @@ fun AiWallpaperScreen(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .aspectRatio(9f / 16f)
-                                .clip(RoundedCornerShape(12.dp)),
+                                .clip(RoundedCornerShape(8.dp)),
                             contentScale = ContentScale.Crop,
                         ) {
                             when (painter.state) {
                                 is AsyncImagePainter.State.Loading -> {
                                     ShimmerBox(
                                         modifier = Modifier.fillMaxSize(),
-                                        shape = RoundedCornerShape(12.dp),
+                                        shape = RoundedCornerShape(8.dp),
                                     )
                                 }
                                 is AsyncImagePainter.State.Error -> {
@@ -578,7 +578,8 @@ fun AiWallpaperScreen(
                         ) {
                             OutlinedButton(
                                 onClick = { viewModel.saveToFavorites() },
-                                modifier = Modifier.weight(1f),
+                                modifier = Modifier.weight(1f).heightIn(min = 48.dp),
+                                shape = RoundedCornerShape(8.dp),
                                 enabled = !state.isSaved && !state.isApplying,
                             ) {
                                 Icon(
@@ -593,7 +594,8 @@ fun AiWallpaperScreen(
                             Box(modifier = Modifier.weight(1f)) {
                                 Button(
                                     onClick = { showTargetMenu = true },
-                                    modifier = Modifier.fillMaxWidth(),
+                                    modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp),
+                                    shape = RoundedCornerShape(8.dp),
                                     enabled = !state.isApplying,
                                 ) {
                                     if (state.isApplying) {
@@ -609,7 +611,7 @@ fun AiWallpaperScreen(
                                             modifier = Modifier.size(16.dp),
                                         )
                                         Spacer(Modifier.width(6.dp))
-                                        Text("Set Wallpaper")
+                                        Text("Set wallpaper")
                                     }
                                 }
                                 DropdownMenu(
