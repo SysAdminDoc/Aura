@@ -267,7 +267,7 @@ fun CreatorProfileScreen(
                                             modifier = Modifier.size(16.dp),
                                         )
                                     },
-                                    shape = RoundedCornerShape(10.dp),
+                                    shape = RoundedCornerShape(8.dp),
                                 )
                             }
                         }
@@ -364,7 +364,7 @@ private fun CreatorSummaryCard(
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Surface(
-                shape = RoundedCornerShape(12.dp),
+                shape = RoundedCornerShape(8.dp),
                 color = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f),
                 border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.18f)),
             ) {
@@ -474,7 +474,8 @@ private fun CreatorProfileEditDialog(
             Button(
                 onClick = { onSave(displayName, bio, websiteUrl, avatarUrl) },
                 enabled = !isSaving && displayName.trim().length >= 2,
-                shape = RoundedCornerShape(10.dp),
+                shape = RoundedCornerShape(8.dp),
+                modifier = Modifier.heightIn(min = 48.dp),
             ) {
                 if (isSaving) {
                     CircularProgressIndicator(Modifier.size(14.dp), strokeWidth = 2.dp)
@@ -484,7 +485,7 @@ private fun CreatorProfileEditDialog(
             }
         },
         dismissButton = {
-            TextButton(onClick = onDismiss, enabled = !isSaving, shape = RoundedCornerShape(10.dp)) {
+            TextButton(onClick = onDismiss, enabled = !isSaving, shape = RoundedCornerShape(8.dp), modifier = Modifier.heightIn(min = 48.dp)) {
                 Text("Cancel")
             }
         },
@@ -495,7 +496,7 @@ private fun CreatorProfileEditDialog(
 private fun CreatorMetric(label: String, value: String, modifier: Modifier = Modifier) {
     Surface(
         modifier = modifier,
-        shape = RoundedCornerShape(10.dp),
+        shape = RoundedCornerShape(8.dp),
         color = MaterialTheme.colorScheme.surfaceContainer.copy(alpha = 0.62f),
         border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.18f)),
     ) {
@@ -548,9 +549,9 @@ private fun CreatorRow(
         )
     }
     Surface(
-        shape = RoundedCornerShape(12.dp),
+        shape = RoundedCornerShape(8.dp),
         color = MaterialTheme.colorScheme.surfaceContainer.copy(alpha = 0.7f),
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.18f)),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.24f)),
     ) {
         Row(
             modifier = Modifier.fillMaxWidth().padding(12.dp),
@@ -570,7 +571,8 @@ private fun CreatorRow(
                     TextButton(
                         onClick = if (creator.isFollowed) onUnfollow else onFollow,
                         enabled = !actionInFlight,
-                        shape = RoundedCornerShape(10.dp),
+                        shape = RoundedCornerShape(8.dp),
+                        modifier = Modifier.heightIn(min = 48.dp),
                     ) {
                         if (actionInFlight) {
                             CircularProgressIndicator(Modifier.size(14.dp), strokeWidth = 2.dp)
@@ -595,9 +597,9 @@ private fun CreatorRow(
 @Composable
 private fun UploadRow(upload: CreatorUploadRef) {
     Surface(
-        shape = RoundedCornerShape(12.dp),
+        shape = RoundedCornerShape(8.dp),
         color = MaterialTheme.colorScheme.surfaceContainer.copy(alpha = 0.52f),
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.16f)),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.24f)),
     ) {
         Row(
             modifier = Modifier.fillMaxWidth().padding(12.dp),
@@ -605,7 +607,7 @@ private fun UploadRow(upload: CreatorUploadRef) {
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Surface(
-                shape = RoundedCornerShape(10.dp),
+                shape = RoundedCornerShape(8.dp),
                 color = MaterialTheme.colorScheme.primary.copy(alpha = 0.10f),
             ) {
                 Text(
@@ -631,7 +633,7 @@ private fun UploadRow(upload: CreatorUploadRef) {
 private fun EmptyCreatorSection(text: String) {
     Surface(
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(12.dp),
+        shape = RoundedCornerShape(8.dp),
         color = MaterialTheme.colorScheme.surfaceContainer.copy(alpha = 0.42f),
         border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.14f)),
     ) {
