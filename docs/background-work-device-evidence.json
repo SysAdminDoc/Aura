@@ -1,0 +1,146 @@
+{
+  "schemaVersion": 1,
+  "policyKind": "backgroundWorkDeviceEvidence",
+  "status": "deviceEvidencePending",
+  "packageName": "com.freevibe",
+  "appGradlePath": "app/build.gradle.kts",
+  "schedulingLedgerPath": "docs/background-work-scheduling-ledger.json",
+  "artifactDirectory": "artifacts/background-work-device-evidence",
+  "scenarios": [
+    {
+      "id": "workmanager-baseline",
+      "title": "WorkManager baseline state",
+      "coversWorkNames": [
+        "auto_wallpaper",
+        "daily_wallpaper",
+        "weather_update",
+        "aura_originals_download",
+        "rotation_trigger_oneshot"
+      ],
+      "requiredCommands": [
+        "adb shell dumpsys jobscheduler com.freevibe",
+        "adb shell dumpsys activity services com.freevibe",
+        "adb shell dumpsys package com.freevibe"
+      ],
+      "requiredArtifacts": [
+        "artifacts/background-work-device-evidence/workmanager-baseline-jobscheduler.txt",
+        "artifacts/background-work-device-evidence/workmanager-baseline-services.txt",
+        "artifacts/background-work-device-evidence/workmanager-baseline-package.txt",
+        "artifacts/background-work-device-evidence/workmanager-baseline-notes.md"
+      ],
+      "expectedEvidence": [
+        "Every unique work name from the scheduling ledger is checked against WorkManager or support-bundle output.",
+        "Foreground service state and exported automation receiver state are captured before scheduler stress tests."
+      ]
+    },
+    {
+      "id": "metered-data-saver",
+      "title": "Metered network and Data Saver state",
+      "coversWorkNames": [
+        "auto_wallpaper",
+        "daily_wallpaper",
+        "weather_update",
+        "aura_originals_download",
+        "rotation_trigger_oneshot"
+      ],
+      "requiredCommands": [
+        "adb shell dumpsys connectivity",
+        "adb shell dumpsys netpolicy",
+        "adb shell dumpsys jobscheduler com.freevibe"
+      ],
+      "requiredArtifacts": [
+        "artifacts/background-work-device-evidence/metered-data-saver-connectivity.txt",
+        "artifacts/background-work-device-evidence/metered-data-saver-netpolicy.txt",
+        "artifacts/background-work-device-evidence/metered-data-saver-jobscheduler.txt",
+        "artifacts/background-work-device-evidence/metered-data-saver-notes.md"
+      ],
+      "expectedEvidence": [
+        "Diagnostics action hints match metered and restricted-background state.",
+        "Unmetered-only Aura Originals work remains deferred on metered network evidence."
+      ]
+    },
+    {
+      "id": "low-battery-constraint",
+      "title": "Low battery constraint state",
+      "coversWorkNames": [
+        "auto_wallpaper",
+        "rotation_trigger_oneshot"
+      ],
+      "requiredCommands": [
+        "adb shell dumpsys battery",
+        "adb shell cmd battery unplug",
+        "adb shell cmd battery set level 10",
+        "adb shell dumpsys jobscheduler com.freevibe"
+      ],
+      "requiredArtifacts": [
+        "artifacts/background-work-device-evidence/low-battery-battery.txt",
+        "artifacts/background-work-device-evidence/low-battery-jobscheduler.txt",
+        "artifacts/background-work-device-evidence/low-battery-restore.txt",
+        "artifacts/background-work-device-evidence/low-battery-notes.md"
+      ],
+      "expectedEvidence": [
+        "Battery-not-low constrained work is deferred while the battery level is forced low.",
+        "The device battery override is restored after capture."
+      ]
+    },
+    {
+      "id": "doze-standby",
+      "title": "Doze and App Standby scheduling delay",
+      "coversWorkNames": [
+        "auto_wallpaper",
+        "daily_wallpaper",
+        "weather_update",
+        "aura_originals_download",
+        "rotation_trigger_oneshot"
+      ],
+      "requiredCommands": [
+        "adb shell dumpsys deviceidle",
+        "adb shell dumpsys battery unplug",
+        "adb shell dumpsys deviceidle force-idle",
+        "adb shell am set-standby-bucket com.freevibe restricted",
+        "adb shell dumpsys jobscheduler com.freevibe"
+      ],
+      "requiredArtifacts": [
+        "artifacts/background-work-device-evidence/doze-standby-deviceidle.txt",
+        "artifacts/background-work-device-evidence/doze-standby-jobscheduler.txt",
+        "artifacts/background-work-device-evidence/doze-standby-restore.txt",
+        "artifacts/background-work-device-evidence/doze-standby-notes.md"
+      ],
+      "expectedEvidence": [
+        "Doze or restricted standby bucket state is visible in captured device state.",
+        "Delayed WorkManager jobs are reconciled with the Settings background-work diagnostics copy."
+      ]
+    },
+    {
+      "id": "rotation-trigger-coalescing",
+      "title": "Rotation trigger coalescing and fallback",
+      "coversWorkNames": [
+        "rotation_trigger_oneshot",
+        "auto_wallpaper"
+      ],
+      "requiredCommands": [
+        "adb shell am broadcast -a com.freevibe.action.ROTATE_NOW -p com.freevibe",
+        "adb shell am broadcast -a com.freevibe.action.SHUFFLE_NOW -p com.freevibe",
+        "adb shell dumpsys jobscheduler com.freevibe",
+        "adb shell dumpsys activity services com.freevibe"
+      ],
+      "requiredArtifacts": [
+        "artifacts/background-work-device-evidence/rotation-trigger-broadcasts.txt",
+        "artifacts/background-work-device-evidence/rotation-trigger-jobscheduler.txt",
+        "artifacts/background-work-device-evidence/rotation-trigger-services.txt",
+        "artifacts/background-work-device-evidence/rotation-trigger-notes.md"
+      ],
+      "expectedEvidence": [
+        "Repeated public rotation broadcasts coalesce under the unique work policy.",
+        "Expedited fallback or deferral is described alongside WorkManager and foreground-service evidence."
+      ]
+    }
+  ],
+  "sourceUrls": [
+    "https://developer.android.com/tools/adb",
+    "https://developer.android.com/develop/background-work/background-tasks/persistent/getting-started/define-work",
+    "https://developer.android.com/develop/background-work/background-tasks/persistent/how-to/states",
+    "https://developer.android.com/training/monitoring-device-state/doze-standby",
+    "https://developer.android.com/develop/connectivity/network-ops/data-saver"
+  ]
+}

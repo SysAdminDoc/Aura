@@ -213,6 +213,9 @@ jobs:
       - name: Background work network posture
         run: python3 tools/background_work_network_check.py --policy docs/background-work-network-posture.json --repo-root .
 
+      - name: Background work device evidence
+        run: python3 tools/background_work_device_evidence_check.py --policy docs/background-work-device-evidence.json --repo-root .
+
       - name: Community guidelines consent
         run: python3 tools/community_guidelines_consent_check.py --repo-root .
 
