@@ -311,10 +311,10 @@ fun WallpapersScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 10.dp, vertical = 6.dp),
-                shape = RoundedCornerShape(12.dp),
+                shape = RoundedCornerShape(8.dp),
                 contentPadding = PaddingValues(horizontal = 10.dp, vertical = 10.dp),
-                highlightHeight = 120.dp,
-                shadowElevation = 6.dp,
+                highlightHeight = 84.dp,
+                shadowElevation = 2.dp,
             ) {
                 HighlightPill(
                     label = wallpaperHeaderEyebrow(
@@ -963,8 +963,8 @@ private fun WallpaperGrid(
                     modifier = Modifier
                         .fillMaxWidth()
                         .clickable { onWallpaperClick(pick) },
-                    shape = RoundedCornerShape(12.dp),
-                    elevation = CardDefaults.cardElevation(defaultElevation = 5.dp),
+                    shape = RoundedCornerShape(8.dp),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
                 ) {
                     Box(
                         modifier = Modifier
@@ -1117,14 +1117,14 @@ private fun WallpaperCard(
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(12.dp))
+            .clip(RoundedCornerShape(8.dp))
             .combinedClickable(
                 onClick = onClick,
                 onLongClick = onLongPress,
             ),
-        shape = RoundedCornerShape(12.dp),
+        shape = RoundedCornerShape(8.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer),
-        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
         border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.28f)),
     ) {
         Box {
@@ -1196,7 +1196,7 @@ private fun WallpaperCard(
                                 Surface(
                                     onClick = onUpvote,
                                     color = Color.White.copy(alpha = 0.15f),
-                                    shape = RoundedCornerShape(10.dp),
+                                    shape = RoundedCornerShape(8.dp),
                                 ) {
                                     Row(
                                         modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
@@ -1226,7 +1226,7 @@ private fun WallpaperCard(
                         badges.take(4).forEach { badge ->
                             Surface(
                                 color = Color.White.copy(alpha = 0.16f),
-                                shape = RoundedCornerShape(10.dp),
+                                shape = RoundedCornerShape(8.dp),
                             ) {
                                 Text(
                                     badge,
@@ -1287,12 +1287,12 @@ private fun WallpaperStateCard(
 ) {
     GlassCard(
         modifier = modifier.fillMaxWidth(),
-        contentPadding = PaddingValues(20.dp),
-        highlightHeight = 88.dp,
-        shadowElevation = 3.dp,
+        contentPadding = PaddingValues(18.dp),
+        highlightHeight = 76.dp,
+        shadowElevation = 2.dp,
     ) {
         Surface(
-            shape = RoundedCornerShape(10.dp),
+            shape = RoundedCornerShape(8.dp),
             color = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f),
             border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.18f)),
         ) {
@@ -1322,7 +1322,8 @@ private fun WallpaperStateCard(
                 primaryAction?.let { action ->
                     Button(
                         onClick = action.onClick,
-                        shape = RoundedCornerShape(10.dp),
+                        shape = RoundedCornerShape(8.dp),
+                        modifier = Modifier.heightIn(min = 48.dp),
                     ) {
                         Icon(action.icon, contentDescription = null, modifier = Modifier.size(16.dp))
                         Spacer(Modifier.width(6.dp))
@@ -1332,7 +1333,8 @@ private fun WallpaperStateCard(
                 secondaryAction?.let { action ->
                     OutlinedButton(
                         onClick = action.onClick,
-                        shape = RoundedCornerShape(10.dp),
+                        shape = RoundedCornerShape(8.dp),
+                        modifier = Modifier.heightIn(min = 48.dp),
                     ) {
                         Icon(action.icon, contentDescription = null, modifier = Modifier.size(16.dp))
                         Spacer(Modifier.width(6.dp))
@@ -1356,7 +1358,7 @@ private fun SeasonalBannerCard(
         modifier = modifier
             .fillMaxWidth()
             .padding(horizontal = 2.dp, vertical = 4.dp),
-        shape = RoundedCornerShape(12.dp),
+        shape = RoundedCornerShape(8.dp),
         color = MaterialTheme.colorScheme.surfaceContainer.copy(alpha = 0.85f),
         border = BorderStroke(1.dp, accentColor.copy(alpha = 0.36f)),
         shadowElevation = 4.dp,
@@ -1369,7 +1371,7 @@ private fun SeasonalBannerCard(
             horizontalArrangement = Arrangement.spacedBy(14.dp),
         ) {
             Surface(
-                shape = RoundedCornerShape(10.dp),
+                shape = RoundedCornerShape(8.dp),
                 color = accentColor.copy(alpha = 0.18f),
                 modifier = Modifier.size(44.dp),
             ) {
@@ -1397,7 +1399,7 @@ private fun SeasonalBannerCard(
                 )
             }
             Surface(
-                shape = RoundedCornerShape(12.dp),
+                shape = RoundedCornerShape(8.dp),
                 color = accentColor.copy(alpha = 0.14f),
             ) {
                 Text(
@@ -1450,10 +1452,10 @@ private fun DiscoverCollectionsRow(
                 val shortcut = collections[index]
                 Surface(
                     onClick = { onSearch?.invoke(shortcut.query) },
-                    shape = RoundedCornerShape(12.dp),
+                    shape = RoundedCornerShape(8.dp),
                     color = MaterialTheme.colorScheme.surface.copy(alpha = 0.78f),
                     border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.36f)),
-                    shadowElevation = 4.dp,
+                    shadowElevation = 2.dp,
                     modifier = Modifier.width(176.dp),
                 ) {
                     Column(
@@ -1461,7 +1463,7 @@ private fun DiscoverCollectionsRow(
                         verticalArrangement = Arrangement.spacedBy(12.dp),
                     ) {
                         Surface(
-                            shape = RoundedCornerShape(10.dp),
+                            shape = RoundedCornerShape(8.dp),
                             color = shortcut.tint.copy(alpha = 0.14f),
                         ) {
                             Icon(
@@ -1635,14 +1637,16 @@ private fun WallpaperUploadDialog(
                     )
                 },
                 enabled = !isUploading && name.isNotBlank() && rightsAttested,
-                shape = RoundedCornerShape(10.dp),
+                shape = RoundedCornerShape(8.dp),
+                modifier = Modifier.heightIn(min = 48.dp),
             ) { Text("Upload") }
         },
         dismissButton = {
             TextButton(
                 onClick = onDismiss,
                 enabled = !isUploading,
-                shape = RoundedCornerShape(10.dp),
+                shape = RoundedCornerShape(8.dp),
+                modifier = Modifier.heightIn(min = 48.dp),
             ) { Text("Cancel") }
         },
     )
@@ -1710,7 +1714,7 @@ private fun FloatingActionRow(
 ) {
     Surface(
         onClick = onClick,
-        shape = RoundedCornerShape(10.dp),
+        shape = RoundedCornerShape(8.dp),
         color = MaterialTheme.colorScheme.surface.copy(alpha = 0.92f),
         border = BorderStroke(1.dp, tint.copy(alpha = 0.16f)),
         shadowElevation = 6.dp,
