@@ -84,7 +84,7 @@ fun VideoWallpaperPreviewScreen(
                     Row(
                         modifier = Modifier
                             .padding(end = 8.dp)
-                            .clip(RoundedCornerShape(10.dp))
+                            .clip(RoundedCornerShape(8.dp))
                             .background(MaterialTheme.colorScheme.surfaceVariant)
                             .padding(2.dp),
                     ) {
@@ -111,15 +111,15 @@ fun VideoWallpaperPreviewScreen(
                 ) {
                     FilledTonalButton(
                         onClick = onCrop,
-                        modifier = Modifier.weight(1f).height(44.dp),
-                        shape = RoundedCornerShape(10.dp),
+                        modifier = Modifier.weight(1f).heightIn(min = 48.dp),
+                        shape = RoundedCornerShape(8.dp),
                     ) {
-                        Text("Crop…", style = MaterialTheme.typography.labelLarge)
+                        Text("Crop", style = MaterialTheme.typography.labelLarge)
                     }
                     Button(
                         onClick = onApply,
-                        modifier = Modifier.weight(1.2f).height(44.dp),
-                        shape = RoundedCornerShape(10.dp),
+                        modifier = Modifier.weight(1.2f).heightIn(min = 48.dp),
+                        shape = RoundedCornerShape(8.dp),
                     ) {
                         Icon(Icons.Default.Check, contentDescription = null, modifier = Modifier.size(18.dp))
                         Spacer(Modifier.width(6.dp))
@@ -280,7 +280,7 @@ private fun HomeOverlay() {
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 8.dp, vertical = 10.dp)
-                .clip(RoundedCornerShape(12.dp))
+                .clip(RoundedCornerShape(8.dp))
                 .background(Color.Black.copy(alpha = 0.28f))
                 .padding(horizontal = 10.dp, vertical = 10.dp),
         ) {
@@ -296,7 +296,7 @@ private fun MockHomeIcon() {
     Box(
         modifier = Modifier
             .size(44.dp)
-            .clip(RoundedCornerShape(12.dp))
+            .clip(RoundedCornerShape(8.dp))
             .background(Color.White.copy(alpha = 0.22f))
             .padding(8.dp),
     ) {

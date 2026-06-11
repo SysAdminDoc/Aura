@@ -288,7 +288,7 @@ fun SoundDetailScreen(
         ) {
             // Waveform with integrated play button
             Box(
-                modifier = Modifier.fillMaxWidth().height(80.dp).clip(RoundedCornerShape(12.dp)),
+                modifier = Modifier.fillMaxWidth().height(80.dp).clip(RoundedCornerShape(8.dp)),
                 contentAlignment = Alignment.Center,
             ) {
                 if (s.duration > 0) {
@@ -303,7 +303,7 @@ fun SoundDetailScreen(
                 }
                 // Play overlay
                 Surface(
-                    shape = RoundedCornerShape(12.dp),
+                    shape = RoundedCornerShape(8.dp),
                     color = MaterialTheme.colorScheme.primary.copy(alpha = 0.85f),
                     contentColor = Color.White,
                     border = BorderStroke(1.dp, Color.White.copy(alpha = 0.18f)),
@@ -362,8 +362,8 @@ fun SoundDetailScreen(
                 Surface(
                     color = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.58f),
                     contentColor = MaterialTheme.colorScheme.onErrorContainer,
-                    shape = RoundedCornerShape(12.dp),
-                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.error.copy(alpha = 0.18f)),
+                    shape = RoundedCornerShape(8.dp),
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.error.copy(alpha = 0.22f)),
                 ) {
                     Row(
                         Modifier.fillMaxWidth().padding(14.dp),
@@ -386,8 +386,8 @@ fun SoundDetailScreen(
                 Surface(
                     color = MaterialTheme.colorScheme.tertiaryContainer.copy(alpha = 0.52f),
                     contentColor = MaterialTheme.colorScheme.onTertiaryContainer,
-                    shape = RoundedCornerShape(12.dp),
-                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.tertiary.copy(alpha = 0.18f)),
+                    shape = RoundedCornerShape(8.dp),
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.tertiary.copy(alpha = 0.22f)),
                 ) {
                     Row(
                         Modifier.fillMaxWidth().padding(14.dp),
@@ -425,13 +425,13 @@ fun SoundDetailScreen(
                 Surface(
                     color = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.55f),
                     contentColor = MaterialTheme.colorScheme.onErrorContainer,
-                    shape = RoundedCornerShape(12.dp),
-                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.error.copy(alpha = 0.18f)),
+                    shape = RoundedCornerShape(8.dp),
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.error.copy(alpha = 0.22f)),
                 ) {
                     Row(Modifier.fillMaxWidth().padding(14.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                         Surface(
                             color = MaterialTheme.colorScheme.error.copy(alpha = 0.12f),
-                            shape = RoundedCornerShape(10.dp),
+                            shape = RoundedCornerShape(8.dp),
                         ) {
                             Icon(
                                 Icons.Default.Warning,
@@ -485,8 +485,8 @@ fun SoundDetailScreen(
             if (canReportSound) {
                 OutlinedButton(
                     onClick = { showReportDialog = true },
-                    modifier = Modifier.fillMaxWidth().height(44.dp),
-                    shape = RoundedCornerShape(10.dp),
+                    modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp),
+                    shape = RoundedCornerShape(8.dp),
                 ) {
                     Icon(Icons.Default.Report, contentDescription = null, modifier = Modifier.size(18.dp))
                     Spacer(Modifier.width(8.dp))
@@ -496,8 +496,8 @@ fun SoundDetailScreen(
             if (canBlockCreator) {
                 OutlinedButton(
                     onClick = { showBlockCreatorDialog = true },
-                    modifier = Modifier.fillMaxWidth().height(44.dp),
-                    shape = RoundedCornerShape(10.dp),
+                    modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp),
+                    shape = RoundedCornerShape(8.dp),
                     colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.error),
                 ) {
                     Icon(Icons.Default.Block, contentDescription = null, modifier = Modifier.size(18.dp))
@@ -508,8 +508,8 @@ fun SoundDetailScreen(
             if (canDeleteUpload) {
                 OutlinedButton(
                     onClick = { showDeleteUploadDialog = true },
-                    modifier = Modifier.fillMaxWidth().height(44.dp),
-                    shape = RoundedCornerShape(10.dp),
+                    modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp),
+                    shape = RoundedCornerShape(8.dp),
                     colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.error),
                 ) {
                     Icon(Icons.Default.Delete, contentDescription = null, modifier = Modifier.size(18.dp))
@@ -569,7 +569,7 @@ private fun buildSoundShareBody(sound: Sound, capabilities: SoundLicenseCapabili
 private fun ApplyButton(text: String, icon: androidx.compose.ui.graphics.vector.ImageVector, enabled: Boolean, isLoading: Boolean, modifier: Modifier, onClick: () -> Unit) {
     Button(
         onClick = onClick, modifier = modifier.height(48.dp), enabled = enabled,
-        shape = RoundedCornerShape(12.dp),
+        shape = RoundedCornerShape(8.dp),
         colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.surfaceContainerHigh, contentColor = MaterialTheme.colorScheme.onSurface),
     ) {
         if (isLoading) CircularProgressIndicator(Modifier.size(16.dp), strokeWidth = 2.dp)
@@ -589,7 +589,7 @@ private fun SecondarySoundAction(
         onClick = onClick,
         enabled = enabled,
         modifier = modifier.height(64.dp),
-        shape = RoundedCornerShape(12.dp),
+        shape = RoundedCornerShape(8.dp),
         color = MaterialTheme.colorScheme.surfaceContainer,
         contentColor = if (enabled) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.55f),
         border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = if (enabled) 0.28f else 0.14f)),
@@ -630,11 +630,11 @@ private fun SimilarSoundsSection(
                 items(3) {
                     Surface(
                         color = MaterialTheme.colorScheme.surfaceContainerHigh,
-                        shape = RoundedCornerShape(12.dp),
-                        modifier = Modifier.width(160.dp),
+                        shape = RoundedCornerShape(8.dp),
+                        modifier = Modifier.width(184.dp),
                     ) {
                         Row(Modifier.padding(10.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                            ShimmerBox(Modifier.size(34.dp), shape = RoundedCornerShape(10.dp))
+                            ShimmerBox(Modifier.size(48.dp), shape = RoundedCornerShape(8.dp))
                             Column(verticalArrangement = Arrangement.spacedBy(5.dp)) {
                                 ShimmerBox(Modifier.width(78.dp).height(12.dp), shape = RoundedCornerShape(5.dp))
                                 ShimmerBox(Modifier.width(44.dp).height(10.dp), shape = RoundedCornerShape(5.dp))
@@ -648,12 +648,12 @@ private fun SimilarSoundsSection(
                 items(similarSounds.value, key = { it.stableKey() }) { similar ->
                     Surface(
                         onClick = { onSoundClick(similar) }, color = MaterialTheme.colorScheme.surfaceContainerHigh,
-                        shape = RoundedCornerShape(12.dp), modifier = Modifier.width(160.dp),
+                        shape = RoundedCornerShape(8.dp), modifier = Modifier.width(184.dp),
                     ) {
                         Row(Modifier.padding(10.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                             IconButton(
                                 onClick = { viewModel.togglePlayback(similar) },
-                                modifier = Modifier.size(34.dp).clip(RoundedCornerShape(10.dp)).background(if (currentPlayingId == similar.stableKey()) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceContainer),
+                                modifier = Modifier.size(48.dp).clip(RoundedCornerShape(8.dp)).background(if (currentPlayingId == similar.stableKey()) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceContainer),
                             ) {
                                 Icon(
                                     if (currentPlayingId == similar.stableKey()) Icons.Default.Pause else Icons.Default.PlayArrow,
@@ -673,7 +673,7 @@ private fun SimilarSoundsSection(
         } else if (loaded) {
             Surface(
                 color = MaterialTheme.colorScheme.surfaceContainer,
-                shape = RoundedCornerShape(12.dp),
+                shape = RoundedCornerShape(8.dp),
                 border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.22f)),
             ) {
                 Row(

@@ -80,7 +80,7 @@ fun WallpaperPreviewScreen(
                     Row(
                         modifier = Modifier
                             .padding(end = 8.dp)
-                            .clip(RoundedCornerShape(10.dp))
+                            .clip(RoundedCornerShape(8.dp))
                             .background(MaterialTheme.colorScheme.surfaceVariant)
                             .padding(2.dp),
                     ) {
@@ -270,7 +270,7 @@ private fun HomeMock(overlayTint: Color) {
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 8.dp, vertical = 10.dp)
-                .clip(RoundedCornerShape(12.dp))
+                .clip(RoundedCornerShape(8.dp))
                 .background(Color.Black.copy(alpha = 0.28f))
                 .padding(horizontal = 10.dp, vertical = 10.dp),
         ) {
@@ -292,7 +292,7 @@ private fun MockIcon(tint: Color, label: String?) {
         Box(
             modifier = Modifier
                 .size(44.dp)
-                .clip(RoundedCornerShape(12.dp))
+                .clip(RoundedCornerShape(8.dp))
                 .background(tint.copy(alpha = 0.28f))
                 .padding(8.dp),
         ) {
@@ -381,8 +381,8 @@ private fun ApplyActionButton(
         FilledTonalButton(
             onClick = onClick,
             enabled = enabled,
-            modifier = modifier.height(44.dp),
-            shape = RoundedCornerShape(10.dp),
+            modifier = modifier.heightIn(min = 48.dp),
+            shape = RoundedCornerShape(8.dp),
         ) {
             Text(label, style = MaterialTheme.typography.labelLarge)
         }
@@ -390,8 +390,8 @@ private fun ApplyActionButton(
         Button(
             onClick = onClick,
             enabled = enabled,
-            modifier = modifier.height(44.dp),
-            shape = RoundedCornerShape(10.dp),
+            modifier = modifier.heightIn(min = 48.dp),
+            shape = RoundedCornerShape(8.dp),
         ) {
             Icon(Icons.Default.Check, contentDescription = null, modifier = Modifier.size(18.dp))
             Spacer(Modifier.width(6.dp))
