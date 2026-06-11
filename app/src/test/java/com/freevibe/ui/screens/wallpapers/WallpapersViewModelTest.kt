@@ -395,6 +395,7 @@ class WallpapersViewModelTest {
             redditRepo = redditRepo,
             reportRepoOverride = reportRepo,
         )
+        advanceUntilIdle()
         val wallpaper = wallpaper(id = "cw_1", source = ContentSource.COMMUNITY, color = "#223344")
             .copy(communityUploaderId = "creator-1")
 
@@ -479,6 +480,7 @@ class WallpapersViewModelTest {
             wallpaperUploadRepoOverride = uploadRepo,
             communityBlockRepoOverride = blockRepo,
         )
+        advanceUntilIdle()
 
         viewModel.selectTab(WallpaperTab.COMMUNITY)
         advanceUntilIdle()
@@ -507,6 +509,7 @@ class WallpapersViewModelTest {
             redditRepo = redditRepo,
             wallpaperUploadRepoOverride = uploadRepo,
         )
+        advanceUntilIdle()
 
         assertTrue(
             viewModel.canDeleteCommunityWallpaper(
@@ -536,6 +539,7 @@ class WallpapersViewModelTest {
             redditRepo = redditRepo,
             wallpaperUploadRepoOverride = uploadRepo,
         )
+        advanceUntilIdle()
 
         viewModel.deleteCommunityWallpaper(ownerWallpaper)
         advanceUntilIdle()
@@ -849,6 +853,7 @@ class WallpapersViewModelTest {
         every { prefs.pixabayProviderEnabled } returns flowOf(pixabayProviderEnabled)
         every { prefs.communityProviderEnabled } returns flowOf(communityProviderEnabled)
         every { prefs.generatedContentProviderEnabled } returns flowOf(generatedContentProviderEnabled)
+        every { prefs.communityGuidelinesAccepted } returns flowOf(true)
         every { prefs.preferredResolution } returns flowOf("1080x1920")
         every { prefs.userStyles } returns flowOf("minimal,nature")
 

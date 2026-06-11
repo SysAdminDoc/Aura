@@ -11,8 +11,8 @@ from pathlib import Path
 from typing import Any
 
 
-EXPECTED_DISTRIBUTION_URL = r"https\://services.gradle.org/distributions/gradle-8.12-bin.zip"
-EXPECTED_DISTRIBUTION_SHA256 = "7a00d51fb93147819aab76024feece20b6b84e420694101f276be952e08bef03"
+EXPECTED_DISTRIBUTION_URL = r"https\://services.gradle.org/distributions/gradle-8.12.1-bin.zip"
+EXPECTED_DISTRIBUTION_SHA256 = "8d97a97984f6cbd2b85fe4c60a743440a347544bf18818048e611f5288d46c94"
 EXPECTED_WRAPPER_PATH = Path("gradle/wrapper/gradle-wrapper.properties")
 SHA256_HEX = re.compile(r"^[a-f0-9]{64}$")
 
@@ -58,7 +58,7 @@ def validate_gradle_wrapper(path: Path) -> dict[str, Any]:
 
     distribution_url = require_property(properties, "distributionUrl")
     if distribution_url != EXPECTED_DISTRIBUTION_URL:
-        raise GradleWrapperPolicyError("Gradle wrapper distributionUrl must remain the reviewed Gradle 8.12 bin ZIP")
+        raise GradleWrapperPolicyError("Gradle wrapper distributionUrl must remain the reviewed Gradle 8.12.1 bin ZIP")
     if distribution_url.endswith("-all.zip"):
         raise GradleWrapperPolicyError("Gradle wrapper must use the bin distribution, not the all distribution")
 
@@ -66,7 +66,7 @@ def validate_gradle_wrapper(path: Path) -> dict[str, Any]:
     if not SHA256_HEX.fullmatch(distribution_sha256):
         raise GradleWrapperPolicyError("Gradle wrapper distributionSha256Sum must be a SHA-256 hex digest")
     if distribution_sha256 != EXPECTED_DISTRIBUTION_SHA256:
-        raise GradleWrapperPolicyError("Gradle wrapper distributionSha256Sum does not match the reviewed Gradle 8.12 checksum")
+        raise GradleWrapperPolicyError("Gradle wrapper distributionSha256Sum does not match the reviewed Gradle 8.12.1 checksum")
 
     if require_property(properties, "validateDistributionUrl") != "true":
         raise GradleWrapperPolicyError("Gradle wrapper validateDistributionUrl must be true")

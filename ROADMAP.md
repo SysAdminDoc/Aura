@@ -3491,20 +3491,6 @@ Net-new items from the fourth research pass (2026-06-10). Focused on: transitive
 
 ### P0 — Security and compliance fixes
 
-- [ ] P0 — **Pin jackson-databind and commons-io transitive versions to fix CVEs**
-  Why: youtubedl-android 0.18.1 pins jackson-databind 2.11.1 (CVE-2025-52999 stack overflow DoS, CVE-2025-49128 memory disclosure, CVE-2022-42003/42004) and commons-io 2.5 (CVE-2024-47554 DoS, CVE-2021-29425 path traversal). Jackson parses yt-dlp `--dump-json` output shaped by remote sites. Nothing else in Aura pulls Jackson, so 2.11.1 wins Gradle resolution unconstrained.
-  Evidence: GitHub Advisory DB (GHSA-h46c-h94j-95f3, GHSA-78wr-2p64-hpwj); `app/build.gradle.kts` youtubedl-android 0.18.1 dependency; Aura uses Moshi not Jackson directly.
-  Touches: `app/build.gradle.kts` (Gradle dependency constraints block), `gradle/verification-metadata.xml`, generated notice lockfile refresh.
-  Acceptance: `./gradlew dependencies --configuration releaseRuntimeClasspath | grep jackson-databind` shows >= 2.15.0; `commons-io` shows >= 2.14.0; existing unit tests pass; dependency verification metadata updated.
-  Complexity: S
-
-- [ ] P0 — **Bump Gradle wrapper from 8.12 to 8.12.1+ (CVE-2025-27148)**
-  Why: Gradle 8.12 is the only version affected by CVE-2025-27148 (local privilege escalation via world-writable temp on Linux CI, CVSS 8.8). Fixed in 8.12.1. If N-1 lands first and jumps to Gradle 9.x, this becomes moot, but N-1 has no committed timeline. This is a one-line fix.
-  Evidence: GHSA-465q-w4mf-4f4r; `gradle/wrapper/gradle-wrapper.properties` pins exactly 8.12.
-  Touches: `gradle/wrapper/gradle-wrapper.properties`, `gradle/wrapper/gradle-wrapper.jar` (via `./gradlew wrapper --gradle-version=8.12.1`).
-  Acceptance: wrapper properties show >= 8.12.1; CI and local builds pass; AGP 8.7.3 compatibility confirmed.
-  Complexity: S
-
 - [ ] P0 — **SHA-pin all GitHub Actions references**
   Why: All workflows use tag pins (`actions/checkout@v4`, `softprops/action-gh-release@v2`). The tj-actions compromise (CVE-2025-30066, March 2025) proved tag-pinned consumers are vulnerable to tag retargeting. OpenSSF Scorecard (which Aura runs) penalizes tag pins. Dependabot github-actions ecosystem is already configured to maintain SHA pins once set.
   Evidence: `.github/workflows/*.yml` (all `uses:` are tag-pinned); GHSA-mrrh-fwg8-r2c3; OpenSSF Scorecard Pinned-Dependencies check.

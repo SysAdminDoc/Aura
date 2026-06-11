@@ -108,6 +108,15 @@ baselineProfile {
 }
 
 dependencies {
+    constraints {
+        implementation("com.fasterxml.jackson.core:jackson-databind:2.17.3") {
+            because("youtubedl-android 0.18.1 pulls jackson-databind 2.11.1, which has published CVEs")
+        }
+        implementation("commons-io:commons-io:2.16.1") {
+            because("youtubedl-android 0.18.1 pulls commons-io 2.5, which has published CVEs")
+        }
+    }
+
     // Core library desugaring — required by NewPipeExtractor on API < 33 so
     // URLEncoder.encode(String, Charset) and friends resolve at runtime (issue #2).
     coreLibraryDesugaring(libs.desugar.jdk.libs)

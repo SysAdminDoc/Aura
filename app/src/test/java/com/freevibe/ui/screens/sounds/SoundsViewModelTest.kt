@@ -367,6 +367,7 @@ class SoundsViewModelTest {
             soundCloudRepo = soundCloudRepo,
             reportRepoOverride = reportRepo,
         )
+        advanceUntilIdle()
         val sound = testSound("cu_1", ContentSource.COMMUNITY, "Community Tone")
             .copy(communityUploaderId = "creator-1")
 
@@ -422,6 +423,7 @@ class SoundsViewModelTest {
             uploadRepoOverride = uploadRepo,
             communityBlockRepoOverride = blockRepo,
         )
+        advanceUntilIdle()
 
         viewModel.selectTab(SoundTab.COMMUNITY)
         advanceUntilIdle()
@@ -465,6 +467,7 @@ class SoundsViewModelTest {
             soundCloudRepo = soundCloudRepo,
             uploadRepoOverride = uploadRepo,
         )
+        advanceUntilIdle()
 
         assertTrue(viewModel.canDeleteCommunitySound(testSound("cu_owner_sound", ContentSource.COMMUNITY, "Owner tone")))
         coVerify(exactly = 1) { uploadRepo.canDeleteSoundUpload("cu_owner_sound") }
@@ -501,6 +504,7 @@ class SoundsViewModelTest {
             soundCloudRepo = soundCloudRepo,
             uploadRepoOverride = uploadRepo,
         )
+        advanceUntilIdle()
 
         viewModel.deleteCommunitySound(sound)
         advanceUntilIdle()
@@ -1349,6 +1353,7 @@ class SoundsViewModelTest {
         every { prefs.ytSoundBlockedWords } returns flowOf("mix,podcast")
         every { prefs.youtubeProviderEnabled } returns flowOf(youtubeProviderEnabled)
         every { prefs.communityProviderEnabled } returns flowOf(communityProviderEnabled)
+        every { prefs.communityGuidelinesAccepted } returns flowOf(true)
 
         val searchHistoryRepo = mockk<SearchHistoryRepository>()
         every { searchHistoryRepo.getRecentSoundSearches(any()) } returns flowOf(emptyList<SearchHistoryEntity>())
