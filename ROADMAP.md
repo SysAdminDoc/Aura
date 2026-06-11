@@ -278,13 +278,6 @@ Append-only Cycle 4 handoff. Every item below is source-backed in `docs/research
   - Acceptance: backup matrix declares include/exclude for Room DB, DataStore API keys, local identity UUID, weather lat/lon, crash logs, downloaded media, cached provider metadata, favorites, and collections; backup XML matches the matrix for Android 11 and Android 12+.
   - Verify: inspect APK backup XML; smoke-run app then list app data files and compare to matrix; restore simulation or manual D2D/cloud decision review.
 
-- [ ] 🤖 🔬 **P1 — Weather location disclosure, retention, and clearing**
-  - Why: Weather effects use coarse location and send lat/lon to Open-Meteo, then store lat/lon in SharedPreferences for wallpaper rendering.
-  - Evidence: `WeatherUpdateWorker.kt`; `SettingsScreen.kt`; Android approximate-location guidance; Play User Data location disclosure rules.
-  - Touches: Settings weather toggle, `WeatherUpdateWorker`, `WeatherWallpaperService`, backup XML, privacy policy.
-  - Acceptance: weather toggle explains approximate location and Open-Meteo call before permission request; app never requests `ACCESS_FINE_LOCATION` or `ACCESS_BACKGROUND_LOCATION` for weather; stored lat/lon are rounded or justified; disabling weather clears location/weather prefs and cancels work.
-  - Verify: enable/deny/disable weather flows; confirm no background-location permission; inspect prefs after disable; network call contains expected rounded/coarse coordinates.
-
 - [ ] 🤖 🔬 **P1 — Just-in-time permission disclosure and denial UX audit**
   - Why: Aura requests sensitive capabilities across contacts, microphone recording, notifications, WRITE_SETTINGS, and location. Each needs a clear user action, rationale, decline path, and graceful fallback.
   - Evidence: manifest permissions; `SoundsScreen.kt` record flow; `SettingsScreen.kt` notification/location/settings flows; `ContactPickerScreen.kt`; Play prominent-disclosure guidance; Android runtime-permission docs.

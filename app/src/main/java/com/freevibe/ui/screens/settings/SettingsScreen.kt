@@ -235,6 +235,12 @@ fun SettingsScreen(
         WeatherUpdateWorker.schedule(context)
     }
 
+    fun disableWeatherEffects() {
+        viewModel.setWeatherEffects(false)
+        WeatherUpdateWorker.cancel(context)
+        WeatherUpdateWorker.clearStoredWeatherState(context)
+    }
+
     fun openNotificationSettings() {
         val intent = Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS).apply {
             putExtra(Settings.EXTRA_APP_PACKAGE, context.packageName)
@@ -358,7 +364,7 @@ fun SettingsScreen(
         if (granted) {
             enableWeatherEffects()
         } else {
-            viewModel.setWeatherEffects(false)
+            disableWeatherEffects()
         }
     }
 
@@ -916,12 +922,11 @@ fun SettingsScreen(
             SettingsToggle(
                 icon = Icons.Default.Cloud,
                 title = "Weather effects",
-                subtitle = "Rain, snow, fog overlay based on real weather",
+                subtitle = "Uses approximate location with Open-Meteo for rain, snow, and fog overlays",
                 checked = weatherEffects,
                 onCheckedChange = {
                     if (!it) {
-                        viewModel.setWeatherEffects(false)
-                        WeatherUpdateWorker.cancel(context)
+                        disableWeatherEffects()
                     } else if (ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
                         enableWeatherEffects()
                     } else {

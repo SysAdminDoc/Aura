@@ -10,6 +10,7 @@ import androidx.work.*
 import com.freevibe.data.remote.weather.OpenMeteoApi
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
+import kotlin.math.round
 import java.util.concurrent.TimeUnit
 
 /**
@@ -36,23 +37,17 @@ class WeatherUpdateWorker @AssistedInject constructor(
 
             val weather = response.currentWeather ?: return successReceipt()
 
-            // Store weather data for WeatherWallpaperService.
-            //
-            // Latitude/longitude are stored as Float — earlier revisions used
-            // putLong(location.first.toLong()) which truncated 39.7392 → 39 and silently
-            // disabled adaptive tint for anyone within 1° of the equator/prime meridian
-            // (the WallpaperService bails when lat/lon are both zero). Float gives ~7
-            // significant digits which is more than enough for solar-position math
-            // (sub-meter precision after the decimal). Long-bit-packed Double would be
-            // pixel-perfect but isn't needed here.
+            // Store only coarse coordinates for WeatherWallpaperService. Two decimal
+            // places preserve enough regional context for weather/adaptive tint while
+            // avoiding exact last-known-location retention.
             applicationContext.getSharedPreferences("freevibe_weather_wp", Context.MODE_PRIVATE)
                 .edit()
                 .putString("weather_effect", weather.weatherEffect.name)
                 .putFloat("wind_speed", weather.windSpeed.toFloat())
                 .putFloat("temperature", weather.temperature.toFloat())
                 .putInt("is_day", weather.isDay)
-                .putFloat("location_lat", location.first.toFloat())
-                .putFloat("location_lon", location.second.toFloat())
+                .putFloat("location_lat", roundWeatherCoordinate(location.first))
+                .putFloat("location_lon", roundWeatherCoordinate(location.second))
                 // Sentinel so a missing-location read in the service can be distinguished
                 // from a legitimate (0.0, 0.0) reading on Null Island.
                 .putBoolean("location_present", true)
@@ -83,21 +78,15 @@ class WeatherUpdateWorker @AssistedInject constructor(
     }
 
     private fun getLastKnownLocation(): Pair<Double, Double>? {
-        val hasFine = ContextCompat.checkSelfPermission(applicationContext, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED
         val hasCoarse = ContextCompat.checkSelfPermission(applicationContext, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED
-        if (!hasFine && !hasCoarse) return null
+        if (!hasCoarse) return null
 
         val lm = applicationContext.getSystemService(Context.LOCATION_SERVICE) as? LocationManager
             ?: return null
 
         val location = try {
             @Suppress("DEPRECATION")
-            if (hasFine) {
-                lm.getLastKnownLocation(LocationManager.GPS_PROVIDER)
-                    ?: lm.getLastKnownLocation(LocationManager.NETWORK_PROVIDER)
-            } else {
-                lm.getLastKnownLocation(LocationManager.NETWORK_PROVIDER)
-            }
+            lm.getLastKnownLocation(LocationManager.NETWORK_PROVIDER)
         } catch (_: Exception) { null }
 
         return location?.let { it.latitude to it.longitude }
@@ -126,5 +115,21 @@ class WeatherUpdateWorker @AssistedInject constructor(
         fun cancel(context: Context) {
             WorkManager.getInstance(context).cancelUniqueWork(WORK_NAME)
         }
+
+        fun clearStoredWeatherState(context: Context) {
+            context.getSharedPreferences("freevibe_weather_wp", Context.MODE_PRIVATE)
+                .edit()
+                .remove("weather_effect")
+                .remove("wind_speed")
+                .remove("temperature")
+                .remove("is_day")
+                .remove("location_lat")
+                .remove("location_lon")
+                .remove("location_present")
+                .apply()
+        }
     }
 }
+
+internal fun roundWeatherCoordinate(value: Double): Float =
+    (round(value * 100.0) / 100.0).toFloat()
