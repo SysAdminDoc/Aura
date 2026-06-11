@@ -3,6 +3,7 @@ package com.freevibe.ui.screens.favorites
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.border
 import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
@@ -281,13 +282,13 @@ fun FavoritesScreen(
                                 Card(
                                     modifier = Modifier
                                         .fillMaxWidth()
-                                        .clip(RoundedCornerShape(12.dp))
+                                        .clip(RoundedCornerShape(8.dp))
                                         .then(
                                             if (isSelected) {
                                                 Modifier.border(
                                                     width = 3.dp,
                                                     color = MaterialTheme.colorScheme.primary,
-                                                    shape = RoundedCornerShape(12.dp),
+                                                    shape = RoundedCornerShape(8.dp),
                                                 )
                                             } else Modifier,
                                         )
@@ -305,7 +306,7 @@ fun FavoritesScreen(
                                                 toggleSelect(key)
                                             },
                                         ),
-                                    shape = RoundedCornerShape(12.dp),
+                                    shape = RoundedCornerShape(8.dp),
                                 ) {
                                     Box {
                                         AsyncImage(
@@ -397,7 +398,7 @@ fun FavoritesScreen(
                                         Box(
                                             Modifier
                                                 .fillMaxSize()
-                                                .clip(RoundedCornerShape(12.dp))
+                                                .clip(RoundedCornerShape(8.dp))
                                                 .background(MaterialTheme.colorScheme.errorContainer)
                                                 .padding(horizontal = 20.dp),
                                             contentAlignment = Alignment.CenterEnd,
@@ -416,8 +417,9 @@ fun FavoritesScreen(
                                             viewModel.selectSound(fav)
                                             onSoundClick(fav)
                                         },
-                                        shape = RoundedCornerShape(12.dp),
-                                        color = MaterialTheme.colorScheme.surface,
+                                        shape = RoundedCornerShape(8.dp),
+                                        color = MaterialTheme.colorScheme.surfaceContainer,
+                                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.24f)),
                                     ) {
                                         Row(
                                             modifier = Modifier.fillMaxWidth().padding(12.dp),

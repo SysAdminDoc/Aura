@@ -6,6 +6,7 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
@@ -371,7 +372,7 @@ fun CollectionsScreen(
                         Card(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .clip(RoundedCornerShape(12.dp))
+                                .clip(RoundedCornerShape(8.dp))
                                 .combinedClickable(
                                     onClick = {
                                         val wallpaper = item.toWallpaper()
@@ -386,7 +387,7 @@ fun CollectionsScreen(
                                         }
                                     },
                                 ),
-                            shape = RoundedCornerShape(12.dp),
+                            shape = RoundedCornerShape(8.dp),
                         ) {
                             AsyncImage(
                                 model = item.thumbnailUrl,
@@ -462,13 +463,13 @@ private fun ImportCollectionSheet(
                 modifier = Modifier.fillMaxWidth(),
                 label = { Text("Aura collection link") },
                 singleLine = true,
-                shape = RoundedCornerShape(12.dp),
+                shape = RoundedCornerShape(8.dp),
             )
             Button(
                 onClick = { onImportLink(link) },
                 enabled = link.isNotBlank(),
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(12.dp),
+                modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp),
+                shape = RoundedCornerShape(8.dp),
             ) {
                 Icon(Icons.Default.Link, contentDescription = null)
                 Spacer(Modifier.width(8.dp))
@@ -480,8 +481,8 @@ private fun ImportCollectionSheet(
             ) {
                 OutlinedButton(
                     onClick = onOpenFile,
-                    modifier = Modifier.weight(1f),
-                    shape = RoundedCornerShape(12.dp),
+                    modifier = Modifier.weight(1f).heightIn(min = 48.dp),
+                    shape = RoundedCornerShape(8.dp),
                 ) {
                     Icon(Icons.Default.FileOpen, contentDescription = null)
                     Spacer(Modifier.width(8.dp))
@@ -489,8 +490,8 @@ private fun ImportCollectionSheet(
                 }
                 OutlinedButton(
                     onClick = onOpenQrImage,
-                    modifier = Modifier.weight(1f),
-                    shape = RoundedCornerShape(12.dp),
+                    modifier = Modifier.weight(1f).heightIn(min = 48.dp),
+                    shape = RoundedCornerShape(8.dp),
                 ) {
                     Icon(Icons.Default.QrCodeScanner, contentDescription = null)
                     Spacer(Modifier.width(8.dp))
@@ -519,7 +520,7 @@ private fun CollectionQrDialog(
                 verticalArrangement = Arrangement.spacedBy(12.dp),
             ) {
                 Surface(
-                    shape = RoundedCornerShape(12.dp),
+                    shape = RoundedCornerShape(8.dp),
                     color = androidx.compose.ui.graphics.Color.White,
                     tonalElevation = 0.dp,
                 ) {
@@ -546,12 +547,12 @@ private fun CollectionQrDialog(
             }
         },
         confirmButton = {
-            TextButton(onClick = onCopyLink, shape = RoundedCornerShape(10.dp)) {
+            TextButton(onClick = onCopyLink, shape = RoundedCornerShape(8.dp)) {
                 Text("Copy link")
             }
         },
         dismissButton = {
-            TextButton(onClick = onDismiss, shape = RoundedCornerShape(10.dp)) {
+            TextButton(onClick = onDismiss, shape = RoundedCornerShape(8.dp)) {
                 Text("Done")
             }
         },
@@ -580,7 +581,8 @@ private fun CollectionCard(
 
     Card(
         onClick = onClick,
-        shape = RoundedCornerShape(12.dp),
+        shape = RoundedCornerShape(8.dp),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.24f)),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer),
     ) {
         Row(
@@ -594,7 +596,7 @@ private fun CollectionCard(
             Box(
                 modifier = Modifier
                     .size(72.dp)
-                    .clip(RoundedCornerShape(12.dp))
+                    .clip(RoundedCornerShape(8.dp))
                     .background(MaterialTheme.colorScheme.surfaceContainerHigh),
             ) {
                 if (covers.isNotEmpty()) {
