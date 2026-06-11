@@ -12,6 +12,7 @@ from typing import Any
 
 
 USES_PATTERN = re.compile(r"^\s*uses:\s*['\"]?([^'\"\s#]+)['\"]?\s*(?:#.*)?$")
+FULL_SHA_REF = re.compile(r"^[a-f0-9]{40}$")
 
 
 class GitHubActionsAllowlistError(ValueError):
@@ -83,6 +84,8 @@ def validate_action_reference(reference: str, forbidden_refs: list[str], label: 
         raise GitHubActionsAllowlistError(f"{label} must include action name and ref")
     if ref in forbidden_refs:
         raise GitHubActionsAllowlistError(f"{label} uses forbidden floating ref: {ref}")
+    if not FULL_SHA_REF.fullmatch(ref):
+        raise GitHubActionsAllowlistError(f"{label} must pin a reviewed 40-character commit SHA")
 
 
 def workflow_paths(repo_root: Path, workflow_directory: str) -> list[Path]:

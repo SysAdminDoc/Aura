@@ -3491,13 +3491,6 @@ Net-new items from the fourth research pass (2026-06-10). Focused on: transitive
 
 ### P0 — Security and compliance fixes
 
-- [ ] P0 — **SHA-pin all GitHub Actions references**
-  Why: All workflows use tag pins (`actions/checkout@v4`, `softprops/action-gh-release@v2`). The tj-actions compromise (CVE-2025-30066, March 2025) proved tag-pinned consumers are vulnerable to tag retargeting. OpenSSF Scorecard (which Aura runs) penalizes tag pins. Dependabot github-actions ecosystem is already configured to maintain SHA pins once set.
-  Evidence: `.github/workflows/*.yml` (all `uses:` are tag-pinned); GHSA-mrrh-fwg8-r2c3; OpenSSF Scorecard Pinned-Dependencies check.
-  Touches: all `.github/workflows/*.yml` files (replace `@vN` with `@<full-sha> # vN`), Dependabot maintains freshness.
-  Acceptance: every third-party `uses:` reference is SHA-pinned with a version comment; OpenSSF Scorecard Pinned-Dependencies score improves; Dependabot PRs keep SHAs current.
-  Complexity: S
-
 - [ ] P0 — **Add Open-Meteo attribution to comply with CC-BY 4.0 terms**
   Why: Open-Meteo free tier requires CC-BY 4.0 attribution with a link. Open-Meteo appears only in `OpenMeteoApi.kt`/`AppModule.kt`/`WeatherUpdateWorker.kt` -- no user-visible attribution found. Missing attribution violates the terms of service for Aura's weather feature.
   Evidence: Open-Meteo terms (https://open-meteo.com/en/terms); grep for "open-meteo" / "Open-Meteo" in UI code returns zero hits outside API/worker.

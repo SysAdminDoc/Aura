@@ -24,12 +24,13 @@ def live_policy() -> dict[str, object]:
 
 
 def fixture_policy() -> dict[str, object]:
+    checkout_sha = "34e114876b0b11c390a56381ad16ebd13914f8d5"
     return {
         "schemaVersion": 1,
         "policyKind": "githubActionsAllowlist",
         "workflowDirectory": ".github/workflows",
         "requiredWorkflowPaths": [".github/workflows/example.yml"],
-        "allowedActions": ["actions/checkout@v4"],
+        "allowedActions": [f"actions/checkout@{checkout_sha}"],
         "forbiddenRefs": ["latest", "main", "master"],
     }
 
@@ -87,6 +88,20 @@ class GitHubActionsAllowlistCheckTest(unittest.TestCase):
             with self.assertRaises(GitHubActionsAllowlistError):
                 validate_github_actions_allowlist(repo_root, fixture_policy())
 
+    def test_rejects_tag_pinned_action_reference(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            repo_root = Path(tmpdir)
+            write_workflow(
+                repo_root,
+                ".github/workflows/example.yml",
+                "jobs:\n  test:\n    steps:\n      - uses: actions/checkout@v4\n",
+            )
+            policy = copy.deepcopy(fixture_policy())
+            policy["allowedActions"] = ["actions/checkout@v4"]
+
+            with self.assertRaises(GitHubActionsAllowlistError):
+                validate_github_actions_allowlist(repo_root, policy)
+
     def test_rejects_missing_required_workflow(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
             repo_root = Path(tmpdir)
@@ -101,10 +116,13 @@ class GitHubActionsAllowlistCheckTest(unittest.TestCase):
             write_workflow(
                 repo_root,
                 ".github/workflows/example.yml",
-                "jobs:\n  test:\n    steps:\n      - uses: actions/checkout@v4\n",
+                "jobs:\n  test:\n    steps:\n      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5\n",
             )
             policy = copy.deepcopy(fixture_policy())
-            policy["allowedActions"] = ["actions/checkout@v4", "actions/cache@v4"]
+            policy["allowedActions"] = [
+                "actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5",
+                "actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830",
+            ]
 
             with self.assertRaises(GitHubActionsAllowlistError):
                 validate_github_actions_allowlist(repo_root, policy)
