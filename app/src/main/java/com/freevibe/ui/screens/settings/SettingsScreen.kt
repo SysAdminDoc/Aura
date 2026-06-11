@@ -1150,11 +1150,11 @@ fun SettingsScreen(
             )
             // Preview volume slider
             Surface(
-                color = MaterialTheme.colorScheme.surface.copy(alpha = 0.72f),
-                shape = RoundedCornerShape(12.dp),
+                color = MaterialTheme.colorScheme.surfaceContainer.copy(alpha = 0.82f),
+                shape = RoundedCornerShape(8.dp),
                 border = androidx.compose.foundation.BorderStroke(
                     1.dp,
-                    MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f),
+                    MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.36f),
                 ),
                 shadowElevation = 2.dp,
             ) {
@@ -1166,7 +1166,7 @@ fun SettingsScreen(
                     horizontalArrangement = Arrangement.spacedBy(16.dp),
                 ) {
                     Surface(
-                        shape = RoundedCornerShape(10.dp),
+                        shape = RoundedCornerShape(8.dp),
                         color = MaterialTheme.colorScheme.secondary.copy(alpha = 0.12f),
                     ) {
                         @Suppress("DEPRECATION")
@@ -2110,7 +2110,7 @@ private fun BlockedCreatorsDialog(
                     blockedCreators.forEach { blocked ->
                         Surface(
                             color = MaterialTheme.colorScheme.surfaceContainerHighest.copy(alpha = 0.55f),
-                            shape = RoundedCornerShape(10.dp),
+                            shape = RoundedCornerShape(8.dp),
                         ) {
                             Row(
                                 modifier = Modifier
@@ -2359,11 +2359,11 @@ private fun VideoBatteryDashboardCard(
     }
     Surface(
         modifier = modifier,
-        color = MaterialTheme.colorScheme.surface.copy(alpha = 0.72f),
-        shape = RoundedCornerShape(12.dp),
+        color = MaterialTheme.colorScheme.surfaceContainer.copy(alpha = 0.82f),
+        shape = RoundedCornerShape(8.dp),
         border = androidx.compose.foundation.BorderStroke(
             1.dp,
-            MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f),
+            MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.36f),
         ),
         shadowElevation = 2.dp,
     ) {
@@ -2377,7 +2377,7 @@ private fun VideoBatteryDashboardCard(
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Surface(
-                    shape = RoundedCornerShape(10.dp),
+                    shape = RoundedCornerShape(8.dp),
                     color = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f),
                 ) {
                     Icon(
@@ -2582,7 +2582,8 @@ private fun SettingsMetric(
     Surface(
         modifier = modifier,
         color = tint.copy(alpha = 0.12f),
-        shape = RoundedCornerShape(10.dp),
+        shape = RoundedCornerShape(8.dp),
+        border = androidx.compose.foundation.BorderStroke(1.dp, tint.copy(alpha = 0.16f)),
     ) {
         Column(
             modifier = Modifier.padding(horizontal = 14.dp, vertical = 14.dp),
@@ -2645,11 +2646,11 @@ private fun SettingsItem(
 ) {
     Surface(
         onClick = onClick,
-        color = MaterialTheme.colorScheme.surface.copy(alpha = 0.72f),
-        shape = RoundedCornerShape(12.dp),
+        color = MaterialTheme.colorScheme.surfaceContainer.copy(alpha = 0.82f),
+        shape = RoundedCornerShape(8.dp),
         border = androidx.compose.foundation.BorderStroke(
             1.dp,
-            MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f),
+            MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.36f),
         ),
         shadowElevation = 2.dp,
     ) {
@@ -2661,7 +2662,7 @@ private fun SettingsItem(
             horizontalArrangement = Arrangement.spacedBy(14.dp),
         ) {
             Surface(
-                shape = RoundedCornerShape(10.dp),
+                shape = RoundedCornerShape(8.dp),
                 color = MaterialTheme.colorScheme.secondary.copy(alpha = 0.12f),
             ) {
                 Icon(
@@ -2697,12 +2698,12 @@ private fun SettingsToggle(
 ) {
     Surface(
         onClick = { onCheckedChange(!checked) },
-        color = MaterialTheme.colorScheme.surface.copy(alpha = 0.72f),
-        shape = RoundedCornerShape(12.dp),
+        color = MaterialTheme.colorScheme.surfaceContainer.copy(alpha = 0.82f),
+        shape = RoundedCornerShape(8.dp),
         border = androidx.compose.foundation.BorderStroke(
             1.dp,
             if (checked) MaterialTheme.colorScheme.primary.copy(alpha = 0.28f)
-            else MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f),
+            else MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.36f),
         ),
         shadowElevation = 2.dp,
     ) {
@@ -2714,7 +2715,7 @@ private fun SettingsToggle(
             horizontalArrangement = Arrangement.spacedBy(14.dp),
         ) {
             Surface(
-                shape = RoundedCornerShape(10.dp),
+                shape = RoundedCornerShape(8.dp),
                 color = if (checked) {
                     MaterialTheme.colorScheme.primary.copy(alpha = 0.14f)
                 } else {
@@ -2804,8 +2805,8 @@ private fun BackgroundWorkDiagnosticRow(row: BackgroundWorkStatusRow) {
         else -> MaterialTheme.colorScheme.tertiary
     }
     Surface(
-        color = MaterialTheme.colorScheme.surface.copy(alpha = 0.78f),
-        shape = RoundedCornerShape(12.dp),
+        color = MaterialTheme.colorScheme.surfaceContainer.copy(alpha = 0.84f),
+        shape = RoundedCornerShape(8.dp),
         border = androidx.compose.foundation.BorderStroke(1.dp, tint.copy(alpha = 0.24f)),
     ) {
         Column(
@@ -2948,7 +2949,7 @@ private fun shareCrashDiagnosticsBundle(context: Context, bundle: String) {
 private fun SourceDiagnosticsEmptyState() {
     Surface(
         color = MaterialTheme.colorScheme.surfaceContainer.copy(alpha = 0.76f),
-        shape = RoundedCornerShape(12.dp),
+        shape = RoundedCornerShape(8.dp),
         border = androidx.compose.foundation.BorderStroke(
             1.dp,
             MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.36f),
@@ -3038,8 +3039,8 @@ private fun SourceDiagnosticRow(stat: SourceMetrics.SourceStats) {
     }
 
     Surface(
-        color = MaterialTheme.colorScheme.surface.copy(alpha = 0.78f),
-        shape = RoundedCornerShape(12.dp),
+        color = MaterialTheme.colorScheme.surfaceContainer.copy(alpha = 0.84f),
+        shape = RoundedCornerShape(8.dp),
         border = androidx.compose.foundation.BorderStroke(1.dp, tint.copy(alpha = 0.24f)),
     ) {
         Column(
