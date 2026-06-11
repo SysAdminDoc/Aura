@@ -138,7 +138,7 @@ fun WallpaperDetailScreen(
                     contentPadding = PaddingValues(24.dp),
                 ) {
                     Surface(
-                        shape = RoundedCornerShape(10.dp),
+                        shape = RoundedCornerShape(8.dp),
                         color = MaterialTheme.colorScheme.secondary.copy(alpha = 0.12f),
                     ) {
                         Icon(
@@ -355,10 +355,10 @@ fun WallpaperDetailScreen(
                     if (showDetailsPanel) {
                     GlassCard(
                         modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(12.dp),
+                        shape = RoundedCornerShape(8.dp),
                         contentPadding = PaddingValues(18.dp),
-                        highlightHeight = 112.dp,
-                        shadowElevation = 4.dp,
+                        highlightHeight = 84.dp,
+                        shadowElevation = 2.dp,
                     ) {
                         Row(
                             modifier = Modifier.fillMaxWidth(),
@@ -427,9 +427,9 @@ fun WallpaperDetailScreen(
                                 onClick = { showApplyOptions = true },
                                 modifier = Modifier
                                     .weight(1f)
-                                    .height(54.dp),
+                                    .heightIn(min = 48.dp),
                                 enabled = !state.isApplying,
-                                shape = RoundedCornerShape(10.dp),
+                                shape = RoundedCornerShape(8.dp),
                             ) {
                                 if (state.isApplying) {
                                     CircularProgressIndicator(
@@ -447,8 +447,8 @@ fun WallpaperDetailScreen(
                                 onClick = { onPreview(wp) },
                                 modifier = Modifier
                                     .weight(0.72f)
-                                    .height(54.dp),
-                                shape = RoundedCornerShape(10.dp),
+                                    .heightIn(min = 48.dp),
+                                shape = RoundedCornerShape(8.dp),
                             ) {
                                 Icon(Icons.Default.Visibility, null, Modifier.size(18.dp))
                                 Spacer(Modifier.width(8.dp))
@@ -500,7 +500,7 @@ fun WallpaperDetailScreen(
                                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                                         Surface(
                                             color = Color(colorInt),
-                                            shape = RoundedCornerShape(12.dp),
+                                            shape = RoundedCornerShape(8.dp),
                                             border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f)),
                                             modifier = Modifier.size(64.dp),
                                         ) {}
@@ -527,7 +527,7 @@ fun WallpaperDetailScreen(
                                     .height(120.dp)
                                     .background(
                                         MaterialTheme.colorScheme.surfaceContainer.copy(alpha = 0.5f),
-                                        RoundedCornerShape(12.dp),
+                                        RoundedCornerShape(8.dp),
                                     ),
                             )
                         }
@@ -853,10 +853,10 @@ private fun CompactWallpaperOverlayCard(
     val actionsScroll = rememberScrollState()
     GlassCard(
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(12.dp),
+        shape = RoundedCornerShape(8.dp),
         contentPadding = PaddingValues(horizontal = 14.dp, vertical = 12.dp),
         highlightHeight = 72.dp,
-        shadowElevation = 3.dp,
+        shadowElevation = 2.dp,
     ) {
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -908,7 +908,7 @@ private fun CompactWallpaperOverlayCard(
                     .weight(1f)
                     .height(48.dp),
                 enabled = !isApplying,
-                shape = RoundedCornerShape(10.dp),
+                shape = RoundedCornerShape(8.dp),
             ) {
                 if (isApplying) {
                     CircularProgressIndicator(
@@ -927,7 +927,7 @@ private fun CompactWallpaperOverlayCard(
                 modifier = Modifier
                     .weight(1f)
                     .height(48.dp),
-                shape = RoundedCornerShape(10.dp),
+                shape = RoundedCornerShape(8.dp),
             ) {
                 Icon(Icons.Default.Visibility, null, Modifier.size(18.dp))
                 Spacer(Modifier.width(8.dp))
@@ -1064,7 +1064,7 @@ private fun DetailActionPill(
 ) {
     Surface(
         onClick = onClick,
-        shape = RoundedCornerShape(10.dp),
+        shape = RoundedCornerShape(8.dp),
         color = tint.copy(alpha = 0.12f),
         border = BorderStroke(1.dp, tint.copy(alpha = 0.12f)),
     ) {
@@ -1200,7 +1200,7 @@ private fun SheetOption(
     Surface(
         onClick = onClick,
         color = MaterialTheme.colorScheme.surface.copy(alpha = 0.5f),
-        shape = RoundedCornerShape(10.dp),
+        shape = RoundedCornerShape(8.dp),
     ) {
         Row(
             modifier = Modifier
@@ -1210,7 +1210,7 @@ private fun SheetOption(
             horizontalArrangement = Arrangement.spacedBy(16.dp),
         ) {
             Surface(
-                shape = RoundedCornerShape(10.dp),
+                shape = RoundedCornerShape(8.dp),
                 color = tint.copy(alpha = 0.12f),
             ) {
                 Icon(
@@ -1283,9 +1283,14 @@ private fun CollectionPickerSheet(
                         modifier = Modifier.weight(1f),
                         placeholder = { Text("Collection name") },
                         singleLine = true,
-                        shape = RoundedCornerShape(12.dp),
+                        shape = RoundedCornerShape(8.dp),
                     )
-                    FilledTonalButton(onClick = { if (newName.isNotBlank()) onCreateNew(newName.trim()) }, enabled = newName.isNotBlank()) { Text("Create") }
+                    FilledTonalButton(
+                        onClick = { if (newName.isNotBlank()) onCreateNew(newName.trim()) },
+                        enabled = newName.isNotBlank(),
+                        modifier = Modifier.heightIn(min = 48.dp),
+                        shape = RoundedCornerShape(8.dp),
+                    ) { Text("Create") }
                 }
             } else {
                 SheetOption(Icons.Default.Add, "New collection", "Create a new place to save wallpapers like this") {
