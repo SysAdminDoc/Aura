@@ -10,6 +10,8 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -355,9 +357,9 @@ fun ContactPickerScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(horizontal = 16.dp, vertical = 8.dp),
-                    shape = RoundedCornerShape(12.dp),
+                    shape = RoundedCornerShape(8.dp),
                     color = MaterialTheme.colorScheme.surfaceContainerHigh,
-                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.18f)),
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.28f)),
                 ) {
                     Row(
                         modifier = Modifier
@@ -367,7 +369,7 @@ fun ContactPickerScreen(
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
                         Surface(
-                            shape = RoundedCornerShape(10.dp),
+                            shape = RoundedCornerShape(8.dp),
                             color = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f),
                         ) {
                             Icon(
@@ -380,7 +382,7 @@ fun ContactPickerScreen(
                         Column(modifier = Modifier.weight(1f)) {
                             Text(sound.name, style = MaterialTheme.typography.titleSmall, maxLines = 1, overflow = TextOverflow.Ellipsis)
                             Text(
-                                "Assign as this contact's ringtone",
+                                "Ready to apply to the selected contact",
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                             )
@@ -441,6 +443,7 @@ fun ContactPickerScreen(
     }
 }
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun ContactAssignmentCard(
     contact: ContactInfo,
@@ -453,9 +456,9 @@ private fun ContactAssignmentCard(
     onApply: () -> Unit,
 ) {
     Surface(
-        shape = RoundedCornerShape(12.dp),
+        shape = RoundedCornerShape(8.dp),
         color = MaterialTheme.colorScheme.surfaceContainer,
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.22f)),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f)),
     ) {
         Column(
             modifier = Modifier
@@ -470,7 +473,7 @@ private fun ContactAssignmentCard(
             ) {
                 Surface(
                     modifier = Modifier.size(48.dp),
-                    shape = RoundedCornerShape(12.dp),
+                    shape = RoundedCornerShape(8.dp),
                     color = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f),
                     border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.14f)),
                 ) {
@@ -500,33 +503,48 @@ private fun ContactAssignmentCard(
             if (!writePermissionGranted) {
                 Text(
                     text = if (permissionPermanentlyDenied) {
-                        "Contact update permission is off. Open Android settings to allow Aura to write the selected ringtone to this contact."
+                        "Contact update permission is off. Open Android settings to let Aura write the ringtone to this contact."
                     } else {
-                        "Aura will ask for contact update permission only when you apply this ringtone."
+                        "Aura asks for contact update permission only when you apply the ringtone."
                     },
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
 
-            Row(
+            FlowRow(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End),
-                verticalAlignment = Alignment.CenterVertically,
+                verticalArrangement = Arrangement.spacedBy(8.dp),
             ) {
-                OutlinedButton(onClick = onChangeContact, enabled = !isApplying) {
+                OutlinedButton(
+                    onClick = onChangeContact,
+                    enabled = !isApplying,
+                    shape = RoundedCornerShape(8.dp),
+                    modifier = Modifier.heightIn(min = 48.dp),
+                ) {
                     Icon(Icons.Default.PersonSearch, contentDescription = null, modifier = Modifier.size(18.dp))
                     Spacer(Modifier.width(6.dp))
                     Text("Change")
                 }
                 if (permissionPermanentlyDenied && !writePermissionGranted) {
-                    Button(onClick = onOpenSettings, enabled = !isApplying) {
+                    Button(
+                        onClick = onOpenSettings,
+                        enabled = !isApplying,
+                        shape = RoundedCornerShape(8.dp),
+                        modifier = Modifier.heightIn(min = 48.dp),
+                    ) {
                         Icon(Icons.Default.Settings, contentDescription = null, modifier = Modifier.size(18.dp))
                         Spacer(Modifier.width(6.dp))
                         Text("Settings")
                     }
                 } else {
-                    Button(onClick = onApply, enabled = enabled) {
+                    Button(
+                        onClick = onApply,
+                        enabled = enabled,
+                        shape = RoundedCornerShape(8.dp),
+                        modifier = Modifier.heightIn(min = 48.dp),
+                    ) {
                         if (isApplying) {
                             CircularProgressIndicator(
                                 modifier = Modifier.size(18.dp),

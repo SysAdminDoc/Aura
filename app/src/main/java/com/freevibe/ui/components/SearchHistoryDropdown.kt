@@ -17,6 +17,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 
 @Composable
@@ -36,7 +37,7 @@ fun SearchHistoryDropdown(
     ) {
         Surface(
             color = Color.Transparent,
-            shape = RoundedCornerShape(12.dp),
+            shape = RoundedCornerShape(8.dp),
             tonalElevation = 0.dp,
             shadowElevation = 6.dp,
             border = androidx.compose.foundation.BorderStroke(
@@ -68,7 +69,7 @@ fun SearchHistoryDropdown(
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                     TextButton(onClick = onClearAll, contentPadding = PaddingValues(horizontal = 8.dp)) {
-                        Text("Clear", style = MaterialTheme.typography.labelSmall)
+                        Text("Clear all", style = MaterialTheme.typography.labelSmall)
                     }
                 }
 
@@ -79,8 +80,9 @@ fun SearchHistoryDropdown(
                     Row(
                         Modifier
                             .fillMaxWidth()
+                            .heightIn(min = 48.dp)
                             .clickable { onQueryClick(query) }
-                            .padding(horizontal = 16.dp, vertical = 11.dp),
+                            .padding(horizontal = 16.dp, vertical = 8.dp),
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(12.dp),
                     ) {
@@ -93,10 +95,12 @@ fun SearchHistoryDropdown(
                             query,
                             modifier = Modifier.weight(1f),
                             style = MaterialTheme.typography.bodyMedium,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
                         )
                         IconButton(
                             onClick = { onDeleteQuery(query) },
-                            modifier = Modifier.size(36.dp),
+                            modifier = Modifier.size(48.dp),
                         ) {
                             Icon(Icons.Default.Close, "Remove", Modifier.size(14.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f))
                         }

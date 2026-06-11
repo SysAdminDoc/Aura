@@ -2,6 +2,7 @@ package com.freevibe.ui.screens.downloads
 
 import android.content.Intent
 import android.net.Uri
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -150,7 +151,8 @@ fun DownloadsScreen(
 private fun ActiveDownloadCard(dl: DownloadProgress, onDismiss: () -> Unit) {
     Surface(
         color = MaterialTheme.colorScheme.surfaceContainer,
-        shape = RoundedCornerShape(12.dp),
+        shape = RoundedCornerShape(8.dp),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.26f)),
     ) {
         Column(Modifier.fillMaxWidth().padding(12.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
@@ -162,7 +164,7 @@ private fun ActiveDownloadCard(dl: DownloadProgress, onDismiss: () -> Unit) {
                 Spacer(Modifier.width(8.dp))
                 Text(dl.fileName, Modifier.weight(1f), style = MaterialTheme.typography.labelMedium, maxLines = 1, overflow = TextOverflow.Ellipsis)
                 if (dl.isComplete || dl.error != null) {
-                    IconButton(onClick = onDismiss, Modifier.size(36.dp)) { Icon(Icons.Default.Close, "Dismiss", Modifier.size(16.dp)) }
+                    IconButton(onClick = onDismiss, Modifier.size(48.dp)) { Icon(Icons.Default.Close, "Dismiss", Modifier.size(16.dp)) }
                 }
             }
             if (!dl.isComplete && dl.error == null) {
@@ -191,7 +193,8 @@ private fun DownloadHistoryCard(
     Surface(
         onClick = onOpen,
         color = MaterialTheme.colorScheme.surfaceContainer,
-        shape = RoundedCornerShape(12.dp),
+        shape = RoundedCornerShape(8.dp),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.24f)),
     ) {
         Row(
             Modifier.fillMaxWidth().padding(14.dp),
@@ -229,7 +232,7 @@ private fun DownloadHistoryCard(
                     }
                 }
             }
-            IconButton(onClick = onDelete, Modifier.size(36.dp)) {
+            IconButton(onClick = onDelete, Modifier.size(48.dp)) {
                 Icon(Icons.Default.Delete, "Delete", Modifier.size(18.dp), tint = MaterialTheme.colorScheme.error.copy(alpha = 0.7f))
             }
         }

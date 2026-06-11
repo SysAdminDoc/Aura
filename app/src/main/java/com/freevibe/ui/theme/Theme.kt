@@ -123,8 +123,8 @@ fun FreeVibeTheme(
             extraSmall = androidx.compose.foundation.shape.RoundedCornerShape(4.dp),
             small = androidx.compose.foundation.shape.RoundedCornerShape(6.dp),
             medium = androidx.compose.foundation.shape.RoundedCornerShape(8.dp),
-            large = androidx.compose.foundation.shape.RoundedCornerShape(10.dp),
-            extraLarge = androidx.compose.foundation.shape.RoundedCornerShape(12.dp),
+            large = androidx.compose.foundation.shape.RoundedCornerShape(8.dp),
+            extraLarge = androidx.compose.foundation.shape.RoundedCornerShape(8.dp),
         ),
         typography = Typography(
             headlineLarge = TextStyle(
@@ -155,16 +155,16 @@ fun FreeVibeTheme(
                 fontSize = 14.sp,
             ),
             bodyLarge = TextStyle(
-                fontSize = 15.sp,
-                lineHeight = 23.sp,
+                fontSize = 16.sp,
+                lineHeight = 24.sp,
             ),
             bodyMedium = TextStyle(
-                fontSize = 13.5.sp,
-                lineHeight = 20.sp,
+                fontSize = 14.sp,
+                lineHeight = 21.sp,
             ),
             bodySmall = TextStyle(
                 fontSize = 12.sp,
-                lineHeight = 17.sp,
+                lineHeight = 18.sp,
             ),
             labelLarge = TextStyle(
                 fontWeight = FontWeight.SemiBold,

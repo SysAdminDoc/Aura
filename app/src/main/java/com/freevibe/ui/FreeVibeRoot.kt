@@ -171,12 +171,20 @@ fun FreeVibeRoot(
         Scaffold(
             containerColor = Color.Transparent,
             snackbarHost = {
-                // Lift the snackbar above the bottom nav bar when it's visible so it doesn't
-                // sit behind the floating nav pill.
+                // Lift the snackbar above bottom navigation when visible.
                 SnackbarHost(
                     hostState = snackbarHostState,
                     modifier = Modifier.padding(bottom = if (showBottomBar) 72.dp else 0.dp),
-                )
+                ) { data ->
+                    Snackbar(
+                        snackbarData = data,
+                        shape = RoundedCornerShape(8.dp),
+                        containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+                        contentColor = MaterialTheme.colorScheme.onSurface,
+                        actionColor = MaterialTheme.colorScheme.primary,
+                        dismissActionContentColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
             },
             bottomBar = {
                 if (showBottomBar) {
@@ -188,18 +196,18 @@ fun FreeVibeRoot(
                                     androidx.compose.foundation.layout.WindowInsetsSides.Bottom,
                                 ),
                             )
-                            .padding(horizontal = 12.dp, vertical = 4.dp),
+                            .padding(horizontal = 12.dp, vertical = 6.dp),
                         contentAlignment = Alignment.Center,
                     ) {
                         Surface(
-                            shape = RoundedCornerShape(12.dp),
-                            color = MaterialTheme.colorScheme.surface.copy(alpha = 0.94f),
+                            shape = RoundedCornerShape(8.dp),
+                            color = MaterialTheme.colorScheme.surface.copy(alpha = 0.96f),
                             contentColor = MaterialTheme.colorScheme.onSurface,
                             tonalElevation = 0.dp,
-                            shadowElevation = 5.dp,
+                            shadowElevation = 3.dp,
                             border = BorderStroke(
                                 1.dp,
-                                MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f),
+                                MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.42f),
                             ),
                         ) {
                             NavigationBar(
@@ -208,7 +216,7 @@ fun FreeVibeRoot(
                                 tonalElevation = 0.dp,
                                 windowInsets = WindowInsets(0, 0, 0, 0),
                                 modifier = Modifier
-                                    .height(60.dp)
+                                    .height(64.dp)
                                     .padding(horizontal = 2.dp),
                             ) {
                                 Screen.bottomNavItems.forEach { screen ->
@@ -256,7 +264,7 @@ fun FreeVibeRoot(
                                                 maxLines = 1,
                                             )
                                         },
-                                        alwaysShowLabel = false,
+                                        alwaysShowLabel = true,
                                         colors = NavigationBarItemDefaults.colors(
                                             selectedIconColor = MaterialTheme.colorScheme.primary,
                                             selectedTextColor = MaterialTheme.colorScheme.primary,

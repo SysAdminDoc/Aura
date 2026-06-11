@@ -6,6 +6,9 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.size
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
@@ -40,7 +43,12 @@ fun CommunityGuidelinesDialog(
                         horizontalArrangement = Arrangement.spacedBy(8.dp),
                         verticalAlignment = Alignment.Top,
                     ) {
-                        Text("-", color = MaterialTheme.colorScheme.primary)
+                        androidx.compose.material3.Icon(
+                            imageVector = Icons.Default.CheckCircle,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(16.dp),
+                        )
                         Text(
                             rule,
                             style = MaterialTheme.typography.bodySmall,
@@ -58,7 +66,7 @@ fun CommunityGuidelinesDialog(
         },
         confirmButton = {
             Button(onClick = onAccept) {
-                Text("Accept")
+                Text("I agree")
             }
         },
         dismissButton = {

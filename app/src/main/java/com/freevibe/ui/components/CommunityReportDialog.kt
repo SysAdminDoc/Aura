@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
@@ -42,6 +43,11 @@ fun CommunityReportDialog(
         title = { Text(title) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                Text(
+                    "Choose the closest reason. Reports help keep public community content safe and usable.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
                 FlowRow(
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                     verticalArrangement = Arrangement.spacedBy(8.dp),
@@ -64,7 +70,9 @@ fun CommunityReportDialog(
                 OutlinedTextField(
                     value = note,
                     onValueChange = { note = it.take(500) },
-                    label = { Text("Details") },
+                    modifier = Modifier.fillMaxWidth(),
+                    label = { Text("Details optional") },
+                    supportingText = { Text("${note.length}/500") },
                     minLines = 3,
                     maxLines = 5,
                 )
@@ -77,7 +85,7 @@ fun CommunityReportDialog(
                     onDismiss()
                 },
             ) {
-                Text("Submit")
+                Text("Submit report")
             }
         },
         dismissButton = {

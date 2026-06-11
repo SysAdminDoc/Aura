@@ -176,7 +176,7 @@ fun OnboardingScreen(
                         .height(54.dp),
                     shape = RoundedCornerShape(8.dp),
                 ) {
-                    Text(if (pagerState.currentPage == 3) "Get Started" else "Next")
+                    Text(if (pagerState.currentPage == 3) "Get started" else "Next")
                 }
             }
         }
@@ -241,7 +241,7 @@ private fun WelcomePage() {
         icon = Icons.Default.Wallpaper,
         iconColor = MaterialTheme.colorScheme.primary,
         title = "Welcome to Aura",
-        description = "The open-source way to personalize your Android device with wallpapers, video wallpapers, ringtones, and sounds from YouTube plus open media catalogs. No accounts, no ads, no setup.",
+        description = "A calm, open-source toolkit for wallpapers, video wallpapers, ringtones, and sounds. No ads, no required account, no noisy setup.",
         badges = listOf(
             Icons.Default.LockOpen to "No account",
             Icons.Default.Block to "No ads",
@@ -253,20 +253,20 @@ private fun WelcomePage() {
 @Composable
 private fun FeaturesPage() {
     val features = listOf(
-        Triple(Icons.Default.Wallpaper, "HD/4K Wallpapers", "5 sources: Wallhaven, Pexels, Pixabay, Reddit, Bing"),
-        Triple(Icons.Default.VideoLibrary, "Video Wallpapers", "Pexels, Pixabay loops, YouTube, Reddit cinemagraphs"),
-        Triple(Icons.Default.MusicNote, "Ringtones & Sounds", "YouTube sound search, short-clip filters, trim & fade editor"),
-        Triple(Icons.Default.Schedule, "Smart Scheduler", "Auto-rotate by interval, source, or time of day"),
-        Triple(Icons.Default.Cloud, "Weather Effects", "Rain, snow, fog overlay from real-time weather"),
-        Triple(Icons.Default.DarkMode, "AMOLED Editor", "Black crush, vignette, grain, warmth + 10 presets"),
+        Triple(Icons.Default.Wallpaper, "HD and 4K wallpapers", "Curated sources with phone-friendly quality filters"),
+        Triple(Icons.Default.VideoLibrary, "Video wallpapers", "Loops, cinemagraphs, and motion-ready previews"),
+        Triple(Icons.Default.MusicNote, "Ringtones and sounds", "Short-clip filters plus trim and fade tools"),
+        Triple(Icons.Default.Schedule, "Smart rotation", "Rotate by interval, source, or time of day"),
+        Triple(Icons.Default.Cloud, "Weather effects", "Optional rain, snow, and fog overlays"),
+        Triple(Icons.Default.DarkMode, "AMOLED editor", "Tone, vignette, grain, warmth, and presets"),
     )
 
     PageLayout(
         eyebrow = "What you get",
         icon = Icons.Default.AutoAwesome,
         iconColor = MaterialTheme.colorScheme.secondary,
-        title = "A full personalization toolkit",
-        description = "Aura combines discovery, motion, sound, and automation so your device feels consistent instead of stitched together from separate apps.",
+        title = "One cohesive personalization toolkit",
+        description = "Discovery, motion, sound, editing, and automation live together so your device feels intentional.",
         badges = listOf(
             Icons.Default.Wallpaper to "Wallpapers",
             Icons.Default.VideoLibrary to "Video loops",
@@ -302,7 +302,7 @@ private fun FeatureRow(icon: ImageVector, title: String, subtitle: String) {
     ) {
         Surface(
             color = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f),
-            shape = RoundedCornerShape(10.dp),
+            shape = RoundedCornerShape(8.dp),
         ) {
             Icon(
                 icon,
@@ -345,7 +345,7 @@ private fun StylePickerPage(selectedStyles: Set<String>, onToggle: (String) -> U
         icon = Icons.Default.Tune,
         iconColor = MaterialTheme.colorScheme.primary,
         title = "What should Aura lean toward?",
-        description = "Pick a few looks you want to see more often in Discover. You can adjust this anytime in Settings.",
+        description = "Choose a few looks to bias Discover toward. You can adjust this anytime in Settings.",
         badges = emptyList(),
         content = {
             Row(
@@ -377,7 +377,7 @@ private fun StylePickerPage(selectedStyles: Set<String>, onToggle: (String) -> U
                             modifier = Modifier
                                 .weight(1f)
                                 .height(132.dp),
-                            shape = RoundedCornerShape(12.dp),
+                            shape = RoundedCornerShape(8.dp),
                             color = if (selected) option.tint.copy(alpha = 0.18f)
                             else MaterialTheme.colorScheme.surface.copy(alpha = 0.58f),
                             border = BorderStroke(
@@ -392,18 +392,32 @@ private fun StylePickerPage(selectedStyles: Set<String>, onToggle: (String) -> U
                                     .padding(14.dp),
                                 verticalArrangement = Arrangement.SpaceBetween,
                             ) {
-                                Surface(
-                                    shape = RoundedCornerShape(10.dp),
-                                    color = option.tint.copy(alpha = 0.14f),
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically,
                                 ) {
-                                    Icon(
-                                        imageVector = option.icon,
-                                        contentDescription = null,
-                                        tint = option.tint,
-                                        modifier = Modifier
-                                            .padding(10.dp)
-                                            .size(18.dp),
-                                    )
+                                    Surface(
+                                        shape = RoundedCornerShape(8.dp),
+                                        color = option.tint.copy(alpha = 0.14f),
+                                    ) {
+                                        Icon(
+                                            imageVector = option.icon,
+                                            contentDescription = null,
+                                            tint = option.tint,
+                                            modifier = Modifier
+                                                .padding(10.dp)
+                                                .size(18.dp),
+                                        )
+                                    }
+                                    AnimatedVisibility(visible = selected) {
+                                        Icon(
+                                            imageVector = Icons.Default.CheckCircle,
+                                            contentDescription = null,
+                                            tint = option.tint,
+                                            modifier = Modifier.size(18.dp),
+                                        )
+                                    }
                                 }
                                 Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                                     Text(
@@ -434,7 +448,7 @@ private fun ReadyPage() {
         icon = Icons.Default.Celebration,
         iconColor = MaterialTheme.colorScheme.secondary,
         title = "You're all set",
-        description = "Everything works out of the box. Start browsing wallpapers and sounds, or add the home screen widget for quick access.",
+        description = "Everything works out of the box. Start with Discover, tune sources later, or add the widget for quick access.",
         badges = listOf(
             Icons.Default.Wallpaper to "Discover",
             Icons.Default.MusicNote to "Sounds",
@@ -499,7 +513,7 @@ private fun PageLayout(
             Box(
                 modifier = Modifier
                     .size(96.dp)
-                    .clip(RoundedCornerShape(12.dp))
+                    .clip(RoundedCornerShape(8.dp))
                     .background(iconColor.copy(alpha = 0.14f)),
                 contentAlignment = Alignment.Center,
             ) {

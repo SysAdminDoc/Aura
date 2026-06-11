@@ -4,6 +4,8 @@ import androidx.compose.animation.core.*
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
@@ -22,11 +24,18 @@ import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.freevibe.service.DownloadProgress
+
+private val AuraCardShape = RoundedCornerShape(8.dp)
+private val AuraControlShape = RoundedCornerShape(8.dp)
+private val AuraIconTileShape = RoundedCornerShape(8.dp)
+private val AuraMinimumTouchTarget = 48.dp
 
 // ── Download Progress Overlay ─────────────────────────────────────
 
@@ -57,7 +66,8 @@ private fun DownloadItem(
 ) {
     Surface(
         color = MaterialTheme.colorScheme.surfaceContainer,
-        shape = RoundedCornerShape(12.dp),
+        shape = AuraCardShape,
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.28f)),
         tonalElevation = 2.dp,
     ) {
         Column(
@@ -113,7 +123,7 @@ private fun DownloadItem(
                 }
 
                 if (download.isComplete || download.error != null) {
-                    IconButton(onClick = onDismiss, modifier = Modifier.size(36.dp)) {
+                    IconButton(onClick = onDismiss, modifier = Modifier.size(AuraMinimumTouchTarget)) {
                         Icon(Icons.Default.Close, "Dismiss", modifier = Modifier.size(16.dp))
                     }
                 }
@@ -140,12 +150,12 @@ private fun DownloadItem(
 @Composable
 fun ShimmerBox(
     modifier: Modifier = Modifier,
-    shape: RoundedCornerShape = RoundedCornerShape(8.dp),
+    shape: RoundedCornerShape = AuraCardShape,
 ) {
     val shimmerColors = listOf(
-        MaterialTheme.colorScheme.surfaceContainer,
-        MaterialTheme.colorScheme.surfaceContainerHigh,
-        MaterialTheme.colorScheme.surfaceContainer,
+        MaterialTheme.colorScheme.surfaceContainer.copy(alpha = 0.72f),
+        MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.9f),
+        MaterialTheme.colorScheme.surfaceContainer.copy(alpha = 0.72f),
     )
 
     val transition = rememberInfiniteTransition(label = "shimmer")
@@ -186,13 +196,13 @@ fun ShimmerWallpaperGrid(modifier: Modifier = Modifier) {
                     modifier = Modifier
                         .weight(1f)
                         .height(if (it % 2 == 0) 220.dp else 180.dp),
-                    shape = RoundedCornerShape(12.dp),
+                    shape = AuraCardShape,
                 )
                 ShimmerBox(
                     modifier = Modifier
                         .weight(1f)
                         .height(if (it % 2 == 0) 180.dp else 220.dp),
-                    shape = RoundedCornerShape(12.dp),
+                    shape = AuraCardShape,
                 )
             }
         }
@@ -212,7 +222,7 @@ fun ShimmerSoundList(modifier: Modifier = Modifier) {
             ) {
                 ShimmerBox(
                     modifier = Modifier.size(44.dp),
-                    shape = RoundedCornerShape(10.dp),
+                    shape = AuraIconTileShape,
                 )
                 Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                     ShimmerBox(modifier = Modifier.width(180.dp).height(14.dp))
@@ -228,10 +238,10 @@ fun ShimmerSoundList(modifier: Modifier = Modifier) {
 @Composable
 fun GlassCard(
     modifier: Modifier = Modifier,
-    shape: Shape = RoundedCornerShape(12.dp),
-    contentPadding: PaddingValues = PaddingValues(18.dp),
-    highlightHeight: Dp = 96.dp,
-    shadowElevation: Dp = 3.dp,
+    shape: Shape = AuraCardShape,
+    contentPadding: PaddingValues = PaddingValues(16.dp),
+    highlightHeight: Dp = 72.dp,
+    shadowElevation: Dp = 2.dp,
     content: @Composable ColumnScope.() -> Unit,
 ) {
     Surface(
@@ -240,7 +250,7 @@ fun GlassCard(
         shape = shape,
         border = BorderStroke(
             width = 1.dp,
-            color = MaterialTheme.colorScheme.outline.copy(alpha = 0.18f),
+            color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.34f),
         ),
         tonalElevation = 0.dp,
         shadowElevation = shadowElevation,
@@ -250,9 +260,9 @@ fun GlassCard(
                 .background(
                     Brush.verticalGradient(
                         listOf(
-                            MaterialTheme.colorScheme.surface.copy(alpha = 0.98f),
-                            MaterialTheme.colorScheme.surfaceContainer.copy(alpha = 0.95f),
-                            MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.88f),
+                            MaterialTheme.colorScheme.surface.copy(alpha = 0.99f),
+                            MaterialTheme.colorScheme.surfaceContainer.copy(alpha = 0.94f),
+                            MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.82f),
                         ),
                     ),
                 ),
@@ -264,7 +274,7 @@ fun GlassCard(
                     .background(
                         Brush.verticalGradient(
                             listOf(
-                                MaterialTheme.colorScheme.primary.copy(alpha = 0.08f),
+                                MaterialTheme.colorScheme.primary.copy(alpha = 0.055f),
                                 Color.Transparent,
                             ),
                         ),
@@ -287,12 +297,14 @@ fun HighlightPill(
 ) {
     Surface(
         modifier = modifier,
-        shape = RoundedCornerShape(8.dp),
-        color = tint.copy(alpha = 0.14f),
-        border = BorderStroke(1.dp, tint.copy(alpha = 0.18f)),
+        shape = AuraControlShape,
+        color = tint.copy(alpha = 0.12f),
+        border = BorderStroke(1.dp, tint.copy(alpha = 0.2f)),
     ) {
         Row(
-            modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
+            modifier = Modifier
+                .heightIn(min = 32.dp)
+                .padding(horizontal = 10.dp, vertical = 6.dp),
             horizontalArrangement = Arrangement.spacedBy(6.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
@@ -324,20 +336,22 @@ fun CompactSearchField(
     onClear: (() -> Unit)? = null,
     keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
     keyboardActions: KeyboardActions = KeyboardActions.Default,
-    shape: Shape = RoundedCornerShape(10.dp),
+    shape: Shape = AuraControlShape,
 ) {
     var isFocused by remember { mutableStateOf(false) }
 
     Surface(
-        modifier = modifier.height(44.dp),
-        color = MaterialTheme.colorScheme.surface.copy(alpha = if (isFocused) 0.78f else 0.62f),
+        modifier = modifier
+            .heightIn(min = AuraMinimumTouchTarget)
+            .semantics { contentDescription = placeholder },
+        color = MaterialTheme.colorScheme.surfaceContainer.copy(alpha = if (isFocused) 0.92f else 0.72f),
         shape = shape,
         border = BorderStroke(
             1.dp,
             if (isFocused) {
                 MaterialTheme.colorScheme.primary.copy(alpha = 0.72f)
             } else {
-                MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.42f)
+                MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.34f)
             },
         ),
         tonalElevation = 0.dp,
@@ -353,7 +367,7 @@ fun CompactSearchField(
                 imageVector = leadingIcon,
                 contentDescription = null,
                 tint = leadingTint,
-                modifier = Modifier.size(18.dp),
+                modifier = Modifier.size(19.dp),
             )
 
             BasicTextField(
@@ -362,7 +376,7 @@ fun CompactSearchField(
                 modifier = Modifier
                     .weight(1f)
                     .onFocusChanged { isFocused = it.isFocused },
-                textStyle = MaterialTheme.typography.bodyMedium.copy(
+                textStyle = MaterialTheme.typography.bodyLarge.copy(
                     color = MaterialTheme.colorScheme.onSurface,
                 ),
                 singleLine = true,
@@ -377,7 +391,7 @@ fun CompactSearchField(
                         if (value.isEmpty()) {
                             Text(
                                 text = placeholder,
-                                style = MaterialTheme.typography.bodyMedium,
+                                style = MaterialTheme.typography.bodyLarge,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f),
                                 maxLines = 1,
                                 overflow = TextOverflow.Ellipsis,
@@ -389,7 +403,7 @@ fun CompactSearchField(
             )
 
             if (value.isNotEmpty() && onClear != null) {
-                IconButton(onClick = onClear, modifier = Modifier.size(36.dp)) {
+                IconButton(onClick = onClear, modifier = Modifier.size(AuraMinimumTouchTarget)) {
                     Icon(Icons.Default.Close, contentDescription = "Clear", modifier = Modifier.size(14.dp))
                 }
             }
@@ -425,13 +439,13 @@ fun SourceBadge(source: String, modifier: Modifier = Modifier) {
 
     Surface(
         color = color.copy(alpha = 0.16f),
-        shape = RoundedCornerShape(10.dp),
+        shape = AuraControlShape,
         modifier = modifier,
         border = BorderStroke(1.dp, color.copy(alpha = 0.12f)),
     ) {
         Text(
             label,
-            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+            modifier = Modifier.padding(horizontal = 8.dp, vertical = 5.dp),
             style = MaterialTheme.typography.labelMedium,
             color = color,
         )
@@ -444,6 +458,7 @@ data class AuraStateAction(
     val onClick: () -> Unit,
 )
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun AuraStateCard(
     icon: ImageVector,
@@ -456,14 +471,14 @@ fun AuraStateCard(
 ) {
     GlassCard(
         modifier = modifier.fillMaxWidth(),
-        contentPadding = PaddingValues(20.dp),
-        highlightHeight = 88.dp,
-        shadowElevation = 3.dp,
+        contentPadding = PaddingValues(18.dp),
+        highlightHeight = 76.dp,
+        shadowElevation = 2.dp,
     ) {
         Surface(
-            shape = RoundedCornerShape(10.dp),
-            color = tone.copy(alpha = 0.12f),
-            border = BorderStroke(1.dp, tone.copy(alpha = 0.18f)),
+            shape = AuraIconTileShape,
+            color = tone.copy(alpha = 0.11f),
+            border = BorderStroke(1.dp, tone.copy(alpha = 0.2f)),
         ) {
             Icon(
                 imageVector = icon,
@@ -489,14 +504,16 @@ fun AuraStateCard(
         )
         if (primaryAction != null || secondaryAction != null) {
             Spacer(Modifier.height(16.dp))
-            Row(
+            FlowRow(
+                modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(10.dp),
-                verticalAlignment = Alignment.CenterVertically,
+                verticalArrangement = Arrangement.spacedBy(8.dp),
             ) {
                 primaryAction?.let { action ->
                     Button(
                         onClick = action.onClick,
-                        shape = RoundedCornerShape(10.dp),
+                        shape = AuraControlShape,
+                        modifier = Modifier.heightIn(min = AuraMinimumTouchTarget),
                     ) {
                         Icon(action.icon, contentDescription = null, modifier = Modifier.size(16.dp))
                         Spacer(Modifier.width(6.dp))
@@ -506,7 +523,8 @@ fun AuraStateCard(
                 secondaryAction?.let { action ->
                     OutlinedButton(
                         onClick = action.onClick,
-                        shape = RoundedCornerShape(10.dp),
+                        shape = AuraControlShape,
+                        modifier = Modifier.heightIn(min = AuraMinimumTouchTarget),
                     ) {
                         Icon(action.icon, contentDescription = null, modifier = Modifier.size(16.dp))
                         Spacer(Modifier.width(6.dp))
