@@ -6,6 +6,7 @@ import android.util.Log
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
@@ -346,7 +347,7 @@ fun VideoWallpapersScreen(
 
             FilledTonalIconButton(
                 onClick = { galleryLauncher.launch(videoWallpaperMimeTypes()) },
-                modifier = Modifier.size(34.dp),
+                modifier = Modifier.size(48.dp),
             ) {
                 Icon(Icons.Default.FolderOpen, "Video or GIF from gallery", modifier = Modifier.size(16.dp))
             }
@@ -642,8 +643,9 @@ private fun VideoCard(
     }
 
     Card(
-        shape = RoundedCornerShape(12.dp),
+        shape = RoundedCornerShape(8.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.24f)),
     ) {
         Box {
             // ExoPlayer video or loading placeholder
@@ -673,7 +675,7 @@ private fun VideoCard(
                     modifier = Modifier
                         .fillMaxWidth()
                         .aspectRatio(previewAspectRatio)
-                        .clip(RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp)),
+                        .clip(RoundedCornerShape(topStart = 8.dp, topEnd = 8.dp)),
                 )
             } else {
                 // Static thumbnail for non-focused cards; show spinner only while unresolved
@@ -779,7 +781,7 @@ private fun VideoCard(
                     metadataBadges.forEach { badge ->
                         Surface(
                             color = MaterialTheme.colorScheme.primary.copy(alpha = 0.08f),
-                            shape = RoundedCornerShape(10.dp),
+                            shape = RoundedCornerShape(8.dp),
                         ) {
                             Text(
                                 badge,
@@ -792,19 +794,19 @@ private fun VideoCard(
                 }
             }
             // Vote buttons
-            IconButton(onClick = onUpvote, modifier = Modifier.size(36.dp)) {
+            IconButton(onClick = onUpvote, modifier = Modifier.size(48.dp)) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(Icons.Default.ThumbUp, "Upvote video", Modifier.size(16.dp), tint = MaterialTheme.colorScheme.primary)
                     if (voteCount > 0) Text("$voteCount", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.primary, modifier = Modifier.padding(start = 2.dp))
                 }
             }
-            IconButton(onClick = onDownvote, modifier = Modifier.size(36.dp)) {
+            IconButton(onClick = onDownvote, modifier = Modifier.size(48.dp)) {
                 Icon(Icons.Default.VisibilityOff, "Hide video", Modifier.size(16.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant)
             }
             if (onPreview != null) {
                 IconButton(
                     onClick = onPreview,
-                    modifier = Modifier.size(36.dp),
+                    modifier = Modifier.size(48.dp),
                 ) {
                     Icon(
                         Icons.Default.Visibility,
@@ -818,7 +820,8 @@ private fun VideoCard(
             Button(
                 onClick = onApply,
                 enabled = !isApplying,
-                shape = RoundedCornerShape(12.dp),
+                shape = RoundedCornerShape(8.dp),
+                modifier = Modifier.heightIn(min = 48.dp),
             ) {
                 if (isApplying) {
                     CircularProgressIndicator(Modifier.size(16.dp), strokeWidth = 2.dp, color = Color.White)
@@ -905,8 +908,8 @@ private fun PresentationModeButton(
 ) {
     OutlinedButton(
         onClick = onClick,
-        modifier = modifier.heightIn(min = 44.dp),
-        shape = RoundedCornerShape(10.dp),
+        modifier = modifier.heightIn(min = 48.dp),
+        shape = RoundedCornerShape(8.dp),
         colors = ButtonDefaults.outlinedButtonColors(
             containerColor = if (selected) {
                 MaterialTheme.colorScheme.primaryContainer
