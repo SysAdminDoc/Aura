@@ -264,12 +264,13 @@ Append-only Cycle 4 handoff. Every item below is source-backed in `docs/research
   - Verify: Firebase rules tests for owner delete/admin hide/public read; upload/delete manual pass; public catalog no longer exposes unneeded metadata; removal path documented in privacy policy.
   - Progress 2026-06-06: Cycle 55 added `storagePath` metadata for new sound/wallpaper uploads, private `/owner_uploads/{uid}` indexes, owner repository delete methods, RTDB owner-index rules, and `docs/community-upload-deletion.md`. Cycle 56 added owner-visible detail delete actions. Cycle 57 added tracked Storage rules plus emulator tests for owner-only blob create/delete, public reads, MIME/size ceilings, and unmanaged-path denial. Cycle 58 added RTDB emulator tests for public metadata reads, owner creates/deletes, owner-index privacy, report authorization, quota ledgers, and collection shares. Cycle 60 added private admin takedown receipts that must match current upload `storagePath` handles. Cycle 61 added confirmed admin delete actions that consume those receipts, remove Storage and metadata rows, and record retry state. Cycle 65 added Storage orphan cleanup policy. Cycle 66 added `tools/community_upload_backfill_plan.py`, tests, and `docs/community-upload-backfill.md` for dry-run legacy `storagePath` and owner-index backfill planning. Cycle 67 added private owner/admin deletion tombstones plus `docs/community-deletion-retention-policy.md`. Remaining work: public request copy and live backfill evidence after owner access is confirmed.
 
-- [ ] 🤖 🔬 **P1 — Android 17 Contact Picker and contacts-permission minimization**
+- [~] 🤖 🔬 **P1 — Android 17 Contact Picker and contacts-permission minimization**
   - Why: Per-contact ringtone assignment requests broad contacts read/write permissions immediately on screen entry. Android 17 provides a picker that gives selected-contact read access without broad address-book access.
   - Evidence: `ContactPickerScreen.kt` immediate `READ_CONTACTS`/`WRITE_CONTACTS` launcher; Android 17 Contact Picker docs; Play User Data contact restrictions.
   - Touches: `ContactPickerScreen`, `ContactRingtoneService`, permission copy, Settings privacy screen, API 37 test plan.
   - Acceptance: API 37+ uses system Contact Picker for contact selection; broad read contacts permission is not requested before the user selects a contact; write permission is requested only when needed to set the ringtone; older devices retain a just-in-time fallback.
   - Verify: API 37 picker flow; API 35 fallback flow; deny read/write permissions and confirm app degrades to "choose another apply target"; no automatic prompt on screen entry.
+  - Progress 2026-06-11: Removed the broad `READ_CONTACTS` manifest permission and replaced screen-entry read/write prompts with Android system contact-pick selection plus just-in-time `WRITE_CONTACTS` at ringtone apply. Remaining work: API 37 device/emulator verification and any direct Android 17 Contact Picker API cleanup after the compile-SDK uplift.
 
 - [ ] 🤖 🔬 **P1 — Backup/data-extraction inventory and secret/identity exclusions**
   - Why: Aura excludes DataStore prefs and crash logs, but `allowBackup=true` leaves other state eligible by default, including the main Room DB and `aura_community_identity`.
@@ -564,12 +565,13 @@ Append-only Cycle 10 handoff. Every item below is source-backed in `docs/researc
   - Acceptance: app and baselineprofile modules compile at SDK 37, target SDK 37 is enabled deliberately, AGP meets the documented minimum, metadata skip workaround is removed or justified, Android 17 emulator/device smoke lane exists, and target-37 behavior changes are checklist-gated.
   - Verify: `:app:assembleDebug`, `:app:testDebugUnitTest`, lint/manifest checks where feasible, Android 17 emulator install/smoke, and target-37 compat checklist signed off before release.
 
-- [ ] 🤖 🔬 **P0 — Android 17 Contact Picker migration for contact ringtones**
+- [~] 🤖 🔬 **P0 — Android 17 Contact Picker migration for contact ringtones**
   - Why: Aura requests broad `READ_CONTACTS` and `WRITE_CONTACTS` together, while Android 17 offers selected-contact read access through the system Contact Picker.
   - Evidence: `AndroidManifest.xml`; `ContactPickerScreen.kt`; `ContactRingtoneService.kt`; Android 17 Contact Picker docs; Android 17 target-SDK Contacts Provider behavior notes.
   - Touches: Cycle 4 contact-permission item; contact picker UI, ringtone apply flow, permission copy, privacy/Data safety docs, Play app-content packet.
   - Acceptance: API 37+ selection uses the system Contact Picker without broad `READ_CONTACTS` when possible; any `WRITE_CONTACTS` request is just-in-time for applying or clearing the ringtone; older devices keep a just-in-time fallback; unsupported write cases explain the limitation.
   - Verify: select contact on Android 17 without `READ_CONTACTS`; apply ringtone with/without `WRITE_CONTACTS`; clear ringtone; denied permission path; older-device fallback; Data safety row updated.
+  - Progress 2026-06-11: Local fallback now uses Android contact-pick selection without declaring `READ_CONTACTS`, runtime write permission is requested only on apply, and Data safety/Play/alt-store rows reflect the narrower contact surface. Remaining work: API 37 picker smoke and clear-ringtone flow validation after the Android 17 toolchain lane unlocks.
 
 - [ ] 🤖 🔬 **P1 — Android 17 large-screen/adaptive-layout smoke gate**
   - Why: Target-37 apps cannot rely on orientation/resizability/aspect restrictions on `sw > 600dp` displays, and Aura has no formal window-size-class navigation or list-detail layout code.

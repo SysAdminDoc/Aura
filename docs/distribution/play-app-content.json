@@ -89,7 +89,7 @@
       },
       {
         "formArea": "Contacts",
-        "answer": "Contacts are accessed locally only for per-contact ringtone assignment.",
+        "answer": "Contacts are selected through Android's contact picker and updated locally only for per-contact ringtone assignment.",
         "evidenceRefs": [
           "app/src/main/AndroidManifest.xml",
           "docs/privacy/data-safety.md"
@@ -185,13 +185,8 @@
         "evidenceRefs": ["docs/privacy/data-safety.md"]
       },
       {
-        "name": "android.permission.READ_CONTACTS",
-        "declaration": "Used locally for per-contact ringtone selection.",
-        "evidenceRefs": ["docs/privacy/data-safety.md"]
-      },
-      {
         "name": "android.permission.WRITE_CONTACTS",
-        "declaration": "Used locally to assign the selected ringtone URI to the chosen contact.",
+        "declaration": "Used locally after contact picker selection to assign the selected ringtone URI to the chosen contact.",
         "evidenceRefs": ["docs/privacy/data-safety.md"]
       },
       {

@@ -22,17 +22,10 @@ data class ContactInfo(
 class ContactRingtoneService @Inject constructor(
     @ApplicationContext private val context: Context,
 ) {
-    /** Search contacts by name */
-    suspend fun searchContacts(query: String): List<ContactInfo> = withContext(Dispatchers.IO) {
-        val contacts = mutableListOf<ContactInfo>()
+    suspend fun getContact(contactUri: Uri): ContactInfo? = withContext(Dispatchers.IO) {
         val resolver = context.contentResolver
-
-        val selection = "${ContactsContract.Contacts.DISPLAY_NAME_PRIMARY} LIKE ?"
-        val selectionArgs = arrayOf("%$query%")
-        val sortOrder = "${ContactsContract.Contacts.DISPLAY_NAME_PRIMARY} ASC"
-
         resolver.query(
-            ContactsContract.Contacts.CONTENT_URI,
+            contactUri,
             arrayOf(
                 ContactsContract.Contacts._ID,
                 ContactsContract.Contacts.LOOKUP_KEY,
@@ -40,30 +33,27 @@ class ContactRingtoneService @Inject constructor(
                 ContactsContract.Contacts.PHOTO_THUMBNAIL_URI,
                 ContactsContract.Contacts.CUSTOM_RINGTONE,
             ),
-            selection,
-            selectionArgs,
-            sortOrder,
+            null,
+            null,
+            null,
         )?.use { cursor ->
             val idIdx = cursor.getColumnIndex(ContactsContract.Contacts._ID)
             val lookupIdx = cursor.getColumnIndex(ContactsContract.Contacts.LOOKUP_KEY)
             val nameIdx = cursor.getColumnIndex(ContactsContract.Contacts.DISPLAY_NAME_PRIMARY)
             val photoIdx = cursor.getColumnIndex(ContactsContract.Contacts.PHOTO_THUMBNAIL_URI)
             val ringtoneIdx = cursor.getColumnIndex(ContactsContract.Contacts.CUSTOM_RINGTONE)
-
-            while (cursor.moveToNext()) {
-                if (idIdx < 0 || nameIdx < 0) continue
-                contacts.add(
-                    ContactInfo(
-                        id = cursor.getLong(idIdx),
-                        lookupKey = if (lookupIdx >= 0) cursor.getString(lookupIdx) ?: "" else "",
-                        name = cursor.getString(nameIdx) ?: "Unknown",
-                        photoUri = if (photoIdx >= 0) cursor.getString(photoIdx) else null,
-                        currentRingtoneUri = if (ringtoneIdx >= 0) cursor.getString(ringtoneIdx) else null,
-                    )
+            if (!cursor.moveToFirst() || idIdx < 0 || nameIdx < 0) {
+                null
+            } else {
+                ContactInfo(
+                    id = cursor.getLong(idIdx),
+                    lookupKey = if (lookupIdx >= 0) cursor.getString(lookupIdx) ?: "" else "",
+                    name = cursor.getString(nameIdx) ?: "Unknown",
+                    photoUri = if (photoIdx >= 0) cursor.getString(photoIdx) else null,
+                    currentRingtoneUri = if (ringtoneIdx >= 0) cursor.getString(ringtoneIdx) else null,
                 )
             }
         }
-        contacts
     }
 
     /** Set a custom ringtone for a specific contact */

@@ -215,14 +215,9 @@
       "disclosure": "Optional weather feature; shared only with the reviewed weather endpoint when enabled."
     },
     {
-      "name": "android.permission.READ_CONTACTS",
-      "purpose": "Let the user choose contacts for per-contact ringtone assignment.",
-      "disclosure": "Contacts stay local to the device."
-    },
-    {
       "name": "android.permission.WRITE_CONTACTS",
-      "purpose": "Assign a selected ringtone to a chosen contact.",
-      "disclosure": "Used only after explicit contact ringtone action."
+      "purpose": "Assign a selected ringtone to the contact chosen through Android's picker.",
+      "disclosure": "Used only after explicit contact ringtone action; contact selection stays local to the device."
     }
   ],
   "networkServices": [

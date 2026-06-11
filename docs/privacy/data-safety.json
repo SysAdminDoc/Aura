@@ -168,19 +168,6 @@
       "playDeclaration": "Approximate location disclosure required for weather effects."
     },
     {
-      "name": "android.permission.READ_CONTACTS",
-      "category": "contacts",
-      "purpose": "Search contacts so the user can assign a selected ringtone to one person.",
-      "userAction": "User opens the contact ringtone picker and grants contacts permission.",
-      "dataTypes": ["Contacts"],
-      "collectionStatus": "localOnly",
-      "sharingStatus": "notShared",
-      "retention": "Contact search results are not uploaded and are not stored as Aura user data.",
-      "deletionPath": "Revoke contacts permission or clear app data.",
-      "denialBehavior": "Aura shows contacts permission copy and cannot assign per-contact ringtones.",
-      "playDeclaration": "Sensitive permission; targeted per-contact ringtone feature."
-    },
-    {
       "name": "android.permission.WRITE_CONTACTS",
       "category": "contacts",
       "purpose": "Write the selected ringtone URI to the chosen contact.",

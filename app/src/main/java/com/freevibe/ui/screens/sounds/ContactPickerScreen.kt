@@ -1,16 +1,16 @@
 package com.freevibe.ui.screens.sounds
 
 import android.Manifest
+import android.app.Activity
+import android.content.Intent
 import android.content.pm.PackageManager
+import android.net.Uri
+import android.provider.ContactsContract
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.KeyboardActions
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.*
@@ -18,10 +18,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalFocusManager
-import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
@@ -35,16 +32,12 @@ import com.freevibe.data.remote.toSound
 import com.freevibe.data.repository.FavoritesRepository
 import com.freevibe.ui.components.AuraStateAction
 import com.freevibe.ui.components.AuraStateCard
-import com.freevibe.ui.components.CompactSearchField
-import com.freevibe.ui.components.ShimmerBox
 import com.freevibe.service.BundledContentProvider
 import com.freevibe.service.ContactInfo
 import com.freevibe.service.ContactRingtoneService
 import com.freevibe.service.SoundApplier
 import com.freevibe.service.SoundUrlResolver
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
@@ -56,10 +49,9 @@ import com.freevibe.data.model.SoundActionDecision
 import com.freevibe.data.model.soundLicenseCapabilities
 
 data class ContactPickerState(
-    val contacts: List<ContactInfo> = emptyList(),
+    val selectedContact: ContactInfo? = null,
     val isLoading: Boolean = false,
-    val query: String = "",
-    val hasPermission: Boolean = false,
+    val hasWritePermission: Boolean = false,
     val selectedSound: Sound? = null,
     val isApplying: Boolean = false,
     val applyingContactId: Long? = null,
@@ -83,11 +75,28 @@ class ContactPickerViewModel @Inject constructor(
 
     private val _state = MutableStateFlow(ContactPickerState())
     val state = _state.asStateFlow()
-    private var searchJob: Job? = null
 
-    fun setPermissionGranted(granted: Boolean) {
-        _state.update { it.copy(hasPermission = granted) }
-        if (granted) search(_state.value.query, immediate = true)
+    fun setWritePermissionGranted(granted: Boolean) {
+        _state.update { it.copy(hasWritePermission = granted) }
+    }
+
+    fun loadSelectedContact(contactUri: Uri) {
+        _state.update { it.copy(isLoading = true, error = null, selectedContact = null) }
+        viewModelScope.launch {
+            try {
+                val contact = contactService.getContact(contactUri)
+                _state.update {
+                    it.copy(
+                        selectedContact = contact,
+                        isLoading = false,
+                        error = if (contact == null) "Aura could not read the selected contact." else null,
+                    )
+                }
+            } catch (e: Exception) {
+                if (e is kotlinx.coroutines.CancellationException) throw e
+                _state.update { it.copy(isLoading = false, error = e.message) }
+            }
+        }
     }
 
     suspend fun ensureSelectedSound(soundId: String, fallbackSound: Sound?): Boolean {
@@ -103,29 +112,6 @@ class ContactPickerViewModel @Inject constructor(
         }
         _state.update { it.copy(selectedSound = sound, error = null) }
         return true
-    }
-
-    fun search(query: String, immediate: Boolean = false) {
-        searchJob?.cancel()
-        _state.update { it.copy(query = query, isLoading = true, error = null) }
-        searchJob = viewModelScope.launch {
-            try {
-                if (!immediate && query.isNotBlank()) {
-                    delay(250)
-                }
-                val contacts = contactService.searchContacts(query)
-                _state.update { current ->
-                    if (current.query != query) current
-                    else current.copy(contacts = contacts, isLoading = false)
-                }
-            } catch (e: Exception) {
-                if (e is kotlinx.coroutines.CancellationException) throw e
-                _state.update { current ->
-                    if (current.query != query) current
-                    else current.copy(isLoading = false, error = e.message)
-                }
-            }
-        }
     }
 
     fun assignToContact(contactId: Long, confirmed: Boolean = false) {
@@ -203,8 +189,8 @@ fun ContactPickerScreen(
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     val context = LocalContext.current
-    val focusManager = LocalFocusManager.current
     val snackbarHostState = remember { SnackbarHostState() }
+    val scope = rememberCoroutineScope()
     var permissionPermanentlyDenied by remember { mutableStateOf(false) }
     val soundIdentityKey = remember(soundId, fallbackSound?.source, fallbackSound?.previewUrl, fallbackSound?.downloadUrl) {
         listOf(
@@ -216,24 +202,31 @@ fun ContactPickerScreen(
     }
     var soundResolved by remember(soundIdentityKey) { mutableStateOf<Boolean?>(null) }
     var pendingContactAction by remember(soundIdentityKey) { mutableStateOf<PendingContactAction?>(null) }
+    var pendingWriteContactId by remember(soundIdentityKey) { mutableStateOf<Long?>(null) }
 
     LaunchedEffect(soundIdentityKey) {
         soundResolved = viewModel.ensureSelectedSound(soundId, fallbackSound)
     }
 
-    // Permission handling
-    val permissionLauncher = rememberLauncherForActivityResult(
-        ActivityResultContracts.RequestMultiplePermissions()
-    ) { permissions ->
-        val readGranted = permissions[Manifest.permission.READ_CONTACTS] == true
-        val writeGranted = permissions[Manifest.permission.WRITE_CONTACTS] == true
-        if (readGranted && writeGranted) {
-            viewModel.setPermissionGranted(true)
-        } else {
-            viewModel.setPermissionGranted(false)
-            val activity = context as? android.app.Activity
+    val contactPickerLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.StartActivityForResult(),
+    ) { result ->
+        if (result.resultCode == Activity.RESULT_OK) {
+            result.data?.data?.let(viewModel::loadSelectedContact)
+        }
+    }
+
+    val writePermissionLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestPermission(),
+    ) { granted ->
+        viewModel.setWritePermissionGranted(granted)
+        val pendingContactId = pendingWriteContactId
+        pendingWriteContactId = null
+        if (granted && pendingContactId != null) {
+            viewModel.assignToContact(pendingContactId, confirmed = true)
+        } else if (!granted) {
+            val activity = context as? Activity
             if (activity != null &&
-                !activity.shouldShowRequestPermissionRationale(Manifest.permission.READ_CONTACTS) &&
                 !activity.shouldShowRequestPermissionRationale(Manifest.permission.WRITE_CONTACTS)
             ) {
                 permissionPermanentlyDenied = true
@@ -242,20 +235,11 @@ fun ContactPickerScreen(
     }
 
     LaunchedEffect(Unit) {
-        val hasRead = ContextCompat.checkSelfPermission(
-            context, Manifest.permission.READ_CONTACTS
-        ) == PackageManager.PERMISSION_GRANTED
         val hasWrite = ContextCompat.checkSelfPermission(
             context, Manifest.permission.WRITE_CONTACTS
         ) == PackageManager.PERMISSION_GRANTED
 
-        if (hasRead && hasWrite) {
-            viewModel.setPermissionGranted(true)
-        } else {
-            permissionLauncher.launch(
-                arrayOf(Manifest.permission.READ_CONTACTS, Manifest.permission.WRITE_CONTACTS)
-            )
-        }
+        viewModel.setWritePermissionGranted(hasWrite)
     }
 
     LaunchedEffect(state.success) {
@@ -263,6 +247,41 @@ fun ContactPickerScreen(
     }
     LaunchedEffect(state.error) {
         state.error?.let { snackbarHostState.showSnackbar("Error: $it"); viewModel.clearMessages() }
+    }
+
+    fun launchSystemContactPicker() {
+        val intent = Intent(Intent.ACTION_PICK, ContactsContract.Contacts.CONTENT_URI)
+        try {
+            contactPickerLauncher.launch(intent)
+        } catch (_: Exception) {
+            scope.launch { snackbarHostState.showSnackbar("No contact picker is available on this device.") }
+        }
+    }
+
+    fun requestWriteOrAssign(contactId: Long) {
+        val hasWrite = ContextCompat.checkSelfPermission(
+            context,
+            Manifest.permission.WRITE_CONTACTS,
+        ) == PackageManager.PERMISSION_GRANTED
+        if (hasWrite) {
+            viewModel.setWritePermissionGranted(true)
+            viewModel.assignToContact(contactId, confirmed = true)
+        } else {
+            pendingWriteContactId = contactId
+            writePermissionLauncher.launch(Manifest.permission.WRITE_CONTACTS)
+        }
+    }
+
+    fun assignWithPolicy(contactId: Long) {
+        val sound = state.selectedSound ?: return
+        val capability = sound.soundLicenseCapabilities().capability(SoundAction.APPLY)
+        when (capability.decision) {
+            SoundActionDecision.ALLOWED -> requestWriteOrAssign(contactId)
+            SoundActionDecision.CONFIRMATION_REQUIRED -> {
+                pendingContactAction = PendingContactAction(contactId, capability.reason)
+            }
+            SoundActionDecision.DISABLED -> Unit
+        }
     }
 
     pendingContactAction?.let { pending ->
@@ -274,7 +293,7 @@ fun ContactPickerScreen(
                 TextButton(
                     onClick = {
                         pendingContactAction = null
-                        viewModel.assignToContact(pending.contactId, confirmed = true)
+                        requestWriteOrAssign(pending.contactId)
                     },
                 ) {
                     Text("Continue")
@@ -286,18 +305,6 @@ fun ContactPickerScreen(
                 }
             },
         )
-    }
-
-    fun assignWithPolicy(contactId: Long) {
-        val sound = state.selectedSound ?: return
-        val capability = sound.soundLicenseCapabilities().capability(SoundAction.APPLY)
-        when (capability.decision) {
-            SoundActionDecision.ALLOWED -> viewModel.assignToContact(contactId, confirmed = true)
-            SoundActionDecision.CONFIRMATION_REQUIRED -> {
-                pendingContactAction = PendingContactAction(contactId, capability.reason)
-            }
-            SoundActionDecision.DISABLED -> Unit
-        }
     }
 
     Scaffold(
@@ -343,51 +350,6 @@ fun ContactPickerScreen(
                 true -> Unit
             }
 
-            if (!state.hasPermission) {
-                Box(Modifier.fillMaxSize().padding(20.dp), contentAlignment = Alignment.Center) {
-                    if (permissionPermanentlyDenied) {
-                        AuraStateCard(
-                            icon = Icons.Default.Contacts,
-                            title = "Contacts access is off",
-                            description = "Enable contacts permission in Android settings so Aura can assign this sound to one person.",
-                            tone = MaterialTheme.colorScheme.tertiary,
-                            primaryAction = AuraStateAction(
-                                label = "Open settings",
-                                icon = Icons.Default.Settings,
-                                onClick = {
-                                    val intent = android.content.Intent(android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
-                                        data = android.net.Uri.fromParts("package", context.packageName, null)
-                                    }
-                                    try { context.startActivity(intent) } catch (_: Exception) {}
-                                },
-                            ),
-                        )
-                    } else {
-                        AuraStateCard(
-                            icon = Icons.Default.Contacts,
-                            title = "Allow contacts access",
-                            description = "Aura needs read and write contacts permission to set a custom ringtone for a selected contact.",
-                            tone = MaterialTheme.colorScheme.primary,
-                            primaryAction = AuraStateAction(
-                                label = "Allow contacts",
-                                icon = Icons.Default.Check,
-                                onClick = {
-                                    permissionLauncher.launch(
-                                        arrayOf(Manifest.permission.READ_CONTACTS, Manifest.permission.WRITE_CONTACTS)
-                                    )
-                                },
-                            ),
-                            secondaryAction = AuraStateAction(
-                                label = "Back",
-                                icon = Icons.AutoMirrored.Filled.ArrowBack,
-                                onClick = onBack,
-                            ),
-                        )
-                    }
-                }
-                return@Scaffold
-            }
-
             state.selectedSound?.let { sound ->
                 Surface(
                     modifier = Modifier
@@ -427,59 +389,52 @@ fun ContactPickerScreen(
                 }
             }
 
-            CompactSearchField(
-                value = state.query,
-                onValueChange = { viewModel.search(it) },
-                placeholder = "Search contacts",
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 8.dp),
-                leadingIcon = Icons.Default.Search,
-                onClear = { viewModel.search("", immediate = true); focusManager.clearFocus() },
-                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
-                keyboardActions = KeyboardActions(onSearch = { focusManager.clearFocus() }),
-            )
-
             if (state.isLoading) {
-                ContactListSkeleton()
-            } else if (state.contacts.isEmpty()) {
+                Box(Modifier.fillMaxSize().padding(20.dp), contentAlignment = Alignment.Center) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        CircularProgressIndicator(strokeWidth = 2.dp)
+                        Spacer(Modifier.height(12.dp))
+                        Text("Reading selected contact...", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    }
+                }
+            } else if (state.selectedContact == null) {
                 Box(Modifier.fillMaxSize().padding(20.dp), contentAlignment = Alignment.Center) {
                     AuraStateCard(
-                        icon = Icons.Default.PersonSearch,
-                        title = if (state.query.isNotBlank()) "No matching contacts" else "No contacts found",
-                        description = if (state.query.isNotBlank()) {
-                            "Try a different name or clear the search to show all contacts."
-                        } else {
-                            "Aura could not find contacts on this device after permission was granted."
-                        },
-                        tone = MaterialTheme.colorScheme.tertiary,
-                        primaryAction = if (state.query.isNotBlank()) {
-                            AuraStateAction("Clear search", Icons.Default.Close) {
-                                viewModel.search("", immediate = true)
-                                focusManager.clearFocus()
-                            }
-                        } else {
-                            null
-                        },
+                        icon = Icons.Default.Contacts,
+                        title = "Pick a contact",
+                        description = "Use Android's contact picker so Aura only receives the person you choose. Contact updates are requested later if you apply the ringtone.",
+                        tone = MaterialTheme.colorScheme.primary,
+                        primaryAction = AuraStateAction("Pick contact", Icons.Default.PersonSearch, ::launchSystemContactPicker),
+                        secondaryAction = AuraStateAction("Back", Icons.AutoMirrored.Filled.ArrowBack, onBack),
                     )
                 }
             } else {
-                LazyColumn(
-                    contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
-                    verticalArrangement = Arrangement.spacedBy(6.dp),
+                val contact = state.selectedContact ?: return@Scaffold
+                val canApplySelectedSound = state.selectedSound
+                    ?.soundLicenseCapabilities()
+                    ?.canUse(SoundAction.APPLY)
+                    ?: false
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 8.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp),
                 ) {
-                    val canApplySelectedSound = state.selectedSound
-                        ?.soundLicenseCapabilities()
-                        ?.canUse(SoundAction.APPLY)
-                        ?: false
-                    items(state.contacts, key = { it.id }) { contact ->
-                        ContactRow(
-                            contact = contact,
-                            enabled = !state.isApplying && canApplySelectedSound,
-                            isApplying = state.applyingContactId == contact.id,
-                            onClick = { assignWithPolicy(contact.id) },
-                        )
-                    }
+                    ContactAssignmentCard(
+                        contact = contact,
+                        enabled = !state.isApplying && canApplySelectedSound,
+                        isApplying = state.applyingContactId == contact.id,
+                        writePermissionGranted = state.hasWritePermission,
+                        permissionPermanentlyDenied = permissionPermanentlyDenied,
+                        onChangeContact = ::launchSystemContactPicker,
+                        onOpenSettings = {
+                            val intent = Intent(android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
+                                data = Uri.fromParts("package", context.packageName, null)
+                            }
+                            try { context.startActivity(intent) } catch (_: Exception) {}
+                        },
+                        onApply = { assignWithPolicy(contact.id) },
+                    )
                 }
             }
         }
@@ -487,102 +442,104 @@ fun ContactPickerScreen(
 }
 
 @Composable
-private fun ContactListSkeleton() {
-    LazyColumn(
-        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 10.dp),
-        verticalArrangement = Arrangement.spacedBy(6.dp),
-    ) {
-        items(8) {
-            Surface(
-                shape = RoundedCornerShape(12.dp),
-                color = MaterialTheme.colorScheme.surfaceContainer,
-            ) {
-                Row(
-                    Modifier.fillMaxWidth().padding(12.dp),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    ShimmerBox(Modifier.size(44.dp), shape = RoundedCornerShape(10.dp))
-                    Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                        ShimmerBox(Modifier.width(150.dp).height(14.dp), shape = RoundedCornerShape(5.dp))
-                        ShimmerBox(Modifier.width(96.dp).height(10.dp), shape = RoundedCornerShape(5.dp))
-                    }
-                }
-            }
-        }
-    }
-}
-
-@Composable
-private fun ContactRow(
+private fun ContactAssignmentCard(
     contact: ContactInfo,
     enabled: Boolean,
     isApplying: Boolean,
-    onClick: () -> Unit,
+    writePermissionGranted: Boolean,
+    permissionPermanentlyDenied: Boolean,
+    onChangeContact: () -> Unit,
+    onOpenSettings: () -> Unit,
+    onApply: () -> Unit,
 ) {
     Surface(
-        onClick = onClick,
-        enabled = enabled,
         shape = RoundedCornerShape(12.dp),
-        color = MaterialTheme.colorScheme.surfaceContainer.copy(alpha = if (isApplying) 1f else 0.62f),
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = if (enabled) 0.22f else 0.1f)),
+        color = MaterialTheme.colorScheme.surfaceContainer,
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.22f)),
     ) {
-        Row(
+        Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .alpha(if (enabled || isApplying) 1f else 0.55f)
-                .padding(vertical = 10.dp, horizontal = 12.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
+                .padding(14.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
-            Surface(
-                modifier = Modifier.size(44.dp),
-                shape = RoundedCornerShape(10.dp),
-                color = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f),
-                border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.14f)),
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
             ) {
-                Box(contentAlignment = Alignment.Center) {
+                Surface(
+                    modifier = Modifier.size(48.dp),
+                    shape = RoundedCornerShape(12.dp),
+                    color = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f),
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.14f)),
+                ) {
+                    Box(contentAlignment = Alignment.Center) {
+                        Text(
+                            contact.name.take(1).uppercase(Locale.ROOT).ifBlank { "?" },
+                            style = MaterialTheme.typography.titleMedium,
+                            color = MaterialTheme.colorScheme.primary,
+                        )
+                    }
+                }
+                Column(modifier = Modifier.weight(1f)) {
                     Text(
-                        contact.name.take(1).uppercase(Locale.ROOT).ifBlank { "?" },
+                        contact.name,
                         style = MaterialTheme.typography.titleMedium,
-                        color = MaterialTheme.colorScheme.primary,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                    Text(
+                        if (contact.currentRingtoneUri != null) "Custom ringtone set" else "Selected from Android contact picker",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
             }
 
-            Column(modifier = Modifier.weight(1f)) {
+            if (!writePermissionGranted) {
                 Text(
-                    contact.name,
-                    style = MaterialTheme.typography.titleMedium,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                )
-                Text(
-                    if (isApplying) {
-                        "Assigning ringtone..."
-                    } else if (contact.currentRingtoneUri != null) {
-                        "Custom ringtone set"
+                    text = if (permissionPermanentlyDenied) {
+                        "Contact update permission is off. Open Android settings to allow Aura to write the selected ringtone to this contact."
                     } else {
-                        "Tap to assign"
+                        "Aura will ask for contact update permission only when you apply this ringtone."
                     },
-                    style = MaterialTheme.typography.labelSmall,
-                    color = if (contact.currentRingtoneUri != null || isApplying) {
-                        MaterialTheme.colorScheme.secondary
-                    } else {
-                        MaterialTheme.colorScheme.onSurfaceVariant
-                    },
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
 
-            if (isApplying) {
-                CircularProgressIndicator(Modifier.size(18.dp), strokeWidth = 2.dp)
-            } else {
-                Icon(
-                    Icons.Default.ChevronRight,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.size(20.dp),
-                )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                OutlinedButton(onClick = onChangeContact, enabled = !isApplying) {
+                    Icon(Icons.Default.PersonSearch, contentDescription = null, modifier = Modifier.size(18.dp))
+                    Spacer(Modifier.width(6.dp))
+                    Text("Change")
+                }
+                if (permissionPermanentlyDenied && !writePermissionGranted) {
+                    Button(onClick = onOpenSettings, enabled = !isApplying) {
+                        Icon(Icons.Default.Settings, contentDescription = null, modifier = Modifier.size(18.dp))
+                        Spacer(Modifier.width(6.dp))
+                        Text("Settings")
+                    }
+                } else {
+                    Button(onClick = onApply, enabled = enabled) {
+                        if (isApplying) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(18.dp),
+                                strokeWidth = 2.dp,
+                                color = MaterialTheme.colorScheme.onPrimary,
+                            )
+                        } else {
+                            Icon(Icons.Default.Check, contentDescription = null, modifier = Modifier.size(18.dp))
+                        }
+                        Spacer(Modifier.width(6.dp))
+                        Text(if (isApplying) "Applying" else "Apply")
+                    }
+                }
             }
         }
     }
