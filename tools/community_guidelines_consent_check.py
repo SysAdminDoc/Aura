@@ -65,9 +65,6 @@ REQUIRED_CODE_MARKERS = {
     "app/src/main/java/com/freevibe/data/repository/VoteRepository.kt": [
         "prefs.communityGuidelinesAccepted.first()",
     ],
-    "app/src/main/java/com/freevibe/FreeVibeApp.kt": [
-        "prefs.communityGuidelinesAccepted.first()",
-    ],
 }
 
 

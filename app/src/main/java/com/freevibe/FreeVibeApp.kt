@@ -14,9 +14,7 @@ import com.freevibe.data.local.WallpaperCacheManager
 import com.freevibe.service.CrashDiagnosticsCollector
 import com.freevibe.service.CrashDiagnosticsText
 import com.freevibe.service.AppCheckInstaller
-import com.freevibe.service.CommunityIdentityProvider
 import com.freevibe.service.OfflineFavoritesManager
-import com.freevibe.service.SourceMetrics
 import dagger.hilt.android.HiltAndroidApp
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -46,16 +44,7 @@ class FreeVibeApp : Application(), Configuration.Provider, ImageLoaderFactory {
     lateinit var offlineFavoritesManager: OfflineFavoritesManager
 
     @Inject
-    lateinit var communityIdentityProvider: CommunityIdentityProvider
-
-    @Inject
-    lateinit var voteRepository: com.freevibe.data.repository.VoteRepository
-
-    @Inject
     lateinit var systemThemeListener: com.freevibe.service.SystemThemeListener
-
-    @Inject
-    lateinit var sourceMetrics: SourceMetrics
 
     private val appScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
@@ -86,7 +75,6 @@ class FreeVibeApp : Application(), Configuration.Provider, ImageLoaderFactory {
         installAppCheck()
         createMediaNotificationChannel()
         evictStaleCaches()
-        warmCommunityIdentity()
         startSystemThemeListener()
         initYtDlp()
         enqueueAuraOriginalsDownload()
@@ -203,34 +191,6 @@ class FreeVibeApp : Application(), Configuration.Provider, ImageLoaderFactory {
             } catch (e: Exception) {
                 if (e is kotlinx.coroutines.CancellationException) throw e
                 if (BuildConfig.DEBUG) Log.w("FreeVibeApp", "Cache eviction failed", e)
-            }
-        }
-    }
-
-    private fun warmCommunityIdentity() {
-        appScope.launch {
-            try {
-                val prefs = com.freevibe.data.local.PreferencesManager(this@FreeVibeApp)
-                if (!prefs.communityProviderEnabled.first()) {
-                    sourceMetrics.recordDisabled("community")
-                    return@launch
-                }
-                if (!prefs.communityGuidelinesAccepted.first()) {
-                    sourceMetrics.recordDisabled("community")
-                    return@launch
-                }
-                communityIdentityProvider.ensureSignedIn()
-                // Refresh admin Custom Claim once the user is signed in. This is the
-                // server-side source of truth for moderation privileges (the legacy
-                // device-ID hash fallback in VoteRepository stays during the
-                // migration window per ROADMAP N-2).
-                voteRepository.refreshAdminFromClaims()
-            } catch (e: Exception) {
-                if (e is kotlinx.coroutines.CancellationException) throw e
-                // Firebase auth can fail at launch (airplane mode, cold-start network race, etc).
-                // Swallow + log — community features degrade gracefully when unsigned; this must
-                // not crash the app at startup or it'll hit the uncaught-handler we just wired up.
-                if (BuildConfig.DEBUG) Log.w("FreeVibeApp", "Community warm-up failed", e)
             }
         }
     }

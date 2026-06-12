@@ -247,6 +247,9 @@ jobs:
       - name: Room schema history gate
         run: python3 tools/room_schema_history_check.py --repo-root .
 
+      - name: Community identity laziness
+        run: python3 tools/community_identity_laziness_check.py --repo-root .
+
       - name: Backend tool unit tests
         run: python3 -m unittest discover -s test/tools -p '*_test.py'
 

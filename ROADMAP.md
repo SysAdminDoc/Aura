@@ -585,13 +585,6 @@ Append-only Cycle 11 handoff. Every item below is source-backed in `docs/researc
 
 Append-only Cycle 12 handoff. Every item below is source-backed in `docs/research/cycle-12-2026-06-04.md`; merge into the existing Now/Next/Later item named in `Touches` when implementation starts.
 
-- [ ] 🤖 🔬 **P0 — Lazy community identity creation and consent boundary**
-  - Why: Aura advertises "no account required," but startup currently calls `CommunityIdentityProvider.ensureSignedIn()`, which can create a Firebase anonymous account before the user uploads, votes, follows, or opens creator profile.
-  - Evidence: `FreeVibeApp.warmCommunityIdentity()`; `CommunityIdentityProvider.ensureSignedIn()`; fastlane "no account required" copy; Firebase anonymous-auth docs; Play account-deletion guidance.
-  - Touches: app startup warm-up, community write flows, creator profile entry, admin-claim refresh, privacy/Data safety docs, fastlane metadata.
-  - Acceptance: fresh install and public community browsing do not create a Firebase Auth user; anonymous identity is created only after an explicit community write/profile action; the UI labels the current identity type before writes; admin custom-claim refresh is lazy or behind an admin-only path.
-  - Verify: fresh install with network and Firebase configured, inspect Auth/current-user state before browsing; open public community feed; then upload/vote/follow/open creator profile and confirm identity creation plus auth label.
-
 - [ ] 🤖 🔬 **P0 — Accountless community deletion contract**
   - Why: Anonymous community data spans Auth, RTDB, Storage, local identity prefs, votes, follows, creator profile state, and public uploads; deleting only the Firebase user would orphan public data.
   - Evidence: `CommunityIdentityProvider`; `UploadRepository`; `WallpaperUploadRepository`; `VoteRepository`; `CreatorProfileRepository`; `database.rules.json`; Play account-deletion and Data safety docs; Firebase Auth/RTDB/Storage delete docs.

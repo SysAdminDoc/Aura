@@ -135,7 +135,7 @@
       "reportAndBlockAvailable": true,
       "moderationQueueAvailable": true,
       "termsOrGuidelinesStatus": "implemented",
-      "answer": "Aura requires users to accept versioned Community Guidelines before community feeds, uploads, votes, reports, blocks, follows, profiles, or startup community identity warm-up can proceed.",
+      "answer": "Aura requires users to accept versioned Community Guidelines before community feeds, uploads, votes, reports, blocks, follows, or profiles can proceed. Fresh installs do not create a Firebase community identity until an explicit community action needs one.",
       "evidenceRefs": [
         "docs/legal/community-guidelines.md",
         "app/src/main/java/com/freevibe/data/model/CommunityGuidelinesPolicy.kt",
