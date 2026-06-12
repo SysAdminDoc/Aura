@@ -1,8 +1,12 @@
 package com.freevibe.ui.screens.editor
 
+import com.freevibe.data.model.ContentSource
+import com.freevibe.data.model.Sound
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertNotEquals
+import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
@@ -101,4 +105,54 @@ class SoundEditorViewModelTest {
 
         assertNotEquals(first, second)
     }
+
+    @Test
+    fun `editor blocks sounds whose edit action is disabled`() {
+        val message = soundEditorEditGateMessage(
+            sound = sound(source = ContentSource.YOUTUBE, license = "YouTube"),
+            editConfirmed = true,
+        )
+
+        assertNotNull(message)
+        assertTrue(message!!.contains("cannot be trimmed", ignoreCase = true))
+    }
+
+    @Test
+    fun `editor requires confirmation for non-commercial licensed sounds`() {
+        val sound = sound(
+            source = ContentSource.FREESOUND,
+            license = "CC BY-NC",
+            sourcePageUrl = "https://freesound.org/s/123",
+            uploaderName = "creator",
+        )
+
+        assertNotNull(soundEditorEditGateMessage(sound, editConfirmed = false))
+        assertNull(soundEditorEditGateMessage(sound, editConfirmed = true))
+    }
+
+    @Test
+    fun `editor allows local user files without confirmation`() {
+        val message = soundEditorEditGateMessage(
+            sound = sound(source = ContentSource.LOCAL, license = ""),
+            editConfirmed = false,
+        )
+
+        assertNull(message)
+    }
+
+    private fun sound(
+        source: ContentSource,
+        license: String,
+        sourcePageUrl: String = "https://example.com/source",
+        uploaderName: String = "uploader",
+    ) = Sound(
+        id = "sound_1",
+        source = source,
+        name = "Sound",
+        previewUrl = "https://example.com/preview.mp3",
+        downloadUrl = "https://example.com/download.mp3",
+        license = license,
+        sourcePageUrl = sourcePageUrl,
+        uploaderName = uploaderName,
+    )
 }

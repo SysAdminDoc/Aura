@@ -536,7 +536,7 @@ fun FreeVibeRoot(
                     soundId = soundId,
                     fallbackSound = fallbackSound,
                     onBack = { navController.popBackStack() },
-                    onEdit = { sound -> navController.navigate(Screen.SoundEditor.createRoute(sound)) { launchSingleTop = true } },
+                    onEdit = { sound -> navController.navigate(Screen.SoundEditor.createRoute(sound, editConfirmed = true)) { launchSingleTop = true } },
                     onContactPicker = { sound ->
                         navController.navigate(Screen.ContactPicker.createRoute(sound)) { launchSingleTop = true }
                     },
@@ -786,11 +786,16 @@ fun FreeVibeRoot(
                         type = NavType.StringType
                         nullable = true
                         defaultValue = null
+                    },
+                    navArgument("editConfirmed") {
+                        type = NavType.BoolType
+                        defaultValue = false
                     }
                 )
             ) { backStackEntry ->
                 val soundId = backStackEntry.arguments?.getString("soundId").orEmpty().ifBlank { null }
                 val localUri = backStackEntry.arguments?.getString("localUri").orEmpty().ifBlank { null }
+                val editConfirmed = backStackEntry.arguments?.getBoolean("editConfirmed") ?: false
                 val fallbackSound = soundId?.let { id ->
                     backStackEntry.arguments?.getString("name")
                         ?.takeIf { it.isNotBlank() }
@@ -813,6 +818,7 @@ fun FreeVibeRoot(
                     soundId = soundId,
                     fallbackSound = fallbackSound,
                     initialLocalUri = localUri?.let(Uri::parse),
+                    editConfirmed = editConfirmed,
                     onBack = { navController.popBackStack() },
                 )
             }

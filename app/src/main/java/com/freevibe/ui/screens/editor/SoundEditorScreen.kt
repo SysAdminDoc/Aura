@@ -51,6 +51,7 @@ fun SoundEditorScreen(
     soundId: String? = null,
     fallbackSound: Sound? = null,
     initialLocalUri: Uri? = null,
+    editConfirmed: Boolean = false,
     onBack: () -> Unit,
     recoveryViewModel: com.freevibe.ui.screens.sounds.SoundsViewModel = androidx.hilt.navigation.compose.hiltViewModel(),
     viewModel: SoundEditorViewModel = androidx.hilt.navigation.compose.hiltViewModel(),
@@ -93,13 +94,14 @@ fun SoundEditorScreen(
         runCatching { context.startActivity(viewModel.requestWriteSettings()) }
             .onFailure { scope.launch { snackbarHostState.showSnackbar(writeSettingsUnavailable) } }
     }
-    val editorIdentityKey = remember(soundId, fallbackSound?.source, fallbackSound?.previewUrl, fallbackSound?.downloadUrl, initialLocalUri) {
+    val editorIdentityKey = remember(soundId, fallbackSound?.source, fallbackSound?.previewUrl, fallbackSound?.downloadUrl, initialLocalUri, editConfirmed) {
         listOf(
             soundId.orEmpty(),
             fallbackSound?.source?.name.orEmpty(),
             fallbackSound?.previewUrl.orEmpty(),
             fallbackSound?.downloadUrl.orEmpty(),
             initialLocalUri?.toString().orEmpty(),
+            editConfirmed.toString(),
         ).joinToString("|")
     }
     var selectionResolved by remember(editorIdentityKey) {
@@ -123,7 +125,7 @@ fun SoundEditorScreen(
     LaunchedEffect(state.error) {
         state.error?.let { snackbarHostState.showSnackbar("Error: $it"); viewModel.clearMessages() }
     }
-    LaunchedEffect(soundId, fallbackSound?.source, fallbackSound?.previewUrl, fallbackSound?.downloadUrl) {
+    LaunchedEffect(soundId, fallbackSound?.source, fallbackSound?.previewUrl, fallbackSound?.downloadUrl, editConfirmed) {
         if (soundId == null) {
             selectionResolved = true
         } else {
@@ -135,7 +137,7 @@ fun SoundEditorScreen(
                     downloadUrl = it.downloadUrl.takeIf { url -> url.isNotBlank() },
                 ) ?: it
             } ?: recoveryViewModel.resolveSound(soundId)
-            selectionResolved = sound?.let { viewModel.loadSound(it) } ?: false
+            selectionResolved = sound?.let { viewModel.loadSound(it, editConfirmed = editConfirmed) } ?: false
         }
     }
     LaunchedEffect(soundId, currentSelectedSound?.stableKey(), initialLocalUri) {

@@ -8,6 +8,9 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.freevibe.data.model.ContentType
 import com.freevibe.data.model.Sound
+import com.freevibe.data.model.SoundAction
+import com.freevibe.data.model.SoundActionDecision
+import com.freevibe.data.model.soundLicenseCapabilities
 import com.freevibe.data.model.stableKey
 import com.freevibe.service.AudioTrimmer
 import com.freevibe.service.MediaIngestionLimitExceeded
@@ -111,11 +114,15 @@ class SoundEditorViewModel @Inject constructor(
         val fadeIn: Long, val fadeOut: Long,
     )
 
-    fun loadSound(sound: Sound): Boolean {
+    fun loadSound(sound: Sound, editConfirmed: Boolean = false): Boolean {
         val currentState = _state.value
         val soundKey = sound.stableKey()
         if (shouldReuseLoadedSound(loadedSoundKey, soundKey, currentState)) {
             return true
+        }
+        soundEditorEditGateMessage(sound, editConfirmed)?.let { message ->
+            _state.update { it.copy(error = message) }
+            return false
         }
         loadedSoundKey = soundKey
         if (sound.downloadUrl.isBlank() && sound.previewUrl.isBlank() && sound.sourcePageUrl.isBlank()) return false
@@ -537,6 +544,15 @@ internal fun shouldReuseLoadedLocalUri(
     loadedSoundKey == requestedLocalKey &&
         state.isLocalFile &&
         (state.localFilePath != null || state.isLoading)
+
+internal fun soundEditorEditGateMessage(sound: Sound, editConfirmed: Boolean): String? {
+    val capability = sound.soundLicenseCapabilities().capability(SoundAction.EDIT)
+    return when (capability.decision) {
+        SoundActionDecision.ALLOWED -> null
+        SoundActionDecision.CONFIRMATION_REQUIRED -> capability.reason.takeUnless { editConfirmed }
+        SoundActionDecision.DISABLED -> capability.reason
+    }
+}
 
 internal fun buildRemoteAudioCacheFileName(name: String, cacheIdentity: String, url: String): String {
     val ext = when {

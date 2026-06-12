@@ -160,7 +160,7 @@ sealed class Screen(
         title = "Edit Sound",
         icon = Icons.Filled.ContentCut,
         selectedIcon = Icons.Filled.ContentCut,
-        destinationPattern = "sound_editor?soundId={soundId}&source={source}&name={name}&previewUrl={previewUrl}&downloadUrl={downloadUrl}&localUri={localUri}",
+        destinationPattern = "sound_editor?soundId={soundId}&source={source}&name={name}&previewUrl={previewUrl}&downloadUrl={downloadUrl}&localUri={localUri}&editConfirmed={editConfirmed}",
     ) {
         fun createRoute(soundId: String? = null) =
             soundId?.let { "sound_editor?soundId=${Uri.encode(it)}" } ?: "sound_editor"
@@ -168,13 +168,14 @@ sealed class Screen(
         fun createLocalRoute(uri: Uri): String =
             "sound_editor?localUri=${Uri.encode(uri.toString())}"
 
-        fun createRoute(sound: Sound): String {
+        fun createRoute(sound: Sound, editConfirmed: Boolean = false): String {
             val queryParams = buildList {
                 add("soundId=${Uri.encode(sound.id)}")
                 add("source=${Uri.encode(sound.source.name)}")
                 add("name=${Uri.encode(sound.name)}")
                 add("previewUrl=${Uri.encode(sound.previewUrl)}")
                 add("downloadUrl=${Uri.encode(sound.downloadUrl)}")
+                add("editConfirmed=$editConfirmed")
             }.joinToString("&")
             return "sound_editor?$queryParams"
         }
