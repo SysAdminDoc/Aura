@@ -1,8 +1,11 @@
 package com.freevibe.ui.screens.sounds
 
 import android.Manifest
+import android.content.Context
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
+import android.provider.Settings
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Canvas
@@ -153,6 +156,8 @@ fun SoundsScreen(
     var quickApplyActionInFlight by remember { mutableStateOf(false) }
     var quickApplyObservedApplying by remember { mutableStateOf(false) }
     var showFiltersSheet by remember { mutableStateOf(false) }
+    var showRecordPermissionPrompt by remember { mutableStateOf(false) }
+    var showRecordPermissionRecovery by remember { mutableStateOf(false) }
     val context = LocalContext.current
     val focusManager = LocalFocusManager.current
     val snackbarHostState = remember { SnackbarHostState() }
@@ -205,8 +210,12 @@ fun SoundsScreen(
     val recordPermissionLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestPermission()
     ) { granted ->
-        if (granted) viewModel.startCommunityRecording()
-        else viewModel.reportRecordingPermissionDenied()
+        if (granted) {
+            viewModel.startCommunityRecording()
+        } else {
+            viewModel.reportRecordingPermissionDenied()
+            showRecordPermissionRecovery = true
+        }
     }
     val startRecording: () -> Unit = {
         if (!communityProviderEnabled) {
@@ -216,8 +225,43 @@ fun SoundsScreen(
         } else if (ContextCompat.checkSelfPermission(context, Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED) {
             viewModel.startCommunityRecording()
         } else {
-            recordPermissionLauncher.launch(Manifest.permission.RECORD_AUDIO)
+            showRecordPermissionPrompt = true
         }
+    }
+
+    if (showRecordPermissionPrompt) {
+        AlertDialog(
+            onDismissRequest = { showRecordPermissionPrompt = false },
+            title = { Text(stringResource(R.string.permission_microphone_title)) },
+            text = { Text(stringResource(R.string.permission_microphone_body)) },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        showRecordPermissionPrompt = false
+                        recordPermissionLauncher.launch(Manifest.permission.RECORD_AUDIO)
+                    },
+                ) {
+                    Text(stringResource(R.string.permission_continue))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showRecordPermissionPrompt = false }) {
+                    Text(stringResource(R.string.permission_not_now))
+                }
+            },
+        )
+    }
+
+    if (showRecordPermissionRecovery) {
+        PermissionRecoveryDialog(
+            title = stringResource(R.string.permission_microphone_title),
+            body = stringResource(R.string.permission_microphone_denied_body),
+            onOpenSettings = {
+                showRecordPermissionRecovery = false
+                openAuraAppSettings(context)
+            },
+            onDismiss = { showRecordPermissionRecovery = false },
+        )
     }
 
     LaunchedEffect(state.recordedUploadUri) {
@@ -1721,6 +1765,37 @@ private fun UploadDialog(
             ) { Text("Cancel") }
         },
     )
+}
+
+@Composable
+private fun PermissionRecoveryDialog(
+    title: String,
+    body: String,
+    onOpenSettings: () -> Unit,
+    onDismiss: () -> Unit,
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(title) },
+        text = { Text(body) },
+        confirmButton = {
+            TextButton(onClick = onOpenSettings) {
+                Text(stringResource(R.string.permission_open_settings))
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text(stringResource(R.string.permission_not_now))
+            }
+        },
+    )
+}
+
+private fun openAuraAppSettings(context: Context) {
+    val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
+        data = Uri.fromParts("package", context.packageName, null)
+    }
+    runCatching { context.startActivity(intent) }
 }
 
 private fun formatRecordingElapsed(elapsedMs: Long): String {

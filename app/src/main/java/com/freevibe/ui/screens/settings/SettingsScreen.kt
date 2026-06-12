@@ -79,6 +79,13 @@ private const val AURA_SOURCE_URL = "https://github.com/SysAdminDoc/Aura"
 private const val AURA_PRIVACY_POLICY_URL = "https://github.com/SysAdminDoc/Aura/blob/main/docs/privacy/privacy-policy.md"
 private const val OPEN_METEO_LICENCE_URL = "https://open-meteo.com/en/licence"
 
+private enum class SettingsPermissionPrompt {
+    DAILY_NOTIFICATION_REQUEST,
+    DAILY_NOTIFICATION_RECOVERY,
+    WEATHER_LOCATION_REQUEST,
+    WEATHER_LOCATION_RECOVERY,
+}
+
 private fun openExternalUrl(context: Context, url: String) {
     try {
         context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)))
@@ -266,6 +273,15 @@ fun SettingsScreen(
         } catch (_: Exception) {}
     }
 
+    fun openAppSettings() {
+        try {
+            context.startActivity(
+                Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS)
+                    .setData(Uri.fromParts("package", context.packageName, null))
+            )
+        } catch (_: Exception) {}
+    }
+
     // Video wallpaper picker
     var pendingLocalFolderSource by remember { mutableStateOf<String?>(null) }
     val localFolderPickerLauncher = rememberLauncherForActivityResult(
@@ -389,6 +405,8 @@ fun SettingsScreen(
         }
     }
 
+    var settingsPermissionPrompt by remember { mutableStateOf<SettingsPermissionPrompt?>(null) }
+
     val notificationPermissionLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestPermission()
     ) { granted ->
@@ -396,7 +414,7 @@ fun SettingsScreen(
             setDailyWallpaperEnabled(true)
         } else {
             setDailyWallpaperEnabled(false)
-            openNotificationSettings()
+            settingsPermissionPrompt = SettingsPermissionPrompt.DAILY_NOTIFICATION_RECOVERY
         }
     }
     val locationPermissionLauncher = rememberLauncherForActivityResult(
@@ -406,6 +424,7 @@ fun SettingsScreen(
             enableWeatherEffects()
         } else {
             disableWeatherEffects()
+            settingsPermissionPrompt = SettingsPermissionPrompt.WEATHER_LOCATION_RECOVERY
         }
     }
 
@@ -441,6 +460,70 @@ fun SettingsScreen(
         stabilityAiKey,
     ) {
         listOf(wallhavenApiKey, pexelsApiKey, pixabayApiKey, freesoundApiKey, stabilityAiKey).count { it.isNotBlank() }
+    }
+
+    settingsPermissionPrompt?.let { prompt ->
+        val isRecovery = when (prompt) {
+            SettingsPermissionPrompt.DAILY_NOTIFICATION_RECOVERY,
+            SettingsPermissionPrompt.WEATHER_LOCATION_RECOVERY -> true
+            SettingsPermissionPrompt.DAILY_NOTIFICATION_REQUEST,
+            SettingsPermissionPrompt.WEATHER_LOCATION_REQUEST -> false
+        }
+        AlertDialog(
+            onDismissRequest = { settingsPermissionPrompt = null },
+            title = {
+                Text(
+                    when (prompt) {
+                        SettingsPermissionPrompt.DAILY_NOTIFICATION_REQUEST,
+                        SettingsPermissionPrompt.DAILY_NOTIFICATION_RECOVERY -> stringResource(R.string.permission_notification_title)
+                        SettingsPermissionPrompt.WEATHER_LOCATION_REQUEST,
+                        SettingsPermissionPrompt.WEATHER_LOCATION_RECOVERY -> stringResource(R.string.permission_location_title)
+                    },
+                )
+            },
+            text = {
+                Text(
+                    when (prompt) {
+                        SettingsPermissionPrompt.DAILY_NOTIFICATION_REQUEST -> stringResource(R.string.permission_notification_body)
+                        SettingsPermissionPrompt.DAILY_NOTIFICATION_RECOVERY -> stringResource(R.string.permission_notification_denied_body)
+                        SettingsPermissionPrompt.WEATHER_LOCATION_REQUEST -> stringResource(R.string.permission_location_body)
+                        SettingsPermissionPrompt.WEATHER_LOCATION_RECOVERY -> stringResource(R.string.permission_location_denied_body)
+                    },
+                )
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        settingsPermissionPrompt = null
+                        when (prompt) {
+                            SettingsPermissionPrompt.DAILY_NOTIFICATION_REQUEST -> {
+                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                                    notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+                                } else {
+                                    setDailyWallpaperEnabled(true)
+                                }
+                            }
+                            SettingsPermissionPrompt.DAILY_NOTIFICATION_RECOVERY -> openNotificationSettings()
+                            SettingsPermissionPrompt.WEATHER_LOCATION_REQUEST -> {
+                                locationPermissionLauncher.launch(Manifest.permission.ACCESS_COARSE_LOCATION)
+                            }
+                            SettingsPermissionPrompt.WEATHER_LOCATION_RECOVERY -> openAppSettings()
+                        }
+                    },
+                ) {
+                    Text(
+                        stringResource(
+                            if (isRecovery) R.string.permission_open_settings else R.string.permission_continue,
+                        ),
+                    )
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { settingsPermissionPrompt = null }) {
+                    Text(stringResource(R.string.permission_not_now))
+                }
+            },
+        )
     }
 
     Column(
@@ -898,10 +981,11 @@ fun SettingsScreen(
                         setDailyWallpaperEnabled(false)
                     } else if (!NotificationManagerCompat.from(context).areNotificationsEnabled()) {
                         setDailyWallpaperEnabled(false)
-                        openNotificationSettings()
+                        settingsPermissionPrompt = SettingsPermissionPrompt.DAILY_NOTIFICATION_RECOVERY
                     } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
                         ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
-                        notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+                        setDailyWallpaperEnabled(false)
+                        settingsPermissionPrompt = SettingsPermissionPrompt.DAILY_NOTIFICATION_REQUEST
                     } else {
                         setDailyWallpaperEnabled(true)
                     }
@@ -942,7 +1026,8 @@ fun SettingsScreen(
                     } else if (ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
                         enableWeatherEffects()
                     } else {
-                        locationPermissionLauncher.launch(Manifest.permission.ACCESS_COARSE_LOCATION)
+                        disableWeatherEffects()
+                        settingsPermissionPrompt = SettingsPermissionPrompt.WEATHER_LOCATION_REQUEST
                     }
                 },
             )
