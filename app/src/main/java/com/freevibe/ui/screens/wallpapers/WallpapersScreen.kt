@@ -38,6 +38,7 @@ import androidx.compose.ui.semantics.CustomAccessibilityAction
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.customActions
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -776,15 +777,15 @@ private fun ColorPickerRow(
         if (onClear != null) {
             Box(
                 modifier = Modifier
-                    .size(32.dp)
+                    .size(48.dp)
                     .clip(CircleShape)
                     .background(MaterialTheme.colorScheme.surfaceContainerHigh)
-                    .clickable { onClear() },
+                    .clickable(onClickLabel = clearWallpaperColorFilterLabel()) { onClear() },
                 contentAlignment = Alignment.Center,
             ) {
                 Icon(
                     Icons.Default.Close,
-                    contentDescription = "Clear color filter",
+                    contentDescription = clearWallpaperColorFilterLabel(),
                     modifier = Modifier.size(16.dp),
                     tint = MaterialTheme.colorScheme.onSurface,
                 )
@@ -793,18 +794,27 @@ private fun ColorPickerRow(
         WALLHAVEN_COLORS.forEach { (hex, color) ->
             Box(
                 modifier = Modifier
-                    .size(32.dp)
+                    .size(48.dp)
                     .clip(CircleShape)
                     .background(color)
                     .then(
                         if (selectedColor == hex) Modifier.border(2.dp, MaterialTheme.colorScheme.primary, CircleShape)
                         else Modifier
                     )
-                    .clickable { onColorSelected(hex) },
+                    .clickable(onClickLabel = wallpaperColorFilterActionLabel(hex)) { onColorSelected(hex) }
+                    .semantics {
+                        contentDescription = wallpaperColorFilterActionLabel(hex)
+                        stateDescription = if (selectedColor == hex) "Selected" else "Not selected"
+                    },
             )
         }
     }
 }
+
+internal fun clearWallpaperColorFilterLabel(): String = "Clear color filter"
+
+internal fun wallpaperColorFilterActionLabel(hex: String): String =
+    "Set wallpaper color filter #$hex"
 
 @Composable
 private fun WallpaperFiltersSheet(

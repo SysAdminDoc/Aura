@@ -108,6 +108,12 @@ class WallpaperFeedQualityTest {
     }
 
     @Test
+    fun `wallpaper color filter labels include the selected color`() {
+        assertEquals("Clear color filter", clearWallpaperColorFilterLabel())
+        assertEquals("Set wallpaper color filter #0066cc", wallpaperColorFilterActionLabel("0066cc"))
+    }
+
+    @Test
     fun `quality floor drops low signal wallpaper when stronger set exists`() {
         val strongCandidates = listOf(
             wallpaper(
