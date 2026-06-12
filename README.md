@@ -76,6 +76,23 @@ the same link is available in Settings > About > Privacy policy.
 | **Community Voting** | Upvote/downvote wallpapers and sounds via Firebase |
 | **OLED Dark Theme** | Deep blacks, zero burn-in, Material 3 |
 
+## External Automation
+
+Aura exposes two optional broadcast actions for Tasker, MacroDroid, adb, and
+Termux users:
+
+```text
+com.freevibe.action.ROTATE_NOW
+com.freevibe.action.SHUFFLE_NOW
+```
+
+Enable them in Settings > Wallpaper rotation > External automation before
+sending broadcasts. Aura ignores external broadcasts by default, accepts at most
+one every 30 seconds, and records the last action plus the optional
+`com.freevibe.extra.CALLER_PACKAGE` diagnostic extra in Settings > Diagnostics.
+Broadcasts only enqueue the existing rotation worker, so charging, Wi-Fi, idle,
+battery, Doze, and WorkManager quota can still delay the wallpaper change.
+
 ## Content Sources
 
 | Source | Content | Auth |

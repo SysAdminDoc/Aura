@@ -16,6 +16,8 @@ import com.freevibe.service.CommunityIdentityProvider
 import com.freevibe.service.CommunityIdentitySummary
 import com.freevibe.service.CrashDiagnosticsCollector
 import com.freevibe.service.CrashDiagnosticsSummary
+import com.freevibe.service.ExternalAutomationDiagnostics
+import com.freevibe.service.ExternalAutomationGate
 import com.freevibe.service.OfflineFavoritesManager
 import com.freevibe.service.SourceMetrics
 import com.freevibe.service.VideoWallpaperSelectionResult
@@ -208,11 +210,17 @@ class SettingsViewModel @Inject constructor(
     private val _backgroundWorkDiagnostics = MutableStateFlow(BackgroundWorkDiagnostics())
     val backgroundWorkDiagnostics: StateFlow<BackgroundWorkDiagnostics> =
         _backgroundWorkDiagnostics.asStateFlow()
+    private val _externalAutomationDiagnostics = MutableStateFlow(
+        ExternalAutomationGate.readDiagnostics(context),
+    )
+    val externalAutomationDiagnostics: StateFlow<ExternalAutomationDiagnostics> =
+        _externalAutomationDiagnostics.asStateFlow()
 
     init {
         refreshCacheUsage()
         refreshCrashDiagnostics()
         refreshBackgroundWorkDiagnostics()
+        refreshExternalAutomationDiagnostics()
     }
 
     fun setAutoWallpaper(enabled: Boolean) = viewModelScope.launch {
@@ -309,6 +317,19 @@ class SettingsViewModel @Inject constructor(
     fun refreshBackgroundWorkDiagnostics() = viewModelScope.launch {
         _backgroundWorkDiagnostics.value = withContext(ioDispatcher) {
             backgroundWorkDiagnosticsReader.read()
+        }
+    }
+
+    fun setExternalAutomationEnabled(enabled: Boolean) = viewModelScope.launch {
+        _externalAutomationDiagnostics.value = withContext(ioDispatcher) {
+            ExternalAutomationGate.setEnabled(context, enabled)
+            ExternalAutomationGate.readDiagnostics(context)
+        }
+    }
+
+    fun refreshExternalAutomationDiagnostics() = viewModelScope.launch {
+        _externalAutomationDiagnostics.value = withContext(ioDispatcher) {
+            ExternalAutomationGate.readDiagnostics(context)
         }
     }
 

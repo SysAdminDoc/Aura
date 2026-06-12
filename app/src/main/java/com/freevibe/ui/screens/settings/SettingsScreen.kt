@@ -53,6 +53,7 @@ import com.freevibe.service.BackgroundWorkStatusRow
 import com.freevibe.service.CommunityIdentitySummary
 import com.freevibe.service.CrashDiagnosticsSummary
 import com.freevibe.service.DailyWallpaperWorker
+import com.freevibe.service.ExternalAutomationDiagnostics
 import com.freevibe.service.SourceMetrics
 import com.freevibe.service.VIDEO_STATS_PREFS_NAME
 import com.freevibe.service.VideoWallpaperSelectionResult
@@ -218,6 +219,7 @@ fun SettingsScreen(
     val diagnostics by viewModel.diagnostics.collectAsStateWithLifecycle()
     val crashDiagnostics by viewModel.crashDiagnostics.collectAsStateWithLifecycle()
     val backgroundWorkDiagnostics by viewModel.backgroundWorkDiagnostics.collectAsStateWithLifecycle()
+    val externalAutomationDiagnostics by viewModel.externalAutomationDiagnostics.collectAsStateWithLifecycle()
     val videoWallpaperSelectionResult by viewModel.videoWallpaperSelectionResult.collectAsStateWithLifecycle()
     val videoBatteryDashboard by rememberVideoBatteryDashboardState(
         context = context,
@@ -443,6 +445,7 @@ fun SettingsScreen(
     var showDarkModeWallpaperPicker by remember { mutableStateOf(false) }
     var showLightModeWallpaperPicker by remember { mutableStateOf(false) }
     var showBackgroundWorkDiagnostics by remember { mutableStateOf(false) }
+    var showExternalAutomationDiagnostics by remember { mutableStateOf(false) }
     var showCrashDiagnostics by remember { mutableStateOf(false) }
     var crashDiagnosticsBusy by remember { mutableStateOf(false) }
     var touchEffectStrength by remember {
@@ -651,6 +654,13 @@ fun SettingsScreen(
                 subtitle = "Pick the next wallpaper while the screen is off so unlock shows the new one",
                 checked = rotateOnScreenOff,
                 onCheckedChange = { viewModel.setRotateOnScreenOff(it) },
+            )
+            SettingsToggle(
+                icon = Icons.Default.Schedule,
+                title = "External automation",
+                subtitle = externalAutomationSubtitle(externalAutomationDiagnostics),
+                checked = externalAutomationDiagnostics.enabled,
+                onCheckedChange = { viewModel.setExternalAutomationEnabled(it) },
             )
             // #9: Grid columns
             SettingsItem(
@@ -1686,6 +1696,15 @@ fun SettingsScreen(
                 },
             )
             SettingsItem(
+                icon = Icons.Default.SettingsInputComponent,
+                title = "External automation",
+                subtitle = externalAutomationSubtitle(externalAutomationDiagnostics),
+                onClick = {
+                    viewModel.refreshExternalAutomationDiagnostics()
+                    showExternalAutomationDiagnostics = true
+                },
+            )
+            SettingsItem(
                 icon = Icons.Default.MonitorHeart,
                 title = "Source diagnostics",
                 subtitle = if (diagnostics.isEmpty()) {
@@ -1694,6 +1713,40 @@ fun SettingsScreen(
                     "${diagnostics.size} active sources tracked this session"
                 },
                 onClick = { showDiagnostics = true },
+            )
+        }
+        if (showExternalAutomationDiagnostics) {
+            val snapshot = externalAutomationDiagnostics
+            AlertDialog(
+                onDismissRequest = { showExternalAutomationDiagnostics = false },
+                title = { Text("External automation") },
+                text = {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .heightIn(max = 420.dp)
+                            .verticalScroll(rememberScrollState()),
+                        verticalArrangement = Arrangement.spacedBy(12.dp),
+                    ) {
+                        Text(
+                            "Tasker, MacroDroid, adb, and Termux broadcasts are ignored until this toggle is enabled. Accepted broadcasts are limited to one rotation every ${externalAutomationRateLimitLabel(snapshot.minIntervalMs)}.",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                        ExternalAutomationDiagnosticsSummary(snapshot)
+                        Text(
+                            "Public actions: com.freevibe.action.ROTATE_NOW and com.freevibe.action.SHUFFLE_NOW. Optional diagnostic extra: com.freevibe.extra.CALLER_PACKAGE.",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
+                },
+                confirmButton = {
+                    TextButton(onClick = { showExternalAutomationDiagnostics = false }) { Text("Close") }
+                },
+                dismissButton = {
+                    TextButton(onClick = { viewModel.refreshExternalAutomationDiagnostics() }) { Text("Refresh") }
+                },
             )
         }
         if (showBackgroundWorkDiagnostics) {
@@ -2870,10 +2923,95 @@ private fun backgroundWorkDiagnosticsSubtitle(status: BackgroundWorkDiagnostics)
     return "$receiptCount WorkInfo receipts • ${meteredNetworkLabel(status.network.activeNetworkMetered)} • Data Saver ${status.network.restrictBackgroundStatus}"
 }
 
+private fun externalAutomationSubtitle(status: ExternalAutomationDiagnostics): String {
+    val state = if (status.enabled) "Enabled" else "Off"
+    val last = when {
+        status.lastAcceptedAtMs > 0L -> "last accepted ${formatExternalAutomationTime(status.lastAcceptedAtMs)}"
+        status.lastRejectedAtMs > 0L -> {
+            "last rejected: ${externalAutomationReasonLabel(status.lastRejectedReason)}"
+        }
+        else -> "no external triggers recorded"
+    }
+    return "$state - $last"
+}
+
+private fun externalAutomationRateLimitLabel(intervalMs: Long): String {
+    val seconds = (intervalMs / 1000L).coerceAtLeast(1L)
+    return "${seconds}s"
+}
+
+private fun formatExternalAutomationTime(timestampMs: Long): String =
+    DateFormat.getDateTimeInstance(DateFormat.SHORT, DateFormat.SHORT, Locale.getDefault())
+        .format(Date(timestampMs))
+
+private fun externalAutomationReasonLabel(reason: String): String = when (reason) {
+    "disabled" -> "disabled"
+    "rate_limited" -> "rate limited"
+    "unsupported_action" -> "unsupported action"
+    "" -> "none"
+    else -> reason
+}
+
+private fun externalAutomationActionLabel(action: String): String = when (action) {
+    "com.freevibe.action.ROTATE_NOW" -> "rotate"
+    "com.freevibe.action.SHUFFLE_NOW" -> "shuffle"
+    "" -> "none"
+    else -> "unsupported"
+}
+
+private fun externalAutomationCallerLabel(callerPackage: String): String =
+    callerPackage.ifBlank { "not provided" }.let { label ->
+        if (label.length <= 28) label else "${label.take(25)}..."
+    }
+
 private fun meteredNetworkLabel(activeNetworkMetered: Boolean?): String = when (activeNetworkMetered) {
     true -> "metered"
     false -> "unmetered"
     null -> "meter unknown"
+}
+
+@Composable
+@OptIn(ExperimentalLayoutApi::class)
+private fun ExternalAutomationDiagnosticsSummary(status: ExternalAutomationDiagnostics) {
+    FlowRow(
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        DiagnosticMetricPill(
+            "State",
+            if (status.enabled) "Enabled" else "Off",
+            if (status.enabled) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.tertiary,
+        )
+        DiagnosticMetricPill(
+            "Rate limit",
+            externalAutomationRateLimitLabel(status.minIntervalMs),
+            MaterialTheme.colorScheme.secondary,
+        )
+        DiagnosticMetricPill(
+            "Last action",
+            externalAutomationActionLabel(status.lastAction),
+            MaterialTheme.colorScheme.tertiary,
+        )
+        DiagnosticMetricPill(
+            "Caller",
+            externalAutomationCallerLabel(status.lastCallerPackage),
+            MaterialTheme.colorScheme.tertiary,
+        )
+    }
+    if (status.lastAcceptedAtMs > 0L) {
+        Text(
+            "Last accepted: ${formatExternalAutomationTime(status.lastAcceptedAtMs)}",
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+    }
+    if (status.lastRejectedAtMs > 0L) {
+        Text(
+            "Last rejected: ${formatExternalAutomationTime(status.lastRejectedAtMs)} (${externalAutomationReasonLabel(status.lastRejectedReason)})",
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+    }
 }
 
 @Composable
