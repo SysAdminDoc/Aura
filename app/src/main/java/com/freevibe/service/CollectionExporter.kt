@@ -228,36 +228,21 @@ class CollectionExporter @Inject constructor(
         if (file.version != CURRENT_VERSION) {
             throw IllegalArgumentException("This collection format is not supported by this Aura version.")
         }
-        val validItems = file.items
-            .asSequence()
-            .filter { it.wallpaperId.isNotBlank() && it.fullUrl.isAllowedShareUrl() }
-            .take(MAX_IMPORT_ITEMS)
-            .toList()
-        if (validItems.isEmpty()) {
+        val importItems = buildCollectionImportItems(file.items)
+        if (importItems.isEmpty()) {
             throw IllegalArgumentException("This collection does not contain importable wallpapers.")
         }
 
         val name = sanitizeImportedCollectionName(file.collectionName).ifBlank { "Imported collection" }
-        val collectionId = collectionDao.createCollection(
-            WallpaperCollectionEntity(name = "$name (Imported)")
+        val importedName = "$name (Imported)"
+        val collectionId = collectionDao.importCollection(
+            collection = WallpaperCollectionEntity(name = importedName),
+            items = importItems,
         )
-        validItems.forEach { item ->
-            collectionDao.addItem(
-                WallpaperCollectionItemEntity(
-                    collectionId = collectionId,
-                    wallpaperId = item.wallpaperId,
-                    thumbnailUrl = item.thumbnailUrl.ifBlank { item.fullUrl },
-                    fullUrl = item.fullUrl,
-                    source = item.source.ifBlank { "REDDIT" }.uppercase(Locale.ROOT),
-                    width = item.width.coerceAtLeast(0),
-                    height = item.height.coerceAtLeast(0),
-                )
-            )
-        }
         return CollectionImportResult(
             collectionId = collectionId,
-            collectionName = "$name (Imported)",
-            itemCount = validItems.size,
+            collectionName = importedName,
+            itemCount = importItems.size,
         )
     }
 
@@ -336,6 +321,24 @@ internal fun sanitizeImportedCollectionName(name: String): String =
     name.trim()
         .replace(Regex("\\s+"), " ")
         .take(80)
+
+internal fun buildCollectionImportItems(items: List<CollectionExportItem>): List<WallpaperCollectionItemEntity> =
+    items.asSequence()
+        .filter { it.wallpaperId.isNotBlank() && it.fullUrl.isAllowedShareUrl() }
+        .take(MAX_IMPORT_ITEMS)
+        .map { item ->
+            WallpaperCollectionItemEntity(
+                collectionId = 0L,
+                wallpaperId = item.wallpaperId,
+                thumbnailUrl = item.thumbnailUrl.ifBlank { item.fullUrl },
+                fullUrl = item.fullUrl,
+                source = item.source.ifBlank { "REDDIT" }.uppercase(Locale.ROOT),
+                width = item.width.coerceAtLeast(0),
+                height = item.height.coerceAtLeast(0),
+            )
+        }
+        .distinctBy { item -> item.source to item.wallpaperId }
+        .toList()
 
 private fun String.isAllowedShareUrl(): Boolean =
     startsWith("https://", ignoreCase = true)

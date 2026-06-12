@@ -3,6 +3,9 @@
 All notable changes to Aura will be documented in this file.
 
 ## Unreleased
+- **Transactional collection import**: collection JSON imports now create the
+  collection and all normalized items inside one Room transaction, with
+  duplicate source-scoped wallpapers collapsed before insert.
 - **Custom accessibility semantics**: added source-backed coverage for reusable
   Compose components, Settings rows/toggles, media cards, badges, waveform
   controls, and action labels.

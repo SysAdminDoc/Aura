@@ -1,7 +1,9 @@
 package com.freevibe.service
 
+import java.io.File
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class CollectionExporterTest {
@@ -34,4 +36,54 @@ class CollectionExporterTest {
         assertEquals(80, sanitized.length)
         assertEquals("Travel Walls", sanitized.take("Travel Walls".length))
     }
+
+    @Test
+    fun `buildCollectionImportItems filters unsafe urls and dedupes normalized identities`() {
+        val items = buildCollectionImportItems(
+            listOf(
+                exportItem(wallpaperId = "one", source = "pexels", fullUrl = "https://example.com/one.jpg"),
+                exportItem(wallpaperId = "one", source = "PEXELS", fullUrl = "https://example.com/one-dup.jpg"),
+                exportItem(wallpaperId = "two", source = "", fullUrl = "https://example.com/two.jpg", thumbnailUrl = ""),
+                exportItem(wallpaperId = "unsafe", source = "wallhaven", fullUrl = "http://example.com/unsafe.jpg"),
+                exportItem(wallpaperId = "", source = "wallhaven", fullUrl = "https://example.com/blank.jpg"),
+            ),
+        )
+
+        assertEquals(2, items.size)
+        assertEquals("one", items[0].wallpaperId)
+        assertEquals("PEXELS", items[0].source)
+        assertEquals(0, items[0].width)
+        assertEquals(0, items[0].height)
+        assertEquals("two", items[1].wallpaperId)
+        assertEquals("REDDIT", items[1].source)
+        assertEquals("https://example.com/two.jpg", items[1].thumbnailUrl)
+    }
+
+    @Test
+    fun `collection import uses DAO transaction boundary`() {
+        val exporter = File("src/main/java/com/freevibe/service/CollectionExporter.kt").readText()
+        val database = File("src/main/java/com/freevibe/data/local/Database.kt").readText()
+
+        assertTrue(exporter.contains("collectionDao.importCollection("))
+        assertTrue(exporter.contains("itemCount = importItems.size"))
+        assertTrue(database.contains("@Transaction"))
+        assertTrue(database.contains("suspend fun importCollection("))
+        assertTrue(database.indexOf("@Transaction") < database.indexOf("suspend fun importCollection("))
+    }
+
+    private fun exportItem(
+        wallpaperId: String,
+        source: String,
+        fullUrl: String,
+        thumbnailUrl: String = "https://example.com/thumb.jpg",
+        width: Int = -1,
+        height: Int = -4,
+    ) = CollectionExportItem(
+        wallpaperId = wallpaperId,
+        source = source,
+        thumbnailUrl = thumbnailUrl,
+        fullUrl = fullUrl,
+        width = width,
+        height = height,
+    )
 }

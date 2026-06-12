@@ -221,6 +221,18 @@ interface CollectionDao {
     @Insert(onConflict = OnConflictStrategy.IGNORE)
     suspend fun addItem(item: WallpaperCollectionItemEntity)
 
+    @Transaction
+    suspend fun importCollection(
+        collection: WallpaperCollectionEntity,
+        items: List<WallpaperCollectionItemEntity>,
+    ): Long {
+        val collectionId = createCollection(collection)
+        items.forEach { item ->
+            addItem(item.copy(collectionId = collectionId))
+        }
+        return collectionId
+    }
+
     @Query("DELETE FROM wallpaper_collection_items WHERE collectionId = :collectionId AND wallpaperId = :wallpaperId AND source = :source")
     suspend fun removeItem(collectionId: Long, wallpaperId: String, source: String)
 
