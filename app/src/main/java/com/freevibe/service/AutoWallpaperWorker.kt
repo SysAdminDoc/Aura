@@ -221,12 +221,25 @@ class AutoWallpaperWorker @AssistedInject constructor(
             val requiresCharging = prefs.autoWallpaperRequiresCharging.first()
             val requiresWiFiOnly = prefs.autoWallpaperRequiresWiFiOnly.first()
             val requiresIdle = prefs.autoWallpaperRequiresIdle.first()
+            val source = if (prefs.schedulerEnabled.first()) {
+                val daySource = prefs.schedulerDaySource.first()
+                val nightSource = prefs.schedulerNightSource.first()
+                if (daySource.isNotEmpty() && nightSource.isNotEmpty()) {
+                    val hour = Calendar.getInstance().get(Calendar.HOUR_OF_DAY)
+                    if (hour in 6..17) daySource else nightSource
+                } else {
+                    prefs.schedulerSource.first()
+                }
+            } else {
+                prefs.autoWallpaperSource.first()
+            }
             scheduleWithConstraints(
                 context = context,
                 intervalMinutes = intervalMinutes,
                 requiresCharging = requiresCharging,
                 requiresWiFiOnly = requiresWiFiOnly,
                 requiresIdle = requiresIdle,
+                requiresNetwork = sourceRequiresNetwork(source),
             )
         }
 
@@ -241,11 +254,13 @@ class AutoWallpaperWorker @AssistedInject constructor(
             requiresCharging: Boolean,
             requiresWiFiOnly: Boolean,
             requiresIdle: Boolean,
+            requiresNetwork: Boolean = true,
         ) {
             val constraints = buildAutoWallpaperConstraints(
                 requiresCharging = requiresCharging,
                 requiresWiFiOnly = requiresWiFiOnly,
                 requiresIdle = requiresIdle,
+                requiresNetwork = requiresNetwork,
             )
 
             val request = PeriodicWorkRequestBuilder<AutoWallpaperWorker>(
@@ -286,10 +301,15 @@ internal fun buildAutoWallpaperConstraints(
     requiresCharging: Boolean,
     requiresWiFiOnly: Boolean,
     requiresIdle: Boolean,
+    requiresNetwork: Boolean = true,
 ): Constraints {
     val builder = Constraints.Builder()
         .setRequiredNetworkType(
-            if (requiresWiFiOnly) NetworkType.UNMETERED else NetworkType.CONNECTED,
+            when {
+                !requiresNetwork -> NetworkType.NOT_REQUIRED
+                requiresWiFiOnly -> NetworkType.UNMETERED
+                else -> NetworkType.CONNECTED
+            },
         )
         .setRequiresBatteryNotLow(true)
     if (requiresCharging) builder.setRequiresCharging(true)
@@ -303,6 +323,9 @@ internal fun String.normalizeWallpaperRotationSource(): String = when (lowercase
     "", "unsplash" -> "discover"
     else -> this
 }
+
+internal fun sourceRequiresNetwork(source: String): Boolean =
+    source.normalizeWallpaperRotationSource() != WALLPAPER_SOURCE_LOCAL_FOLDER
 
 internal fun pickScheduledWallpaper(
     wallpapers: List<Wallpaper>,

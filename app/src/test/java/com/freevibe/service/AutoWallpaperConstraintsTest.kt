@@ -1,6 +1,7 @@
 package com.freevibe.service
 
 import androidx.work.NetworkType
+import com.freevibe.data.model.WALLPAPER_SOURCE_LOCAL_FOLDER
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -29,6 +30,17 @@ class AutoWallpaperConstraintsTest {
             requiresIdle = false,
         )
         assertEquals(NetworkType.UNMETERED, c.requiredNetworkType)
+    }
+
+    @Test
+    fun `local-only source removes network constraint even when wifi-only is enabled`() {
+        val c = buildAutoWallpaperConstraints(
+            requiresCharging = false,
+            requiresWiFiOnly = true,
+            requiresIdle = false,
+            requiresNetwork = false,
+        )
+        assertEquals(NetworkType.NOT_REQUIRED, c.requiredNetworkType)
     }
 
     @Test
@@ -69,5 +81,11 @@ class AutoWallpaperConstraintsTest {
         assertEquals(NetworkType.UNMETERED, c.requiredNetworkType)
         assertTrue(c.requiresBatteryNotLow())
         assertTrue(c.requiresCharging())
+    }
+
+    @Test
+    fun `sourceRequiresNetwork treats local folder as offline capable`() {
+        assertFalse(sourceRequiresNetwork(WALLPAPER_SOURCE_LOCAL_FOLDER))
+        assertTrue(sourceRequiresNetwork("wallhaven"))
     }
 }
