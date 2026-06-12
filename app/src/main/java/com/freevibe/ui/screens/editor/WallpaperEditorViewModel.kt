@@ -7,6 +7,8 @@ import com.freevibe.data.model.Wallpaper
 import com.freevibe.data.model.WallpaperTarget
 import com.freevibe.data.model.stableKey
 import com.freevibe.service.WallpaperApplier
+import com.freevibe.service.advertisedLengthExceeds
+import com.freevibe.service.readStreamCapped
 import dagger.hilt.android.lifecycle.HiltViewModel
 import okhttp3.OkHttpClient
 import kotlinx.coroutines.Dispatchers
@@ -151,13 +153,10 @@ class WallpaperEditorViewModel @Inject constructor(
                         if (!response.isSuccessful) throw Exception("HTTP ${response.code}")
                         val body = response.body ?: throw Exception("Empty response body")
                         val advertised = body.contentLength()
-                        if (advertised in 1..Long.MAX_VALUE && advertised > MAX_EDIT_BYTES) {
+                        if (advertisedLengthExceeds(advertised, MAX_EDIT_BYTES)) {
                             throw Exception("Image too large to edit")
                         }
-                        val bytes = body.bytes()
-                        if (bytes.size.toLong() > MAX_EDIT_BYTES) {
-                            throw Exception("Image too large to edit")
-                        }
+                        val bytes = readStreamCapped(body.byteStream(), MAX_EDIT_BYTES)
                         BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
                             ?: throw Exception("Failed to decode image")
                     }

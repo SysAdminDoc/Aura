@@ -4,6 +4,8 @@ import android.content.Context
 import com.freevibe.data.model.ContentSource
 import com.freevibe.data.model.Wallpaper
 import com.freevibe.data.remote.stability.StabilityAiApi
+import com.freevibe.service.advertisedLengthExceeds
+import com.freevibe.service.copyStreamCapped
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
@@ -68,13 +70,18 @@ class AiWallpaperRepository @Inject constructor(
 
             val body = response.body()
                 ?: throw IllegalStateException("Empty response from Stability AI")
+            if (advertisedLengthExceeds(body.contentLength(), MAX_GENERATED_WALLPAPER_BYTES)) {
+                throw IllegalStateException("Generated wallpaper is too large")
+            }
 
             val id = UUID.randomUUID().toString()
             val file = File(dir, "$id.png")
             val tmp = File(dir, "$id.tmp")
             try {
                 body.byteStream().use { input ->
-                    tmp.outputStream().use { output -> input.copyTo(output) }
+                    tmp.outputStream().use { output ->
+                        copyStreamCapped(input, output, MAX_GENERATED_WALLPAPER_BYTES)
+                    }
                 }
                 if (!tmp.renameTo(file)) {
                     tmp.copyTo(file, overwrite = true)
@@ -154,6 +161,7 @@ class AiWallpaperRepository @Inject constructor(
     companion object {
         /** Hard cap on stored generated wallpapers. Surfaced for tests. */
         internal const val MAX_GENERATED_FILES = 50
+        private const val MAX_GENERATED_WALLPAPER_BYTES = 32L * 1024L * 1024L
 
         internal fun generatedWallpaperTags(style: AiStyle): List<String> = buildList {
             add("ai-generated")

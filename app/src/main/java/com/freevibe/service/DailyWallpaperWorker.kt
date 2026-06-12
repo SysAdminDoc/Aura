@@ -55,9 +55,9 @@ class DailyWallpaperWorker @AssistedInject constructor(
                         // Notification thumbs should be tiny; cap at 4 MB so a compromised feed
                         // can't force a giant byte[] + bitmap into a background worker.
                         val advertised = body.contentLength()
-                        if (advertised in 1..Long.MAX_VALUE && advertised > 4L * 1024 * 1024) return@use null
-                        val bytes = body.bytes()
-                        if (bytes.isEmpty() || bytes.size > 4 * 1024 * 1024) return@use null
+                        if (advertisedLengthExceeds(advertised, DAILY_THUMB_MAX_BYTES)) return@use null
+                        val bytes = readStreamCapped(body.byteStream(), DAILY_THUMB_MAX_BYTES)
+                        if (bytes.isEmpty()) return@use null
                         BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
                     }
                 } catch (e: Exception) {
@@ -160,6 +160,7 @@ class DailyWallpaperWorker @AssistedInject constructor(
         const val WORK_NAME = "daily_wallpaper"
         const val CHANNEL_ID = "daily_wallpaper"
         const val NOTIFICATION_ID = 42
+        private const val DAILY_THUMB_MAX_BYTES = 4L * 1024L * 1024L
 
         fun schedule(context: Context) {
             val request = PeriodicWorkRequestBuilder<DailyWallpaperWorker>(

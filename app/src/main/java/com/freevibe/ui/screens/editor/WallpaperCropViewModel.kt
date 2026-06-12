@@ -10,6 +10,8 @@ import com.freevibe.data.model.stableKey
 import com.freevibe.service.SmartCropCalculator
 import com.freevibe.service.SmartCropDetector
 import com.freevibe.service.WallpaperApplier
+import com.freevibe.service.advertisedLengthExceeds
+import com.freevibe.service.readStreamCapped
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -75,13 +77,10 @@ class WallpaperCropViewModel @Inject constructor(
                         if (!response.isSuccessful) throw Exception("HTTP ${response.code}")
                         val body = response.body ?: throw Exception("Empty body")
                         val advertised = body.contentLength()
-                        if (advertised in 1..Long.MAX_VALUE && advertised > MAX_CROP_BYTES) {
+                        if (advertisedLengthExceeds(advertised, MAX_CROP_BYTES)) {
                             throw Exception("Image too large to crop")
                         }
-                        val bytes = body.bytes()
-                        if (bytes.size.toLong() > MAX_CROP_BYTES) {
-                            throw Exception("Image too large to crop")
-                        }
+                        val bytes = readStreamCapped(body.byteStream(), MAX_CROP_BYTES)
                         BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
                             ?: throw Exception("Failed to decode image")
                     }

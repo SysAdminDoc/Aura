@@ -2,6 +2,7 @@ package com.freevibe.service
 
 import android.content.Context
 import android.net.Uri
+import android.provider.OpenableColumns
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -21,6 +22,8 @@ internal const val VIDEO_WALLPAPER_SCALE_MODE_ZOOM = "zoom"
 internal const val VIDEO_WALLPAPER_SCALE_MODE_FIT = "fit"
 
 internal fun videoWallpaperMimeTypes(): Array<String> = arrayOf("video/*", "image/gif")
+
+internal const val MAX_VIDEO_WALLPAPER_BYTES = 256L * 1024L * 1024L
 
 internal fun normalizeVideoWallpaperScaleMode(scaleMode: String?): String =
     when (scaleMode?.trim()?.lowercase(Locale.ROOT)) {
@@ -76,8 +79,14 @@ class VideoWallpaperStorage @Inject constructor(
             val tempFile = File(targetFile.parentFile, "${targetFile.name}.tmp")
 
             try {
+                val advertisedSize = resolver.advertisedSize(uri)
+                if (advertisedLengthExceeds(advertisedSize, MAX_VIDEO_WALLPAPER_BYTES)) {
+                    throw IOException("Selected file exceeds video wallpaper limit")
+                }
                 resolver.openInputStream(uri)?.use { input ->
-                    tempFile.outputStream().use { output -> input.copyTo(output) }
+                    tempFile.outputStream().use { output ->
+                        copyStreamCapped(input, output, MAX_VIDEO_WALLPAPER_BYTES)
+                    }
                 } ?: throw IOException("Could not open the selected file")
 
                 validatePreparedMotionFile(tempFile)
@@ -116,6 +125,9 @@ class VideoWallpaperStorage @Inject constructor(
         if (!file.exists() || file.length() < 1024) {
             throw IOException("Selected file is empty or invalid")
         }
+        if (file.length() > MAX_VIDEO_WALLPAPER_BYTES) {
+            throw IOException("Selected file exceeds video wallpaper limit")
+        }
     }
 
     private fun commitPreparedVideo(tempFile: File, targetFile: File) {
@@ -143,6 +155,12 @@ class VideoWallpaperStorage @Inject constructor(
 
     private fun managedVideoFile(extension: String): File =
         File(context.filesDir, "live_wallpaper.$extension")
+
+    private fun android.content.ContentResolver.advertisedSize(uri: Uri): Long =
+        query(uri, arrayOf(OpenableColumns.SIZE), null, null, null)?.use { cursor ->
+            val index = cursor.getColumnIndex(OpenableColumns.SIZE)
+            if (index >= 0 && cursor.moveToFirst()) cursor.getLong(index) else -1L
+        } ?: -1L
 
     private fun persistSelectedVideoWallpaper(file: File) {
         context.getSharedPreferences("freevibe_live_wp", Context.MODE_PRIVATE)

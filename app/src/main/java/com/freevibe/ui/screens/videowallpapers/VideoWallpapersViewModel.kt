@@ -12,10 +12,13 @@ import com.freevibe.data.remote.pixabay.PixabayVideo
 import com.freevibe.data.repository.YouTubeRepository
 import com.freevibe.data.repository.VoteRepository
 import com.freevibe.data.repository.pixabayRateLimitBackoffMillis
+import com.freevibe.service.MAX_VIDEO_WALLPAPER_BYTES
 import com.freevibe.service.SourceMetrics
 import com.freevibe.service.VIDEO_WALLPAPER_SCALE_MODE_ZOOM
 import com.freevibe.service.VideoWallpaperSelectionResult
 import com.freevibe.service.VideoWallpaperStorage
+import com.freevibe.service.advertisedLengthExceeds
+import com.freevibe.service.copyStreamCapped
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.CancellationException
@@ -433,9 +436,14 @@ class VideoWallpapersViewModel @Inject constructor(
                             okHttpClient.newCall(Request.Builder().url(videoUrl).build()).execute().use { resp ->
                                 if (!resp.isSuccessful) throw Exception("HTTP ${resp.code}")
                                 val body = resp.body ?: throw Exception("Empty response body")
+                                if (advertisedLengthExceeds(body.contentLength(), MAX_VIDEO_WALLPAPER_BYTES)) {
+                                    throw Exception("Video exceeds size limit")
+                                }
                                 body.byteStream().use { input ->
                                     cacheFile.parentFile?.mkdirs()
-                                    cacheFile.outputStream().use { output -> input.copyTo(output) }
+                                    cacheFile.outputStream().use { output ->
+                                        copyStreamCapped(input, output, MAX_VIDEO_WALLPAPER_BYTES)
+                                    }
                                 }
                             }
                         }
@@ -444,9 +452,14 @@ class VideoWallpapersViewModel @Inject constructor(
                         okHttpClient.newCall(Request.Builder().url(videoUrl).build()).execute().use { resp ->
                             if (!resp.isSuccessful) throw Exception("HTTP ${resp.code}")
                             val body = resp.body ?: throw Exception("Empty response body")
+                            if (advertisedLengthExceeds(body.contentLength(), MAX_VIDEO_WALLPAPER_BYTES)) {
+                                throw Exception("Video exceeds size limit")
+                            }
                             body.byteStream().use { input ->
                                 cacheFile.parentFile?.mkdirs()
-                                cacheFile.outputStream().use { output -> input.copyTo(output) }
+                                cacheFile.outputStream().use { output ->
+                                    copyStreamCapped(input, output, MAX_VIDEO_WALLPAPER_BYTES)
+                                }
                             }
                         }
                     }

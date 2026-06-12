@@ -54,11 +54,10 @@ class ColorExtractor @Inject constructor(
                 // Palette only needs a ~200x200 downsample; cap the buffered payload at 32 MB
                 // so a hostile redirect to a giant image can't explode heap just for tinting.
                 val advertised = body.contentLength()
-                if (advertised in 1..Long.MAX_VALUE && advertised > MAX_COLOR_EXTRACT_BYTES) {
+                if (advertisedLengthExceeds(advertised, MAX_COLOR_EXTRACT_BYTES)) {
                     return@withContext null
                 }
-                val bytes = body.bytes()
-                if (bytes.size > MAX_COLOR_EXTRACT_BYTES) return@withContext null
+                val bytes = readStreamCapped(body.byteStream(), MAX_COLOR_EXTRACT_BYTES)
                 // Decode at reduced size for faster palette extraction
                 val options = BitmapFactory.Options().apply {
                     inJustDecodeBounds = true

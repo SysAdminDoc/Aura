@@ -91,14 +91,11 @@ class DualWallpaperService @Inject constructor(
             val body = resp.body ?: throw IllegalStateException("Empty response body")
             // Reject oversized payloads before allocating the byte[].
             val advertised = body.contentLength()
-            if (advertised in 1..Long.MAX_VALUE && advertised > MAX_WALLPAPER_BYTES) {
+            if (advertisedLengthExceeds(advertised, MAX_WALLPAPER_BYTES)) {
                 throw java.io.IOException("Wallpaper too large: $advertised > $MAX_WALLPAPER_BYTES bytes")
             }
-            val bytes = body.bytes()
+            val bytes = readStreamCapped(body.byteStream(), MAX_WALLPAPER_BYTES)
             if (bytes.isEmpty()) throw java.io.IOException("Empty response body")
-            if (bytes.size > MAX_WALLPAPER_BYTES) {
-                throw java.io.IOException("Wallpaper too large: ${bytes.size} > $MAX_WALLPAPER_BYTES bytes")
-            }
 
             // Two-pass decode: measure first, then subsample to avoid OOM on 4K+ images
             val bounds = BitmapFactory.Options().apply { inJustDecodeBounds = true }

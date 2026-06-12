@@ -12,6 +12,7 @@ import com.freevibe.data.model.stableKey
 import com.freevibe.service.AudioTrimmer
 import com.freevibe.service.SoundUrlResolver
 import com.freevibe.service.SoundApplier
+import com.freevibe.service.copyStreamCapped
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
@@ -430,7 +431,9 @@ class SoundEditorViewModel @Inject constructor(
         val safeName = fileName.replace(FILE_SANITIZE_REGEX, "_")
         val file = File(cacheDir, safeName)
         context.contentResolver.openInputStream(uri)?.use { input ->
-            FileOutputStream(file).use { output -> input.copyTo(output) }
+            FileOutputStream(file).use { output ->
+                copyStreamCapped(input, output, MAX_EDIT_DOWNLOAD_BYTES)
+            }
         } ?: throw IllegalStateException("Cannot read file")
         file
     }

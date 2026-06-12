@@ -223,7 +223,10 @@ class SoundApplier @Inject constructor(
         type: ContentType,
         file: File,
     ): Uri? = saveToMediaStore(fileName, mimeType, type) { output ->
-        FileInputStream(file).use { input -> input.copyTo(output) }
+        if (file.length() > MAX_APPLY_BYTES) {
+            throw java.io.IOException("Sound file too large: ${file.length()} > $MAX_APPLY_BYTES bytes")
+        }
+        FileInputStream(file).use { input -> copyStreamCapped(input, output, MAX_APPLY_BYTES) }
     }
 
     private fun guessMimeType(url: String): String {
