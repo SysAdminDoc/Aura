@@ -3275,13 +3275,6 @@ Items below are sourced from exhaustive external research against competitors, p
 
 ### P0 -- Root-cause fixes and trust
 
-- [ ] P0 -- **Verify bundled yt-dlp version against CVE-2026-26331**
-  Why: youtubedl-android 0.18.1 bundles a yt-dlp binary. CVE-2026-26331 (CVSS 8.8, command injection via `--netrc-cmd`) is fixed in yt-dlp 2026.02.21. Aura does not use `--netrc-cmd`, but the bundled binary version needs explicit verification and documentation.
-  Evidence: CVE-2026-26331 advisory (GHSA-g3gw-q23r-pgqm); `app/build.gradle.kts:228` pins youtubedl-android 0.18.1.
-  Touches: `app/build.gradle.kts`, yt-dlp binary version extraction, `docs/distribution/supply-chain.md`, release preflight.
-  Acceptance: Bundled yt-dlp version is documented; if pre-2026.02.21, either bump youtubedl-android or document that `--netrc-cmd` is never invoked and the attack vector is not reachable.
-  Complexity: S
-
 - [ ] P0 -- **Bump NewPipe Extractor from 0.24.8 to 0.26.2+**
   Why: NewPipe Extractor 0.24.8 is 18+ months stale. YouTube regularly breaks older extractors. v0.26.x fixes SABR-only player response crashes, comment extraction, and live stream display. Staleness is the top recurring breakage risk for Sounds and Video tabs.
   Evidence: NewPipe Extractor releases; CLAUDE.md pin comment at v0.24.8; v6.31.1 crash fix for Android 8-12 was a NewPipe-related backport issue.

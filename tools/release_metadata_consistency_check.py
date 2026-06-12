@@ -207,9 +207,11 @@ def validate_release_docs(repo_root: Path, policy: dict[str, Any]) -> None:
         if not any(artifact in text for text in docs.values()):
             raise ReleaseMetadataConsistencyError(f"required release artifact is missing from docs: {artifact}")
     release_workflow = docs["release workflow"]
-    for snippet in ("RELEASE_NOTES.md", "SHA256SUMS.txt", "actions/attest@v4"):
+    for snippet in ("RELEASE_NOTES.md", "SHA256SUMS.txt"):
         if snippet not in release_workflow:
             raise ReleaseMetadataConsistencyError(f"release workflow missing snippet: {snippet}")
+    if "actions/attest@" not in release_workflow or "# v4" not in release_workflow:
+        raise ReleaseMetadataConsistencyError("release workflow missing pinned actions/attest v4 step")
 
 
 def validate_policy(repo_root: Path, policy: dict[str, Any]) -> dict[str, object]:
