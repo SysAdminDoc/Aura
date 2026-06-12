@@ -1,10 +1,13 @@
 package com.freevibe.service
 
 import android.content.Context
+import android.net.Uri
+import android.provider.DocumentsContract
 import androidx.hilt.work.HiltWorker
 import androidx.work.*
 import com.freevibe.data.local.PreferencesManager
-import com.freevibe.data.model.SearchResult
+import com.freevibe.data.model.ContentSource
+import com.freevibe.data.model.WALLPAPER_SOURCE_LOCAL_FOLDER
 import com.freevibe.data.model.Wallpaper
 import com.freevibe.data.model.WallpaperTarget
 import com.freevibe.data.model.stableKey
@@ -17,6 +20,7 @@ import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
 import kotlinx.coroutines.flow.first
 import java.util.Calendar
+import java.util.Locale
 import java.util.concurrent.TimeUnit
 
 @HiltWorker
@@ -176,13 +180,17 @@ class AutoWallpaperWorker @AssistedInject constructor(
             "bing" -> wallpaperRepo.getBingDaily(page = 1).items
             "reddit" -> redditRepo.getMultiSubreddit().items
             "pixabay" -> wallpaperRepo.getPixabay(page = (1..5).random()).items
+            WALLPAPER_SOURCE_LOCAL_FOLDER -> queryLocalFolderWallpapers(
+                context = applicationContext,
+                folderUriString = prefs.localWallpaperFolderUri.first(),
+            )
             "discover" -> wallpaperRepo.getDiscover(page = (1..3).random()).items
             else -> wallpaperRepo.getDiscover(page = 1).items
         }
     }
 
     private suspend fun applyAndRecord(wallpaper: Wallpaper, target: WallpaperTarget): Result {
-        return wallpaperApplier.applyFromUrl(wallpaper.fullUrl, target).fold(
+        return wallpaperApplier.applyByLocator(wallpaper.fullUrl, target).fold(
             onSuccess = {
                 historyManager.record(wallpaper, target)
                 Result.success()
@@ -312,3 +320,72 @@ internal fun pickAlternateWallpaper(
     .filter { it.stableKey() != current.stableKey() }
     .randomOrNull()
     ?: current
+
+internal fun queryLocalFolderWallpapers(
+    context: Context,
+    folderUriString: String,
+): List<Wallpaper> {
+    if (folderUriString.isBlank()) return emptyList()
+    val treeUri = runCatching { Uri.parse(folderUriString) }.getOrNull() ?: return emptyList()
+    val treeDocumentId = runCatching { DocumentsContract.getTreeDocumentId(treeUri) }
+        .getOrNull()
+        ?: return emptyList()
+    val childrenUri = DocumentsContract.buildChildDocumentsUriUsingTree(treeUri, treeDocumentId)
+    val projection = arrayOf(
+        DocumentsContract.Document.COLUMN_DOCUMENT_ID,
+        DocumentsContract.Document.COLUMN_DISPLAY_NAME,
+        DocumentsContract.Document.COLUMN_MIME_TYPE,
+        DocumentsContract.Document.COLUMN_SIZE,
+    )
+    return runCatching {
+        context.contentResolver.query(childrenUri, projection, null, null, null)?.use { cursor ->
+            val documentIdIndex = cursor.getColumnIndex(DocumentsContract.Document.COLUMN_DOCUMENT_ID)
+            val displayNameIndex = cursor.getColumnIndex(DocumentsContract.Document.COLUMN_DISPLAY_NAME)
+            val mimeTypeIndex = cursor.getColumnIndex(DocumentsContract.Document.COLUMN_MIME_TYPE)
+            val sizeIndex = cursor.getColumnIndex(DocumentsContract.Document.COLUMN_SIZE)
+            val wallpapers = mutableListOf<Wallpaper>()
+            while (cursor.moveToNext()) {
+                val documentId = cursor.stringAt(documentIdIndex).takeUnless { it.isBlank() } ?: continue
+                val displayName = cursor.stringAt(displayNameIndex)
+                val mimeType = cursor.stringAt(mimeTypeIndex)
+                if (!isLocalWallpaperMimeType(displayName, mimeType)) continue
+                val documentUri = DocumentsContract.buildDocumentUriUsingTree(treeUri, documentId).toString()
+                wallpapers += Wallpaper(
+                    id = documentUri,
+                    source = ContentSource.LOCAL,
+                    thumbnailUrl = documentUri,
+                    fullUrl = documentUri,
+                    width = 0,
+                    height = 0,
+                    fileSize = cursor.longAt(sizeIndex),
+                    fileType = mimeType,
+                    sourcePageUrl = folderUriString,
+                    license = "Local User Content",
+                    uploaderName = "Local folder",
+                )
+            }
+            wallpapers.sortedWith(compareBy<Wallpaper, String>(String.CASE_INSENSITIVE_ORDER) { it.localSortName() })
+        } ?: emptyList()
+    }.getOrDefault(emptyList())
+}
+
+internal fun isLocalWallpaperMimeType(
+    displayName: String?,
+    mimeType: String?,
+): Boolean {
+    val normalizedMime = mimeType?.lowercase(Locale.ROOT).orEmpty()
+    if (normalizedMime == "vnd.android.document/directory") return false
+    if (normalizedMime.startsWith("image/")) return true
+    return displayName
+        ?.substringAfterLast('.', missingDelimiterValue = "")
+        ?.lowercase(Locale.ROOT) in setOf("jpg", "jpeg", "png", "webp", "heic", "heif", "avif")
+}
+
+private fun android.database.Cursor.stringAt(index: Int): String =
+    if (index >= 0 && !isNull(index)) getString(index).orEmpty() else ""
+
+private fun android.database.Cursor.longAt(index: Int): Long =
+    if (index >= 0 && !isNull(index)) getLong(index).coerceAtLeast(0L) else 0L
+
+private fun Wallpaper.localSortName(): String =
+    fullUrl.substringAfterLast('/').ifBlank { id }

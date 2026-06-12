@@ -1,6 +1,7 @@
 package com.freevibe.service
 
 import com.freevibe.data.model.ContentSource
+import com.freevibe.data.model.WALLPAPER_SOURCE_LOCAL_FOLDER
 import com.freevibe.data.model.Wallpaper
 import com.freevibe.data.model.stableKey
 import org.junit.Assert.assertEquals
@@ -16,6 +17,21 @@ class AutoWallpaperWorkerTest {
         assertEquals("discover", "unsplash".normalizeWallpaperRotationSource())
         assertEquals("discover", "".normalizeWallpaperRotationSource())
         assertEquals("wallhaven", "wallhaven".normalizeWallpaperRotationSource())
+        assertEquals(WALLPAPER_SOURCE_LOCAL_FOLDER, WALLPAPER_SOURCE_LOCAL_FOLDER.normalizeWallpaperRotationSource())
+    }
+
+    @Test
+    fun `isLocalWallpaperMimeType accepts image mime types and common extensions`() {
+        assertTrue(isLocalWallpaperMimeType("photo.jpg", "image/jpeg"))
+        assertTrue(isLocalWallpaperMimeType("portrait.WEBP", null))
+        assertTrue(isLocalWallpaperMimeType("wallpaper.heic", "application/octet-stream"))
+    }
+
+    @Test
+    fun `isLocalWallpaperMimeType rejects folders and non-image media`() {
+        assertEquals(false, isLocalWallpaperMimeType("Pictures", "vnd.android.document/directory"))
+        assertEquals(false, isLocalWallpaperMimeType("clip.mp4", "video/mp4"))
+        assertEquals(false, isLocalWallpaperMimeType("notes.txt", null))
     }
 
     @Test

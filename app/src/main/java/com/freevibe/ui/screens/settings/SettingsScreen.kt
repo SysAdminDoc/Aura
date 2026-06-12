@@ -43,6 +43,7 @@ import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.freevibe.data.model.WALLPAPER_SOURCE_LOCAL_FOLDER
 import com.freevibe.data.repository.CommunityBlockedUser
 import com.freevibe.service.COMMUNITY_DELETION_REQUEST_SUBJECT
 import com.freevibe.service.BackgroundWorkDiagnostics
@@ -152,6 +153,7 @@ fun SettingsScreen(
     val autoWpEnabled by viewModel.autoWpEnabled.collectAsStateWithLifecycle()
     val autoWpInterval by viewModel.autoWpInterval.collectAsStateWithLifecycle()
     val autoWpSource by viewModel.autoWpSource.collectAsStateWithLifecycle()
+    val localWallpaperFolderUri by viewModel.localWallpaperFolderUri.collectAsStateWithLifecycle()
     val autoWpRequiresCharging by viewModel.autoWpRequiresCharging.collectAsStateWithLifecycle()
     val autoWpRequiresWiFi by viewModel.autoWpRequiresWiFi.collectAsStateWithLifecycle()
     val autoWpRequiresIdle by viewModel.autoWpRequiresIdle.collectAsStateWithLifecycle()
@@ -222,6 +224,9 @@ fun SettingsScreen(
                 .getBoolean("daily_wallpaper_enabled", false)
         )
     }
+    val localFolderPermissionActive = remember(localWallpaperFolderUri) {
+        hasPersistedReadPermission(context, localWallpaperFolderUri)
+    }
 
     fun setDailyWallpaperEnabled(enabled: Boolean) {
         dailyWp = enabled
@@ -262,6 +267,41 @@ fun SettingsScreen(
     }
 
     // Video wallpaper picker
+    var pendingLocalFolderSource by remember { mutableStateOf<String?>(null) }
+    val localFolderPickerLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.OpenDocumentTree()
+    ) { uri: Uri? ->
+        val target = pendingLocalFolderSource
+        pendingLocalFolderSource = null
+        if (uri != null) {
+            val persisted = runCatching {
+                context.contentResolver.takePersistableUriPermission(
+                    uri,
+                    Intent.FLAG_GRANT_READ_URI_PERMISSION,
+                )
+            }.isSuccess
+            viewModel.setLocalWallpaperFolderUri(uri.toString())
+            when (target) {
+                "auto" -> viewModel.setAutoWpSource(WALLPAPER_SOURCE_LOCAL_FOLDER)
+                "scheduler" -> viewModel.setSchedulerSource(WALLPAPER_SOURCE_LOCAL_FOLDER)
+            }
+            Toast.makeText(
+                context,
+                if (persisted) {
+                    "Local wallpaper folder saved"
+                } else {
+                    "Folder selected. If rotation cannot read it, choose the folder again."
+                },
+                Toast.LENGTH_LONG,
+            ).show()
+        }
+    }
+
+    fun chooseLocalWallpaperFolder(target: String? = null) {
+        pendingLocalFolderSource = target
+        localFolderPickerLauncher.launch(null)
+    }
+
     val videoPickerLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.OpenDocument()
     ) { uri: Uri? ->
@@ -464,7 +504,11 @@ fun SettingsScreen(
                 SettingsItem(
                     icon = Icons.Default.Source,
                     title = "Wallpaper source",
-                    subtitle = autoWpSource.replaceFirstChar { it.uppercase() },
+                    subtitle = wallpaperRotationSourceLabel(
+                        source = autoWpSource,
+                        localFolderUri = localWallpaperFolderUri,
+                        localFolderPermissionActive = localFolderPermissionActive,
+                    ),
                     onClick = { showSourcePicker = true },
                 )
                 // T-7: Rotation execution constraints. WorkManager gates the worker on
@@ -490,6 +534,23 @@ fun SettingsScreen(
                     subtitle = "Defer rotation until you're not actively using the phone",
                     checked = autoWpRequiresIdle,
                     onCheckedChange = { viewModel.setAutoWallpaperRequiresIdle(it) },
+                )
+            }
+            SettingsItem(
+                icon = Icons.Default.FolderOpen,
+                title = "Local rotation folder",
+                subtitle = localWallpaperFolderSubtitle(
+                    localWallpaperFolderUri,
+                    localFolderPermissionActive,
+                ),
+                onClick = { chooseLocalWallpaperFolder() },
+            )
+            if (localWallpaperFolderUri.isNotBlank()) {
+                SettingsItem(
+                    icon = Icons.Default.DeleteOutline,
+                    title = "Clear local rotation folder",
+                    subtitle = "Remove the saved folder grant from Aura",
+                    onClick = { viewModel.clearLocalWallpaperFolderUri() },
                 )
             }
             // NX-6: trigger-based rotation (per-unlock + screen-off pre-stage).
@@ -665,7 +726,11 @@ fun SettingsScreen(
                     schedulerSource == "collection" ->
                         "Collection (none selected)"
                     else ->
-                        schedulerSource.replaceFirstChar { it.uppercase() }
+                        wallpaperRotationSourceLabel(
+                            source = schedulerSource,
+                            localFolderUri = localWallpaperFolderUri,
+                            localFolderPermissionActive = localFolderPermissionActive,
+                        )
                 }
                 SettingsItem(
                     icon = Icons.Default.Source,
@@ -724,6 +789,7 @@ fun SettingsScreen(
             if (showSchedulerSource) {
                 val sources = listOf(
                     "discover" to "Discover (mixed)", "favorites" to "My Favorites",
+                    WALLPAPER_SOURCE_LOCAL_FOLDER to "Local folder",
                     "wallhaven" to "Wallhaven", "pixabay" to "Pixabay", "reddit" to "Reddit (legacy)",
                     "bing" to "Bing Daily", "collection" to "A collection…",
                 ).filter { (key, _) ->
@@ -748,6 +814,15 @@ fun SettingsScreen(
                                             if (key == "collection") {
                                                 showSchedulerSource = false
                                                 showCollectionPicker = true
+                                            } else if (
+                                                key == WALLPAPER_SOURCE_LOCAL_FOLDER &&
+                                                !isLocalWallpaperFolderReady(
+                                                    localWallpaperFolderUri,
+                                                    localFolderPermissionActive,
+                                                )
+                                            ) {
+                                                showSchedulerSource = false
+                                                chooseLocalWallpaperFolder("scheduler")
                                             } else {
                                                 viewModel.setSchedulerSource(key)
                                                 showSchedulerSource = false
@@ -1749,7 +1824,13 @@ fun SettingsScreen(
             bingProviderEnabled = bingProviderEnabled,
             pixabayProviderEnabled = pixabayProviderEnabled,
             redditProviderEnabled = redditProviderEnabled,
+            localFolderUri = localWallpaperFolderUri,
+            localFolderPermissionActive = localFolderPermissionActive,
             onDismiss = { showSourcePicker = false },
+            onChooseLocalFolder = {
+                showSourcePicker = false
+                chooseLocalWallpaperFolder("auto")
+            },
             onSelect = { source ->
                 viewModel.setAutoWpSource(source)
                 showSourcePicker = false
@@ -3120,6 +3201,42 @@ private fun sourceDisplayName(source: String): String =
         }
         .ifBlank { source }
 
+private fun isLocalWallpaperFolderReady(
+    localFolderUri: String,
+    localFolderPermissionActive: Boolean,
+): Boolean = localFolderUri.isNotBlank() && localFolderPermissionActive
+
+private fun localWallpaperFolderSubtitle(
+    localFolderUri: String,
+    localFolderPermissionActive: Boolean,
+): String = when {
+    localFolderUri.isBlank() -> "Choose a local image folder for offline rotation"
+    localFolderPermissionActive -> "Folder selected for local-only wallpaper rotation"
+    else -> "Permission needs repair; choose the folder again"
+}
+
+private fun wallpaperRotationSourceLabel(
+    source: String,
+    localFolderUri: String,
+    localFolderPermissionActive: Boolean,
+): String = when (source) {
+    WALLPAPER_SOURCE_LOCAL_FOLDER -> when {
+        localFolderUri.isBlank() -> "Local folder (choose folder)"
+        localFolderPermissionActive -> "Local folder"
+        else -> "Local folder (permission needed)"
+    }
+    else -> sourceDisplayName(source)
+}
+
+private fun hasPersistedReadPermission(context: Context, uriString: String): Boolean {
+    if (uriString.isBlank()) return false
+    return runCatching {
+        context.contentResolver.persistedUriPermissions.any { permission ->
+            permission.isReadPermission && permission.uri.toString() == uriString
+        }
+    }.getOrDefault(false)
+}
+
 private fun countSelectedStyles(raw: String): Int =
     raw.split(",").count { it.trim().isNotBlank() }
 
@@ -3232,12 +3349,17 @@ private fun SourcePickerDialog(
     bingProviderEnabled: Boolean,
     pixabayProviderEnabled: Boolean,
     redditProviderEnabled: Boolean,
+    localFolderUri: String,
+    localFolderPermissionActive: Boolean,
     onDismiss: () -> Unit,
+    onChooseLocalFolder: () -> Unit,
     onSelect: (String) -> Unit,
 ) {
+    val localFolderReady = isLocalWallpaperFolderReady(localFolderUri, localFolderPermissionActive)
     val sources = listOf(
         "discover" to "Discover (mixed)",
         "favorites" to "My Favorites",
+        WALLPAPER_SOURCE_LOCAL_FOLDER to if (localFolderReady) "Local folder" else "Local folder (choose folder)",
         "reddit" to "Reddit (legacy)",
         "wallhaven" to "Wallhaven",
         "pixabay" to "Pixabay",
@@ -3266,7 +3388,13 @@ private fun SourcePickerDialog(
                     ) {
                         RadioButton(
                             selected = currentSource == key,
-                            onClick = { onSelect(key) },
+                            onClick = {
+                                if (key == WALLPAPER_SOURCE_LOCAL_FOLDER && !localFolderReady) {
+                                    onChooseLocalFolder()
+                                } else {
+                                    onSelect(key)
+                                }
+                            },
                         )
                         Spacer(Modifier.width(8.dp))
                         Text(label)

@@ -3441,13 +3441,6 @@ Net-new items from the fourth research pass (2026-06-10). Focused on: transitive
 
 ### P1 — Feature gap closure
 
-- [ ] P1 — **Local-folder wallpaper rotation source via SAF**
-  Why: Paperize's core feature and WallFlow's most-requested ask (#102/#106). Aura has zero `OPEN_DOCUMENT_TREE` / `DocumentFile` usage. Users with curated local wallpaper folders have no way to add them to Aura's rotation scheduler. This also builds the SAF infrastructure needed for scheduled backup exports.
-  Evidence: grep for `OPEN_DOCUMENT_TREE` / `DocumentFile` returns zero hits; WallFlow issues #102/#106; Paperize folder-rotation core; `AutoWallpaperWorker.kt` rotation source list.
-  Touches: Settings > Auto wallpaper (folder picker via `ACTION_OPEN_DOCUMENT_TREE`, persisted URI), new `LocalFolderSource` in `data/repository/`, `AutoWallpaperWorker.kt` (new source type), `ProviderDisclosure.kt` (LOCAL source row).
-  Acceptance: user picks a folder; rotation cycles through images in that folder (recursive optional); folder URI persists across reboots; revoked permission surfaces a fix-it notice; no network access needed; images respect existing wallpaper-apply pipeline (crop, apply home/lock/dual).
-  Complexity: M
-
 ### P2 — Differentiation
 
 - [ ] P2 — **Depth/portrait wallpaper composer (MagicFX but FOSS)**

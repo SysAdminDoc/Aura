@@ -101,6 +101,7 @@ class PreferencesManager @Inject constructor(
     val autoWallpaperInterval: Flow<Long> = get(Keys.AUTO_WP_INTERVAL, 12L)
     val autoWallpaperSource: Flow<String> = get(Keys.AUTO_WP_SOURCE, "wallhaven")
     val autoWallpaperTarget: Flow<String> = get(Keys.AUTO_WP_TARGET, "BOTH")
+    val localWallpaperFolderUri: Flow<String> = get(Keys.LOCAL_WALLPAPER_FOLDER_URI, "")
     /** Hold rotation until the device is plugged in (battery-friendly). */
     val autoWallpaperRequiresCharging: Flow<Boolean> = get(Keys.AUTO_WP_REQUIRES_CHARGING, false)
     /** Hold rotation until on Wi-Fi / unmetered (data-cap-friendly). */
@@ -116,6 +117,7 @@ class PreferencesManager @Inject constructor(
     suspend fun setAutoWallpaperInterval(hours: Long) = set(Keys.AUTO_WP_INTERVAL, hours)
     suspend fun setAutoWallpaperSource(source: String) = set(Keys.AUTO_WP_SOURCE, source)
     suspend fun setAutoWallpaperTarget(target: String) = set(Keys.AUTO_WP_TARGET, target)
+    suspend fun setLocalWallpaperFolderUri(uri: String) = set(Keys.LOCAL_WALLPAPER_FOLDER_URI, uri.trim())
     suspend fun setAutoWallpaperRequiresCharging(v: Boolean) = set(Keys.AUTO_WP_REQUIRES_CHARGING, v)
     suspend fun setAutoWallpaperRequiresWiFiOnly(v: Boolean) = set(Keys.AUTO_WP_REQUIRES_WIFI, v)
     suspend fun setAutoWallpaperRequiresIdle(v: Boolean) = set(Keys.AUTO_WP_REQUIRES_IDLE, v)
@@ -275,6 +277,7 @@ class PreferencesManager @Inject constructor(
         val AUTO_WP_INTERVAL = longPreferencesKey("auto_wp_interval")
         val AUTO_WP_SOURCE = stringPreferencesKey("auto_wp_source")
         val AUTO_WP_TARGET = stringPreferencesKey("auto_wp_target")
+        val LOCAL_WALLPAPER_FOLDER_URI = stringPreferencesKey("local_wallpaper_folder_uri")
         val AUTO_PREVIEW = booleanPreferencesKey("auto_preview")
         val PREVIEW_VOLUME = floatPreferencesKey("preview_volume")
         val GRID_COLUMNS = intPreferencesKey("grid_columns")

@@ -373,6 +373,7 @@ class SettingsViewModelTest {
             every { prefs.autoWallpaperEnabled } returns flowOf(false)
             every { prefs.autoWallpaperInterval } returns flowOf(12L)
             every { prefs.autoWallpaperSource } returns flowOf("discover")
+            every { prefs.localWallpaperFolderUri } returns flowOf("")
             every { prefs.schedulerEnabled } returns flowOf(false)
             every { prefs.schedulerIntervalMinutes } returns flowOf(360L)
             every { prefs.schedulerSource } returns flowOf("discover")

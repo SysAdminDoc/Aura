@@ -107,6 +107,7 @@ class SettingsViewModel @Inject constructor(
     val autoWpEnabled = prefs.autoWallpaperEnabled.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
     val autoWpInterval = prefs.autoWallpaperInterval.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 12L)
     val autoWpSource = prefs.autoWallpaperSource.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), "wallhaven")
+    val localWallpaperFolderUri = prefs.localWallpaperFolderUri.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), "")
     val autoWpRequiresCharging = prefs.autoWallpaperRequiresCharging.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
     val autoWpRequiresWiFi = prefs.autoWallpaperRequiresWiFiOnly.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
     val autoWpRequiresIdle = prefs.autoWallpaperRequiresIdle.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
@@ -233,6 +234,23 @@ class SettingsViewModel @Inject constructor(
     // #10: Set auto-wallpaper source
     fun setAutoWpSource(source: String) = viewModelScope.launch {
         prefs.setAutoWallpaperSource(source)
+    }
+
+    fun setLocalWallpaperFolderUri(uri: String) = viewModelScope.launch {
+        prefs.setLocalWallpaperFolderUri(uri)
+    }
+
+    fun clearLocalWallpaperFolderUri() = viewModelScope.launch {
+        val uri = localWallpaperFolderUri.value
+        if (uri.isNotBlank()) {
+            runCatching {
+                context.contentResolver.releasePersistableUriPermission(
+                    android.net.Uri.parse(uri),
+                    android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION,
+                )
+            }
+        }
+        prefs.setLocalWallpaperFolderUri("")
     }
 
     // T-7: Auto-wallpaper rotation constraints. Re-schedule on toggle so the
