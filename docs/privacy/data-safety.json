@@ -37,19 +37,6 @@
       "playDeclaration": "Sensitive special access; reviewed because it is required for ringtone/notification/alarm apply flows."
     },
     {
-      "name": "com.android.alarm.permission.SET_ALARM",
-      "category": "alarms",
-      "purpose": "Support alarm-tone actions for sounds selected by the user.",
-      "userAction": "User chooses an alarm-related sound action.",
-      "dataTypes": ["Audio files"],
-      "collectionStatus": "localOnly",
-      "sharingStatus": "notShared",
-      "retention": "No app-side remote data is created by the permission.",
-      "deletionPath": "Change alarm settings or remove the local downloaded sound.",
-      "denialBehavior": "Alarm-related integration is unavailable while browsing remains usable.",
-      "playDeclaration": "Declared for alarm sound integration."
-    },
-    {
       "name": "android.permission.RECORD_AUDIO",
       "category": "communityUploads",
       "purpose": "Record a community sound when the user explicitly starts recording.",

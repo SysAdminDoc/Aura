@@ -586,13 +586,6 @@ Append-only Cycle 11 handoff. Every item below is source-backed in `docs/researc
   - Acceptance: each apply path shows a rationale before opening special app access, validates grant state on return, handles revoke/deny/no-settings-activity cases, separates default-sound changes from contact-write permission, and documents that Aura modifies system sound settings only after explicit user action.
   - Verify: revoke `WRITE_SETTINGS` and attempt detail apply, quick apply, local trimmed-file apply, and contact ringtone apply; grant and apply each default sound type; simulate/no-op guard for missing settings activity; inspect MediaStore row and default sound URI after success.
 
-- [ ] 🤖 🔬 **P1 — Remove or justify dormant manifest permissions**
-  - Why: `com.android.alarm.permission.SET_ALARM` is declared, but local source search found no `AlarmClock`, `ACTION_SET_ALARM`, or `AlarmManager` flow. Dormant permissions create store-review and trust risk even when protection level is normal.
-  - Evidence: `AndroidManifest.xml`; `SoundApplier` alarm-sound path uses `RingtoneManager.TYPE_ALARM`; no source hits for alarm-setting APIs; Android `SET_ALARM` permission docs.
-  - Touches: manifest, release preflight, alarm-sound apply docs, app-content packet, permission ledger.
-  - Acceptance: `SET_ALARM` is removed unless Aura ships a user-initiated alarm-setting feature; any retained normal/legacy permission such as `WRITE_EXTERNAL_STORAGE` with `maxSdkVersion=28` has a current code path and disclosure row.
-  - Verify: manifest permission diff after removal/justification; alarm ringtone apply still works through `WRITE_SETTINGS`/MediaStore; preflight reports zero permission rows with "unknown" or "future feature" purpose.
-
 - [ ] 🤖 🔬 **P1 — Microphone/community audio disclosure and retention**
   - Why: Community recording requests `RECORD_AUDIO` from a user action and writes a cache file, but the roadmap needs explicit evidence that recordings stay local until upload, become public only after upload, can be discarded, and are cleaned up if abandoned.
   - Evidence: `SoundsScreen.kt`; `CommunityAudioRecorder.kt`; `SoundsViewModel.kt`; `file_paths.xml`; Play personal/sensitive user-data policy; Play Data safety audio/user-generated-content categories; Android runtime-permission guidance.

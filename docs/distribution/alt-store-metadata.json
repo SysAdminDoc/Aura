@@ -165,11 +165,6 @@
       "disclosure": "Protected system setting used only after explicit user action."
     },
     {
-      "name": "com.android.alarm.permission.SET_ALARM",
-      "purpose": "Offer alarm sound assignment where supported by the device.",
-      "disclosure": "Used only for sound apply flows."
-    },
-    {
       "name": "android.permission.RECORD_AUDIO",
       "purpose": "Record a local sound clip for optional community sound upload.",
       "disclosure": "Requested only when the user starts recording."
