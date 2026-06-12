@@ -39,6 +39,9 @@ class SoundApplier @Inject constructor(
         }
     }
 
+    fun canOpenWriteSettings(): Boolean =
+        requestWriteSettings().resolveActivity(context.packageManager) != null
+
     /** Download audio from URL, save to MediaStore, and set as system sound */
     suspend fun downloadAndApply(
         url: String,

@@ -50,6 +50,9 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.freevibe.R
 import com.freevibe.data.model.ContentSource
@@ -76,6 +79,7 @@ import com.freevibe.ui.policy.CommunityUploadPolicyKind
 import com.freevibe.ui.policy.communityUploadPolicyCopy
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.launch
 import kotlin.math.sin
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -151,6 +155,30 @@ fun SoundsScreen(
     var showFiltersSheet by remember { mutableStateOf(false) }
     val context = LocalContext.current
     val focusManager = LocalFocusManager.current
+    val snackbarHostState = remember { SnackbarHostState() }
+    val scope = rememberCoroutineScope()
+    var writeSettingsRefresh by remember { mutableIntStateOf(0) }
+    val lifecycleOwner = LocalLifecycleOwner.current
+    DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME) {
+                writeSettingsRefresh += 1
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
+    }
+    val canWriteSettings = remember(writeSettingsRefresh, state.isApplying) { viewModel.canWriteSettings() }
+    val canOpenWriteSettings = remember(writeSettingsRefresh) { viewModel.canOpenWriteSettings() }
+    val writeSettingsUnavailable = stringResource(R.string.write_settings_unavailable)
+    fun openWriteSettings() {
+        if (!canOpenWriteSettings) {
+            scope.launch { snackbarHostState.showSnackbar(writeSettingsUnavailable) }
+            return
+        }
+        runCatching { context.startActivity(viewModel.requestWriteSettings()) }
+            .onFailure { scope.launch { snackbarHostState.showSnackbar(writeSettingsUnavailable) } }
+    }
     val isYouTubeTab = state.selectedTab == SoundTab.YOUTUBE
     val soundFilterCount = remember(state.qualityFilter) {
         if (state.qualityFilter != SoundQualityFilter.BEST) 1 else 0
@@ -248,7 +276,8 @@ fun SoundsScreen(
     if (currentQuickApplySound != null) {
         QuickApplySheet(
             sound = currentQuickApplySound,
-            canApply = viewModel.canWriteSettings(),
+            canApply = canWriteSettings,
+            canOpenPermissionSettings = canOpenWriteSettings,
             isApplying = state.isApplying,
             onApply = { sound, type ->
                 quickApplyActionInFlight = true
@@ -256,7 +285,7 @@ fun SoundsScreen(
                 viewModel.applySound(sound, type, confirmed = true)
             },
             onDownload = { viewModel.downloadSound(it, confirmed = true); quickApplySound = null },
-            onGrantPermission = { context.startActivity(viewModel.requestWriteSettings()) },
+            onGrantPermission = ::openWriteSettings,
             onDismiss = {
                 if (!state.isApplying) {
                     quickApplySound = null
@@ -283,7 +312,6 @@ fun SoundsScreen(
     }
 
     // Snackbar for success/error feedback
-    val snackbarHostState = remember { SnackbarHostState() }
     LaunchedEffect(state.applySuccess) {
         state.applySuccess?.let { snackbarHostState.showSnackbar(it); viewModel.clearSuccess() }
     }
@@ -1343,6 +1371,7 @@ private fun quickApplyPolicyMessages(capabilities: SoundLicenseCapabilities): Li
 private fun QuickApplySheet(
     sound: Sound,
     canApply: Boolean,
+    canOpenPermissionSettings: Boolean,
     isApplying: Boolean,
     onApply: (Sound, ContentType) -> Unit,
     onDownload: (Sound) -> Unit,
@@ -1353,6 +1382,8 @@ private fun QuickApplySheet(
     val canUseApply = canApply && licenseCapabilities.canUse(SoundAction.APPLY)
     val canUseDownload = licenseCapabilities.canUse(SoundAction.DOWNLOAD)
     val policyMessages = remember(licenseCapabilities) { quickApplyPolicyMessages(licenseCapabilities) }
+    val writeSettingsBody = stringResource(R.string.write_settings_body)
+    val openSettingsLabel = stringResource(R.string.write_settings_open)
     var pendingAction by remember(sound.stableKey()) { mutableStateOf<QuickApplyPendingAction?>(null) }
 
     pendingAction?.let { pending ->
@@ -1415,13 +1446,13 @@ private fun QuickApplySheet(
                     ) {
                         Icon(Icons.Default.Warning, contentDescription = null, tint = MaterialTheme.colorScheme.error)
                         Text(
-                            "System settings permission is required before applying.",
+                            writeSettingsBody,
                             modifier = Modifier.weight(1f),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onErrorContainer,
                         )
-                        TextButton(onClick = onGrantPermission, enabled = !isApplying) {
-                            Text("Grant")
+                        TextButton(onClick = onGrantPermission, enabled = !isApplying && canOpenPermissionSettings) {
+                            Text(openSettingsLabel)
                         }
                     }
                 }

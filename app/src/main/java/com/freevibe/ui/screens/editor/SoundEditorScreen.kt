@@ -20,6 +20,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.ProgressBarRangeInfo
 import androidx.compose.ui.semantics.contentDescription
@@ -28,6 +29,9 @@ import androidx.compose.ui.semantics.progressBarRangeInfo
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.freevibe.R
 import com.freevibe.data.model.ContentType
@@ -35,6 +39,7 @@ import com.freevibe.data.model.Sound
 import com.freevibe.data.model.stableKey
 import com.freevibe.ui.components.AuraStateAction
 import com.freevibe.ui.components.AuraStateCard
+import kotlinx.coroutines.launch
 import kotlin.math.abs
 import kotlin.math.max
 
@@ -61,6 +66,33 @@ fun SoundEditorScreen(
     val fadeOutLabel = stringResource(R.string.a11y_fade_out)
     val fadeInState = stringResource(R.string.a11y_duration_ms, state.fadeInMs)
     val fadeOutState = stringResource(R.string.a11y_duration_ms, state.fadeOutMs)
+    val writeSettingsTitle = stringResource(R.string.write_settings_title)
+    val writeSettingsBody = stringResource(R.string.write_settings_body)
+    val openSettingsLabel = stringResource(R.string.write_settings_open)
+    val writeSettingsUnavailable = stringResource(R.string.write_settings_unavailable)
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+    var writeSettingsRefresh by remember { mutableIntStateOf(0) }
+    val lifecycleOwner = LocalLifecycleOwner.current
+    DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME) {
+                writeSettingsRefresh += 1
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
+    }
+    val canWriteSettings = remember(writeSettingsRefresh, state.isApplying) { viewModel.canWriteSettings() }
+    val canOpenWriteSettings = remember(writeSettingsRefresh) { viewModel.canOpenWriteSettings() }
+    fun openWriteSettings() {
+        if (!canOpenWriteSettings) {
+            scope.launch { snackbarHostState.showSnackbar(writeSettingsUnavailable) }
+            return
+        }
+        runCatching { context.startActivity(viewModel.requestWriteSettings()) }
+            .onFailure { scope.launch { snackbarHostState.showSnackbar(writeSettingsUnavailable) } }
+    }
     val editorIdentityKey = remember(soundId, fallbackSound?.source, fallbackSound?.previewUrl, fallbackSound?.downloadUrl, initialLocalUri) {
         listOf(
             soundId.orEmpty(),
@@ -384,17 +416,40 @@ fun SoundEditorScreen(
 
                 // Apply buttons
                 Text("Set trimmed audio as", style = MaterialTheme.typography.labelLarge)
+                if (!canWriteSettings) {
+                    Surface(
+                        color = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.55f),
+                        contentColor = MaterialTheme.colorScheme.onErrorContainer,
+                        shape = RoundedCornerShape(8.dp),
+                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.error.copy(alpha = 0.22f)),
+                    ) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth().padding(14.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(12.dp),
+                        ) {
+                            Icon(Icons.Default.Warning, contentDescription = null, tint = MaterialTheme.colorScheme.error)
+                            Column(Modifier.weight(1f)) {
+                                Text(writeSettingsTitle, style = MaterialTheme.typography.labelLarge)
+                                Text(writeSettingsBody, style = MaterialTheme.typography.bodySmall)
+                            }
+                            TextButton(onClick = ::openWriteSettings, enabled = canOpenWriteSettings) {
+                                Text(openSettingsLabel)
+                            }
+                        }
+                    }
+                }
                 Row(
                     Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                 ) {
-                    ApplyBtn("Ringtone", Modifier.weight(1f), state.isApplying) {
+                    ApplyBtn("Ringtone", Modifier.weight(1f), state.isApplying, enabled = canWriteSettings) {
                         viewModel.applyTrimmed(ContentType.RINGTONE)
                     }
-                    ApplyBtn("Notification", Modifier.weight(1f), state.isApplying) {
+                    ApplyBtn("Notification", Modifier.weight(1f), state.isApplying, enabled = canWriteSettings) {
                         viewModel.applyTrimmed(ContentType.NOTIFICATION)
                     }
-                    ApplyBtn("Alarm", Modifier.weight(1f), state.isApplying) {
+                    ApplyBtn("Alarm", Modifier.weight(1f), state.isApplying, enabled = canWriteSettings) {
                         viewModel.applyTrimmed(ContentType.ALARM)
                     }
                 }
@@ -449,10 +504,12 @@ private fun TrimGuidance(trimDurationMs: Long) {
 }
 
 @Composable
-private fun ApplyBtn(text: String, modifier: Modifier, isLoading: Boolean, onClick: () -> Unit) {
+private fun ApplyBtn(text: String, modifier: Modifier, isLoading: Boolean, enabled: Boolean = true, onClick: () -> Unit) {
     val applyLabel = stringResource(R.string.a11y_set_trimmed_audio_as, text)
     val applyState = if (isLoading) {
         stringResource(R.string.a11y_applying)
+    } else if (!enabled) {
+        stringResource(R.string.write_settings_required_short)
     } else {
         stringResource(R.string.a11y_ready)
     }
@@ -464,7 +521,7 @@ private fun ApplyBtn(text: String, modifier: Modifier, isLoading: Boolean, onCli
                 stateDescription = applyState
                 onClick(label = applyLabel, action = null)
             },
-        enabled = !isLoading,
+        enabled = enabled && !isLoading,
         shape = RoundedCornerShape(8.dp),
         colors = ButtonDefaults.buttonColors(
             containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,

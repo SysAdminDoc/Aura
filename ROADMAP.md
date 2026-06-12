@@ -579,13 +579,6 @@ Append-only Cycle 11 handoff. Every item below is source-backed in `docs/researc
   - Verify: parse merged manifest and compare with ledger; review Play Data safety fields for location, contacts, voice/sound recordings, other audio files, crash/diagnostics, user-generated content, and device IDs; confirm fastlane copy does not contradict the ledger.
   - Progress 2026-06-07: Cycle 141 added `docs/privacy/data-safety.md`, `docs/privacy/data-safety.json`, `tools/privacy_data_safety_check.py`, focused tests, and verify/release workflow gates. The live matrix covers all 15 manifest permissions and fails if permissions or `maxSdkVersion` values drift without a reviewed row.
 
-- [ ] 🤖 🔬 **P0 — `WRITE_SETTINGS` ringtone/sound special-access contract**
-  - Why: Aura uses special app access to set default ringtone, notification, and alarm sounds; Android requires a user-specific system-settings grant, and the settings activity may be absent on some devices.
-  - Evidence: `SoundApplier.canWriteSettings()`; `SoundApplier.requestWriteSettings()`; `SoundDetailScreen.kt`; `SoundsScreen.kt`; `RingtoneManager.setActualDefaultRingtoneUri()` usage; Android `Settings.System.canWrite()` and `ACTION_MANAGE_WRITE_SETTINGS` docs; Play restricted-permission guidance.
-  - Touches: ringtone/notification/alarm apply flows, quick-apply sheet, contact-ringtone apply path, privacy/Data safety copy, release QA script.
-  - Acceptance: each apply path shows a rationale before opening special app access, validates grant state on return, handles revoke/deny/no-settings-activity cases, separates default-sound changes from contact-write permission, and documents that Aura modifies system sound settings only after explicit user action.
-  - Verify: revoke `WRITE_SETTINGS` and attempt detail apply, quick apply, local trimmed-file apply, and contact ringtone apply; grant and apply each default sound type; simulate/no-op guard for missing settings activity; inspect MediaStore row and default sound URI after success.
-
 - [ ] 🤖 🔬 **P1 — Microphone/community audio disclosure and retention**
   - Why: Community recording requests `RECORD_AUDIO` from a user action and writes a cache file, but the roadmap needs explicit evidence that recordings stay local until upload, become public only after upload, can be discarded, and are cleaned up if abandoned.
   - Evidence: `SoundsScreen.kt`; `CommunityAudioRecorder.kt`; `SoundsViewModel.kt`; `file_paths.xml`; Play personal/sensitive user-data policy; Play Data safety audio/user-generated-content categories; Android runtime-permission guidance.

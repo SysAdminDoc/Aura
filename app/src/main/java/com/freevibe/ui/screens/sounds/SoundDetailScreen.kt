@@ -38,6 +38,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.freevibe.R
 import com.freevibe.ui.components.AuraStateAction
@@ -168,6 +171,10 @@ fun SoundDetailScreen(
     val removeFavoriteLabel = stringResource(R.string.a11y_remove_favorite)
     val playingState = stringResource(R.string.a11y_preview_playing)
     val readyState = stringResource(R.string.a11y_ready)
+    val writeSettingsTitle = stringResource(R.string.write_settings_title)
+    val writeSettingsBody = stringResource(R.string.write_settings_body)
+    val openSettingsLabel = stringResource(R.string.write_settings_open)
+    val writeSettingsUnavailable = stringResource(R.string.write_settings_unavailable)
     var showReportDialog by remember(s.stableKey()) { mutableStateOf(false) }
     var showBlockCreatorDialog by remember(s.stableKey()) { mutableStateOf(false) }
     var showDeleteUploadDialog by remember(s.stableKey()) { mutableStateOf(false) }
@@ -184,6 +191,28 @@ fun SoundDetailScreen(
     }
 
     val snackbarHostState = remember { SnackbarHostState() }
+    val scope = rememberCoroutineScope()
+    var writeSettingsRefresh by remember { mutableIntStateOf(0) }
+    val lifecycleOwner = LocalLifecycleOwner.current
+    DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME) {
+                writeSettingsRefresh += 1
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
+    }
+    val canWriteSettings = remember(writeSettingsRefresh, state.isApplying) { viewModel.canWriteSettings() }
+    val canOpenWriteSettings = remember(writeSettingsRefresh) { viewModel.canOpenWriteSettings() }
+    fun openWriteSettings() {
+        if (!canOpenWriteSettings) {
+            scope.launch { snackbarHostState.showSnackbar(writeSettingsUnavailable) }
+            return
+        }
+        runCatching { context.startActivity(viewModel.requestWriteSettings()) }
+            .onFailure { scope.launch { snackbarHostState.showSnackbar(writeSettingsUnavailable) } }
+    }
     LaunchedEffect(state.applySuccess) { state.applySuccess?.let { snackbarHostState.showSnackbar(it); viewModel.clearSuccess() } }
     LaunchedEffect(state.error) { state.error?.let { snackbarHostState.showSnackbar("Error: $it"); viewModel.clearError() } }
 
@@ -448,7 +477,7 @@ fun SoundDetailScreen(
             }
 
             // Permission warning
-            if (!viewModel.canWriteSettings()) {
+            if (!canWriteSettings) {
                 Surface(
                     color = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.55f),
                     contentColor = MaterialTheme.colorScheme.onErrorContainer,
@@ -468,26 +497,28 @@ fun SoundDetailScreen(
                             )
                         }
                         Column(Modifier.weight(1f)) {
-                            Text("Allow ringtone changes", style = MaterialTheme.typography.labelLarge)
+                            Text(writeSettingsTitle, style = MaterialTheme.typography.labelLarge)
                             Text(
-                                "Aura needs system settings access before it can set ringtones, notifications, and alarms.",
+                                writeSettingsBody,
                                 style = MaterialTheme.typography.bodySmall,
                             )
                         }
-                        TextButton(onClick = { context.startActivity(viewModel.requestWriteSettings()) }) { Text("Open") }
+                        TextButton(onClick = ::openWriteSettings, enabled = canOpenWriteSettings) {
+                            Text(openSettingsLabel)
+                        }
                     }
                 }
             }
 
             // 3 Apply buttons side-by-side
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                ApplyButton("Ringtone", Icons.Default.Call, !state.isApplying && viewModel.canWriteSettings() && canApplySound, state.isApplying, Modifier.weight(1f)) {
+                ApplyButton("Ringtone", Icons.Default.Call, !state.isApplying && canWriteSettings && canApplySound, state.isApplying, Modifier.weight(1f)) {
                     runSoundAction(SoundAction.APPLY, "Apply sound") { viewModel.applySound(s, ContentType.RINGTONE, confirmed = true) }
                 }
-                ApplyButton("Notification", Icons.Default.Notifications, !state.isApplying && viewModel.canWriteSettings() && canApplySound, state.isApplying, Modifier.weight(1f)) {
+                ApplyButton("Notification", Icons.Default.Notifications, !state.isApplying && canWriteSettings && canApplySound, state.isApplying, Modifier.weight(1f)) {
                     runSoundAction(SoundAction.APPLY, "Apply sound") { viewModel.applySound(s, ContentType.NOTIFICATION, confirmed = true) }
                 }
-                ApplyButton("Alarm", Icons.Default.Alarm, !state.isApplying && viewModel.canWriteSettings() && canApplySound, state.isApplying, Modifier.weight(1f)) {
+                ApplyButton("Alarm", Icons.Default.Alarm, !state.isApplying && canWriteSettings && canApplySound, state.isApplying, Modifier.weight(1f)) {
                     runSoundAction(SoundAction.APPLY, "Apply sound") { viewModel.applySound(s, ContentType.ALARM, confirmed = true) }
                 }
             }

@@ -267,10 +267,20 @@ class SoundEditorViewModel @Inject constructor(
         if (_state.value.isPlaying) stopPlayback() else startPlayback()
     }
 
+    fun canWriteSettings(): Boolean = soundApplier.canWriteSettings()
+
+    fun canOpenWriteSettings(): Boolean = soundApplier.canOpenWriteSettings()
+
+    fun requestWriteSettings() = soundApplier.requestWriteSettings()
+
     fun applyTrimmed(type: ContentType) {
         val s = _state.value
         val path = s.localFilePath ?: return
         viewModelScope.launch {
+            if (!soundApplier.canWriteSettings()) {
+                _state.update { it.copy(error = "System settings access is required before applying sounds.") }
+                return@launch
+            }
             _state.update { it.copy(isApplying = true) }
             try {
                 val trimmedPath = audioTrimmer.trim(

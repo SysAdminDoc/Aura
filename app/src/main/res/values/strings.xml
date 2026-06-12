@@ -52,4 +52,9 @@
     <string name="a11y_selected">Selected</string>
     <string name="a11y_not_selected">Not selected</string>
     <string name="a11y_use_mode">Use %1$s mode</string>
+    <string name="write_settings_title">Allow ringtone changes</string>
+    <string name="write_settings_body">Aura needs Modify system settings access before it can set ringtones, notification sounds, or alarm sounds. Aura only changes these after you tap an apply action.</string>
+    <string name="write_settings_open">Open settings</string>
+    <string name="write_settings_required_short">System settings access required</string>
+    <string name="write_settings_unavailable">This device does not expose the Modify system settings screen for Aura. Open Android settings manually and allow Aura to modify system settings.</string>
 </resources>

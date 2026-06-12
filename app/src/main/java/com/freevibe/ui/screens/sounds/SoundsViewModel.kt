@@ -734,6 +734,15 @@ class SoundsViewModel @Inject constructor(
                 _state.update { it.copy(isApplying = false, error = message) }
                 return@launch
             }
+            if (!soundApplier.canWriteSettings()) {
+                _state.update {
+                    it.copy(
+                        isApplying = false,
+                        error = "System settings access is required before applying sounds.",
+                    )
+                }
+                return@launch
+            }
             _state.update { it.copy(isApplying = true, applySuccess = null) }
             val url = resolveDownloadUrl(sound)
                 ?: run {
@@ -784,6 +793,7 @@ class SoundsViewModel @Inject constructor(
     }
 
     fun canWriteSettings(): Boolean = soundApplier.canWriteSettings()
+    fun canOpenWriteSettings(): Boolean = soundApplier.canOpenWriteSettings()
     fun requestWriteSettings() = soundApplier.requestWriteSettings()
 
     fun toggleFavorite(sound: Sound) {
