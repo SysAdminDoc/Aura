@@ -35,8 +35,15 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.CustomAccessibilityAction
 import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.customActions
+import androidx.compose.ui.semantics.onClick
+import androidx.compose.ui.semantics.progressBarRangeInfo
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.stateDescription
+import androidx.compose.ui.semantics.ProgressBarRangeInfo
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextOverflow
@@ -44,6 +51,7 @@ import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.freevibe.R
 import com.freevibe.data.model.ContentSource
 import com.freevibe.data.model.ContentType
 import com.freevibe.data.model.COMMUNITY_UPLOAD_LICENSES
@@ -985,11 +993,36 @@ private fun SoundCard(
         !(sound.source == ContentSource.BUNDLED && sound.uploaderName == "Aura Picks")
     val (sourceLabel, sourceColor) = soundSourceTone(sound.source)
     val badges = remember(sound, tab) { soundBadges(sound, tab) }
+    val playPreviewLabel = stringResource(R.string.a11y_play_preview)
+    val pausePreviewLabel = stringResource(R.string.a11y_pause_preview)
+    val quickActionsLabel = stringResource(R.string.a11y_show_quick_actions)
+    val upvoteSoundLabel = stringResource(R.string.a11y_upvote_sound)
+    val hideSoundLabel = stringResource(R.string.a11y_hide_sound)
+    val openSoundDetailsLabel = stringResource(R.string.a11y_open_sound_details, sound.name)
+    val openDetailsLabel = stringResource(R.string.a11y_open_details)
     val playButtonDescription = when {
-        isResolving && sound.source == ContentSource.YOUTUBE -> "Loading YouTube audio"
-        isResolving -> "Preparing audio"
-        isPlaying -> "Pause"
-        else -> "Play"
+        isResolving && sound.source == ContentSource.YOUTUBE -> stringResource(R.string.a11y_loading_youtube_audio)
+        isResolving -> stringResource(R.string.a11y_preparing_audio)
+        isPlaying -> pausePreviewLabel
+        else -> playPreviewLabel
+    }
+    val soundStateDescription = when {
+        isResolving -> stringResource(R.string.a11y_preview_preparing)
+        isPlaying -> stringResource(R.string.a11y_preview_playing)
+        isPreviewReady -> stringResource(R.string.a11y_preview_ready)
+        else -> stringResource(R.string.a11y_preview_not_loaded)
+    }
+    val voteStateDescription = stringResource(R.string.a11y_vote_count, voteCount ?: 0)
+    val cardActions = buildList {
+        add(CustomAccessibilityAction(openDetailsLabel) { onClick(); true })
+        add(CustomAccessibilityAction(if (isPlaying) pausePreviewLabel else playPreviewLabel) { onPlayClick(); true })
+        add(CustomAccessibilityAction(quickActionsLabel) { onLongPress(); true })
+        onUpvote?.let { upvote ->
+            add(CustomAccessibilityAction(upvoteSoundLabel) { upvote(); true })
+        }
+        onDownvote?.let { downvote ->
+            add(CustomAccessibilityAction(hideSoundLabel) { downvote(); true })
+        }
     }
     Surface(
         color = if (isPlaying) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.34f) else MaterialTheme.colorScheme.surfaceContainer.copy(alpha = 0.72f),
@@ -1000,7 +1033,17 @@ private fun SoundCard(
             else MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.24f),
         ),
         shadowElevation = if (isPlaying) 3.dp else 1.dp,
-        modifier = Modifier.combinedClickable(onClick = onClick, onLongClick = onLongPress),
+        modifier = Modifier
+            .combinedClickable(
+                onClick = onClick,
+                onClickLabel = openSoundDetailsLabel,
+                onLongClick = onLongPress,
+                onLongClickLabel = quickActionsLabel,
+            )
+            .semantics {
+                stateDescription = soundStateDescription
+                customActions = cardActions
+            },
     ) {
         Column(Modifier.fillMaxWidth().padding(vertical = 10.dp, horizontal = 12.dp)) {
             Row(
@@ -1014,7 +1057,11 @@ private fun SoundCard(
                     modifier = Modifier
                         .size(40.dp)
                         .clip(CircleShape)
-                        .semantics { contentDescription = playButtonDescription }
+                        .semantics {
+                            contentDescription = playButtonDescription
+                            stateDescription = soundStateDescription
+                            onClick(label = playButtonDescription, action = null)
+                        }
                         .background(
                             if (isPlaying) MaterialTheme.colorScheme.primary
                             else MaterialTheme.colorScheme.surfaceContainerHigh
@@ -1025,7 +1072,7 @@ private fun SoundCard(
                     } else {
                         Icon(
                             if (isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow,
-                            contentDescription = playButtonDescription,
+                            contentDescription = null,
                             tint = if (isPlaying) Color.White else MaterialTheme.colorScheme.onSurface,
                             modifier = Modifier.size(20.dp),
                         )
@@ -1140,7 +1187,12 @@ private fun SoundCard(
                             onClick = it,
                             shape = RoundedCornerShape(8.dp),
                             contentPadding = PaddingValues(horizontal = 10.dp, vertical = 0.dp),
-                            modifier = Modifier.heightIn(min = 40.dp),
+                            modifier = Modifier
+                                .heightIn(min = 40.dp)
+                                .semantics {
+                                    stateDescription = voteStateDescription
+                                    onClick(label = upvoteSoundLabel, action = null)
+                                },
                         ) {
                             Icon(Icons.Default.ThumbUp, contentDescription = null, modifier = Modifier.size(15.dp))
                             Spacer(Modifier.width(5.dp))
@@ -1155,7 +1207,9 @@ private fun SoundCard(
                             onClick = it,
                             shape = RoundedCornerShape(8.dp),
                             contentPadding = PaddingValues(horizontal = 10.dp, vertical = 0.dp),
-                            modifier = Modifier.heightIn(min = 40.dp),
+                            modifier = Modifier
+                                .heightIn(min = 40.dp)
+                                .semantics { onClick(label = hideSoundLabel, action = null) },
                         ) {
                             Icon(Icons.Default.VisibilityOff, contentDescription = null, modifier = Modifier.size(15.dp))
                             Spacer(Modifier.width(5.dp))
@@ -1177,7 +1231,21 @@ private fun MiniWaveform(duration: Double, isPlaying: Boolean, progress: Float, 
         val seed = (duration * 1000).toInt()
         List(barCount) { i -> (0.2f + 0.8f * ((sin((seed + i * 37) % 360 * 0.0174533) + 1f) / 2f).toFloat()) }
     }
-    Canvas(modifier.height(20.dp)) {
+    val waveformDescription = stringResource(R.string.a11y_playback_waveform)
+    val waveformState = if (isPlaying) {
+        stringResource(R.string.a11y_playing_percent, (progress * 100).toInt())
+    } else {
+        stringResource(R.string.a11y_stopped)
+    }
+    Canvas(
+        modifier
+            .height(20.dp)
+            .semantics {
+                contentDescription = waveformDescription
+                stateDescription = waveformState
+                progressBarRangeInfo = ProgressBarRangeInfo(progress.coerceIn(0f, 1f), 0f..1f)
+            },
+    ) {
         val barWidth = size.width / barCount
         val gap = 1.dp.toPx()
         heights.forEachIndexed { i, height ->

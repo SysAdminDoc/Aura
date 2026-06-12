@@ -30,6 +30,11 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.onClick
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -39,6 +44,7 @@ import androidx.media3.common.MediaItem
 import androidx.media3.common.Player
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.freevibe.R
 import com.freevibe.data.repository.matchesHiddenIds
 import com.freevibe.service.VIDEO_WALLPAPER_SCALE_MODE_FIT
 import com.freevibe.service.VIDEO_WALLPAPER_SCALE_MODE_ZOOM
@@ -641,8 +647,25 @@ private fun VideoCard(
     val metadataBadges = remember(item, orientation) {
         listOf(item.loopBadge(), item.batteryBadge(), item.fitBadge(orientation))
     }
+    val videoStateDescription = when {
+        isApplying -> stringResource(R.string.a11y_video_applying)
+        shouldPreview && streamUrl != null -> stringResource(R.string.a11y_video_preview_playing)
+        streamUrl == null -> stringResource(R.string.a11y_video_preview_loading)
+        else -> stringResource(R.string.a11y_video_preview_ready)
+    }
+    val upvoteVideoLabel = stringResource(R.string.a11y_upvote_video_wallpaper)
+    val hideVideoLabel = stringResource(R.string.a11y_hide_video_wallpaper)
+    val previewVideoLabel = stringResource(R.string.a11y_preview_video_wallpaper)
+    val applyVideoLabel = stringResource(R.string.a11y_apply_video_wallpaper)
+    val applyingLabel = stringResource(R.string.a11y_applying)
+    val readyLabel = stringResource(R.string.a11y_ready)
+    val voteStateDescription = stringResource(R.string.a11y_vote_count, voteCount)
 
     Card(
+        modifier = Modifier.semantics {
+            contentDescription = item.title
+            stateDescription = videoStateDescription
+        },
         shape = RoundedCornerShape(8.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer),
         border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.24f)),
@@ -711,7 +734,7 @@ private fun VideoCard(
                             Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
                                 Icon(
                                     Icons.Default.PlayArrow,
-                                    "Preview video",
+                                    contentDescription = null,
                                     tint = Color.White,
                                     modifier = Modifier.size(24.dp),
                                 )
@@ -794,23 +817,48 @@ private fun VideoCard(
                 }
             }
             // Vote buttons
-            IconButton(onClick = onUpvote, modifier = Modifier.size(48.dp)) {
+            IconButton(
+                onClick = onUpvote,
+                modifier = Modifier
+                    .size(48.dp)
+                    .semantics {
+                        stateDescription = voteStateDescription
+                        onClick(label = upvoteVideoLabel, action = null)
+                    },
+            ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(Icons.Default.ThumbUp, "Upvote video", Modifier.size(16.dp), tint = MaterialTheme.colorScheme.primary)
+                    Icon(
+                        Icons.Default.ThumbUp,
+                        contentDescription = null,
+                        modifier = Modifier.size(16.dp),
+                        tint = MaterialTheme.colorScheme.primary,
+                    )
                     if (voteCount > 0) Text("$voteCount", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.primary, modifier = Modifier.padding(start = 2.dp))
                 }
             }
-            IconButton(onClick = onDownvote, modifier = Modifier.size(48.dp)) {
-                Icon(Icons.Default.VisibilityOff, "Hide video", Modifier.size(16.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant)
+            IconButton(
+                onClick = onDownvote,
+                modifier = Modifier
+                    .size(48.dp)
+                    .semantics { onClick(label = hideVideoLabel, action = null) },
+            ) {
+                Icon(
+                    Icons.Default.VisibilityOff,
+                    contentDescription = null,
+                    modifier = Modifier.size(16.dp),
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
             }
             if (onPreview != null) {
                 IconButton(
                     onClick = onPreview,
-                    modifier = Modifier.size(48.dp),
+                    modifier = Modifier
+                        .size(48.dp)
+                        .semantics { onClick(label = previewVideoLabel, action = null) },
                 ) {
                     Icon(
                         Icons.Default.Visibility,
-                        contentDescription = "Preview video wallpaper",
+                        contentDescription = null,
                         modifier = Modifier.size(18.dp),
                         tint = MaterialTheme.colorScheme.primary,
                     )
@@ -821,7 +869,12 @@ private fun VideoCard(
                 onClick = onApply,
                 enabled = !isApplying,
                 shape = RoundedCornerShape(8.dp),
-                modifier = Modifier.heightIn(min = 48.dp),
+                modifier = Modifier
+                    .heightIn(min = 48.dp)
+                    .semantics {
+                        stateDescription = if (isApplying) applyingLabel else readyLabel
+                        onClick(label = applyVideoLabel, action = null)
+                    },
             ) {
                 if (isApplying) {
                     CircularProgressIndicator(Modifier.size(16.dp), strokeWidth = 2.dp, color = Color.White)
@@ -906,9 +959,20 @@ private fun PresentationModeButton(
     label: String,
     modifier: Modifier = Modifier,
 ) {
+    val selectedDescription = if (selected) {
+        stringResource(R.string.a11y_selected)
+    } else {
+        stringResource(R.string.a11y_not_selected)
+    }
+    val useModeLabel = stringResource(R.string.a11y_use_mode, label)
     OutlinedButton(
         onClick = onClick,
-        modifier = modifier.heightIn(min = 48.dp),
+        modifier = modifier
+            .heightIn(min = 48.dp)
+            .semantics {
+                stateDescription = selectedDescription
+                onClick(label = useModeLabel, action = null)
+            },
         shape = RoundedCornerShape(8.dp),
         colors = ButtonDefaults.outlinedButtonColors(
             containerColor = if (selected) {

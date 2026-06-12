@@ -24,12 +24,18 @@ import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.onClick
+import androidx.compose.ui.semantics.progressBarRangeInfo
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.stateDescription
+import androidx.compose.ui.semantics.ProgressBarRangeInfo
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.freevibe.R
 import com.freevibe.service.DownloadProgress
 
 private val AuraCardShape = RoundedCornerShape(8.dp)
@@ -64,7 +70,17 @@ private fun DownloadItem(
     download: DownloadProgress,
     onDismiss: () -> Unit,
 ) {
+    val dismissDownloadLabel = stringResource(R.string.a11y_dismiss_download, download.fileName)
+    val downloadStateDescription = when {
+        download.isComplete -> stringResource(R.string.a11y_download_complete)
+        download.error != null -> stringResource(R.string.a11y_download_failed)
+        else -> stringResource(R.string.a11y_download_percent, (download.progress * 100).toInt())
+    }
     Surface(
+        modifier = Modifier.semantics {
+            contentDescription = download.fileName
+            stateDescription = downloadStateDescription
+        },
         color = MaterialTheme.colorScheme.surfaceContainer,
         shape = AuraCardShape,
         border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.28f)),
@@ -123,8 +139,13 @@ private fun DownloadItem(
                 }
 
                 if (download.isComplete || download.error != null) {
-                    IconButton(onClick = onDismiss, modifier = Modifier.size(AuraMinimumTouchTarget)) {
-                        Icon(Icons.Default.Close, "Dismiss", modifier = Modifier.size(16.dp))
+                    IconButton(
+                        onClick = onDismiss,
+                        modifier = Modifier
+                            .size(AuraMinimumTouchTarget)
+                            .semantics { onClick(label = dismissDownloadLabel, action = null) },
+                    ) {
+                        Icon(Icons.Default.Close, contentDescription = null, modifier = Modifier.size(16.dp))
                     }
                 }
             }
@@ -136,7 +157,10 @@ private fun DownloadItem(
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(4.dp)
-                        .clip(RoundedCornerShape(2.dp)),
+                        .clip(RoundedCornerShape(2.dp))
+                        .semantics {
+                            progressBarRangeInfo = ProgressBarRangeInfo(download.progress, 0f..1f)
+                        },
                     color = MaterialTheme.colorScheme.primary,
                     trackColor = MaterialTheme.colorScheme.surfaceContainerHigh,
                 )
@@ -513,7 +537,9 @@ fun AuraStateCard(
                     Button(
                         onClick = action.onClick,
                         shape = AuraControlShape,
-                        modifier = Modifier.heightIn(min = AuraMinimumTouchTarget),
+                        modifier = Modifier
+                            .heightIn(min = AuraMinimumTouchTarget)
+                            .semantics { onClick(label = action.label, action = null) },
                     ) {
                         Icon(action.icon, contentDescription = null, modifier = Modifier.size(16.dp))
                         Spacer(Modifier.width(6.dp))
@@ -524,7 +550,9 @@ fun AuraStateCard(
                     OutlinedButton(
                         onClick = action.onClick,
                         shape = AuraControlShape,
-                        modifier = Modifier.heightIn(min = AuraMinimumTouchTarget),
+                        modifier = Modifier
+                            .heightIn(min = AuraMinimumTouchTarget)
+                            .semantics { onClick(label = action.label, action = null) },
                     ) {
                         Icon(action.icon, contentDescription = null, modifier = Modifier.size(16.dp))
                         Spacer(Modifier.width(6.dp))
@@ -543,9 +571,16 @@ fun CountBadge(
     tone: Color = MaterialTheme.colorScheme.primary,
 ) {
     if (count <= 0) return
+    val countDescription = if (count > 99) {
+        stringResource(R.string.a11y_count_badge_overflow)
+    } else {
+        stringResource(R.string.a11y_count_badge, count)
+    }
 
     Surface(
-        modifier = modifier,
+        modifier = modifier.semantics {
+            contentDescription = countDescription
+        },
         shape = RoundedCornerShape(6.dp),
         color = tone,
         contentColor = MaterialTheme.colorScheme.onPrimary,

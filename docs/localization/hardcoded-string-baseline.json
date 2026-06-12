@@ -99,7 +99,7 @@
     },
     {
       "count": 1,
-      "firstLine": 407,
+      "firstLine": 431,
       "id": "ade15f1377251e42",
       "path": "app/src/main/java/com/freevibe/ui/components/SharedComponents.kt",
       "sink": "contentDescription",
@@ -107,7 +107,7 @@
     },
     {
       "count": 1,
-      "firstLine": 161,
+      "firstLine": 185,
       "id": "d8a9167a7fdc6340",
       "path": "app/src/main/java/com/freevibe/ui/components/SharedComponents.kt",
       "sink": "label",
@@ -115,7 +115,7 @@
     },
     {
       "count": 1,
-      "firstLine": 169,
+      "firstLine": 193,
       "id": "250adc3bb4e77670",
       "path": "app/src/main/java/com/freevibe/ui/components/SharedComponents.kt",
       "sink": "label",
@@ -3715,7 +3715,7 @@
     },
     {
       "count": 1,
-      "firstLine": 1580,
+      "firstLine": 1648,
       "id": "bec5d61ccb1463f3",
       "path": "app/src/main/java/com/freevibe/ui/screens/sounds/SoundsScreen.kt",
       "sink": "Text",
@@ -3723,7 +3723,7 @@
     },
     {
       "count": 1,
-      "firstLine": 1331,
+      "firstLine": 1399,
       "id": "2bdeed07dfd6212a",
       "path": "app/src/main/java/com/freevibe/ui/screens/sounds/SoundsScreen.kt",
       "sink": "Text",
@@ -3731,7 +3731,7 @@
     },
     {
       "count": 2,
-      "firstLine": 1307,
+      "firstLine": 1375,
       "id": "78dc65cd858a76d8",
       "path": "app/src/main/java/com/freevibe/ui/screens/sounds/SoundsScreen.kt",
       "sink": "Text",
@@ -3739,7 +3739,7 @@
     },
     {
       "count": 1,
-      "firstLine": 1514,
+      "firstLine": 1582,
       "id": "130bca86009a6c55",
       "path": "app/src/main/java/com/freevibe/ui/screens/sounds/SoundsScreen.kt",
       "sink": "Text",
@@ -3747,7 +3747,7 @@
     },
     {
       "count": 1,
-      "firstLine": 875,
+      "firstLine": 883,
       "id": "469b076687a99f32",
       "path": "app/src/main/java/com/freevibe/ui/screens/sounds/SoundsScreen.kt",
       "sink": "Text",
@@ -3755,7 +3755,7 @@
     },
     {
       "count": 1,
-      "firstLine": 1530,
+      "firstLine": 1598,
       "id": "23c590cc77f48259",
       "path": "app/src/main/java/com/freevibe/ui/screens/sounds/SoundsScreen.kt",
       "sink": "Text",
@@ -3763,7 +3763,7 @@
     },
     {
       "count": 1,
-      "firstLine": 1302,
+      "firstLine": 1370,
       "id": "2dabfad36ce48313",
       "path": "app/src/main/java/com/freevibe/ui/screens/sounds/SoundsScreen.kt",
       "sink": "Text",
@@ -3771,7 +3771,7 @@
     },
     {
       "count": 1,
-      "firstLine": 1475,
+      "firstLine": 1543,
       "id": "821aabcd61a14293",
       "path": "app/src/main/java/com/freevibe/ui/screens/sounds/SoundsScreen.kt",
       "sink": "Text",
@@ -3779,7 +3779,7 @@
     },
     {
       "count": 1,
-      "firstLine": 1356,
+      "firstLine": 1424,
       "id": "9fc941e17a0063d7",
       "path": "app/src/main/java/com/freevibe/ui/screens/sounds/SoundsScreen.kt",
       "sink": "Text",
@@ -3787,7 +3787,7 @@
     },
     {
       "count": 1,
-      "firstLine": 1162,
+      "firstLine": 1216,
       "id": "c286dd1c67c5fcda",
       "path": "app/src/main/java/com/freevibe/ui/screens/sounds/SoundsScreen.kt",
       "sink": "Text",
@@ -3795,7 +3795,7 @@
     },
     {
       "count": 1,
-      "firstLine": 1534,
+      "firstLine": 1602,
       "id": "83b825d3fbb0fa6c",
       "path": "app/src/main/java/com/freevibe/ui/screens/sounds/SoundsScreen.kt",
       "sink": "Text",
@@ -3803,7 +3803,7 @@
     },
     {
       "count": 1,
-      "firstLine": 1550,
+      "firstLine": 1618,
       "id": "baaa1ce34aa6fa16",
       "path": "app/src/main/java/com/freevibe/ui/screens/sounds/SoundsScreen.kt",
       "sink": "Text",
@@ -3811,7 +3811,7 @@
     },
     {
       "count": 1,
-      "firstLine": 1227,
+      "firstLine": 1295,
       "id": "9e255979d2c4dd9a",
       "path": "app/src/main/java/com/freevibe/ui/screens/sounds/SoundsScreen.kt",
       "sink": "Text",
@@ -3819,7 +3819,7 @@
     },
     {
       "count": 1,
-      "firstLine": 1069,
+      "firstLine": 1116,
       "id": "be995495a73ac6f6",
       "path": "app/src/main/java/com/freevibe/ui/screens/sounds/SoundsScreen.kt",
       "sink": "Text",
@@ -3827,7 +3827,7 @@
     },
     {
       "count": 1,
-      "firstLine": 1460,
+      "firstLine": 1528,
       "id": "98245e3ea916885f",
       "path": "app/src/main/java/com/freevibe/ui/screens/sounds/SoundsScreen.kt",
       "sink": "Text",
@@ -3835,7 +3835,7 @@
     },
     {
       "count": 1,
-      "firstLine": 1447,
+      "firstLine": 1515,
       "id": "47858b625d1ea8c9",
       "path": "app/src/main/java/com/freevibe/ui/screens/sounds/SoundsScreen.kt",
       "sink": "Text",
@@ -3843,7 +3843,7 @@
     },
     {
       "count": 1,
-      "firstLine": 1225,
+      "firstLine": 1293,
       "id": "6b6da1de78750bf2",
       "path": "app/src/main/java/com/freevibe/ui/screens/sounds/SoundsScreen.kt",
       "sink": "Text",
@@ -3851,7 +3851,7 @@
     },
     {
       "count": 1,
-      "firstLine": 1252,
+      "firstLine": 1320,
       "id": "d652616a3c36f75b",
       "path": "app/src/main/java/com/freevibe/ui/screens/sounds/SoundsScreen.kt",
       "sink": "Text",
@@ -3859,7 +3859,7 @@
     },
     {
       "count": 1,
-      "firstLine": 1510,
+      "firstLine": 1578,
       "id": "9ebbdaf732725a11",
       "path": "app/src/main/java/com/freevibe/ui/screens/sounds/SoundsScreen.kt",
       "sink": "Text",
@@ -3867,7 +3867,7 @@
     },
     {
       "count": 1,
-      "firstLine": 1548,
+      "firstLine": 1616,
       "id": "035dd1c8035239b9",
       "path": "app/src/main/java/com/freevibe/ui/screens/sounds/SoundsScreen.kt",
       "sink": "Text",
@@ -3875,7 +3875,7 @@
     },
     {
       "count": 1,
-      "firstLine": 1470,
+      "firstLine": 1538,
       "id": "5c7c2e2d761f22f9",
       "path": "app/src/main/java/com/freevibe/ui/screens/sounds/SoundsScreen.kt",
       "sink": "Text",
@@ -3883,7 +3883,7 @@
     },
     {
       "count": 1,
-      "firstLine": 1350,
+      "firstLine": 1418,
       "id": "e7355009ae8f44cf",
       "path": "app/src/main/java/com/freevibe/ui/screens/sounds/SoundsScreen.kt",
       "sink": "Text",
@@ -3891,7 +3891,7 @@
     },
     {
       "count": 1,
-      "firstLine": 1528,
+      "firstLine": 1596,
       "id": "cc80622e0efc96e8",
       "path": "app/src/main/java/com/freevibe/ui/screens/sounds/SoundsScreen.kt",
       "sink": "Text",
@@ -3899,7 +3899,7 @@
     },
     {
       "count": 1,
-      "firstLine": 1604,
+      "firstLine": 1672,
       "id": "b707d9c1bb436570",
       "path": "app/src/main/java/com/freevibe/ui/screens/sounds/SoundsScreen.kt",
       "sink": "Text",
@@ -3907,7 +3907,7 @@
     },
     {
       "count": 1,
-      "firstLine": 1504,
+      "firstLine": 1572,
       "id": "553e21942ed4e42e",
       "path": "app/src/main/java/com/freevibe/ui/screens/sounds/SoundsScreen.kt",
       "sink": "Text",
@@ -3915,7 +3915,7 @@
     },
     {
       "count": 1,
-      "firstLine": 1529,
+      "firstLine": 1597,
       "id": "921d14c01f157400",
       "path": "app/src/main/java/com/freevibe/ui/screens/sounds/SoundsScreen.kt",
       "sink": "Text",
@@ -3923,7 +3923,7 @@
     },
     {
       "count": 1,
-      "firstLine": 871,
+      "firstLine": 879,
       "id": "060d4ca1a65e7996",
       "path": "app/src/main/java/com/freevibe/ui/screens/sounds/SoundsScreen.kt",
       "sink": "contentDescription",
@@ -3931,7 +3931,7 @@
     },
     {
       "count": 1,
-      "firstLine": 1109,
+      "firstLine": 1156,
       "id": "8c0c194ef43710d7",
       "path": "app/src/main/java/com/freevibe/ui/screens/sounds/SoundsScreen.kt",
       "sink": "contentDescription",
@@ -3939,7 +3939,7 @@
     },
     {
       "count": 1,
-      "firstLine": 565,
+      "firstLine": 573,
       "id": "a54d33427aedfd65",
       "path": "app/src/main/java/com/freevibe/ui/screens/sounds/SoundsScreen.kt",
       "sink": "contentDescription",
@@ -3947,7 +3947,7 @@
     },
     {
       "count": 1,
-      "firstLine": 805,
+      "firstLine": 813,
       "id": "ad1c19805377fb5e",
       "path": "app/src/main/java/com/freevibe/ui/screens/sounds/SoundsScreen.kt",
       "sink": "label",
@@ -3955,7 +3955,7 @@
     },
     {
       "count": 1,
-      "firstLine": 420,
+      "firstLine": 428,
       "id": "9e3c92a593cfbd82",
       "path": "app/src/main/java/com/freevibe/ui/screens/sounds/SoundsScreen.kt",
       "sink": "label",
@@ -3963,7 +3963,7 @@
     },
     {
       "count": 1,
-      "firstLine": 798,
+      "firstLine": 806,
       "id": "6d0ad843774c4279",
       "path": "app/src/main/java/com/freevibe/ui/screens/sounds/SoundsScreen.kt",
       "sink": "label",
@@ -3971,7 +3971,7 @@
     },
     {
       "count": 1,
-      "firstLine": 416,
+      "firstLine": 424,
       "id": "199f947b48f7ad37",
       "path": "app/src/main/java/com/freevibe/ui/screens/sounds/SoundsScreen.kt",
       "sink": "title",
@@ -3979,7 +3979,7 @@
     },
     {
       "count": 1,
-      "firstLine": 780,
+      "firstLine": 788,
       "id": "8f4a04ad005590b3",
       "path": "app/src/main/java/com/freevibe/ui/screens/sounds/SoundsScreen.kt",
       "sink": "title",
@@ -4123,7 +4123,7 @@
     },
     {
       "count": 1,
-      "firstLine": 800,
+      "firstLine": 836,
       "id": "7132e2d7a551c754",
       "path": "app/src/main/java/com/freevibe/ui/screens/videowallpapers/VideoWallpapersScreen.kt",
       "sink": "Text",
@@ -4131,7 +4131,7 @@
     },
     {
       "count": 1,
-      "firstLine": 746,
+      "firstLine": 769,
       "id": "e11233ed99a71a95",
       "path": "app/src/main/java/com/freevibe/ui/screens/videowallpapers/VideoWallpapersScreen.kt",
       "sink": "Text",
@@ -4139,7 +4139,7 @@
     },
     {
       "count": 1,
-      "firstLine": 529,
+      "firstLine": 535,
       "id": "ac474d116a3c8f05",
       "path": "app/src/main/java/com/freevibe/ui/screens/videowallpapers/VideoWallpapersScreen.kt",
       "sink": "Text",
@@ -4147,7 +4147,7 @@
     },
     {
       "count": 1,
-      "firstLine": 526,
+      "firstLine": 532,
       "id": "b1ff12d21a577c04",
       "path": "app/src/main/java/com/freevibe/ui/screens/videowallpapers/VideoWallpapersScreen.kt",
       "sink": "Text",
@@ -4155,7 +4155,7 @@
     },
     {
       "count": 4,
-      "firstLine": 570,
+      "firstLine": 576,
       "id": "b68f2dc70d0c15cb",
       "path": "app/src/main/java/com/freevibe/ui/screens/videowallpapers/VideoWallpapersScreen.kt",
       "sink": "Text",
@@ -4163,7 +4163,7 @@
     },
     {
       "count": 1,
-      "firstLine": 596,
+      "firstLine": 602,
       "id": "4d712d931778b55e",
       "path": "app/src/main/java/com/freevibe/ui/screens/videowallpapers/VideoWallpapersScreen.kt",
       "sink": "Text",
@@ -4171,7 +4171,7 @@
     },
     {
       "count": 2,
-      "firstLine": 577,
+      "firstLine": 583,
       "id": "7339b1d32ea57643",
       "path": "app/src/main/java/com/freevibe/ui/screens/videowallpapers/VideoWallpapersScreen.kt",
       "sink": "Text",
@@ -4179,7 +4179,7 @@
     },
     {
       "count": 1,
-      "firstLine": 506,
+      "firstLine": 512,
       "id": "bd7675daabc470a3",
       "path": "app/src/main/java/com/freevibe/ui/screens/videowallpapers/VideoWallpapersScreen.kt",
       "sink": "Text",
@@ -4187,7 +4187,7 @@
     },
     {
       "count": 1,
-      "firstLine": 558,
+      "firstLine": 564,
       "id": "265e23fd08b7e5f7",
       "path": "app/src/main/java/com/freevibe/ui/screens/videowallpapers/VideoWallpapersScreen.kt",
       "sink": "Text",
@@ -4195,7 +4195,7 @@
     },
     {
       "count": 1,
-      "firstLine": 961,
+      "firstLine": 1025,
       "id": "873146a4f1a38cc9",
       "path": "app/src/main/java/com/freevibe/ui/screens/videowallpapers/VideoWallpapersScreen.kt",
       "sink": "Text",
@@ -4203,7 +4203,7 @@
     },
     {
       "count": 1,
-      "firstLine": 532,
+      "firstLine": 538,
       "id": "3f905f1dab6f4a3f",
       "path": "app/src/main/java/com/freevibe/ui/screens/videowallpapers/VideoWallpapersScreen.kt",
       "sink": "Text",
@@ -4211,7 +4211,7 @@
     },
     {
       "count": 1,
-      "firstLine": 984,
+      "firstLine": 1048,
       "id": "e6ecd97c5631412c",
       "path": "app/src/main/java/com/freevibe/ui/screens/videowallpapers/VideoWallpapersScreen.kt",
       "sink": "Text",
@@ -4219,7 +4219,7 @@
     },
     {
       "count": 1,
-      "firstLine": 959,
+      "firstLine": 1023,
       "id": "2eaabf8ef8de320a",
       "path": "app/src/main/java/com/freevibe/ui/screens/videowallpapers/VideoWallpapersScreen.kt",
       "sink": "Text",
@@ -4227,7 +4227,7 @@
     },
     {
       "count": 1,
-      "firstLine": 1006,
+      "firstLine": 1070,
       "id": "527174e696015c03",
       "path": "app/src/main/java/com/freevibe/ui/screens/videowallpapers/VideoWallpapersScreen.kt",
       "sink": "Text",
@@ -4235,7 +4235,7 @@
     },
     {
       "count": 1,
-      "firstLine": 508,
+      "firstLine": 514,
       "id": "01b8d098b5022374",
       "path": "app/src/main/java/com/freevibe/ui/screens/videowallpapers/VideoWallpapersScreen.kt",
       "sink": "Text",
@@ -4243,7 +4243,7 @@
     },
     {
       "count": 1,
-      "firstLine": 520,
+      "firstLine": 526,
       "id": "8fe3db5bd3999c64",
       "path": "app/src/main/java/com/freevibe/ui/screens/videowallpapers/VideoWallpapersScreen.kt",
       "sink": "Text",
@@ -4251,7 +4251,7 @@
     },
     {
       "count": 2,
-      "firstLine": 152,
+      "firstLine": 158,
       "id": "f075924648f1c873",
       "path": "app/src/main/java/com/freevibe/ui/screens/videowallpapers/VideoWallpapersScreen.kt",
       "sink": "Toast",
@@ -4259,7 +4259,7 @@
     },
     {
       "count": 2,
-      "firstLine": 157,
+      "firstLine": 163,
       "id": "4c4dab125bf7f09e",
       "path": "app/src/main/java/com/freevibe/ui/screens/videowallpapers/VideoWallpapersScreen.kt",
       "sink": "Toast",
@@ -4267,7 +4267,7 @@
     },
     {
       "count": 1,
-      "firstLine": 252,
+      "firstLine": 258,
       "id": "6ce4f670bdef102e",
       "path": "app/src/main/java/com/freevibe/ui/screens/videowallpapers/VideoWallpapersScreen.kt",
       "sink": "Toast",
@@ -4275,15 +4275,7 @@
     },
     {
       "count": 1,
-      "firstLine": 813,
-      "id": "6b934c194a2e6b16",
-      "path": "app/src/main/java/com/freevibe/ui/screens/videowallpapers/VideoWallpapersScreen.kt",
-      "sink": "contentDescription",
-      "text": "Preview video wallpaper"
-    },
-    {
-      "count": 1,
-      "firstLine": 888,
+      "firstLine": 941,
       "id": "fd1444f54ba7100b",
       "path": "app/src/main/java/com/freevibe/ui/screens/videowallpapers/VideoWallpapersScreen.kt",
       "sink": "label",
@@ -4291,7 +4283,7 @@
     },
     {
       "count": 1,
-      "firstLine": 895,
+      "firstLine": 948,
       "id": "30d08d1f3a520dea",
       "path": "app/src/main/java/com/freevibe/ui/screens/videowallpapers/VideoWallpapersScreen.kt",
       "sink": "label",
@@ -4299,7 +4291,7 @@
     },
     {
       "count": 1,
-      "firstLine": 274,
+      "firstLine": 280,
       "id": "642e59d035099294",
       "path": "app/src/main/java/com/freevibe/ui/screens/videowallpapers/VideoWallpapersScreen.kt",
       "sink": "placeholder",
@@ -4307,7 +4299,7 @@
     },
     {
       "count": 1,
-      "firstLine": 372,
+      "firstLine": 378,
       "id": "97a811b0eed88350",
       "path": "app/src/main/java/com/freevibe/ui/screens/videowallpapers/VideoWallpapersScreen.kt",
       "sink": "title",
@@ -4315,7 +4307,7 @@
     },
     {
       "count": 1,
-      "firstLine": 382,
+      "firstLine": 388,
       "id": "cdc74e04c1348988",
       "path": "app/src/main/java/com/freevibe/ui/screens/videowallpapers/VideoWallpapersScreen.kt",
       "sink": "title",
