@@ -3204,6 +3204,18 @@ private fun SourceDiagnosticRow(stat: SourceMetrics.SourceStats) {
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
+            stat.providerPolicy?.let { policy ->
+                Text(
+                    "Policy: ${policy.diagnosticSummary}",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                Text(
+                    policy.quotaSummary,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
             if (persistentFailure) {
                 Text(
                     "This source has failed repeatedly without a successful response. Try another source or check provider status before retrying.",

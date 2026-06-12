@@ -22,6 +22,20 @@ class BatchDownloadServiceTest {
     }
 
     @Test
+    fun `progress counts policy-blocked items toward completion`() {
+        val state = BatchDownloadState(
+            totalCount = 4,
+            completedCount = 1,
+            failedCount = 1,
+            blockedCount = 2,
+        )
+
+        assertEquals(4, state.processedCount)
+        assertEquals(1f, state.progress, 0.0001f)
+        assertTrue(state.isComplete)
+    }
+
+    @Test
     fun `batch download ids are scoped by wallpaper source`() {
         val redditWallpaper = wallpaper(id = "shared_42", source = ContentSource.REDDIT)
         val pexelsWallpaper = wallpaper(id = "shared_42", source = ContentSource.PEXELS)
@@ -38,6 +52,19 @@ class BatchDownloadServiceTest {
             buildBatchFileName(redditWallpaper, "jpg"),
             buildBatchFileName(pexelsWallpaper, "jpg"),
         )
+    }
+
+    @Test
+    fun `batch download plan caps each provider by policy`() {
+        val pixabay = (1..35).map { wallpaper(id = "px_$it", source = ContentSource.PIXABAY) }
+        val local = (1..3).map { wallpaper(id = "local_$it", source = ContentSource.LOCAL) }
+
+        val plan = planBatchDownloads(pixabay + local)
+
+        assertEquals(33, plan.allowed.size)
+        assertEquals(5, plan.blockedCount)
+        assertEquals(30, plan.allowed.count { it.source == ContentSource.PIXABAY })
+        assertEquals(3, plan.allowed.count { it.source == ContentSource.LOCAL })
     }
 
     private fun wallpaper(id: String, source: ContentSource) = Wallpaper(

@@ -235,8 +235,12 @@ fun FavoritesScreen(
                     Column(Modifier.padding(horizontal = 16.dp, vertical = 8.dp)) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Text(
-                                text = "Downloading ${batchState.completedCount + batchState.failedCount}/${batchState.totalCount}" +
-                                    if (batchState.failedCount > 0) " (${batchState.failedCount} failed)" else "",
+                                text = "Downloading ${batchState.processedCount}/${batchState.totalCount}" +
+                                    if (batchState.failedCount > 0 || batchState.blockedCount > 0) {
+                                        " (${batchState.failedCount} failed, ${batchState.blockedCount} blocked)"
+                                    } else {
+                                        ""
+                                    },
                                 style = MaterialTheme.typography.labelMedium,
                                 modifier = Modifier.weight(1f),
                             )

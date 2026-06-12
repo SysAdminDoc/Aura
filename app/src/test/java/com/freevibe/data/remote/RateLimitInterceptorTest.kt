@@ -1,5 +1,6 @@
 package com.freevibe.data.remote
 
+import com.freevibe.data.model.providerRetryAfterHostSuffixes
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.slot
@@ -161,6 +162,29 @@ class RateLimitInterceptorTest {
 
         // Subdomain should match the suffix and trigger backoff.
         assertEquals(listOf(10L), sleeps)
+    }
+
+    @Test
+    fun `policy retry hosts include pixabay`() {
+        val sleeps = mutableListOf<Long>()
+        val interceptor = RateLimitInterceptor(
+            hostSuffixes = providerRetryAfterHostSuffixes(),
+            maxRetries = 1,
+            sleeper = { sleeps += it },
+        )
+        val chain = mockk<Interceptor.Chain>()
+        val request = req("pixabay.com", path = "/api/")
+        every { chain.request() } returns request
+        every { chain.proceed(request) } returnsMany listOf(
+            resp(request, 429, retryAfter = "3"),
+            resp(request, 200),
+        )
+
+        val result = interceptor.intercept(chain)
+
+        assertEquals(200, result.code)
+        assertEquals(listOf(3_000L), sleeps)
+        verify(exactly = 2) { chain.proceed(request) }
     }
 
     @Test

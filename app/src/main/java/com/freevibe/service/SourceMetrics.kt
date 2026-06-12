@@ -1,5 +1,7 @@
 package com.freevibe.service
 
+import com.freevibe.data.model.ProviderNetworkPolicy
+import com.freevibe.data.model.providerNetworkPolicyForSourceKey
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -38,6 +40,7 @@ class SourceMetrics @Inject constructor() {
         val lastDisabledAtMs: Long,
         val consecutiveFailureCount: Long,
         val recentLatenciesMs: List<Long>,
+        val providerPolicy: ProviderNetworkPolicy? = providerNetworkPolicyForSourceKey(source),
     ) {
         /** Successes / active provider attempts. Disabled decisions are not outages. */
         val activeRequests: Long = (totalRequests - disabledCount).coerceAtLeast(0L)

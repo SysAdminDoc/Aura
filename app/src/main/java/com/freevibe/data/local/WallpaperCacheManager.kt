@@ -2,8 +2,11 @@ package com.freevibe.data.local
 
 import androidx.room.withTransaction
 import com.freevibe.data.model.ContentSource
+import com.freevibe.data.model.PROVIDER_CACHE_TTL_DEFAULT_MS
 import com.freevibe.data.model.Wallpaper
 import com.freevibe.data.model.WallpaperCacheEntity
+import com.freevibe.data.model.longestProviderRequestCacheTtlMs
+import com.freevibe.data.model.providerNetworkPoliciesBySource
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -13,11 +16,6 @@ class WallpaperCacheManager @Inject constructor(
     private val db: FreeVibeDatabase,
 ) {
     companion object {
-        const val TTL_DEFAULT = 6 * 60 * 60 * 1000L    // 6 hours
-        const val TTL_REDDIT = 2 * 60 * 60 * 1000L     // 2 hours (fast-changing)
-        const val TTL_PICSUM = 24 * 60 * 60 * 1000L    // 24 hours (static catalog)
-        const val TTL_PIXABAY = 24 * 60 * 60 * 1000L   // 24 hours (provider request-cache policy)
-        const val TTL_BING = 4 * 60 * 60 * 1000L       // 4 hours (daily rotation)
         private const val MAX_ENTRIES_PER_KEY = 180
         private const val MAX_TOTAL_ENTRIES = 1800
     }
@@ -60,7 +58,7 @@ class WallpaperCacheManager @Inject constructor(
 
     /** Remove all expired entries (uses longest TTL — per-source freshness is checked in getCached) */
     suspend fun evictExpired() {
-        val oldest = System.currentTimeMillis() - TTL_PICSUM
+        val oldest = System.currentTimeMillis() - longestProviderRequestCacheTtlMs()
         cacheDao.evictOlderThan(oldest)
         cacheDao.pruneToMaxEntries(MAX_TOTAL_ENTRIES)
     }
@@ -70,13 +68,8 @@ class WallpaperCacheManager @Inject constructor(
 
     suspend fun countEntries(): Int = cacheDao.countEntries()
 
-    private fun getTtl(source: ContentSource): Long = when (source) {
-        ContentSource.PICSUM -> TTL_PICSUM
-        ContentSource.PIXABAY -> TTL_PIXABAY
-        ContentSource.BING -> TTL_BING
-        ContentSource.REDDIT -> TTL_REDDIT
-        else -> TTL_DEFAULT
-    }
+    private fun getTtl(source: ContentSource): Long =
+        providerNetworkPoliciesBySource[source]?.requestCacheTtlMs ?: PROVIDER_CACHE_TTL_DEFAULT_MS
 
     private fun WallpaperCacheEntity.toWallpaper() = Wallpaper(
         id = id,

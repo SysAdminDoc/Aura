@@ -1,6 +1,8 @@
 package com.freevibe.service
 
 import kotlinx.coroutines.test.runTest
+import com.freevibe.data.model.ContentSource
+import com.freevibe.data.model.providerNetworkPoliciesBySource
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
@@ -29,6 +31,17 @@ class SourceMetricsTest {
         assertEquals(1.0, s.successRatio, 0.001)
         assertNotNull(s.p50Ms)
         assertNotNull(s.p95Ms)
+    }
+
+    @Test
+    fun `snapshot exposes provider quota and cache policy when source is known`() {
+        val m = SourceMetrics()
+        m.recordSuccess("pixabay", latencyMs = 120L)
+
+        val s = m.snapshot("pixabay")!!
+
+        assertEquals(providerNetworkPoliciesBySource.getValue(ContentSource.PIXABAY), s.providerPolicy)
+        assertTrue(s.providerPolicy!!.diagnosticSummary.contains("request cache 1d"))
     }
 
     @Test

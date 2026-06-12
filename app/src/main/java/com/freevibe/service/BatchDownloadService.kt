@@ -1,6 +1,8 @@
 package com.freevibe.service
 
+import com.freevibe.data.model.ContentSource
 import com.freevibe.data.model.Wallpaper
+import com.freevibe.data.model.providerNetworkPoliciesBySource
 import com.freevibe.data.model.stableKey
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -14,13 +16,28 @@ data class BatchDownloadState(
     val totalCount: Int = 0,
     val completedCount: Int = 0,
     val failedCount: Int = 0,
+    val blockedCount: Int = 0,
     val isRunning: Boolean = false,
     val currentItem: String = "",
 ) {
+    val processedCount: Int
+        get() = completedCount + failedCount + blockedCount
+
     val progress: Float
-        get() = if (totalCount > 0) (completedCount + failedCount).toFloat() / totalCount else 0f
-    val isComplete: Boolean get() = completedCount + failedCount >= totalCount && totalCount > 0
+        get() = if (totalCount > 0) processedCount.toFloat() / totalCount else 0f
+    val isComplete: Boolean get() = processedCount >= totalCount && totalCount > 0
 }
+
+data class BatchDownloadStartResult(
+    val acceptedCount: Int = 0,
+    val blockedCount: Int = 0,
+    val alreadyRunning: Boolean = false,
+)
+
+internal data class BatchDownloadPlan(
+    val allowed: List<Wallpaper>,
+    val blockedCount: Int,
+)
 
 @Singleton
 class BatchDownloadService @Inject constructor(
@@ -32,23 +49,35 @@ class BatchDownloadService @Inject constructor(
     private val lock = Any()
     private var scope: CoroutineScope? = null
 
-    fun downloadBatch(wallpapers: List<Wallpaper>, concurrency: Int = 3) {
+    fun downloadBatch(wallpapers: List<Wallpaper>, concurrency: Int = 3): BatchDownloadStartResult {
+        val plan = planBatchDownloads(wallpapers)
         val newScope = synchronized(lock) {
-            if (_state.value.isRunning) return
+            if (_state.value.isRunning) return BatchDownloadStartResult(alreadyRunning = true)
             // Cancel any previous scope (e.g., from a prior cancelled run that never cleared state) and
             // publish the fresh state + new scope atomically so a concurrent reset()/cancel() cannot
             // see a half-initialized state.
             scope?.cancel()
             val fresh = CoroutineScope(Dispatchers.IO + SupervisorJob())
             scope = fresh
-            _state.value = BatchDownloadState(totalCount = wallpapers.size, isRunning = true)
+            _state.value = BatchDownloadState(
+                totalCount = wallpapers.size,
+                blockedCount = plan.blockedCount,
+                isRunning = plan.allowed.isNotEmpty(),
+            )
             fresh
+        }
+        if (plan.allowed.isEmpty()) {
+            synchronized(lock) {
+                newScope.cancel()
+                scope = null
+            }
+            return BatchDownloadStartResult(acceptedCount = 0, blockedCount = plan.blockedCount)
         }
         newScope.launch {
             try {
                 val semaphore = kotlinx.coroutines.sync.Semaphore(concurrency)
 
-                wallpapers.map { wp ->
+                plan.allowed.map { wp ->
                     async {
                         semaphore.acquire()
                         try {
@@ -79,13 +108,17 @@ class BatchDownloadService @Inject constructor(
             } catch (_: CancellationException) {
                 // Scope cancelled: count all unfinished items as failed
                 _state.update { s ->
-                    val remaining = s.totalCount - s.completedCount - s.failedCount
+                    val remaining = s.totalCount - s.completedCount - s.failedCount - s.blockedCount
                     s.copy(failedCount = s.failedCount + remaining)
                 }
             } finally {
                 _state.update { s -> s.copy(isRunning = false, currentItem = "") }
             }
         }
+        return BatchDownloadStartResult(
+            acceptedCount = plan.allowed.size,
+            blockedCount = plan.blockedCount,
+        )
     }
 
     fun cancel() {
@@ -119,6 +152,27 @@ class BatchDownloadService @Inject constructor(
 }
 
 internal fun buildBatchDownloadId(wallpaper: Wallpaper): String = "batch_${wallpaper.stableKey()}"
+
+internal fun planBatchDownloads(wallpapers: List<Wallpaper>): BatchDownloadPlan {
+    if (wallpapers.isEmpty()) return BatchDownloadPlan(allowed = emptyList(), blockedCount = 0)
+    val acceptedBySource = mutableMapOf<ContentSource, Int>()
+    val allowed = mutableListOf<Wallpaper>()
+    var blocked = 0
+
+    wallpapers.forEach { wallpaper ->
+        val policy = providerNetworkPoliciesBySource[wallpaper.source]
+        val limit = policy?.maxBatchDownloadPerUserAction ?: Int.MAX_VALUE
+        val accepted = acceptedBySource[wallpaper.source] ?: 0
+        if (accepted < limit) {
+            acceptedBySource[wallpaper.source] = accepted + 1
+            allowed += wallpaper
+        } else {
+            blocked += 1
+        }
+    }
+
+    return BatchDownloadPlan(allowed = allowed, blockedCount = blocked)
+}
 
 internal fun buildBatchFileName(wallpaper: Wallpaper, extension: String): String {
     val sourceName = wallpaper.source.name.lowercase(Locale.ROOT)

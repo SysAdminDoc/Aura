@@ -87,8 +87,8 @@ class FavoritesViewModel @Inject constructor(
     fun downloadAllWallpapers() {
         val wps = wallpapers.value.map { it.toWallpaper() }
         if (wps.isEmpty()) return
-        batchDownloadService.downloadBatch(wps)
-        _message.update { _ -> "Downloading ${wps.size} wallpapers..." }
+        val result = batchDownloadService.downloadBatch(wps)
+        _message.update { _ -> batchDownloadMessage(result, "wallpaper") }
     }
 
     // -- Bulk actions (selection mode) ---------------------------------------
@@ -111,9 +111,22 @@ class FavoritesViewModel @Inject constructor(
             _message.update { _ -> "Select at least one wallpaper" }
             return
         }
-        batchDownloadService.downloadBatch(wps)
-        _message.update { _ -> "Downloading ${wps.size} wallpaper${if (wps.size == 1) "" else "s"}..." }
+        val result = batchDownloadService.downloadBatch(wps)
+        _message.update { _ -> batchDownloadMessage(result, "wallpaper") }
     }
 
     fun clearMessage() { _message.update { _ -> null } }
+}
+
+private fun batchDownloadMessage(
+    result: com.freevibe.service.BatchDownloadStartResult,
+    noun: String,
+): String = when {
+    result.alreadyRunning -> "A batch download is already running"
+    result.acceptedCount == 0 && result.blockedCount > 0 ->
+        "Provider policy blocked ${result.blockedCount} ${noun}${if (result.blockedCount == 1) "" else "s"}"
+    result.blockedCount > 0 ->
+        "Downloading ${result.acceptedCount} ${noun}${if (result.acceptedCount == 1) "" else "s"}; ${result.blockedCount} blocked by provider policy"
+    else ->
+        "Downloading ${result.acceptedCount} ${noun}${if (result.acceptedCount == 1) "" else "s"}..."
 }
