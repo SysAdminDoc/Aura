@@ -72,6 +72,8 @@ import com.freevibe.ui.components.SearchHistoryDropdown
 import com.freevibe.ui.components.ShimmerBox
 import com.freevibe.ui.components.ShimmerWallpaperGrid
 import com.freevibe.ui.components.SourceBadge
+import com.freevibe.ui.components.AuraStatusAction
+import com.freevibe.ui.components.AuraStatusBanner
 import com.freevibe.ui.policy.CommunityUploadPolicyKind
 import com.freevibe.ui.policy.communityUploadPolicyCopy
 
@@ -155,6 +157,8 @@ fun WallpapersScreen(
     val focusManager = LocalFocusManager.current
     val haptic = LocalHapticFeedback.current
     val snackbarHostState = remember { SnackbarHostState() }
+    var nonBlockingWarning by remember { mutableStateOf<String?>(null) }
+    var nonBlockingWarningSource by remember { mutableStateOf<String?>(null) }
     var showSearchHistory by remember { mutableStateOf(false) }
     var showSourceMenu by remember { mutableStateOf(false) }
     var showFiltersSheet by remember { mutableStateOf(false) }
@@ -249,9 +253,11 @@ fun WallpapersScreen(
             viewModel.clearSuccess()
         }
     }
-    LaunchedEffect(state.error, state.wallpapers.isNotEmpty()) {
+    LaunchedEffect(state.error, state.errorSource, state.wallpapers.isNotEmpty()) {
         if (state.wallpapers.isNotEmpty()) {
             state.error?.let {
+                nonBlockingWarning = it
+                nonBlockingWarningSource = state.errorSource
                 snackbarHostState.showSnackbar(it)
                 viewModel.clearError()
             }
@@ -529,6 +535,31 @@ fun WallpapersScreen(
                 downloads = downloads,
                 onDismiss = { viewModel.dismissDownload(it) },
             )
+
+            nonBlockingWarning?.let { warning ->
+                AuraStatusBanner(
+                    icon = Icons.Default.CloudOff,
+                    title = nonBlockingWarningSource?.let { source ->
+                        "Showing last good ${source.lowercase(java.util.Locale.ROOT)} results"
+                    } ?: "Showing last good wallpaper results",
+                    message = "$warning. Your current feed stays visible while Aura retries in the background.",
+                    tone = MaterialTheme.colorScheme.tertiary,
+                    primaryAction = AuraStatusAction(
+                        label = "Refresh",
+                        icon = Icons.Default.Refresh,
+                        onClick = { viewModel.refresh() },
+                    ),
+                    secondaryAction = AuraStatusAction(
+                        label = "Dismiss",
+                        icon = Icons.Default.Close,
+                        onClick = {
+                            nonBlockingWarning = null
+                            nonBlockingWarningSource = null
+                        },
+                    ),
+                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp),
+                )
+            }
 
             // Content with pull-to-refresh (#4)
             Box(modifier = Modifier.fillMaxSize()) {

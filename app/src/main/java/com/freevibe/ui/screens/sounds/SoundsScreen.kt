@@ -78,6 +78,8 @@ import com.freevibe.ui.components.GlassCard
 import com.freevibe.ui.components.CommunityPolicyNotice
 import com.freevibe.ui.components.SearchHistoryDropdown
 import com.freevibe.ui.components.ShimmerSoundList
+import com.freevibe.ui.components.AuraStatusAction
+import com.freevibe.ui.components.AuraStatusBanner
 import com.freevibe.ui.policy.CommunityUploadPolicyKind
 import com.freevibe.ui.policy.communityUploadPolicyCopy
 import kotlinx.coroutines.delay
@@ -161,6 +163,7 @@ fun SoundsScreen(
     val context = LocalContext.current
     val focusManager = LocalFocusManager.current
     val snackbarHostState = remember { SnackbarHostState() }
+    var nonBlockingWarning by remember { mutableStateOf<String?>(null) }
     val scope = rememberCoroutineScope()
     var writeSettingsRefresh by remember { mutableIntStateOf(0) }
     val lifecycleOwner = LocalLifecycleOwner.current
@@ -361,7 +364,11 @@ fun SoundsScreen(
     }
     LaunchedEffect(state.error) {
         if (displaySounds.isNotEmpty() || displayTopHits.isNotEmpty()) {
-            state.error?.let { snackbarHostState.showSnackbar(it); viewModel.clearError() }
+            state.error?.let {
+                nonBlockingWarning = it
+                snackbarHostState.showSnackbar(it)
+                viewModel.clearError()
+            }
         }
     }
 
@@ -485,6 +492,26 @@ fun SoundsScreen(
                             viewModel.selectTab(tab)
                         }
                     },
+                )
+            }
+
+            nonBlockingWarning?.let { warning ->
+                AuraStatusBanner(
+                    icon = Icons.Default.GraphicEq,
+                    title = "Showing last good sound results",
+                    message = "$warning. Playback and saved results remain available while Aura refreshes.",
+                    tone = MaterialTheme.colorScheme.tertiary,
+                    primaryAction = AuraStatusAction(
+                        label = "Refresh",
+                        icon = Icons.Default.Refresh,
+                        onClick = { viewModel.refresh() },
+                    ),
+                    secondaryAction = AuraStatusAction(
+                        label = "Dismiss",
+                        icon = Icons.Default.Close,
+                        onClick = { nonBlockingWarning = null },
+                    ),
+                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp),
                 )
             }
 

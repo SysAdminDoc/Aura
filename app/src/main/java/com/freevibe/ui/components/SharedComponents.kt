@@ -487,6 +487,109 @@ data class AuraStateAction(
     val onClick: () -> Unit,
 )
 
+data class AuraStatusAction(
+    val label: String,
+    val icon: ImageVector,
+    val onClick: () -> Unit,
+)
+
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+fun AuraStatusBanner(
+    icon: ImageVector,
+    title: String,
+    message: String,
+    modifier: Modifier = Modifier,
+    tone: Color = MaterialTheme.colorScheme.primary,
+    primaryAction: AuraStatusAction? = null,
+    secondaryAction: AuraStatusAction? = null,
+) {
+    Surface(
+        modifier = modifier
+            .fillMaxWidth()
+            .semantics {
+                contentDescription = "$title. $message"
+            },
+        shape = AuraCardShape,
+        color = tone.copy(alpha = 0.095f),
+        contentColor = MaterialTheme.colorScheme.onSurface,
+        border = BorderStroke(1.dp, tone.copy(alpha = 0.22f)),
+        tonalElevation = 0.dp,
+    ) {
+        Row(
+            modifier = Modifier.padding(12.dp),
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            verticalAlignment = Alignment.Top,
+        ) {
+            Surface(
+                shape = AuraIconTileShape,
+                color = tone.copy(alpha = 0.12f),
+                border = BorderStroke(1.dp, tone.copy(alpha = 0.18f)),
+            ) {
+                Icon(
+                    imageVector = icon,
+                    contentDescription = null,
+                    tint = tone,
+                    modifier = Modifier
+                        .padding(9.dp)
+                        .size(20.dp),
+                )
+            }
+            Column(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(4.dp),
+            ) {
+                Text(
+                    text = title,
+                    style = MaterialTheme.typography.titleSmall,
+                    color = MaterialTheme.colorScheme.onSurface,
+                )
+                Text(
+                    text = message,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                if (primaryAction != null || secondaryAction != null) {
+                    Spacer(Modifier.height(4.dp))
+                    FlowRow(
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalArrangement = Arrangement.spacedBy(4.dp),
+                    ) {
+                        primaryAction?.let { action ->
+                            TextButton(
+                                onClick = action.onClick,
+                                shape = AuraControlShape,
+                                contentPadding = PaddingValues(horizontal = 10.dp, vertical = 0.dp),
+                                modifier = Modifier
+                                    .heightIn(min = 36.dp)
+                                    .semantics { onClick(label = action.label, action = null) },
+                            ) {
+                                Icon(action.icon, contentDescription = null, modifier = Modifier.size(15.dp))
+                                Spacer(Modifier.width(6.dp))
+                                Text(action.label)
+                            }
+                        }
+                        secondaryAction?.let { action ->
+                            TextButton(
+                                onClick = action.onClick,
+                                shape = AuraControlShape,
+                                contentPadding = PaddingValues(horizontal = 10.dp, vertical = 0.dp),
+                                modifier = Modifier
+                                    .heightIn(min = 36.dp)
+                                    .semantics { onClick(label = action.label, action = null) },
+                            ) {
+                                Icon(action.icon, contentDescription = null, modifier = Modifier.size(15.dp))
+                                Spacer(Modifier.width(6.dp))
+                                Text(action.label)
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun AuraStateCard(

@@ -56,6 +56,8 @@ import com.freevibe.service.normalizeVideoWallpaperScaleMode
 import com.freevibe.service.videoWallpaperMimeTypes
 import com.freevibe.ui.components.AuraStateAction
 import com.freevibe.ui.components.AuraStateCard
+import com.freevibe.ui.components.AuraStatusAction
+import com.freevibe.ui.components.AuraStatusBanner
 import com.freevibe.ui.components.CompactSearchField
 import com.freevibe.ui.components.CountBadge
 import com.freevibe.ui.LiveWallpaperLaunchMode
@@ -368,11 +370,22 @@ fun VideoWallpapersScreen(
         }
 
         if (state.degradedSources.isNotEmpty()) {
-            Text(
-                text = videoSourceHealthSummary(state.degradedSources),
-                modifier = Modifier.padding(horizontal = 12.dp, vertical = 2.dp),
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            AuraStatusBanner(
+                icon = Icons.Default.CloudOff,
+                title = "Limited video source availability",
+                message = videoSourceHealthSummary(state.degradedSources),
+                tone = MaterialTheme.colorScheme.tertiary,
+                primaryAction = AuraStatusAction(
+                    label = "Refresh",
+                    icon = Icons.Default.Refresh,
+                    onClick = { viewModel.refresh() },
+                ),
+                secondaryAction = AuraStatusAction(
+                    label = "Use gallery",
+                    icon = Icons.Default.FolderOpen,
+                    onClick = { galleryLauncher.launch(videoWallpaperMimeTypes()) },
+                ),
+                modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp),
             )
         }
 

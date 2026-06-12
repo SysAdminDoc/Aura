@@ -2827,10 +2827,10 @@ private fun SettingsSection(
         modifier = Modifier
             .fillMaxWidth()
             .widthIn(max = 760.dp)
-            .padding(top = 26.dp, start = 20.dp, end = 20.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp),
+            .padding(top = 24.dp, start = 20.dp, end = 20.dp),
+        verticalArrangement = Arrangement.spacedBy(10.dp),
     ) {
-        Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+        Column(verticalArrangement = Arrangement.spacedBy(5.dp)) {
             Text(
                 text = title,
                 modifier = Modifier.semantics { heading() },
@@ -2842,8 +2842,12 @@ private fun SettingsSection(
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
+            HorizontalDivider(
+                modifier = Modifier.padding(top = 4.dp),
+                color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.22f),
+            )
         }
-        Column(verticalArrangement = Arrangement.spacedBy(10.dp), content = content)
+        Column(verticalArrangement = Arrangement.spacedBy(8.dp), content = content)
     }
 }
 
@@ -2856,25 +2860,28 @@ private fun SettingsItem(
 ) {
     val itemDescription = stringResource(R.string.a11y_title_subtitle, title, subtitle)
     Surface(
-        modifier = Modifier.semantics(mergeDescendants = true) {
-            contentDescription = itemDescription
-            onClick(label = title, action = null)
-        },
+        modifier = Modifier
+            .fillMaxWidth()
+            .heightIn(min = 76.dp)
+            .semantics(mergeDescendants = true) {
+                contentDescription = itemDescription
+                onClick(label = title, action = null)
+            },
         onClick = onClick,
-        color = MaterialTheme.colorScheme.surfaceContainer.copy(alpha = 0.82f),
+        color = MaterialTheme.colorScheme.surfaceContainer.copy(alpha = 0.74f),
         shape = RoundedCornerShape(8.dp),
         border = androidx.compose.foundation.BorderStroke(
             1.dp,
-            MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.36f),
+            MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.28f),
         ),
-        shadowElevation = 2.dp,
+        shadowElevation = 1.dp,
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 18.dp, vertical = 16.dp),
+                .padding(horizontal = 16.dp, vertical = 14.dp),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(14.dp),
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             Surface(
                 shape = RoundedCornerShape(8.dp),
@@ -2892,13 +2899,25 @@ private fun SettingsItem(
             Column(modifier = Modifier.weight(1f)) {
                 Text(title, style = MaterialTheme.typography.titleMedium)
                 Spacer(Modifier.height(2.dp))
-                Text(subtitle, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text(
+                    subtitle,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
             }
-            Icon(
-                imageVector = Icons.Default.ChevronRight,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f),
-            )
+            Surface(
+                shape = RoundedCornerShape(6.dp),
+                color = MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.68f),
+            ) {
+                Icon(
+                    imageVector = Icons.Default.ChevronRight,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.82f),
+                    modifier = Modifier
+                        .padding(6.dp)
+                        .size(18.dp),
+                )
+            }
         }
     }
 }
@@ -2918,27 +2937,34 @@ private fun SettingsToggle(
     )
     val toggleDescription = stringResource(R.string.a11y_title_subtitle, title, subtitle)
     Surface(
-        modifier = Modifier.semantics(mergeDescendants = true) {
-            contentDescription = toggleDescription
-            stateDescription = toggleStateDescription
-            onClick(label = toggleActionLabel, action = null)
-        },
+        modifier = Modifier
+            .fillMaxWidth()
+            .heightIn(min = 78.dp)
+            .semantics(mergeDescendants = true) {
+                contentDescription = toggleDescription
+                stateDescription = toggleStateDescription
+                onClick(label = toggleActionLabel, action = null)
+            },
         onClick = { onCheckedChange(!checked) },
-        color = MaterialTheme.colorScheme.surfaceContainer.copy(alpha = 0.82f),
+        color = if (checked) {
+            MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.86f)
+        } else {
+            MaterialTheme.colorScheme.surfaceContainer.copy(alpha = 0.74f)
+        },
         shape = RoundedCornerShape(8.dp),
         border = androidx.compose.foundation.BorderStroke(
             1.dp,
-            if (checked) MaterialTheme.colorScheme.primary.copy(alpha = 0.28f)
-            else MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.36f),
+            if (checked) MaterialTheme.colorScheme.primary.copy(alpha = 0.34f)
+            else MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.28f),
         ),
-        shadowElevation = 2.dp,
+        shadowElevation = if (checked) 2.dp else 1.dp,
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 18.dp, vertical = 14.dp),
+                .padding(horizontal = 16.dp, vertical = 14.dp),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(14.dp),
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             Surface(
                 shape = RoundedCornerShape(8.dp),
@@ -2962,11 +2988,25 @@ private fun SettingsToggle(
                 Spacer(Modifier.height(2.dp))
                 Text(subtitle, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
-            Switch(
-                checked = checked,
-                onCheckedChange = onCheckedChange,
-                colors = SwitchDefaults.colors(checkedTrackColor = MaterialTheme.colorScheme.primary),
-            )
+            Column(
+                horizontalAlignment = Alignment.End,
+                verticalArrangement = Arrangement.spacedBy(4.dp),
+            ) {
+                Text(
+                    text = toggleStateDescription,
+                    style = MaterialTheme.typography.labelSmall,
+                    color = if (checked) {
+                        MaterialTheme.colorScheme.primary
+                    } else {
+                        MaterialTheme.colorScheme.onSurfaceVariant
+                    },
+                )
+                Switch(
+                    checked = checked,
+                    onCheckedChange = onCheckedChange,
+                    colors = SwitchDefaults.colors(checkedTrackColor = MaterialTheme.colorScheme.primary),
+                )
+            }
         }
     }
 }

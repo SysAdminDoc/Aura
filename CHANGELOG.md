@@ -3,6 +3,10 @@
 All notable changes to Aura will be documented in this file.
 
 ## Unreleased
+- **Premium UI feedback polish**: added a shared inline status banner for
+  recoverable provider failures, surfaced last-good-result recovery on
+  wallpapers/sounds/video, and tightened Settings/Favorites spacing, state
+  labels, borders, and progress feedback.
 - **Native compliance drift gate**: native/copyleft inventory checks now derive
   youtubedl-android and NewPipe coordinates from Gradle so dependency bumps
   cannot leave the reviewed payload lock checking stale versions.
