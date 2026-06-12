@@ -45,6 +45,8 @@ class CollectionExporterTest {
                 exportItem(wallpaperId = "one", source = "PEXELS", fullUrl = "https://example.com/one-dup.jpg"),
                 exportItem(wallpaperId = "two", source = "", fullUrl = "https://example.com/two.jpg", thumbnailUrl = ""),
                 exportItem(wallpaperId = "unsafe", source = "wallhaven", fullUrl = "http://example.com/unsafe.jpg"),
+                exportItem(wallpaperId = "unknown", source = "UNKNOWN_PROVIDER", fullUrl = "https://example.com/unknown.jpg"),
+                exportItem(wallpaperId = "oversized", source = "WALLHAVEN", fullUrl = "https://example.com/" + "x".repeat(2048)),
                 exportItem(wallpaperId = "", source = "wallhaven", fullUrl = "https://example.com/blank.jpg"),
             ),
         )
@@ -66,6 +68,11 @@ class CollectionExporterTest {
 
         assertTrue(exporter.contains("collectionDao.importCollection("))
         assertTrue(exporter.contains("itemCount = importItems.size"))
+        assertTrue(exporter.contains("json.toByteArray(Charsets.UTF_8).size > MAX_IMPORT_BYTES"))
+        assertTrue(exporter.contains("file.items.size > MAX_IMPORT_ITEMS"))
+        assertTrue(exporter.contains("normalizeImportedContentSource(item.source, blankDefault = \"REDDIT\")"))
+        assertTrue(exporter.contains("normalizeImportedHttpsUrl(item.fullUrl)"))
+        assertTrue(exporter.contains("normalizeImportedHttpsUrl(item.thumbnailUrl, allowBlank = true)"))
         assertTrue(database.contains("@Transaction"))
         assertTrue(database.contains("suspend fun importCollection("))
         assertTrue(database.indexOf("@Transaction") < database.indexOf("suspend fun importCollection("))

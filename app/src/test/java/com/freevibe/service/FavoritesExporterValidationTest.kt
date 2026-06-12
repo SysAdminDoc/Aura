@@ -20,6 +20,7 @@ class FavoritesExporterValidationTest {
         assertFalse(isAllowedImportedFavoriteUrl("file:///sdcard/payload.jpg"))
         assertFalse(isAllowedImportedFavoriteUrl("content://media/external/images/1"))
         assertFalse(isAllowedImportedFavoriteUrl("javascript:alert(1)"))
+        assertFalse(isAllowedImportedFavoriteUrl("https://example.com/" + "x".repeat(2048)))
     }
 
     @Test
@@ -49,6 +50,19 @@ class FavoritesExporterValidationTest {
 
         assertNotNull(entity)
         assertEquals(SOURCE_AVAILABILITY_AVAILABLE, entity?.sourceAvailability)
+    }
+
+    @Test
+    fun `validated favorite entity rejects unknown sources`() {
+        val entity = FavoriteExportItem(
+            id = "wallpaper_1",
+            source = "UNKNOWN_PROVIDER",
+            type = "WALLPAPER",
+            thumbnailUrl = "https://example.com/thumb.jpg",
+            fullUrl = "https://example.com/full.jpg",
+        ).toValidatedEntity()
+
+        assertFalse(entity != null)
     }
 
     @Test

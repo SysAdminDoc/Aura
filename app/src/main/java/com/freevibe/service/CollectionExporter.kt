@@ -27,7 +27,6 @@ import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
 import java.io.ByteArrayOutputStream
 import java.io.File
-import java.util.Locale
 import java.util.UUID
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -223,10 +222,16 @@ class CollectionExporter @Inject constructor(
     }
 
     private suspend fun importJson(json: String): CollectionImportResult {
+        if (json.toByteArray(Charsets.UTF_8).size > MAX_IMPORT_BYTES) {
+            throw IllegalArgumentException("Collection file is too large to import safely.")
+        }
         val file = adapter.fromJson(json)
             ?: throw IllegalArgumentException("This is not a valid Aura collection file.")
         if (file.version != CURRENT_VERSION) {
             throw IllegalArgumentException("This collection format is not supported by this Aura version.")
+        }
+        if (file.items.size > MAX_IMPORT_ITEMS) {
+            throw IllegalArgumentException("Too many collection items (${file.items.size}). Maximum is $MAX_IMPORT_ITEMS.")
         }
         val importItems = buildCollectionImportItems(file.items)
         if (importItems.isEmpty()) {
@@ -324,24 +329,28 @@ internal fun sanitizeImportedCollectionName(name: String): String =
 
 internal fun buildCollectionImportItems(items: List<CollectionExportItem>): List<WallpaperCollectionItemEntity> =
     items.asSequence()
-        .filter { it.wallpaperId.isNotBlank() && it.fullUrl.isAllowedShareUrl() }
         .take(MAX_IMPORT_ITEMS)
-        .map { item ->
+        .mapNotNull { item ->
+            val wallpaperId = normalizeImportedText(item.wallpaperId).takeIf { it.isNotBlank() }
+                ?: return@mapNotNull null
+            val fullUrl = normalizeImportedHttpsUrl(item.fullUrl) ?: return@mapNotNull null
+            val thumbnailUrl = normalizeImportedHttpsUrl(item.thumbnailUrl, allowBlank = true)
+                ?.ifBlank { fullUrl }
+                ?: return@mapNotNull null
+            val source = normalizeImportedContentSource(item.source, blankDefault = "REDDIT")
+                ?: return@mapNotNull null
             WallpaperCollectionItemEntity(
                 collectionId = 0L,
-                wallpaperId = item.wallpaperId,
-                thumbnailUrl = item.thumbnailUrl.ifBlank { item.fullUrl },
-                fullUrl = item.fullUrl,
-                source = item.source.ifBlank { "REDDIT" }.uppercase(Locale.ROOT),
+                wallpaperId = wallpaperId,
+                thumbnailUrl = thumbnailUrl,
+                fullUrl = fullUrl,
+                source = source,
                 width = item.width.coerceAtLeast(0),
                 height = item.height.coerceAtLeast(0),
             )
         }
         .distinctBy { item -> item.source to item.wallpaperId }
         .toList()
-
-private fun String.isAllowedShareUrl(): Boolean =
-    startsWith("https://", ignoreCase = true)
 
 private fun Throwable.rethrowIfCancelled() {
     if (this is CancellationException) throw this

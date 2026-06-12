@@ -3,6 +3,9 @@
 All notable changes to Aura will be documented in this file.
 
 ## Unreleased
+- **Unified import validation**: favorites and collection imports now share
+  HTTPS URL caps, text caps, source enum checks, duplicate identity handling,
+  and oversized collection-token rejection.
 - **Transactional collection import**: collection JSON imports now create the
   collection and all normalized items inside one Room transaction, with
   duplicate source-scoped wallpapers collapsed before insert.

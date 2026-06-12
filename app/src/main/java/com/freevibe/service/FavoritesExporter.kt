@@ -21,8 +21,6 @@ import javax.inject.Singleton
 private const val CURRENT_EXPORT_VERSION = 1
 private const val MAX_IMPORT_ITEMS = 5000
 private const val MAX_IMPORT_CHARS = 2_000_000
-private const val MAX_TEXT_LENGTH = 512
-private const val MAX_URL_LENGTH = 2048
 
 @Singleton
 class FavoritesExporter @Inject constructor(
@@ -177,37 +175,29 @@ private fun FavoriteEntity.toExportItem() = FavoriteExportItem(
 internal fun isAllowedImportedFavoriteUrl(
     url: String,
     allowBlank: Boolean = false,
-): Boolean {
-    val normalizedUrl = url.trim()
-    if (normalizedUrl.isBlank()) return allowBlank
-
-    val scheme = runCatching { java.net.URI(normalizedUrl).scheme }
-        .getOrNull()
-        ?.lowercase(java.util.Locale.ROOT)
-        ?: return false
-
-    return scheme == "https"
-}
+): Boolean = isAllowedImportedHttpsUrl(url, allowBlank)
 
 internal fun FavoriteExportItem.toValidatedEntity(): FavoriteEntity? {
-    val normalizedId = id.trim()
-    val normalizedSource = source.trim().uppercase(java.util.Locale.ROOT)
+    val normalizedId = normalizeImportedText(id)
+    val normalizedSource = normalizeImportedContentSource(source)
     val normalizedType = type.trim().uppercase(java.util.Locale.ROOT)
 
     if (normalizedId.isBlank()) return null
-    if (normalizedSource.isBlank()) return null
-    val validSources = com.freevibe.data.model.ContentSource.entries.map { it.name }.toSet()
-    if (normalizedSource !in validSources) return null
+    if (normalizedSource == null) return null
     if (normalizedType !in setOf("WALLPAPER", "SOUND")) return null
 
-    val normalizedName = name.trim().take(MAX_TEXT_LENGTH)
-    val normalizedThumbnailUrl = thumbnailUrl.trim().take(MAX_URL_LENGTH)
-    val normalizedFullUrl = fullUrl.trim().take(MAX_URL_LENGTH)
-    val normalizedSourcePageUrl = sourcePageUrl?.trim()?.take(MAX_URL_LENGTH)?.takeIf { it.isNotBlank() }
-    val normalizedLicense = license?.trim()?.take(MAX_TEXT_LENGTH)?.takeIf { it.isNotBlank() }
+    val normalizedName = normalizeImportedText(name)
+    val normalizedThumbnailUrl = normalizeImportedHttpsUrl(
+        thumbnailUrl,
+        allowBlank = normalizedType == "SOUND",
+    ) ?: return null
+    val normalizedFullUrl = normalizeImportedHttpsUrl(fullUrl) ?: return null
+    val normalizedSourcePageUrl =
+        normalizeImportedHttpsUrl(sourcePageUrl, allowBlank = true)?.takeIf { it.isNotBlank() }
+    val normalizedLicense = normalizeImportedOptionalText(license)
     val normalizedSourceAvailability = normalizeSourceAvailability(sourceAvailability)
     val normalizedSourceAvailabilityReason =
-        sourceAvailabilityReason?.trim()?.take(MAX_TEXT_LENGTH)?.takeIf { it.isNotBlank() }
+        normalizeImportedOptionalText(sourceAvailabilityReason)
 
     if (normalizedType == "WALLPAPER" && (normalizedThumbnailUrl.isBlank() || normalizedFullUrl.isBlank())) {
         return null
@@ -215,12 +205,6 @@ internal fun FavoriteExportItem.toValidatedEntity(): FavoriteEntity? {
     if (normalizedType == "SOUND" && normalizedFullUrl.isBlank()) {
         return null
     }
-    if (!isAllowedImportedFavoriteUrl(normalizedFullUrl)) return null
-    if (!isAllowedImportedFavoriteUrl(normalizedThumbnailUrl, allowBlank = normalizedType == "SOUND")) {
-        return null
-    }
-    if (!isAllowedImportedFavoriteUrl(normalizedSourcePageUrl.orEmpty(), allowBlank = true)) return null
-
     return FavoriteEntity(
         id = normalizedId,
         source = normalizedSource,
@@ -231,14 +215,14 @@ internal fun FavoriteExportItem.toValidatedEntity(): FavoriteEntity? {
         width = width.coerceAtLeast(0),
         height = height.coerceAtLeast(0),
         duration = duration.coerceAtLeast(0.0),
-        tags = tags?.trim()?.take(MAX_TEXT_LENGTH)?.takeIf { it.isNotBlank() },
-        colors = colors?.trim()?.take(MAX_TEXT_LENGTH)?.takeIf { it.isNotBlank() },
-        category = category?.trim()?.take(MAX_TEXT_LENGTH)?.takeIf { it.isNotBlank() },
-        uploaderName = uploaderName?.trim()?.take(MAX_TEXT_LENGTH)?.takeIf { it.isNotBlank() },
+        tags = normalizeImportedOptionalText(tags),
+        colors = normalizeImportedOptionalText(colors),
+        category = normalizeImportedOptionalText(category),
+        uploaderName = normalizeImportedOptionalText(uploaderName),
         sourcePageUrl = normalizedSourcePageUrl,
         license = normalizedLicense,
         fileSize = fileSize?.coerceAtLeast(0L),
-        fileType = fileType?.trim()?.take(MAX_TEXT_LENGTH)?.takeIf { it.isNotBlank() },
+        fileType = normalizeImportedOptionalText(fileType),
         views = views?.coerceAtLeast(0L),
         favoritesCount = favoritesCount?.coerceAtLeast(0L),
         addedAt = (addedAt ?: System.currentTimeMillis()).coerceAtLeast(0L),
