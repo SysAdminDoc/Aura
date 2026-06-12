@@ -128,10 +128,18 @@ class WallpapersViewModel @Inject constructor(
     val redditProviderEnabled = prefs.redditProviderEnabled.stateIn(viewModelScope, SharingStarted.Eagerly, false)
     val pexelsProviderEnabled = prefs.pexelsProviderEnabled.stateIn(viewModelScope, SharingStarted.Eagerly, true)
     val pixabayProviderEnabled = prefs.pixabayProviderEnabled.stateIn(viewModelScope, SharingStarted.Eagerly, true)
-    val communityProviderEnabled = prefs.communityProviderEnabled.stateIn(viewModelScope, SharingStarted.Eagerly, true)
+    val communityProviderEnabled = prefs.communityProviderEnabled.stateIn(
+        viewModelScope,
+        SharingStarted.Eagerly,
+        PreferencesManager.DEFAULT_COMMUNITY_PROVIDER_ENABLED,
+    )
     val communityGuidelinesAccepted = prefs.communityGuidelinesAccepted.stateIn(viewModelScope, SharingStarted.Eagerly, false)
     val generatedContentProviderEnabled =
-        prefs.generatedContentProviderEnabled.stateIn(viewModelScope, SharingStarted.Eagerly, true)
+        prefs.generatedContentProviderEnabled.stateIn(
+            viewModelScope,
+            SharingStarted.Eagerly,
+            PreferencesManager.DEFAULT_GENERATED_CONTENT_PROVIDER_ENABLED,
+        )
 
     val recentSearches = searchHistoryRepo.getRecentWallpaperSearches(8)
         .map { list -> list.map { it.query } }

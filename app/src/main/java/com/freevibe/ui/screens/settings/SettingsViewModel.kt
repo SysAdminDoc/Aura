@@ -149,7 +149,7 @@ class SettingsViewModel @Inject constructor(
     val generatedContentProviderEnabled = prefs.generatedContentProviderEnabled.stateIn(
         viewModelScope,
         SharingStarted.WhileSubscribed(5000),
-        true,
+        PreferencesManager.DEFAULT_GENERATED_CONTENT_PROVIDER_ENABLED,
     )
     val generatedContentDisclosureAccepted = prefs.generatedContentDisclosureAccepted.stateIn(
         viewModelScope,
@@ -160,7 +160,11 @@ class SettingsViewModel @Inject constructor(
     val bingProviderEnabled = prefs.bingProviderEnabled.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), true)
     val pexelsProviderEnabled = prefs.pexelsProviderEnabled.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), true)
     val pixabayProviderEnabled = prefs.pixabayProviderEnabled.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), true)
-    val communityProviderEnabled = prefs.communityProviderEnabled.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), true)
+    val communityProviderEnabled = prefs.communityProviderEnabled.stateIn(
+        viewModelScope,
+        SharingStarted.WhileSubscribed(5000),
+        PreferencesManager.DEFAULT_COMMUNITY_PROVIDER_ENABLED,
+    )
     val communityGuidelinesAccepted = prefs.communityGuidelinesAccepted.stateIn(
         viewModelScope,
         SharingStarted.WhileSubscribed(5000),

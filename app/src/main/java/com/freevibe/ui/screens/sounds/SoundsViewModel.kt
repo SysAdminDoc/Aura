@@ -119,7 +119,11 @@ class SoundsViewModel @Inject constructor(
     val autoPreview = prefs.autoPreviewSounds.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), true)
     val previewVolume = prefs.soundPreviewVolume.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0.7f)
     val youtubeProviderEnabled = prefs.youtubeProviderEnabled.stateIn(viewModelScope, SharingStarted.Eagerly, true)
-    val communityProviderEnabled = prefs.communityProviderEnabled.stateIn(viewModelScope, SharingStarted.Eagerly, true)
+    val communityProviderEnabled = prefs.communityProviderEnabled.stateIn(
+        viewModelScope,
+        SharingStarted.Eagerly,
+        PreferencesManager.DEFAULT_COMMUNITY_PROVIDER_ENABLED,
+    )
     val communityGuidelinesAccepted = prefs.communityGuidelinesAccepted.stateIn(viewModelScope, SharingStarted.Eagerly, false)
 
     private val _previewReadyIds = MutableStateFlow<Set<String>>(emptySet())

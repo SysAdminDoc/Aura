@@ -156,7 +156,11 @@ class AiWallpaperViewModel @Inject constructor(
     val stabilityAiKey: StateFlow<String> = prefs.stabilityAiKey
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), "")
     val generatedContentProviderEnabled: StateFlow<Boolean> = prefs.generatedContentProviderEnabled
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), true)
+        .stateIn(
+            viewModelScope,
+            SharingStarted.WhileSubscribed(5000),
+            PreferencesManager.DEFAULT_GENERATED_CONTENT_PROVIDER_ENABLED,
+        )
     val generatedContentDisclosureAccepted: StateFlow<Boolean> = prefs.generatedContentDisclosureAccepted
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
 

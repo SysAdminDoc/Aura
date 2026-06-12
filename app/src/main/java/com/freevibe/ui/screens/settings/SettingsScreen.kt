@@ -588,11 +588,11 @@ fun SettingsScreen(
             )
             SettingsToggle(
                 icon = Icons.Default.Groups,
-                title = "Enable Community source",
+                title = "Enable external Community source",
                 subtitle = if (communityProviderEnabled) {
-                    "Shows community feeds, uploads, votes, and creator surfaces"
+                    "Shows Firebase-backed feeds, uploads, votes, and creator surfaces"
                 } else {
-                    "Hides community tabs and blocks Firebase-backed actions"
+                    "Off by default. Hides community tabs and blocks Firebase-backed actions"
                 },
                 checked = communityProviderEnabled,
                 onCheckedChange = { viewModel.setCommunityProviderEnabled(it) },
@@ -1299,8 +1299,8 @@ fun SettingsScreen(
 
         // API Keys
         SettingsSection(
-            title = "API Keys",
-            description = "Optional provider credentials unlock higher limits, richer search, and advanced filters.",
+            title = "External services",
+            description = "Provider keys and opt-in cloud features. Generated wallpapers and community actions stay off until you enable them here.",
         ) {
             var showWallhavenKey by remember { mutableStateOf(false) }
             SettingsItem(
@@ -1434,11 +1434,11 @@ fun SettingsScreen(
             }
             SettingsToggle(
                 icon = Icons.Default.AutoAwesome,
-                title = "Enable generated wallpapers",
+                title = "Enable external generated wallpapers",
                 subtitle = if (generatedContentProviderEnabled) {
                     "Shows generation entry points and allows Stability requests"
                 } else {
-                    "Hides generation entry points and blocks Stability requests"
+                    "Off by default. Hides generation entry points and blocks Stability requests"
                 },
                 checked = generatedContentProviderEnabled,
                 onCheckedChange = { viewModel.setGeneratedContentProviderEnabled(it) },

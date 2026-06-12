@@ -40,6 +40,9 @@ class PreferencesManager @Inject constructor(
             "phone ringtone sound effect",
             "classic phone ringtones",
         )
+
+        const val DEFAULT_GENERATED_CONTENT_PROVIDER_ENABLED = false
+        const val DEFAULT_COMMUNITY_PROVIDER_ENABLED = false
     }
 
     private val dataStore = context.dataStore
@@ -51,13 +54,19 @@ class PreferencesManager @Inject constructor(
     val pixabayApiKey: Flow<String> = get(Keys.PIXABAY_KEY, com.freevibe.BuildConfig.PIXABAY_API_KEY)
     val freesoundApiKey: Flow<String> = get(Keys.FREESOUND_KEY, com.freevibe.BuildConfig.FREESOUND_API_KEY)
     val stabilityAiKey: Flow<String> = get(Keys.STABILITY_KEY, com.freevibe.BuildConfig.STABILITY_AI_KEY)
-    val generatedContentProviderEnabled: Flow<Boolean> = get(Keys.GENERATED_CONTENT_PROVIDER_ENABLED, true)
+    val generatedContentProviderEnabled: Flow<Boolean> = get(
+        Keys.GENERATED_CONTENT_PROVIDER_ENABLED,
+        DEFAULT_GENERATED_CONTENT_PROVIDER_ENABLED,
+    )
     val generatedContentDisclosureAccepted: Flow<Boolean> = get(Keys.GENERATED_CONTENT_DISCLOSURE_ACCEPTED, false)
     val wallhavenProviderEnabled: Flow<Boolean> = get(Keys.WALLHAVEN_PROVIDER_ENABLED, true)
     val bingProviderEnabled: Flow<Boolean> = get(Keys.BING_PROVIDER_ENABLED, true)
     val pexelsProviderEnabled: Flow<Boolean> = get(Keys.PEXELS_PROVIDER_ENABLED, true)
     val pixabayProviderEnabled: Flow<Boolean> = get(Keys.PIXABAY_PROVIDER_ENABLED, true)
-    val communityProviderEnabled: Flow<Boolean> = get(Keys.COMMUNITY_PROVIDER_ENABLED, true)
+    val communityProviderEnabled: Flow<Boolean> = get(
+        Keys.COMMUNITY_PROVIDER_ENABLED,
+        DEFAULT_COMMUNITY_PROVIDER_ENABLED,
+    )
     val communityGuidelinesAcceptedVersion: Flow<Int> = get(Keys.COMMUNITY_GUIDELINES_ACCEPTED_VERSION, 0)
     val communityGuidelinesAccepted: Flow<Boolean> =
         communityGuidelinesAcceptedVersion.map(::hasAcceptedCommunityGuidelinesVersion)
