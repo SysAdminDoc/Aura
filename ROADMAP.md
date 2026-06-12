@@ -803,13 +803,6 @@ Append-only Cycle 16 handoff. Every item below is source-backed in `docs/researc
   - Verify: emulator tests cover publish, public read-by-token, owner/admin overwrite/delete, unauthenticated write denial, malformed payload denial, and oversized payload denial; app share/import succeeds against emulator rules.
   - Progress 2026-06-06: Cycle 58 switched tracked rules to `shared_collections/{token}`, added `createdByUid` to published shares, bounded version/payload/name/item-count/created-at fields, allowed owner/admin cleanup, blocked non-owner overwrites, kept public token reads, denied the old `collection_shares` path, and added emulator coverage.
 
-- [ ] 🤖 🔬 **P0 — Whole-graph Room migration test and schema history gate**
-  - Why: Room is v14 with migrations from 1 through 14, but exported schemas exist only for v9-v14 and the tracked migration test validates only a manually built 8 -> 9 case.
-  - Evidence: `Database.kt`; `DatabaseMigrations.kt`; `app/schemas/com.freevibe.data.local.FreeVibeDatabase/*.json`; `DatabaseMigrationTest.kt`; Android Room migration/testing docs.
-  - Touches: Room schema exports, androidTest migration harness, CI/release preflight, future Room migration process.
-  - Acceptance: every supported starting version migrates to current without destructive fallback; representative favorites, downloads, search history, wallpaper cache, history, and collections survive; source-aware duplicate IDs across providers remain distinct.
-  - Verify: `MigrationTestHelper` tests for v1/v3/v5/v8/v9/v10/v11/v12/v13 -> v14 or an explicit supported-version policy; CI fails when database version changes without schema and migration-test updates.
-
 - [ ] 🤖 🔬 **P1 — Backup/restore reconciliation for path-backed records**
   - Why: `freevibe.db` is eligible for backup/transfer, but path-backed fields such as `FavoriteEntity.offlinePath` and `DownloadEntity.localPath` can point to files that were not restored, were cache-cleared, or moved across devices.
   - Evidence: `backup_rules.xml`; `data_extraction_rules.xml`; `FavoriteEntity`; `DownloadEntity`; `OfflineFavoritesManager`; `DownloadManager`; Android Auto Backup and app-specific storage docs.

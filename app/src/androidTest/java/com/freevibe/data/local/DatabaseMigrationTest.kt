@@ -1,6 +1,7 @@
 package com.freevibe.data.local
 
 import android.database.sqlite.SQLiteDatabase
+import androidx.room.migration.Migration
 import androidx.room.testing.MigrationTestHelper
 import androidx.sqlite.db.framework.FrameworkSQLiteOpenHelperFactory
 import androidx.test.ext.junit.runners.AndroidJUnit4
@@ -45,6 +46,155 @@ class DatabaseMigrationTest {
         }
     }
 
+    @Test
+    fun migrateEveryExportedSchemaVersionToCurrent() {
+        for (startVersion in EXPORTED_SCHEMA_START_VERSION until CURRENT_SCHEMA_VERSION) {
+            createEmptyExportedSchemaDatabase(startVersion)
+
+            helper.runMigrationsAndValidate(
+                TEST_DB,
+                CURRENT_SCHEMA_VERSION,
+                true,
+                *migrationsFrom(startVersion),
+            ).close()
+        }
+    }
+
+    @Test
+    fun migrate14To16_preservesRepresentativeRowsAndBackfillsAvailabilityDefaults() {
+        createVersion14DatabaseWithRepresentativeRows()
+
+        helper.runMigrationsAndValidate(
+            TEST_DB,
+            CURRENT_SCHEMA_VERSION,
+            true,
+            *migrationsFrom(14),
+        ).use { db ->
+            assertEquals(1, countRows(db, "favorites"))
+            assertEquals(1, countRows(db, "downloads"))
+            assertEquals(1, countRows(db, "search_history"))
+            assertEquals(1, countRows(db, "wallpaper_cache"))
+            assertEquals(1, countRows(db, "wallpaper_history"))
+            assertEquals(1, countRows(db, "wallpaper_collections"))
+            assertEquals(1, countRows(db, "wallpaper_collection_items"))
+
+            db.query(
+                """
+                SELECT name, sourceAvailability, sourceAvailabilityReason, license
+                FROM favorites
+                WHERE id = 'shared-id' AND source = 'PEXELS' AND type = 'WALLPAPER'
+                """.trimIndent()
+            ).use { cursor ->
+                assertTrue(cursor.moveToFirst())
+                assertEquals("Saved forest", cursor.getString(0))
+                assertEquals("AVAILABLE", cursor.getString(1))
+                assertTrue(cursor.isNull(2))
+                assertTrue(cursor.isNull(3))
+            }
+
+            db.query(
+                """
+                SELECT name, sourceAvailability, sourceAvailabilityReason
+                FROM downloads
+                WHERE id = 'download-1'
+                """.trimIndent()
+            ).use { cursor ->
+                assertTrue(cursor.moveToFirst())
+                assertEquals("Downloaded tone", cursor.getString(0))
+                assertEquals("AVAILABLE", cursor.getString(1))
+                assertTrue(cursor.isNull(2))
+            }
+
+            db.query(
+                """
+                SELECT source, fullUrl
+                FROM wallpaper_collection_items
+                WHERE collectionId = 1 AND wallpaperId = 'shared-id'
+                """.trimIndent()
+            ).use { cursor ->
+                assertTrue(cursor.moveToFirst())
+                assertEquals("PEXELS", cursor.getString(0))
+                assertEquals("https://example.com/full.jpg", cursor.getString(1))
+            }
+        }
+    }
+
+    private fun createEmptyExportedSchemaDatabase(version: Int) {
+        val context = InstrumentationRegistry.getInstrumentation().targetContext
+        context.deleteDatabase(TEST_DB)
+        helper.createDatabase(TEST_DB, version).close()
+    }
+
+    private fun createVersion14DatabaseWithRepresentativeRows() {
+        createEmptyExportedSchemaDatabase(14)
+        val context = InstrumentationRegistry.getInstrumentation().targetContext
+        SQLiteDatabase.openDatabase(context.getDatabasePath(TEST_DB).path, null, SQLiteDatabase.OPEN_READWRITE).use { db ->
+            db.execSQL(
+                """
+                INSERT INTO favorites (
+                    id, source, type, thumbnailUrl, fullUrl, name, width, height, duration,
+                    addedAt, offlinePath, tags, colors, category, uploaderName, sourcePageUrl,
+                    fileSize, fileType, views, favoritesCount
+                ) VALUES (
+                    'shared-id', 'PEXELS', 'WALLPAPER', 'https://example.com/thumb.jpg',
+                    'https://example.com/full.jpg', 'Saved forest', 1080, 1920, 0.0,
+                    1700000000, '/data/user/0/com.freevibe/files/offline/shared.jpg',
+                    'forest,green', '#112233', 'nature', 'Creator', 'https://example.com/source',
+                    123456, 'image/jpeg', 7, 3
+                )
+                """.trimIndent()
+            )
+            db.execSQL(
+                """
+                INSERT INTO downloads (
+                    id, source, type, localPath, name, downloadedAt
+                ) VALUES (
+                    'download-1', 'YOUTUBE', 'SOUND',
+                    '/data/user/0/com.freevibe/files/downloads/tone.mp3',
+                    'Downloaded tone', 1700000001
+                )
+                """.trimIndent()
+            )
+            db.execSQL("INSERT INTO search_history (query, type, timestamp) VALUES ('forest', 'WALLPAPER', 1700000002)")
+            db.execSQL(
+                """
+                INSERT INTO wallpaper_cache (
+                    id, source, thumbnailUrl, fullUrl, width, height, category, tags,
+                    fileSize, fileType, uploaderName, colors, sourcePageUrl, views,
+                    favorites, cacheKey, cachedAt
+                ) VALUES (
+                    'shared-id', 'PEXELS', 'https://example.com/thumb.jpg',
+                    'https://example.com/full.jpg', 1080, 1920, 'nature', 'forest',
+                    123456, 'image/jpeg', 'Creator', '#112233', 'https://example.com/source',
+                    7, 3, 'discover:nature', 1700000003
+                )
+                """.trimIndent()
+            )
+            db.execSQL(
+                """
+                INSERT INTO wallpaper_history (
+                    wallpaperId, source, thumbnailUrl, fullUrl, width, height, target, appliedAt
+                ) VALUES (
+                    'shared-id', 'PEXELS', 'https://example.com/thumb.jpg',
+                    'https://example.com/full.jpg', 1080, 1920, 'BOTH', 1700000004
+                )
+                """.trimIndent()
+            )
+            db.execSQL("INSERT INTO wallpaper_collections (collectionId, name, createdAt) VALUES (1, 'Forest set', 1700000005)")
+            db.execSQL(
+                """
+                INSERT INTO wallpaper_collection_items (
+                    collectionId, wallpaperId, thumbnailUrl, fullUrl, source, width, height, addedAt
+                ) VALUES (
+                    1, 'shared-id', 'https://example.com/thumb.jpg',
+                    'https://example.com/full.jpg', 'PEXELS', 1080, 1920, 1700000006
+                )
+                """.trimIndent()
+            )
+            db.version = 14
+        }
+    }
+
     private fun createVersion8Database() {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
         context.deleteDatabase(TEST_DB)
@@ -78,6 +228,19 @@ class DatabaseMigrationTest {
 
     companion object {
         private const val TEST_DB = "room-migration-test.db"
+        private const val EXPORTED_SCHEMA_START_VERSION = 9
+        private const val CURRENT_SCHEMA_VERSION = 16
+
+        private fun migrationsFrom(startVersion: Int): Array<Migration> =
+            DatabaseMigrations.ALL_MIGRATIONS
+                .filter { migration -> migration.startVersion >= startVersion }
+                .toTypedArray()
+
+        private fun countRows(db: androidx.sqlite.db.SupportSQLiteDatabase, table: String): Int =
+            db.query("SELECT COUNT(*) FROM $table").use { cursor ->
+                assertTrue(cursor.moveToFirst())
+                cursor.getInt(0)
+            }
 
         private val VERSION_8_SCHEMA = listOf(
             "CREATE TABLE IF NOT EXISTS `favorites` (`id` TEXT NOT NULL, `source` TEXT NOT NULL, `type` TEXT NOT NULL, `thumbnailUrl` TEXT NOT NULL, `fullUrl` TEXT NOT NULL, `name` TEXT NOT NULL, `width` INTEGER NOT NULL, `height` INTEGER NOT NULL, `duration` REAL NOT NULL, `addedAt` INTEGER NOT NULL, `offlinePath` TEXT NOT NULL, `tags` TEXT, `colors` TEXT, `category` TEXT, `uploaderName` TEXT, `sourcePageUrl` TEXT, `fileSize` INTEGER, `fileType` TEXT, `views` INTEGER, `favoritesCount` INTEGER, PRIMARY KEY(`id`))",

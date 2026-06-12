@@ -244,6 +244,9 @@ jobs:
       - name: Media ingestion guard
         run: python3 tools/media_ingestion_check.py --repo-root .
 
+      - name: Room schema history gate
+        run: python3 tools/room_schema_history_check.py --repo-root .
+
       - name: Backend tool unit tests
         run: python3 -m unittest discover -s test/tools -p '*_test.py'
 
