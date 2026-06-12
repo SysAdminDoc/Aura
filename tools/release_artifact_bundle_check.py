@@ -17,6 +17,7 @@ REQUIRED_STATIC_FILES = {
     "THIRD-PARTY-NOTICES.md",
     RAW_GOOGLE_OSS_INPUT_ARCHIVE,
     "NATIVE-COMPLIANCE.md",
+    "NATIVE-ALIGNMENT.json",
     "SHA256SUMS.txt",
     "RELEASE_NOTES.md",
     "apksigner.txt",
@@ -72,6 +73,29 @@ def require_non_empty(path: Path) -> None:
         raise ValueError(f"Required file is empty: {path}")
 
 
+def validate_native_alignment(path: Path, *, package_name: str) -> list[str]:
+    errors: list[str] = []
+    try:
+        payload = json.loads(read_text(path))
+    except (FileNotFoundError, json.JSONDecodeError) as exc:
+        return [str(exc)]
+    if payload.get("status") != "ok":
+        errors.append("NATIVE-ALIGNMENT.json status must be ok")
+    if payload.get("policyKind") != "nativePageAlignment":
+        errors.append("NATIVE-ALIGNMENT.json policyKind must be nativePageAlignment")
+    if payload.get("packageName") != package_name:
+        errors.append(f"NATIVE-ALIGNMENT.json packageName must be {package_name}")
+    if payload.get("requiredLoadSegmentAlignmentBytes") != 16384:
+        errors.append("NATIVE-ALIGNMENT.json requiredLoadSegmentAlignmentBytes must be 16384")
+    checked_segments = payload.get("checked64BitLoadSegments")
+    if not isinstance(checked_segments, int) or checked_segments <= 0:
+        errors.append("NATIVE-ALIGNMENT.json must include checked64BitLoadSegments > 0")
+    seen_abis = payload.get("seen64BitAbis")
+    if not isinstance(seen_abis, list) or not {"arm64-v8a", "x86_64"} <= set(seen_abis):
+        errors.append("NATIVE-ALIGNMENT.json must include arm64-v8a and x86_64")
+    return errors
+
+
 def validate_bundle(
     *,
     release_dir: Path,
@@ -109,6 +133,7 @@ def validate_bundle(
             "THIRD-PARTY-NOTICES.md",
             RAW_GOOGLE_OSS_INPUT_ARCHIVE,
             "NATIVE-COMPLIANCE.md",
+            "NATIVE-ALIGNMENT.json",
         }
         missing = sorted(expected_checksum_files - set(checksums))
         extra = sorted(set(checksums) - expected_checksum_files)
@@ -136,6 +161,7 @@ def validate_bundle(
             "THIRD-PARTY-NOTICES.md",
             RAW_GOOGLE_OSS_INPUT_ARCHIVE,
             "NATIVE-COMPLIANCE.md",
+            "NATIVE-ALIGNMENT.json",
             "Signing certificate SHA-256:",
             "GitHub artifact attestation:",
             "Build type: release, android:debuggable=false",
@@ -172,6 +198,8 @@ def validate_bundle(
             errors.append("aapt-badging.txt marks the APK debuggable")
     except FileNotFoundError as exc:
         errors.append(str(exc))
+
+    errors.extend(validate_native_alignment(release_dir / "NATIVE-ALIGNMENT.json", package_name="com.freevibe"))
 
     return errors
 

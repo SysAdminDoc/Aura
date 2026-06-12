@@ -179,6 +179,15 @@ jobs:
       - name: Provider credential APK scan
         run: python3 tools/provider_credential_apk_scan.py --local-properties local.properties --apk "${{ steps.package.outputs.apk_path }}"
 
+      - name: Native 16KB alignment
+        run: |
+          python3 tools/native_alignment_check.py \
+            --policy docs/distribution/native-alignment.json \
+            --apk "${{ steps.package.outputs.apk_path }}" \
+            > "$RELEASE_DIR/NATIVE-ALIGNMENT.json"
+          test -s "$RELEASE_DIR/NATIVE-ALIGNMENT.json"
+          cat "$RELEASE_DIR/NATIVE-ALIGNMENT.json"
+
       - name: Generate third-party notices
         run: |
           ./gradlew :app:releaseOssLicensesTask --stacktrace --no-daemon
@@ -225,7 +234,7 @@ jobs:
         run: |
           (
             cd "$RELEASE_DIR"
-            sha256sum "${{ steps.package.outputs.apk_name }}" THIRD-PARTY-NOTICES.md GOOGLE-OSS-RAW-INPUTS.zip NATIVE-COMPLIANCE.md > SHA256SUMS.txt
+            sha256sum "${{ steps.package.outputs.apk_name }}" THIRD-PARTY-NOTICES.md GOOGLE-OSS-RAW-INPUTS.zip NATIVE-COMPLIANCE.md NATIVE-ALIGNMENT.json > SHA256SUMS.txt
           )
 
       - name: Attest release artifacts
@@ -248,6 +257,7 @@ jobs:
             printf -- '- Third-party notices: THIRD-PARTY-NOTICES.md\n'
             printf -- '- Raw Google OSS inputs: GOOGLE-OSS-RAW-INPUTS.zip\n'
             printf -- '- Native compliance packet: NATIVE-COMPLIANCE.md\n'
+            printf -- '- Native 16KB alignment evidence: NATIVE-ALIGNMENT.json\n'
             printf -- '- Signing certificate SHA-256: %s\n' '${{ steps.verify_apk.outputs.cert_sha256 }}'
             printf -- '- GitHub artifact attestation: %s\n' '${{ steps.attest.outputs.attestation-url }}'
             printf -- '- Build type: release, android:debuggable=false\n\n'
@@ -275,6 +285,7 @@ jobs:
             release/THIRD-PARTY-NOTICES.md
             release/GOOGLE-OSS-RAW-INPUTS.zip
             release/NATIVE-COMPLIANCE.md
+            release/NATIVE-ALIGNMENT.json
             release/SHA256SUMS.txt
             release/RELEASE_NOTES.md
             release/apksigner.txt
@@ -293,5 +304,6 @@ jobs:
             release/THIRD-PARTY-NOTICES.md
             release/GOOGLE-OSS-RAW-INPUTS.zip
             release/NATIVE-COMPLIANCE.md
+            release/NATIVE-ALIGNMENT.json
             release/SHA256SUMS.txt
           fail_on_unmatched_files: true

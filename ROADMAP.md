@@ -3445,13 +3445,6 @@ Net-new items from the fourth research pass (2026-06-10). Focused on: transitive
 
 ### P1 — Reliability and dependency currency
 
-- [ ] P1 — **Verify 16KB page-size alignment on release APK**
-  Why: youtubedl-android 0.18.0+ ships 16KB-aligned 64-bit libs. AGP 8.7.3 qualifies. No off-Play deadline exists, but Android 16 runs misaligned apps in a nag-dialog compat mode and Android 17 adds a fatal mode. One verification run documents compliance.
-  Evidence: `check_elf_alignment.sh` from Android docs; `useLegacyPackaging = true` in `app/build.gradle.kts`; youtubedl-android PR #331.
-  Touches: one-time run of `check_elf_alignment.sh` against v6.31.1 release APK; document result in `docs/distribution/` or CLAUDE.md.
-  Acceptance: all 64-bit `.so` files in the release APK have 16KB-aligned ELF LOAD segments; 32-bit alignment is irrelevant (16KB only applies to 64-bit); result documented.
-  Complexity: S
-
 ### P1 — Feature gap closure
 
 - [ ] P1 — **Local-folder wallpaper rotation source via SAF**
