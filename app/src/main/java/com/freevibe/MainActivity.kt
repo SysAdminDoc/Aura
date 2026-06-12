@@ -16,6 +16,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import com.freevibe.data.model.ContentSource
 import com.freevibe.data.model.Wallpaper
+import com.freevibe.service.RotationTriggerService
+import com.freevibe.service.TaskerActionReceiver
 import com.freevibe.service.extractCollectionShareToken
 import com.freevibe.ui.FreeVibeRoot
 import com.freevibe.ui.navigation.Screen
@@ -35,6 +37,8 @@ private const val EXTRA_DAILY_WALLPAPER_SOURCE = "daily_wallpaper_source"
 private const val EXTRA_DAILY_WALLPAPER_WIDTH = "daily_wallpaper_width"
 private const val EXTRA_DAILY_WALLPAPER_HEIGHT = "daily_wallpaper_height"
 private const val EXTRA_NAVIGATE_TO = "navigate_to"
+internal const val ACTION_SHORTCUT_SEARCH = "com.freevibe.action.SEARCH"
+internal const val ACTION_SHORTCUT_DOWNLOADS = "com.freevibe.action.DOWNLOADS"
 
 internal fun consumeLaunchNavigation(intent: Intent?): LaunchNavigation? {
     val navigation = parseLaunchNavigation(intent)
@@ -50,6 +54,19 @@ internal fun consumeLaunchNavigation(intent: Intent?): LaunchNavigation? {
 
 internal fun shouldHandleInitialLaunchNavigation(savedInstanceState: Bundle?): Boolean =
     savedInstanceState == null
+
+internal fun routeForShortcutAction(action: String?): String? =
+    when (action) {
+        TaskerActionReceiver.ACTION_SHUFFLE_NOW,
+        TaskerActionReceiver.ACTION_ROTATE_NOW,
+        ACTION_SHORTCUT_SEARCH -> Screen.Wallpapers.route
+        ACTION_SHORTCUT_DOWNLOADS -> Screen.Downloads.route
+        else -> null
+    }
+
+internal fun isRotationShortcutAction(action: String?): Boolean =
+    action == TaskerActionReceiver.ACTION_SHUFFLE_NOW ||
+        action == TaskerActionReceiver.ACTION_ROTATE_NOW
 
 internal fun buildLaunchNavigation(
     route: String? = null,
@@ -120,7 +137,7 @@ internal fun parseLaunchNavigation(intent: Intent?): LaunchNavigation? {
     parseCollectionImportNavigation(intent)?.let { return it }
 
     return buildLaunchNavigation(
-        route = intent.getStringExtra(EXTRA_NAVIGATE_TO),
+        route = intent.getStringExtra(EXTRA_NAVIGATE_TO) ?: routeForShortcutAction(intent.action),
         wallpaperId = intent.getStringExtra(EXTRA_DAILY_WALLPAPER_ID),
         fullUrl = intent.getStringExtra(EXTRA_DAILY_WALLPAPER_URL).orEmpty(),
         thumbnailUrl = intent.getStringExtra(EXTRA_DAILY_WALLPAPER_THUMB).orEmpty(),
@@ -169,6 +186,7 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         launchNavigation = if (shouldHandleInitialLaunchNavigation(savedInstanceState)) {
+            handleShortcutSideEffects(intent)
             consumeLaunchNavigation(intent)
         } else {
             null
@@ -192,6 +210,13 @@ class MainActivity : ComponentActivity() {
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         setIntent(intent)
+        handleShortcutSideEffects(intent)
         launchNavigation = consumeLaunchNavigation(intent)
+    }
+
+    private fun handleShortcutSideEffects(intent: Intent?) {
+        if (isRotationShortcutAction(intent?.action)) {
+            RotationTriggerService.enqueueRotation(this)
+        }
     }
 }

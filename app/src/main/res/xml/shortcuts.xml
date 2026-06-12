@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+<shortcuts xmlns:android="http://schemas.android.com/apk/res/android">
+    <shortcut
+        android:shortcutId="shuffle_wallpaper"
+        android:enabled="true"
+        android:icon="@drawable/ic_shortcut_shuffle"
+        android:shortcutShortLabel="@string/shortcut_shuffle_short"
+        android:shortcutLongLabel="@string/shortcut_shuffle_long"
+        android:shortcutDisabledMessage="@string/shortcut_unavailable">
+        <intent
+            android:action="com.freevibe.action.SHUFFLE_NOW"
+            android:targetPackage="com.freevibe"
+            android:targetClass="com.freevibe.MainActivity" />
+    </shortcut>
+
+    <shortcut
+        android:shortcutId="rotate_now"
+        android:enabled="true"
+        android:icon="@drawable/ic_shortcut_rotate"
+        android:shortcutShortLabel="@string/shortcut_rotate_short"
+        android:shortcutLongLabel="@string/shortcut_rotate_long"
+        android:shortcutDisabledMessage="@string/shortcut_unavailable">
+        <intent
+            android:action="com.freevibe.action.ROTATE_NOW"
+            android:targetPackage="com.freevibe"
+            android:targetClass="com.freevibe.MainActivity" />
+    </shortcut>
+
+    <shortcut
+        android:shortcutId="search_wallpapers"
+        android:enabled="true"
+        android:icon="@drawable/ic_shortcut_search"
+        android:shortcutShortLabel="@string/shortcut_search_short"
+        android:shortcutLongLabel="@string/shortcut_search_long"
+        android:shortcutDisabledMessage="@string/shortcut_unavailable">
+        <intent
+            android:action="com.freevibe.action.SEARCH"
+            android:targetPackage="com.freevibe"
+            android:targetClass="com.freevibe.MainActivity" />
+    </shortcut>
+
+    <shortcut
+        android:shortcutId="downloads"
+        android:enabled="true"
+        android:icon="@drawable/ic_shortcut_downloads"
+        android:shortcutShortLabel="@string/shortcut_downloads_short"
+        android:shortcutLongLabel="@string/shortcut_downloads_long"
+        android:shortcutDisabledMessage="@string/shortcut_unavailable">
+        <intent
+            android:action="com.freevibe.action.DOWNLOADS"
+            android:targetPackage="com.freevibe"
+            android:targetClass="com.freevibe.MainActivity" />
+    </shortcut>
+</shortcuts>

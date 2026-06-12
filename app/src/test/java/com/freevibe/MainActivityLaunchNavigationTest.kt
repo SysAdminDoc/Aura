@@ -2,6 +2,8 @@ package com.freevibe
 
 import android.os.Bundle
 import com.freevibe.data.model.ContentSource
+import com.freevibe.service.TaskerActionReceiver
+import com.freevibe.ui.navigation.Screen
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
@@ -40,6 +42,24 @@ class MainActivityLaunchNavigationTest {
     fun `saved state gates initial stale launch replay`() {
         assertFalse(shouldHandleInitialLaunchNavigation(Bundle()))
         assertTrue(shouldHandleInitialLaunchNavigation(null))
+    }
+
+    @Test
+    fun `shortcut actions map to launcher routes`() {
+        assertEquals(Screen.Wallpapers.route, routeForShortcutAction(TaskerActionReceiver.ACTION_SHUFFLE_NOW))
+        assertEquals(Screen.Wallpapers.route, routeForShortcutAction(TaskerActionReceiver.ACTION_ROTATE_NOW))
+        assertEquals(Screen.Wallpapers.route, routeForShortcutAction(ACTION_SHORTCUT_SEARCH))
+        assertEquals(Screen.Downloads.route, routeForShortcutAction(ACTION_SHORTCUT_DOWNLOADS))
+        assertNull(routeForShortcutAction("com.freevibe.action.UNKNOWN"))
+    }
+
+    @Test
+    fun `rotation shortcut detection only accepts rotation actions`() {
+        assertTrue(isRotationShortcutAction(TaskerActionReceiver.ACTION_SHUFFLE_NOW))
+        assertTrue(isRotationShortcutAction(TaskerActionReceiver.ACTION_ROTATE_NOW))
+        assertFalse(isRotationShortcutAction(ACTION_SHORTCUT_SEARCH))
+        assertFalse(isRotationShortcutAction(ACTION_SHORTCUT_DOWNLOADS))
+        assertFalse(isRotationShortcutAction(null))
     }
 
     @Test
