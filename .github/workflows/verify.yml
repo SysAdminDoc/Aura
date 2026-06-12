@@ -250,6 +250,9 @@ jobs:
       - name: Community identity laziness
         run: python3 tools/community_identity_laziness_check.py --repo-root .
 
+      - name: Accessibility release gate
+        run: python3 tools/accessibility_release_gate_check.py --repo-root .
+
       - name: Backend tool unit tests
         run: python3 -m unittest discover -s test/tools -p '*_test.py'
 

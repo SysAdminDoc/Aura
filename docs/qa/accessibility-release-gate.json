@@ -1,0 +1,52 @@
+{
+  "schemaVersion": 1,
+  "policyKind": "accessibilityReleaseGate",
+  "status": "releaseGateReadyManualEvidenceRequired",
+  "automatedGate": {
+    "instrumentedTest": "app/src/androidTest/java/com/freevibe/ui/accessibility/AccessibilityReleaseGateTest.kt",
+    "requiredApi": "enableAccessibilityChecks",
+    "requiredDependencies": [
+      "androidx.compose.ui:ui-test-junit4",
+      "androidx.compose.ui:ui-test-junit4-accessibility"
+    ],
+    "verifyCommand": "./gradlew :app:connectedDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.class=com.freevibe.ui.accessibility.AccessibilityReleaseGateTest"
+  },
+  "manualScenarios": [
+    {
+      "id": "wallpapers-feed-detail",
+      "surface": "Wallpapers feed, filters, Wallpaper Detail, apply sheet",
+      "checks": ["TalkBack traversal order", "action labels", "favorite/vote state", "dark and light themes"]
+    },
+    {
+      "id": "video-wallpapers",
+      "surface": "Video wallpapers feed, preview, crop, live-wallpaper picker",
+      "checks": ["preview state", "apply state", "crop controls", "live-wallpaper picker labels"]
+    },
+    {
+      "id": "sounds-editor",
+      "surface": "Sounds feed, Sound Detail, Sound Editor",
+      "checks": ["playback progress", "waveform range", "apply buttons", "record/upload disclosure"]
+    },
+    {
+      "id": "settings-diagnostics",
+      "surface": "Settings, privacy, diagnostics, background work, provider controls",
+      "checks": ["switch labels", "dialog headings", "error states", "support bundle actions"]
+    },
+    {
+      "id": "adaptive-access",
+      "surface": "Primary app flows at 200 percent font, high contrast, dark/light themes",
+      "checks": ["no clipped text", "48dp touch targets", "contrast", "scroll reachability"]
+    },
+    {
+      "id": "widget-entrypoints",
+      "surface": "Home widget and live-wallpaper picker metadata",
+      "checks": ["spoken labels", "disabled/error state", "large display size"]
+    }
+  ],
+  "releaseRequirement": "Run the automated accessibility test and complete every manual scenario, or record an explicit release waiver with reason and owner.",
+  "sourceUrls": [
+    "https://developer.android.com/develop/ui/compose/accessibility/testing",
+    "https://developer.android.com/guide/topics/ui/accessibility/testing",
+    "https://developer.android.com/guide/topics/ui/accessibility/apps"
+  ]
+}

@@ -291,13 +291,6 @@ Append-only Cycle 4 handoff. Every item below is source-backed in `docs/research
 
 Append-only Cycle 5 handoff. Every item below is source-backed in `docs/research/cycle-5-2026-06-04.md`; merge into the existing Now/Next/Later item named in `Touches` when implementation starts.
 
-- [ ] 🤖 🔬 **P0 — Accessibility release gate for core Aura flows**
-  - Why: Aura has dense custom Compose surfaces and no automated accessibility-check wiring. Accessibility Scanner and Compose tests can catch regressions before release, while TalkBack/manual passes catch interaction-order and state-announcement issues.
-  - Evidence: no `enableAccessibilityChecks`/`ui-test-junit4-accessibility` found; Compose accessibility-testing docs; Accessibility Scanner docs; Aura's image/audio/video/settings/editor/widget surfaces.
-  - Touches: UI test dependencies, screen tests, QA checklist, release checklist, `docs/qa/accessibility.md`.
-  - Acceptance: key Compose screen tests enable accessibility checks; manual checklist covers TalkBack, Switch Access/keyboard-like navigation, 200% font, high contrast, dark/light themes, widget, and live-wallpaper picker; release notes require passing or explicitly waiving the gate.
-  - Verify: run focused accessibility UI tests; capture Accessibility Scanner recording for primary flows; manual TalkBack pass for Wallpapers/Videos/Sounds/Settings/detail/editor flows.
-
 - [ ] 🤖 🔬 **P1 — Extract visible strings and plan first localization batch**
   - Why: Aura is mostly hardcoded English today, with about 300 hardcoded visible-string patterns and only the base `values` resource directory.
   - Evidence: `rg` counts in Cycle 5 research; Android per-app language docs; existing U-11 roadmap item.
@@ -3275,13 +3268,6 @@ Items below are sourced from exhaustive external research against competitors, p
   Complexity: XL
 
 ### P2 -- Observability and testing
-
-- [ ] P2 -- **TalkBack manual QA checklist and CI-gated accessibility scanner**
-  Why: Zero TalkBack coverage, zero Accessibility Scanner runs, zero `enableAccessibilityChecks` in tests. Aura's dense custom surfaces (waveform, crop viewport, color dots, staggered grid, filter chips) need explicit a11y verification.
-  Evidence: Cycle 5 researcher items; Android Accessibility Scanner docs; `enableAccessibilityChecks` Compose testing API.
-  Touches: UI test dependencies, screen tests, `docs/qa/accessibility.md`, release checklist.
-  Acceptance: Key Compose screen tests enable accessibility checks; manual TalkBack checklist covers primary flows; release notes require passing or explicitly waiving the gate.
-  Complexity: M
 
 - [ ] P2 -- **200% font and large display-size smoke pass**
   Why: Android 14+ supports 200% nonlinear font scaling. Aura's dense chips, cards, overlays, bottom sheets, and editor timelines may clip or overlap. No smoke screenshots exist at large font sizes.
