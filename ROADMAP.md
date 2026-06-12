@@ -3418,13 +3418,6 @@ Net-new items from the second 2026-06-09 research pass (live provider probes, ba
   Acceptance: on-device repro recorded first (per RESEARCH open question 2); Reddit provider defaults to off with an honest "source discontinued by Reddit" state (reuse Cycle 46 unavailable-source states); Wallpaper of the Day uses a source-priority list (Bing daily → Wallhaven toplist) and fires again; no UI surface silently shows an empty Reddit feed; saved Reddit favorites keep metadata and show the remote-gone state from Cycle 48.
   Complexity: M
 
-- [ ] P0 — **Migrate Cloud Functions runtime from Node 20 to Node 22**
-  Why: `functions/package.json` pins `"engines": {"node": "20"}`. Google deprecated Node 20 on 2026-04-30 and decommissions it 2026-10-30 — deploys will hard-fail. Node 22 is supported until 2027-10-31.
-  Evidence: Cloud Run functions runtime-support schedule; `functions/package.json:5`.
-  Touches: `functions/package.json` (engines, `@types/node`), `functions/tsconfig.json` target/lib if needed, CI workflows that run functions tests, `docs/community-backend-runbook.md` deploy section.
-  Acceptance: engines set to 22; `npm --prefix functions test` and the emulator-backed rules/functions CI lanes pass on Node 22; an `npm audit --omit=dev` (or `npm outdated`) check is added to the functions CI lane so the Node backend gets the same supply-chain gate the Android side has; firebase-admin stays on the patched 13.x line (14.0.0 evaluated separately — it shipped 2026-06-08 with no CVE driver).
-  Complexity: S
-
 ### P1 — Reliability of the YouTube spine and aging strata
 
 - [ ] P1 — **yt-dlp runtime self-update with rollback**

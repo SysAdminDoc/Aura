@@ -39,12 +39,12 @@
     {
       "bytes": 399,
       "path": "functions/package.json",
-      "sha256": "ccf8b2e67545a66d0cdff42b0bdd113e06db351939ec12b4c30d33fbc1e28400"
+      "sha256": "5fc7147f387dd6119a2181912917aaa85de2d466864098173a5981272f816a29"
     },
     {
       "bytes": 111678,
       "path": "functions/package-lock.json",
-      "sha256": "2a4acabaabb1bf695378f506e7b68a4814e78dc2a9ec93fe6f6cd90463a8dfb7"
+      "sha256": "8f11894b4d01dd1d9bfb5bddbc13b3fdcba93cc5775374caa046866ab2f31a05"
     },
     {
       "bytes": 425,
@@ -87,9 +87,9 @@
       "sha256": "e050ecd2d4dc61c85cb9bb596f386f62b0f291cde1ceb16d5fd2198cf8ea2200"
     },
     {
-      "bytes": 11231,
+      "bytes": 11286,
       "path": "functions/src/reportHandler.ts",
-      "sha256": "33fe58e7aef5142bee5c502b647d598c7b393580b34beb71ddc81be5465a1793"
+      "sha256": "85d590962f029b4b5053d4f11cb0f712570d63922c96e445f28941a0b5d702b8"
     },
     {
       "bytes": 16605,
