@@ -3,6 +3,9 @@
 All notable changes to Aura will be documented in this file.
 
 ## Unreleased
+- **Native compliance drift gate**: native/copyleft inventory checks now derive
+  youtubedl-android and NewPipe coordinates from Gradle so dependency bumps
+  cannot leave the reviewed payload lock checking stale versions.
 - **YouTube extractor self-update**: added a manual Settings action for stable
   yt-dlp runtime updates, rollback until the next successful extraction, and
   diagnostics coverage for active extractor version/status.

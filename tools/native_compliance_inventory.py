@@ -17,11 +17,18 @@ from pathlib import Path
 
 DEFAULT_LOCKFILE = "docs/legal/native-compliance.lock.json"
 
-DEFAULT_COORDINATES = (
+DEFAULT_COORDINATE_FALLBACK = (
     "io.github.junkfood02.youtubedl-android:common:0.18.1",
     "io.github.junkfood02.youtubedl-android:library:0.18.1",
     "io.github.junkfood02.youtubedl-android:ffmpeg:0.18.1",
     "com.github.teamnewpipe:NewPipeExtractor:v0.26.3",
+)
+
+DEFAULT_GRADLE_BUILD_FILES = ("app/build.gradle.kts",)
+NATIVE_COORDINATE_PREFIXES = (
+    "com.github.teamnewpipe:NewPipeExtractor:",
+    "io.github.junkfood02.youtubedl-android:ffmpeg:",
+    "io.github.junkfood02.youtubedl-android:library:",
 )
 
 
@@ -194,10 +201,15 @@ def parse_args() -> argparse.Namespace:
         help="Gradle modules cache root. Defaults to ~/.gradle/caches/modules-2/files-2.1.",
     )
     parser.add_argument(
+        "--repo-root",
+        default=".",
+        help="Repository root used to discover default native coordinates. Defaults to current directory.",
+    )
+    parser.add_argument(
         "--coordinate",
         action="append",
         dest="coordinates",
-        help="Coordinate to inspect as group:name:version. Can be repeated.",
+        help="Coordinate to inspect as group:name:version. Can be repeated; bypasses Gradle discovery.",
     )
     parser.add_argument(
         "--output",
@@ -222,6 +234,52 @@ def parse_coordinate(value: str) -> Coordinate:
     if len(parts) != 3 or not all(parts):
         raise ValueError(f"Invalid coordinate {value!r}; expected group:name:version")
     return Coordinate(group=parts[0], name=parts[1], version=parts[2])
+
+
+def declared_gradle_coordinates(repo_root: Path) -> set[str]:
+    coordinates: set[str] = set()
+    coordinate_re = re.compile(r"""["']([^"']+:[^"']+:[^"']+)["']""")
+    for relative_path in DEFAULT_GRADLE_BUILD_FILES:
+        path = repo_root / relative_path
+        if not path.is_file():
+            continue
+        for match in coordinate_re.finditer(path.read_text(encoding="utf-8")):
+            coordinate = match.group(1)
+            if coordinate.startswith(NATIVE_COORDINATE_PREFIXES):
+                coordinates.add(coordinate)
+    return coordinates
+
+
+def discover_default_coordinates(repo_root: Path) -> list[Coordinate]:
+    declared = declared_gradle_coordinates(repo_root)
+    if not declared:
+        return [parse_coordinate(value) for value in DEFAULT_COORDINATE_FALLBACK]
+
+    by_name = {parse_coordinate(value).name: parse_coordinate(value) for value in declared}
+    required = {"NewPipeExtractor", "library", "ffmpeg"}
+    missing = sorted(required - by_name.keys())
+    if missing:
+        raise ValueError(
+            "Native compliance coordinate discovery is missing Gradle dependencies: "
+            + ", ".join(missing)
+        )
+
+    ytdlp_versions = {by_name[name].version for name in ("library", "ffmpeg")}
+    if len(ytdlp_versions) != 1:
+        raise ValueError(
+            "youtubedl-android library and ffmpeg versions must match for native compliance review"
+        )
+    ytdlp_version = next(iter(ytdlp_versions))
+    return [
+        Coordinate(
+            group="io.github.junkfood02.youtubedl-android",
+            name="common",
+            version=ytdlp_version,
+        ),
+        by_name["library"],
+        by_name["ffmpeg"],
+        by_name["NewPipeExtractor"],
+    ]
 
 
 def sha256(path: Path) -> str:
@@ -660,7 +718,11 @@ def build_markdown(
 def main() -> int:
     args = parse_args()
     cache_root = Path(os.path.expanduser(args.gradle_cache)).resolve()
-    coordinates = [parse_coordinate(value) for value in (args.coordinates or DEFAULT_COORDINATES)]
+    coordinates = (
+        [parse_coordinate(value) for value in args.coordinates]
+        if args.coordinates
+        else discover_default_coordinates(Path(args.repo_root).resolve())
+    )
     if args.mode in {"write-lock", "check-lock"}:
         lock = build_lock(cache_root, coordinates)
         lockfile = Path(args.lockfile)
