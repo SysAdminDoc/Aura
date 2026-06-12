@@ -20,8 +20,16 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.ProgressBarRangeInfo
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.onClick
+import androidx.compose.ui.semantics.progressBarRangeInfo
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.freevibe.R
 import com.freevibe.data.model.ContentType
 import com.freevibe.data.model.Sound
 import com.freevibe.data.model.stableKey
@@ -45,6 +53,14 @@ fun SoundEditorScreen(
     val state by viewModel.state.collectAsStateWithLifecycle()
     val currentSelectedSound by recoveryViewModel.selectedSound.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
+    val playPreviewLabel = stringResource(R.string.a11y_play_preview)
+    val pausePreviewLabel = stringResource(R.string.a11y_pause_preview)
+    val playingState = stringResource(R.string.a11y_preview_playing)
+    val readyState = stringResource(R.string.a11y_ready)
+    val fadeInLabel = stringResource(R.string.a11y_fade_in)
+    val fadeOutLabel = stringResource(R.string.a11y_fade_out)
+    val fadeInState = stringResource(R.string.a11y_duration_ms, state.fadeInMs)
+    val fadeOutState = stringResource(R.string.a11y_duration_ms, state.fadeOutMs)
     val editorIdentityKey = remember(soundId, fallbackSound?.source, fallbackSound?.previewUrl, fallbackSound?.downloadUrl, initialLocalUri) {
         listOf(
             soundId.orEmpty(),
@@ -286,11 +302,16 @@ fun SoundEditorScreen(
                         modifier = Modifier
                             .size(64.dp)
                             .clip(RoundedCornerShape(8.dp))
-                            .background(MaterialTheme.colorScheme.primaryContainer),
+                            .background(MaterialTheme.colorScheme.primaryContainer)
+                            .semantics {
+                                contentDescription = if (state.isPlaying) pausePreviewLabel else playPreviewLabel
+                                stateDescription = if (state.isPlaying) playingState else readyState
+                                onClick(label = if (state.isPlaying) pausePreviewLabel else playPreviewLabel, action = null)
+                            },
                     ) {
                         Icon(
                             if (state.isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow,
-                            contentDescription = if (state.isPlaying) "Pause preview" else "Play preview",
+                            contentDescription = null,
                             tint = MaterialTheme.colorScheme.primary,
                             modifier = Modifier.size(32.dp),
                         )
@@ -319,7 +340,16 @@ fun SoundEditorScreen(
                             },
                             onValueChangeFinished = { fadeInUndoSaved = false },
                             valueRange = 0f..(state.trimDurationMs / 2f).coerceAtLeast(100f),
-                            modifier = Modifier.heightIn(min = 40.dp),
+                            modifier = Modifier
+                                .heightIn(min = 40.dp)
+                                .semantics {
+                                    contentDescription = fadeInLabel
+                                    stateDescription = fadeInState
+                                    progressBarRangeInfo = ProgressBarRangeInfo(
+                                        state.fadeInMs.toFloat(),
+                                        0f..(state.trimDurationMs / 2f).coerceAtLeast(100f),
+                                    )
+                                },
                         )
                     }
                     // Fade Out
@@ -338,7 +368,16 @@ fun SoundEditorScreen(
                             },
                             onValueChangeFinished = { fadeOutUndoSaved = false },
                             valueRange = 0f..(state.trimDurationMs / 2f).coerceAtLeast(100f),
-                            modifier = Modifier.heightIn(min = 40.dp),
+                            modifier = Modifier
+                                .heightIn(min = 40.dp)
+                                .semantics {
+                                    contentDescription = fadeOutLabel
+                                    stateDescription = fadeOutState
+                                    progressBarRangeInfo = ProgressBarRangeInfo(
+                                        state.fadeOutMs.toFloat(),
+                                        0f..(state.trimDurationMs / 2f).coerceAtLeast(100f),
+                                    )
+                                },
                         )
                     }
                 }
@@ -411,9 +450,20 @@ private fun TrimGuidance(trimDurationMs: Long) {
 
 @Composable
 private fun ApplyBtn(text: String, modifier: Modifier, isLoading: Boolean, onClick: () -> Unit) {
+    val applyLabel = stringResource(R.string.a11y_set_trimmed_audio_as, text)
+    val applyState = if (isLoading) {
+        stringResource(R.string.a11y_applying)
+    } else {
+        stringResource(R.string.a11y_ready)
+    }
     Button(
         onClick = onClick,
-        modifier = modifier.height(48.dp),
+        modifier = modifier
+            .height(48.dp)
+            .semantics {
+                stateDescription = applyState
+                onClick(label = applyLabel, action = null)
+            },
         enabled = !isLoading,
         shape = RoundedCornerShape(8.dp),
         colors = ButtonDefaults.buttonColors(
@@ -445,11 +495,26 @@ private fun WaveformView(
     val dimmed = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.15f)
     val playhead = MaterialTheme.colorScheme.tertiary
     val fadeColor = MaterialTheme.colorScheme.tertiary.copy(alpha = 0.2f)
+    val trimStartPercent = (trimStart.coerceIn(0f, 1f) * 100).toInt()
+    val trimEndPercent = (trimEnd.coerceIn(0f, 1f) * 100).toInt()
+    val trimDescription = stringResource(R.string.a11y_trim_waveform)
+    val trimState = stringResource(R.string.a11y_trim_range, trimStartPercent, trimEndPercent)
+    val playbackState = if (isPlaying) {
+        stringResource(R.string.a11y_playing_percent, (playbackPosition.coerceIn(0f, 1f) * 100).toInt())
+    } else {
+        stringResource(R.string.a11y_stopped)
+    }
+    val trimPlaybackState = stringResource(R.string.a11y_trim_playback_state, trimState, playbackState)
 
     Box(
         modifier = modifier
             .clip(RoundedCornerShape(8.dp))
             .background(MaterialTheme.colorScheme.surfaceContainer)
+            .semantics {
+                contentDescription = trimDescription
+                stateDescription = trimPlaybackState
+                progressBarRangeInfo = ProgressBarRangeInfo(playbackPosition.coerceIn(0f, 1f), 0f..1f)
+            }
     ) {
         Canvas(
             modifier = Modifier

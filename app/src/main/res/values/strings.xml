@@ -30,6 +30,13 @@
     <string name="a11y_vote_count">%1$d votes</string>
     <string name="a11y_playback_waveform">Playback waveform</string>
     <string name="a11y_seekable_waveform">Seekable waveform</string>
+    <string name="a11y_trim_waveform">Trim waveform</string>
+    <string name="a11y_trim_range">Selected range %1$d to %2$d percent</string>
+    <string name="a11y_trim_playback_state">%1$s, %2$s</string>
+    <string name="a11y_fade_in">Fade in</string>
+    <string name="a11y_fade_out">Fade out</string>
+    <string name="a11y_duration_ms">%1$d ms</string>
+    <string name="a11y_set_trimmed_audio_as">Set trimmed audio as %1$s</string>
     <string name="a11y_playing_percent">Playing %1$d percent</string>
     <string name="a11y_stopped">Stopped</string>
     <string name="a11y_video_applying">Applying video wallpaper</string>
