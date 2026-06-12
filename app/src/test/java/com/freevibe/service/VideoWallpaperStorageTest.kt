@@ -35,4 +35,73 @@ class VideoWallpaperStorageTest {
         assertEquals(VIDEO_WALLPAPER_SCALE_MODE_ZOOM, normalizeVideoWallpaperScaleMode("crop"))
         assertEquals(VIDEO_WALLPAPER_SCALE_MODE_ZOOM, normalizeVideoWallpaperScaleMode(null))
     }
+
+    @Test
+    fun `video probe accepts real motion files`() {
+        val failure = videoWallpaperProbeFailure(
+            VideoWallpaperProbe(
+                hasVideo = true,
+                durationMs = 5_000L,
+                width = 1080,
+                height = 1920,
+                mimeType = "video/mp4",
+            ),
+        )
+
+        assertEquals(null, failure)
+    }
+
+    @Test
+    fun `video probe rejects audio-only files`() {
+        val failure = videoWallpaperProbeFailure(
+            VideoWallpaperProbe(
+                hasVideo = false,
+                durationMs = 5_000L,
+                width = 0,
+                height = 0,
+                mimeType = "audio/mp4",
+            ),
+        )
+
+        assertEquals("Selected file does not contain a video track", failure)
+    }
+
+    @Test
+    fun `video probe rejects unreadable dimensions`() {
+        val failure = videoWallpaperProbeFailure(
+            VideoWallpaperProbe(
+                hasVideo = true,
+                durationMs = 5_000L,
+                width = 0,
+                height = 1920,
+                mimeType = "video/mp4",
+            ),
+        )
+
+        assertEquals("Selected video dimensions could not be read", failure)
+    }
+
+    @Test
+    fun `video probe rejects too-short clips`() {
+        val failure = videoWallpaperProbeFailure(
+            VideoWallpaperProbe(
+                hasVideo = true,
+                durationMs = 250L,
+                width = 1080,
+                height = 1920,
+                mimeType = "video/mp4",
+            ),
+        )
+
+        assertEquals("Selected video is too short", failure)
+    }
+
+    @Test
+    fun `gif header validation accepts gif signatures only`() {
+        assertTrue(hasValidGifHeader("GIF87a".toByteArray()))
+        assertTrue(hasValidGifHeader("GIF89a".toByteArray()))
+        assertFalse(hasValidGifHeader("GIF00a".toByteArray()))
+        assertFalse(hasValidGifHeader("MP4....".toByteArray()))
+        assertFalse(hasValidGifHeader(byteArrayOf(1, 2, 3)))
+    }
 }

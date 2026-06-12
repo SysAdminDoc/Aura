@@ -347,13 +347,6 @@ Append-only Cycle 6 handoff. Every item below is source-backed in `docs/research
   - Acceptance: every remote/local media path declares allowed schemes, max bytes, temp-file behavior, cleanup, MIME/content validation, and user-facing error class; no direct `body.bytes()` or unbounded `copyTo()` remains on untrusted input.
   - Verify: unit tests for oversized advertised, oversized chunked, empty, truncated, wrong MIME, unsupported container, cancellation cleanup, and temp-file deletion.
 
-- [ ] 🤖 🔬 **P1 — Video wallpaper size/probe hardening**
-  - Why: Pexels/direct/YouTube fallback video downloads and local video selection are the highest remaining media-size risk.
-  - Evidence: raw `copyTo()` in `VideoWallpapersViewModel`; length-only validation in `VideoWallpaperStorage`; stronger 256 MB precedent in `VideoCropScreen`.
-  - Touches: `VideoWallpapersViewModel`, `VideoWallpaperStorage`, `VideoCropScreen`, video apply/export UI, tests.
-  - Acceptance: all video ingest paths stream-cap at a documented limit, reject too-small/too-large/truncated files, probe duration/dimensions/container before persisting, and surface actionable errors.
-  - Verify: local huge file, chunked oversized HTTP, wrong-extension file, truncated video, GIF path, WebM/MKV/MP4 happy paths.
-
 - [ ] 🤖 🔬 **P1 — MIME/content validation before public writes and apply actions**
   - Why: URL extensions and content-resolver MIME strings are hints. Aura should validate actual content before writing MediaStore rows, setting system sounds, applying wallpapers, or caching favorites.
   - Evidence: MIME guessing in `DownloadManager`/`SoundApplier`; URL/MIME extension logic in `VideoWallpaperStorage`; Android media-storage docs.

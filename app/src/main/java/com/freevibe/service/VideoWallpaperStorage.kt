@@ -1,6 +1,7 @@
 package com.freevibe.service
 
 import android.content.Context
+import android.media.MediaMetadataRetriever
 import android.net.Uri
 import android.provider.OpenableColumns
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -24,6 +25,15 @@ internal const val VIDEO_WALLPAPER_SCALE_MODE_FIT = "fit"
 internal fun videoWallpaperMimeTypes(): Array<String> = arrayOf("video/*", "image/gif")
 
 internal const val MAX_VIDEO_WALLPAPER_BYTES = 256L * 1024L * 1024L
+private const val MIN_VIDEO_WALLPAPER_DURATION_MS = 1_000L
+
+internal data class VideoWallpaperProbe(
+    val hasVideo: Boolean,
+    val durationMs: Long,
+    val width: Int,
+    val height: Int,
+    val mimeType: String?,
+)
 
 internal fun normalizeVideoWallpaperScaleMode(scaleMode: String?): String =
     when (scaleMode?.trim()?.lowercase(Locale.ROOT)) {
@@ -65,6 +75,20 @@ internal fun resolveVideoWallpaperExtension(
     }
 }
 
+internal fun videoWallpaperProbeFailure(probe: VideoWallpaperProbe): String? =
+    when {
+        !probe.hasVideo -> "Selected file does not contain a video track"
+        probe.durationMs < MIN_VIDEO_WALLPAPER_DURATION_MS -> "Selected video is too short"
+        probe.width <= 0 || probe.height <= 0 -> "Selected video dimensions could not be read"
+        else -> null
+    }
+
+internal fun hasValidGifHeader(header: ByteArray): Boolean =
+    header.size >= 6 && (
+        header.copyOfRange(0, 6).toString(Charsets.US_ASCII) == "GIF87a" ||
+            header.copyOfRange(0, 6).toString(Charsets.US_ASCII) == "GIF89a"
+        )
+
 @Singleton
 class VideoWallpaperStorage @Inject constructor(
     @ApplicationContext private val context: Context,
@@ -89,7 +113,7 @@ class VideoWallpaperStorage @Inject constructor(
                     }
                 } ?: throw IOException("Could not open the selected file")
 
-                validatePreparedMotionFile(tempFile)
+                validatePreparedMotionFile(tempFile, extension)
                 commitPreparedVideo(tempFile, targetFile)
                 persistSelectedVideoWallpaper(targetFile)
                 targetFile
@@ -110,7 +134,7 @@ class VideoWallpaperStorage @Inject constructor(
 
             try {
                 writer(tempFile)
-                validatePreparedMotionFile(tempFile)
+                validatePreparedMotionFile(tempFile, extension)
                 commitPreparedVideo(tempFile, targetFile)
                 persistSelectedVideoWallpaper(targetFile)
                 targetFile
@@ -121,12 +145,49 @@ class VideoWallpaperStorage @Inject constructor(
         }
     }
 
-    private fun validatePreparedMotionFile(file: File) {
+    private fun validatePreparedMotionFile(file: File, extension: String) {
         if (!file.exists() || file.length() < 1024) {
             throw IOException("Selected file is empty or invalid")
         }
         if (file.length() > MAX_VIDEO_WALLPAPER_BYTES) {
             throw IOException("Selected file exceeds video wallpaper limit")
+        }
+        if (extension.equals("gif", ignoreCase = true)) {
+            validateGifHeader(file)
+            return
+        }
+        val probe = probeVideoFile(file)
+        videoWallpaperProbeFailure(probe)?.let { throw IOException(it) }
+    }
+
+    private fun validateGifHeader(file: File) {
+        val header = ByteArray(6)
+        val read = file.inputStream().use { it.read(header) }
+        if (read != header.size || !hasValidGifHeader(header)) {
+            throw IOException("Selected GIF is invalid")
+        }
+    }
+
+    private fun probeVideoFile(file: File): VideoWallpaperProbe {
+        val retriever = MediaMetadataRetriever()
+        return try {
+            retriever.setDataSource(file.absolutePath)
+            val hasVideo = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_HAS_VIDEO)
+                ?.equals("yes", ignoreCase = true) == true
+            VideoWallpaperProbe(
+                hasVideo = hasVideo,
+                durationMs = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION)
+                    ?.toLongOrNull() ?: 0L,
+                width = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_WIDTH)
+                    ?.toIntOrNull() ?: 0,
+                height = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_HEIGHT)
+                    ?.toIntOrNull() ?: 0,
+                mimeType = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_MIMETYPE),
+            )
+        } catch (e: Exception) {
+            throw IOException("Selected video could not be decoded", e)
+        } finally {
+            runCatching { retriever.release() }
         }
     }
 
