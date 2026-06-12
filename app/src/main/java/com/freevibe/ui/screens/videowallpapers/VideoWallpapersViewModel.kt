@@ -17,6 +17,7 @@ import com.freevibe.service.SourceMetrics
 import com.freevibe.service.VIDEO_WALLPAPER_SCALE_MODE_ZOOM
 import com.freevibe.service.VideoWallpaperSelectionResult
 import com.freevibe.service.VideoWallpaperStorage
+import com.freevibe.service.YtDlpUpdateManager
 import com.freevibe.service.advertisedLengthExceeds
 import com.freevibe.service.copyStreamCapped
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -233,6 +234,7 @@ class VideoWallpapersViewModel @Inject constructor(
     private val okHttpClient: OkHttpClient,
     private val videoWallpaperStorage: VideoWallpaperStorage,
     private val sourceMetrics: SourceMetrics,
+    private val ytDlpUpdateManager: YtDlpUpdateManager,
     val voteRepo: VoteRepository,
 ) : ViewModel() {
 
@@ -413,7 +415,7 @@ class VideoWallpapersViewModel @Inject constructor(
 
                 if (videoUrl == null) {
                     withContext(Dispatchers.Main) {
-                        Toast.makeText(context, "Could not get video URL", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(context, context.getString(com.freevibe.R.string.ytdlp_video_url_update_hint), Toast.LENGTH_SHORT).show()
                     }
                     _state.update { it.copy(isApplying = null) }
                     return@launch
@@ -430,8 +432,10 @@ class VideoWallpapersViewModel @Inject constructor(
                             request.addOption("-o", cacheFile.absolutePath)
                             request.addOption("--force-overwrites")
                             com.yausername.youtubedl_android.YoutubeDL.getInstance().execute(request)
+                            ytDlpUpdateManager.recordExtractionSuccess()
                         } catch (e: Exception) {
                             if (e is kotlinx.coroutines.CancellationException) throw e
+                            ytDlpUpdateManager.recordExtractionFailure(e)
                             if (com.freevibe.BuildConfig.DEBUG) Log.e("VideoWP", "yt-dlp download failed: ${e.message}, using stream URL")
                             okHttpClient.newCall(Request.Builder().url(videoUrl).build()).execute().use { resp ->
                                 if (!resp.isSuccessful) throw Exception("HTTP ${resp.code}")

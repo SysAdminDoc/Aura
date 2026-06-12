@@ -3,6 +3,9 @@
 All notable changes to Aura will be documented in this file.
 
 ## Unreleased
+- **YouTube extractor self-update**: added a manual Settings action for stable
+  yt-dlp runtime updates, rollback until the next successful extraction, and
+  diagnostics coverage for active extractor version/status.
 - **Localization extraction batch**: moved navigation titles, community
   guidelines/report dialogs, and recent-search actions into Android string
   resources, then refreshed the hardcoded-string baseline.

@@ -64,6 +64,7 @@ import com.freevibe.service.VIDEO_STATS_PREFS_NAME
 import com.freevibe.service.VideoWallpaperSelectionResult
 import com.freevibe.service.WeatherUpdateWorker
 import com.freevibe.service.VideoWallpaperService
+import com.freevibe.service.YtDlpUpdateStatus
 import com.freevibe.service.communityDeletionRequestBody
 import com.freevibe.service.effectiveVideoFpsLimit
 import com.freevibe.service.shouldUseVideoBatterySaver
@@ -226,6 +227,7 @@ fun SettingsScreen(
     val backgroundWorkDiagnostics by viewModel.backgroundWorkDiagnostics.collectAsStateWithLifecycle()
     val externalAutomationDiagnostics by viewModel.externalAutomationDiagnostics.collectAsStateWithLifecycle()
     val videoWallpaperSelectionResult by viewModel.videoWallpaperSelectionResult.collectAsStateWithLifecycle()
+    val ytDlpUpdate by viewModel.ytDlpUpdate.collectAsStateWithLifecycle()
     val videoBatteryDashboard by rememberVideoBatteryDashboardState(
         context = context,
         requestedFps = videoFpsLimit,
@@ -409,6 +411,13 @@ fun SettingsScreen(
         communityIdentityCleanup.error?.let {
             Toast.makeText(context, it, Toast.LENGTH_LONG).show()
             viewModel.clearCommunityIdentityCleanupState()
+        }
+    }
+    val ytDlpUpdateNotice = ytDlpUpdateToastMessage(ytDlpUpdate)
+    LaunchedEffect(ytDlpUpdate.completedStatus, ytDlpUpdate.error) {
+        ytDlpUpdateNotice?.let {
+            Toast.makeText(context, it, Toast.LENGTH_LONG).show()
+            viewModel.clearYtDlpUpdateNotice()
         }
     }
 
@@ -1329,6 +1338,19 @@ fun SettingsScreen(
                 },
                 checked = youtubeProviderEnabled,
                 onCheckedChange = { viewModel.setYoutubeProviderEnabled(it) },
+            )
+            SettingsItem(
+                icon = Icons.Default.Update,
+                title = stringResource(R.string.settings_ytdlp_update_title),
+                subtitle = ytDlpUpdateSubtitle(
+                    state = ytDlpUpdate,
+                    youtubeProviderEnabled = youtubeProviderEnabled,
+                ),
+                onClick = {
+                    if (youtubeProviderEnabled && !ytDlpUpdate.isUpdating) {
+                        viewModel.updateYtDlp()
+                    }
+                },
             )
             SettingsItem(
                 icon = Icons.Default.Block,
@@ -3201,6 +3223,56 @@ private fun crashDiagnosticsSubtitle(summary: CrashDiagnosticsSummary): String =
         "Last crash ${summary.lastCrashAt ?: "recorded"} • Copy or share a sanitized issue bundle"
     } else {
         "No local crash log yet • Copy or share environment details if the app freezes"
+    }
+
+@Composable
+private fun ytDlpUpdateSubtitle(
+    state: YtDlpUpdateUiState,
+    youtubeProviderEnabled: Boolean,
+): String {
+    if (!youtubeProviderEnabled) return stringResource(R.string.settings_ytdlp_update_disabled)
+    if (state.isUpdating) return stringResource(R.string.settings_ytdlp_update_checking)
+    val snapshot = state.snapshot
+    val version = snapshot.activeVersionName
+        ?: snapshot.activeVersion
+        ?: stringResource(R.string.settings_ytdlp_update_version_unknown)
+    val lastCheck = if (snapshot.lastAttemptAtMs > 0L) {
+        DateFormat.getDateTimeInstance(DateFormat.SHORT, DateFormat.SHORT)
+            .format(Date(snapshot.lastAttemptAtMs))
+    } else {
+        stringResource(R.string.settings_ytdlp_update_never_checked)
+    }
+    return stringResource(
+        R.string.settings_ytdlp_update_status,
+        version,
+        lastCheck,
+        ytDlpUpdateStatusLabel(snapshot.lastStatus),
+    )
+}
+
+@Composable
+private fun ytDlpUpdateStatusLabel(status: YtDlpUpdateStatus): String = when (status) {
+    YtDlpUpdateStatus.NEVER_RUN -> stringResource(R.string.settings_ytdlp_update_never_checked)
+    YtDlpUpdateStatus.CHECKING -> stringResource(R.string.settings_ytdlp_update_checking_short)
+    YtDlpUpdateStatus.ALREADY_UP_TO_DATE -> stringResource(R.string.settings_ytdlp_update_already)
+    YtDlpUpdateStatus.UPDATED_PENDING_VALIDATION -> stringResource(R.string.settings_ytdlp_update_pending)
+    YtDlpUpdateStatus.VALIDATED -> stringResource(R.string.settings_ytdlp_update_validated)
+    YtDlpUpdateStatus.ROLLED_BACK -> stringResource(R.string.settings_ytdlp_update_rolled_back)
+    YtDlpUpdateStatus.FAILED -> stringResource(R.string.settings_ytdlp_update_failed)
+}
+
+@Composable
+private fun ytDlpUpdateToastMessage(state: YtDlpUpdateUiState): String? =
+    when (state.completedStatus) {
+        YtDlpUpdateStatus.ALREADY_UP_TO_DATE -> stringResource(R.string.settings_ytdlp_update_toast_current)
+        YtDlpUpdateStatus.UPDATED_PENDING_VALIDATION -> stringResource(R.string.settings_ytdlp_update_toast_updated)
+        YtDlpUpdateStatus.VALIDATED -> stringResource(R.string.settings_ytdlp_update_toast_validated)
+        YtDlpUpdateStatus.ROLLED_BACK -> stringResource(R.string.settings_ytdlp_update_toast_rolled_back)
+        YtDlpUpdateStatus.FAILED -> stringResource(
+            R.string.settings_ytdlp_update_toast_failed,
+            state.error ?: stringResource(R.string.settings_ytdlp_update_unknown_error),
+        )
+        else -> null
     }
 
 private fun copyCrashDiagnosticsBundle(context: Context, bundle: String) {

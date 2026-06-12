@@ -19,6 +19,10 @@ import com.freevibe.service.OfflineFavoritesManager
 import com.freevibe.service.VideoWallpaperSelectionResult
 import com.freevibe.service.VideoWallpaperStorage
 import com.freevibe.service.WallpaperHistoryManager
+import com.freevibe.service.YtDlpUpdateManager
+import com.freevibe.service.YtDlpUpdateResult
+import com.freevibe.service.YtDlpUpdateSnapshot
+import com.freevibe.service.YtDlpUpdateStatus
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
@@ -299,6 +303,36 @@ class SettingsViewModelTest {
         assertEquals("No WorkInfo records", viewModel.backgroundWorkDiagnostics.value.rows.single().workInfoStatus)
     }
 
+    @Test
+    fun `updateYtDlp delegates to manager and publishes pending validation state`() = runTest(dispatcher) {
+        val manager = mockk<YtDlpUpdateManager>()
+        val initial = YtDlpUpdateSnapshot(activeVersionName = "bundled")
+        val updated = YtDlpUpdateSnapshot(
+            activeVersionName = "2026.06.12",
+            lastStatus = YtDlpUpdateStatus.UPDATED_PENDING_VALIDATION,
+            lastAttemptAtMs = 123L,
+            pendingValidation = true,
+            rollbackAvailable = true,
+        )
+        every { manager.snapshot() } returns initial
+        coEvery { manager.updateStable() } returns YtDlpUpdateResult(
+            status = YtDlpUpdateStatus.UPDATED_PENDING_VALIDATION,
+            snapshot = updated,
+        )
+        val viewModel = createViewModel(
+            cacheDir = createTempDirectory("settings-ytdlp").toFile().also(tempDirs::add),
+            ytDlpUpdateManagerOverride = manager,
+        )
+
+        viewModel.updateYtDlp()
+        advanceUntilIdle()
+
+        assertFalse(viewModel.ytDlpUpdate.value.isUpdating)
+        assertEquals(YtDlpUpdateStatus.UPDATED_PENDING_VALIDATION, viewModel.ytDlpUpdate.value.completedStatus)
+        assertEquals(updated, viewModel.ytDlpUpdate.value.snapshot)
+        coVerify(exactly = 1) { manager.updateStable() }
+    }
+
     private fun createViewModel(
         cacheDir: File,
         offlineFavoritesSize: Long = 0L,
@@ -309,6 +343,7 @@ class SettingsViewModelTest {
         communityBlockRepoOverride: CommunityBlockRepository? = null,
         communityIdentityProviderOverride: CommunityIdentityProvider? = null,
         backgroundWorkDiagnosticsReaderOverride: BackgroundWorkDiagnosticsReader? = null,
+        ytDlpUpdateManagerOverride: YtDlpUpdateManager? = null,
         isAdmin: Boolean = false,
     ): SettingsViewModel {
         val context = mockk<Context>(relaxed = true).also {
@@ -342,6 +377,9 @@ class SettingsViewModelTest {
         val communityIdentityProvider = communityIdentityProviderOverride ?: mockk<CommunityIdentityProvider>(relaxed = true).also {
             every { it.currentIdentitySummary() } returns CommunityIdentitySummary()
         }
+        val ytDlpUpdateManager = ytDlpUpdateManagerOverride ?: mockk<YtDlpUpdateManager>().also {
+            every { it.snapshot() } returns YtDlpUpdateSnapshot()
+        }
         return SettingsViewModel(
             context = context,
             prefs = prefs,
@@ -358,12 +396,14 @@ class SettingsViewModelTest {
                 sourceMetrics = com.freevibe.service.SourceMetrics(),
                 backgroundWorkDiagnosticsReader = backgroundWorkDiagnosticsReaderOverride
                     ?: FakeBackgroundWorkDiagnosticsReader(BackgroundWorkDiagnostics()),
+                ytDlpUpdateManager = ytDlpUpdateManager,
             ),
             backgroundWorkDiagnosticsReader = backgroundWorkDiagnosticsReaderOverride
                 ?: FakeBackgroundWorkDiagnosticsReader(BackgroundWorkDiagnostics()),
             voteRepo = voteRepo,
             communityBlockRepo = communityBlockRepo,
             communityIdentityProvider = communityIdentityProvider,
+            ytDlpUpdateManager = ytDlpUpdateManager,
             ioDispatcher = dispatcher,
         )
     }

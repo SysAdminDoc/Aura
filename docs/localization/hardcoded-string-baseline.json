@@ -1523,7 +1523,7 @@
     },
     {
       "count": 1,
-      "firstLine": 1313,
+      "firstLine": 1322,
       "id": "6933c3cdd8e90eb1",
       "path": "app/src/main/java/com/freevibe/ui/screens/settings/SettingsScreen.kt",
       "sink": "Text",
@@ -1531,7 +1531,7 @@
     },
     {
       "count": 1,
-      "firstLine": 2153,
+      "firstLine": 2175,
       "id": "866df0364ed22a74",
       "path": "app/src/main/java/com/freevibe/ui/screens/settings/SettingsScreen.kt",
       "sink": "Text",
@@ -1539,7 +1539,7 @@
     },
     {
       "count": 1,
-      "firstLine": 3145,
+      "firstLine": 3167,
       "id": "2f7c654db71a10f8",
       "path": "app/src/main/java/com/freevibe/ui/screens/settings/SettingsScreen.kt",
       "sink": "Text",
@@ -1547,7 +1547,7 @@
     },
     {
       "count": 1,
-      "firstLine": 3380,
+      "firstLine": 3452,
       "id": "bce1592a69b894aa",
       "path": "app/src/main/java/com/freevibe/ui/screens/settings/SettingsScreen.kt",
       "sink": "Text",
@@ -1555,7 +1555,7 @@
     },
     {
       "count": 1,
-      "firstLine": 3179,
+      "firstLine": 3201,
       "id": "7cf2f3d04db953ca",
       "path": "app/src/main/java/com/freevibe/ui/screens/settings/SettingsScreen.kt",
       "sink": "Text",
@@ -1563,7 +1563,7 @@
     },
     {
       "count": 1,
-      "firstLine": 2128,
+      "firstLine": 2150,
       "id": "bb5a22e37ea9c710",
       "path": "app/src/main/java/com/freevibe/ui/screens/settings/SettingsScreen.kt",
       "sink": "Text",
@@ -1571,7 +1571,7 @@
     },
     {
       "count": 1,
-      "firstLine": 3528,
+      "firstLine": 3600,
       "id": "f2d2e7dfcc25e23d",
       "path": "app/src/main/java/com/freevibe/ui/screens/settings/SettingsScreen.kt",
       "sink": "Text",
@@ -1579,7 +1579,7 @@
     },
     {
       "count": 1,
-      "firstLine": 1860,
+      "firstLine": 1882,
       "id": "91b05625f5e90f7e",
       "path": "app/src/main/java/com/freevibe/ui/screens/settings/SettingsScreen.kt",
       "sink": "Text",
@@ -1587,7 +1587,7 @@
     },
     {
       "count": 1,
-      "firstLine": 3594,
+      "firstLine": 3666,
       "id": "0c8f42f0cfa04318",
       "path": "app/src/main/java/com/freevibe/ui/screens/settings/SettingsScreen.kt",
       "sink": "Text",
@@ -1595,7 +1595,7 @@
     },
     {
       "count": 1,
-      "firstLine": 1768,
+      "firstLine": 1790,
       "id": "dc75ff83e08a36f1",
       "path": "app/src/main/java/com/freevibe/ui/screens/settings/SettingsScreen.kt",
       "sink": "Text",
@@ -1603,7 +1603,7 @@
     },
     {
       "count": 1,
-      "firstLine": 2575,
+      "firstLine": 2597,
       "id": "45a762a6add58254",
       "path": "app/src/main/java/com/freevibe/ui/screens/settings/SettingsScreen.kt",
       "sink": "Text",
@@ -1611,7 +1611,7 @@
     },
     {
       "count": 1,
-      "firstLine": 2148,
+      "firstLine": 2170,
       "id": "aadec34be00ad72b",
       "path": "app/src/main/java/com/freevibe/ui/screens/settings/SettingsScreen.kt",
       "sink": "Text",
@@ -1619,7 +1619,7 @@
     },
     {
       "count": 1,
-      "firstLine": 2279,
+      "firstLine": 2301,
       "id": "9e3c0f8e5d29f9d4",
       "path": "app/src/main/java/com/freevibe/ui/screens/settings/SettingsScreen.kt",
       "sink": "Text",
@@ -1627,7 +1627,7 @@
     },
     {
       "count": 13,
-      "firstLine": 147,
+      "firstLine": 148,
       "id": "bfbde285cd6e3d6c",
       "path": "app/src/main/java/com/freevibe/ui/screens/settings/SettingsScreen.kt",
       "sink": "Text",
@@ -1635,7 +1635,7 @@
     },
     {
       "count": 1,
-      "firstLine": 1298,
+      "firstLine": 1307,
       "id": "fd586252420e855e",
       "path": "app/src/main/java/com/freevibe/ui/screens/settings/SettingsScreen.kt",
       "sink": "Text",
@@ -1643,7 +1643,7 @@
     },
     {
       "count": 2,
-      "firstLine": 146,
+      "firstLine": 147,
       "id": "7f67db9b5879397b",
       "path": "app/src/main/java/com/freevibe/ui/screens/settings/SettingsScreen.kt",
       "sink": "Text",
@@ -1651,7 +1651,7 @@
     },
     {
       "count": 1,
-      "firstLine": 2170,
+      "firstLine": 2192,
       "id": "f09ddd4a6ecdbf9d",
       "path": "app/src/main/java/com/freevibe/ui/screens/settings/SettingsScreen.kt",
       "sink": "Text",
@@ -1659,7 +1659,7 @@
     },
     {
       "count": 1,
-      "firstLine": 2254,
+      "firstLine": 2276,
       "id": "2630c1e77ca1e3d5",
       "path": "app/src/main/java/com/freevibe/ui/screens/settings/SettingsScreen.kt",
       "sink": "Text",
@@ -1667,7 +1667,7 @@
     },
     {
       "count": 1,
-      "firstLine": 2229,
+      "firstLine": 2251,
       "id": "e842b6537eef19ce",
       "path": "app/src/main/java/com/freevibe/ui/screens/settings/SettingsScreen.kt",
       "sink": "Text",
@@ -1675,7 +1675,7 @@
     },
     {
       "count": 8,
-      "firstLine": 1183,
+      "firstLine": 1192,
       "id": "0a735cc99253d6ac",
       "path": "app/src/main/java/com/freevibe/ui/screens/settings/SettingsScreen.kt",
       "sink": "Text",
@@ -1683,7 +1683,7 @@
     },
     {
       "count": 1,
-      "firstLine": 2151,
+      "firstLine": 2173,
       "id": "c5c16baf4515fb10",
       "path": "app/src/main/java/com/freevibe/ui/screens/settings/SettingsScreen.kt",
       "sink": "Text",
@@ -1691,7 +1691,7 @@
     },
     {
       "count": 1,
-      "firstLine": 2199,
+      "firstLine": 2221,
       "id": "73970ee819821410",
       "path": "app/src/main/java/com/freevibe/ui/screens/settings/SettingsScreen.kt",
       "sink": "Text",
@@ -1699,7 +1699,7 @@
     },
     {
       "count": 1,
-      "firstLine": 1886,
+      "firstLine": 1908,
       "id": "1044d73724094cab",
       "path": "app/src/main/java/com/freevibe/ui/screens/settings/SettingsScreen.kt",
       "sink": "Text",
@@ -1707,7 +1707,7 @@
     },
     {
       "count": 1,
-      "firstLine": 2259,
+      "firstLine": 2281,
       "id": "841c4e7368300b1c",
       "path": "app/src/main/java/com/freevibe/ui/screens/settings/SettingsScreen.kt",
       "sink": "Text",
@@ -1715,7 +1715,7 @@
     },
     {
       "count": 1,
-      "firstLine": 1843,
+      "firstLine": 1865,
       "id": "9e061ba7c23e1432",
       "path": "app/src/main/java/com/freevibe/ui/screens/settings/SettingsScreen.kt",
       "sink": "Text",
@@ -1723,7 +1723,7 @@
     },
     {
       "count": 1,
-      "firstLine": 2125,
+      "firstLine": 2147,
       "id": "e5a6ec30b5bb19c7",
       "path": "app/src/main/java/com/freevibe/ui/screens/settings/SettingsScreen.kt",
       "sink": "Text",
@@ -1731,7 +1731,7 @@
     },
     {
       "count": 1,
-      "firstLine": 1125,
+      "firstLine": 1134,
       "id": "3a7dbb844226655d",
       "path": "app/src/main/java/com/freevibe/ui/screens/settings/SettingsScreen.kt",
       "sink": "Text",
@@ -1739,7 +1739,7 @@
     },
     {
       "count": 1,
-      "firstLine": 1163,
+      "firstLine": 1172,
       "id": "031c4dcb54a2ec41",
       "path": "app/src/main/java/com/freevibe/ui/screens/settings/SettingsScreen.kt",
       "sink": "Text",
@@ -1747,7 +1747,7 @@
     },
     {
       "count": 1,
-      "firstLine": 3172,
+      "firstLine": 3194,
       "id": "38203e9f0c62dbf0",
       "path": "app/src/main/java/com/freevibe/ui/screens/settings/SettingsScreen.kt",
       "sink": "Text",
@@ -1755,7 +1755,7 @@
     },
     {
       "count": 1,
-      "firstLine": 2224,
+      "firstLine": 2246,
       "id": "2f256de07278f87d",
       "path": "app/src/main/java/com/freevibe/ui/screens/settings/SettingsScreen.kt",
       "sink": "Text",
@@ -1763,7 +1763,7 @@
     },
     {
       "count": 1,
-      "firstLine": 2213,
+      "firstLine": 2235,
       "id": "65bf24c36fe6d613",
       "path": "app/src/main/java/com/freevibe/ui/screens/settings/SettingsScreen.kt",
       "sink": "Text",
@@ -1771,7 +1771,7 @@
     },
     {
       "count": 1,
-      "firstLine": 1987,
+      "firstLine": 2009,
       "id": "e9d41d352434fa0b",
       "path": "app/src/main/java/com/freevibe/ui/screens/settings/SettingsScreen.kt",
       "sink": "Text",
@@ -1779,7 +1779,7 @@
     },
     {
       "count": 1,
-      "firstLine": 2207,
+      "firstLine": 2229,
       "id": "e04c0eb0564145dd",
       "path": "app/src/main/java/com/freevibe/ui/screens/settings/SettingsScreen.kt",
       "sink": "Text",
@@ -1787,7 +1787,7 @@
     },
     {
       "count": 1,
-      "firstLine": 1018,
+      "firstLine": 1027,
       "id": "2ce1de776d96d46d",
       "path": "app/src/main/java/com/freevibe/ui/screens/settings/SettingsScreen.kt",
       "sink": "Text",
@@ -1795,7 +1795,7 @@
     },
     {
       "count": 1,
-      "firstLine": 3165,
+      "firstLine": 3187,
       "id": "1a44144f631add80",
       "path": "app/src/main/java/com/freevibe/ui/screens/settings/SettingsScreen.kt",
       "sink": "Text",
@@ -1803,7 +1803,7 @@
     },
     {
       "count": 1,
-      "firstLine": 3405,
+      "firstLine": 3477,
       "id": "88b72cf6f13d05b3",
       "path": "app/src/main/java/com/freevibe/ui/screens/settings/SettingsScreen.kt",
       "sink": "Text",
@@ -1811,7 +1811,7 @@
     },
     {
       "count": 1,
-      "firstLine": 3151,
+      "firstLine": 3173,
       "id": "14f82d507941a2c3",
       "path": "app/src/main/java/com/freevibe/ui/screens/settings/SettingsScreen.kt",
       "sink": "Text",
@@ -1819,7 +1819,7 @@
     },
     {
       "count": 1,
-      "firstLine": 3158,
+      "firstLine": 3180,
       "id": "2837430e41a981f5",
       "path": "app/src/main/java/com/freevibe/ui/screens/settings/SettingsScreen.kt",
       "sink": "Text",
@@ -1827,7 +1827,7 @@
     },
     {
       "count": 1,
-      "firstLine": 1076,
+      "firstLine": 1085,
       "id": "3539795915254882",
       "path": "app/src/main/java/com/freevibe/ui/screens/settings/SettingsScreen.kt",
       "sink": "Text",
@@ -1835,7 +1835,7 @@
     },
     {
       "count": 1,
-      "firstLine": 1109,
+      "firstLine": 1118,
       "id": "1fde413c45ab3a2a",
       "path": "app/src/main/java/com/freevibe/ui/screens/settings/SettingsScreen.kt",
       "sink": "Text",
@@ -1843,7 +1843,7 @@
     },
     {
       "count": 1,
-      "firstLine": 1818,
+      "firstLine": 1840,
       "id": "4ab4ddb6a44c31da",
       "path": "app/src/main/java/com/freevibe/ui/screens/settings/SettingsScreen.kt",
       "sink": "Text",
@@ -1851,7 +1851,7 @@
     },
     {
       "count": 1,
-      "firstLine": 1778,
+      "firstLine": 1800,
       "id": "564b21ecd826f5a3",
       "path": "app/src/main/java/com/freevibe/ui/screens/settings/SettingsScreen.kt",
       "sink": "Text",
@@ -1859,7 +1859,7 @@
     },
     {
       "count": 1,
-      "firstLine": 3087,
+      "firstLine": 3109,
       "id": "9c10ff612b08ae84",
       "path": "app/src/main/java/com/freevibe/ui/screens/settings/SettingsScreen.kt",
       "sink": "Text",
@@ -1867,7 +1867,7 @@
     },
     {
       "count": 1,
-      "firstLine": 3268,
+      "firstLine": 3340,
       "id": "60e1f79af90c100d",
       "path": "app/src/main/java/com/freevibe/ui/screens/settings/SettingsScreen.kt",
       "sink": "Text",
@@ -1875,7 +1875,7 @@
     },
     {
       "count": 1,
-      "firstLine": 2218,
+      "firstLine": 2240,
       "id": "cc1e35756f6d377c",
       "path": "app/src/main/java/com/freevibe/ui/screens/settings/SettingsScreen.kt",
       "sink": "Text",
@@ -1883,7 +1883,7 @@
     },
     {
       "count": 1,
-      "firstLine": 1785,
+      "firstLine": 1807,
       "id": "8117f9dbf38974fc",
       "path": "app/src/main/java/com/freevibe/ui/screens/settings/SettingsScreen.kt",
       "sink": "Text",
@@ -1891,7 +1891,7 @@
     },
     {
       "count": 1,
-      "firstLine": 2283,
+      "firstLine": 2305,
       "id": "e9380825c866b29b",
       "path": "app/src/main/java/com/freevibe/ui/screens/settings/SettingsScreen.kt",
       "sink": "Text",
@@ -1899,7 +1899,7 @@
     },
     {
       "count": 1,
-      "firstLine": 3523,
+      "firstLine": 3595,
       "id": "e0311d3cd2953266",
       "path": "app/src/main/java/com/freevibe/ui/screens/settings/SettingsScreen.kt",
       "sink": "Text",
@@ -1907,7 +1907,7 @@
     },
     {
       "count": 1,
-      "firstLine": 2127,
+      "firstLine": 2149,
       "id": "64d42bdee9ca7941",
       "path": "app/src/main/java/com/freevibe/ui/screens/settings/SettingsScreen.kt",
       "sink": "Text",
@@ -1915,7 +1915,7 @@
     },
     {
       "count": 1,
-      "firstLine": 3270,
+      "firstLine": 3342,
       "id": "f7b3a6168dbb0d57",
       "path": "app/src/main/java/com/freevibe/ui/screens/settings/SettingsScreen.kt",
       "sink": "Text",
@@ -1923,7 +1923,7 @@
     },
     {
       "count": 1,
-      "firstLine": 2020,
+      "firstLine": 2042,
       "id": "1360cb18071c1b59",
       "path": "app/src/main/java/com/freevibe/ui/screens/settings/SettingsScreen.kt",
       "sink": "Text",
@@ -1931,7 +1931,7 @@
     },
     {
       "count": 1,
-      "firstLine": 1295,
+      "firstLine": 1304,
       "id": "5f5c5c560cae8451",
       "path": "app/src/main/java/com/freevibe/ui/screens/settings/SettingsScreen.kt",
       "sink": "Text",
@@ -1939,7 +1939,7 @@
     },
     {
       "count": 1,
-      "firstLine": 3190,
+      "firstLine": 3212,
       "id": "3bd4f02e6ebabf99",
       "path": "app/src/main/java/com/freevibe/ui/screens/settings/SettingsScreen.kt",
       "sink": "Text",
@@ -1947,7 +1947,7 @@
     },
     {
       "count": 2,
-      "firstLine": 1800,
+      "firstLine": 1822,
       "id": "cb0d1b741bae63f9",
       "path": "app/src/main/java/com/freevibe/ui/screens/settings/SettingsScreen.kt",
       "sink": "Text",
@@ -1955,7 +1955,7 @@
     },
     {
       "count": 1,
-      "firstLine": 1836,
+      "firstLine": 1858,
       "id": "54fa77e43d63e3f6",
       "path": "app/src/main/java/com/freevibe/ui/screens/settings/SettingsScreen.kt",
       "sink": "Text",
@@ -1963,7 +1963,7 @@
     },
     {
       "count": 1,
-      "firstLine": 2126,
+      "firstLine": 2148,
       "id": "a39df11c47baf6f8",
       "path": "app/src/main/java/com/freevibe/ui/screens/settings/SettingsScreen.kt",
       "sink": "Text",
@@ -1971,7 +1971,7 @@
     },
     {
       "count": 1,
-      "firstLine": 938,
+      "firstLine": 947,
       "id": "96e1641c4abdef09",
       "path": "app/src/main/java/com/freevibe/ui/screens/settings/SettingsScreen.kt",
       "sink": "Text",
@@ -1979,7 +1979,7 @@
     },
     {
       "count": 1,
-      "firstLine": 864,
+      "firstLine": 873,
       "id": "306c858f75e3b52a",
       "path": "app/src/main/java/com/freevibe/ui/screens/settings/SettingsScreen.kt",
       "sink": "Text",
@@ -1987,7 +1987,7 @@
     },
     {
       "count": 4,
-      "firstLine": 136,
+      "firstLine": 137,
       "id": "4e7e219fcb187fc3",
       "path": "app/src/main/java/com/freevibe/ui/screens/settings/SettingsScreen.kt",
       "sink": "Text",
@@ -1995,7 +1995,7 @@
     },
     {
       "count": 1,
-      "firstLine": 950,
+      "firstLine": 959,
       "id": "f3e9c6fc5e15ae9c",
       "path": "app/src/main/java/com/freevibe/ui/screens/settings/SettingsScreen.kt",
       "sink": "Text",
@@ -2003,7 +2003,7 @@
     },
     {
       "count": 1,
-      "firstLine": 554,
+      "firstLine": 563,
       "id": "65780fb8d00c2781",
       "path": "app/src/main/java/com/freevibe/ui/screens/settings/SettingsScreen.kt",
       "sink": "Text",
@@ -2011,7 +2011,7 @@
     },
     {
       "count": 2,
-      "firstLine": 1910,
+      "firstLine": 1932,
       "id": "2f09c3d06f3c3873",
       "path": "app/src/main/java/com/freevibe/ui/screens/settings/SettingsScreen.kt",
       "sink": "Text",
@@ -2019,7 +2019,7 @@
     },
     {
       "count": 1,
-      "firstLine": 1808,
+      "firstLine": 1830,
       "id": "332655424a397a0a",
       "path": "app/src/main/java/com/freevibe/ui/screens/settings/SettingsScreen.kt",
       "sink": "Text",
@@ -2027,7 +2027,7 @@
     },
     {
       "count": 1,
-      "firstLine": 2072,
+      "firstLine": 2094,
       "id": "fa2dc288ca84e870",
       "path": "app/src/main/java/com/freevibe/ui/screens/settings/SettingsScreen.kt",
       "sink": "Text",
@@ -2035,7 +2035,7 @@
     },
     {
       "count": 1,
-      "firstLine": 1027,
+      "firstLine": 1036,
       "id": "61bbd65082e8ed2a",
       "path": "app/src/main/java/com/freevibe/ui/screens/settings/SettingsScreen.kt",
       "sink": "Text",
@@ -2043,7 +2043,7 @@
     },
     {
       "count": 1,
-      "firstLine": 1134,
+      "firstLine": 1143,
       "id": "597553e6909303fb",
       "path": "app/src/main/java/com/freevibe/ui/screens/settings/SettingsScreen.kt",
       "sink": "Text",
@@ -2051,7 +2051,7 @@
     },
     {
       "count": 1,
-      "firstLine": 1855,
+      "firstLine": 1877,
       "id": "e1e53df14e4c0f76",
       "path": "app/src/main/java/com/freevibe/ui/screens/settings/SettingsScreen.kt",
       "sink": "Text",
@@ -2059,7 +2059,7 @@
     },
     {
       "count": 1,
-      "firstLine": 2076,
+      "firstLine": 2098,
       "id": "ff4e64744fcdbd07",
       "path": "app/src/main/java/com/freevibe/ui/screens/settings/SettingsScreen.kt",
       "sink": "Text",
@@ -2067,7 +2067,7 @@
     },
     {
       "count": 1,
-      "firstLine": 3398,
+      "firstLine": 3470,
       "id": "83b31f404e9638a1",
       "path": "app/src/main/java/com/freevibe/ui/screens/settings/SettingsScreen.kt",
       "sink": "Text",
@@ -2075,7 +2075,7 @@
     },
     {
       "count": 1,
-      "firstLine": 1201,
+      "firstLine": 1210,
       "id": "311ba014e3b6f44d",
       "path": "app/src/main/java/com/freevibe/ui/screens/settings/SettingsScreen.kt",
       "sink": "Text",
@@ -2083,7 +2083,7 @@
     },
     {
       "count": 1,
-      "firstLine": 2335,
+      "firstLine": 2357,
       "id": "70170271b4fa9f6f",
       "path": "app/src/main/java/com/freevibe/ui/screens/settings/SettingsScreen.kt",
       "sink": "Text",
@@ -2091,7 +2091,7 @@
     },
     {
       "count": 1,
-      "firstLine": 1391,
+      "firstLine": 1413,
       "id": "d7931a6ac59e1abf",
       "path": "app/src/main/java/com/freevibe/ui/screens/settings/SettingsScreen.kt",
       "sink": "Text",
@@ -2099,7 +2099,7 @@
     },
     {
       "count": 1,
-      "firstLine": 2383,
+      "firstLine": 2405,
       "id": "25f2f51067168160",
       "path": "app/src/main/java/com/freevibe/ui/screens/settings/SettingsScreen.kt",
       "sink": "Text",
@@ -2107,7 +2107,7 @@
     },
     {
       "count": 1,
-      "firstLine": 1093,
+      "firstLine": 1102,
       "id": "00f3da94faa0639d",
       "path": "app/src/main/java/com/freevibe/ui/screens/settings/SettingsScreen.kt",
       "sink": "Text",
@@ -2115,7 +2115,7 @@
     },
     {
       "count": 1,
-      "firstLine": 897,
+      "firstLine": 906,
       "id": "c2ec1c8a97aa6bc9",
       "path": "app/src/main/java/com/freevibe/ui/screens/settings/SettingsScreen.kt",
       "sink": "Text",
@@ -2123,7 +2123,7 @@
     },
     {
       "count": 1,
-      "firstLine": 1072,
+      "firstLine": 1081,
       "id": "3d940a71758839a3",
       "path": "app/src/main/java/com/freevibe/ui/screens/settings/SettingsScreen.kt",
       "sink": "Text",
@@ -2131,7 +2131,7 @@
     },
     {
       "count": 1,
-      "firstLine": 945,
+      "firstLine": 954,
       "id": "8c609dba5aaf0fae",
       "path": "app/src/main/java/com/freevibe/ui/screens/settings/SettingsScreen.kt",
       "sink": "Text",
@@ -2139,7 +2139,7 @@
     },
     {
       "count": 1,
-      "firstLine": 2122,
+      "firstLine": 2144,
       "id": "0f523cedd52ec04f",
       "path": "app/src/main/java/com/freevibe/ui/screens/settings/SettingsScreen.kt",
       "sink": "Text",
@@ -2147,7 +2147,7 @@
     },
     {
       "count": 1,
-      "firstLine": 2152,
+      "firstLine": 2174,
       "id": "97904a840fd56b70",
       "path": "app/src/main/java/com/freevibe/ui/screens/settings/SettingsScreen.kt",
       "sink": "Text",
@@ -2155,7 +2155,7 @@
     },
     {
       "count": 1,
-      "firstLine": 352,
+      "firstLine": 354,
       "id": "cef081fd5331b804",
       "path": "app/src/main/java/com/freevibe/ui/screens/settings/SettingsScreen.kt",
       "sink": "Toast",
@@ -2163,7 +2163,7 @@
     },
     {
       "count": 1,
-      "firstLine": 376,
+      "firstLine": 378,
       "id": "fad7a31475b9b512",
       "path": "app/src/main/java/com/freevibe/ui/screens/settings/SettingsScreen.kt",
       "sink": "Toast",
@@ -2171,7 +2171,7 @@
     },
     {
       "count": 1,
-      "firstLine": 353,
+      "firstLine": 355,
       "id": "cdd1066931f5fad8",
       "path": "app/src/main/java/com/freevibe/ui/screens/settings/SettingsScreen.kt",
       "sink": "Toast",
@@ -2179,7 +2179,7 @@
     },
     {
       "count": 1,
-      "firstLine": 379,
+      "firstLine": 381,
       "id": "556f46356bccc359",
       "path": "app/src/main/java/com/freevibe/ui/screens/settings/SettingsScreen.kt",
       "sink": "Toast",
@@ -2187,7 +2187,7 @@
     },
     {
       "count": 2,
-      "firstLine": 1880,
+      "firstLine": 1902,
       "id": "c70a43596167770e",
       "path": "app/src/main/java/com/freevibe/ui/screens/settings/SettingsScreen.kt",
       "sink": "Toast",
@@ -2195,7 +2195,7 @@
     },
     {
       "count": 1,
-      "firstLine": 359,
+      "firstLine": 361,
       "id": "e975295336e345e1",
       "path": "app/src/main/java/com/freevibe/ui/screens/settings/SettingsScreen.kt",
       "sink": "Toast",
@@ -2203,7 +2203,7 @@
     },
     {
       "count": 1,
-      "firstLine": 3215,
+      "firstLine": 3287,
       "id": "e7acab17d83c1508",
       "path": "app/src/main/java/com/freevibe/ui/screens/settings/SettingsScreen.kt",
       "sink": "Toast",
@@ -2211,7 +2211,7 @@
     },
     {
       "count": 1,
-      "firstLine": 3209,
+      "firstLine": 3281,
       "id": "e6fb59b6184c3c04",
       "path": "app/src/main/java/com/freevibe/ui/screens/settings/SettingsScreen.kt",
       "sink": "Toast",
@@ -2219,7 +2219,7 @@
     },
     {
       "count": 1,
-      "firstLine": 382,
+      "firstLine": 384,
       "id": "5d28f7cee4de8ae5",
       "path": "app/src/main/java/com/freevibe/ui/screens/settings/SettingsScreen.kt",
       "sink": "Toast",
@@ -2227,7 +2227,7 @@
     },
     {
       "count": 1,
-      "firstLine": 3227,
+      "firstLine": 3299,
       "id": "3ed4232cd96954e5",
       "path": "app/src/main/java/com/freevibe/ui/screens/settings/SettingsScreen.kt",
       "sink": "Toast",
@@ -2235,7 +2235,7 @@
     },
     {
       "count": 1,
-      "firstLine": 3240,
+      "firstLine": 3312,
       "id": "f0371c5a51b40a53",
       "path": "app/src/main/java/com/freevibe/ui/screens/settings/SettingsScreen.kt",
       "sink": "Toast",
@@ -2243,7 +2243,7 @@
     },
     {
       "count": 1,
-      "firstLine": 354,
+      "firstLine": 356,
       "id": "d5e1b9be705b9717",
       "path": "app/src/main/java/com/freevibe/ui/screens/settings/SettingsScreen.kt",
       "sink": "Toast",
@@ -2251,7 +2251,7 @@
     },
     {
       "count": 1,
-      "firstLine": 2730,
+      "firstLine": 2752,
       "id": "43d70a9f74bb82f5",
       "path": "app/src/main/java/com/freevibe/ui/screens/settings/SettingsScreen.kt",
       "sink": "label",
@@ -2259,7 +2259,7 @@
     },
     {
       "count": 1,
-      "firstLine": 2725,
+      "firstLine": 2747,
       "id": "52e688d9c263cfa7",
       "path": "app/src/main/java/com/freevibe/ui/screens/settings/SettingsScreen.kt",
       "sink": "label",
@@ -2267,7 +2267,7 @@
     },
     {
       "count": 1,
-      "firstLine": 2742,
+      "firstLine": 2764,
       "id": "35390afd8f9b06ce",
       "path": "app/src/main/java/com/freevibe/ui/screens/settings/SettingsScreen.kt",
       "sink": "label",
@@ -2275,7 +2275,7 @@
     },
     {
       "count": 1,
-      "firstLine": 2608,
+      "firstLine": 2630,
       "id": "372b3e0032b88f07",
       "path": "app/src/main/java/com/freevibe/ui/screens/settings/SettingsScreen.kt",
       "sink": "label",
@@ -2283,7 +2283,7 @@
     },
     {
       "count": 1,
-      "firstLine": 2694,
+      "firstLine": 2716,
       "id": "d1eabc7724f89c07",
       "path": "app/src/main/java/com/freevibe/ui/screens/settings/SettingsScreen.kt",
       "sink": "label",
@@ -2291,7 +2291,7 @@
     },
     {
       "count": 1,
-      "firstLine": 2623,
+      "firstLine": 2645,
       "id": "1205431045e649e6",
       "path": "app/src/main/java/com/freevibe/ui/screens/settings/SettingsScreen.kt",
       "sink": "label",
@@ -2299,7 +2299,7 @@
     },
     {
       "count": 1,
-      "firstLine": 2613,
+      "firstLine": 2635,
       "id": "e295c9d4f3b10b7c",
       "path": "app/src/main/java/com/freevibe/ui/screens/settings/SettingsScreen.kt",
       "sink": "label",
@@ -2307,7 +2307,7 @@
     },
     {
       "count": 1,
-      "firstLine": 2749,
+      "firstLine": 2771,
       "id": "b3766bda7ad2ca6c",
       "path": "app/src/main/java/com/freevibe/ui/screens/settings/SettingsScreen.kt",
       "sink": "label",
@@ -2315,7 +2315,7 @@
     },
     {
       "count": 1,
-      "firstLine": 2618,
+      "firstLine": 2640,
       "id": "1ee14126b3945104",
       "path": "app/src/main/java/com/freevibe/ui/screens/settings/SettingsScreen.kt",
       "sink": "label",
@@ -2323,7 +2323,7 @@
     },
     {
       "count": 1,
-      "firstLine": 1497,
+      "firstLine": 1519,
       "id": "b12cea61f09564d8",
       "path": "app/src/main/java/com/freevibe/ui/screens/settings/SettingsScreen.kt",
       "sink": "placeholder",
@@ -2331,7 +2331,7 @@
     },
     {
       "count": 3,
-      "firstLine": 1549,
+      "firstLine": 1571,
       "id": "4585f4a9261f976c",
       "path": "app/src/main/java/com/freevibe/ui/screens/settings/SettingsScreen.kt",
       "sink": "placeholder",
@@ -2339,7 +2339,7 @@
     },
     {
       "count": 1,
-      "firstLine": 1594,
+      "firstLine": 1616,
       "id": "35d67ebe83639325",
       "path": "app/src/main/java/com/freevibe/ui/screens/settings/SettingsScreen.kt",
       "sink": "placeholder",
@@ -2347,7 +2347,7 @@
     },
     {
       "count": 1,
-      "firstLine": 2700,
+      "firstLine": 2722,
       "id": "1e685228cd36e65d",
       "path": "app/src/main/java/com/freevibe/ui/screens/settings/SettingsScreen.kt",
       "sink": "text",
@@ -2355,7 +2355,7 @@
     },
     {
       "count": 1,
-      "firstLine": 1918,
+      "firstLine": 1940,
       "id": "6a78061bae237e4b",
       "path": "app/src/main/java/com/freevibe/ui/screens/settings/SettingsScreen.kt",
       "sink": "title",
@@ -2363,7 +2363,7 @@
     },
     {
       "count": 1,
-      "firstLine": 1413,
+      "firstLine": 1435,
       "id": "ffde0bce55bff4b0",
       "path": "app/src/main/java/com/freevibe/ui/screens/settings/SettingsScreen.kt",
       "sink": "title",
@@ -2371,7 +2371,7 @@
     },
     {
       "count": 1,
-      "firstLine": 1923,
+      "firstLine": 1945,
       "id": "b1882821265f928a",
       "path": "app/src/main/java/com/freevibe/ui/screens/settings/SettingsScreen.kt",
       "sink": "title",
@@ -2379,7 +2379,7 @@
     },
     {
       "count": 1,
-      "firstLine": 1359,
+      "firstLine": 1381,
       "id": "ef548db13ba1d993",
       "path": "app/src/main/java/com/freevibe/ui/screens/settings/SettingsScreen.kt",
       "sink": "title",
@@ -2387,7 +2387,7 @@
     },
     {
       "count": 1,
-      "firstLine": 581,
+      "firstLine": 590,
       "id": "b5ebc8beb776df12",
       "path": "app/src/main/java/com/freevibe/ui/screens/settings/SettingsScreen.kt",
       "sink": "title",
@@ -2395,7 +2395,7 @@
     },
     {
       "count": 1,
-      "firstLine": 1258,
+      "firstLine": 1267,
       "id": "39a7a025e4da6c56",
       "path": "app/src/main/java/com/freevibe/ui/screens/settings/SettingsScreen.kt",
       "sink": "title",
@@ -2403,7 +2403,7 @@
     },
     {
       "count": 1,
-      "firstLine": 798,
+      "firstLine": 807,
       "id": "5a3115350d030774",
       "path": "app/src/main/java/com/freevibe/ui/screens/settings/SettingsScreen.kt",
       "sink": "title",
@@ -2411,7 +2411,7 @@
     },
     {
       "count": 1,
-      "firstLine": 1086,
+      "firstLine": 1095,
       "id": "e0651c3c079e1158",
       "path": "app/src/main/java/com/freevibe/ui/screens/settings/SettingsScreen.kt",
       "sink": "title",
@@ -2419,7 +2419,7 @@
     },
     {
       "count": 1,
-      "firstLine": 1696,
+      "firstLine": 1718,
       "id": "e1aa039952f7990e",
       "path": "app/src/main/java/com/freevibe/ui/screens/settings/SettingsScreen.kt",
       "sink": "title",
@@ -2427,7 +2427,7 @@
     },
     {
       "count": 1,
-      "firstLine": 1457,
+      "firstLine": 1479,
       "id": "6fd2804eef052fbb",
       "path": "app/src/main/java/com/freevibe/ui/screens/settings/SettingsScreen.kt",
       "sink": "title",
@@ -2435,7 +2435,7 @@
     },
     {
       "count": 1,
-      "firstLine": 1335,
+      "firstLine": 1357,
       "id": "b8758f0bd702efc2",
       "path": "app/src/main/java/com/freevibe/ui/screens/settings/SettingsScreen.kt",
       "sink": "title",
@@ -2443,7 +2443,7 @@
     },
     {
       "count": 1,
-      "firstLine": 733,
+      "firstLine": 742,
       "id": "57a379c8581aab2e",
       "path": "app/src/main/java/com/freevibe/ui/screens/settings/SettingsScreen.kt",
       "sink": "title",
@@ -2451,7 +2451,7 @@
     },
     {
       "count": 1,
-      "firstLine": 589,
+      "firstLine": 598,
       "id": "498223c73c9b385b",
       "path": "app/src/main/java/com/freevibe/ui/screens/settings/SettingsScreen.kt",
       "sink": "title",
@@ -2459,7 +2459,7 @@
     },
     {
       "count": 1,
-      "firstLine": 651,
+      "firstLine": 660,
       "id": "94eb9cb4c4d8d3a4",
       "path": "app/src/main/java/com/freevibe/ui/screens/settings/SettingsScreen.kt",
       "sink": "title",
@@ -2467,7 +2467,7 @@
     },
     {
       "count": 1,
-      "firstLine": 609,
+      "firstLine": 618,
       "id": "9ed3227a437a5862",
       "path": "app/src/main/java/com/freevibe/ui/screens/settings/SettingsScreen.kt",
       "sink": "title",
@@ -2475,7 +2475,7 @@
     },
     {
       "count": 1,
-      "firstLine": 1227,
+      "firstLine": 1236,
       "id": "8f211d643a7830e0",
       "path": "app/src/main/java/com/freevibe/ui/screens/settings/SettingsScreen.kt",
       "sink": "title",
@@ -2483,7 +2483,7 @@
     },
     {
       "count": 1,
-      "firstLine": 1239,
+      "firstLine": 1248,
       "id": "02241bd5ac6f31d8",
       "path": "app/src/main/java/com/freevibe/ui/screens/settings/SettingsScreen.kt",
       "sink": "title",
@@ -2491,7 +2491,7 @@
     },
     {
       "count": 1,
-      "firstLine": 641,
+      "firstLine": 650,
       "id": "99fc6755a9b48a10",
       "path": "app/src/main/java/com/freevibe/ui/screens/settings/SettingsScreen.kt",
       "sink": "title",
@@ -2499,7 +2499,7 @@
     },
     {
       "count": 1,
-      "firstLine": 739,
+      "firstLine": 748,
       "id": "0ff239844c54b0b8",
       "path": "app/src/main/java/com/freevibe/ui/screens/settings/SettingsScreen.kt",
       "sink": "title",
@@ -2507,7 +2507,7 @@
     },
     {
       "count": 1,
-      "firstLine": 1430,
+      "firstLine": 1452,
       "id": "7c2b7c3eab2dfe2e",
       "path": "app/src/main/java/com/freevibe/ui/screens/settings/SettingsScreen.kt",
       "sink": "title",
@@ -2515,7 +2515,7 @@
     },
     {
       "count": 1,
-      "firstLine": 1442,
+      "firstLine": 1464,
       "id": "14eb16d7c1cceab1",
       "path": "app/src/main/java/com/freevibe/ui/screens/settings/SettingsScreen.kt",
       "sink": "title",
@@ -2523,7 +2523,7 @@
     },
     {
       "count": 1,
-      "firstLine": 1468,
+      "firstLine": 1490,
       "id": "5c08dec04bee4afe",
       "path": "app/src/main/java/com/freevibe/ui/screens/settings/SettingsScreen.kt",
       "sink": "title",
@@ -2531,7 +2531,7 @@
     },
     {
       "count": 1,
-      "firstLine": 1687,
+      "firstLine": 1709,
       "id": "accebac9ac83258e",
       "path": "app/src/main/java/com/freevibe/ui/screens/settings/SettingsScreen.kt",
       "sink": "title",
@@ -2539,7 +2539,7 @@
     },
     {
       "count": 1,
-      "firstLine": 1451,
+      "firstLine": 1473,
       "id": "1a6617ae2343028f",
       "path": "app/src/main/java/com/freevibe/ui/screens/settings/SettingsScreen.kt",
       "sink": "title",
@@ -2547,7 +2547,7 @@
     },
     {
       "count": 1,
-      "firstLine": 991,
+      "firstLine": 1000,
       "id": "1e9bb03195542f71",
       "path": "app/src/main/java/com/freevibe/ui/screens/settings/SettingsScreen.kt",
       "sink": "title",
@@ -2555,7 +2555,7 @@
     },
     {
       "count": 1,
-      "firstLine": 1144,
+      "firstLine": 1153,
       "id": "84bb73a09e249c8c",
       "path": "app/src/main/java/com/freevibe/ui/screens/settings/SettingsScreen.kt",
       "sink": "title",
@@ -2563,7 +2563,7 @@
     },
     {
       "count": 1,
-      "firstLine": 623,
+      "firstLine": 632,
       "id": "06bc67161a0ed28a",
       "path": "app/src/main/java/com/freevibe/ui/screens/settings/SettingsScreen.kt",
       "sink": "title",
@@ -2571,7 +2571,7 @@
     },
     {
       "count": 1,
-      "firstLine": 1682,
+      "firstLine": 1704,
       "id": "06d867e1bbc3babf",
       "path": "app/src/main/java/com/freevibe/ui/screens/settings/SettingsScreen.kt",
       "sink": "title",
@@ -2579,7 +2579,7 @@
     },
     {
       "count": 1,
-      "firstLine": 1666,
+      "firstLine": 1688,
       "id": "5bf67e3eba5585b1",
       "path": "app/src/main/java/com/freevibe/ui/screens/settings/SettingsScreen.kt",
       "sink": "title",
@@ -2587,7 +2587,7 @@
     },
     {
       "count": 1,
-      "firstLine": 722,
+      "firstLine": 731,
       "id": "13c4bb2c6572897d",
       "path": "app/src/main/java/com/freevibe/ui/screens/settings/SettingsScreen.kt",
       "sink": "title",
@@ -2595,7 +2595,7 @@
     },
     {
       "count": 1,
-      "firstLine": 1529,
+      "firstLine": 1551,
       "id": "0781adc75d55c089",
       "path": "app/src/main/java/com/freevibe/ui/screens/settings/SettingsScreen.kt",
       "sink": "title",
@@ -2603,7 +2603,7 @@
     },
     {
       "count": 1,
-      "firstLine": 1557,
+      "firstLine": 1579,
       "id": "e4758e1298416db1",
       "path": "app/src/main/java/com/freevibe/ui/screens/settings/SettingsScreen.kt",
       "sink": "title",
@@ -2611,7 +2611,7 @@
     },
     {
       "count": 1,
-      "firstLine": 1483,
+      "firstLine": 1505,
       "id": "b5b8409fb273676b",
       "path": "app/src/main/java/com/freevibe/ui/screens/settings/SettingsScreen.kt",
       "sink": "title",
@@ -2619,7 +2619,7 @@
     },
     {
       "count": 1,
-      "firstLine": 1324,
+      "firstLine": 1333,
       "id": "ee2d14296d02c0b7",
       "path": "app/src/main/java/com/freevibe/ui/screens/settings/SettingsScreen.kt",
       "sink": "title",
@@ -2627,7 +2627,7 @@
     },
     {
       "count": 1,
-      "firstLine": 1418,
+      "firstLine": 1440,
       "id": "b46d166b6c741ac6",
       "path": "app/src/main/java/com/freevibe/ui/screens/settings/SettingsScreen.kt",
       "sink": "title",
@@ -2635,7 +2635,7 @@
     },
     {
       "count": 1,
-      "firstLine": 1606,
+      "firstLine": 1628,
       "id": "02851e52d23e3771",
       "path": "app/src/main/java/com/freevibe/ui/screens/settings/SettingsScreen.kt",
       "sink": "title",
@@ -2643,7 +2643,7 @@
     },
     {
       "count": 1,
-      "firstLine": 1379,
+      "firstLine": 1401,
       "id": "c4b55ecd8c69eefe",
       "path": "app/src/main/java/com/freevibe/ui/screens/settings/SettingsScreen.kt",
       "sink": "title",
@@ -2651,7 +2651,7 @@
     },
     {
       "count": 1,
-      "firstLine": 1369,
+      "firstLine": 1391,
       "id": "bcd3646aa68b20d1",
       "path": "app/src/main/java/com/freevibe/ui/screens/settings/SettingsScreen.kt",
       "sink": "title",
@@ -2659,7 +2659,7 @@
     },
     {
       "count": 1,
-      "firstLine": 1672,
+      "firstLine": 1694,
       "id": "6448aaa195762b1e",
       "path": "app/src/main/java/com/freevibe/ui/screens/settings/SettingsScreen.kt",
       "sink": "title",
@@ -2667,7 +2667,7 @@
     },
     {
       "count": 2,
-      "firstLine": 1585,
+      "firstLine": 1607,
       "id": "260bd0f0cada14e4",
       "path": "app/src/main/java/com/freevibe/ui/screens/settings/SettingsScreen.kt",
       "sink": "title",
@@ -2675,7 +2675,7 @@
     },
     {
       "count": 1,
-      "firstLine": 1617,
+      "firstLine": 1639,
       "id": "a9d94a0e90639280",
       "path": "app/src/main/java/com/freevibe/ui/screens/settings/SettingsScreen.kt",
       "sink": "title",
@@ -2683,7 +2683,7 @@
     },
     {
       "count": 1,
-      "firstLine": 673,
+      "firstLine": 682,
       "id": "6380b59feded1185",
       "path": "app/src/main/java/com/freevibe/ui/screens/settings/SettingsScreen.kt",
       "sink": "title",
@@ -2691,7 +2691,7 @@
     },
     {
       "count": 1,
-      "firstLine": 835,
+      "firstLine": 844,
       "id": "d1dd6b47d8e2f391",
       "path": "app/src/main/java/com/freevibe/ui/screens/settings/SettingsScreen.kt",
       "sink": "title",
@@ -2699,7 +2699,7 @@
     },
     {
       "count": 1,
-      "firstLine": 631,
+      "firstLine": 640,
       "id": "11bc599373fb4bb3",
       "path": "app/src/main/java/com/freevibe/ui/screens/settings/SettingsScreen.kt",
       "sink": "title",
@@ -2707,7 +2707,7 @@
     },
     {
       "count": 1,
-      "firstLine": 842,
+      "firstLine": 851,
       "id": "446017396874c457",
       "path": "app/src/main/java/com/freevibe/ui/screens/settings/SettingsScreen.kt",
       "sink": "title",
@@ -2715,7 +2715,7 @@
     },
     {
       "count": 1,
-      "firstLine": 1636,
+      "firstLine": 1658,
       "id": "06cf23ee8e928c4e",
       "path": "app/src/main/java/com/freevibe/ui/screens/settings/SettingsScreen.kt",
       "sink": "title",
@@ -2723,7 +2723,7 @@
     },
     {
       "count": 1,
-      "firstLine": 1941,
+      "firstLine": 1963,
       "id": "2f6aac0fbaa03432",
       "path": "app/src/main/java/com/freevibe/ui/screens/settings/SettingsScreen.kt",
       "sink": "title",
@@ -2731,7 +2731,7 @@
     },
     {
       "count": 1,
-      "firstLine": 686,
+      "firstLine": 695,
       "id": "e4df6e2533d131b6",
       "path": "app/src/main/java/com/freevibe/ui/screens/settings/SettingsScreen.kt",
       "sink": "title",
@@ -2739,7 +2739,7 @@
     },
     {
       "count": 2,
-      "firstLine": 1540,
+      "firstLine": 1562,
       "id": "c369f485f4432067",
       "path": "app/src/main/java/com/freevibe/ui/screens/settings/SettingsScreen.kt",
       "sink": "title",
@@ -2747,7 +2747,7 @@
     },
     {
       "count": 2,
-      "firstLine": 1568,
+      "firstLine": 1590,
       "id": "ed15812bb5d20aff",
       "path": "app/src/main/java/com/freevibe/ui/screens/settings/SettingsScreen.kt",
       "sink": "title",
@@ -2755,7 +2755,7 @@
     },
     {
       "count": 1,
-      "firstLine": 658,
+      "firstLine": 667,
       "id": "92928b2accc501a7",
       "path": "app/src/main/java/com/freevibe/ui/screens/settings/SettingsScreen.kt",
       "sink": "title",
@@ -2763,7 +2763,7 @@
     },
     {
       "count": 1,
-      "firstLine": 698,
+      "firstLine": 707,
       "id": "fc8f3b03cca9e7ff",
       "path": "app/src/main/java/com/freevibe/ui/screens/settings/SettingsScreen.kt",
       "sink": "title",
@@ -2771,7 +2771,7 @@
     },
     {
       "count": 1,
-      "firstLine": 1935,
+      "firstLine": 1957,
       "id": "997822d1027f02c2",
       "path": "app/src/main/java/com/freevibe/ui/screens/settings/SettingsScreen.kt",
       "sink": "title",
@@ -2779,7 +2779,7 @@
     },
     {
       "count": 1,
-      "firstLine": 710,
+      "firstLine": 719,
       "id": "a5f9e34fefd7a3cd",
       "path": "app/src/main/java/com/freevibe/ui/screens/settings/SettingsScreen.kt",
       "sink": "title",
@@ -2787,7 +2787,7 @@
     },
     {
       "count": 1,
-      "firstLine": 806,
+      "firstLine": 815,
       "id": "d4fce30564296c02",
       "path": "app/src/main/java/com/freevibe/ui/screens/settings/SettingsScreen.kt",
       "sink": "title",
@@ -2795,7 +2795,7 @@
     },
     {
       "count": 1,
-      "firstLine": 1518,
+      "firstLine": 1540,
       "id": "a7470b97b071894e",
       "path": "app/src/main/java/com/freevibe/ui/screens/settings/SettingsScreen.kt",
       "sink": "title",
@@ -2803,7 +2803,7 @@
     },
     {
       "count": 1,
-      "firstLine": 1508,
+      "firstLine": 1530,
       "id": "60b594a200fffad1",
       "path": "app/src/main/java/com/freevibe/ui/screens/settings/SettingsScreen.kt",
       "sink": "title",
@@ -2811,7 +2811,7 @@
     },
     {
       "count": 1,
-      "firstLine": 849,
+      "firstLine": 858,
       "id": "d98a82a9e544a6a6",
       "path": "app/src/main/java/com/freevibe/ui/screens/settings/SettingsScreen.kt",
       "sink": "title",
@@ -2819,7 +2819,7 @@
     },
     {
       "count": 1,
-      "firstLine": 986,
+      "firstLine": 995,
       "id": "e9c51c730fd0a343",
       "path": "app/src/main/java/com/freevibe/ui/screens/settings/SettingsScreen.kt",
       "sink": "title",
@@ -2827,7 +2827,7 @@
     },
     {
       "count": 1,
-      "firstLine": 1341,
+      "firstLine": 1363,
       "id": "f9d4a72f34f78894",
       "path": "app/src/main/java/com/freevibe/ui/screens/settings/SettingsScreen.kt",
       "sink": "title",
@@ -2835,7 +2835,7 @@
     },
     {
       "count": 1,
-      "firstLine": 1253,
+      "firstLine": 1262,
       "id": "a5ff0844425416d8",
       "path": "app/src/main/java/com/freevibe/ui/screens/settings/SettingsScreen.kt",
       "sink": "title",
@@ -2843,7 +2843,7 @@
     },
     {
       "count": 1,
-      "firstLine": 829,
+      "firstLine": 838,
       "id": "c73edaa2c5f3f93e",
       "path": "app/src/main/java/com/freevibe/ui/screens/settings/SettingsScreen.kt",
       "sink": "title",
@@ -2851,7 +2851,7 @@
     },
     {
       "count": 1,
-      "firstLine": 1929,
+      "firstLine": 1951,
       "id": "e8bdeed06e7bfc2d",
       "path": "app/src/main/java/com/freevibe/ui/screens/settings/SettingsScreen.kt",
       "sink": "title",
@@ -2859,7 +2859,7 @@
     },
     {
       "count": 1,
-      "firstLine": 1714,
+      "firstLine": 1736,
       "id": "9f026f7a5cc64985",
       "path": "app/src/main/java/com/freevibe/ui/screens/settings/SettingsScreen.kt",
       "sink": "title",
@@ -2867,7 +2867,7 @@
     },
     {
       "count": 2,
-      "firstLine": 1642,
+      "firstLine": 1664,
       "id": "237e143346b36ae2",
       "path": "app/src/main/java/com/freevibe/ui/screens/settings/SettingsScreen.kt",
       "sink": "title",
@@ -2875,7 +2875,7 @@
     },
     {
       "count": 1,
-      "firstLine": 1661,
+      "firstLine": 1683,
       "id": "94de4152e6de2f90",
       "path": "app/src/main/java/com/freevibe/ui/screens/settings/SettingsScreen.kt",
       "sink": "title",
@@ -2883,7 +2883,7 @@
     },
     {
       "count": 1,
-      "firstLine": 704,
+      "firstLine": 713,
       "id": "864801cc4af51b22",
       "path": "app/src/main/java/com/freevibe/ui/screens/settings/SettingsScreen.kt",
       "sink": "title",
@@ -2891,7 +2891,7 @@
     },
     {
       "count": 1,
-      "firstLine": 1011,
+      "firstLine": 1020,
       "id": "fbc9cdd53650d58a",
       "path": "app/src/main/java/com/freevibe/ui/screens/settings/SettingsScreen.kt",
       "sink": "title",
@@ -2899,7 +2899,7 @@
     },
     {
       "count": 1,
-      "firstLine": 1189,
+      "firstLine": 1198,
       "id": "85b7abb9f8d367fe",
       "path": "app/src/main/java/com/freevibe/ui/screens/settings/SettingsScreen.kt",
       "sink": "title",
@@ -2907,7 +2907,7 @@
     },
     {
       "count": 1,
-      "firstLine": 1349,
+      "firstLine": 1371,
       "id": "7eeaa9f2ea043359",
       "path": "app/src/main/java/com/freevibe/ui/screens/settings/SettingsScreen.kt",
       "sink": "title",
@@ -2915,7 +2915,7 @@
     },
     {
       "count": 1,
-      "firstLine": 679,
+      "firstLine": 688,
       "id": "b46dd9c772ba1b14",
       "path": "app/src/main/java/com/freevibe/ui/screens/settings/SettingsScreen.kt",
       "sink": "title",
@@ -2923,7 +2923,7 @@
     },
     {
       "count": 2,
-      "firstLine": 1477,
+      "firstLine": 1499,
       "id": "94e06e1a6c65f3f8",
       "path": "app/src/main/java/com/freevibe/ui/screens/settings/SettingsScreen.kt",
       "sink": "title",
@@ -2931,7 +2931,7 @@
     },
     {
       "count": 1,
-      "firstLine": 790,
+      "firstLine": 799,
       "id": "19111fc500ce014f",
       "path": "app/src/main/java/com/freevibe/ui/screens/settings/SettingsScreen.kt",
       "sink": "title",
@@ -2939,7 +2939,7 @@
     },
     {
       "count": 1,
-      "firstLine": 781,
+      "firstLine": 790,
       "id": "430bd89cbd8e25ed",
       "path": "app/src/main/java/com/freevibe/ui/screens/settings/SettingsScreen.kt",
       "sink": "title",
@@ -2947,7 +2947,7 @@
     },
     {
       "count": 1,
-      "firstLine": 596,
+      "firstLine": 605,
       "id": "fa799da0faa2c6f3",
       "path": "app/src/main/java/com/freevibe/ui/screens/settings/SettingsScreen.kt",
       "sink": "title",
@@ -2955,7 +2955,7 @@
     },
     {
       "count": 1,
-      "firstLine": 576,
+      "firstLine": 585,
       "id": "dd18264f22680728",
       "path": "app/src/main/java/com/freevibe/ui/screens/settings/SettingsScreen.kt",
       "sink": "title",
@@ -2963,7 +2963,7 @@
     },
     {
       "count": 1,
-      "firstLine": 616,
+      "firstLine": 625,
       "id": "428cf82b5249e5cc",
       "path": "app/src/main/java/com/freevibe/ui/screens/settings/SettingsScreen.kt",
       "sink": "title",
@@ -2971,7 +2971,7 @@
     },
     {
       "count": 1,
-      "firstLine": 1318,
+      "firstLine": 1327,
       "id": "a48472e0349214a8",
       "path": "app/src/main/java/com/freevibe/ui/screens/settings/SettingsScreen.kt",
       "sink": "title",
@@ -3971,15 +3971,7 @@
     },
     {
       "count": 1,
-      "firstLine": 416,
-      "id": "87e84b53c21cb5cf",
-      "path": "app/src/main/java/com/freevibe/ui/screens/videowallpapers/VideoWallpapersViewModel.kt",
-      "sink": "Toast",
-      "text": "Could not get video URL"
-    },
-    {
-      "count": 1,
-      "firstLine": 475,
+      "firstLine": 479,
       "id": "d2cc981a244809c5",
       "path": "app/src/main/java/com/freevibe/ui/screens/videowallpapers/VideoWallpapersViewModel.kt",
       "sink": "Toast",
@@ -3987,7 +3979,7 @@
     },
     {
       "count": 1,
-      "firstLine": 401,
+      "firstLine": 403,
       "id": "35757423927b43e5",
       "path": "app/src/main/java/com/freevibe/ui/screens/videowallpapers/VideoWallpapersViewModel.kt",
       "sink": "Toast",
@@ -3995,7 +3987,7 @@
     },
     {
       "count": 1,
-      "firstLine": 538,
+      "firstLine": 542,
       "id": "3d6a1dd83bca2d29",
       "path": "app/src/main/java/com/freevibe/ui/screens/videowallpapers/VideoWallpapersViewModel.kt",
       "sink": "title",

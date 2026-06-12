@@ -24,6 +24,10 @@ import com.freevibe.service.VideoWallpaperSelectionResult
 import com.freevibe.service.VideoWallpaperStorage
 import com.freevibe.service.WallpaperApplier
 import com.freevibe.service.WallpaperHistoryManager
+import com.freevibe.service.YtDlpUpdateManager
+import com.freevibe.service.YtDlpUpdateResult
+import com.freevibe.service.YtDlpUpdateSnapshot
+import com.freevibe.service.YtDlpUpdateStatus
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.CoroutineDispatcher
@@ -49,6 +53,13 @@ data class CommunityIdentityCleanupState(
     val error: String? = null,
 )
 
+data class YtDlpUpdateUiState(
+    val snapshot: YtDlpUpdateSnapshot = YtDlpUpdateSnapshot(),
+    val isUpdating: Boolean = false,
+    val completedStatus: YtDlpUpdateStatus? = null,
+    val error: String? = null,
+)
+
 sealed interface ParallaxGalleryResult {
     data object Preparing : ParallaxGalleryResult
     data object Ready : ParallaxGalleryResult
@@ -71,6 +82,7 @@ class SettingsViewModel @Inject constructor(
     private val voteRepo: VoteRepository,
     private val communityBlockRepo: CommunityBlockRepository,
     private val communityIdentityProvider: CommunityIdentityProvider,
+    private val ytDlpUpdateManager: YtDlpUpdateManager,
     @IoDispatcher private val ioDispatcher: CoroutineDispatcher,
 ) : ViewModel() {
 
@@ -215,6 +227,10 @@ class SettingsViewModel @Inject constructor(
     )
     val externalAutomationDiagnostics: StateFlow<ExternalAutomationDiagnostics> =
         _externalAutomationDiagnostics.asStateFlow()
+    private val _ytDlpUpdate = MutableStateFlow(
+        YtDlpUpdateUiState(snapshot = ytDlpUpdateManager.snapshot()),
+    )
+    val ytDlpUpdate = _ytDlpUpdate.asStateFlow()
 
     init {
         refreshCacheUsage()
@@ -331,6 +347,40 @@ class SettingsViewModel @Inject constructor(
         _externalAutomationDiagnostics.value = withContext(ioDispatcher) {
             ExternalAutomationGate.readDiagnostics(context)
         }
+    }
+
+    fun updateYtDlp() {
+        if (_ytDlpUpdate.value.isUpdating) return
+        viewModelScope.launch {
+            _ytDlpUpdate.update {
+                it.copy(
+                    snapshot = ytDlpUpdateManager.snapshot(),
+                    isUpdating = true,
+                    completedStatus = null,
+                    error = null,
+                )
+            }
+            val result = runCatching { ytDlpUpdateManager.updateStable() }
+                .getOrElse { error ->
+                    YtDlpUpdateResult(
+                        status = YtDlpUpdateStatus.FAILED,
+                        snapshot = ytDlpUpdateManager.snapshot().copy(
+                            lastStatus = YtDlpUpdateStatus.FAILED,
+                            lastError = error.message ?: error.javaClass.simpleName,
+                        ),
+                    )
+                }
+            _ytDlpUpdate.value = YtDlpUpdateUiState(
+                snapshot = result.snapshot,
+                isUpdating = false,
+                completedStatus = result.status,
+                error = result.snapshot.lastError,
+            )
+        }
+    }
+
+    fun clearYtDlpUpdateNotice() {
+        _ytDlpUpdate.update { it.copy(completedStatus = null, error = null) }
     }
 
     fun clearWallpaperHistory() = viewModelScope.launch {

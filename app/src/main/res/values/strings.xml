@@ -136,4 +136,23 @@
     <string name="settings_external_automation_last_accepted">Last accepted: %1$s</string>
     <string name="settings_external_automation_last_rejected">Last rejected: %1$s (%2$s)</string>
     <string name="settings_diagnostics_policy">Policy: %1$s</string>
+    <string name="settings_ytdlp_update_title">Update YouTube extractor</string>
+    <string name="settings_ytdlp_update_disabled">Enable YouTube features before updating the extractor</string>
+    <string name="settings_ytdlp_update_checking">Checking the stable yt-dlp release...</string>
+    <string name="settings_ytdlp_update_checking_short">Checking</string>
+    <string name="settings_ytdlp_update_version_unknown">bundled version</string>
+    <string name="settings_ytdlp_update_never_checked">Never checked</string>
+    <string name="settings_ytdlp_update_status">Active %1$s - Last check %2$s - %3$s</string>
+    <string name="settings_ytdlp_update_already">Up to date</string>
+    <string name="settings_ytdlp_update_pending">Updated; validating on the next YouTube extraction</string>
+    <string name="settings_ytdlp_update_validated">Validated</string>
+    <string name="settings_ytdlp_update_rolled_back">Rolled back after extraction failure</string>
+    <string name="settings_ytdlp_update_failed">Last update failed</string>
+    <string name="settings_ytdlp_update_toast_current">YouTube extractor is already up to date.</string>
+    <string name="settings_ytdlp_update_toast_updated">YouTube extractor updated. Aura will keep the previous copy until the next successful extraction.</string>
+    <string name="settings_ytdlp_update_toast_validated">YouTube extractor validated.</string>
+    <string name="settings_ytdlp_update_toast_rolled_back">YouTube extractor rolled back after validation failed.</string>
+    <string name="settings_ytdlp_update_toast_failed">YouTube extractor update failed: %1$s</string>
+    <string name="settings_ytdlp_update_unknown_error">unknown error</string>
+    <string name="ytdlp_video_url_update_hint">Could not get video URL. Try updating the YouTube extractor in Settings.</string>
 </resources>

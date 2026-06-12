@@ -6,6 +6,7 @@ import com.freevibe.data.model.Sound
 import com.freevibe.BuildConfig
 import com.freevibe.data.local.PreferencesManager
 import com.freevibe.service.SourceMetrics
+import com.freevibe.service.YtDlpUpdateManager
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
@@ -24,6 +25,7 @@ import javax.inject.Singleton
 class YouTubeRepository @Inject constructor(
     private val sourceMetrics: SourceMetrics,
     private val prefs: PreferencesManager,
+    private val ytDlpUpdateManager: YtDlpUpdateManager,
 ) {
 
     // Cache resolved stream URLs with TTL to avoid stale URLs (YouTube tokens expire)
@@ -131,11 +133,19 @@ class YouTubeRepository @Inject constructor(
                 val response = com.yausername.youtubedl_android.YoutubeDL.getInstance().execute(request)
                 val streamUrl = response.out?.trim()?.takeIf { it.isNotBlank() }
                 if (BuildConfig.DEBUG) android.util.Log.d("YouTubeRepo", "yt-dlp preview result: ${streamUrl?.take(80) ?: "NULL"}")
-                streamUrl?.also { streamCache[videoId] = CachedStream(it, System.currentTimeMillis()) }
+                if (streamUrl == null) {
+                    recordEmptyExtractorResult()
+                    null
+                } else {
+                    streamCache[videoId] = CachedStream(streamUrl, System.currentTimeMillis())
+                    ytDlpUpdateManager.recordExtractionSuccess()
+                    streamUrl
+                }
             }
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
+            ytDlpUpdateManager.recordExtractionFailure(e)
             if (BuildConfig.DEBUG) android.util.Log.e("YouTubeRepo", "getAudioPreviewUrl failed for $videoId: ${e.javaClass.simpleName}: ${e.message}")
             null
         }
@@ -156,11 +166,18 @@ class YouTubeRepository @Inject constructor(
                 request.addOption("--get-url")
                 val response = com.yausername.youtubedl_android.YoutubeDL.getInstance().execute(request)
                 val streamUrl = response.out?.trim()
-                if (streamUrl.isNullOrBlank()) null else streamUrl
+                if (streamUrl.isNullOrBlank()) {
+                    recordEmptyExtractorResult()
+                    null
+                } else {
+                    ytDlpUpdateManager.recordExtractionSuccess()
+                    streamUrl
+                }
             }
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
+            ytDlpUpdateManager.recordExtractionFailure(e)
             if (BuildConfig.DEBUG) android.util.Log.e("YouTubeRepo", "getAudioStreamUrl failed for $videoId: ${e.javaClass.simpleName}: ${e.message}")
             null
         }
@@ -179,14 +196,29 @@ class YouTubeRepository @Inject constructor(
                 request.addOption("--get-url")
                 val response = com.yausername.youtubedl_android.YoutubeDL.getInstance().execute(request)
                 val streamUrl = response.out?.trim()?.lines()?.firstOrNull()
-                if (streamUrl.isNullOrBlank()) null else streamUrl
+                if (streamUrl.isNullOrBlank()) {
+                    recordEmptyExtractorResult()
+                    null
+                } else {
+                    ytDlpUpdateManager.recordExtractionSuccess()
+                    streamUrl
+                }
             }
         } catch (e: CancellationException) {
             throw e
-        } catch (_: Exception) { null }
+        } catch (e: Exception) {
+            ytDlpUpdateManager.recordExtractionFailure(e)
+            null
+        }
     }
 
     private suspend fun isProviderEnabled(): Boolean = prefs.youtubeProviderEnabled.first()
+
+    private suspend fun recordEmptyExtractorResult() {
+        ytDlpUpdateManager.recordExtractionFailure(
+            IllegalStateException("yt-dlp returned an empty stream URL"),
+        )
+    }
 
     private fun emptySearchResult() = SearchResult<Sound>(
         items = emptyList(),

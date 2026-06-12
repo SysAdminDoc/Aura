@@ -37,6 +37,7 @@ class CrashDiagnosticsCollector @Inject constructor(
     private val prefs: PreferencesManager,
     private val sourceMetrics: SourceMetrics,
     private val backgroundWorkDiagnosticsReader: BackgroundWorkDiagnosticsReader,
+    private val ytDlpUpdateManager: YtDlpUpdateManager,
 ) {
     fun readSummary(): CrashDiagnosticsSummary {
         val logFile = crashLogFile()
@@ -68,6 +69,7 @@ class CrashDiagnosticsCollector @Inject constructor(
                 .getBoolean(DAILY_WALLPAPER_ENABLED_KEY, false)
         }.getOrDefault(false)
         val videoFps = runCatching { prefs.videoFpsLimit.first() }.getOrDefault(0)
+        val ytDlpSnapshot = ytDlpUpdateManager.snapshot()
         val generatedAt = timestampWithZone(System.currentTimeMillis())
         val backgroundWork = CrashDiagnosticsText.formatBackgroundWorkSection(
             backgroundWorkRows(
@@ -108,6 +110,13 @@ class CrashDiagnosticsCollector @Inject constructor(
             appendLine("- Scheduler source: $schedulerSource")
             appendLine("- Scheduler enabled: $schedulerEnabled")
             appendLine("- Video wallpaper FPS limit: ${if (videoFps > 0) videoFps else "unavailable"}")
+            appendLine("- yt-dlp active version: ${ytDlpSnapshot.activeVersionName ?: ytDlpSnapshot.activeVersion ?: "bundled or unknown"}")
+            appendLine(
+                "- yt-dlp update status: ${ytDlpSnapshot.lastStatus.name}; " +
+                    "last attempt=${if (ytDlpSnapshot.lastAttemptAtMs > 0L) timestampWithZone(ytDlpSnapshot.lastAttemptAtMs) else "never"}; " +
+                    "pending validation=${ytDlpSnapshot.pendingValidation}; " +
+                    "rollback available=${ytDlpSnapshot.rollbackAvailable}",
+            )
             appendLine()
             appendLine(backgroundWork)
             if (liveBackgroundWork != null) {
