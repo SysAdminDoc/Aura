@@ -587,64 +587,6 @@ fun SettingsScreen(
                 subtitle = "Organize wallpapers into folders",
                 onClick = onCollectionsClick,
             )
-            SettingsToggle(
-                icon = Icons.Default.Groups,
-                title = "Enable external Community source",
-                subtitle = if (communityProviderEnabled) {
-                    "Shows Firebase-backed feeds, uploads, votes, and creator surfaces"
-                } else {
-                    "Off by default. Hides community tabs and blocks Firebase-backed actions"
-                },
-                checked = communityProviderEnabled,
-                onCheckedChange = { viewModel.setCommunityProviderEnabled(it) },
-            )
-            if (communityProviderEnabled) {
-                SettingsItem(
-                    icon = Icons.Default.VerifiedUser,
-                    title = "Community guidelines",
-                    subtitle = if (communityGuidelinesAccepted) {
-                        "Accepted v$communityGuidelinesAcceptedVersion"
-                    } else {
-                        "Required before uploads, votes, reports, blocks, follows, and profiles"
-                    },
-                    onClick = { showCommunityGuidelines = true },
-                )
-            }
-            if (communityProviderEnabled && communityGuidelinesAccepted) {
-                SettingsItem(
-                    icon = Icons.Default.Person,
-                    title = "Community identity",
-                    subtitle = communityIdentitySubtitle(communityIdentitySummary),
-                    onClick = {
-                        viewModel.refreshCommunityIdentitySummary()
-                        showCommunityIdentity = true
-                    },
-                )
-                SettingsItem(
-                    icon = Icons.Default.Person,
-                    title = "Creator profile",
-                    subtitle = "Uploads, votes, follows, and leaderboard",
-                    onClick = onCreatorProfileClick,
-                )
-                SettingsItem(
-                    icon = Icons.Default.Block,
-                    title = "Blocked creators",
-                    subtitle = if (blockedCommunityCreators.isEmpty()) {
-                        "No community creators hidden"
-                    } else {
-                        "${blockedCommunityCreators.size} community creators hidden"
-                    },
-                    onClick = { showBlockedCreators = true },
-                )
-                if (viewModel.isAdmin) {
-                    SettingsItem(
-                        icon = Icons.Default.Report,
-                        title = "Community reports",
-                        subtitle = "Review open rights, source, and safety reports",
-                        onClick = onCommunityReportsClick,
-                    )
-                }
-            }
             if (showCommunityIdentity) {
                 CommunityIdentityDialog(
                     summary = communityIdentitySummary,
@@ -1303,6 +1245,64 @@ fun SettingsScreen(
             title = "Advanced external services",
             description = "Provider keys and opt-in cloud features. Generated wallpapers and community actions stay off until you enable them here.",
         ) {
+            SettingsToggle(
+                icon = Icons.Default.Groups,
+                title = "Enable external Community source",
+                subtitle = if (communityProviderEnabled) {
+                    "Shows Firebase-backed feeds, uploads, votes, and creator surfaces"
+                } else {
+                    "Off by default. Hides community tabs and blocks Firebase-backed actions"
+                },
+                checked = communityProviderEnabled,
+                onCheckedChange = { viewModel.setCommunityProviderEnabled(it) },
+            )
+            if (communityProviderEnabled) {
+                SettingsItem(
+                    icon = Icons.Default.VerifiedUser,
+                    title = "Community guidelines",
+                    subtitle = if (communityGuidelinesAccepted) {
+                        "Accepted v$communityGuidelinesAcceptedVersion"
+                    } else {
+                        "Required before uploads, votes, reports, blocks, follows, and profiles"
+                    },
+                    onClick = { showCommunityGuidelines = true },
+                )
+            }
+            if (communityProviderEnabled && communityGuidelinesAccepted) {
+                SettingsItem(
+                    icon = Icons.Default.Person,
+                    title = "Community identity",
+                    subtitle = communityIdentitySubtitle(communityIdentitySummary),
+                    onClick = {
+                        viewModel.refreshCommunityIdentitySummary()
+                        showCommunityIdentity = true
+                    },
+                )
+                SettingsItem(
+                    icon = Icons.Default.Person,
+                    title = "Creator profile",
+                    subtitle = "Uploads, votes, follows, and leaderboard",
+                    onClick = onCreatorProfileClick,
+                )
+                SettingsItem(
+                    icon = Icons.Default.Block,
+                    title = "Blocked creators",
+                    subtitle = if (blockedCommunityCreators.isEmpty()) {
+                        "No community creators hidden"
+                    } else {
+                        "${blockedCommunityCreators.size} community creators hidden"
+                    },
+                    onClick = { showBlockedCreators = true },
+                )
+                if (viewModel.isAdmin) {
+                    SettingsItem(
+                        icon = Icons.Default.Report,
+                        title = "Community reports",
+                        subtitle = "Review open rights, source, and safety reports",
+                        onClick = onCommunityReportsClick,
+                    )
+                }
+            }
             var showWallhavenKey by remember { mutableStateOf(false) }
             SettingsItem(
                 icon = Icons.Default.Key,
