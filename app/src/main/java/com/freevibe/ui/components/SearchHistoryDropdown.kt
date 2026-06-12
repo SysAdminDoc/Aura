@@ -17,6 +17,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 
@@ -77,11 +79,15 @@ fun SearchHistoryDropdown(
 
                 // Query items
                 recentQueries.take(8).forEach { query ->
+                    val openLabel = recentSearchActionLabel(query)
                     Row(
                         Modifier
                             .fillMaxWidth()
                             .heightIn(min = 48.dp)
-                            .clickable { onQueryClick(query) }
+                            .clickable(onClickLabel = openLabel) { onQueryClick(query) }
+                            .semantics {
+                                contentDescription = "Recent search: $query"
+                            }
                             .padding(horizontal = 16.dp, vertical = 8.dp),
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(12.dp),
@@ -102,7 +108,12 @@ fun SearchHistoryDropdown(
                             onClick = { onDeleteQuery(query) },
                             modifier = Modifier.size(48.dp),
                         ) {
-                            Icon(Icons.Default.Close, "Remove", Modifier.size(14.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f))
+                            Icon(
+                                Icons.Default.Close,
+                                removeRecentSearchLabel(query),
+                                Modifier.size(14.dp),
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
+                            )
                         }
                     }
                 }
@@ -112,3 +123,8 @@ fun SearchHistoryDropdown(
         }
     }
 }
+
+internal fun recentSearchActionLabel(query: String): String = "Search for $query"
+
+internal fun removeRecentSearchLabel(query: String): String =
+    "Remove $query from recent searches"

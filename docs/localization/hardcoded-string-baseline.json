@@ -83,7 +83,7 @@
     },
     {
       "count": 1,
-      "firstLine": 72,
+      "firstLine": 74,
       "id": "07ea56d7361b43a7",
       "path": "app/src/main/java/com/freevibe/ui/components/SearchHistoryDropdown.kt",
       "sink": "Text",
@@ -91,11 +91,19 @@
     },
     {
       "count": 1,
-      "firstLine": 67,
+      "firstLine": 69,
       "id": "100f88f5e1ee72bc",
       "path": "app/src/main/java/com/freevibe/ui/components/SearchHistoryDropdown.kt",
       "sink": "Text",
       "text": "Recent searches"
+    },
+    {
+      "count": 1,
+      "firstLine": 89,
+      "id": "c66212caad412c18",
+      "path": "app/src/main/java/com/freevibe/ui/components/SearchHistoryDropdown.kt",
+      "sink": "contentDescription",
+      "text": "Recent search: $query"
     },
     {
       "count": 1,
