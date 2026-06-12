@@ -3391,13 +3391,6 @@ Net-new items from the second 2026-06-09 research pass (live provider probes, ba
   Acceptance: user-triggered update works offline-safe (no-op without network); previous binary is retained and restored if the first post-update extraction fails; update is opt-in or unmetered-only by default (data politeness); diagnostics bundle records the active yt-dlp version.
   Complexity: M
 
-- [ ] P1 — **Networking stack refresh: OkHttp 5.x + Retrofit 3.x**
-  Why: OkHttp 4.12 is end-of-line; 5.x is the first stable line since 2023 with a dedicated Android artifact, Android 10/11 TLS crash fixes, and stable DNS-over-HTTPS. Retrofit 3.0 is the maintained line and is binary-compatible with OkHttp 4/5, making this a low-risk upgrade independent of N-1. Not covered by any existing roadmap item (N-1 covers AGP/Kotlin/Compose/Hilt only).
-  Evidence: OkHttp changelog; Retrofit 3.0 release/migration guides; `gradle/libs.versions.toml` (okhttp 4.12.0, retrofit 2.11.0).
-  Touches: `gradle/libs.versions.toml`, `di/AppModule.kt` (client builders, interceptors), `RateLimitInterceptor`, MockWebServer test imports if used (new `mockwebserver3` coordinates), dependency verification metadata, generated OSS notice lock.
-  Acceptance: all provider repositories compile and pass unit tests; logging/rate-limit interceptors behave identically; release APK strips JVM-only OkHttp artifact; notice lockfile regenerated without drift-gate failures.
-  Complexity: S
-
 - [ ] P1 — **Room 2.6.1 → 2.8.x persistence refresh**
   Why: Room 2.8 ships Kotlin-native codegen (KSP2-friendly), `RoomRawQuery`, and KMP support — the concrete prerequisite for the L-4 KMP shared-logic bet and the NX-7 sync work, and it runs on the current Kotlin 2.1/AGP 8.7 toolchain (needs Kotlin 2.0+, satisfied). Room 3.0 (March 2026) is a breaking major to defer until after N-1.
   Evidence: androidx Room release notes; Room 3.0 announcement blog; `gradle/libs.versions.toml` (room 2.6.1); Cycle 16 whole-graph migration-test item provides the safety harness.
