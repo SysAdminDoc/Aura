@@ -21,11 +21,7 @@ DEFAULT_COORDINATES = (
     "io.github.junkfood02.youtubedl-android:common:0.18.1",
     "io.github.junkfood02.youtubedl-android:library:0.18.1",
     "io.github.junkfood02.youtubedl-android:ffmpeg:0.18.1",
-    "com.github.teamnewpipe:NewPipeExtractor:v0.24.8",
-    "com.github.teamnewpipe.NewPipeExtractor:NewPipeExtractor:v0.24.8",
-    "com.github.teamnewpipe.NewPipeExtractor:extractor:v0.24.8",
-    "com.github.teamnewpipe.NewPipeExtractor:timeago-generator:v0.24.8",
-    "com.github.teamnewpipe.NewPipeExtractor:timeago-parser:v0.24.8",
+    "com.github.teamnewpipe:NewPipeExtractor:v0.26.3",
 )
 
 
@@ -75,35 +71,11 @@ SOURCE_REFERENCES = {
         license_url="https://www.ffmpeg.org/legal.html",
         review_note="Embedded libraries expose FFmpeg 7.1.1 configure evidence; exact Termux source, patch, and dependency correspondence still needs release-owner review.",
     ),
-    "com.github.teamnewpipe:NewPipeExtractor:v0.24.8": SourceReference(
+    "com.github.teamnewpipe:NewPipeExtractor:v0.26.3": SourceReference(
         license_id="GPL-3.0-or-later",
-        source_url="https://github.com/TeamNewPipe/NewPipeExtractor/tree/v0.24.8",
-        license_url="https://raw.githubusercontent.com/TeamNewPipe/NewPipeExtractor/v0.24.8/LICENSE",
-        review_note="Marker coordinate; inspect transitive NewPipeExtractor modules for real classes.",
-    ),
-    "com.github.teamnewpipe.NewPipeExtractor:NewPipeExtractor:v0.24.8": SourceReference(
-        license_id="GPL-3.0-or-later",
-        source_url="https://github.com/TeamNewPipe/NewPipeExtractor/tree/v0.24.8",
-        license_url="https://raw.githubusercontent.com/TeamNewPipe/NewPipeExtractor/v0.24.8/LICENSE",
-        review_note="Aggregator module; no native payload entries matched this inventory.",
-    ),
-    "com.github.teamnewpipe.NewPipeExtractor:extractor:v0.24.8": SourceReference(
-        license_id="GPL-3.0-or-later",
-        source_url="https://github.com/TeamNewPipe/NewPipeExtractor/tree/v0.24.8",
-        license_url="https://raw.githubusercontent.com/TeamNewPipe/NewPipeExtractor/v0.24.8/LICENSE",
-        review_note="Main extractor module used by Aura's YouTube metadata path.",
-    ),
-    "com.github.teamnewpipe.NewPipeExtractor:timeago-generator:v0.24.8": SourceReference(
-        license_id="GPL-3.0-or-later",
-        source_url="https://github.com/TeamNewPipe/NewPipeExtractor/tree/v0.24.8",
-        license_url="https://raw.githubusercontent.com/TeamNewPipe/NewPipeExtractor/v0.24.8/LICENSE",
-        review_note="Transitive NewPipeExtractor time parsing helper.",
-    ),
-    "com.github.teamnewpipe.NewPipeExtractor:timeago-parser:v0.24.8": SourceReference(
-        license_id="GPL-3.0-or-later",
-        source_url="https://github.com/TeamNewPipe/NewPipeExtractor/tree/v0.24.8",
-        license_url="https://raw.githubusercontent.com/TeamNewPipe/NewPipeExtractor/v0.24.8/LICENSE",
-        review_note="Transitive NewPipeExtractor time parsing helper.",
+        source_url="https://github.com/TeamNewPipe/NewPipeExtractor/tree/v0.26.3",
+        license_url="https://raw.githubusercontent.com/TeamNewPipe/NewPipeExtractor/v0.26.3/LICENSE",
+        review_note="Single NewPipeExtractor artifact used by Aura's YouTube metadata path.",
     ),
 }
 

@@ -622,135 +622,34 @@
     {
       "artifacts": [
         {
-          "fileName": "NewPipeExtractor-v0.24.8.jar",
+          "fileName": "NewPipeExtractor-v0.26.3.jar",
           "kind": "jar",
           "payloadEntries": [],
-          "sha256": "a5c92c0ec5bd184258e1e412247528fb0ae0c8ff2ee1e96d87656f2bd8d17c5f",
-          "size": 292
+          "sha256": "8c53b4b4fb25c8a2f5789ec00f0532fb337b91d6f0f384fd02efd1dc52e7fba9",
+          "size": 801535
         },
         {
-          "fileName": "NewPipeExtractor-v0.24.8.pom",
-          "kind": "pom",
-          "payloadEntries": [],
-          "sha256": "ba82f1cf42fad137f5c73b025c1d95993c528742c19d7d47df706360a3d2a48e",
-          "size": 1164
-        }
-      ],
-      "coordinate": "com.github.teamnewpipe:NewPipeExtractor:v0.24.8",
-      "missing": false
-    },
-    {
-      "artifacts": [
-        {
-          "fileName": "NewPipeExtractor-v0.24.8.jar",
-          "kind": "jar",
-          "payloadEntries": [],
-          "sha256": "ae39d0c1c1b6d1424d603c64f5211b175f32d2eb6c188cee5fce76f4a06640d3",
-          "size": 261
-        },
-        {
-          "fileName": "NewPipeExtractor-v0.24.8.module",
+          "fileName": "NewPipeExtractor-v0.26.3.module",
           "kind": "module",
           "payloadEntries": [],
-          "sha256": "f72b20cd0b3af1e381bb6b931a2e3b723b5ef13323ce14762f6721a6f1f30911",
-          "size": 2363
+          "sha256": "efeccee23d3bc1bb044b1a0c0338a19830bb569c9db07f541147df39ee9a4d4c",
+          "size": 4164
         },
         {
-          "fileName": "NewPipeExtractor-v0.24.8.pom",
+          "fileName": "NewPipeExtractor-v0.26.3.pom",
           "kind": "pom",
           "payloadEntries": [],
-          "sha256": "386d62e59fe80ea47a728df06c844bb03c2b412adc206dc052503be1e89d9b46",
-          "size": 1782
+          "sha256": "933016a107bf22c8df7a437a4bc493acc75d82b9f71c514351f959a04a01bf5d",
+          "size": 2438
         }
       ],
-      "coordinate": "com.github.teamnewpipe.NewPipeExtractor:NewPipeExtractor:v0.24.8",
-      "missing": false
-    },
-    {
-      "artifacts": [
-        {
-          "fileName": "extractor-v0.24.8.jar",
-          "kind": "jar",
-          "payloadEntries": [],
-          "sha256": "847f4a589edddcae2cc8a357e3de496b77103d94a221fc9b41edd5db4467780d",
-          "size": 698238
-        },
-        {
-          "fileName": "extractor-v0.24.8.module",
-          "kind": "module",
-          "payloadEntries": [],
-          "sha256": "fd98c5de69c5adfa1d59ab9b3031f5e4551eb8782d7e277fbff669b2ae8f90b5",
-          "size": 2830
-        },
-        {
-          "fileName": "extractor-v0.24.8.pom",
-          "kind": "pom",
-          "payloadEntries": [],
-          "sha256": "2e6cc7f62332dacc8e445a1b0916ab05a7887bd880c8063fe37a5f50957f45a9",
-          "size": 2676
-        }
-      ],
-      "coordinate": "com.github.teamnewpipe.NewPipeExtractor:extractor:v0.24.8",
-      "missing": false
-    },
-    {
-      "artifacts": [
-        {
-          "fileName": "timeago-generator-v0.24.8.jar",
-          "kind": "jar",
-          "payloadEntries": [],
-          "sha256": "32ea643e7c2227e52b79c82b570fbde60db713a68d70e6f7e7145f8f58be5ea0",
-          "size": 13011
-        },
-        {
-          "fileName": "timeago-generator-v0.24.8.module",
-          "kind": "module",
-          "payloadEntries": [],
-          "sha256": "c9860e3ec918db68679f35a07abc8e573c16eb661d305985f55e0662bf7d8884",
-          "size": 2341
-        },
-        {
-          "fileName": "timeago-generator-v0.24.8.pom",
-          "kind": "pom",
-          "payloadEntries": [],
-          "sha256": "6c0a2994725f36459a3df2b112b54ff822c62843fb9c7944038bf88d18b6ce8b",
-          "size": 1981
-        }
-      ],
-      "coordinate": "com.github.teamnewpipe.NewPipeExtractor:timeago-generator:v0.24.8",
-      "missing": false
-    },
-    {
-      "artifacts": [
-        {
-          "fileName": "timeago-parser-v0.24.8.jar",
-          "kind": "jar",
-          "payloadEntries": [],
-          "sha256": "39e1177d01e9c8b1c6afe4f7e89678eaae3ebfb0e9dc49bfcb58466c800b629f",
-          "size": 80074
-        },
-        {
-          "fileName": "timeago-parser-v0.24.8.module",
-          "kind": "module",
-          "payloadEntries": [],
-          "sha256": "225bdc23569d7f208beb2858bb29754a06c5867c29aaf102b98a0f7eb0599f1e",
-          "size": 1995
-        },
-        {
-          "fileName": "timeago-parser-v0.24.8.pom",
-          "kind": "pom",
-          "payloadEntries": [],
-          "sha256": "155efbe4b0dc323e7d2fb98b8bd42d7097114a357e9e28654db6584a9a132c36",
-          "size": 1552
-        }
-      ],
-      "coordinate": "com.github.teamnewpipe.NewPipeExtractor:timeago-parser:v0.24.8",
+      "coordinate": "com.github.teamnewpipe:NewPipeExtractor:v0.26.3",
       "missing": false
     }
   ],
   "counts": {
-    "artifactRecords": 23,
-    "coordinates": 8,
+    "artifactRecords": 12,
+    "coordinates": 4,
     "payloadEntries": 36
   },
   "gradleCache": "~/.gradle/caches/modules-2/files-2.1",

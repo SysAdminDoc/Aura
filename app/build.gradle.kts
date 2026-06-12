@@ -94,6 +94,9 @@ android {
         jniLibs {
             useLegacyPackaging = true
         }
+        resources {
+            excludes += "META-INF/versions/9/OSGI-INF/MANIFEST.MF"
+        }
     }
 
     sourceSets {
@@ -229,8 +232,8 @@ dependencies {
     // PIN: NewPipe ships YouTube-extractor patches monthly. Bumping versions can
     // introduce subtle stream-handling regressions (DownloaderImpl InputStream leak
     // historically, fixed in v5.8). Re-verify YouTubeRepository + DownloaderImpl
-    // stream lifecycle on every bump (round-19 audit confirmed clean for v0.24.8).
-    implementation("com.github.teamnewpipe:NewPipeExtractor:v0.24.8")
+    // stream lifecycle on every bump (re-verified clean for v0.26.3).
+    implementation("com.github.teamnewpipe:NewPipeExtractor:v0.26.3")
 
     // yt-dlp for Android (YouTube stream URL extraction)
     implementation("io.github.junkfood02.youtubedl-android:library:0.18.1")

@@ -40,8 +40,8 @@
     {
       "id": "newpipe-extractor",
       "licenseId": "GPL-3.0-or-later",
-      "reviewNote": "NewPipeExtractor is the YouTube metadata/search extractor. Keep source, notice, and native-compliance records aligned with the pinned v0.24.8 coordinate family.",
-      "sourceUrl": "https://github.com/TeamNewPipe/NewPipeExtractor/tree/v0.24.8",
+      "reviewNote": "NewPipeExtractor is the YouTube metadata/search extractor. Keep source, notice, and native-compliance records aligned with the pinned v0.26.3 coordinate family.",
+      "sourceUrl": "https://github.com/TeamNewPipe/NewPipeExtractor/tree/v0.26.3",
       "target": "com.github.teamnewpipe",
       "targetType": "coordinate-prefix",
       "usage": "YouTube search metadata, stream metadata, and extractor support for sound/video discovery."

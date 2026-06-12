@@ -1,7 +1,7 @@
 {
   "counts": {
-    "dependencyRecords": 267,
-    "noticeSections": 305
+    "dependencyRecords": 263,
+    "noticeSections": 302
   },
   "dependencies": [
     {
@@ -1013,34 +1013,10 @@
       "version": "e9d656ddb49a412a5a0a5d5ef20ca7ef09549996"
     },
     {
-      "coordinate": "com.github.teamnewpipe:NewPipeExtractor:v0.24.8",
+      "coordinate": "com.github.teamnewpipe:NewPipeExtractor:v0.26.3",
       "group": "com.github.teamnewpipe",
       "name": "NewPipeExtractor",
-      "version": "v0.24.8"
-    },
-    {
-      "coordinate": "com.github.teamnewpipe.NewPipeExtractor:NewPipeExtractor:v0.24.8",
-      "group": "com.github.teamnewpipe.NewPipeExtractor",
-      "name": "NewPipeExtractor",
-      "version": "v0.24.8"
-    },
-    {
-      "coordinate": "com.github.teamnewpipe.NewPipeExtractor:extractor:v0.24.8",
-      "group": "com.github.teamnewpipe.NewPipeExtractor",
-      "name": "extractor",
-      "version": "v0.24.8"
-    },
-    {
-      "coordinate": "com.github.teamnewpipe.NewPipeExtractor:timeago-generator:v0.24.8",
-      "group": "com.github.teamnewpipe.NewPipeExtractor",
-      "name": "timeago-generator",
-      "version": "v0.24.8"
-    },
-    {
-      "coordinate": "com.github.teamnewpipe.NewPipeExtractor:timeago-parser:v0.24.8",
-      "group": "com.github.teamnewpipe.NewPipeExtractor",
-      "name": "timeago-parser",
-      "version": "v0.24.8"
+      "version": "v0.26.3"
     },
     {
       "coordinate": "com.google.accompanist:accompanist-drawablepainter:0.32.0",
@@ -1343,10 +1319,10 @@
       "version": "16.3.0"
     },
     {
-      "coordinate": "com.google.protobuf:protobuf-javalite:4.31.1",
+      "coordinate": "com.google.protobuf:protobuf-javalite:4.35.0",
       "group": "com.google.protobuf",
       "name": "protobuf-javalite",
-      "version": "4.31.1"
+      "version": "4.35.0"
     },
     {
       "coordinate": "com.google.zxing:core:3.5.3",
@@ -1577,10 +1553,10 @@
       "version": "1.7.3"
     },
     {
-      "coordinate": "org.jsoup:jsoup:1.21.1",
+      "coordinate": "org.jsoup:jsoup:1.22.2",
       "group": "org.jsoup",
       "name": "jsoup",
-      "version": "1.21.1"
+      "version": "1.22.2"
     },
     {
       "coordinate": "org.jspecify:jspecify:1.0.0",
@@ -1589,16 +1565,16 @@
       "version": "1.0.0"
     },
     {
-      "coordinate": "org.mozilla:rhino:1.8.0",
+      "coordinate": "org.mozilla:rhino:1.8.1",
       "group": "org.mozilla",
       "name": "rhino",
-      "version": "1.8.0"
+      "version": "1.8.1"
     },
     {
-      "coordinate": "org.mozilla:rhino-engine:1.8.0",
+      "coordinate": "org.mozilla:rhino-engine:1.8.1",
       "group": "org.mozilla",
       "name": "rhino-engine",
-      "version": "1.8.0"
+      "version": "1.8.1"
     },
     {
       "coordinate": "org.reactivestreams:reactive-streams:1.0.4",
@@ -1613,9 +1589,9 @@
     "licenseText": "app/build/generated/res/releaseOssLicensesTask/raw/third_party_licenses"
   },
   "inputSha256": {
-    "dependencies": "4c75fd15387c50d25769486cfc86af9609e03d0a6596d9ba676aa2286685f185",
-    "licenseMetadata": "14a81047fa4b2114818066504dde14df7bc046c64a62b2a6731aa58fced75372",
-    "licenseText": "c300e37365f423cbb9baf757379925f2f2f51a60f6626f88b5ae52ffcfcbc06c"
+    "dependencies": "2e5ff96000bea558187efda17b42273c879eaa2063d2109ad171aefb95303d05",
+    "licenseMetadata": "fccac3d6de2d78492cd97aff0356562f7bfe2fe585525b9ad8d2891aefbd2976",
+    "licenseText": "66a56ed69aebe2024698aa069c8c70d5f990a1a7888c961d62b829537c2df22d"
   },
   "noticeSections": [
     {
@@ -2393,27 +2369,9 @@
       "offset": 94
     },
     {
-      "length": 39,
-      "name": "TeamNewPipe/NewPipeExtractor",
-      "noticeSha256": "aa6390b0ceadb95bf8f5213e89ffb7f767c9eeccd62f28ace7867d54642ab8bd",
-      "offset": 143
-    },
-    {
-      "length": 39,
-      "name": "TeamNewPipe/NewPipeExtractor",
-      "noticeSha256": "aa6390b0ceadb95bf8f5213e89ffb7f767c9eeccd62f28ace7867d54642ab8bd",
-      "offset": 143
-    },
-    {
-      "length": 39,
-      "name": "TeamNewPipe/NewPipeExtractor",
-      "noticeSha256": "aa6390b0ceadb95bf8f5213e89ffb7f767c9eeccd62f28ace7867d54642ab8bd",
-      "offset": 143
-    },
-    {
-      "length": 39,
-      "name": "TeamNewPipe/NewPipeExtractor",
-      "noticeSha256": "aa6390b0ceadb95bf8f5213e89ffb7f767c9eeccd62f28ace7867d54642ab8bd",
+      "length": 40,
+      "name": "NewPipe Extractor",
+      "noticeSha256": "94a810252e2ae13d64271c5e929c256a0abed6f7df2528449e3b4c1093485a92",
       "offset": 143
     },
     {
@@ -2444,607 +2402,607 @@
       "length": 11361,
       "name": "Dagger",
       "noticeSha256": "e8076546f4222d1eb96f7c60dd5a450360d7aeb51d31153eda7c9e6e008a541f",
-      "offset": 184
+      "offset": 185
     },
     {
       "length": 47,
       "name": "play-services-auth",
       "noticeSha256": "e3f505f692c1334ec5b11a95faaaa72477e4c4bc1e0ea10830a5ffdb04bd27d7",
-      "offset": 11547
+      "offset": 11548
     },
     {
       "length": 1096,
       "name": "Animal Sniffer",
       "noticeSha256": "32d66e2183bf8e7435b702284b960a4803f1df6eb138a02b3fb81f6c6a5e1351",
-      "offset": 11596
+      "offset": 11597
     },
     {
       "length": 1892,
       "name": "Checker Framework Annotations",
       "noticeSha256": "0a0d953557de1c47817def2774d227d1ebd9a52cc120245f33fbd9614ff796b5",
-      "offset": 12694
+      "offset": 12695
     },
     {
       "length": 11357,
       "name": "Error Prone",
       "noticeSha256": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4",
-      "offset": 14588
+      "offset": 14589
     },
     {
       "length": 11358,
       "name": "Google Auto",
       "noticeSha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
-      "offset": 25947
+      "offset": 25948
     },
     {
       "length": 11358,
       "name": "Guava JDK5",
       "noticeSha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
-      "offset": 25947
+      "offset": 25948
     },
     {
       "length": 11362,
       "name": "Guava JDK7",
       "noticeSha256": "01b4bb058a35cf06dde9e3447b34f4af535df2ec1423393893e517e8ee83ba53",
-      "offset": 37307
+      "offset": 37308
     },
     {
       "length": 81008,
       "name": "J2ObjC",
       "noticeSha256": "22418fba3d2030cc22690f1c0c38ae423d5540110e9d61519027e3210ac29726",
-      "offset": 48671
+      "offset": 48672
     },
     {
       "length": 11358,
       "name": "JSR 250",
       "noticeSha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
-      "offset": 25947
+      "offset": 25948
     },
     {
       "length": 1602,
       "name": "JSR 305",
       "noticeSha256": "fb9bdee1ef51ee85a17d04fda7fbf0ea2af92454b151a252c13cea7a720f3a8b",
-      "offset": 129681
+      "offset": 129682
     },
     {
       "length": 11365,
       "name": "JSR 330",
       "noticeSha256": "9cf3b8a82221b4a6382ce164d099c79a2827e160d5fd533d07bc63f69ca6b34f",
-      "offset": 131285
+      "offset": 131286
     },
     {
       "length": 11358,
       "name": "JSpecify",
       "noticeSha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
-      "offset": 25947
+      "offset": 25948
     },
     {
       "length": 11307,
       "name": "JsInterop Annotations",
       "noticeSha256": "b3e17cd48de9bfefe076d376cc136df378ebfceffbb48069205c0dd0231a0cae",
-      "offset": 142652
+      "offset": 142653
     },
     {
       "length": 105133,
       "name": "Kotlin",
       "noticeSha256": "4fe7bc606857fd3954bc067fad926e7993ddca7232202969e0dfabe4a9e50fdd",
-      "offset": 153961
+      "offset": 153962
     },
     {
       "length": 11357,
       "name": "Kotlin coroutines",
       "noticeSha256": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4",
-      "offset": 14588
+      "offset": 14589
     },
     {
       "length": 1732,
       "name": "Protocol Buffers for Java",
       "noticeSha256": "6e5e117324afd944dcf67f36cf329843bc1a92229a8cd9bb573d7a83130fea7d",
-      "offset": 259096
+      "offset": 259097
     },
     {
       "length": 11358,
       "name": "SafeParcelable library",
       "noticeSha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
-      "offset": 25947
+      "offset": 25948
     },
     {
       "length": 11358,
       "name": "Tink",
       "noticeSha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
-      "offset": 25947
+      "offset": 25948
     },
     {
       "length": 10695,
       "name": "apksig",
       "noticeSha256": "38751245389e1e23f73e6f5384b5cbe7fa972cc4410c5adc9c04b082a0b9561a",
-      "offset": 260830
+      "offset": 260831
     },
     {
       "length": 1558,
       "name": "chrome_sync",
       "noticeSha256": "3dbd2c90050b652d63656481c3e5871c52261575292db77d4ea63419f187a55b",
-      "offset": 271527
+      "offset": 271528
     },
     {
       "length": 11358,
       "name": "gsfclient",
       "noticeSha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
-      "offset": 25947
+      "offset": 25948
     },
     {
       "length": 9116,
       "name": "java_annotations",
       "noticeSha256": "fa0c4e18606d2893cb6c05f492dde582267c0f0a5cd097f71bf9e6ec860208f8",
-      "offset": 273087
+      "offset": 273088
     },
     {
       "length": 11356,
       "name": "kotlinx_atomicfu",
       "noticeSha256": "43070e2d4e532684de521b885f385d0841030efa2b1a20bafb76133a5e1379c1",
-      "offset": 282205
+      "offset": 282206
     },
     {
       "length": 47,
       "name": "play-services-auth-api-phone",
       "noticeSha256": "e3f505f692c1334ec5b11a95faaaa72477e4c4bc1e0ea10830a5ffdb04bd27d7",
-      "offset": 11547
+      "offset": 11548
     },
     {
       "length": 47,
       "name": "play-services-auth-base",
       "noticeSha256": "e3f505f692c1334ec5b11a95faaaa72477e4c4bc1e0ea10830a5ffdb04bd27d7",
-      "offset": 11547
+      "offset": 11548
     },
     {
       "length": 10691,
       "name": "AndroidX annotation experimental library",
       "noticeSha256": "0366083b9f13b07a2bbbd01979783001c96c4d7037068c4226bf116e05780105",
-      "offset": 293563
+      "offset": 293564
     },
     {
       "length": 10694,
       "name": "AndroidX tracing library",
       "noticeSha256": "2f1aa69014fbe0b673f7ed0a26efc04c605787a42c7f3acd0a452ee0e84254b3",
-      "offset": 304256
+      "offset": 304257
     },
     {
       "length": 47,
       "name": "play-services-base",
       "noticeSha256": "e3f505f692c1334ec5b11a95faaaa72477e4c4bc1e0ea10830a5ffdb04bd27d7",
-      "offset": 11547
+      "offset": 11548
     },
     {
       "length": 11356,
       "name": "kotlinx_serialization",
       "noticeSha256": "c5accbbd8546e94c34aed24afe689a617627d18eed5a6c48277e48db57c23851",
-      "offset": 314952
+      "offset": 314953
     },
     {
       "length": 47,
       "name": "play-services-basement",
       "noticeSha256": "e3f505f692c1334ec5b11a95faaaa72477e4c4bc1e0ea10830a5ffdb04bd27d7",
-      "offset": 11547
+      "offset": 11548
     },
     {
       "length": 47,
       "name": "play-services-cloud-messaging",
       "noticeSha256": "e3f505f692c1334ec5b11a95faaaa72477e4c4bc1e0ea10830a5ffdb04bd27d7",
-      "offset": 11547
+      "offset": 11548
     },
     {
       "length": 10694,
       "name": "AndroidX lifecycle common library",
       "noticeSha256": "2f1aa69014fbe0b673f7ed0a26efc04c605787a42c7f3acd0a452ee0e84254b3",
-      "offset": 304256
+      "offset": 304257
     },
     {
       "length": 10694,
       "name": "AndroidX lifecycle livedatacore library",
       "noticeSha256": "2f1aa69014fbe0b673f7ed0a26efc04c605787a42c7f3acd0a452ee0e84254b3",
-      "offset": 304256
+      "offset": 304257
     },
     {
       "length": 10694,
       "name": "AndroidX lifecycle runtime library",
       "noticeSha256": "2f1aa69014fbe0b673f7ed0a26efc04c605787a42c7f3acd0a452ee0e84254b3",
-      "offset": 304256
+      "offset": 304257
     },
     {
       "length": 47,
       "name": "play-services-fido",
       "noticeSha256": "e3f505f692c1334ec5b11a95faaaa72477e4c4bc1e0ea10830a5ffdb04bd27d7",
-      "offset": 11547
+      "offset": 11548
     },
     {
       "length": 42,
       "name": "play-services-mlkit-subject-segmentation",
       "noticeSha256": "b3267b2c808d2fc217dc404a125168edbc154b4e6b2ae7e6442f59e6db327646",
-      "offset": 326310
+      "offset": 326311
     },
     {
       "length": 16008,
       "name": "Android SDK Platforms",
       "noticeSha256": "8598f4e111252d203df6c4ec0b9274d8d9ea034d4fcf13cd50b2b15de23a5e62",
-      "offset": 326354
+      "offset": 326355
     },
     {
       "length": 10695,
       "name": "AndroidX activity library",
       "noticeSha256": "8a9d1ae85f7e294183b3df28502f8c511eb96481937ba71fca535f32fa80f4e4",
-      "offset": 342364
+      "offset": 342365
     },
     {
       "length": 10691,
       "name": "AndroidX annotation jvm library",
       "noticeSha256": "0366083b9f13b07a2bbbd01979783001c96c4d7037068c4226bf116e05780105",
-      "offset": 293563
+      "offset": 293564
     },
     {
       "length": 10695,
       "name": "AndroidX annotation library",
       "noticeSha256": "8a9d1ae85f7e294183b3df28502f8c511eb96481937ba71fca535f32fa80f4e4",
-      "offset": 342364
+      "offset": 342365
     },
     {
       "length": 10694,
       "name": "AndroidX architecture core common library",
       "noticeSha256": "2f1aa69014fbe0b673f7ed0a26efc04c605787a42c7f3acd0a452ee0e84254b3",
-      "offset": 304256
+      "offset": 304257
     },
     {
       "length": 10694,
       "name": "AndroidX architecture core runtime library",
       "noticeSha256": "2f1aa69014fbe0b673f7ed0a26efc04c605787a42c7f3acd0a452ee0e84254b3",
-      "offset": 304256
+      "offset": 304257
     },
     {
       "length": 10694,
       "name": "AndroidX asynclayoutinflater library",
       "noticeSha256": "f01b55631ca239fda6f323b88f16e0fd3b211987704cf619644602641d04e526",
-      "offset": 353061
+      "offset": 353062
     },
     {
       "length": 10695,
       "name": "AndroidX collection library",
       "noticeSha256": "8a9d1ae85f7e294183b3df28502f8c511eb96481937ba71fca535f32fa80f4e4",
-      "offset": 342364
+      "offset": 342365
     },
     {
       "length": 10695,
       "name": "AndroidX concurrent futures library",
       "noticeSha256": "8a9d1ae85f7e294183b3df28502f8c511eb96481937ba71fca535f32fa80f4e4",
-      "offset": 342364
+      "offset": 342365
     },
     {
       "length": 10695,
       "name": "AndroidX coordinatorlayout library",
       "noticeSha256": "8a9d1ae85f7e294183b3df28502f8c511eb96481937ba71fca535f32fa80f4e4",
-      "offset": 342364
+      "offset": 342365
     },
     {
       "length": 10695,
       "name": "AndroidX core ktx library",
       "noticeSha256": "8a9d1ae85f7e294183b3df28502f8c511eb96481937ba71fca535f32fa80f4e4",
-      "offset": 342364
+      "offset": 342365
     },
     {
       "length": 10695,
       "name": "AndroidX core library",
       "noticeSha256": "8a9d1ae85f7e294183b3df28502f8c511eb96481937ba71fca535f32fa80f4e4",
-      "offset": 342364
+      "offset": 342365
     },
     {
       "length": 10695,
       "name": "AndroidX cursoradapter library",
       "noticeSha256": "8a9d1ae85f7e294183b3df28502f8c511eb96481937ba71fca535f32fa80f4e4",
-      "offset": 342364
+      "offset": 342365
     },
     {
       "length": 10695,
       "name": "AndroidX customview library",
       "noticeSha256": "8a9d1ae85f7e294183b3df28502f8c511eb96481937ba71fca535f32fa80f4e4",
-      "offset": 342364
+      "offset": 342365
     },
     {
       "length": 10695,
       "name": "AndroidX documentfile library",
       "noticeSha256": "8a9d1ae85f7e294183b3df28502f8c511eb96481937ba71fca535f32fa80f4e4",
-      "offset": 342364
+      "offset": 342365
     },
     {
       "length": 10695,
       "name": "AndroidX drawerlayout library",
       "noticeSha256": "8a9d1ae85f7e294183b3df28502f8c511eb96481937ba71fca535f32fa80f4e4",
-      "offset": 342364
+      "offset": 342365
     },
     {
       "length": 10695,
       "name": "AndroidX exifinterface library",
       "noticeSha256": "8a9d1ae85f7e294183b3df28502f8c511eb96481937ba71fca535f32fa80f4e4",
-      "offset": 342364
+      "offset": 342365
     },
     {
       "length": 10695,
       "name": "AndroidX fragment library",
       "noticeSha256": "8a9d1ae85f7e294183b3df28502f8c511eb96481937ba71fca535f32fa80f4e4",
-      "offset": 342364
+      "offset": 342365
     },
     {
       "length": 10693,
       "name": "AndroidX interpolator library",
       "noticeSha256": "91829f267b9311ecc8b9996c372c0c22e67d1a994aeec2db94bbb45a5105c40c",
-      "offset": 363757
+      "offset": 363758
     },
     {
       "length": 10695,
       "name": "AndroidX legacy coreui library",
       "noticeSha256": "8a9d1ae85f7e294183b3df28502f8c511eb96481937ba71fca535f32fa80f4e4",
-      "offset": 342364
+      "offset": 342365
     },
     {
       "length": 10695,
       "name": "AndroidX legacy coreutils library",
       "noticeSha256": "8a9d1ae85f7e294183b3df28502f8c511eb96481937ba71fca535f32fa80f4e4",
-      "offset": 342364
+      "offset": 342365
     },
     {
       "length": 10695,
       "name": "AndroidX legacy v4 library",
       "noticeSha256": "8a9d1ae85f7e294183b3df28502f8c511eb96481937ba71fca535f32fa80f4e4",
-      "offset": 342364
+      "offset": 342365
     },
     {
       "length": 10694,
       "name": "AndroidX lifecycle viewmodel library",
       "noticeSha256": "2f1aa69014fbe0b673f7ed0a26efc04c605787a42c7f3acd0a452ee0e84254b3",
-      "offset": 304256
+      "offset": 304257
     },
     {
       "length": 10693,
       "name": "AndroidX lifecycle viewmodel savedstate library",
       "noticeSha256": "91829f267b9311ecc8b9996c372c0c22e67d1a994aeec2db94bbb45a5105c40c",
-      "offset": 363757
+      "offset": 363758
     },
     {
       "length": 10695,
       "name": "AndroidX loader library",
       "noticeSha256": "8a9d1ae85f7e294183b3df28502f8c511eb96481937ba71fca535f32fa80f4e4",
-      "offset": 342364
+      "offset": 342365
     },
     {
       "length": 10693,
       "name": "AndroidX localbroadcastmanager library",
       "noticeSha256": "91829f267b9311ecc8b9996c372c0c22e67d1a994aeec2db94bbb45a5105c40c",
-      "offset": 363757
+      "offset": 363758
     },
     {
       "length": 10695,
       "name": "AndroidX media base library",
       "noticeSha256": "8a9d1ae85f7e294183b3df28502f8c511eb96481937ba71fca535f32fa80f4e4",
-      "offset": 342364
+      "offset": 342365
     },
     {
       "length": 10695,
       "name": "AndroidX print library",
       "noticeSha256": "8a9d1ae85f7e294183b3df28502f8c511eb96481937ba71fca535f32fa80f4e4",
-      "offset": 342364
+      "offset": 342365
     },
     {
       "length": 10689,
       "name": "AndroidX savedstate library",
       "noticeSha256": "d01ce9a0672de1a119755c19a79cfbe9b2916379fa0e67187fa413484e4e624d",
-      "offset": 374452
+      "offset": 374453
     },
     {
       "length": 10695,
       "name": "AndroidX swiperefreshlayout library",
       "noticeSha256": "8a9d1ae85f7e294183b3df28502f8c511eb96481937ba71fca535f32fa80f4e4",
-      "offset": 342364
+      "offset": 342365
     },
     {
       "length": 10695,
       "name": "AndroidX versionedparcelable library",
       "noticeSha256": "3c5edbd56525e321a53eda1a587f1ca1c78b30481fb8abd2ba93f9c610f861ba",
-      "offset": 385143
+      "offset": 385144
     },
     {
       "length": 10695,
       "name": "AndroidX viewpager library",
       "noticeSha256": "8a9d1ae85f7e294183b3df28502f8c511eb96481937ba71fca535f32fa80f4e4",
-      "offset": 342364
+      "offset": 342365
     },
     {
       "length": 11357,
       "name": "Firebase",
       "noticeSha256": "4b6062c11fef70a520223b3c3c6591e6b00fa09fdc6fb0f35e486b41e78fe11f",
-      "offset": 395840
+      "offset": 395841
     },
     {
       "length": 11419,
       "name": "TensorFlow Lite Support",
       "noticeSha256": "6c3f6ee3067cb3d74ad4e8f2e39da8ffcd4560391a4a228a9a8c3bf872e89a32",
-      "offset": 407199
+      "offset": 407200
     },
     {
       "length": 47,
       "name": "play-services-stats",
       "noticeSha256": "e3f505f692c1334ec5b11a95faaaa72477e4c4bc1e0ea10830a5ffdb04bd27d7",
-      "offset": 11547
+      "offset": 11548
     },
     {
       "length": 21000,
       "name": "ICU4C",
       "noticeSha256": "4eac19453ddf356478db3be6b101a6d872d0046cdc8222df1ff5c997dd4b9fbe",
-      "offset": 418620
+      "offset": 418621
     },
     {
       "length": 1732,
       "name": "Protobuf Nano",
       "noticeSha256": "31c7505c31a1ea8557a5362cd69946dc9f5ee80fac8fa1d1b1531c08530497b0",
-      "offset": 439622
+      "offset": 439623
     },
     {
       "length": 680,
       "name": "STL",
       "noticeSha256": "c90e5f7087454491c222670ecf8ba419dd9e0a8ecbd43bc83926bce0bce05741",
-      "offset": 441356
+      "offset": 441357
     },
     {
       "length": 731,
       "name": "UTF",
       "noticeSha256": "fb80673636bcfc1b5dc9e9953224e7a38d373edc9b7253a21814f67a2a22939f",
-      "offset": 442038
+      "offset": 442039
     },
     {
       "length": 11342,
       "name": "flatbuffers",
       "noticeSha256": "7ec9661a8afafab1eee3523d6f1a193eff76314a5ab10b4ce96aefd87621b0c3",
-      "offset": 442771
+      "offset": 442772
     },
     {
       "length": 11358,
       "name": "safeparcel",
       "noticeSha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
-      "offset": 25947
+      "offset": 25948
     },
     {
       "length": 47,
       "name": "play-services-tasks",
       "noticeSha256": "e3f505f692c1334ec5b11a95faaaa72477e4c4bc1e0ea10830a5ffdb04bd27d7",
-      "offset": 11547
+      "offset": 11548
     },
     {
       "length": 47,
       "name": "googleid",
       "noticeSha256": "e3f505f692c1334ec5b11a95faaaa72477e4c4bc1e0ea10830a5ffdb04bd27d7",
-      "offset": 11547
+      "offset": 11548
     },
     {
       "length": 10695,
       "name": "AndroidX collection jvm library",
       "noticeSha256": "8a9d1ae85f7e294183b3df28502f8c511eb96481937ba71fca535f32fa80f4e4",
-      "offset": 342364
+      "offset": 342365
     },
     {
       "length": 10692,
       "name": "AndroidX credentials library",
       "noticeSha256": "4b8b44f689ed7e822a2930b5967d6dee4f94975ebb76a00a6faa71b90e0fc63f",
-      "offset": 454115
+      "offset": 454116
     },
     {
       "length": 47,
       "name": "image",
       "noticeSha256": "e3f505f692c1334ec5b11a95faaaa72477e4c4bc1e0ea10830a5ffdb04bd27d7",
-      "offset": 11547
+      "offset": 11548
     },
     {
       "length": 10694,
       "name": "AndroidX architecture core library",
       "noticeSha256": "2f1aa69014fbe0b673f7ed0a26efc04c605787a42c7f3acd0a452ee0e84254b3",
-      "offset": 304256
+      "offset": 304257
     },
     {
       "length": 10694,
       "name": "AndroidX architecture library",
       "noticeSha256": "2f1aa69014fbe0b673f7ed0a26efc04c605787a42c7f3acd0a452ee0e84254b3",
-      "offset": 304256
+      "offset": 304257
     },
     {
       "length": 52,
       "name": "core-common",
       "noticeSha256": "399b6fd6585f48c42ea11271314123bff08fc4ad8e75eacece9374d0a31a832c",
-      "offset": 464809
+      "offset": 464810
     },
     {
       "length": 11357,
       "name": "Jakarta Inject",
       "noticeSha256": "58d1e17ffe5109a7ae296caafcadfdbe6a7d176f0bc4ab01e12a689b0499d8bd",
-      "offset": 464863
+      "offset": 464864
     },
     {
       "length": 1360,
       "name": "Play Core Software Development Kit",
       "noticeSha256": "62eefe4377b4ed9a123f2ec95399acaf9ac1edf99b38c74c471d5db38632464d",
-      "offset": 476222
+      "offset": 476223
     },
     {
       "length": 12521,
       "name": "archive_patcher",
       "noticeSha256": "9e69074ca08973d9129cfd12658e6bc6cc502edb3bb99824db836726cb11a86f",
-      "offset": 477584
+      "offset": 477585
     },
     {
       "length": 64,
       "name": "integrity",
       "noticeSha256": "3127f64803ff1f427c69006e1186c2ba7279db728de152690b8df8ae97da08a1",
-      "offset": 490107
+      "offset": 490108
     },
     {
       "length": 1384,
       "name": "Play Integrity API Terms of Service",
       "noticeSha256": "af887da609cd24660f3ffca8b186d7a6ea8687632a0f7dba8b9acd626e9bd0d6",
-      "offset": 490173
+      "offset": 490174
     },
     {
       "length": 9217,
       "name": "p2putils",
       "noticeSha256": "299d8188dce0db22d8e31cb86dc3c15e4263bf870a1cf99ecce37fe91415498d",
-      "offset": 491559
+      "offset": 491560
     },
     {
       "length": 47,
       "name": "recaptcha",
       "noticeSha256": "e3f505f692c1334ec5b11a95faaaa72477e4c4bc1e0ea10830a5ffdb04bd27d7",
-      "offset": 11547
+      "offset": 11548
     },
     {
       "length": 10694,
       "name": "AndroidX lifecycle extensions library",
       "noticeSha256": "2f1aa69014fbe0b673f7ed0a26efc04c605787a42c7f3acd0a452ee0e84254b3",
-      "offset": 304256
+      "offset": 304257
     },
     {
       "length": 10694,
       "name": "AndroidX lifecycle livedata library",
       "noticeSha256": "2f1aa69014fbe0b673f7ed0a26efc04c605787a42c7f3acd0a452ee0e84254b3",
-      "offset": 304256
+      "offset": 304257
     },
     {
       "length": 10694,
       "name": "AndroidX lifecycle service library",
       "noticeSha256": "2f1aa69014fbe0b673f7ed0a26efc04c605787a42c7f3acd0a452ee0e84254b3",
-      "offset": 304256
+      "offset": 304257
     },
     {
       "length": 10695,
       "name": "AndroidX security crypto library",
       "noticeSha256": "8a9d1ae85f7e294183b3df28502f8c511eb96481937ba71fca535f32fa80f4e4",
-      "offset": 342364
+      "offset": 342365
     },
     {
       "length": 11358,
       "name": "Conscrypt",
       "noticeSha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
-      "offset": 25947
+      "offset": 25948
     },
     {
       "length": 11358,
       "name": "Gson",
       "noticeSha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
-      "offset": 25947
+      "offset": 25948
     },
     {
       "length": 11359,
       "name": "HighwayHash",
       "noticeSha256": "8c6db340475136df3c1201d458fa5755698eace76e510471ecc9d857d6083dac",
-      "offset": 500778
+      "offset": 500779
     },
     {
       "length": 11358,
       "name": "android_build",
       "noticeSha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
-      "offset": 25947
+      "offset": 25948
     },
     {
       "length": 46,
@@ -3110,49 +3068,49 @@
       "length": 47,
       "name": "firebase-auth",
       "noticeSha256": "e3f505f692c1334ec5b11a95faaaa72477e4c4bc1e0ea10830a5ffdb04bd27d7",
-      "offset": 11547
+      "offset": 11548
     },
     {
       "length": 328861,
       "name": "Cronet",
       "noticeSha256": "2f734af53ccc3b6071d0958e63a140fc85556461ff67e11eb68101c36c4cf556",
-      "offset": 512139
+      "offset": 512140
     },
     {
       "length": 1732,
       "name": "Protocol Buffers",
       "noticeSha256": "31c7505c31a1ea8557a5362cd69946dc9f5ee80fac8fa1d1b1531c08530497b0",
-      "offset": 439622
+      "offset": 439623
     },
     {
       "length": 1479,
       "name": "Protocol Buffers for Go v2",
       "noticeSha256": "4835612df0098ca95f8e7d9e3bffcb02358d435dbb38057c844c99d7f725eb20",
-      "offset": 841002
+      "offset": 841003
     },
     {
       "length": 1036,
       "name": "checker_framework_util",
       "noticeSha256": "edad15df7d01516356d84c8a887598e2051e8b55d520ac19085d9afad89941bb",
-      "offset": 842483
+      "offset": 842484
     },
     {
       "length": 1732,
       "name": "kotlin",
       "noticeSha256": "6e5e117324afd944dcf67f36cf329843bc1a92229a8cd9bb573d7a83130fea7d",
-      "offset": 259096
+      "offset": 259097
     },
     {
       "length": 11357,
       "name": "mobiledatadownload",
       "noticeSha256": "58d1e17ffe5109a7ae296caafcadfdbe6a7d176f0bc4ab01e12a689b0499d8bd",
-      "offset": 464863
+      "offset": 464864
     },
     {
       "length": 47,
       "name": "firebase-auth-interop",
       "noticeSha256": "e3f505f692c1334ec5b11a95faaaa72477e4c4bc1e0ea10830a5ffdb04bd27d7",
-      "offset": 11547
+      "offset": 11548
     },
     {
       "length": 46,
@@ -3200,31 +3158,31 @@
       "length": 11361,
       "name": "Apache-2.0",
       "noticeSha256": "e8076546f4222d1eb96f7c60dd5a450360d7aeb51d31153eda7c9e6e008a541f",
-      "offset": 184
+      "offset": 185
     },
     {
       "length": 47,
       "name": "firebase-iid",
       "noticeSha256": "e3f505f692c1334ec5b11a95faaaa72477e4c4bc1e0ea10830a5ffdb04bd27d7",
-      "offset": 11547
+      "offset": 11548
     },
     {
       "length": 16013,
       "name": "Android SDK",
       "noticeSha256": "29714c52481af51064f56bca49bfbbec4d1004eadfc82415fc35bd200bee4e3c",
-      "offset": 843521
+      "offset": 843522
     },
     {
       "length": 10695,
       "name": "AndroidX slidingpanelayout library",
       "noticeSha256": "8a9d1ae85f7e294183b3df28502f8c511eb96481937ba71fca535f32fa80f4e4",
-      "offset": 342364
+      "offset": 342365
     },
     {
       "length": 47,
       "name": "firebase-iid-interop",
       "noticeSha256": "e3f505f692c1334ec5b11a95faaaa72477e4c4bc1e0ea10830a5ffdb04bd27d7",
-      "offset": 11547
+      "offset": 11548
     },
     {
       "length": 46,
@@ -3248,19 +3206,19 @@
       "length": 42,
       "name": "common",
       "noticeSha256": "b3267b2c808d2fc217dc404a125168edbc154b4e6b2ae7e6442f59e6db327646",
-      "offset": 326310
+      "offset": 326311
     },
     {
       "length": 42,
       "name": "vision-common",
       "noticeSha256": "b3267b2c808d2fc217dc404a125168edbc154b4e6b2ae7e6442f59e6db327646",
-      "offset": 326310
+      "offset": 326311
     },
     {
       "length": 42,
       "name": "vision-interfaces",
       "noticeSha256": "b3267b2c808d2fc217dc404a125168edbc154b4e6b2ae7e6442f59e6db327646",
-      "offset": 326310
+      "offset": 326311
     },
     {
       "length": 47,
@@ -3326,19 +3284,19 @@
       "length": 44,
       "name": "youtubedl-android",
       "noticeSha256": "1b79220a341bece2927be4c892333ab7153186fa81b1ca3f50028045b6ab8c26",
-      "offset": 859536
+      "offset": 859537
     },
     {
       "length": 44,
       "name": "youtubedl-android",
       "noticeSha256": "1b79220a341bece2927be4c892333ab7153186fa81b1ca3f50028045b6ab8c26",
-      "offset": 859536
+      "offset": 859537
     },
     {
       "length": 44,
       "name": "youtubedl-android",
       "noticeSha256": "1b79220a341bece2927be4c892333ab7153186fa81b1ca3f50028045b6ab8c26",
-      "offset": 859536
+      "offset": 859537
     },
     {
       "length": 46,
@@ -3422,7 +3380,7 @@
       "length": 25,
       "name": "jsoup Java HTML Parser",
       "noticeSha256": "29b6f0c083155ceebec1ec130d7b7bc36e525f8bbbc5fce12f577c39fa40d49d",
-      "offset": 859582
+      "offset": 859583
     },
     {
       "length": 46,
@@ -3432,21 +3390,21 @@
     },
     {
       "length": 40,
-      "name": "org.mozilla:rhino",
+      "name": "rhino",
       "noticeSha256": "c0e4d7c997ac8120d6ea3a8d2fd2560b720cbb3bea7df5bc925cb6f47bb35b3a",
-      "offset": 859609
+      "offset": 859610
     },
     {
       "length": 40,
-      "name": "org.mozilla:rhino-engine",
+      "name": "rhino-engine",
       "noticeSha256": "c0e4d7c997ac8120d6ea3a8d2fd2560b720cbb3bea7df5bc925cb6f47bb35b3a",
-      "offset": 859609
+      "offset": 859610
     },
     {
       "length": 36,
       "name": "reactive-streams",
       "noticeSha256": "cdfe7a2d1de3c3b1bf7dd515128ca856b7ada6953d3ae8a5d9d091f1d934d2f9",
-      "offset": 859651
+      "offset": 859652
     }
   ],
   "schemaVersion": 1,

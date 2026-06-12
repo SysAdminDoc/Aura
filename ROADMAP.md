@@ -37,7 +37,7 @@ If you're adding a feature and the source isn't in the Appendix, do not add it. 
 
 ## State of the Repo (snapshot, 2026-06-04)
 
-- Kotlin 2.1.0 / Compose / Material 3, Hilt 2.53.1, Room 2.6.1 (v14), Retrofit 2.11.0, OkHttp 4.12.0, Media3 1.5.1, Coil 2.7.0, WorkManager 2.10.0, Glance 1.1.1, NewPipe Extractor 0.24.8, youtubedl-android 0.18.1, **ML Kit `segmentation-subject:16.0.0-beta1`** (N-3 migrated 2026-05-16), **Firebase BoM 34.13.0** (N-2 shipped 2026-05-16), `play-services-base:18.5.0` (ModuleInstallClient for unbundled segmenter).
+- Kotlin 2.1.0 / Compose / Material 3, Hilt 2.53.1, Room 2.7.2 (v14), Retrofit 3.0.0, OkHttp 5.3.2, Media3 1.5.1, Coil 2.7.0, WorkManager 2.11.2, Glance 1.1.1, NewPipe Extractor 0.26.3, youtubedl-android 0.18.1, **ML Kit `segmentation-subject:16.0.0-beta1`** (N-3 migrated 2026-05-16), **Firebase BoM 34.13.0** (N-2 shipped 2026-05-16), `play-services-base:18.5.0` (ModuleInstallClient for unbundled segmenter).
 - 130 Kotlin files in `app/src/main/java/com/freevibe/`, 50 unit-test files, scanner not rerun in Cycle 1, 1 design-note TODO resolved (`VoteRepository.kt` admin auth → Custom Claims).
 - Shipped via implementation passes since 2026-04-25 (latest code release tag: `v6.31.1`, Android 8-12 YouTube/Sounds crash fixed with core library desugaring). See Implementation Log.
 - Distribution: GitHub Releases + Obtainium manifest; signed via `freevibe.jks`. CI workflow `.github/workflows/verify.yml` runs assembleDebug/testDebugUnitTest/lintDebug on push/PR. `.github/workflows/release.yml` now builds signed `assembleRelease` APKs from GitHub secrets, rejects debuggable artifacts, runs `apksigner verify --print-certs`, publishes SHA-256 checksums/release notes, creates GitHub artifact attestations, and records Android developer verification status. Cycle 2 decided Aura is full-only for GitHub/Obtainium today, with IzzyOnDroid as the realistic near-term app-store target; F-Droid mainline remains blocked until a real FOSS flavor removes/isolates Firebase, Google Services, and Play Services ML Kit. Dependency Review, SARIF-only OpenSSF Scorecard, release metadata consistency, and checked SBOM readiness workflows now cover PR/scheduled/release supply-chain checks. `docs/distribution/developer-verification.md` tracks the owner-only ADC/PDC package-registration path and the branch-protection required-check owner action.
@@ -3274,13 +3274,6 @@ Start Cycle 67 with deletion retention/tombstone policy, block-user policy, a re
 Items below are sourced from exhaustive external research against competitors, platform APIs, dependency changelogs, security advisories, and community signal. Each is traceable to evidence in `RESEARCH.md`. Do not duplicate items that already exist in the Researcher Queue or Now/Next/Later tiers above -- these are net-new.
 
 ### P0 -- Root-cause fixes and trust
-
-- [ ] P0 -- **Bump NewPipe Extractor from 0.24.8 to 0.26.2+**
-  Why: NewPipe Extractor 0.24.8 is 18+ months stale. YouTube regularly breaks older extractors. v0.26.x fixes SABR-only player response crashes, comment extraction, and live stream display. Staleness is the top recurring breakage risk for Sounds and Video tabs.
-  Evidence: NewPipe Extractor releases; CLAUDE.md pin comment at v0.24.8; v6.31.1 crash fix for Android 8-12 was a NewPipe-related backport issue.
-  Touches: `app/build.gradle.kts:224`, `YouTubeRepository.kt`, `DownloaderImpl` stream lifecycle re-verify, `SoundsViewModel.kt`, `VideoWallpapersViewModel.kt`.
-  Acceptance: NewPipe Extractor bumped to latest stable; YouTube search, stream resolution, and Sounds tab verified on emulator; stream-leak re-verify (per round-19 audit pattern) documented.
-  Complexity: M
 
 ### P1 -- Accessibility, localization, and platform parity
 

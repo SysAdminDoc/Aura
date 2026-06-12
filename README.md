@@ -114,15 +114,15 @@ Firebase RTDB (Community Voting + Uploads + Admin Moderation)
 |-----------|---------|
 | UI | Jetpack Compose + Material 3 |
 | DI | Hilt 2.53.1 |
-| Database | Room 2.6.1 |
-| Network | Retrofit 2.11.0 + OkHttp |
+| Database | Room 2.7.2 |
+| Network | Retrofit 3.0.0 + OkHttp 5.3.2 |
 | JSON | Moshi + KSP codegen |
 | Images | Coil 2.7.0 |
 | Audio/Video | Media3 ExoPlayer |
 | ML | ML Kit Selfie Segmentation |
 | YouTube Search | NewPipe Extractor |
 | YouTube Streams | yt-dlp (youtubedl-android 0.18.1) |
-| Scheduling | WorkManager 2.10.0 |
+| Scheduling | WorkManager 2.11.2 |
 | Widget | Glance 1.1.1 |
 | Performance | Baseline Profile + Macrobenchmark 1.4.1 |
 | Min SDK | 26 (Android 8.0) |
