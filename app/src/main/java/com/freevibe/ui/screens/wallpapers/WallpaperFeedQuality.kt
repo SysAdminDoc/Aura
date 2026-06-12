@@ -93,6 +93,21 @@ internal fun Wallpaper.qualityHints(): WallpaperQualityHints {
     )
 }
 
+internal fun Wallpaper.cardAccessibilitySummary(
+    hints: WallpaperQualityHints = qualityHints(),
+    isFavorite: Boolean,
+    voteCount: Int,
+): String = buildList {
+    add("${source.readableLabel()} wallpaper")
+    if (category.isNotBlank()) add(category)
+    add(hints.resolutionLabel)
+    add(hints.orientationLabel)
+    if (hints.isAmoled) add("AMOLED friendly")
+    if (hints.isIconSafe) add("icon-safe")
+    if (voteCount > 0) add("$voteCount upvotes")
+    add(if (isFavorite) "saved to favorites" else "not saved")
+}.joinToString(", ")
+
 internal fun Wallpaper.matchesDiscoverFilter(filter: WallpaperDiscoverFilter): Boolean = when (filter) {
     WallpaperDiscoverFilter.FOR_YOU -> true
     WallpaperDiscoverFilter.AMOLED -> isAmoledFriendly()
@@ -222,6 +237,11 @@ private fun String.toPixelHint(): Long {
 }
 
 private fun String.normalizeFeedTerm(): String = lowercase().trim()
+
+private fun ContentSource.readableLabel(): String =
+    name.split("_").joinToString(" ") { part ->
+        part.lowercase().replaceFirstChar { char -> char.uppercase() }
+    }
 
 private val AMOLED_TERMS = setOf(
     "amoled", "oled", "black", "dark", "night", "midnight", "shadow", "space", "neon",

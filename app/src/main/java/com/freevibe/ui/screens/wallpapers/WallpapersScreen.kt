@@ -34,6 +34,10 @@ import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.semantics.CustomAccessibilityAction
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.customActions
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -1110,6 +1114,24 @@ private fun WallpaperCard(
         if (hints.isAmoled) add("AMOLED")
         if (hints.isIconSafe) add("Icon-safe")
     }
+    val openWallpaperLabel = "Open wallpaper details"
+    val applyWallpaperLabel = "Show wallpaper apply actions"
+    val favoriteWallpaperLabel = if (isFavorite) "Remove wallpaper from favorites" else "Add wallpaper to favorites"
+    val cardActions = buildList {
+        add(CustomAccessibilityAction(openWallpaperLabel) { onClick(); true })
+        onLongPress?.let { showActions ->
+            add(CustomAccessibilityAction(applyWallpaperLabel) { showActions(); true })
+        }
+        onFavoriteClick?.let { toggleFavorite ->
+            add(CustomAccessibilityAction(favoriteWallpaperLabel) { toggleFavorite(); true })
+        }
+        onUpvote?.let { upvote ->
+            add(CustomAccessibilityAction("Upvote wallpaper") { upvote(); true })
+        }
+        onDownvote?.let { downvote ->
+            add(CustomAccessibilityAction("Hide wallpaper") { downvote(); true })
+        }
+    }
 
     Card(
         modifier = Modifier
@@ -1117,8 +1139,18 @@ private fun WallpaperCard(
             .clip(RoundedCornerShape(8.dp))
             .combinedClickable(
                 onClick = onClick,
+                onClickLabel = openWallpaperLabel,
                 onLongClick = onLongPress,
-            ),
+                onLongClickLabel = if (onLongPress != null) applyWallpaperLabel else null,
+            )
+            .semantics(mergeDescendants = true) {
+                contentDescription = wallpaper.cardAccessibilitySummary(
+                    hints = hints,
+                    isFavorite = isFavorite,
+                    voteCount = voteCount,
+                )
+                customActions = cardActions
+            },
         shape = RoundedCornerShape(8.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
@@ -1127,7 +1159,7 @@ private fun WallpaperCard(
         Box {
             SubcomposeAsyncImage(
                 model = wallpaper.thumbnailUrl,
-                contentDescription = "Wallpaper",
+                contentDescription = null,
                 contentScale = ContentScale.Crop,
                 modifier = Modifier
                     .fillMaxWidth()

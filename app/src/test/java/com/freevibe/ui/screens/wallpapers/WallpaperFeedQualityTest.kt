@@ -85,6 +85,29 @@ class WallpaperFeedQualityTest {
     }
 
     @Test
+    fun `wallpaper card summary gives screen readers useful state`() {
+        val wallpaper = wallpaper(
+            id = "community_pick",
+            source = ContentSource.COMMUNITY,
+            url = "https://example.com/community.jpg",
+            width = 1440,
+            height = 3200,
+            tags = listOf("amoled", "minimal"),
+            colors = listOf("#000000"),
+        ).copy(category = "Minimal")
+
+        val summary = wallpaper.cardAccessibilitySummary(
+            isFavorite = true,
+            voteCount = 12,
+        )
+
+        assertEquals(
+            "Community wallpaper, Minimal, QHD, Portrait, AMOLED friendly, icon-safe, 12 upvotes, saved to favorites",
+            summary,
+        )
+    }
+
+    @Test
     fun `quality floor drops low signal wallpaper when stronger set exists`() {
         val strongCandidates = listOf(
             wallpaper(
