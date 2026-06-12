@@ -148,8 +148,9 @@ fun SoundDetailScreen(
     val canDownloadSound = !sourceUnavailable && licenseCapabilities.canUse(SoundAction.DOWNLOAD)
     val canEditSound = !sourceUnavailable && licenseCapabilities.canUse(SoundAction.EDIT)
     val canReportSound = s.source != ContentSource.LOCAL && s.source != ContentSource.BUNDLED
-    val canDeleteUpload by produceState(false, s.stableKey()) {
-        value = viewModel.canDeleteCommunitySound(s)
+    var canDeleteUpload by remember(s.stableKey()) { mutableStateOf(false) }
+    LaunchedEffect(s.stableKey()) {
+        canDeleteUpload = viewModel.canDeleteCommunitySound(s)
     }
     val canBlockCreator = viewModel.canBlockCommunitySound(s) && !canDeleteUpload
     val policyMessages = remember(licenseCapabilities) { soundPolicyMessages(licenseCapabilities) }

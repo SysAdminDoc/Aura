@@ -229,8 +229,9 @@ fun WallpaperDetailScreen(
     var showDetailsPanel by remember { mutableStateOf(false) }
     val isGeneratedWallpaper = wp.source == ContentSource.AI_GENERATED
     val canReportWallpaper = wp.source != ContentSource.LOCAL
-    val canDeleteUpload by produceState(false, wp.stableKey(), communityProviderEnabled) {
-        value = if (communityProviderEnabled) viewModel.canDeleteCommunityWallpaper(wp) else false
+    var canDeleteUpload by remember(wp.stableKey(), communityProviderEnabled) { mutableStateOf(false) }
+    LaunchedEffect(wp.stableKey(), communityProviderEnabled) {
+        canDeleteUpload = if (communityProviderEnabled) viewModel.canDeleteCommunityWallpaper(wp) else false
     }
     val canBlockCreator = viewModel.canBlockCommunityWallpaper(wp) && !canDeleteUpload
     LaunchedEffect(wp.stableKey()) {
