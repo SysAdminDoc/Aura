@@ -3396,6 +3396,7 @@ Net-new items from the second 2026-06-09 research pass (live provider probes, ba
   Evidence: androidx Room release notes; Room 3.0 announcement blog; `gradle/libs.versions.toml` (room 2.6.1); Cycle 16 whole-graph migration-test item provides the safety harness.
   Touches: `gradle/libs.versions.toml`, `app/schemas/` (export verification), DAOs if codegen surfaces nullability strictness, `FreeVibeDatabase`, Cycle-16 migration test gate.
   Acceptance: all 14 schema versions still migrate v1→v14 under the whole-graph migration test; KSP processing succeeds with Kotlin codegen; no behavior change in favorites/downloads/collections flows; Room 3.0 explicitly deferred with a note.
+  Blocked 2026-06-12: Room 2.8.4 KSP failed locally with `AbstractMethodError` in Room's kotlinx-serialization bundle serializer under Kotlin 2.1.0/KSP 2.1.0-1.0.29. Aura is on Room 2.7.2 now to satisfy WorkManager 2.11.2 without taking the larger Kotlin/KSP/toolchain upgrade.
   Complexity: M
 
 ### P2 — Replacement sources and quick wins
