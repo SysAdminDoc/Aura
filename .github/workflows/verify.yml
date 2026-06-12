@@ -238,6 +238,9 @@ jobs:
       - name: On-device AI wallpaper decision gate
         run: python3 tools/on_device_ai_decision_check.py --policy docs/ai/on-device-wallpaper-decision.json --repo-root .
 
+      - name: Compose hardcoded string baseline
+        run: python3 tools/compose_hardcoded_string_check.py --baseline docs/localization/hardcoded-string-baseline.json --repo-root .
+
       - name: Backend tool unit tests
         run: python3 -m unittest discover -s test/tools -p '*_test.py'
 

@@ -3284,13 +3284,6 @@ Items below are sourced from exhaustive external research against competitors, p
   Acceptance: Every interactive icon has an action label; play/pause/vote/apply states have `stateDescription`; waveform/progress/timeline controls expose progress semantics; decorative icons use `null` content description; card secondary actions use `customActions` to reduce TalkBack traversal noise.
   Complexity: M
 
-- [ ] P1 -- **Hardcoded-string extraction scanner and CI gate**
-  Why: ~300 hardcoded English strings in Compose screens. No `strings.xml` usage for user-visible text. No CI check to prevent new hardcoded strings. This blocks all localization work.
-  Evidence: Cycle 5 research counted ~300 patterns; only `values/` resource directory exists; no `values-*/` locale directories.
-  Touches: All 16+ screen files, `res/values/strings.xml` (new), `tools/` scanner, `.github/workflows/verify.yml`.
-  Acceptance: A lint or script check fails CI when new hardcoded user-visible strings appear in Kotlin (excluding test/debug/provider literals); existing strings have a migration plan.
-  Complexity: L
-
 - [ ] P1 -- **Compose UI screenshot tests with Paparazzi or Roborazzi**
   Why: 50 unit-test files but zero Compose screenshot tests. Theme changes (AMOLED/light/Material You), accessibility scaling, and RTL layout regressions are invisible without visual regression testing. Paparazzi runs on JVM without an emulator.
   Evidence: No `paparazzi` or `roborazzi` dependency found; U-13 roadmap item notes this gap; Compose Compiler 2.x changes screenshot stability.
