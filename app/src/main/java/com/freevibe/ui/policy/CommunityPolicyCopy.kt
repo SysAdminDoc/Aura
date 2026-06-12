@@ -27,7 +27,7 @@ data class CommunityUploadPolicyCopy(
 fun communityUploadPolicyCopy(kind: CommunityUploadPolicyKind): CommunityUploadPolicyCopy =
     CommunityUploadPolicyCopy(
         publicTitle = "Public community listing",
-        publicBody = "This ${kind.displayName} becomes public after upload. Its selected license, source link, uploader label, and tags are stored with the listing.",
+        publicBody = "This ${kind.displayName} becomes public after upload. Its category, selected license, source link, uploader label, tags, public download URL, and sanitized file name are stored with the listing.",
         takedownBody = "Rights holders can report the listing. Confirmed rights reports can hide or delete the ${kind.publicListingName} and its ${kind.uploadedFileName}.",
         attestation = "I own or have rights to share this ${kind.displayName} under the selected license.",
     )

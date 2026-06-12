@@ -13,6 +13,8 @@ class CommunityPolicyCopyTest {
 
         assertTrue(soundCopy.publicBody.contains("becomes public"))
         assertTrue(soundCopy.publicBody.contains("license"))
+        assertTrue(soundCopy.publicBody.contains("public download URL"))
+        assertTrue(soundCopy.publicBody.contains("sanitized file name"))
         assertTrue(soundCopy.takedownBody.contains("hide or delete"))
         assertTrue(soundCopy.takedownBody.contains("uploaded audio file"))
         assertTrue(wallpaperCopy.publicBody.contains("becomes public"))
