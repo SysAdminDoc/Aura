@@ -3495,15 +3495,6 @@ Net-new items from the fourth research pass (2026-06-10). Focused on: transitive
 
 This section records net-new parity work from the Zedge official/web/app pass. The accepted direction is local/device-first. Zedge AI generation, accounts, follower identity, credits, subscriptions, reward ads, premium gates, offer notifications, and source scraping are anti-goals; they are recorded only to prevent accidental roadmap drift.
 
-### P0 -- Local-first trust guardrails
-
-- [ ] P0 — **Default local-first mode and quarantine external-service surfaces**
-  Why: On-device Zedge 9.24.2 puts AI Generator, account/login, credits, offers, and premium mechanics in primary navigation. Aura's installed 6.21.0 snapshot still exposes a primary "Generate" entry, while the repo includes Stability AI, Firebase community, YouTube extraction, and other optional network surfaces. The user goal is local personalization without accounts or third-party services.
-  Aura status: partial / anti-parity. Core browse/apply workflows exist, but external generation/community surfaces are too prominent for the target mode.
-  Touches: `Screen.kt`, `FreeVibeRoot.kt`, `WallpapersScreen.kt`, `AiWallpaperScreen.kt`, `SettingsScreen.kt`, `PreferencesManager.kt`, onboarding/navigation tests.
-  Acceptance: a fresh install defaults to local-first navigation with no primary Generate tab/button, account prompt, credits, premium, or cloud-community prompt in core browse/apply flows; optional external-service features remain available only under Settings > Advanced with explicit "external service" labeling; local wallpapers, videos, sounds, favorites, downloads, and settings remain usable offline; tests cover nav visibility and the local-first toggle.
-  Complexity: M
-
 ### P1 -- Core local parity gaps
 
 - [ ] P1 — **Unified local Library hub for downloads, favorites, collections, imports, and recent activity**
