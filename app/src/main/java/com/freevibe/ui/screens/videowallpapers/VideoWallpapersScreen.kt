@@ -46,10 +46,12 @@ import androidx.media3.exoplayer.ExoPlayer
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.freevibe.R
 import com.freevibe.data.repository.matchesHiddenIds
+import com.freevibe.service.MAX_VIDEO_WALLPAPER_BYTES
 import com.freevibe.service.VIDEO_WALLPAPER_SCALE_MODE_FIT
 import com.freevibe.service.VIDEO_WALLPAPER_SCALE_MODE_ZOOM
 import com.freevibe.service.VideoWallpaperSelectionResult
 import com.freevibe.service.VideoWallpaperService
+import com.freevibe.service.copyStreamCapped
 import com.freevibe.service.normalizeVideoWallpaperScaleMode
 import com.freevibe.service.videoWallpaperMimeTypes
 import com.freevibe.ui.components.AuraStateAction
@@ -127,7 +129,12 @@ internal suspend fun exportVideoToGallery(context: Context, file: File): Uri? = 
         val uri = context.contentResolver.insert(android.provider.MediaStore.Video.Media.EXTERNAL_CONTENT_URI, values)
         uri?.let { destUri ->
             context.contentResolver.openOutputStream(destUri)?.use { out ->
-                file.inputStream().use { input -> input.copyTo(out) }
+                if (file.length() > MAX_VIDEO_WALLPAPER_BYTES) {
+                    throw java.io.IOException("Video exceeds size limit")
+                }
+                file.inputStream().use { input ->
+                    copyStreamCapped(input, out, MAX_VIDEO_WALLPAPER_BYTES)
+                }
             }
         }
         uri

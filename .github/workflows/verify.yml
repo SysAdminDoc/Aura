@@ -241,6 +241,9 @@ jobs:
       - name: Compose hardcoded string baseline
         run: python3 tools/compose_hardcoded_string_check.py --baseline docs/localization/hardcoded-string-baseline.json --repo-root .
 
+      - name: Media ingestion guard
+        run: python3 tools/media_ingestion_check.py --repo-root .
+
       - name: Backend tool unit tests
         run: python3 -m unittest discover -s test/tools -p '*_test.py'
 

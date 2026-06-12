@@ -10,6 +10,7 @@ import com.freevibe.data.model.ContentType
 import com.freevibe.data.model.Sound
 import com.freevibe.data.model.stableKey
 import com.freevibe.service.AudioTrimmer
+import com.freevibe.service.MediaIngestionLimitExceeded
 import com.freevibe.service.SoundUrlResolver
 import com.freevibe.service.SoundApplier
 import com.freevibe.service.copyStreamCapped
@@ -395,26 +396,17 @@ class SoundEditorViewModel @Inject constructor(
                     }
                     body.byteStream().use { input ->
                         FileOutputStream(tmpFile).use { output ->
-                            var copied = 0L
-                            val buf = ByteArray(64 * 1024)
-                            while (true) {
-                                val n = input.read(buf)
-                                if (n <= 0) break
-                                copied += n
-                                if (copied > MAX_EDIT_DOWNLOAD_BYTES) {
-                                    throw Exception("Audio file too large (${copied / (1024 * 1024)} MB)")
-                                }
-                                output.write(buf, 0, n)
+                            try {
+                                copyStreamCapped(input, output, MAX_EDIT_DOWNLOAD_BYTES)
+                            } catch (e: MediaIngestionLimitExceeded) {
+                                throw Exception("Audio file too large (${MAX_EDIT_DOWNLOAD_BYTES / (1024 * 1024)} MB)", e)
                             }
                         }
                     }
                 }
                 if (tmpFile.length() > 0) {
                     if (!tmpFile.renameTo(file)) {
-                        if (!tmpFile.copyRecursively(file, overwrite = true)) {
-                            tmpFile.delete()
-                            throw Exception("Failed to finalize downloaded audio file")
-                        }
+                        tmpFile.copyTo(file, overwrite = true)
                         tmpFile.delete()
                     }
                 } else {

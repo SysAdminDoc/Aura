@@ -332,13 +332,6 @@ Append-only Cycle 5 handoff. Every item below is source-backed in `docs/research
 
 Append-only Cycle 6 handoff. Every item below is source-backed in `docs/research/cycle-6-2026-06-04.md`; merge into the existing Now/Next/Later item named in `Touches` when implementation starts.
 
-- [ ] 🤖 🔬 **P0 — Unified media-ingestion policy and capped-copy helpers**
-  - Why: Aura downloads and imports images, audio, video, generated assets, and community media through several paths with different byte caps and validation behavior.
-  - Evidence: hardened `DownloadManager`/`WallpaperApplier`/`OfflineFavoritesManager` paths; raw `copyTo()` in `VideoWallpapersViewModel`, `VideoWallpaperStorage`, `AiWallpaperRepository`; `body.bytes()` call sites in editor/color/dual/daily paths.
-  - Touches: media ingestion helpers, download/apply/editor/video repositories, tests, `docs/security/media-ingestion.md`.
-  - Acceptance: every remote/local media path declares allowed schemes, max bytes, temp-file behavior, cleanup, MIME/content validation, and user-facing error class; no direct `body.bytes()` or unbounded `copyTo()` remains on untrusted input.
-  - Verify: unit tests for oversized advertised, oversized chunked, empty, truncated, wrong MIME, unsupported container, cancellation cleanup, and temp-file deletion.
-
 - [ ] 🤖 🔬 **P2 — Managed storage ledger and cache cleanup policy**
   - Why: Aura stores previews, offline favorites, edited audio, generated wallpapers, live wallpaper media, share artifacts, downloads, and provider metadata across several directories and MediaStore.
   - Evidence: `AudioPreviewCache` 48 MB, offline favorites 512 MB, `file_paths.xml`, Settings cache cleanup copy, backup rules from Cycle 4.
