@@ -1533,6 +1533,10 @@ private fun RecordingDialog(
     onDiscard: () -> Unit,
 ) {
     var elapsedMs by remember(startedAtMs) { mutableStateOf(0L) }
+    val recordingTitle = stringResource(R.string.community_recording_title)
+    val recordingBody = stringResource(R.string.community_recording_body)
+    val stopLabel = stringResource(R.string.community_recording_stop)
+    val discardLabel = stringResource(R.string.community_recording_discard)
     LaunchedEffect(startedAtMs) {
         while (true) {
             elapsedMs = (System.currentTimeMillis() - startedAtMs).coerceAtLeast(0L)
@@ -1543,7 +1547,7 @@ private fun RecordingDialog(
     AlertDialog(
         onDismissRequest = {},
         icon = { Icon(Icons.Default.Mic, contentDescription = null) },
-        title = { Text("Recording sound") },
+        title = { Text(recordingTitle) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 Text(
@@ -1556,7 +1560,7 @@ private fun RecordingDialog(
                     modifier = Modifier.fillMaxWidth(),
                 )
                 Text(
-                    "Record up to 60 seconds, then add a name, category, and tags before sharing.",
+                    recordingBody,
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
@@ -1566,12 +1570,12 @@ private fun RecordingDialog(
             Button(onClick = onStop, shape = RoundedCornerShape(8.dp), modifier = Modifier.heightIn(min = 48.dp)) {
                 Icon(Icons.Default.Stop, contentDescription = null, modifier = Modifier.size(16.dp))
                 Spacer(Modifier.width(6.dp))
-                Text("Stop")
+                Text(stopLabel)
             }
         },
         dismissButton = {
             TextButton(onClick = onDiscard, shape = RoundedCornerShape(8.dp), modifier = Modifier.heightIn(min = 48.dp)) {
-                Text("Discard")
+                Text(discardLabel)
             }
         },
     )
@@ -1591,6 +1595,8 @@ private fun UploadDialog(
     var rightsAttested by remember { mutableStateOf(false) }
     var tagsText by remember { mutableStateOf("") }
     val policyCopy = remember { communityUploadPolicyCopy(CommunityUploadPolicyKind.SOUND) }
+    val uploadVisibilityTitle = stringResource(R.string.community_upload_visibility_title)
+    val uploadVisibilityBody = stringResource(R.string.community_upload_visibility_body)
     val categories = listOf("ringtone" to "Ringtone", "notification" to "Notification", "alarm" to "Alarm")
     val parsedTags = remember(tagsText) {
         tagsText.split(',', '#')
@@ -1653,6 +1659,10 @@ private fun UploadDialog(
                 CommunityPolicyNotice(
                     title = policyCopy.publicTitle,
                     body = "${policyCopy.publicBody} ${policyCopy.takedownBody}",
+                )
+                CommunityPolicyNotice(
+                    title = uploadVisibilityTitle,
+                    body = uploadVisibilityBody,
                 )
                 Row(
                     modifier = Modifier.fillMaxWidth(),

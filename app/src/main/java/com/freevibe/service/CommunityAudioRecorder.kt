@@ -19,10 +19,14 @@ class CommunityAudioRecorder @Inject constructor(
     val isRecording: Boolean
         get() = recorder != null
 
+    fun pruneStaleRecordings() {
+        ShareOutbox.pruneStaleFiles(context)
+    }
+
     fun start(): Result<Unit> = runCatching {
         check(recorder == null) { "Recording is already in progress" }
 
-        ShareOutbox.pruneStaleFiles(context)
+        pruneStaleRecordings()
         val directory = ShareOutbox.directory(context, "community_recordings")
         val file = File(directory, "community_${System.currentTimeMillis()}.m4a")
         val activeRecorder = createRecorder()

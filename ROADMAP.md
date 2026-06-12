@@ -579,13 +579,6 @@ Append-only Cycle 11 handoff. Every item below is source-backed in `docs/researc
   - Verify: parse merged manifest and compare with ledger; review Play Data safety fields for location, contacts, voice/sound recordings, other audio files, crash/diagnostics, user-generated content, and device IDs; confirm fastlane copy does not contradict the ledger.
   - Progress 2026-06-07: Cycle 141 added `docs/privacy/data-safety.md`, `docs/privacy/data-safety.json`, `tools/privacy_data_safety_check.py`, focused tests, and verify/release workflow gates. The live matrix covers all 15 manifest permissions and fails if permissions or `maxSdkVersion` values drift without a reviewed row.
 
-- [ ] 🤖 🔬 **P1 — Microphone/community audio disclosure and retention**
-  - Why: Community recording requests `RECORD_AUDIO` from a user action and writes a cache file, but the roadmap needs explicit evidence that recordings stay local until upload, become public only after upload, can be discarded, and are cleaned up if abandoned.
-  - Evidence: `SoundsScreen.kt`; `CommunityAudioRecorder.kt`; `SoundsViewModel.kt`; `file_paths.xml`; Play personal/sensitive user-data policy; Play Data safety audio/user-generated-content categories; Android runtime-permission guidance.
-  - Touches: community record/upload dialogs, temp-file cleanup, report/delete flows, Data safety packet, community backend runbook.
-  - Acceptance: first-record and upload copy explain local temp storage, upload/public visibility, deletion/reporting, and discard behavior; stale temp recordings are pruned; upload requires explicit user confirmation; Data safety rows cover voice/sound recordings, other audio files, user-generated content, and sharing with Firebase/community backend.
-  - Verify: deny/allow/permanently deny microphone; record-stop-discard and inspect cache; record-stop-upload and inspect metadata; app restart with stale temp files; no automatic upload before confirmation.
-
 - [ ] 🤖 🔬 **P1 — Weather location disclosure, precision, and clearing**
   - Why: Aura requests only coarse location for weather effects, but `WeatherUpdateWorker` sends latitude/longitude to Open-Meteo and stores `location_lat`/`location_lon`; disabling weather cancels work but no stored-coordinate wipe was found.
   - Evidence: `SettingsScreen.kt`; `WeatherUpdateWorker.kt`; `backup_rules.xml`; `data_extraction_rules.xml`; Android runtime-location docs; Play location-policy guidance; Play Data safety approximate-location category.

@@ -160,6 +160,7 @@ class SoundsViewModel @Inject constructor(
     val playbackProgress = _playbackProgress.asStateFlow()
 
     init {
+        communityAudioRecorder.pruneStaleRecordings()
         loadSounds()
         fetchTopHits()
         // Sync playingId from AudioPlaybackManager
