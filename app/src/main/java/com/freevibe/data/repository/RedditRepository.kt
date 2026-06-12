@@ -152,7 +152,10 @@ class RedditRepository @Inject constructor(
         afterTokens.clear()
     }
 
-    private suspend fun isProviderEnabled(): Boolean = prefs.redditProviderEnabled.first()
+    private suspend fun isProviderEnabled(): Boolean {
+        prefs.redditProviderEnabled.first()
+        return false
+    }
 
     private fun emptyWallpaperResult() = SearchResult<Wallpaper>(
         items = emptyList(),

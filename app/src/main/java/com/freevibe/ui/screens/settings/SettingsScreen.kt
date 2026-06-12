@@ -168,8 +168,6 @@ fun SettingsScreen(
     val ytBlockedWords by viewModel.ytBlockedWords.collectAsStateWithLifecycle()
     val youtubeProviderEnabled by viewModel.youtubeProviderEnabled.collectAsStateWithLifecycle()
     val previewVolume by viewModel.previewVolume.collectAsStateWithLifecycle()
-    val redditSubs by viewModel.redditSubs.collectAsStateWithLifecycle()
-    val redditProviderEnabled by viewModel.redditProviderEnabled.collectAsStateWithLifecycle()
     val preferredRes by viewModel.preferredRes.collectAsStateWithLifecycle()
     val userStyles by viewModel.userStyles.collectAsStateWithLifecycle()
     val schedulerEnabled by viewModel.schedulerEnabled.collectAsStateWithLifecycle()
@@ -414,7 +412,6 @@ fun SettingsScreen(
     var showSourcePicker by remember { mutableStateOf(false) }
     var showClearCacheConfirm by remember { mutableStateOf(false) }
     var showColumnsPicker by remember { mutableStateOf(false) }
-    var showRedditEditor by remember { mutableStateOf(false) }
     var showResPicker by remember { mutableStateOf(false) }
     var showStylePicker by remember { mutableStateOf(false) }
     var showYtSoundEditor by remember { mutableStateOf(false) }
@@ -610,20 +607,15 @@ fun SettingsScreen(
             )
             SettingsItem(
                 icon = Icons.Default.Forum,
-                title = "Legacy Reddit subreddits",
-                subtitle = "${redditSubs.split(",").size} saved feed names",
-                onClick = { showRedditEditor = true },
-            )
-            SettingsToggle(
-                icon = Icons.Default.Forum,
-                title = "Enable discontinued Reddit source",
-                subtitle = if (redditProviderEnabled) {
-                    "Attempts legacy Reddit feeds; new installs should leave this off"
-                } else {
-                    "Reddit retired public feeds; saved Reddit items remain available"
+                title = "Reddit source discontinued",
+                subtitle = "Public feeds are retired; saved Reddit wallpapers keep attribution and unavailable-source states",
+                onClick = {
+                    Toast.makeText(
+                        context,
+                        "Reddit public feeds are no longer available in Aura.",
+                        Toast.LENGTH_LONG,
+                    ).show()
                 },
-                checked = redditProviderEnabled,
-                onCheckedChange = { viewModel.setRedditProviderEnabled(it) },
             )
             SettingsToggle(
                 icon = Icons.Default.ImageSearch,
@@ -790,14 +782,13 @@ fun SettingsScreen(
                 val sources = listOf(
                     "discover" to "Discover (mixed)", "favorites" to "My Favorites",
                     WALLPAPER_SOURCE_LOCAL_FOLDER to "Local folder",
-                    "wallhaven" to "Wallhaven", "pixabay" to "Pixabay", "reddit" to "Reddit (legacy)",
+                    "wallhaven" to "Wallhaven", "pixabay" to "Pixabay",
                     "bing" to "Bing Daily", "collection" to "A collection…",
                 ).filter { (key, _) ->
                     when (key) {
                         "wallhaven" -> wallhavenProviderEnabled || schedulerSource == "wallhaven"
                         "pixabay" -> pixabayProviderEnabled || schedulerSource == "pixabay"
                         "bing" -> bingProviderEnabled || schedulerSource == "bing"
-                        "reddit" -> redditProviderEnabled || schedulerSource == "reddit"
                         else -> true
                     }
                 }
@@ -1823,7 +1814,6 @@ fun SettingsScreen(
             wallhavenProviderEnabled = wallhavenProviderEnabled,
             bingProviderEnabled = bingProviderEnabled,
             pixabayProviderEnabled = pixabayProviderEnabled,
-            redditProviderEnabled = redditProviderEnabled,
             localFolderUri = localWallpaperFolderUri,
             localFolderPermissionActive = localFolderPermissionActive,
             onDismiss = { showSourcePicker = false },
@@ -1966,54 +1956,6 @@ fun SettingsScreen(
             },
             dismissButton = {
                 TextButton(onClick = { showStylePicker = false }) { Text("Cancel") }
-            },
-        )
-    }
-
-    // Legacy Reddit subreddits editor
-    if (showRedditEditor) {
-        var subsText by remember { mutableStateOf(redditSubs) }
-        AlertDialog(
-            onDismissRequest = { showRedditEditor = false },
-            title = { Text("Legacy Reddit subreddits") },
-            text = {
-                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Text(
-                        "Saved legacy feed names (without r/)",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                    OutlinedTextField(
-                        value = subsText,
-                        onValueChange = { subsText = it },
-                        modifier = Modifier.fillMaxWidth(),
-                        placeholder = { Text("wallpapers,MobileWallpaper,...") },
-                        singleLine = false,
-                        maxLines = 3,
-                    )
-                    // Quick add chips
-                    @OptIn(ExperimentalLayoutApi::class)
-                    FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                        listOf("EarthPorn", "spaceporn", "CityPorn", "ImaginaryLandscapes",
-                            "MinimalWallpaper", "phonewallpapers", "WidescreenWallpaper").forEach { sub ->
-                            if (!subsText.contains(sub, ignoreCase = true)) {
-                                SuggestionChip(
-                                    onClick = { subsText = if (subsText.isBlank()) sub else "$subsText,$sub" },
-                                    label = { Text(sub, style = MaterialTheme.typography.labelSmall) },
-                                )
-                            }
-                        }
-                    }
-                }
-            },
-            confirmButton = {
-                TextButton(onClick = {
-                    viewModel.setRedditSubs(subsText.trim())
-                    showRedditEditor = false
-                }) { Text("Save") }
-            },
-            dismissButton = {
-                TextButton(onClick = { showRedditEditor = false }) { Text("Cancel") }
             },
         )
     }
@@ -3348,7 +3290,6 @@ private fun SourcePickerDialog(
     wallhavenProviderEnabled: Boolean,
     bingProviderEnabled: Boolean,
     pixabayProviderEnabled: Boolean,
-    redditProviderEnabled: Boolean,
     localFolderUri: String,
     localFolderPermissionActive: Boolean,
     onDismiss: () -> Unit,
@@ -3360,7 +3301,6 @@ private fun SourcePickerDialog(
         "discover" to "Discover (mixed)",
         "favorites" to "My Favorites",
         WALLPAPER_SOURCE_LOCAL_FOLDER to if (localFolderReady) "Local folder" else "Local folder (choose folder)",
-        "reddit" to "Reddit (legacy)",
         "wallhaven" to "Wallhaven",
         "pixabay" to "Pixabay",
         "bing" to "Bing Daily",
@@ -3369,7 +3309,6 @@ private fun SourcePickerDialog(
             "wallhaven" -> wallhavenProviderEnabled || currentSource == "wallhaven"
             "pixabay" -> pixabayProviderEnabled || currentSource == "pixabay"
             "bing" -> bingProviderEnabled || currentSource == "bing"
-            "reddit" -> redditProviderEnabled || currentSource == "reddit"
             else -> true
         }
     }

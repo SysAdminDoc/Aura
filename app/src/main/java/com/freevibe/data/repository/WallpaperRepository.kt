@@ -480,7 +480,7 @@ class WallpaperRepository @Inject constructor(
         return cacheManager.getStaleCached("discover_$page")
     }
 
-    suspend fun getDiscover(page: Int = 1, redditRepo: com.freevibe.data.repository.RedditRepository? = null, userStyles: List<String> = emptyList()): SearchResult<Wallpaper> =
+    suspend fun getDiscover(page: Int = 1, userStyles: List<String> = emptyList()): SearchResult<Wallpaper> =
         sourceMetrics.measure(SOURCE_DISCOVER) {
             supervisorScope {
                 val primarySources = mutableListOf(
@@ -494,9 +494,6 @@ class WallpaperRepository @Inject constructor(
                     // Also bias Pexels and Pixabay by style
                     primarySources.add(async { loadSourceSafely { getPixabay(query = styleQuery, page = page) } })
                     primarySources.add(async { loadSourceSafely { getPexels(query = styleQuery, page = page) } })
-                }
-                if (redditRepo != null) {
-                    primarySources.add(async { loadSourceSafely { redditRepo.getMultiSubreddit() } })
                 }
                 val secondarySources = listOf(
                     async { loadSourceSafely { getBingDaily(page = page) } },

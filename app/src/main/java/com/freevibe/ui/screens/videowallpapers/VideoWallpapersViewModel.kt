@@ -506,7 +506,7 @@ class VideoWallpapersViewModel @Inject constructor(
             val attemptedSources = java.util.Collections.synchronizedSet(mutableSetOf<String>())
             val failedSources = java.util.Collections.synchronizedSet(mutableSetOf<String>())
             val youtubeEnabled = prefs.youtubeProviderEnabled.first()
-            val redditEnabled = prefs.redditProviderEnabled.first()
+            val redditEnabled = false
             val pexelsEnabled = prefs.pexelsProviderEnabled.first()
             val pixabayEnabled = prefs.pixabayProviderEnabled.first()
 

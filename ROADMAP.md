@@ -3375,13 +3375,6 @@ Net-new items from the second 2026-06-09 research pass (live provider probes, ba
 
 ### P0 — Production breakage and hard deadlines
 
-- [ ] P0 — **Decommission the unauthenticated Reddit source and repoint Wallpaper of the Day**
-  Why: Reddit shut down unauthenticated `.json` endpoints on 2026-05-30 (403 Forbidden, verified by direct probe 2026-06-09). Aura's Reddit wallpaper tabs, 4 Reddit video subs, and the entire Wallpaper of the Day pipeline (`DailyWallpaperWorker` is Reddit-only, retries forever) are silently broken in production. OAuth is not a path: self-service registration closed Nov 2025.
-  Evidence: direct probe `https://www.reddit.com/r/wallpapers/top.json` → 403; r/modnews scraper-protection announcement (2026-05-30); `RedditApi.kt` BASE_URL, `DailyWallpaperWorker.kt:50-70` (no fallback), `VideoWallpapersViewModel.kt:554-555`.
-  Touches: `RedditApi.kt`, `RedditRepository.kt`, `DailyWallpaperWorker.kt`, `VideoWallpapersViewModel.kt`, `AutoWallpaperWorker.kt`, `WallpapersViewModel.kt`, `FreeVibeWidget.kt`, `ProviderDisclosure.kt` runtime-switch defaults, Settings provider copy, README/fastlane source tables.
-  Acceptance: on-device repro recorded first (per RESEARCH open question 2); Reddit provider defaults to off with an honest "source discontinued by Reddit" state (reuse Cycle 46 unavailable-source states); Wallpaper of the Day uses a source-priority list (Bing daily → Wallhaven toplist) and fires again; no UI surface silently shows an empty Reddit feed; saved Reddit favorites keep metadata and show the remote-gone state from Cycle 48.
-  Complexity: M
-
 ### P1 — Reliability of the YouTube spine and aging strata
 
 - [ ] P1 — **yt-dlp runtime self-update with rollback**

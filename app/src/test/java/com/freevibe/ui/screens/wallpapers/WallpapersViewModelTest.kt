@@ -224,7 +224,7 @@ class WallpapersViewModelTest {
             redditRepo = redditRepo,
         )
 
-        coEvery { wallpaperRepo.getDiscover(any(), any(), any()) } returnsMany listOf(
+        coEvery { wallpaperRepo.getDiscover(any(), any()) } returnsMany listOf(
             SearchResult(
                 items = listOf(seededWallpaper),
                 totalCount = 1,
@@ -911,7 +911,7 @@ class WallpapersViewModelTest {
         coEvery { wallpaperRepo.getPexelsCurated(any()) } returns emptyWallpaperResult()
         coEvery { wallpaperRepo.getPixabay(any(), any()) } returns emptyWallpaperResult()
         coEvery { wallpaperRepo.getWallhaven(any(), any(), any()) } returns emptyWallpaperResult()
-        coEvery { wallpaperRepo.getDiscover(any(), any(), any()) } returns emptyWallpaperResult()
+        coEvery { wallpaperRepo.getDiscover(any(), any()) } returns emptyWallpaperResult()
         coEvery { wallpaperRepo.getCachedDiscover(any()) } returns emptyList()
         coEvery { wallpaperRepo.getWallpaperOfTheDay() } returns null
         coEvery { wallpaperRepo.findSimilar(any(), any()) } returns emptyWallpaperResult()

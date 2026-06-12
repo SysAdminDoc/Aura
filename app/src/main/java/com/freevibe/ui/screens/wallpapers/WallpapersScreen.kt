@@ -109,7 +109,6 @@ fun WallpapersScreen(
     val topVoted by viewModel.topVoted.collectAsStateWithLifecycle()
     val hiddenIds by viewModel.hiddenIds.collectAsStateWithLifecycle()
     val wallhavenProviderEnabled by viewModel.wallhavenProviderEnabled.collectAsStateWithLifecycle()
-    val redditProviderEnabled by viewModel.redditProviderEnabled.collectAsStateWithLifecycle()
     val pexelsProviderEnabled by viewModel.pexelsProviderEnabled.collectAsStateWithLifecycle()
     val pixabayProviderEnabled by viewModel.pixabayProviderEnabled.collectAsStateWithLifecycle()
     val communityProviderEnabled by viewModel.communityProviderEnabled.collectAsStateWithLifecycle()
@@ -158,10 +157,10 @@ fun WallpapersScreen(
     var showWallpaperUploadDialog by remember { mutableStateOf(false) }
     var selectedWallpaperUploadUri by remember { mutableStateOf<Uri?>(null) }
     var awaitingWallpaperUploadResult by remember { mutableStateOf(false) }
-    LaunchedEffect(wallhavenProviderEnabled, redditProviderEnabled, pexelsProviderEnabled, pixabayProviderEnabled, communityProviderEnabled, state.selectedTab) {
+    LaunchedEffect(wallhavenProviderEnabled, pexelsProviderEnabled, pixabayProviderEnabled, communityProviderEnabled, state.selectedTab) {
         val disabledTab = when (state.selectedTab) {
             WallpaperTab.WALLHAVEN -> !wallhavenProviderEnabled
-            WallpaperTab.REDDIT -> !redditProviderEnabled
+            WallpaperTab.REDDIT -> true
             WallpaperTab.PEXELS -> !pexelsProviderEnabled
             WallpaperTab.PIXABAY -> !pixabayProviderEnabled
             WallpaperTab.COMMUNITY -> !communityProviderEnabled
@@ -290,7 +289,7 @@ fun WallpapersScreen(
 
     Box(modifier = Modifier.fillMaxSize()) {
         Column(modifier = Modifier.fillMaxSize()) {
-            val visibleTabs = remember(state.selectedTab, redditProviderEnabled, pexelsProviderEnabled, pixabayProviderEnabled, communityProviderEnabled) {
+            val visibleTabs = remember(state.selectedTab, pexelsProviderEnabled, pixabayProviderEnabled, communityProviderEnabled) {
                 WallpaperTab.entries.filter {
                     it != WallpaperTab.SEARCH || state.selectedTab == WallpaperTab.SEARCH
                 }.filter {
@@ -301,8 +300,6 @@ fun WallpapersScreen(
                     it != WallpaperTab.PEXELS || pexelsProviderEnabled || state.selectedTab == WallpaperTab.PEXELS
                 }.filter {
                     it != WallpaperTab.PIXABAY || pixabayProviderEnabled || state.selectedTab == WallpaperTab.PIXABAY
-                }.filter {
-                    it != WallpaperTab.REDDIT || redditProviderEnabled || state.selectedTab == WallpaperTab.REDDIT
                 }.filter {
                     it != WallpaperTab.COMMUNITY || communityProviderEnabled || state.selectedTab == WallpaperTab.COMMUNITY
                 }
@@ -1783,7 +1780,7 @@ private fun wallpaperHeaderSubtitle(
     WallpaperTab.WALLHAVEN -> "High-signal artwork and photography with stronger filtering controls."
     WallpaperTab.PEXELS -> "Clean photography and motion-friendly imagery from Pexels."
     WallpaperTab.PIXABAY -> "Free-use imagery with a broad catalog once your source is configured."
-    WallpaperTab.REDDIT -> "Community-driven finds, trending daily picks, and unexpected standouts."
+    WallpaperTab.REDDIT -> "Saved legacy Reddit items keep attribution, but public feeds are discontinued."
     WallpaperTab.COMMUNITY -> "User-uploaded phone-ready wallpapers with tags, colors, and community voting."
 }
 

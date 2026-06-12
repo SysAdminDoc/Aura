@@ -874,7 +874,6 @@ class WallpapersViewModel @Inject constructor(
                 val result = when (currentTab) {
                     WallpaperTab.DISCOVER -> wallpaperRepo.getDiscover(
                         page = currentPage,
-                        redditRepo = redditRepo,
                         userStyles = userStyles,
                     )
                     WallpaperTab.PIXABAY -> wallpaperRepo.getPixabay(currentPage)
@@ -1153,13 +1152,13 @@ class WallpapersViewModel @Inject constructor(
             .map { it.trim().lowercase(java.util.Locale.ROOT) }
             .filter { it.isNotBlank() }
 
-    private suspend fun isRedditProviderEnabled(): Boolean = prefs.redditProviderEnabled.first()
+    private suspend fun isRedditProviderEnabled(): Boolean = false
     private suspend fun isCommunityProviderEnabled(): Boolean =
         prefs.communityProviderEnabled.first() && prefs.communityGuidelinesAccepted.first()
 
     private fun isProviderDisabledTab(tab: WallpaperTab): Boolean = when (tab) {
         WallpaperTab.WALLHAVEN -> !wallhavenProviderEnabled.value
-        WallpaperTab.REDDIT -> !redditProviderEnabled.value
+        WallpaperTab.REDDIT -> true
         WallpaperTab.PEXELS -> !pexelsProviderEnabled.value
         WallpaperTab.PIXABAY -> !pixabayProviderEnabled.value
         WallpaperTab.COMMUNITY -> !communityProviderEnabled.value || !communityGuidelinesAccepted.value

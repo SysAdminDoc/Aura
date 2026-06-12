@@ -340,11 +340,11 @@ val providerRuntimeControls = listOf(
     ),
     ProviderRuntimeControl(
         source = ContentSource.REDDIT,
-        surfaces = "Legacy saved wallpapers/videos; optional legacy wallpaper/video feeds when explicitly enabled.",
+        surfaces = "Legacy saved wallpapers/videos only.",
         status = ProviderRuntimeControlStatus.COVERED,
-        currentControl = "Settings exposes an off-by-default discontinued Reddit provider flag in addition to editable wallpaper subreddit lists.",
-        disabledBehavior = "Disabled mode hides Reddit wallpaper browsing, skips video wallpaper Reddit jobs, removes Reddit from new rotation pickers, and blocks repository network calls while keeping saved legacy records visible.",
-        followUp = "Capture owner device evidence for final Reddit source retirement and remove the optional legacy feed toggle after the migration window.",
+        currentControl = "Settings explains that public Reddit feeds are discontinued; active source pickers, Discover aggregation, video wallpaper loading, and rotation normalize away from Reddit.",
+        disabledBehavior = "Saved Reddit records keep source attribution and unavailable-source states, but new public-feed network calls are fail-closed.",
+        followUp = "None.",
     ),
     ProviderRuntimeControl(
         source = ContentSource.NASA,

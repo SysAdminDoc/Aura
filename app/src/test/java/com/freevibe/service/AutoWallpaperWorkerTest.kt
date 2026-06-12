@@ -15,6 +15,7 @@ class AutoWallpaperWorkerTest {
     @Test
     fun `normalizeWallpaperRotationSource maps legacy unsplash to discover`() {
         assertEquals("discover", "unsplash".normalizeWallpaperRotationSource())
+        assertEquals("discover", "reddit".normalizeWallpaperRotationSource())
         assertEquals("discover", "".normalizeWallpaperRotationSource())
         assertEquals("wallhaven", "wallhaven".normalizeWallpaperRotationSource())
         assertEquals(WALLPAPER_SOURCE_LOCAL_FOLDER, WALLPAPER_SOURCE_LOCAL_FOLDER.normalizeWallpaperRotationSource())
