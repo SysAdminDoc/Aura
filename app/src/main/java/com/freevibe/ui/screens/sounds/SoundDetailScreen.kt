@@ -27,11 +27,19 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import kotlinx.coroutines.launch
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.ProgressBarRangeInfo
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.onClick
+import androidx.compose.ui.semantics.progressBarRangeInfo
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.freevibe.R
 import com.freevibe.ui.components.AuraStateAction
 import com.freevibe.ui.components.AuraStateCard
 import com.freevibe.ui.components.ShimmerBox
@@ -154,6 +162,12 @@ fun SoundDetailScreen(
     }
     val canBlockCreator = viewModel.canBlockCommunitySound(s) && !canDeleteUpload
     val policyMessages = remember(licenseCapabilities) { soundPolicyMessages(licenseCapabilities) }
+    val playPreviewLabel = stringResource(R.string.a11y_play_preview)
+    val pausePreviewLabel = stringResource(R.string.a11y_pause_preview)
+    val addFavoriteLabel = stringResource(R.string.a11y_add_favorite)
+    val removeFavoriteLabel = stringResource(R.string.a11y_remove_favorite)
+    val playingState = stringResource(R.string.a11y_preview_playing)
+    val readyState = stringResource(R.string.a11y_ready)
     var showReportDialog by remember(s.stableKey()) { mutableStateOf(false) }
     var showBlockCreatorDialog by remember(s.stableKey()) { mutableStateOf(false) }
     var showDeleteUploadDialog by remember(s.stableKey()) { mutableStateOf(false) }
@@ -271,10 +285,16 @@ fun SoundDetailScreen(
                 title = {},
                 navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back") } },
                 actions = {
-                    IconButton(onClick = { viewModel.toggleFavorite(s) }) {
+                    IconButton(
+                        onClick = { viewModel.toggleFavorite(s) },
+                        modifier = Modifier.semantics {
+                            stateDescription = if (isFavorite) removeFavoriteLabel else addFavoriteLabel
+                            onClick(label = if (isFavorite) removeFavoriteLabel else addFavoriteLabel, action = null)
+                        },
+                    ) {
                         Icon(
                             if (isFavorite) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
-                            "Favorite",
+                            contentDescription = null,
                             tint = if (isFavorite) MaterialTheme.colorScheme.tertiary else MaterialTheme.colorScheme.onSurface,
                         )
                     }
@@ -308,13 +328,19 @@ fun SoundDetailScreen(
                     color = MaterialTheme.colorScheme.primary.copy(alpha = 0.85f),
                     contentColor = Color.White,
                     border = BorderStroke(1.dp, Color.White.copy(alpha = 0.18f)),
-                    modifier = Modifier.size(52.dp),
+                    modifier = Modifier
+                        .size(52.dp)
+                        .semantics {
+                            contentDescription = if (isPlaying) pausePreviewLabel else playPreviewLabel
+                            stateDescription = if (isPlaying) playingState else readyState
+                            onClick(label = if (isPlaying) pausePreviewLabel else playPreviewLabel, action = null)
+                        },
                     onClick = { viewModel.togglePlayback(s) },
                 ) {
                     Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                         Icon(
                             if (isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow,
-                            if (isPlaying) "Pause preview" else "Play preview",
+                            contentDescription = null,
                             tint = Color.White,
                             modifier = Modifier.size(28.dp),
                         )
@@ -647,6 +673,17 @@ private fun SimilarSoundsSection(
         } else if (similarSounds.value.isNotEmpty()) {
             LazyRow(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                 items(similarSounds.value, key = { it.stableKey() }) { similar ->
+                    val similarPlaying = currentPlayingId == similar.stableKey()
+                    val similarActionLabel = if (similarPlaying) {
+                        stringResource(R.string.a11y_pause_preview)
+                    } else {
+                        stringResource(R.string.a11y_play_preview)
+                    }
+                    val similarState = if (similarPlaying) {
+                        stringResource(R.string.a11y_preview_playing)
+                    } else {
+                        stringResource(R.string.a11y_ready)
+                    }
                     Surface(
                         onClick = { onSoundClick(similar) }, color = MaterialTheme.colorScheme.surfaceContainerHigh,
                         shape = RoundedCornerShape(8.dp), modifier = Modifier.width(184.dp),
@@ -654,12 +691,19 @@ private fun SimilarSoundsSection(
                         Row(Modifier.padding(10.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                             IconButton(
                                 onClick = { viewModel.togglePlayback(similar) },
-                                modifier = Modifier.size(48.dp).clip(RoundedCornerShape(8.dp)).background(if (currentPlayingId == similar.stableKey()) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceContainer),
+                                modifier = Modifier
+                                    .size(48.dp)
+                                    .clip(RoundedCornerShape(8.dp))
+                                    .background(if (similarPlaying) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceContainer)
+                                    .semantics {
+                                        stateDescription = similarState
+                                        onClick(label = similarActionLabel, action = null)
+                                    },
                             ) {
                                 Icon(
-                                    if (currentPlayingId == similar.stableKey()) Icons.Default.Pause else Icons.Default.PlayArrow,
-                                    if (currentPlayingId == similar.stableKey()) "Pause preview" else "Play preview",
-                                    tint = if (currentPlayingId == similar.stableKey()) Color.White else MaterialTheme.colorScheme.onSurface,
+                                    if (similarPlaying) Icons.Default.Pause else Icons.Default.PlayArrow,
+                                    contentDescription = null,
+                                    tint = if (similarPlaying) Color.White else MaterialTheme.colorScheme.onSurface,
                                     modifier = Modifier.size(16.dp),
                                 )
                             }
@@ -699,10 +743,25 @@ private fun DetailWaveform(duration: Double, isPlaying: Boolean, modifier: Modif
         val seed = (duration * 1000).toInt()
         List(barCount) { i -> (0.15f + 0.85f * ((kotlin.math.sin((seed + i * 37) % 360 * 0.0174533) + 1f) / 2f).toFloat()) }
     }
+    val waveformDescription = stringResource(
+        if (onSeek != null) R.string.a11y_seekable_waveform else R.string.a11y_playback_waveform,
+    )
+    val waveformState = if (isPlaying) {
+        stringResource(R.string.a11y_playing_percent, (progress * 100).toInt())
+    } else {
+        stringResource(R.string.a11y_stopped)
+    }
     Canvas(
-        modifier.background(MaterialTheme.colorScheme.surfaceContainer).then(
-            if (onSeek != null) Modifier.pointerInput(Unit) { detectTapGestures { offset -> onSeek((offset.x / size.width).coerceIn(0f, 1f)) } } else Modifier,
-        ),
+        modifier
+            .background(MaterialTheme.colorScheme.surfaceContainer)
+            .semantics {
+                contentDescription = waveformDescription
+                stateDescription = waveformState
+                progressBarRangeInfo = ProgressBarRangeInfo(progress.coerceIn(0f, 1f), 0f..1f)
+            }
+            .then(
+                if (onSeek != null) Modifier.pointerInput(Unit) { detectTapGestures { offset -> onSeek((offset.x / size.width).coerceIn(0f, 1f)) } } else Modifier,
+            ),
     ) {
         val barWidth = size.width / barCount
         heights.forEachIndexed { i, height ->
