@@ -3,6 +3,9 @@
 All notable changes to Aura will be documented in this file.
 
 ## Unreleased
+- **Backup/restore path reconciliation**: startup now clears stale local paths
+  for restored favorites/download history when app-private files or MediaStore
+  rows are missing, while keeping remote item provenance visible.
 - **Unified import validation**: favorites and collection imports now share
   HTTPS URL caps, text caps, source enum checks, duplicate identity handling,
   and oversized collection-token rejection.

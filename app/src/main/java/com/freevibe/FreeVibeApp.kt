@@ -15,6 +15,7 @@ import com.freevibe.service.CrashDiagnosticsCollector
 import com.freevibe.service.CrashDiagnosticsText
 import com.freevibe.service.AppCheckInstaller
 import com.freevibe.service.OfflineFavoritesManager
+import com.freevibe.service.PathBackedRecordReconciler
 import dagger.hilt.android.HiltAndroidApp
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -45,6 +46,9 @@ class FreeVibeApp : Application(), Configuration.Provider, ImageLoaderFactory {
 
     @Inject
     lateinit var systemThemeListener: com.freevibe.service.SystemThemeListener
+
+    @Inject
+    lateinit var pathBackedRecordReconciler: PathBackedRecordReconciler
 
     private val appScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
@@ -188,6 +192,7 @@ class FreeVibeApp : Application(), Configuration.Provider, ImageLoaderFactory {
             try {
                 wallpaperCacheManager.evictExpired()
                 offlineFavoritesManager.pruneOrphans()
+                pathBackedRecordReconciler.reconcile()
             } catch (e: Exception) {
                 if (e is kotlinx.coroutines.CancellationException) throw e
                 if (BuildConfig.DEBUG) Log.w("FreeVibeApp", "Cache eviction failed", e)

@@ -112,7 +112,7 @@ fun DownloadsScreen(
                     items(displayList, key = { it.id }, contentType = { "download_card" }) { download ->
                         DownloadHistoryCard(
                             download = download,
-                            broken = download.id in brokenIds,
+                            broken = download.localPath.isBlank() || download.id in brokenIds,
                             sourceUnavailable = download.isSourceUnavailable(),
                             onOpen = {
                                 try {
