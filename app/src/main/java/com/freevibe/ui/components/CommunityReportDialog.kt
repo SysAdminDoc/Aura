@@ -18,7 +18,9 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import com.freevibe.R
 import com.freevibe.data.model.COMMUNITY_REPORT_REASONS
 import com.freevibe.data.model.CommunityReportReason
 import com.freevibe.ui.policy.COMMUNITY_REPORT_TAKEDOWN_COPY
@@ -44,7 +46,7 @@ fun CommunityReportDialog(
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 Text(
-                    "Choose the closest reason. Reports help keep public community content safe and usable.",
+                    stringResource(R.string.community_report_reason_prompt),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
@@ -71,8 +73,10 @@ fun CommunityReportDialog(
                     value = note,
                     onValueChange = { note = it.take(500) },
                     modifier = Modifier.fillMaxWidth(),
-                    label = { Text("Details optional") },
-                    supportingText = { Text("${note.length}/500") },
+                    label = { Text(stringResource(R.string.community_report_details_optional)) },
+                    supportingText = {
+                        Text(stringResource(R.string.community_report_note_counter, note.length))
+                    },
                     minLines = 3,
                     maxLines = 5,
                 )
@@ -85,12 +89,12 @@ fun CommunityReportDialog(
                     onDismiss()
                 },
             ) {
-                Text("Submit report")
+                Text(stringResource(R.string.community_report_submit))
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text("Cancel")
+                Text(stringResource(R.string.common_cancel))
             }
         },
     )

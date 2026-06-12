@@ -1,16 +1,18 @@
 package com.freevibe.ui.navigation
 
+import android.net.Uri
+import androidx.annotation.StringRes
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.outlined.*
-import android.net.Uri
 import androidx.compose.ui.graphics.vector.ImageVector
+import com.freevibe.R
 import com.freevibe.data.model.Sound
 import com.freevibe.data.model.Wallpaper
 
 sealed class Screen(
     val route: String,
-    val title: String,
+    @StringRes val titleRes: Int,
     val icon: ImageVector,
     val selectedIcon: ImageVector,
     val destinationPattern: String = route,
@@ -21,7 +23,7 @@ sealed class Screen(
     // ── Bottom nav tabs ───────────────────────────────────────────
     data object Wallpapers : Screen(
         route = "wallpapers",
-        title = "Wallpapers",
+        titleRes = R.string.nav_wallpapers,
         icon = Icons.Outlined.Wallpaper,
         selectedIcon = Icons.Filled.Wallpaper,
         destinationPattern = "wallpapers?query={query}&color={color}&similarId={similarId}&similarSource={similarSource}&similarFullUrl={similarFullUrl}",
@@ -52,13 +54,13 @@ sealed class Screen(
     }
     data object VideoWallpapers : Screen(
         route = "video_wallpapers",
-        title = "Videos",
+        titleRes = R.string.nav_videos,
         icon = Icons.Outlined.VideoLibrary,
         selectedIcon = Icons.Filled.VideoLibrary,
     )
     data object Sounds : Screen(
         route = "sounds",
-        title = "Sounds",
+        titleRes = R.string.nav_sounds,
         icon = Icons.Outlined.MusicNote,
         selectedIcon = Icons.Filled.MusicNote,
         destinationPattern = "sounds?query={query}",
@@ -70,25 +72,25 @@ sealed class Screen(
     }
     data object Favorites : Screen(
         route = "favorites",
-        title = "Favorites",
+        titleRes = R.string.nav_favorites,
         icon = Icons.Outlined.FavoriteBorder,
         selectedIcon = Icons.Filled.Favorite,
     )
     data object Settings : Screen(
         route = "settings",
-        title = "Settings",
+        titleRes = R.string.nav_settings,
         icon = Icons.Outlined.Settings,
         selectedIcon = Icons.Filled.Settings,
     )
     data object CreatorProfile : Screen(
         route = "creator_profile",
-        title = "Creator Profile",
+        titleRes = R.string.nav_creator_profile,
         icon = Icons.Outlined.Person,
         selectedIcon = Icons.Filled.Person,
     )
     data object CommunityReports : Screen(
         route = "community_reports",
-        title = "Community Reports",
+        titleRes = R.string.nav_community_reports,
         icon = Icons.Outlined.Report,
         selectedIcon = Icons.Filled.Report,
     )
@@ -96,7 +98,7 @@ sealed class Screen(
     // ── Wallpaper detail + editor ─────────────────────────────────
     data object WallpaperDetail : Screen(
         route = "wallpaper/{id}",
-        title = "Preview",
+        titleRes = R.string.nav_preview,
         icon = Icons.Filled.Wallpaper,
         selectedIcon = Icons.Filled.Wallpaper,
         destinationPattern = "wallpaper/{id}?source={source}&thumbnailUrl={thumbnailUrl}&fullUrl={fullUrl}&width={width}&height={height}",
@@ -116,7 +118,7 @@ sealed class Screen(
     }
     data object WallpaperEditor : Screen(
         route = "wallpaper_editor/{id}",
-        title = "Edit",
+        titleRes = R.string.nav_edit,
         icon = Icons.Filled.Edit,
         selectedIcon = Icons.Filled.Edit,
         destinationPattern = "wallpaper_editor/{id}?source={source}&thumbnailUrl={thumbnailUrl}&fullUrl={fullUrl}&width={width}&height={height}",
@@ -138,7 +140,7 @@ sealed class Screen(
     // ── Sound detail + editor ─────────────────────────────────────
     data object SoundDetail : Screen(
         route = "sound/{id}",
-        title = "Sound",
+        titleRes = R.string.nav_sound,
         icon = Icons.Filled.MusicNote,
         selectedIcon = Icons.Filled.MusicNote,
         destinationPattern = "sound/{id}?source={source}&name={name}&previewUrl={previewUrl}&downloadUrl={downloadUrl}",
@@ -157,7 +159,7 @@ sealed class Screen(
     }
     data object SoundEditor : Screen(
         route = "sound_editor?soundId={soundId}",
-        title = "Edit Sound",
+        titleRes = R.string.nav_edit_sound,
         icon = Icons.Filled.ContentCut,
         selectedIcon = Icons.Filled.ContentCut,
         destinationPattern = "sound_editor?soundId={soundId}&source={source}&name={name}&previewUrl={previewUrl}&downloadUrl={downloadUrl}&localUri={localUri}&editConfirmed={editConfirmed}",
@@ -184,7 +186,7 @@ sealed class Screen(
     // ── Video-wallpaper preview (mock lock + home screen over live video) ──
     data object VideoWallpaperPreview : Screen(
         route = "video_wallpaper_preview/{streamUrl}",
-        title = "Preview",
+        titleRes = R.string.nav_preview,
         icon = Icons.Filled.Visibility,
         selectedIcon = Icons.Filled.Visibility,
         destinationPattern = "video_wallpaper_preview/{streamUrl}?title={title}",
@@ -198,7 +200,7 @@ sealed class Screen(
     // ── Preview (mock lock + home screen over the wallpaper) ────
     data object WallpaperPreview : Screen(
         route = "wallpaper_preview/{id}",
-        title = "Preview",
+        titleRes = R.string.nav_preview,
         icon = Icons.Filled.Visibility,
         selectedIcon = Icons.Filled.Visibility,
         destinationPattern = "wallpaper_preview/{id}?source={source}&thumbnailUrl={thumbnailUrl}&fullUrl={fullUrl}&width={width}&height={height}",
@@ -220,7 +222,7 @@ sealed class Screen(
     // ── Crop/Position ─────────────────────────────────────────────
     data object WallpaperCrop : Screen(
         route = "wallpaper_crop/{id}",
-        title = "Crop",
+        titleRes = R.string.nav_crop,
         icon = Icons.Filled.Crop,
         selectedIcon = Icons.Filled.Crop,
         destinationPattern = "wallpaper_crop/{id}?source={source}&thumbnailUrl={thumbnailUrl}&fullUrl={fullUrl}&width={width}&height={height}",
@@ -242,7 +244,7 @@ sealed class Screen(
     // ── Contact Ringtone Picker ───────────────────────────────────
     data object ContactPicker : Screen(
         route = "contact_picker/{soundId}",
-        title = "Pick Contact",
+        titleRes = R.string.nav_pick_contact,
         icon = Icons.Filled.Contacts,
         selectedIcon = Icons.Filled.Contacts,
         destinationPattern = "contact_picker/{soundId}?source={source}&name={name}&previewUrl={previewUrl}&downloadUrl={downloadUrl}",
@@ -263,7 +265,7 @@ sealed class Screen(
     // ── Onboarding ────────────────────────────────────────────────
     data object Onboarding : Screen(
         route = "onboarding",
-        title = "Setup",
+        titleRes = R.string.nav_setup,
         icon = Icons.Filled.PlayArrow,
         selectedIcon = Icons.Filled.PlayArrow,
     )
@@ -271,7 +273,7 @@ sealed class Screen(
     // ── Downloads ─────────────────────────────────────────────────
     data object Downloads : Screen(
         route = "downloads",
-        title = "Downloads",
+        titleRes = R.string.nav_downloads,
         icon = Icons.Filled.Download,
         selectedIcon = Icons.Filled.Download,
     )
@@ -279,7 +281,7 @@ sealed class Screen(
     // ── Categories ────────────────────────────────────────────────
     data object Categories : Screen(
         route = "categories",
-        title = "Categories",
+        titleRes = R.string.nav_categories,
         icon = Icons.Filled.Category,
         selectedIcon = Icons.Filled.Category,
     )
@@ -287,7 +289,7 @@ sealed class Screen(
     // ── Licenses ──────────────────────────────────────────────────
     data object Licenses : Screen(
         route = "licenses",
-        title = "Licenses",
+        titleRes = R.string.nav_licenses,
         icon = Icons.Filled.Description,
         selectedIcon = Icons.Filled.Description,
     )
@@ -295,7 +297,7 @@ sealed class Screen(
     // ── Collections ─────────────────────────────────────────────
     data object Collections : Screen(
         route = "collections",
-        title = "Collections",
+        titleRes = R.string.nav_collections,
         icon = Icons.Filled.Folder,
         selectedIcon = Icons.Filled.Folder,
         destinationPattern = "collections?importToken={importToken}&importUri={importUri}",
@@ -312,7 +314,7 @@ sealed class Screen(
     // ── Wallpaper History ───────────────────────────────────────
     data object WallpaperHistory : Screen(
         route = "wallpaper_history",
-        title = "Wallpaper History",
+        titleRes = R.string.nav_wallpaper_history,
         icon = Icons.Filled.History,
         selectedIcon = Icons.Filled.History,
     )
@@ -320,7 +322,7 @@ sealed class Screen(
     // ── AI Wallpaper Generator ──────────────────────────────────
     data object AiWallpaper : Screen(
         route = "ai_wallpaper",
-        title = "AI Generate",
+        titleRes = R.string.nav_ai_generate,
         icon = Icons.Filled.AutoAwesome,
         selectedIcon = Icons.Filled.AutoAwesome,
     )

@@ -17,10 +17,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import com.freevibe.R
 
 @Composable
 fun SearchHistoryDropdown(
@@ -66,12 +68,15 @@ fun SearchHistoryDropdown(
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     Text(
-                        "Recent searches",
+                        stringResource(R.string.search_history_title),
                         style = MaterialTheme.typography.labelMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                     TextButton(onClick = onClearAll, contentPadding = PaddingValues(horizontal = 8.dp)) {
-                        Text("Clear all", style = MaterialTheme.typography.labelSmall)
+                        Text(
+                            stringResource(R.string.search_history_clear_all),
+                            style = MaterialTheme.typography.labelSmall,
+                        )
                     }
                 }
 
@@ -79,14 +84,17 @@ fun SearchHistoryDropdown(
 
                 // Query items
                 recentQueries.take(8).forEach { query ->
-                    val openLabel = recentSearchActionLabel(query)
+                    val openLabel = stringResource(R.string.search_history_action_search_for, query)
+                    val recentSearchDescription =
+                        stringResource(R.string.search_history_recent_query_cd, query)
+                    val removeLabel = stringResource(R.string.search_history_remove_query, query)
                     Row(
                         Modifier
                             .fillMaxWidth()
                             .heightIn(min = 48.dp)
                             .clickable(onClickLabel = openLabel) { onQueryClick(query) }
                             .semantics {
-                                contentDescription = "Recent search: $query"
+                                contentDescription = recentSearchDescription
                             }
                             .padding(horizontal = 16.dp, vertical = 8.dp),
                         verticalAlignment = Alignment.CenterVertically,
@@ -110,7 +118,7 @@ fun SearchHistoryDropdown(
                         ) {
                             Icon(
                                 Icons.Default.Close,
-                                removeRecentSearchLabel(query),
+                                removeLabel,
                                 Modifier.size(14.dp),
                                 tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
                             )
@@ -123,8 +131,3 @@ fun SearchHistoryDropdown(
         }
     }
 }
-
-internal fun recentSearchActionLabel(query: String): String = "Search for $query"
-
-internal fun removeRecentSearchLabel(query: String): String =
-    "Remove $query from recent searches"

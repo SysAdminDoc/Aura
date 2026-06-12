@@ -17,7 +17,9 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import com.freevibe.R
 import com.freevibe.data.model.CommunityGuidelinesPolicy
 
 @Composable
@@ -33,7 +35,7 @@ fun CommunityGuidelinesDialog(
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 Text(
-                    "Read and accept these rules before using community uploads, votes, reports, blocks, follows, or profiles.",
+                    stringResource(R.string.community_guidelines_intro),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
@@ -58,7 +60,7 @@ fun CommunityGuidelinesDialog(
                 }
                 Spacer(Modifier.height(2.dp))
                 Text(
-                    "Aura may hide, remove, or preserve moderation records for content that breaks these guidelines.",
+                    stringResource(R.string.community_guidelines_retention_note),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
@@ -66,19 +68,19 @@ fun CommunityGuidelinesDialog(
         },
         confirmButton = {
             Button(onClick = onAccept) {
-                Text("I agree")
+                Text(stringResource(R.string.community_guidelines_accept))
             }
         },
         dismissButton = {
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 if (onReset != null) {
                     TextButton(onClick = onReset) {
-                        Text("Reset")
+                        Text(stringResource(R.string.common_reset))
                     }
                 }
                 if (allowDismiss) {
                     TextButton(onClick = onDismiss) {
-                        Text("Cancel")
+                        Text(stringResource(R.string.common_cancel))
                     }
                 }
             }

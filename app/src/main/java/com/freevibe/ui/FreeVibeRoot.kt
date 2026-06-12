@@ -15,6 +15,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavType
@@ -224,6 +225,7 @@ fun FreeVibeRoot(
                                         screen = screen,
                                         destination = currentDestination,
                                     )
+                                    val screenTitle = stringResource(screen.titleRes)
 
                                     NavigationBarItem(
                                         selected = selected,
@@ -241,7 +243,7 @@ fun FreeVibeRoot(
                                                 Box {
                                                     Icon(
                                                         imageVector = if (selected) screen.selectedIcon else screen.icon,
-                                                        contentDescription = screen.title,
+                                                        contentDescription = screenTitle,
                                                     )
                                                     CountBadge(
                                                         count = favoritesCount,
@@ -253,13 +255,13 @@ fun FreeVibeRoot(
                                             } else {
                                                 Icon(
                                                     imageVector = if (selected) screen.selectedIcon else screen.icon,
-                                                    contentDescription = screen.title,
+                                                    contentDescription = screenTitle,
                                                 )
                                             }
                                         },
                                         label = {
                                             Text(
-                                                screen.title,
+                                                screenTitle,
                                                 style = MaterialTheme.typography.labelSmall,
                                                 maxLines = 1,
                                             )
