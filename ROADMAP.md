@@ -248,14 +248,6 @@ Append-only Cycle 3 handoff. Every item below is source-backed in `docs/research
 
 Append-only Cycle 4 handoff. Every item below is source-backed in `docs/research/cycle-4-2026-06-04.md`; merge into the existing Now/Next/Later item named in `Touches` when implementation starts.
 
-- [ ] 🤖 🔬 **P0 — Privacy policy and Data safety source-of-truth matrix**
-  - Why: Aura handles contacts, coarse location, microphone recordings, user-provided media, Firebase anonymous IDs, public community metadata, crash diagnostics, local preferences, and third-party provider requests. Play requires a privacy policy and accurate Data safety disclosures.
-  - Evidence: manifest permissions; `CommunityIdentityProvider.kt`; community upload repositories; `CrashDiagnosticsCollector.kt`; Google Play User Data/Data safety/prominent-disclosure guidance.
-  - Touches: `docs/privacy/data-safety.md`, Settings privacy screen, README, release checklist, issue templates, distribution docs.
-  - Acceptance: every permission/SDK/network destination/local store has data type, purpose, collection/sharing status, retention, deletion path, and Data safety answer; in-app privacy screen links the policy and local-only diagnostics statement; release checklist requires review on manifest/dependency changes.
-  - Verify: static permission inventory matches matrix; Data safety rows cover location/contacts/audio/photos/user content/crash logs/diagnostics/device IDs; no release can ship with unchecked privacy matrix diff.
-  - Progress 2026-06-07: Cycle 140 added the in-app Settings privacy-policy link, public policy URL contract, README alignment, and verify/release workflow gate. Cycle 141 added the first checked Data safety slice with `docs/privacy/data-safety.md`, `docs/privacy/data-safety.json`, `tools/privacy_data_safety_check.py`, focused tests, and verify/release workflow enforcement for all manifest permissions. Cycle 142 extended the same gate to every reviewed endpoint ID in `docs/security/network-endpoints.json`. Cycle 143 added source-backed local storage rows for DataStore, Room, SharedPreferences, diagnostics logs, media files, generated wallpapers, offline favorites, cache/share artifacts, deletion paths, and backup/transfer posture. Cycle 144 added Gradle-marker-backed SDK surface rows for Firebase Auth, RTDB, Storage, Functions, App Check, and Play services ML Kit/module install. Play app-content declaration packet work remains open.
-
 - [ ] 🤖 🔬 **P0 — Community upload public-data lifecycle and deletion workflow**
   - Why: Community sounds/wallpapers and collection shares are public-readable, and upload metadata includes Firebase download URLs, uploader labels/IDs, file names, tags, and categories. Users need to know uploads are public and need removal controls.
   - Evidence: `database.rules.json` public reads; `UploadRepository.kt` public download URL metadata; Firebase rules guidance; Cycle 1 report queue and Cycle 3 takedown items.
