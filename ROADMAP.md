@@ -3445,13 +3445,6 @@ Net-new items from the fourth research pass (2026-06-10). Focused on: transitive
 
 ### P1 — Reliability and dependency currency
 
-- [ ] P1 — **Bump WorkManager from 2.10.0 to 2.11.x**
-  Why: WorkManager 2.11.0-2.11.2 fix network-constraint misfires on Android 15+, periodic work not rescheduling after exceptions, and add `setRemoteSessionTimeoutMillis`. These hit exactly Aura's rotation-worker and weather-worker workloads.
-  Evidence: WorkManager release notes (2.11.0 Oct 2025, 2.11.1 Jan 2026); `gradle/libs.versions.toml` pins 2.10.0; Cycle 14 background-work items document constraint/scheduling concerns.
-  Touches: `gradle/libs.versions.toml`, `app/build.gradle.kts`, `gradle/verification-metadata.xml`, worker unit tests, background-work scheduling ledger docs.
-  Acceptance: all workers compile and pass existing tests; Android 15+ network constraint behavior verified in scheduling ledger docs; minSdk 23 requirement satisfied (Aura minSdk is 26).
-  Complexity: S
-
 - [ ] P1 — **Verify 16KB page-size alignment on release APK**
   Why: youtubedl-android 0.18.0+ ships 16KB-aligned 64-bit libs. AGP 8.7.3 qualifies. No off-Play deadline exists, but Android 16 runs misaligned apps in a nag-dialog compat mode and Android 17 adds a fatal mode. One verification run documents compliance.
   Evidence: `check_elf_alignment.sh` from Android docs; `useLegacyPackaging = true` in `app/build.gradle.kts`; youtubedl-android PR #331.
