@@ -347,13 +347,6 @@ Append-only Cycle 6 handoff. Every item below is source-backed in `docs/research
   - Acceptance: every remote/local media path declares allowed schemes, max bytes, temp-file behavior, cleanup, MIME/content validation, and user-facing error class; no direct `body.bytes()` or unbounded `copyTo()` remains on untrusted input.
   - Verify: unit tests for oversized advertised, oversized chunked, empty, truncated, wrong MIME, unsupported container, cancellation cleanup, and temp-file deletion.
 
-- [ ] 🤖 🔬 **P1 — Remove or quarantine the ccMixter cleartext exception**
-  - Why: `network_security_config.xml` permits cleartext traffic for `ccmixter.org`; Android guidance says insecure cleartext config should be avoided whenever possible.
-  - Evidence: `network_security_config.xml`; Android network-security-config docs; Cycle 3 provider-policy queue.
-  - Touches: ccMixter repository, provider policy matrix, network security config, source fallback UI.
-  - Acceptance: ccMixter uses HTTPS-only endpoints, is proxied/mirrored with provenance, or is disabled when HTTPS is unavailable; new cleartext domain additions require provider-policy approval.
-  - Verify: static check for `cleartextTrafficPermitted="true"`; run ccMixter search over HTTPS; disabled-source fallback still leaves Sounds useful.
-
 - [ ] 🤖 🔬 **P1 — Narrow FileProvider share surface**
   - Why: FileProvider currently exposes offline favorites and multiple cache directories. Sharing should use purpose-built files in `cache/share_out` unless a flow explicitly requires another path.
   - Evidence: `file_paths.xml`; `CollectionExporter.kt` safe `share_out` precedent; Android FileProvider and secure file-sharing docs.
