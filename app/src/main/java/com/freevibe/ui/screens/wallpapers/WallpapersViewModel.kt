@@ -125,7 +125,7 @@ class WallpapersViewModel @Inject constructor(
     // #9: Grid columns preference
     val gridColumns = prefs.wallpaperGridColumns.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 2)
     val wallhavenProviderEnabled = prefs.wallhavenProviderEnabled.stateIn(viewModelScope, SharingStarted.Eagerly, true)
-    val redditProviderEnabled = prefs.redditProviderEnabled.stateIn(viewModelScope, SharingStarted.Eagerly, true)
+    val redditProviderEnabled = prefs.redditProviderEnabled.stateIn(viewModelScope, SharingStarted.Eagerly, false)
     val pexelsProviderEnabled = prefs.pexelsProviderEnabled.stateIn(viewModelScope, SharingStarted.Eagerly, true)
     val pixabayProviderEnabled = prefs.pixabayProviderEnabled.stateIn(viewModelScope, SharingStarted.Eagerly, true)
     val communityProviderEnabled = prefs.communityProviderEnabled.stateIn(viewModelScope, SharingStarted.Eagerly, true)
@@ -140,7 +140,7 @@ class WallpapersViewModel @Inject constructor(
     val favoriteIdentities = favoritesRepo.allIdentities()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptySet())
 
-    /** Reddit's most upvoted wallpaper today — crowd-sourced quality metric */
+    /** Daily wallpaper pick from active non-retired sources. */
     private val _dailyPick = MutableStateFlow<Wallpaper?>(null)
     val dailyPick = _dailyPick.asStateFlow()
 
@@ -198,11 +198,7 @@ class WallpapersViewModel @Inject constructor(
     private fun fetchDailyPick() {
         viewModelScope.launch {
             try {
-                if (!isRedditProviderEnabled()) {
-                    _dailyPick.value = null
-                    return@launch
-                }
-                _dailyPick.value = withTimeoutOrNull(5000L) { redditRepo.getDailyTopWallpaper() }
+                _dailyPick.value = withTimeoutOrNull(5000L) { wallpaperRepo.getWallpaperOfTheDay() }
             } catch (e: Exception) {
                 if (e is kotlinx.coroutines.CancellationException) throw e
             }
@@ -1172,7 +1168,8 @@ class WallpapersViewModel @Inject constructor(
         }
     }
 
-    private fun redditDisabledMessage(): String = "Reddit source is disabled in Settings"
+    private fun redditDisabledMessage(): String =
+        "Reddit source is discontinued. Saved Reddit items keep their metadata, but new Reddit feeds are off."
 
     private fun providerDisabledMessage(tab: WallpaperTab): String = when (tab) {
         WallpaperTab.WALLHAVEN -> wallhavenDisabledMessage()

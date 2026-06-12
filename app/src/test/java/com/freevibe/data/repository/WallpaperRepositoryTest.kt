@@ -6,6 +6,8 @@ import com.freevibe.data.model.ContentSource
 import com.freevibe.data.model.SearchResult
 import com.freevibe.data.model.Wallpaper
 import com.freevibe.data.remote.bing.BingDailyApi
+import com.freevibe.data.remote.bing.BingImage
+import com.freevibe.data.remote.bing.BingImageResponse
 import com.freevibe.data.remote.pexels.PexelsApi
 import com.freevibe.data.remote.pexels.PexelsPhoto
 import com.freevibe.data.remote.pexels.PexelsPhotoResponse
@@ -191,6 +193,44 @@ class WallpaperRepositoryTest {
         assertFalse(result.hasMore)
         assertEquals(1L, sourceMetrics.snapshot("bing")?.disabledCount)
         coVerify(exactly = 0) { bingApi.getImages(any(), any(), any(), any(), any()) }
+    }
+
+    @Test
+    fun `getWallpaperOfTheDay prefers Bing daily over Wallhaven`() = runTest {
+        val bingApi = mockk<BingDailyApi>()
+        val wallhavenApi = mockk<WallhavenApi>()
+        coEvery { bingApi.getImages(any(), any(), any(), any(), any()) } returns bingResponse("daily_bing")
+        val repo = wallpaperRepository(
+            bingApi = bingApi,
+            wallhavenApi = wallhavenApi,
+        )
+
+        val result = repo.getWallpaperOfTheDay()
+
+        assertEquals(ContentSource.BING, result?.source)
+        assertTrue(result?.id.orEmpty().startsWith("bing_20260611_"))
+        coVerify(exactly = 0) {
+            wallhavenApi.search(any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), any())
+        }
+    }
+
+    @Test
+    fun `getWallpaperOfTheDay falls back to Wallhaven when Bing is unavailable`() = runTest {
+        val bingApi = mockk<BingDailyApi>()
+        val wallhavenApi = mockk<WallhavenApi>()
+        coEvery { bingApi.getImages(any(), any(), any(), any(), any()) } throws UnknownHostException("dns")
+        coEvery {
+            wallhavenApi.search(any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), any())
+        } returns wallhavenResponse("daily_wh")
+        val repo = wallpaperRepository(
+            bingApi = bingApi,
+            wallhavenApi = wallhavenApi,
+        )
+
+        val result = repo.getWallpaperOfTheDay()
+
+        assertEquals(ContentSource.WALLHAVEN, result?.source)
+        assertEquals("wh_daily_wh", result?.id)
     }
 
     @Test
@@ -385,6 +425,17 @@ class WallpaperRepositoryTest {
                 imageWidth = 1440,
                 imageHeight = 3200,
                 user = "Pixabay Maker",
+            ),
+        ),
+    )
+
+    private fun bingResponse(id: String) = BingImageResponse(
+        images = listOf(
+            BingImage(
+                startDate = "20260611",
+        urlbase = "/th?id=OHR.$id",
+                copyright = "Daily image",
+                title = "Daily image",
             ),
         ),
     )

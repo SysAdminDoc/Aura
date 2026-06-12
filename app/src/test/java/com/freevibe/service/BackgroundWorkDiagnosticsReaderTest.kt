@@ -86,14 +86,14 @@ class BackgroundWorkDiagnosticsReaderTest {
     }
 
     @Test
-    fun backgroundWorkActionHintExplainsSourceSpecificDeferral() {
+    fun backgroundWorkActionHintExplainsDailyWallpaperSourceDeferral() {
         val hint = backgroundWorkActionHint(
             row = BackgroundWorkStatusRow(
                 label = "Daily wallpaper notification",
                 uniqueWorkName = DailyWallpaperWorker.WORK_NAME,
                 workInfoStatus = "RUNNING=1",
                 lastResult = "retry",
-                lastDeferralReason = "no eligible Reddit daily wallpaper was available",
+                lastDeferralReason = "no eligible Bing or Wallhaven daily wallpaper was available",
             ),
             network = BackgroundNetworkDiagnostics(
                 activeNetworkMetered = false,
@@ -102,7 +102,7 @@ class BackgroundWorkDiagnosticsReaderTest {
         )
 
         assertEquals(
-            "No safe Reddit wallpaper was available; review subreddit settings or wait for the next daily run.",
+            "No daily wallpaper was available from Bing or Wallhaven; check enabled providers or wait for the next run.",
             hint,
         )
     }

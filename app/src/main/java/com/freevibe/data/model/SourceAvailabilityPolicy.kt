@@ -21,10 +21,17 @@ fun sourceUnavailableReasonForMessage(
     source: String,
     message: String?,
 ): String? {
-    val raw = message?.takeIf { REMOTE_REMOVED_REGEX.containsMatchIn(it) } ?: return null
     val sourceName = source.uppercase(Locale.ROOT)
+    val raw = message?.takeIf {
+        REMOTE_REMOVED_REGEX.containsMatchIn(it) ||
+            (sourceName == ContentSource.REDDIT.name && it.contains("403"))
+    } ?: return null
     return when (sourceName) {
-        ContentSource.REDDIT.name -> "Source post is unavailable or removed"
+        ContentSource.REDDIT.name -> if (raw.contains("403")) {
+            "Reddit public source is discontinued"
+        } else {
+            "Source post is unavailable or removed"
+        }
         ContentSource.PEXELS.name -> "Pexels media is unavailable or removed"
         ContentSource.PIXABAY.name -> "Pixabay media is unavailable or removed"
         ContentSource.YOUTUBE.name -> "YouTube media is unavailable or removed"

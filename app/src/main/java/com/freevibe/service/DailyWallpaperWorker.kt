@@ -16,65 +16,38 @@ import androidx.hilt.work.HiltWorker
 import androidx.work.*
 import com.freevibe.MainActivity
 import com.freevibe.R
-import com.freevibe.data.local.PreferencesManager
-import com.freevibe.data.remote.reddit.RedditApi
-import com.freevibe.data.remote.toWallpaper
+import com.freevibe.data.model.ContentSource
+import com.freevibe.data.model.Wallpaper
+import com.freevibe.data.repository.WallpaperRepository
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withContext
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import java.util.concurrent.TimeUnit
 
 /**
- * Daily wallpaper notification — shows Reddit's most upvoted wallpaper of the day.
- * Checks r/wallpapers + r/MobileWallpaper sorted by top/day,
- * picks the single highest-upvoted image post. Upvote count provides a real
- * crowd-sourced quality metric.
+ * Daily wallpaper notification. Uses Bing Daily first, then Wallhaven toplist
+ * as a fallback so the worker is not coupled to retired Reddit JSON endpoints.
  */
 @HiltWorker
 class DailyWallpaperWorker @AssistedInject constructor(
     @Assisted appContext: Context,
     @Assisted workerParams: WorkerParameters,
-    private val redditApi: RedditApi,
+    private val wallpaperRepository: WallpaperRepository,
     private val okHttpClient: OkHttpClient,
-    private val prefs: PreferencesManager,
-    private val sourceMetrics: SourceMetrics,
     private val receiptStore: BackgroundWorkReceiptStore,
 ) : CoroutineWorker(appContext, workerParams) {
 
     override suspend fun doWork(): Result {
         return try {
-            if (!prefs.redditProviderEnabled.first()) {
-                sourceMetrics.recordDisabled("reddit")
-                return successReceipt()
-            }
-            // Fetch today's top image posts from multiple wallpaper subreddits
-            val subreddits = listOf("wallpapers", "MobileWallpaper")
-            val topPost = subreddits.flatMap { sub ->
-                try {
-                    redditApi.getSubredditPosts(
-                        subreddit = sub,
-                        sort = "top",
-                        timeRange = "day",
-                        limit = 5,
-                    ).data.children.map { it.data }
-                } catch (e: Exception) {
-                    if (e is kotlinx.coroutines.CancellationException) throw e
-                    emptyList()
-                }
-            }
-                .filter { it.isImage && !it.over18 }
-                .maxByOrNull { it.ups }
-                ?: return retryReceipt("no eligible Reddit daily wallpaper was available")
-
-            val wallpaper = topPost.toWallpaper()
+            val wallpaper = wallpaperRepository.getWallpaperOfTheDay()
+                ?: return retryReceipt("no eligible Bing or Wallhaven daily wallpaper was available")
 
             // Download thumbnail for notification
-            val thumbUrl = topPost.thumbUrl.takeIf { it.startsWith("http") }
-                ?: wallpaper.thumbnailUrl
+            val thumbUrl = wallpaper.thumbnailUrl.takeIf { it.startsWith("http") }
+                ?: wallpaper.fullUrl
             val bitmap = withContext(Dispatchers.IO) {
                 try {
                     okHttpClient.newCall(Request.Builder().url(thumbUrl).build()).execute().use { resp ->
@@ -115,15 +88,17 @@ class DailyWallpaperWorker @AssistedInject constructor(
                     PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
                 )
 
-                val upvotes = formatUpvotes(topPost.ups)
-                val res = topPost.parsedResolution
-                val resText = if (res != null) "${res.first}x${res.second} " else ""
-                val subName = "r/${topPost.subreddit}"
+                val sourceName = wallpaper.dailySourceName()
+                val sizeText = if (wallpaper.width > 0 && wallpaper.height > 0) {
+                    "${wallpaper.width}x${wallpaper.height} "
+                } else {
+                    ""
+                }
 
                 val notification = NotificationCompat.Builder(applicationContext, CHANNEL_ID)
                     .setSmallIcon(R.drawable.ic_notification)
                     .setContentTitle("Wallpaper of the Day")
-                    .setContentText("$upvotes upvotes on $subName ${resText}- tap to preview")
+                    .setContentText("$sourceName daily pick ${sizeText}- tap to preview")
                     .setContentIntent(pendingIntent)
                     .setAutoCancel(true)
                     .setPriority(NotificationCompat.PRIORITY_LOW)
@@ -132,7 +107,7 @@ class DailyWallpaperWorker @AssistedInject constructor(
                             setLargeIcon(it)
                             setStyle(NotificationCompat.BigPictureStyle()
                                 .bigPicture(it)
-                                .setSummaryText("$upvotes upvotes on $subName"))
+                                .setSummaryText("$sourceName daily pick"))
                         }
                     }
                     .build()
@@ -147,7 +122,7 @@ class DailyWallpaperWorker @AssistedInject constructor(
             receiptStore.recordRetry(
                 uniqueWorkName = WORK_NAME,
                 errorClass = e.javaClass.simpleName,
-                deferralReason = "daily wallpaper worker failed; check Reddit provider availability and network state",
+                deferralReason = "daily wallpaper worker failed; check Bing/Wallhaven provider availability and network state",
             )
             Result.retry()
         }
@@ -166,19 +141,19 @@ class DailyWallpaperWorker @AssistedInject constructor(
         return Result.retry()
     }
 
-    private fun formatUpvotes(ups: Int): String = when {
-        ups >= 10_000 -> String.format(java.util.Locale.US, "%.1fk", ups / 1000f)
-        ups >= 1_000 -> String.format(java.util.Locale.US, "%.1fk", ups / 1000f)
-        else -> "$ups"
-    }
-
     private fun createNotificationChannel() {
         val channel = NotificationChannel(
             CHANNEL_ID, "Daily Wallpaper",
             NotificationManager.IMPORTANCE_LOW,
-        ).apply { description = "Today's most upvoted wallpaper from Reddit" }
+        ).apply { description = "Daily wallpaper picks from active wallpaper sources" }
         val manager = applicationContext.getSystemService(NotificationManager::class.java)
         manager.createNotificationChannel(channel)
+    }
+
+    private fun Wallpaper.dailySourceName(): String = when (source) {
+        ContentSource.BING -> "Bing"
+        ContentSource.WALLHAVEN -> "Wallhaven"
+        else -> source.name.lowercase().replaceFirstChar { it.uppercase() }
     }
 
     companion object {

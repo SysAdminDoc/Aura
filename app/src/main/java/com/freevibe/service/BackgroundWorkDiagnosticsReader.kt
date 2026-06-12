@@ -182,8 +182,11 @@ internal fun backgroundWorkActionHint(
     }
 
     val reason = row.lastDeferralReason.orEmpty().lowercase(Locale.ROOT)
+    if (reason.contains("no eligible bing or wallhaven")) {
+        return "No daily wallpaper was available from Bing or Wallhaven; check enabled providers or wait for the next run."
+    }
     if (reason.contains("no eligible reddit")) {
-        return "No safe Reddit wallpaper was available; review subreddit settings or wait for the next daily run."
+        return "No safe Reddit wallpaper was available from a legacy run; switch daily wallpaper to active sources."
     }
     if (reason.contains("hash") || reason.contains("bundle")) {
         return "Aura Originals will retry; repeated failures point to a bundle download, size, hash, or file-write validation problem."

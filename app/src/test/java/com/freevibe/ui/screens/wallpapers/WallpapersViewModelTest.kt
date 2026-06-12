@@ -253,7 +253,7 @@ class WallpapersViewModelTest {
     }
 
     @Test
-    fun `reddit disabled skips daily pick and redirects reddit tab to discover`() = runTest(dispatcher) {
+    fun `reddit disabled keeps daily pick on active sources and redirects reddit tab to discover`() = runTest(dispatcher) {
         val wallpaperRepo = mockk<WallpaperRepository>()
         val redditRepo = mockk<RedditRepository>()
 
@@ -261,10 +261,10 @@ class WallpapersViewModelTest {
             wallpaperRepo = wallpaperRepo,
             redditRepo = redditRepo,
         )
-        coEvery { redditRepo.getDailyTopWallpaper() } returns wallpaper(
-            id = "rd_daily",
+        coEvery { wallpaperRepo.getWallpaperOfTheDay() } returns wallpaper(
+            id = "bing_daily",
             color = "#101820",
-            source = ContentSource.REDDIT,
+            source = ContentSource.BING,
         )
 
         val viewModel = createViewModel(
@@ -274,7 +274,7 @@ class WallpapersViewModelTest {
         )
 
         advanceUntilIdle()
-        assertNull(viewModel.dailyPick.value)
+        assertEquals("bing_daily", viewModel.dailyPick.value?.id)
         coVerify(exactly = 0) { redditRepo.getDailyTopWallpaper() }
 
         viewModel.selectTab(WallpaperTab.REDDIT)
@@ -913,6 +913,7 @@ class WallpapersViewModelTest {
         coEvery { wallpaperRepo.getWallhaven(any(), any(), any()) } returns emptyWallpaperResult()
         coEvery { wallpaperRepo.getDiscover(any(), any(), any()) } returns emptyWallpaperResult()
         coEvery { wallpaperRepo.getCachedDiscover(any()) } returns emptyList()
+        coEvery { wallpaperRepo.getWallpaperOfTheDay() } returns null
         coEvery { wallpaperRepo.findSimilar(any(), any()) } returns emptyWallpaperResult()
         coEvery { redditRepo.getDailyTopWallpaper() } returns null
         every { redditRepo.resetPagination() } just runs

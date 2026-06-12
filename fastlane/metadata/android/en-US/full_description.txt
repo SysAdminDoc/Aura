@@ -1,9 +1,9 @@
 Aura is a free, open-source Android app for personalizing your device with wallpapers, video wallpapers, ringtones, notification sounds, and alarm tones from multiple free content sources.
 
 Features:
-- Browse millions of HD/4K wallpapers from Wallhaven, Pexels, Pixabay, Reddit, and Bing Daily
+- Browse millions of HD/4K wallpapers from Wallhaven, Pexels, Pixabay, and Bing Daily
 - YouTube-first ringtone, notification, and alarm discovery powered by NewPipe + yt-dlp
-- Video live wallpapers from Pexels, YouTube, Reddit, and Pixabay, plus local clips and GIFs
+- Video live wallpapers from Pexels, YouTube, Pixabay, legacy saved Reddit items, plus local clips and GIFs
 - Loop and crop editor for video wallpapers with frame thumbnails and trim handles
 - Parallax / depth wallpapers using on-device ML Kit Subject Segmentation
 - Weather effects overlay (rain, snow, fog, sunny) driven by Open-Meteo
@@ -27,7 +27,7 @@ Features:
 - All preferences stored locally with DataStore
 - No ads, no tracking, no account required, no subscription
 
-Aura uses free APIs from Wallhaven, Pexels, Pixabay, Freesound, and Reddit, plus NewPipe + yt-dlp for YouTube access. Some sources accept optional free API keys that can be configured in Settings for higher rate limits or NSFW content. Content licenses vary by source.
+Aura uses free APIs from Wallhaven, Pexels, Pixabay, and Freesound, plus NewPipe + yt-dlp for YouTube access. Legacy saved Reddit items keep source attribution, but Reddit's public feed is off by default after unauthenticated endpoints were retired. Some sources accept optional free API keys that can be configured in Settings for higher rate limits or NSFW content. Content licenses vary by source.
 
 Built with Kotlin, Jetpack Compose, Material 3, Hilt, Room, Retrofit, Coil, ExoPlayer, and ML Kit.
 

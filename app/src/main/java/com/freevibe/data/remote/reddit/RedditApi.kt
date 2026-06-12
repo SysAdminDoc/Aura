@@ -8,7 +8,7 @@ import retrofit2.http.Query
 
 interface RedditApi {
 
-    /** Fetch posts from a subreddit (public JSON endpoint, no auth needed) */
+    /** Fetch posts from a legacy subreddit feed. Public JSON endpoints may return 403. */
     @GET("r/{subreddit}/{sort}.json")
     suspend fun getSubredditPosts(
         @Path("subreddit") subreddit: String,
@@ -19,7 +19,7 @@ interface RedditApi {
         @Query("raw_json") rawJson: Int = 1,
     ): RedditListingResponse
 
-    /** Search within a subreddit */
+    /** Search within a legacy subreddit feed. Public JSON endpoints may return 403. */
     @GET("r/{subreddit}/search.json")
     suspend fun searchSubreddit(
         @Path("subreddit") subreddit: String,

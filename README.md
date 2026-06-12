@@ -18,8 +18,8 @@
 ## What Makes Aura Different
 
 - **Quality-ranked YouTube sounds** — ringtones, notifications, and alarms use intent-specific YouTube searches with tight duration windows and cleaner result filtering.
-- **Video wallpapers from multiple sources** — browse Reddit, Pexels, Pixabay, and YouTube, import local videos/GIFs, then tune loop, crop, Fill, or Fit before applying.
-- **Multi-source personalization** — Wallhaven, Bing, Pexels, Pixabay, Reddit, YouTube, legacy Freesound attributions, and community uploads.
+- **Video wallpapers from multiple sources** — browse Pexels, Pixabay, YouTube, and legacy saved Reddit items, import local videos/GIFs, then tune loop, crop, Fill, or Fit before applying.
+- **Multi-source personalization** — Wallhaven, Bing, Pexels, Pixabay, YouTube, legacy Reddit/Freesound attributions, and community uploads.
 - **Instant startup** — Discover feed is cached locally. On subsequent launches wallpapers appear immediately while fresh results load in the background.
 - **Performance proof path** — Baseline Profile and Macrobenchmark tests cover startup, Wallpaper Detail, and the main media grids on a physical-device runner.
 - **5 bottom nav tabs** — Wallpapers, Videos, Sounds, Favorites, Settings.
@@ -43,7 +43,7 @@ the same link is available in Settings > About > Privacy policy.
 
 | Feature | Description |
 |---------|-------------|
-| **HD/4K Wallpapers** | Discover feed from Wallhaven, Pexels, Pixabay, Bing & Reddit |
+| **HD/4K Wallpapers** | Discover feed from Wallhaven, Pexels, Pixabay & Bing |
 | **Wallpaper Quality Filters** | Discover chips for For You, AMOLED, 4K+, Portrait, and Icon Safe with curated ranking |
 | **Community Wallpapers** | Upload phone-cropped gallery images with tags, Palette colors, and community voting |
 | **Creator Profiles** | View upload stats, votes, followed creators, followed uploads, and top creator leaderboard |
@@ -83,7 +83,7 @@ the same link is available in Settings > About > Privacy policy.
 | [Wallhaven](https://wallhaven.cc) | 1M+ HD/4K wallpapers | None (optional key for NSFW) |
 | [Pexels](https://pexels.com) | Curated HD photos + videos | Built-in key |
 | [Pixabay](https://pixabay.com) | Editor's choice photos + videos | Built-in key |
-| [Reddit](https://reddit.com) | 7 wallpaper + 4 video subreddits | None |
+| [Reddit](https://reddit.com) | Legacy saved wallpaper/video attribution; public feeds are off by default after Reddit retired unauthenticated endpoints | None |
 | [YouTube](https://youtube.com) | Video wallpapers + active sound feed via NewPipe + yt-dlp | None |
 | [Freesound](https://freesound.org) | Legacy sound attribution for older favorites | Built-in key |
 | Firebase | Community wallpaper/sound uploads + voting | Built-in |
@@ -95,7 +95,7 @@ Jetpack Compose UI (16+ screens, 5 bottom nav tabs)
   Wallpapers | Videos | Sounds | Favorites | Settings
   Editors | Collections | Downloads | Onboarding | Widget
 ViewModels (Hilt) + Cache Layer
-  Repos: Wallhaven, Pexels, Pixabay, Bing, Reddit, YouTube, Freesound legacy,
+  Repos: Wallhaven, Pexels, Pixabay, Bing, Reddit legacy, YouTube, Freesound legacy,
          Collections
   Services: WallpaperApplier, SoundApplier, VideoWallpaperService,
             ParallaxWallpaperService, WeatherWallpaperService, DualWallpaperService,

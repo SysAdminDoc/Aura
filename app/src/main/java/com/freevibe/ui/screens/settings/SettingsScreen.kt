@@ -548,17 +548,17 @@ fun SettingsScreen(
             )
             SettingsItem(
                 icon = Icons.Default.Forum,
-                title = "Reddit subreddits",
-                subtitle = "${redditSubs.split(",").size} subreddits",
+                title = "Legacy Reddit subreddits",
+                subtitle = "${redditSubs.split(",").size} saved feed names",
                 onClick = { showRedditEditor = true },
             )
             SettingsToggle(
                 icon = Icons.Default.Forum,
-                title = "Enable Reddit source",
+                title = "Enable discontinued Reddit source",
                 subtitle = if (redditProviderEnabled) {
-                    "Shows Reddit wallpapers, daily picks, and video loops"
+                    "Attempts legacy Reddit feeds; new installs should leave this off"
                 } else {
-                    "Hides Reddit browsing and skips Reddit background fetches"
+                    "Reddit retired public feeds; saved Reddit items remain available"
                 },
                 checked = redditProviderEnabled,
                 onCheckedChange = { viewModel.setRedditProviderEnabled(it) },
@@ -781,13 +781,14 @@ fun SettingsScreen(
             if (showSchedulerSource) {
                 val sources = listOf(
                     "discover" to "Discover (mixed)", "favorites" to "My Favorites",
-                    "wallhaven" to "Wallhaven", "pixabay" to "Pixabay", "reddit" to "Reddit",
+                    "wallhaven" to "Wallhaven", "pixabay" to "Pixabay", "reddit" to "Reddit (legacy)",
                     "bing" to "Bing Daily", "collection" to "A collection…",
                 ).filter { (key, _) ->
                     when (key) {
                         "wallhaven" -> wallhavenProviderEnabled || schedulerSource == "wallhaven"
                         "pixabay" -> pixabayProviderEnabled || schedulerSource == "pixabay"
                         "bing" -> bingProviderEnabled || schedulerSource == "bing"
+                        "reddit" -> redditProviderEnabled || schedulerSource == "reddit"
                         else -> true
                     }
                 }
@@ -1740,6 +1741,7 @@ fun SettingsScreen(
             wallhavenProviderEnabled = wallhavenProviderEnabled,
             bingProviderEnabled = bingProviderEnabled,
             pixabayProviderEnabled = pixabayProviderEnabled,
+            redditProviderEnabled = redditProviderEnabled,
             onDismiss = { showSourcePicker = false },
             onSelect = { source ->
                 viewModel.setAutoWpSource(source)
@@ -1880,16 +1882,16 @@ fun SettingsScreen(
         )
     }
 
-    // Reddit subreddits editor
+    // Legacy Reddit subreddits editor
     if (showRedditEditor) {
         var subsText by remember { mutableStateOf(redditSubs) }
         AlertDialog(
             onDismissRequest = { showRedditEditor = false },
-            title = { Text("Reddit subreddits") },
+            title = { Text("Legacy Reddit subreddits") },
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Text(
-                        "Comma-separated subreddit names (without r/)",
+                        "Saved legacy feed names (without r/)",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
@@ -3211,13 +3213,14 @@ private fun SourcePickerDialog(
     wallhavenProviderEnabled: Boolean,
     bingProviderEnabled: Boolean,
     pixabayProviderEnabled: Boolean,
+    redditProviderEnabled: Boolean,
     onDismiss: () -> Unit,
     onSelect: (String) -> Unit,
 ) {
     val sources = listOf(
         "discover" to "Discover (mixed)",
         "favorites" to "My Favorites",
-        "reddit" to "Reddit",
+        "reddit" to "Reddit (legacy)",
         "wallhaven" to "Wallhaven",
         "pixabay" to "Pixabay",
         "bing" to "Bing Daily",
@@ -3226,6 +3229,7 @@ private fun SourcePickerDialog(
             "wallhaven" -> wallhavenProviderEnabled || currentSource == "wallhaven"
             "pixabay" -> pixabayProviderEnabled || currentSource == "pixabay"
             "bing" -> bingProviderEnabled || currentSource == "bing"
+            "reddit" -> redditProviderEnabled || currentSource == "reddit"
             else -> true
         }
     }

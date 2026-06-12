@@ -1007,7 +1007,7 @@ private fun WallpaperGrid(
                                 Text("Wallpaper of the Day", style = MaterialTheme.typography.labelLarge, color = Color.White)
                             }
                             Text(
-                                pick.category.ifEmpty { "Top voted on Reddit" },
+                                pick.category.ifEmpty { "Daily pick" },
                                 style = MaterialTheme.typography.labelSmall,
                                 color = Color.White.copy(alpha = 0.7f),
                             )

@@ -345,6 +345,17 @@ class WallpaperRepository @Inject constructor(
         }
     }
 
+    suspend fun getWallpaperOfTheDay(): Wallpaper? {
+        loadSourceSafely { getBingDaily(page = 1) }
+            ?.items
+            ?.firstOrNull()
+            ?.let { return it }
+
+        return loadSourceSafely { getWallhaven(page = 1, topRange = "1d") }
+            ?.items
+            ?.firstOrNull()
+    }
+
     // -- Pixabay --
 
     suspend fun getPixabay(page: Int = 1, query: String = ""): SearchResult<Wallpaper> {

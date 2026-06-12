@@ -29,11 +29,19 @@ class SourceAvailabilityPolicyTest {
                 IllegalStateException("post was removed"),
             ),
         )
+        assertEquals(
+            "Reddit public source is discontinued",
+            sourceUnavailableReasonForFailure(
+                ContentSource.REDDIT,
+                IllegalStateException("HTTP 403 Forbidden"),
+            ),
+        )
     }
 
     @Test
     fun `sourceUnavailableReasonForFailure ignores transient failures`() {
         assertNull(sourceUnavailableReasonForFailure(ContentSource.PIXABAY, IllegalStateException("HTTP 500")))
+        assertNull(sourceUnavailableReasonForFailure(ContentSource.PIXABAY, IllegalStateException("HTTP 403")))
         assertNull(sourceUnavailableReasonForFailure(ContentSource.PIXABAY, java.net.SocketTimeoutException("timeout")))
         assertNull(sourceUnavailableReasonForFailure(ContentSource.PIXABAY, null))
     }

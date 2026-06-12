@@ -25,7 +25,6 @@ import coil.imageLoader
 import coil.request.ImageRequest
 import kotlinx.coroutines.flow.first
 import com.freevibe.data.model.WallpaperTarget
-import com.freevibe.data.repository.RedditRepository
 import com.freevibe.data.repository.WallpaperRepository
 import com.freevibe.service.WallpaperApplier
 import com.freevibe.service.WallpaperHistoryManager
@@ -240,7 +239,7 @@ private fun WidgetContent(
                 ) {
                     QuickActionBtn("Pixabay", GlanceModifier.defaultWeight(), actionRunCallback<ShufflePixabayAction>(), ColorProvider(Color(0xFF00AB6C)))
                     Spacer(GlanceModifier.width(4.dp))
-                    QuickActionBtn("Reddit", GlanceModifier.defaultWeight(), actionRunCallback<ShuffleRedditAction>(), ColorProvider(Color(0xFFFF4500)))
+                    QuickActionBtn("Bing", GlanceModifier.defaultWeight(), actionRunCallback<ShuffleBingAction>(), ColorProvider(Color(0xFF2B7FFF)))
                 }
             }
 
@@ -286,7 +285,6 @@ private fun QuickActionBtn(
 @InstallIn(SingletonComponent::class)
 interface WidgetEntryPoint {
     fun wallpaperRepository(): WallpaperRepository
-    fun redditRepository(): RedditRepository
     fun wallpaperApplier(): WallpaperApplier
     fun wallpaperHistoryManager(): WallpaperHistoryManager
 }
@@ -344,7 +342,7 @@ class OpenFavoritesAction : ActionCallback {
 /**
  * Tap-on-current-wallpaper → deep-link into the detail screen for that wallpaper.
  * Uses the same EXTRA_DAILY_WALLPAPER_* extras that MainActivity already parses for the
- * Reddit daily notification, so no new intent-handling plumbing is needed.
+ * daily wallpaper notification, so no new intent-handling plumbing is needed.
  */
 class OpenCurrentWallpaperAction : ActionCallback {
     override suspend fun onAction(context: Context, glanceId: GlanceId, parameters: ActionParameters) {
@@ -378,9 +376,9 @@ class ShufflePixabayAction : ActionCallback {
     }
 }
 
-class ShuffleRedditAction : ActionCallback {
+class ShuffleBingAction : ActionCallback {
     override suspend fun onAction(context: Context, glanceId: GlanceId, parameters: ActionParameters) {
-        if (applyFromSource(context, "reddit", WallpaperTarget.BOTH)) {
+        if (applyFromSource(context, "bing", WallpaperTarget.BOTH)) {
             updateWidgetStats(context)
             FreeVibeWidget().updateAll(context)
         }
@@ -406,7 +404,7 @@ private suspend fun applyFromSource(context: Context, source: String, target: Wa
             val ep = getEntryPoint(context)
             val items = when (source) {
                 "pixabay" -> ep.wallpaperRepository().getPixabay(page = (1..5).random()).items
-                "reddit" -> ep.redditRepository().getMultiSubreddit().items
+                "bing" -> ep.wallpaperRepository().getBingDaily(page = 1).items
                 else -> ep.wallpaperRepository().getDiscover(page = 1).items
             }
             val wp = items.randomOrNull()
