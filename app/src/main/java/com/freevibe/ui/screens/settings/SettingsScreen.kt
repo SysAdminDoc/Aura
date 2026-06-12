@@ -144,6 +144,7 @@ fun SettingsScreen(
     onCollectionsClick: () -> Unit = {},
     onCreatorProfileClick: () -> Unit = {},
     onCommunityReportsClick: () -> Unit = {},
+    onGeneratedWallpapersClick: () -> Unit = {},
     viewModel: SettingsViewModel = hiltViewModel(),
 ) {
     val context = LocalContext.current
@@ -1299,7 +1300,7 @@ fun SettingsScreen(
 
         // API Keys
         SettingsSection(
-            title = "External services",
+            title = "Advanced external services",
             description = "Provider keys and opt-in cloud features. Generated wallpapers and community actions stay off until you enable them here.",
         ) {
             var showWallhavenKey by remember { mutableStateOf(false) }
@@ -1462,6 +1463,12 @@ fun SettingsScreen(
                 )
             }
             if (generatedContentProviderEnabled) {
+                SettingsItem(
+                    icon = Icons.Default.AutoAwesome,
+                    title = "Open generation studio",
+                    subtitle = "Create wallpapers with Stability after disclosure and key setup",
+                    onClick = onGeneratedWallpapersClick,
+                )
                 SettingsItem(
                     icon = Icons.Default.Key,
                     title = "Stability AI API Key",

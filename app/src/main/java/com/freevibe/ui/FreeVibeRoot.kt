@@ -398,6 +398,7 @@ fun FreeVibeRoot(
                     onCollectionsClick = { navController.navigate(Screen.Collections.route) { launchSingleTop = true } },
                     onCreatorProfileClick = { navController.navigate(Screen.CreatorProfile.route) { launchSingleTop = true } },
                     onCommunityReportsClick = { navController.navigate(Screen.CommunityReports.route) { launchSingleTop = true } },
+                    onGeneratedWallpapersClick = { navController.navigate(Screen.AiWallpaper.route) { launchSingleTop = true } },
                 )
             }
 
