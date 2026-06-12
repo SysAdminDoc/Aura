@@ -59,12 +59,12 @@ class DownloadManager @Inject constructor(
             historyId = buildHistoryId(contentType, id),
             url = url,
             fileName = sanitize(fileName),
-            mimeType = guessMimeType(url),
             relativePath = Environment.DIRECTORY_PICTURES + "/Aura",
             collection = MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
             contentType = contentType,
             contentSource = source,
             maxBytes = MAX_IMAGE_DOWNLOAD_BYTES,
+            expectedMediaFamily = MediaFamily.IMAGE,
         )
     }
 
@@ -89,12 +89,12 @@ class DownloadManager @Inject constructor(
             historyId = buildHistoryId(contentType, id),
             url = url,
             fileName = sanitize(fileName),
-            mimeType = guessAudioMime(url),
             relativePath = relativePath,
             collection = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
             contentType = contentType,
             contentSource = source,
             maxBytes = MAX_AUDIO_DOWNLOAD_BYTES,
+            expectedMediaFamily = MediaFamily.AUDIO,
         )
     }
 
@@ -103,12 +103,12 @@ class DownloadManager @Inject constructor(
         historyId: String,
         url: String,
         fileName: String,
-        mimeType: String,
         relativePath: String,
         collection: Uri,
         contentType: String,
         contentSource: String,
         maxBytes: Long,
+        expectedMediaFamily: MediaFamily,
     ): Result<Uri> = try {
         updateProgress(historyId, DownloadProgress(historyId, fileName, 0f, 0, 0))
 
@@ -130,36 +130,15 @@ class DownloadManager @Inject constructor(
                 )
             }
 
-            // Create MediaStore entry
-            val values = ContentValues().apply {
-                put(MediaStore.MediaColumns.DISPLAY_NAME, fileName)
-                put(MediaStore.MediaColumns.MIME_TYPE, mimeType)
-                put(MediaStore.MediaColumns.RELATIVE_PATH, relativePath)
-                if (Build.VERSION.SDK_INT >= 29) {
-                    put(MediaStore.MediaColumns.IS_PENDING, 1)
-                }
-            }
-
-            val resolver = context.contentResolver
-            val uri = resolver.insert(collection, values)
-                ?: throw IllegalStateException("Failed to create MediaStore entry")
-
-            var success = false
+            val tempDir = File(context.cacheDir, "downloads").apply { mkdirs() }
+            val tempFile = File.createTempFile("aura_download_", ".tmp", tempDir)
+            var downloadedBytes = 0L
             try {
-                // Stream data with progress tracking
-                var downloadedBytes = 0L
-                val outputStream = resolver.openOutputStream(uri)
-                if (outputStream == null) {
-                    try { resolver.delete(uri, null, null) } catch (_: Exception) {}
-                    throw IllegalStateException("Failed to open output stream")
-                }
-                outputStream.use { output ->
+                tempFile.outputStream().use { output ->
                     body.byteStream().use { input ->
                         val buffer = ByteArray(8192)
                         var bytesRead: Int
                         while (input.read(buffer).also { bytesRead = it } != -1) {
-                            // Abort before writing if a malicious/broken server exceeds the
-                            // advertised content length (or never sends Content-Length).
                             if (downloadedBytes + bytesRead > maxBytes) {
                                 throw IllegalStateException(
                                     "Download exceeds size limit ($maxBytes bytes)"
@@ -175,58 +154,34 @@ class DownloadManager @Inject constructor(
                         }
                     }
                 }
-
-                // Mark as complete in MediaStore
-                if (Build.VERSION.SDK_INT >= 29) {
-                    values.clear()
-                    values.put(MediaStore.MediaColumns.IS_PENDING, 0)
-                    resolver.update(uri, values, null, null)
+                if (downloadedBytes <= 0L) {
+                    throw IllegalStateException("Empty response body")
                 }
-
-                val existingEntries = downloadDao.findMatching(
-                    type = contentType,
-                    legacyId = contentId,
-                    scopedId = historyId,
+                val sniffed = requireSniffedMediaFile(
+                    tempFile,
+                    expectedMediaFamily,
+                    if (expectedMediaFamily == MediaFamily.IMAGE) "Wallpaper" else "Sound",
                 )
+                val storedFileName = normalizeMediaFileName(fileName, sniffed)
 
-                // Record in local database
-                downloadDao.insert(
-                    DownloadEntity(
-                        id = historyId,
-                        source = contentSource,
-                        type = contentType,
-                        localPath = uri.toString(),
-                        name = fileName,
-                    )
+                // Create MediaStore entry only after content has been bounded and verified.
+                writeValidatedDownloadToMediaStore(
+                    tempFile = tempFile,
+                    contentId = contentId,
+                    historyId = historyId,
+                    fileName = storedFileName,
+                    mimeType = sniffed.mimeType,
+                    relativePath = relativePath,
+                    collection = collection,
+                    contentType = contentType,
+                    contentSource = contentSource,
+                    totalBytes = totalBytes,
+                    downloadedBytes = downloadedBytes,
+                    maxBytes = maxBytes,
                 )
-
-                existingEntries
-                    .map { it.localPath }
-                    .filter { it.isNotBlank() && it != uri.toString() }
-                    .distinct()
-                    .forEach(::deleteStoredContent)
-
-                existingEntries
-                    .map { it.id }
-                    .filter { it != historyId }
-                    .distinct()
-                    .forEach { existingId ->
-                        downloadDao.deleteById(existingId)
-                    }
-
-                // Mark download complete
-                updateProgress(
-                    historyId,
-                    DownloadProgress(historyId, fileName, 1f, totalBytes, downloadedBytes, isComplete = true),
-                )
-                success = true
             } finally {
-                if (!success) {
-                    try { resolver.delete(uri, null, null) } catch (_: Exception) {}
-                }
+                tempFile.delete()
             }
-
-            uri
         })
     } catch (e: Exception) {
         if (e is CancellationException) throw e
@@ -235,6 +190,97 @@ class DownloadManager @Inject constructor(
         }
         updateProgress(historyId, DownloadProgress(historyId, fileName, 0f, 0, 0, error = e.message))
         Result.failure(e)
+    }
+
+    private suspend fun writeValidatedDownloadToMediaStore(
+        tempFile: File,
+        contentId: String,
+        historyId: String,
+        fileName: String,
+        mimeType: String,
+        relativePath: String,
+        collection: Uri,
+        contentType: String,
+        contentSource: String,
+        totalBytes: Long,
+        downloadedBytes: Long,
+        maxBytes: Long,
+    ): Uri {
+        val values = ContentValues().apply {
+            put(MediaStore.MediaColumns.DISPLAY_NAME, fileName)
+            put(MediaStore.MediaColumns.MIME_TYPE, mimeType)
+            put(MediaStore.MediaColumns.RELATIVE_PATH, relativePath)
+            if (Build.VERSION.SDK_INT >= 29) {
+                put(MediaStore.MediaColumns.IS_PENDING, 1)
+            }
+        }
+
+        val resolver = context.contentResolver
+        val uri = resolver.insert(collection, values)
+            ?: throw IllegalStateException("Failed to create MediaStore entry")
+
+        var success = false
+        try {
+            val outputStream = resolver.openOutputStream(uri)
+            if (outputStream == null) {
+                try { resolver.delete(uri, null, null) } catch (_: Exception) {}
+                throw IllegalStateException("Failed to open output stream")
+            }
+            outputStream.use { output ->
+                tempFile.inputStream().use { input -> copyStreamCapped(input, output, maxBytes) }
+            }
+
+            // Mark as complete in MediaStore
+            if (Build.VERSION.SDK_INT >= 29) {
+                values.clear()
+                values.put(MediaStore.MediaColumns.IS_PENDING, 0)
+                resolver.update(uri, values, null, null)
+            }
+
+            val existingEntries = downloadDao.findMatching(
+                type = contentType,
+                legacyId = contentId,
+                scopedId = historyId,
+            )
+
+            // Record in local database
+            downloadDao.insert(
+                DownloadEntity(
+                    id = historyId,
+                    source = contentSource,
+                    type = contentType,
+                    localPath = uri.toString(),
+                    name = fileName,
+                )
+            )
+
+            existingEntries
+                .map { it.localPath }
+                .filter { it.isNotBlank() && it != uri.toString() }
+                .distinct()
+                .forEach(::deleteStoredContent)
+
+            existingEntries
+                .map { it.id }
+                .filter { it != historyId }
+                .distinct()
+                .forEach { existingId ->
+                    downloadDao.deleteById(existingId)
+                }
+
+            // Mark download complete
+            updateProgress(
+                historyId,
+                DownloadProgress(historyId, fileName, 1f, totalBytes, downloadedBytes, isComplete = true),
+            )
+            success = true
+        } finally {
+            if (!success) {
+                try { resolver.delete(uri, null, null) } catch (_: Exception) {}
+            }
+        }
+
+        return uri
     }
 
     fun clearCompleted(id: String) {
@@ -309,26 +355,6 @@ class DownloadManager @Inject constructor(
 
     private fun buildHistoryId(type: String, id: String): String = "${type.lowercase(java.util.Locale.ROOT)}:$id"
 
-    private fun guessMimeType(url: String): String {
-        val path = url.substringBefore("?").substringBefore("#").lowercase(java.util.Locale.ROOT)
-        return when {
-            path.endsWith(".png") -> "image/png"
-            path.endsWith(".webp") -> "image/webp"
-            path.endsWith(".gif") -> "image/gif"
-            else -> "image/jpeg"
-        }
-    }
-
-    private fun guessAudioMime(url: String): String {
-        val path = url.substringBefore("?").substringBefore("#").lowercase(java.util.Locale.ROOT)
-        return when {
-            path.endsWith(".ogg") -> "audio/ogg"
-            path.endsWith(".wav") -> "audio/wav"
-            path.endsWith(".flac") -> "audio/flac"
-            path.endsWith(".m4a") -> "audio/mp4"
-            else -> "audio/mpeg"
-        }
-    }
 }
 
 /** Hard cap on wallpaper downloads — ~64 MB covers any realistic 8K JPG/PNG/WEBP. */

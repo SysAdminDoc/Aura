@@ -19,7 +19,10 @@ import com.freevibe.data.model.isCommunityUserBlocked
 import com.freevibe.data.model.sanitizeCommunityUploadKey
 import com.freevibe.data.model.validateCommunityUploadRights
 import com.freevibe.service.CommunityIdentityProvider
+import com.freevibe.service.MediaFamily
 import com.freevibe.service.SourceMetrics
+import com.freevibe.service.copyStreamCapped
+import com.freevibe.service.requireSniffedMediaFile
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.FirebaseDatabase
@@ -34,6 +37,7 @@ import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
+import java.io.File
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -115,7 +119,8 @@ class UploadRepository @Inject constructor(
         val normalizedCategory = normalizeUploadCategory(category)
         val normalizedTags = sanitizeUploadTags(tags)
         val uploadInfo = resolveUploadFileInfo(localUri, sanitizedName)
-        val normalizedMimeType = uploadInfo.mimeType.lowercase(java.util.Locale.ROOT)
+        val sniffedAudio = sniffAudioUpload(localUri)
+        val normalizedMimeType = sniffedAudio.mimeType.lowercase(java.util.Locale.ROOT)
         if (!isSupportedAudioUploadMime(normalizedMimeType)) {
             throw IllegalArgumentException("Unsupported audio format")
         }
@@ -127,7 +132,7 @@ class UploadRepository @Inject constructor(
         val timestamp = System.currentTimeMillis()
         val uploaderId = identityProvider.ensureSignedIn()
         val uploaderLabel = identityProvider.currentUploaderLabel()
-        val storagePath = "sounds/${sanitizeUploadStorageSegment(uploaderId)}/${timestamp}_${uploadInfo.baseName}.${uploadInfo.extension}"
+        val storagePath = "sounds/${sanitizeUploadStorageSegment(uploaderId)}/${timestamp}_${uploadInfo.baseName}.${sniffedAudio.extension}"
         val storageRef = storageInstance.reference.child(storagePath)
         var metadataSaved = false
 
@@ -511,6 +516,21 @@ class UploadRepository @Inject constructor(
         } ?: -1
         if (firstByte == -1) {
             throw IllegalArgumentException("Selected audio file is empty or unreadable")
+        }
+    }
+
+    private fun sniffAudioUpload(localUri: Uri): com.freevibe.service.SniffedMediaType {
+        val tempDir = File(context.cacheDir, "upload_probe").apply { mkdirs() }
+        val probeFile = File.createTempFile("aura_upload_", ".tmp", tempDir)
+        return try {
+            context.contentResolver.openInputStream(localUri)?.use { input ->
+                probeFile.outputStream().use { output ->
+                    copyStreamCapped(input, output, MAX_AUDIO_UPLOAD_BYTES)
+                }
+            } ?: throw IllegalArgumentException("Selected audio file is empty or unreadable")
+            requireSniffedMediaFile(probeFile, MediaFamily.AUDIO, "Selected audio")
+        } finally {
+            probeFile.delete()
         }
     }
 

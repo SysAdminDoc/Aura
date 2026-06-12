@@ -347,13 +347,6 @@ Append-only Cycle 6 handoff. Every item below is source-backed in `docs/research
   - Acceptance: every remote/local media path declares allowed schemes, max bytes, temp-file behavior, cleanup, MIME/content validation, and user-facing error class; no direct `body.bytes()` or unbounded `copyTo()` remains on untrusted input.
   - Verify: unit tests for oversized advertised, oversized chunked, empty, truncated, wrong MIME, unsupported container, cancellation cleanup, and temp-file deletion.
 
-- [ ] 🤖 🔬 **P1 — MIME/content validation before public writes and apply actions**
-  - Why: URL extensions and content-resolver MIME strings are hints. Aura should validate actual content before writing MediaStore rows, setting system sounds, applying wallpapers, or caching favorites.
-  - Evidence: MIME guessing in `DownloadManager`/`SoundApplier`; URL/MIME extension logic in `VideoWallpaperStorage`; Android media-storage docs.
-  - Touches: image bounds decode, audio duration/container probe, video metadata probe, upload repositories, favorites/offline cache.
-  - Acceptance: public writes and apply flows require content validation; mismatched extension/MIME files are rejected or normalized; thumbnails/previews do not trust provider-declared type alone.
-  - Verify: tests for `.jpg` HTML body, `.mp3` image body, `.mp4` audio body, empty provider response, and oversized image dimensions.
-
 - [ ] 🤖 🔬 **P2 — Managed storage ledger and cache cleanup policy**
   - Why: Aura stores previews, offline favorites, edited audio, generated wallpapers, live wallpaper media, share artifacts, downloads, and provider metadata across several directories and MediaStore.
   - Evidence: `AudioPreviewCache` 48 MB, offline favorites 512 MB, `file_paths.xml`, Settings cache cleanup copy, backup rules from Cycle 4.

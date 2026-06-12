@@ -50,15 +50,8 @@ class SoundApplier @Inject constructor(
                 throw SecurityException("WRITE_SETTINGS permission not granted")
             }
 
-            // Determine MIME type from URL/extension
-            val mimeType = guessMimeType(url)
-            val safeFileName = ensureFileNameExtension(
-                fileName.replace(SANITIZE_REGEX, "_"),
-                mimeType,
-            )
-
             // Save to MediaStore
-            val uri = saveUrlToMediaStore(safeFileName, mimeType, type, url)
+            val uri = saveUrlToMediaStore(fileName.replace(SANITIZE_REGEX, "_"), type, url)
                 ?: throw IllegalStateException("Failed to save audio to MediaStore")
 
             // Set as system sound
@@ -81,12 +74,7 @@ class SoundApplier @Inject constructor(
         type: ContentType,
     ): Result<Uri> = withContext(Dispatchers.IO) {
         runCatching {
-            val mimeType = guessMimeType(url)
-            val safeFileName = ensureFileNameExtension(
-                fileName.replace(SANITIZE_REGEX, "_"),
-                mimeType,
-            )
-            saveUrlToMediaStore(safeFileName, mimeType, type, url)
+            saveUrlToMediaStore(fileName.replace(SANITIZE_REGEX, "_"), type, url)
                 ?: throw IllegalStateException("Failed to save audio to MediaStore")
         }
     }
@@ -102,13 +90,7 @@ class SoundApplier @Inject constructor(
                 throw SecurityException("WRITE_SETTINGS permission not granted")
             }
 
-            val mimeType = guessMimeType(filePath)
-            val safeFileName = ensureFileNameExtension(
-                fileName.replace(SANITIZE_REGEX, "_"),
-                mimeType,
-            )
-
-            val uri = saveLocalFileToMediaStore(safeFileName, mimeType, type, File(filePath))
+            val uri = saveLocalFileToMediaStore(fileName.replace(SANITIZE_REGEX, "_"), type, File(filePath))
                 ?: throw IllegalStateException("Failed to save audio to MediaStore")
 
             val ringtoneType = when (type) {
@@ -178,7 +160,6 @@ class SoundApplier @Inject constructor(
 
     private fun saveUrlToMediaStore(
         fileName: String,
-        mimeType: String,
         type: ContentType,
         url: String,
     ): Uri? {
@@ -195,20 +176,17 @@ class SoundApplier @Inject constructor(
             if (advertised in 1..Long.MAX_VALUE && advertised > MAX_APPLY_BYTES) {
                 throw IllegalStateException("Sound file too large (${advertised / (1024 * 1024)} MB)")
             }
-            saveToMediaStore(fileName, mimeType, type) { output ->
+            val tempDir = File(context.cacheDir, "audio_apply").apply { mkdirs() }
+            val tempFile = File.createTempFile("aura_sound_", ".tmp", tempDir)
+            try {
                 body.byteStream().use { input ->
-                    var copied = 0L
-                    val buf = ByteArray(64 * 1024)
-                    while (true) {
-                        val n = input.read(buf)
-                        if (n <= 0) break
-                        copied += n
-                        if (copied > MAX_APPLY_BYTES) {
-                            throw IllegalStateException("Sound file too large (${copied / (1024 * 1024)} MB)")
-                        }
-                        output.write(buf, 0, n)
+                    tempFile.outputStream().use { output ->
+                        copyStreamCapped(input, output, MAX_APPLY_BYTES)
                     }
                 }
+                saveLocalFileToMediaStore(fileName, type, tempFile)
+            } finally {
+                tempFile.delete()
             }
         }
     }
@@ -219,39 +197,15 @@ class SoundApplier @Inject constructor(
 
     private fun saveLocalFileToMediaStore(
         fileName: String,
-        mimeType: String,
         type: ContentType,
         file: File,
-    ): Uri? = saveToMediaStore(fileName, mimeType, type) { output ->
+    ): Uri? {
         if (file.length() > MAX_APPLY_BYTES) {
             throw java.io.IOException("Sound file too large: ${file.length()} > $MAX_APPLY_BYTES bytes")
         }
-        FileInputStream(file).use { input -> copyStreamCapped(input, output, MAX_APPLY_BYTES) }
-    }
-
-    private fun guessMimeType(url: String): String {
-        val path = url.substringBefore("?").substringBefore("#").lowercase(java.util.Locale.ROOT)
-        return when {
-            path.endsWith(".mp3") -> "audio/mpeg"
-            path.endsWith(".ogg") -> "audio/ogg"
-            path.endsWith(".wav") -> "audio/wav"
-            path.endsWith(".m4a") -> "audio/mp4"
-            path.endsWith(".aac") -> "audio/aac"
-            path.endsWith(".flac") -> "audio/flac"
-            else -> "audio/mpeg"
+        val sniffed = requireSniffedMediaFile(file, MediaFamily.AUDIO, "Sound")
+        return saveToMediaStore(normalizeMediaFileName(fileName, sniffed), sniffed.mimeType, type) { output ->
+            FileInputStream(file).use { input -> copyStreamCapped(input, output, MAX_APPLY_BYTES) }
         }
-    }
-
-    private fun ensureFileNameExtension(fileName: String, mimeType: String): String {
-        if (fileName.substringAfterLast('.', "").isNotBlank()) return fileName
-        val extension = when (mimeType.lowercase(java.util.Locale.ROOT)) {
-            "audio/ogg" -> "ogg"
-            "audio/wav", "audio/x-wav" -> "wav"
-            "audio/flac" -> "flac"
-            "audio/mp4" -> "m4a"
-            "audio/aac" -> "aac"
-            else -> "mp3"
-        }
-        return "$fileName.$extension"
     }
 }
