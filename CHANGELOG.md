@@ -3,6 +3,9 @@
 All notable changes to Aura will be documented in this file.
 
 ## Unreleased
+- **Custom accessibility semantics**: added source-backed coverage for reusable
+  Compose components, Settings rows/toggles, media cards, badges, waveform
+  controls, and action labels.
 - **External automation hardening**: gated Tasker/MacroDroid rotation broadcasts
   behind an explicit Settings opt-in, added a 30-second burst limit, surfaced
   last-trigger diagnostics, and documented the public intent contract.

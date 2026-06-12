@@ -64,6 +64,12 @@
     <string name="a11y_ready">Ready</string>
     <string name="a11y_selected">Selected</string>
     <string name="a11y_not_selected">Not selected</string>
+    <string name="a11y_on">On</string>
+    <string name="a11y_off">Off</string>
+    <string name="a11y_turn_on">Turn on %1$s</string>
+    <string name="a11y_turn_off">Turn off %1$s</string>
+    <string name="a11y_label_value">%1$s: %2$s</string>
+    <string name="a11y_title_subtitle">%1$s. %2$s</string>
     <string name="a11y_use_mode">Use %1$s mode</string>
     <string name="write_settings_title">Allow ringtone changes</string>
     <string name="write_settings_body">Aura needs Modify system settings access before it can set ringtones, notification sounds, or alarm sounds. Aura only changes these after you tap an apply action.</string>

@@ -25,6 +25,7 @@ import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.onClick
 import androidx.compose.ui.semantics.progressBarRangeInfo
@@ -320,7 +321,9 @@ fun HighlightPill(
     tint: Color = MaterialTheme.colorScheme.primary,
 ) {
     Surface(
-        modifier = modifier,
+        modifier = modifier.clearAndSetSemantics {
+            contentDescription = label
+        },
         shape = AuraControlShape,
         color = tint.copy(alpha = 0.12f),
         border = BorderStroke(1.dp, tint.copy(alpha = 0.2f)),
@@ -464,7 +467,9 @@ fun SourceBadge(source: String, modifier: Modifier = Modifier) {
     Surface(
         color = color.copy(alpha = 0.16f),
         shape = AuraControlShape,
-        modifier = modifier,
+        modifier = modifier.clearAndSetSemantics {
+            contentDescription = label
+        },
         border = BorderStroke(1.dp, color.copy(alpha = 0.12f)),
     ) {
         Text(

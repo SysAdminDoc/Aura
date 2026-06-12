@@ -39,6 +39,11 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.onClick
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.unit.dp
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
@@ -2758,8 +2763,11 @@ private fun SettingsMetric(
     tint: Color,
     modifier: Modifier = Modifier,
 ) {
+    val metricDescription = stringResource(R.string.a11y_label_value, label, value)
     Surface(
-        modifier = modifier,
+        modifier = modifier.semantics(mergeDescendants = true) {
+            contentDescription = metricDescription
+        },
         color = tint.copy(alpha = 0.12f),
         shape = RoundedCornerShape(8.dp),
         border = androidx.compose.foundation.BorderStroke(1.dp, tint.copy(alpha = 0.16f)),
@@ -2803,6 +2811,7 @@ private fun SettingsSection(
         Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
             Text(
                 text = title,
+                modifier = Modifier.semantics { heading() },
                 style = MaterialTheme.typography.titleLarge,
                 color = MaterialTheme.colorScheme.onSurface,
             )
@@ -2823,7 +2832,12 @@ private fun SettingsItem(
     subtitle: String,
     onClick: () -> Unit,
 ) {
+    val itemDescription = stringResource(R.string.a11y_title_subtitle, title, subtitle)
     Surface(
+        modifier = Modifier.semantics(mergeDescendants = true) {
+            contentDescription = itemDescription
+            onClick(label = title, action = null)
+        },
         onClick = onClick,
         color = MaterialTheme.colorScheme.surfaceContainer.copy(alpha = 0.82f),
         shape = RoundedCornerShape(8.dp),
@@ -2875,7 +2889,18 @@ private fun SettingsToggle(
     checked: Boolean,
     onCheckedChange: (Boolean) -> Unit,
 ) {
+    val toggleStateDescription = stringResource(if (checked) R.string.a11y_on else R.string.a11y_off)
+    val toggleActionLabel = stringResource(
+        if (checked) R.string.a11y_turn_off else R.string.a11y_turn_on,
+        title,
+    )
+    val toggleDescription = stringResource(R.string.a11y_title_subtitle, title, subtitle)
     Surface(
+        modifier = Modifier.semantics(mergeDescendants = true) {
+            contentDescription = toggleDescription
+            stateDescription = toggleStateDescription
+            onClick(label = toggleActionLabel, action = null)
+        },
         onClick = { onCheckedChange(!checked) },
         color = MaterialTheme.colorScheme.surfaceContainer.copy(alpha = 0.82f),
         shape = RoundedCornerShape(8.dp),
