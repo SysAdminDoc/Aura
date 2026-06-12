@@ -38,11 +38,13 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.freevibe.R
 import com.freevibe.data.model.WALLPAPER_SOURCE_LOCAL_FOLDER
 import com.freevibe.data.repository.CommunityBlockedUser
 import com.freevibe.service.COMMUNITY_DELETION_REQUEST_SUBJECT
@@ -931,8 +933,8 @@ fun SettingsScreen(
             }
             SettingsToggle(
                 icon = Icons.Default.Cloud,
-                title = "Weather effects",
-                subtitle = "Uses approximate location with Open-Meteo for rain, snow, and fog overlays",
+                title = stringResource(R.string.settings_weather_effects_title),
+                subtitle = stringResource(R.string.settings_weather_effects_subtitle),
                 checked = weatherEffects,
                 onCheckedChange = {
                     if (!it) {

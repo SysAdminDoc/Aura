@@ -63,4 +63,6 @@
     <string name="community_recording_discard">Discard</string>
     <string name="community_upload_visibility_title">Public upload</string>
     <string name="community_upload_visibility_body">Pressing Upload publishes this sound, its category, license, tags, and source URL to the community catalog. Cancel keeps the selected file local.</string>
+    <string name="settings_weather_effects_title">Weather effects</string>
+    <string name="settings_weather_effects_subtitle">Uses approximate location with Open-Meteo; Aura stores rounded two-decimal coordinates and clears them when disabled.</string>
 </resources>

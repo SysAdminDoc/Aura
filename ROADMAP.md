@@ -579,13 +579,6 @@ Append-only Cycle 11 handoff. Every item below is source-backed in `docs/researc
   - Verify: parse merged manifest and compare with ledger; review Play Data safety fields for location, contacts, voice/sound recordings, other audio files, crash/diagnostics, user-generated content, and device IDs; confirm fastlane copy does not contradict the ledger.
   - Progress 2026-06-07: Cycle 141 added `docs/privacy/data-safety.md`, `docs/privacy/data-safety.json`, `tools/privacy_data_safety_check.py`, focused tests, and verify/release workflow gates. The live matrix covers all 15 manifest permissions and fails if permissions or `maxSdkVersion` values drift without a reviewed row.
 
-- [ ] 🤖 🔬 **P1 — Weather location disclosure, precision, and clearing**
-  - Why: Aura requests only coarse location for weather effects, but `WeatherUpdateWorker` sends latitude/longitude to Open-Meteo and stores `location_lat`/`location_lon`; disabling weather cancels work but no stored-coordinate wipe was found.
-  - Evidence: `SettingsScreen.kt`; `WeatherUpdateWorker.kt`; `backup_rules.xml`; `data_extraction_rules.xml`; Android runtime-location docs; Play location-policy guidance; Play Data safety approximate-location category.
-  - Touches: weather effects settings copy, worker/state cleanup, privacy/Data safety docs, backup/transfer rules, release QA script.
-  - Acceptance: weather opt-in copy names the external weather provider and stored location precision; Aura stores the minimum useful precision or documents why not; disabling weather clears stored coordinates/weather state and cancels work; fine/background location remain absent.
-  - Verify: enable with coarse location, inspect prefs/network request precision, disable and inspect `freevibe_weather_wp`; backup/transfer exclusions remain; preflight fails on `ACCESS_FINE_LOCATION` or `ACCESS_BACKGROUND_LOCATION` without new review.
-
 - [ ] 🤖 🔬 **P1 — Foreground-service and notification declaration packet**
   - Why: Aura declares `mediaPlayback` and `specialUse` foreground services; Play target-34+ updates require service-type descriptions, user-impact explanations, and demonstration videos, while Android notification permission denial changes user-visible notification behavior.
   - Evidence: `AndroidManifest.xml`; `AudioPlaybackService.kt`; `RotationTriggerService.kt`; `SettingsScreen.kt`; Android foreground-service type docs; Play foreground-service declaration docs; Android notification-permission docs.
