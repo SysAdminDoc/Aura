@@ -23,11 +23,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.compose.AsyncImage
+import com.freevibe.R
 import com.freevibe.data.model.FavoriteEntity
 import com.freevibe.data.model.isSourceUnavailable
 import com.freevibe.data.model.stableKey
@@ -228,6 +230,21 @@ fun FavoritesScreen(
             // but surfaced no progress. Now we render a compact linear indicator + counts whenever
             // BatchDownloadService is running.
             if (batchState.isRunning || (batchState.totalCount > 0 && !batchState.isComplete)) {
+                val batchProgressText = if (batchState.failedCount > 0 || batchState.blockedCount > 0) {
+                    stringResource(
+                        R.string.favorites_batch_downloading_with_outcomes,
+                        batchState.processedCount,
+                        batchState.totalCount,
+                        batchState.failedCount,
+                        batchState.blockedCount,
+                    )
+                } else {
+                    stringResource(
+                        R.string.favorites_batch_downloading,
+                        batchState.processedCount,
+                        batchState.totalCount,
+                    )
+                }
                 Surface(
                     color = MaterialTheme.colorScheme.surfaceVariant,
                     modifier = Modifier.fillMaxWidth(),
@@ -235,12 +252,7 @@ fun FavoritesScreen(
                     Column(Modifier.padding(horizontal = 16.dp, vertical = 8.dp)) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Text(
-                                text = "Downloading ${batchState.processedCount}/${batchState.totalCount}" +
-                                    if (batchState.failedCount > 0 || batchState.blockedCount > 0) {
-                                        " (${batchState.failedCount} failed, ${batchState.blockedCount} blocked)"
-                                    } else {
-                                        ""
-                                    },
+                                text = batchProgressText,
                                 style = MaterialTheme.typography.labelMedium,
                                 modifier = Modifier.weight(1f),
                             )

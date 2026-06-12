@@ -657,7 +657,7 @@ fun SettingsScreen(
             )
             SettingsToggle(
                 icon = Icons.Default.Schedule,
-                title = "External automation",
+                title = stringResource(R.string.settings_external_automation_title),
                 subtitle = externalAutomationSubtitle(externalAutomationDiagnostics),
                 checked = externalAutomationDiagnostics.enabled,
                 onCheckedChange = { viewModel.setExternalAutomationEnabled(it) },
@@ -1697,7 +1697,7 @@ fun SettingsScreen(
             )
             SettingsItem(
                 icon = Icons.Default.SettingsInputComponent,
-                title = "External automation",
+                title = stringResource(R.string.settings_external_automation_title),
                 subtitle = externalAutomationSubtitle(externalAutomationDiagnostics),
                 onClick = {
                     viewModel.refreshExternalAutomationDiagnostics()
@@ -1719,7 +1719,7 @@ fun SettingsScreen(
             val snapshot = externalAutomationDiagnostics
             AlertDialog(
                 onDismissRequest = { showExternalAutomationDiagnostics = false },
-                title = { Text("External automation") },
+                title = { Text(stringResource(R.string.settings_external_automation_title)) },
                 text = {
                     Column(
                         modifier = Modifier
@@ -1729,23 +1729,30 @@ fun SettingsScreen(
                         verticalArrangement = Arrangement.spacedBy(12.dp),
                     ) {
                         Text(
-                            "Tasker, MacroDroid, adb, and Termux broadcasts are ignored until this toggle is enabled. Accepted broadcasts are limited to one rotation every ${externalAutomationRateLimitLabel(snapshot.minIntervalMs)}.",
+                            stringResource(
+                                R.string.settings_external_automation_dialog_body,
+                                externalAutomationRateLimitLabel(snapshot.minIntervalMs),
+                            ),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
                         ExternalAutomationDiagnosticsSummary(snapshot)
                         Text(
-                            "Public actions: com.freevibe.action.ROTATE_NOW and com.freevibe.action.SHUFFLE_NOW. Optional diagnostic extra: com.freevibe.extra.CALLER_PACKAGE.",
+                            stringResource(R.string.settings_external_automation_public_contract),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
                     }
                 },
                 confirmButton = {
-                    TextButton(onClick = { showExternalAutomationDiagnostics = false }) { Text("Close") }
+                    TextButton(onClick = { showExternalAutomationDiagnostics = false }) {
+                        Text(stringResource(R.string.common_close))
+                    }
                 },
                 dismissButton = {
-                    TextButton(onClick = { viewModel.refreshExternalAutomationDiagnostics() }) { Text("Refresh") }
+                    TextButton(onClick = { viewModel.refreshExternalAutomationDiagnostics() }) {
+                        Text(stringResource(R.string.common_refresh))
+                    }
                 },
             )
         }
@@ -3000,14 +3007,21 @@ private fun ExternalAutomationDiagnosticsSummary(status: ExternalAutomationDiagn
     }
     if (status.lastAcceptedAtMs > 0L) {
         Text(
-            "Last accepted: ${formatExternalAutomationTime(status.lastAcceptedAtMs)}",
+            stringResource(
+                R.string.settings_external_automation_last_accepted,
+                formatExternalAutomationTime(status.lastAcceptedAtMs),
+            ),
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
     }
     if (status.lastRejectedAtMs > 0L) {
         Text(
-            "Last rejected: ${formatExternalAutomationTime(status.lastRejectedAtMs)} (${externalAutomationReasonLabel(status.lastRejectedReason)})",
+            stringResource(
+                R.string.settings_external_automation_last_rejected,
+                formatExternalAutomationTime(status.lastRejectedAtMs),
+                externalAutomationReasonLabel(status.lastRejectedReason),
+            ),
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
@@ -3344,7 +3358,7 @@ private fun SourceDiagnosticRow(stat: SourceMetrics.SourceStats) {
             )
             stat.providerPolicy?.let { policy ->
                 Text(
-                    "Policy: ${policy.diagnosticSummary}",
+                    stringResource(R.string.settings_diagnostics_policy, policy.diagnosticSummary),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
