@@ -1,11 +1,29 @@
 <?xml version="1.0" encoding="utf-8"?>
 <full-backup-content>
-    <exclude domain="sharedpref" path="freevibe_dark_mode.xml" />
-    <exclude domain="sharedpref" path="freevibe_live_wp.xml" />
-    <exclude domain="sharedpref" path="freevibe_weather_wp.xml" />
+    <exclude domain="database" path="freevibe.db" />
     <exclude domain="database" path="freevibe.db-journal" />
     <exclude domain="database" path="freevibe.db-shm" />
     <exclude domain="database" path="freevibe.db-wal" />
-    <exclude domain="file" path="datastore/freevibe_prefs.preferences_pb" />
+    <exclude domain="file" path="ai_wallpapers/" />
+    <exclude domain="file" path="aura_originals/" />
     <exclude domain="file" path="crash.log" />
+    <exclude domain="file" path="datastore/freevibe_prefs.preferences_pb" />
+    <exclude domain="file" path="live_wallpaper.gif" />
+    <exclude domain="file" path="live_wallpaper.mkv" />
+    <exclude domain="file" path="live_wallpaper.mov" />
+    <exclude domain="file" path="live_wallpaper.mp4" />
+    <exclude domain="file" path="live_wallpaper.webm" />
+    <exclude domain="file" path="offline_favorites/" />
+    <exclude domain="file" path="parallax/" />
+    <exclude domain="sharedpref" path="aura_community_identity.xml" />
+    <exclude domain="sharedpref" path="aura_votes.xml" />
+    <exclude domain="sharedpref" path="background_work_receipts.xml" />
+    <exclude domain="sharedpref" path="freevibe_dark_mode.xml" />
+    <exclude domain="sharedpref" path="freevibe_live_wp.xml" />
+    <exclude domain="sharedpref" path="freevibe_parallax.xml" />
+    <exclude domain="sharedpref" path="freevibe_pixabay_video_cache.xml" />
+    <exclude domain="sharedpref" path="freevibe_selected_content.xml" />
+    <exclude domain="sharedpref" path="freevibe_video_stats.xml" />
+    <exclude domain="sharedpref" path="freevibe_weather_wp.xml" />
+    <exclude domain="sharedpref" path="freevibe_widget.xml" />
 </full-backup-content>
