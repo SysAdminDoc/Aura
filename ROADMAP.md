@@ -3445,13 +3445,6 @@ Net-new items from the fourth research pass (2026-06-10). Focused on: transitive
 
 ### P1 — Reliability and dependency currency
 
-- [ ] P1 — **Provider health watchdog surfacing persistent source failure**
-  Why: Reddit was dead for ~10 days before anyone noticed. `SourceMetrics` already collects per-source success/failure data but nothing flags persistent 100%-failure to the user or diagnostics. A threshold-based notice would have caught Reddit's death immediately.
-  Evidence: `SourceMetrics.kt` singleton with per-source ring buffer; Reddit 403 since May 30 was invisible; `SettingsScreen.kt` Diagnostics dialog shows metrics but no alerts.
-  Touches: `SourceMetrics.kt` (threshold check after N consecutive failures), `SettingsScreen.kt` Diagnostics (persistent-failure badge per source), optional `WallpapersScreen.kt` / `SoundsScreen.kt` (dismissible notice when active source is 100% failed), support bundle background-work section.
-  Acceptance: after 10 consecutive failures (configurable) with no success, source is flagged as persistently failing; Diagnostics dialog shows a distinct error state vs transient failures; user-facing notice is dismissible; resets on first success.
-  Complexity: S
-
 - [ ] P1 — **Bump WorkManager from 2.10.0 to 2.11.x**
   Why: WorkManager 2.11.0-2.11.2 fix network-constraint misfires on Android 15+, periodic work not rescheduling after exceptions, and add `setRemoteSessionTimeoutMillis`. These hit exactly Aura's rotation-worker and weather-worker workloads.
   Evidence: WorkManager release notes (2.11.0 Oct 2025, 2.11.1 Jan 2026); `gradle/libs.versions.toml` pins 2.10.0; Cycle 14 background-work items document constraint/scheduling concerns.

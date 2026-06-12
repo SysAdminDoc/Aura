@@ -3033,10 +3033,12 @@ private fun DiagnosticMetricPill(
 
 @Composable
 private fun SourceDiagnosticRow(stat: SourceMetrics.SourceStats) {
+    val persistentFailure = stat.isPersistentlyFailing
     val successPercent = (stat.successRatio * 100).toInt().coerceIn(0, 100)
     val hasFailure = stat.failureCount > 0L
     val hasDisabled = stat.disabledCount > 0L
     val tint = when {
+        persistentFailure -> MaterialTheme.colorScheme.error
         hasFailure -> MaterialTheme.colorScheme.error
         hasDisabled -> MaterialTheme.colorScheme.tertiary
         else -> MaterialTheme.colorScheme.primary
@@ -3064,11 +3066,13 @@ private fun SourceDiagnosticRow(stat: SourceMetrics.SourceStats) {
                 Text(sourceDisplayName(stat.source), style = MaterialTheme.typography.titleSmall)
                 HighlightPill(
                     label = when {
+                        persistentFailure -> "Persistent failure"
                         hasFailure -> "Needs attention"
                         hasDisabled -> "Disabled"
                         else -> "Healthy"
                     },
                     icon = when {
+                        persistentFailure -> Icons.Default.ReportProblem
                         hasFailure -> Icons.Default.Error
                         hasDisabled -> Icons.Default.Block
                         else -> Icons.Default.CheckCircle
@@ -3086,10 +3090,17 @@ private fun SourceDiagnosticRow(stat: SourceMetrics.SourceStats) {
                 trackColor = MaterialTheme.colorScheme.surfaceContainerHigh,
             )
             Text(
-                "${stat.totalRequests} requests • $successPercent% success • ${stat.disabledCount} disabled • $latency",
+                "${stat.totalRequests} requests • $successPercent% success • ${stat.consecutiveFailureCount} consecutive failures • ${stat.disabledCount} disabled • $latency",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
+            if (persistentFailure) {
+                Text(
+                    "This source has failed repeatedly without a successful response. Try another source or check provider status before retrying.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.error,
+                )
+            }
             if (stat.lastErrorClass != null) {
                 Text(
                     "Last error: ${stat.lastErrorClass} — ${stat.lastErrorMessage ?: "no detail"}",

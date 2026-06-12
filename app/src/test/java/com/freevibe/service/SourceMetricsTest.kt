@@ -39,9 +39,11 @@ class SourceMetricsTest {
         assertEquals(1L, s.totalRequests)
         assertEquals(0L, s.successCount)
         assertEquals(1L, s.failureCount)
+        assertEquals(1L, s.consecutiveFailureCount)
         assertEquals("IOException", s.lastErrorClass)
         assertEquals("timeout", s.lastErrorMessage)
         assertEquals(0.0, s.successRatio, 0.001)
+        assertFalse(s.isPersistentlyFailing)
     }
 
     @Test
@@ -87,10 +89,31 @@ class SourceMetricsTest {
         assertEquals(1L, s.totalRequests)
         assertEquals(0L, s.successCount)
         assertEquals(0L, s.failureCount)
+        assertEquals(0L, s.consecutiveFailureCount)
         assertEquals(1L, s.disabledCount)
         assertEquals(0L, s.activeRequests)
         assertEquals(1.0, s.successRatio, 0.001)
         assertNull(s.lastErrorClass)
+    }
+
+    @Test
+    fun `persistent failure starts after ten consecutive failures and resets on success`() {
+        val m = SourceMetrics()
+        repeat(9) { m.recordFailure("reddit", IOException("403")) }
+
+        var s = m.snapshot("reddit")!!
+        assertEquals(9L, s.consecutiveFailureCount)
+        assertFalse(s.isPersistentlyFailing)
+
+        m.recordFailure("reddit", IOException("403"))
+        s = m.snapshot("reddit")!!
+        assertEquals(10L, s.consecutiveFailureCount)
+        assertTrue(s.isPersistentlyFailing)
+
+        m.recordSuccess("reddit", 80L)
+        s = m.snapshot("reddit")!!
+        assertEquals(0L, s.consecutiveFailureCount)
+        assertFalse(s.isPersistentlyFailing)
     }
 
     @Test
@@ -132,6 +155,18 @@ class SourceMetricsTest {
         val all = m.snapshotAll().map { it.source }
         // freesound (2 failures) first; wallhaven (2 reqs, 0 failures) before reddit (1 req).
         assertEquals(listOf("freesound", "wallhaven", "reddit"), all)
+    }
+
+    @Test
+    fun `snapshotAll promotes persistent failures before transient failures`() {
+        val m = SourceMetrics()
+        repeat(11) { m.recordFailure("reddit", IOException("403")) }
+        repeat(20) { m.recordFailure("wallhaven", IOException("timeout")) }
+        m.recordSuccess("wallhaven", 100L)
+
+        val all = m.snapshotAll().map { it.source }
+
+        assertEquals(listOf("reddit", "wallhaven"), all.take(2))
     }
 
     @Test

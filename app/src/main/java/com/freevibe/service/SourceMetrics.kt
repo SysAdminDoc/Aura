@@ -36,6 +36,7 @@ class SourceMetrics @Inject constructor() {
         val lastSuccessAtMs: Long,
         val lastFailureAtMs: Long,
         val lastDisabledAtMs: Long,
+        val consecutiveFailureCount: Long,
         val recentLatenciesMs: List<Long>,
     ) {
         /** Successes / active provider attempts. Disabled decisions are not outages. */
@@ -53,6 +54,9 @@ class SourceMetrics @Inject constructor() {
                 val idx = ((sorted.size - 1) * 0.95).toInt().coerceAtLeast(0)
                 sorted[idx]
             }
+
+        val isPersistentlyFailing: Boolean =
+            consecutiveFailureCount >= PERSISTENT_FAILURE_THRESHOLD
     }
 
     private class MutableEntry {
@@ -60,6 +64,7 @@ class SourceMetrics @Inject constructor() {
         val success = AtomicLong(0L)
         val failure = AtomicLong(0L)
         val disabled = AtomicLong(0L)
+        val consecutiveFailures = AtomicLong(0L)
         @Volatile var lastErrorClass: String? = null
         @Volatile var lastErrorMessage: String? = null
         @Volatile var lastSuccessAtMs: Long = 0L
@@ -95,6 +100,7 @@ class SourceMetrics @Inject constructor() {
         val e = entries.computeIfAbsent(source) { MutableEntry() }
         e.total.incrementAndGet()
         e.success.incrementAndGet()
+        e.consecutiveFailures.set(0L)
         e.lastSuccessAtMs = System.currentTimeMillis()
         synchronized(e.latencyLock) {
             e.latencies.addLast(latencyMs.coerceAtLeast(0L))
@@ -111,6 +117,7 @@ class SourceMetrics @Inject constructor() {
         val e = entries.computeIfAbsent(source) { MutableEntry() }
         e.total.incrementAndGet()
         e.failure.incrementAndGet()
+        e.consecutiveFailures.incrementAndGet()
         e.lastErrorClass = error.javaClass.simpleName
         e.lastErrorMessage = error.message
             ?.let(RequestRedactor::redact)
@@ -144,6 +151,7 @@ class SourceMetrics @Inject constructor() {
             lastSuccessAtMs = e.lastSuccessAtMs,
             lastFailureAtMs = e.lastFailureAtMs,
             lastDisabledAtMs = e.lastDisabledAtMs,
+            consecutiveFailureCount = e.consecutiveFailures.get(),
             recentLatenciesMs = latencies,
         )
     }
@@ -152,7 +160,9 @@ class SourceMetrics @Inject constructor() {
     fun snapshotAll(): List<SourceStats> = entries.keys
         .mapNotNull { snapshot(it) }
         .sortedWith(
-            compareByDescending<SourceStats> { it.failureCount }
+            compareByDescending<SourceStats> { if (it.isPersistentlyFailing) 1 else 0 }
+                .thenByDescending { it.failureCount }
+                .thenByDescending { it.consecutiveFailureCount }
                 .thenByDescending { it.disabledCount }
                 .thenByDescending { it.totalRequests },
         )
@@ -165,5 +175,6 @@ class SourceMetrics @Inject constructor() {
 
     private companion object {
         const val MAX_LATENCY_SAMPLES = 50
+        const val PERSISTENT_FAILURE_THRESHOLD = 10L
     }
 }
