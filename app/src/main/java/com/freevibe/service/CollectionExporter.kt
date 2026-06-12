@@ -5,7 +5,6 @@ import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.net.Uri
-import androidx.core.content.FileProvider
 import com.freevibe.data.local.CollectionDao
 import com.freevibe.data.model.WallpaperCollectionEntity
 import com.freevibe.data.model.WallpaperCollectionItemEntity
@@ -172,16 +171,13 @@ class CollectionExporter @Inject constructor(
     }
 
     private fun writeShareFile(collectionId: Long, collectionName: String, json: String): Uri {
-        val shareDir = File(context.cacheDir, "share_out").apply { mkdirs() }
+        ShareOutbox.pruneStaleFiles(context)
+        val shareDir = ShareOutbox.directory(context)
         val safeName = collectionName.replace(FILENAME_SANITIZE_REGEX, "_").ifBlank { "collection" }
         val shareFile = File(shareDir, "aura_${safeName}_${collectionId}.json").apply {
             writeBytes(json.toByteArray(Charsets.UTF_8))
         }
-        return FileProvider.getUriForFile(
-            context,
-            "${context.packageName}.fileprovider",
-            shareFile,
-        )
+        return ShareOutbox.uriFor(context, shareFile)
     }
 
     private suspend fun publishPayload(json: String, collectionName: String, itemCount: Int): String {

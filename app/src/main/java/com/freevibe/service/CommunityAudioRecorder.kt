@@ -4,7 +4,6 @@ import android.content.Context
 import android.media.MediaRecorder
 import android.net.Uri
 import android.os.Build
-import androidx.core.content.FileProvider
 import dagger.hilt.android.qualifiers.ApplicationContext
 import java.io.File
 import javax.inject.Inject
@@ -23,7 +22,8 @@ class CommunityAudioRecorder @Inject constructor(
     fun start(): Result<Unit> = runCatching {
         check(recorder == null) { "Recording is already in progress" }
 
-        val directory = File(context.cacheDir, "sounds/community_recordings").apply { mkdirs() }
+        ShareOutbox.pruneStaleFiles(context)
+        val directory = ShareOutbox.directory(context, "community_recordings")
         val file = File(directory, "community_${System.currentTimeMillis()}.m4a")
         val activeRecorder = createRecorder()
         try {
@@ -62,13 +62,7 @@ class CommunityAudioRecorder @Inject constructor(
                 file.delete()
                 Result.failure(IllegalArgumentException("Recording was too short"))
             } else {
-                Result.success(
-                    FileProvider.getUriForFile(
-                        context,
-                        "${context.packageName}.fileprovider",
-                        file,
-                    ),
-                )
+                Result.success(ShareOutbox.uriFor(context, file))
             }
         } catch (e: RuntimeException) {
             release()
