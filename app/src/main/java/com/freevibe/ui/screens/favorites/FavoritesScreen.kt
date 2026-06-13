@@ -24,6 +24,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.CustomAccessibilityAction
+import androidx.compose.ui.semantics.ProgressBarRangeInfo
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.customActions
+import androidx.compose.ui.semantics.onClick
+import androidx.compose.ui.semantics.progressBarRangeInfo
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -33,6 +41,7 @@ import com.freevibe.R
 import com.freevibe.data.model.FavoriteEntity
 import com.freevibe.data.model.isSourceUnavailable
 import com.freevibe.data.model.stableKey
+import com.freevibe.ui.components.AuraSnackbarHost
 import com.freevibe.ui.components.AuraStateCard
 import kotlinx.coroutines.launch
 
@@ -96,7 +105,7 @@ fun FavoritesScreen(
         message?.let { snackbarHostState.showSnackbar(it); viewModel.clearMessage() }
     }
 
-    Scaffold(snackbarHost = { SnackbarHost(snackbarHostState) }) { scaffoldPadding ->
+    Scaffold(snackbarHost = { AuraSnackbarHost(snackbarHostState) }) { scaffoldPadding ->
         Column(modifier = Modifier.fillMaxSize().padding(scaffoldPadding)) {
             if (selectionMode) {
                 TopAppBar(
@@ -125,7 +134,10 @@ fun FavoritesScreen(
                                 exitSelection()
                             },
                         ) {
-                            Icon(Icons.Default.CloudDownload, contentDescription = "Download selected")
+                            Icon(
+                                Icons.Default.CloudDownload,
+                                contentDescription = "Download ${selectedKeys.size} selected wallpaper${if (selectedKeys.size == 1) "" else "s"}",
+                            )
                         }
                         IconButton(
                             enabled = selectedKeys.isNotEmpty(),
@@ -148,7 +160,10 @@ fun FavoritesScreen(
                                 }
                             },
                         ) {
-                            Icon(Icons.Default.Delete, contentDescription = "Remove selected")
+                            Icon(
+                                Icons.Default.Delete,
+                                contentDescription = "Remove ${selectedKeys.size} selected favorite${if (selectedKeys.size == 1) "" else "s"}",
+                            )
                         }
                     },
                     colors = TopAppBarDefaults.topAppBarColors(
@@ -160,15 +175,15 @@ fun FavoritesScreen(
                 )
             } else {
             TopAppBar(
-                title = { Text("Favorites") },
+                title = { Text(stringResource(R.string.favorites_title)) },
                 actions = {
                     Box {
                         IconButton(onClick = { showMenu = true }) {
-                            Icon(Icons.Default.MoreVert, "More")
+                            Icon(Icons.Default.MoreVert, stringResource(R.string.collections_more))
                         }
                         DropdownMenu(expanded = showMenu, onDismissRequest = { showMenu = false }) {
                             DropdownMenuItem(
-                                text = { Text("Export favorites") },
+                                text = { Text(stringResource(R.string.favorites_export)) },
                                 onClick = {
                                     showMenu = false
                                     exportLauncher.launch("freevibe_favorites.json")
@@ -176,7 +191,7 @@ fun FavoritesScreen(
                                 leadingIcon = { Icon(Icons.Default.Upload, null) },
                             )
                             DropdownMenuItem(
-                                text = { Text("Import favorites") },
+                                text = { Text(stringResource(R.string.favorites_import)) },
                                 onClick = {
                                     showMenu = false
                                     importLauncher.launch(arrayOf("application/json"))
@@ -185,7 +200,7 @@ fun FavoritesScreen(
                             )
                             if (wallpapers.isNotEmpty()) {
                                 DropdownMenuItem(
-                                    text = { Text("Download all wallpapers") },
+                                    text = { Text(stringResource(R.string.favorites_download_all)) },
                                     onClick = {
                                         showMenu = false
                                         viewModel.downloadAllWallpapers()
@@ -195,17 +210,17 @@ fun FavoritesScreen(
                             }
                             HorizontalDivider()
                             DropdownMenuItem(
-                                text = { Text("Sort: Recent first") },
+                                text = { Text(stringResource(R.string.favorites_sort_recent)) },
                                 onClick = { sortBy = "recent"; showMenu = false },
                                 leadingIcon = { Icon(Icons.Default.Schedule, null) },
                             )
                             DropdownMenuItem(
-                                text = { Text("Sort: Name A-Z") },
+                                text = { Text(stringResource(R.string.favorites_sort_name)) },
                                 onClick = { sortBy = "name"; showMenu = false },
                                 leadingIcon = { Icon(Icons.Default.SortByAlpha, null) },
                             )
                             DropdownMenuItem(
-                                text = { Text("Sort: Oldest first") },
+                                text = { Text(stringResource(R.string.favorites_sort_oldest)) },
                                 onClick = { sortBy = "oldest"; showMenu = false },
                                 leadingIcon = { Icon(Icons.Default.History, null) },
                             )
@@ -230,6 +245,13 @@ fun FavoritesScreen(
             // but surfaced no progress. Now we render a compact linear indicator + counts whenever
             // BatchDownloadService is running.
             if (batchState.isRunning || (batchState.totalCount > 0 && !batchState.isComplete)) {
+                val batchProgressDescription = favoritesBatchProgressSummary(
+                    processed = batchState.processedCount,
+                    total = batchState.totalCount,
+                    failed = batchState.failedCount,
+                    blocked = batchState.blockedCount,
+                    currentItem = batchState.currentItem,
+                )
                 val batchProgressText = if (batchState.failedCount > 0 || batchState.blockedCount > 0) {
                     stringResource(
                         R.string.favorites_batch_downloading_with_outcomes,
@@ -246,15 +268,19 @@ fun FavoritesScreen(
                     )
                 }
                 Surface(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 12.dp, vertical = 6.dp)
+                        .semantics(mergeDescendants = true) {
+                            contentDescription = batchProgressDescription
+                            stateDescription = batchProgressText
+                        },
                     color = MaterialTheme.colorScheme.surfaceContainer.copy(alpha = 0.86f),
                     shape = RoundedCornerShape(8.dp),
                     border = BorderStroke(
                         1.dp,
                         MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.28f),
                     ),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 12.dp, vertical = 6.dp),
                 ) {
                     Row(
                         modifier = Modifier.padding(12.dp),
@@ -303,7 +329,13 @@ fun FavoritesScreen(
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .height(4.dp)
-                                    .clip(RoundedCornerShape(2.dp)),
+                                    .clip(RoundedCornerShape(2.dp))
+                                    .semantics {
+                                        progressBarRangeInfo = ProgressBarRangeInfo(
+                                            batchState.progress.coerceIn(0f, 1f),
+                                            0f..1f,
+                                        )
+                                    },
                                 color = MaterialTheme.colorScheme.primary,
                                 trackColor = MaterialTheme.colorScheme.surfaceContainerHigh,
                             )
@@ -331,6 +363,15 @@ fun FavoritesScreen(
                                 val key = fav.stableKey()
                                 val isSelected = key in selectedKeys
                                 val sourceUnavailable = fav.isSourceUnavailable()
+                                val selectedDescription = stringResource(
+                                    if (isSelected) R.string.a11y_selected else R.string.a11y_not_selected,
+                                )
+                                val openLabel = "Open ${favoriteDisplayName(fav)}"
+                                val selectionLabel = if (isSelected) {
+                                    "Deselect ${favoriteDisplayName(fav)}"
+                                } else {
+                                    "Select ${favoriteDisplayName(fav)}"
+                                }
                                 Card(
                                     modifier = Modifier
                                         .fillMaxWidth()
@@ -345,6 +386,7 @@ fun FavoritesScreen(
                                             } else Modifier,
                                         )
                                         .combinedClickable(
+                                            onClickLabel = if (selectionMode) selectionLabel else openLabel,
                                             onClick = {
                                                 if (selectionMode) {
                                                     toggleSelect(key)
@@ -353,11 +395,33 @@ fun FavoritesScreen(
                                                     onWallpaperClick(fav)
                                                 }
                                             },
+                                            onLongClickLabel = selectionLabel,
                                             onLongClick = {
                                                 if (!selectionMode) selectionMode = true
                                                 toggleSelect(key)
                                             },
-                                        ),
+                                        )
+                                        .semantics(mergeDescendants = true) {
+                                            contentDescription = favoriteWallpaperSummary(
+                                                favorite = fav,
+                                                isSelected = isSelected,
+                                                sourceUnavailable = sourceUnavailable,
+                                            )
+                                            stateDescription = selectedDescription
+                                            onClick(label = if (selectionMode) selectionLabel else openLabel, action = null)
+                                            customActions = listOf(
+                                                CustomAccessibilityAction(openLabel) {
+                                                    viewModel.selectWallpaper(fav, sortedWallpapers)
+                                                    onWallpaperClick(fav)
+                                                    true
+                                                },
+                                                CustomAccessibilityAction(selectionLabel) {
+                                                    if (!selectionMode) selectionMode = true
+                                                    toggleSelect(key)
+                                                    true
+                                                },
+                                            )
+                                        },
                                     shape = RoundedCornerShape(8.dp),
                                 ) {
                                     Box {
@@ -426,6 +490,9 @@ fun FavoritesScreen(
                         ) {
                             items(sortedSounds, key = { it.stableKey() }, contentType = { "favorite_card" }) { fav ->
                                 val sourceUnavailable = fav.isSourceUnavailable()
+                                val soundSummary = favoriteSoundSummary(fav, sourceUnavailable)
+                                val openLabel = "Open ${favoriteDisplayName(fav)}"
+                                val removeLabel = "Remove ${favoriteDisplayName(fav)}"
                                 val dismissState = rememberSwipeToDismissBoxState(
                                     confirmValueChange = { value ->
                                         if (value != SwipeToDismissBoxValue.Settled) {
@@ -457,7 +524,7 @@ fun FavoritesScreen(
                                         ) {
                                             Icon(
                                                 Icons.Default.Delete,
-                                                contentDescription = "Remove",
+                                                contentDescription = removeLabel,
                                                 tint = MaterialTheme.colorScheme.error,
                                             )
                                         }
@@ -468,6 +535,11 @@ fun FavoritesScreen(
                                         onClick = {
                                             viewModel.selectSound(fav)
                                             onSoundClick(fav)
+                                        },
+                                        modifier = Modifier.semantics(mergeDescendants = true) {
+                                            contentDescription = soundSummary
+                                            stateDescription = if (sourceUnavailable) "Source unavailable" else "Saved sound"
+                                            onClick(label = openLabel, action = null)
                                         },
                                         shape = RoundedCornerShape(8.dp),
                                         color = MaterialTheme.colorScheme.surfaceContainer,
@@ -527,7 +599,7 @@ private fun SourceUnavailableBadge(modifier: Modifier = Modifier) {
             horizontalArrangement = Arrangement.spacedBy(5.dp),
         ) {
             Icon(Icons.Default.Warning, contentDescription = null, modifier = Modifier.size(14.dp))
-            Text("Source unavailable", style = MaterialTheme.typography.labelSmall)
+            Text(stringResource(R.string.favorites_source_unavailable), style = MaterialTheme.typography.labelSmall)
         }
     }
 }
@@ -547,3 +619,70 @@ private fun EmptyState(
         )
     }
 }
+
+internal fun favoriteDisplayName(favorite: FavoriteEntity): String =
+    favorite.name.ifBlank { favorite.id }
+
+internal fun favoriteWallpaperSummary(
+    favorite: FavoriteEntity,
+    isSelected: Boolean,
+    sourceUnavailable: Boolean,
+): String {
+    val status = when {
+        sourceUnavailable -> "source unavailable"
+        isSelected -> "selected"
+        else -> "saved wallpaper"
+    }
+    val details = buildList {
+        favorite.category?.takeIf { it.isNotBlank() }?.let(::add)
+        if (favorite.width > 0 && favorite.height > 0) add("${favorite.width} by ${favorite.height}")
+        favorite.source.takeIf { it.isNotBlank() }?.let { add(sourceDisplayLabel(it)) }
+    }.joinToString(", ")
+    return listOf(favoriteDisplayName(favorite), status, details)
+        .filter { it.isNotBlank() }
+        .joinToString(". ")
+}
+
+internal fun favoriteSoundSummary(
+    favorite: FavoriteEntity,
+    sourceUnavailable: Boolean,
+): String {
+    val status = if (sourceUnavailable) "source unavailable" else "saved sound"
+    val duration = if (favorite.duration > 0) "${favorite.duration.toInt()} seconds" else ""
+    return listOf(favoriteDisplayName(favorite), status, duration, sourceDisplayLabel(favorite.source))
+        .filter { it.isNotBlank() }
+        .joinToString(". ")
+}
+
+internal fun favoritesBatchProgressSummary(
+    processed: Int,
+    total: Int,
+    failed: Int,
+    blocked: Int,
+    currentItem: String,
+): String {
+    val outcomes = buildList {
+        if (failed > 0) add("$failed failed")
+        if (blocked > 0) add("$blocked blocked")
+    }.joinToString(", ")
+    val current = currentItem.takeIf { it.isNotBlank() }?.let { "Current item: $it" }.orEmpty()
+    return listOf(
+        "Downloading favorites $processed of $total",
+        outcomes,
+        current,
+    ).filter { it.isNotBlank() }.joinToString(". ")
+}
+
+private fun sourceDisplayLabel(source: String): String =
+    when (source.uppercase(java.util.Locale.ROOT)) {
+        "YOUTUBE" -> "YouTube"
+        "CCMIXTER" -> "ccMixter"
+        "SOUNDCLOUD" -> "SoundCloud"
+        "BUNDLED" -> "Aura Picks"
+        else -> source.split('_', '-')
+            .filter { it.isNotBlank() }
+            .joinToString(" ") { part ->
+                part.lowercase(java.util.Locale.ROOT)
+                    .replaceFirstChar { if (it.isLowerCase()) it.titlecase() else it.toString() }
+            }
+        }

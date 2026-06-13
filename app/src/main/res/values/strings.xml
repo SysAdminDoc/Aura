@@ -385,4 +385,14 @@
     <string name="history_clear_title">Clear wallpaper history?</string>
     <string name="history_clear_body">This will remove all records of previously applied wallpapers.</string>
     <string name="history_clear_confirm">Clear</string>
+
+    <!-- Favorites -->
+    <string name="favorites_title">Favorites</string>
+    <string name="favorites_export">Export favorites</string>
+    <string name="favorites_import">Import favorites</string>
+    <string name="favorites_download_all">Download all wallpapers</string>
+    <string name="favorites_sort_recent">Sort: Recent first</string>
+    <string name="favorites_sort_name">Sort: Name A–Z</string>
+    <string name="favorites_sort_oldest">Sort: Oldest first</string>
+    <string name="favorites_source_unavailable">Source unavailable</string>
 </resources>
