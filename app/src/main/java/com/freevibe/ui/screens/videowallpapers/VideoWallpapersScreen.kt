@@ -529,9 +529,9 @@ fun VideoWallpapersScreen(
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
                 Spacer(Modifier.height(16.dp))
-                Text("Downloading & applying...", color = Color.White, style = MaterialTheme.typography.titleMedium)
+                Text(stringResource(R.string.video_downloading), color = Color.White, style = MaterialTheme.typography.titleMedium)
                 Spacer(Modifier.height(8.dp))
-                Text("This may take a moment", color = Color.White.copy(alpha = 0.6f), style = MaterialTheme.typography.bodySmall)
+                Text(stringResource(R.string.video_downloading_hint), color = Color.White.copy(alpha = 0.6f), style = MaterialTheme.typography.bodySmall)
             }
         }
     }
@@ -543,7 +543,7 @@ fun VideoWallpapersScreen(
         var selectedScaleMode by remember(item.id) { mutableStateOf(VIDEO_WALLPAPER_SCALE_MODE_ZOOM) }
         AlertDialog(
             onDismissRequest = { confirmItem = null },
-            title = { Text("Video Wallpaper") },
+            title = { Text(stringResource(R.string.video_wallpaper_title)) },
             text = {
                 Column {
                     Text(item.title, style = MaterialTheme.typography.bodyMedium)
@@ -592,34 +592,32 @@ fun VideoWallpapersScreen(
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     if (streamUrl != null) {
                         if (needsCrop) {
-                            // Landscape: Crop is primary action
-                            OutlinedButton(onClick = { viewModel.applyVideoWallpaper(item, selectedScaleMode); confirmItem = null }) { Text("Apply") }
+                            OutlinedButton(onClick = { viewModel.applyVideoWallpaper(item, selectedScaleMode); confirmItem = null }) { Text(stringResource(R.string.video_apply)) }
                             Button(onClick = {
                                 confirmItem = null
                                 cropItem = item to streamUrl
                             }) {
-                                Icon(Icons.Default.Crop, "Crop video", Modifier.size(16.dp))
+                                Icon(Icons.Default.Crop, stringResource(R.string.video_crop), Modifier.size(16.dp))
                                 Spacer(Modifier.width(4.dp))
-                                Text("Crop")
+                                Text(stringResource(R.string.video_crop))
                             }
                         } else {
-                            // Portrait/unknown: Apply is primary, Crop is secondary
                             OutlinedButton(onClick = {
                                 confirmItem = null
                                 cropItem = item to streamUrl
                             }) {
-                                Icon(Icons.Default.Crop, "Crop video", Modifier.size(16.dp))
+                                Icon(Icons.Default.Crop, stringResource(R.string.video_crop), Modifier.size(16.dp))
                                 Spacer(Modifier.width(4.dp))
-                                Text("Crop")
+                                Text(stringResource(R.string.video_crop))
                             }
-                            Button(onClick = { viewModel.applyVideoWallpaper(item, selectedScaleMode); confirmItem = null }) { Text("Apply") }
+                            Button(onClick = { viewModel.applyVideoWallpaper(item, selectedScaleMode); confirmItem = null }) { Text(stringResource(R.string.video_apply)) }
                         }
                     } else {
-                        Button(onClick = { viewModel.applyVideoWallpaper(item, selectedScaleMode); confirmItem = null }) { Text("Apply") }
+                        Button(onClick = { viewModel.applyVideoWallpaper(item, selectedScaleMode); confirmItem = null }) { Text(stringResource(R.string.video_apply)) }
                     }
                 }
             },
-            dismissButton = { TextButton(onClick = { confirmItem = null }) { Text("Cancel") } },
+            dismissButton = { TextButton(onClick = { confirmItem = null }) { Text(stringResource(R.string.common_cancel)) } },
         )
     }
     } // end Scaffold
@@ -901,7 +899,7 @@ private fun VideoCard(
                 } else {
                     Icon(Icons.Default.Wallpaper, null, Modifier.size(16.dp))
                     Spacer(Modifier.width(4.dp))
-                    Text("Apply")
+                    Text(stringResource(R.string.video_apply))
                 }
             }
         }
@@ -1040,7 +1038,7 @@ private fun VideoFiltersSheet(
             .padding(bottom = 24.dp),
         verticalArrangement = Arrangement.spacedBy(14.dp),
     ) {
-        Text("Refine videos", style = MaterialTheme.typography.titleMedium)
+        Text(stringResource(R.string.video_refine_title), style = MaterialTheme.typography.titleMedium)
         Text(
             "Focus",
             style = MaterialTheme.typography.labelLarge,
@@ -1087,7 +1085,7 @@ private fun VideoFiltersSheet(
             TextButton(onClick = it) {
                 Icon(Icons.Default.RestartAlt, contentDescription = null, modifier = Modifier.size(16.dp))
                 Spacer(Modifier.width(6.dp))
-                Text("Reset filters")
+                Text(stringResource(R.string.video_reset_filters))
             }
         }
     }

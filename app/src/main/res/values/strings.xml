@@ -365,4 +365,8 @@
 
     <!-- Licenses -->
     <string name="licenses_title">Open Source Licenses</string>
+
+    <!-- Video wallpaper refine -->
+    <string name="video_refine_title">Refine videos</string>
+    <string name="video_reset_filters">Reset filters</string>
 </resources>
