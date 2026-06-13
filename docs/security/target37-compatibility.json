@@ -1,0 +1,107 @@
+{
+  "schemaVersion": 1,
+  "policyKind": "target37PrivacySecurityCompatibilityPreflight",
+  "androidVersion": "Android 17 / API 37",
+  "scan": {
+    "sourceRoots": [
+      "app/src/main/java"
+    ],
+    "manifestPath": "app/src/main/AndroidManifest.xml",
+    "networkSecurityConfigPath": "app/src/main/res/xml/network_security_config.xml"
+  },
+  "localNetwork": {
+    "decision": "Aura does not request ACCESS_LOCAL_NETWORK and does not use local discovery APIs in current flows.",
+    "forbiddenPermissions": [
+      "android.permission.ACCESS_LOCAL_NETWORK"
+    ],
+    "forbiddenTerms": [
+      "ServerSocket(",
+      "DatagramSocket(",
+      "MulticastSocket(",
+      "NsdManager",
+      "WifiManager",
+      "NetworkInterface.getNetworkInterfaces",
+      "InetAddress.getLocalHost"
+    ],
+    "stringLiteralHostPattern": "\\.local"
+  },
+  "contacts": {
+    "decision": "Aura uses Android's contact picker selection plus just-in-time WRITE_CONTACTS for ringtone updates; broad READ_CONTACTS remains forbidden.",
+    "forbiddenManifestPermissions": [
+      "android.permission.READ_CONTACTS"
+    ],
+    "reviewedContactFiles": [
+      "app/src/main/java/com/freevibe/ui/screens/sounds/ContactPickerScreen.kt",
+      "app/src/main/java/com/freevibe/service/ContactRingtoneService.kt"
+    ]
+  },
+  "reflection": {
+    "decision": "Reflection is allowed only for reviewed platform/backward-compatibility bridges until compileSdk 37 removes the need for direct API bridges.",
+    "terms": [
+      "Class.forName(",
+      "getDeclaredField(",
+      "getDeclaredMethod(",
+      "getDeclaredConstructor(",
+      "getField(",
+      "getMethod(",
+      "isAccessible = true",
+      "setAccessible("
+    ],
+    "reviewedOccurrences": [
+      {
+        "path": "app/src/main/java/com/freevibe/service/AudioTrimmer.kt",
+        "terms": [
+          "getDeclaredField(",
+          "isAccessible = true"
+        ],
+        "reason": "Reads youtubedl-android FFmpeg binary and LD_LIBRARY_PATH values for local audio trimming."
+      },
+      {
+        "path": "app/src/main/java/com/freevibe/ui/screens/videowallpapers/VideoCropScreen.kt",
+        "terms": [
+          "getDeclaredField(",
+          "isAccessible = true"
+        ],
+        "reason": "Reads youtubedl-android FFmpeg binary and LD_LIBRARY_PATH values for local video crop/export."
+      },
+      {
+        "path": "app/src/main/java/com/freevibe/service/PhotoPickerCustomization.kt",
+        "terms": [
+          "Class.forName(",
+          "getDeclaredConstructor(",
+          "getMethod(",
+          "getField("
+        ],
+        "reason": "Bridges Android 17 Photo Picker 9:16 customization before compileSdk 37 is installed."
+      },
+      {
+        "path": "app/src/main/java/com/freevibe/service/SmartCropDetector.kt",
+        "terms": [
+          "getMethod("
+        ],
+        "reason": "Supports ML Kit subject segmentation beta API shape differences without broad reflection."
+      }
+    ]
+  },
+  "networkSecurity": {
+    "decision": "Release builds keep cleartext disabled globally; the previous ccMixter cleartext exception is removed.",
+    "cleartextPermitted": false,
+    "ccmixterCleartextException": "removed"
+  },
+  "dynamicCodeLoading": {
+    "decision": "Aura app code does not load native or dex code dynamically outside packaged dependencies.",
+    "forbiddenTerms": [
+      "DexClassLoader(",
+      "PathClassLoader(",
+      "InMemoryDexClassLoader(",
+      "dalvik.system.DexClassLoader",
+      "dalvik.system.PathClassLoader",
+      "System.load(",
+      "System.loadLibrary("
+    ]
+  },
+  "tlsPlatformReview": {
+    "certificateTransparency": "No custom trust manager or pinned certificate override is used; Aura relies on platform trust behavior and reviewed HTTPS endpoints.",
+    "encryptedClientHello": "Provider compatibility remains on platform and provider TLS support; no app-level ECH override is used."
+  }
+}
