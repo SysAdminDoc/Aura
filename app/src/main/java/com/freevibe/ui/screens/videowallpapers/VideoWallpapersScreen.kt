@@ -862,7 +862,7 @@ private fun VideoCard(
             ) {
                 Icon(
                     Icons.Default.VisibilityOff,
-                    contentDescription = null,
+                    contentDescription = hideVideoLabel,
                     modifier = Modifier.size(16.dp),
                     tint = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
@@ -876,7 +876,7 @@ private fun VideoCard(
                 ) {
                     Icon(
                         Icons.Default.Visibility,
-                        contentDescription = null,
+                        contentDescription = previewVideoLabel,
                         modifier = Modifier.size(18.dp),
                         tint = MaterialTheme.colorScheme.primary,
                     )

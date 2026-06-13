@@ -19,6 +19,13 @@ All notable changes to Aura will be documented in this file.
   stale/frozen engine state, surface recreation counts, last error, and
   last recovery action for support triage. Draw receipts are throttled to
   one write per 30 seconds to avoid I/O pressure.
+- **Compose accessibility semantics pass**: Added missing
+  `contentDescription` to interactive icons that lacked TalkBack
+  element names: VideoWallpapersScreen hide/preview icon buttons,
+  WallpaperDetailScreen palette color search dots, SoundDetailScreen
+  favorite toggle icon. Verified existing `stateDescription`,
+  `customActions`, `progressBarRangeInfo`, and decorative `null`
+  contentDescription patterns are correct across all screens.
 - **Reduced motion accessibility**: when the system `ANIMATOR_DURATION_SCALE`
   is 0 or the new manual "Reduce animations" toggle in Settings is enabled,
   all live wallpaper particle effects (weather, VFX, touch ripples) are

@@ -29,6 +29,8 @@ import androidx.compose.ui.graphics.graphicsLayer
 import kotlin.math.absoluteValue
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
@@ -472,7 +474,9 @@ fun WallpaperDetailScreen(
                                         onClick = { onSearchColor(hex.removePrefix("#")) },
                                         color = Color(colorInt),
                                         shape = CircleShape,
-                                        modifier = Modifier.size(24.dp),
+                                        modifier = Modifier
+                                            .size(24.dp)
+                                            .semantics { contentDescription = "Search color $hex" },
                                         border = BorderStroke(1.dp, Color.White.copy(alpha = 0.22f)),
                                         content = {},
                                     )

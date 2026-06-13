@@ -323,7 +323,7 @@ fun SoundDetailScreen(
                     ) {
                         Icon(
                             if (isFavorite) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
-                            contentDescription = null,
+                            contentDescription = if (isFavorite) removeFavoriteLabel else addFavoriteLabel,
                             tint = if (isFavorite) MaterialTheme.colorScheme.tertiary else MaterialTheme.colorScheme.onSurface,
                         )
                     }

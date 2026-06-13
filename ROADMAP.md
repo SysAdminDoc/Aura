@@ -3003,13 +3003,6 @@ Items below are sourced from exhaustive external research against competitors, p
 
 ### P1 -- Accessibility, localization, and platform parity
 
-- [ ] P1 -- **Add Compose semantics to all custom interactive components**
-  Why: Aura has zero `stateDescription`, `customActions`, or `onClick(label=...)` on any custom component. TalkBack cannot announce play/pause state, vote count, filter state, waveform progress, or crop position. The CVS Health android-compose-accessibility-techniques repo demonstrates the required patterns.
-  Evidence: Grep for `stateDescription`, `customActions`, `heading()` returns zero hits; Android Compose accessibility semantics docs; CVS Health reference implementation.
-  Touches: `SharedComponents.kt`, `SoundsScreen.kt`, `SoundDetailScreen.kt`, `WallpapersScreen.kt`, `WallpaperDetailScreen.kt`, `VideoWallpapersScreen.kt`, `SoundEditorScreen.kt`, `WallpaperCropScreen.kt`, `VideoCropScreen.kt`, `FreeVibeWidget.kt`.
-  Acceptance: Every interactive icon has an action label; play/pause/vote/apply states have `stateDescription`; waveform/progress/timeline controls expose progress semantics; decorative icons use `null` content description; card secondary actions use `customActions` to reduce TalkBack traversal noise.
-  Complexity: M
-
 - [ ] P1 -- **Compose UI screenshot tests with Paparazzi or Roborazzi**
   Why: 50 unit-test files but zero Compose screenshot tests. Theme changes (AMOLED/light/Material You), accessibility scaling, and RTL layout regressions are invisible without visual regression testing. Paparazzi runs on JVM without an emulator.
   Evidence: No `paparazzi` or `roborazzi` dependency found; U-13 roadmap item notes this gap; Compose Compiler 2.x changes screenshot stability.
