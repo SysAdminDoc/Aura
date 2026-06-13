@@ -29,6 +29,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.res.stringResource
+import com.freevibe.R
 import java.util.Locale
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.ViewModel
@@ -205,10 +207,10 @@ fun CreatorProfileScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Creator profile") },
+                title = { Text(stringResource(R.string.profile_title)) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.common_back))
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.surface),
@@ -437,20 +439,20 @@ private fun CreatorProfileEditDialog(
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Edit creator profile") },
+        title = { Text(stringResource(R.string.profile_edit_title)) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 OutlinedTextField(
                     value = displayName,
                     onValueChange = { displayName = it },
-                    label = { Text("Display name") },
+                    label = { Text(stringResource(R.string.profile_edit_name_label)) },
                     singleLine = true,
                     enabled = !isSaving,
                 )
                 OutlinedTextField(
                     value = bio,
                     onValueChange = { bio = it },
-                    label = { Text("Bio") },
+                    label = { Text(stringResource(R.string.profile_edit_bio_label)) },
                     minLines = 2,
                     maxLines = 4,
                     enabled = !isSaving,
@@ -458,14 +460,14 @@ private fun CreatorProfileEditDialog(
                 OutlinedTextField(
                     value = websiteUrl,
                     onValueChange = { websiteUrl = it },
-                    label = { Text("Website URL") },
+                    label = { Text(stringResource(R.string.profile_edit_website_label)) },
                     singleLine = true,
                     enabled = !isSaving,
                 )
                 OutlinedTextField(
                     value = avatarUrl,
                     onValueChange = { avatarUrl = it },
-                    label = { Text("Avatar URL") },
+                    label = { Text(stringResource(R.string.profile_edit_avatar_label)) },
                     singleLine = true,
                     enabled = !isSaving,
                 )
@@ -481,13 +483,13 @@ private fun CreatorProfileEditDialog(
                 if (isSaving) {
                     CircularProgressIndicator(Modifier.size(14.dp), strokeWidth = 2.dp)
                 } else {
-                    Text("Save")
+                    Text(stringResource(R.string.common_save))
                 }
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss, enabled = !isSaving, shape = RoundedCornerShape(8.dp), modifier = Modifier.heightIn(min = 48.dp)) {
-                Text("Cancel")
+                Text(stringResource(R.string.common_cancel))
             }
         },
     )
@@ -529,8 +531,8 @@ private fun CreatorRow(
     if (showBlockConfirm && onBlock != null) {
         AlertDialog(
             onDismissRequest = { if (!actionInFlight) showBlockConfirm = false },
-            title = { Text("Block creator?") },
-            text = { Text("This hides future community uploads from this creator in your personal community feeds.") },
+            title = { Text(stringResource(R.string.detail_block_title)) },
+            text = { Text(stringResource(R.string.detail_block_body)) },
             confirmButton = {
                 Button(
                     onClick = {
@@ -539,12 +541,12 @@ private fun CreatorRow(
                     },
                     enabled = !actionInFlight,
                 ) {
-                    Text("Block")
+                    Text(stringResource(R.string.reports_block_confirm))
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showBlockConfirm = false }, enabled = !actionInFlight) {
-                    Text("Cancel")
+                    Text(stringResource(R.string.common_cancel))
                 }
             },
         )

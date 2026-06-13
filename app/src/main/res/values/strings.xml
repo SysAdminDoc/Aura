@@ -309,4 +309,60 @@
     <string name="reports_action_restore">Restore</string>
     <string name="reports_action_delete">Delete upload</string>
     <string name="reports_action_block">Block creator</string>
+
+    <!-- Wallpaper detail -->
+    <string name="detail_loading_pill">Loading wallpaper</string>
+    <string name="detail_loading_title">Preparing the detail view</string>
+    <string name="detail_loading_body">Aura is restoring the image and its metadata so you can preview, save, or apply it cleanly.</string>
+    <string name="detail_unavailable_title">Wallpaper unavailable</string>
+    <string name="detail_unavailable_body">This item is no longer available from its source or couldn\'t be restored from local state.</string>
+    <string name="detail_unavailable_action">Back to feed</string>
+    <string name="detail_show_image">Show image</string>
+    <string name="detail_set_wallpaper">Set wallpaper</string>
+    <string name="detail_preview">Preview</string>
+    <string name="detail_set">Set</string>
+    <string name="detail_set_wallpaper_title">Set wallpaper</string>
+    <string name="detail_more_actions">More actions</string>
+    <string name="detail_save_to_collection">Save to collection</string>
+    <string name="detail_collection_name_placeholder">Collection name</string>
+    <string name="detail_create">Create</string>
+    <string name="detail_delete_title">Delete upload?</string>
+    <string name="detail_block_title">Block creator?</string>
+    <string name="detail_block_body">This hides future community uploads from this creator in your personal community feeds.</string>
+
+    <!-- Categories -->
+    <string name="categories_title">Categories</string>
+
+    <!-- Video wallpapers -->
+    <string name="video_downloading">Downloading &amp; applying…</string>
+    <string name="video_downloading_hint">This may take a moment</string>
+    <string name="video_wallpaper_title">Video Wallpaper</string>
+    <string name="video_apply">Apply</string>
+    <string name="video_crop">Crop</string>
+
+    <!-- Wallpaper feed -->
+    <string name="feed_generate">Generate</string>
+    <string name="feed_refine_title">Refine feed</string>
+    <string name="feed_reset_filters">Reset filters</string>
+    <string name="feed_wotd">Wallpaper of the Day</string>
+    <string name="feed_upload_title">Upload wallpaper</string>
+    <string name="feed_upload_name_label">Wallpaper name</string>
+    <string name="feed_upload_category_label">Category</string>
+    <string name="feed_upload_tags_label">Tags</string>
+    <string name="feed_upload_tags_hint">Aura crops to your screen ratio, compresses under 4 MB, and extracts colors.</string>
+    <string name="feed_upload_license_label">License</string>
+    <string name="feed_upload_source_label">Source URL</string>
+    <string name="feed_upload_source_hint">Optional HTTPS link for credited source material.</string>
+    <string name="feed_upload_button">Upload</string>
+
+    <!-- Creator profile -->
+    <string name="profile_title">Creator profile</string>
+    <string name="profile_edit_title">Edit creator profile</string>
+    <string name="profile_edit_name_label">Display name</string>
+    <string name="profile_edit_bio_label">Bio</string>
+    <string name="profile_edit_website_label">Website URL</string>
+    <string name="profile_edit_avatar_label">Avatar URL</string>
+
+    <!-- Licenses -->
+    <string name="licenses_title">Open Source Licenses</string>
 </resources>
