@@ -212,27 +212,12 @@ Append-only Cycle 3 handoff. Every item below is source-backed in `docs/research
   - Verify: turn off Pexels and run Wallpapers/Videos first-run; source badges/links visible; no auto-rotation defaults depend only on Pexels.
   - Completed 2026-06-06: Cycle 47 added Discover and video-wallpaper enhancement guards so Pexels-only batches are dropped unless non-Pexels base inventory is present. Focused tests prove disabled-Pexels Discover still returns Wallhaven/Pixabay, Pexels API calls are skipped, Pexels photo rows keep creator/source-page metadata, and video batches keep Pexels only when Pixabay/Reddit/YouTube-style fallback inventory is present. `docs/research/cycle-47-2026-06-06.md` records the checked Pexels policy source.
 
-- [ ] 🤖 🔬 **P1 — Provider cache and rate-limit policy engine**
-  - Why: Pixabay and Freesound have explicit cache/rate-limit expectations, but Aura's rate-limit handling is currently host-specific and policy-free.
-  - Evidence: `RateLimitInterceptor.kt` targets Freesound; Pixabay docs require 24-hour request caching and expose rate-limit headers; `SourceMetrics.kt` records failures but does not enforce provider rules.
-  - Touches: `RateLimitInterceptor`, provider repositories, cache metadata, `SourceMetrics`, Settings diagnostics.
-  - Acceptance: provider policies declare request cache TTL, media URL TTL, Retry-After handling, max automatic prefetch, and mass-download guard; Settings source-health view shows quota/cache state where available.
-  - Verify: simulated 429 with Retry-After for Pixabay/Freesound; cache hit avoids duplicate request inside TTL; mass-download guard blocks batch prefetch beyond policy.
-
 - [x] 🤖 🔬 **P1 — YouTube legal-mode/offline-risk switch**
   - Why: Aura's YouTube feature set searches, resolves, caches, and downloads audio/video through NewPipe/yt-dlp, while YouTube's official policy is restrictive around undocumented access, downloads, caching, offline playback, and background playback.
   - Evidence: `YouTubeRepository.kt` NewPipe/yt-dlp stream extraction; `VideoWallpapersViewModel.kt` yt-dlp download path; YouTube API developer policies.
   - Touches: YouTube repository abstraction, Sounds YouTube tab, video wallpaper YouTube source, Settings provider toggles, distribution docs, issue templates.
   - Acceptance: distributor can disable YouTube features; first-run does not require YouTube; UI clearly labels YouTube as optional; fallback sources remain useful; no YouTube download/cache happens when legal mode disables it.
   - Verify: disable YouTube and run Sounds/Videos; bundled sound and community paths still work; source metrics record disabled state separately from provider outage.
-
-- [~] 🤖 🔬 **P1 — Sound license capability gates**
-  - Why: Licenses and provider terms differ by source and action. A badge alone is not enough to decide whether a sound can be trimmed, normalized, downloaded, set as a ringtone, shared, or bundled.
-  - Evidence: `SoundDetailScreen.kt` displays license/uploader metadata; Freesound and SoundCloud terms require source-specific credit and usage compliance.
-  - Touches: sound models, sound repositories, editor/apply/share flows, Aura Originals curation, licenses screen.
-  - Acceptance: each sound has normalized license metadata and action capabilities; restricted actions are disabled or require confirmation; Aura Originals accepts only reviewed CC0/compatible assets; source link/uploader/license appear in every detail/export path.
-  - Verify: matrix tests for CC0, CC BY, CC BY-NC, SoundCloud, YouTube, community, bundled; editor/apply/share flows respect capability gates.
-  - Progress 2026-06-06: Cycle 49 added `SoundLicensePolicy.kt` with normalized license/action capabilities, Room v16 favorite-license persistence, favorites export/import preservation, ViewModel gates before apply/download stream resolution, Sound Detail/quick-apply/contact disabled or confirmation-required actions, provenance-rich share text, and `docs/legal/sound-license-capabilities.md`. Cycle 50 added selected community upload licenses and rights attestation so new community sounds use item-specific license decisions while legacy rows keep the `User Upload` fallback. Remaining work: keep standalone editor entry points aligned if new routes are added outside Sound Detail.
 
 - [~] 🤖 🔬 **P2 — Source deletion and takedown reconciliation**
   - Why: Reddit and other user-generated sources can delete, hide, suspend, or remove content after Aura cached it.
@@ -264,46 +249,11 @@ Append-only Cycle 4 handoff. Every item below is source-backed in `docs/research
   - Verify: API 37 picker flow; API 35 fallback flow; deny read/write permissions and confirm app degrades to "choose another apply target"; no automatic prompt on screen entry.
   - Progress 2026-06-11: Removed the broad `READ_CONTACTS` manifest permission and replaced screen-entry read/write prompts with Android system contact-pick selection plus just-in-time `WRITE_CONTACTS` at ringtone apply. Remaining work: API 37 device/emulator verification and any direct Android 17 Contact Picker API cleanup after the compile-SDK uplift.
 
-- [ ] 🤖 🔬 **P1 — Backup/data-extraction inventory and secret/identity exclusions**
-  - Why: Aura excludes DataStore prefs and crash logs, but `allowBackup=true` leaves other state eligible by default, including the main Room DB and `aura_community_identity`.
-  - Evidence: `AndroidManifest.xml`; `backup_rules.xml`; `data_extraction_rules.xml`; `CommunityIdentityProvider.kt`; Android Auto Backup docs.
-  - Touches: backup XML, Room/favorites/export docs, identity prefs, API key storage docs, release checklist.
-  - Acceptance: backup matrix declares include/exclude for Room DB, DataStore API keys, local identity UUID, weather lat/lon, crash logs, downloaded media, cached provider metadata, favorites, and collections; backup XML matches the matrix for Android 11 and Android 12+.
-  - Verify: inspect APK backup XML; smoke-run app then list app data files and compare to matrix; restore simulation or manual D2D/cloud decision review.
-
-- [ ] 🤖 🔬 **P1 — Just-in-time permission disclosure and denial UX audit**
-  - Why: Aura requests sensitive capabilities across contacts, microphone recording, notifications, WRITE_SETTINGS, and location. Each needs a clear user action, rationale, decline path, and graceful fallback.
-  - Evidence: manifest permissions; `SoundsScreen.kt` record flow; `SettingsScreen.kt` notification/location/settings flows; `ContactPickerScreen.kt`; Play prominent-disclosure guidance; Android runtime-permission docs.
-  - Touches: permission launch sites, microcopy, Settings privacy screen, QA checklist.
-  - Acceptance: no sensitive permission prompt fires before an explicit feature action; every denied permission leaves the rest of the app usable; permanent-denial states link to Android settings; release QA includes permission-denial screenshots.
-  - Verify: revoke each dangerous/special permission and exercise feature flows; check no startup prompts; run manual screenshots for allow/deny/permanent-deny states.
-
-- [ ] 🤖 🔬 **P2 — External automation consent, rate limit, and diagnostics**
-  - Why: The exported Tasker/MacroDroid receiver lets any app trigger wallpaper rotation broadcasts. The feature is useful but needs an opt-in boundary and observability.
-  - Evidence: `TaskerActionReceiver.kt`; `AndroidManifest.xml` exported receiver; Play User Data and foreground-service user-awareness guidance.
-  - Touches: Settings automation toggle, `TaskerActionReceiver`, `RotationTriggerService`, source diagnostics, README automation docs.
-  - Acceptance: external broadcast actions are ignored until the user enables automation; repeated broadcasts are rate-limited; diagnostics show last external trigger time/package when available; docs list the public intent contract and risks.
-  - Verify: broadcast ignored by default; enabled broadcast rotates once; burst broadcasts coalesce; diagnostics record external trigger state.
-
 ---
 
 ## 🔬 Researcher Queue (Cycle 5 — 2026-06-04)
 
 Append-only Cycle 5 handoff. Every item below is source-backed in `docs/research/cycle-5-2026-06-04.md`; merge into the existing Now/Next/Later item named in `Touches` when implementation starts.
-
-- [ ] 🤖 🔬 **P1 — Extract visible strings and plan first localization batch**
-  - Why: Aura is mostly hardcoded English today, with about 300 hardcoded visible-string patterns and only the base `values` resource directory.
-  - Evidence: `rg` counts in Cycle 5 research; Android per-app language docs; existing U-11 roadmap item.
-  - Touches: Compose screens, resources, widgets, live-wallpaper metadata, CI lint/search check, Weblate/Crowdin decision.
-  - Acceptance: visible strings live in resources or a central string abstraction; no new hardcoded user-visible strings in Kotlin except test/debug/source-provider literals; first-locale list and translation workflow documented; generated locale config stays disabled until translations are complete enough to publish.
-  - Verify: hardcoded-string scanner; resource build; pseudo-localization/manual long-string pass; RTL smoke test with Arabic/Hebrew pseudo-content.
-
-- [ ] 🤖 🔬 **P1 — Custom component semantics matrix**
-  - Why: Wallpaper/video cards, audio preview buttons, waveform/progress displays, vote/hide actions, filter chips, source/license badges, crop/timeline editors, and settings toggles need explicit labels, state descriptions, and custom actions.
-  - Evidence: no `stateDescription`, `customActions`, `onClick(label=...)`, or `heading()` found; Compose semantics/API-default docs.
-  - Touches: shared components, Wallpapers/Videos/Sounds screens, Sound Detail, editor screens, Settings, widget actions.
-  - Acceptance: each reusable component declares required semantics; interactive icons have action labels; progress/waveform/timeline controls expose progress/range state; repeated card secondary actions move to custom actions where TalkBack traversal would be noisy.
-  - Verify: Compose semantics assertions; TalkBack announces play/pause/vote/apply/crop states correctly; decorative icons remain hidden from screen readers.
 
 - [ ] 🤖 🔬 **P1 — 200% font, display-size, and contrast audit**
   - Why: Android 14 supports 200% nonlinear font scaling. Aura's dense chips, cards, overlays, bottom sheets, and editor timelines may clip or overlap at large fonts.
@@ -788,27 +738,6 @@ Append-only Cycle 16 handoff. Every item below is source-backed in `docs/researc
   - Acceptance: code and rules use one canonical share-token path; rules validate payload shape, version, item count, payload length, creator UID, createdAt, owner overwrite/delete, and admin cleanup.
   - Verify: emulator tests cover publish, public read-by-token, owner/admin overwrite/delete, unauthenticated write denial, malformed payload denial, and oversized payload denial; app share/import succeeds against emulator rules.
   - Progress 2026-06-06: Cycle 58 switched tracked rules to `shared_collections/{token}`, added `createdByUid` to published shares, bounded version/payload/name/item-count/created-at fields, allowed owner/admin cleanup, blocked non-owner overwrites, kept public token reads, denied the old `collection_shares` path, and added emulator coverage.
-
-- [ ] 🤖 🔬 **P1 — Backup/restore reconciliation for path-backed records**
-  - Why: `freevibe.db` is eligible for backup/transfer, but path-backed fields such as `FavoriteEntity.offlinePath` and `DownloadEntity.localPath` can point to files that were not restored, were cache-cleared, or moved across devices.
-  - Evidence: `backup_rules.xml`; `data_extraction_rules.xml`; `FavoriteEntity`; `DownloadEntity`; `OfflineFavoritesManager`; `DownloadManager`; Android Auto Backup and app-specific storage docs.
-  - Touches: startup reconciliation worker, favorites/downloads UI states, backup/privacy matrix, storage ledger, support diagnostics.
-  - Acceptance: after restore or startup, Aura checks path-backed records, clears or repairs missing local paths, preserves remote provenance, and surfaces "remote-only" or "file missing" instead of broken offline/download states.
-  - Verify: seed DB with valid and missing file paths, simulate restore/cache clear/device transfer, run reconciliation, and confirm apply/play/share/delete flows handle every state.
-
-- [ ] 🤖 🔬 **P1 — Unified import payload validation for favorites and collections**
-  - Why: Favorites import has size, version, enum, URL, and field-length limits; collection URI import has byte/item/HTTPS limits, but token import reads the RTDB payload string directly and collection items lack the same validation breadth.
-  - Evidence: `FavoritesExporter.kt`; `FavoritesExporterValidationTest.kt`; `CollectionExporter.kt`; `CollectionExporterTest.kt`; Firebase RTDB data-validation docs.
-  - Touches: favorites import, collection import, shared parser/helpers, import tests, support copy.
-  - Acceptance: file, deep-link, QR, and token imports share one capped validation contract covering payload size, item count, version, source enum, URL length, HTTPS-only URLs, field lengths, duplicate identity behavior, and unknown-provider handling.
-  - Verify: fuzz fixtures for huge JSON, future/old versions, malformed fields, unsafe URLs, duplicate items, unknown sources, empty payloads, and token payloads over the cap.
-
-- [ ] 🤖 🔬 **P1 — Transactional collection import**
-  - Why: `CollectionExporter.importJson()` creates the collection row and then inserts items one by one, so an insert failure can leave an empty or partial imported collection.
-  - Evidence: `CollectionExporter.kt`; `CollectionDao`; Room transaction guidance; existing collection repository tests.
-  - Touches: `CollectionDao`, `CollectionExporter`, collection import UI, DAO tests.
-  - Acceptance: collection import is all-or-nothing; duplicate imported items are de-duped predictably; a failed item insert leaves no new collection rows or collection items.
-  - Verify: inject DAO failure after collection creation, confirm no partial collection remains; successful import creates exactly one collection with the expected source-scoped item identities.
 
 - [ ] 🤖 🔬 **P2 — Export format compatibility and provenance schema policy**
   - Why: Favorites and collections export format version 1 payloads do not yet document how future provenance, source-deleted state, license/action-capability, or local-only metadata will migrate.
@@ -3161,13 +3090,6 @@ Net-new items from the second 2026-06-09 research pass (live provider probes, ba
 
 ### P1 — Reliability of the YouTube spine and aging strata
 
-- [ ] P1 — **yt-dlp runtime self-update with rollback**
-  Why: Aura never calls `YoutubeDL.updateYoutubeDL()` — the yt-dlp binary is frozen at whatever youtubedl-android 0.18.1 bundled in Nov 2024, while YouTube escalated SABR-forcing and PO-token enforcement through 2026. Today the only fix for extraction breakage is a full app release; the library officially supports runtime binary updates.
-  Evidence: zero `updateYoutubeDL` hits in `app/src/main/java`; youtubedl-android README (`UpdateChannel.STABLE`); yt-dlp issues #12482/#15689 and PO-Token Guide documenting 2026 enforcement churn.
-  Touches: `FreeVibeApp.kt` (init path), new `YtDlpUpdateManager` in `service/`, Settings > Sounds (manual "Update extractor" action + last-updated stamp), optional unmetered-only periodic WorkManager job, `SoundsViewModel.kt`/`VideoWallpapersViewModel.kt` error mapping so SABR/PO-token failures surface an actionable "Update extractor" hint instead of a generic failure.
-  Acceptance: user-triggered update works offline-safe (no-op without network); previous binary is retained and restored if the first post-update extraction fails; update is opt-in or unmetered-only by default (data politeness); diagnostics bundle records the active yt-dlp version.
-  Complexity: M
-
 - [ ] P1 — **Room 2.6.1 → 2.8.x persistence refresh**
   Why: Room 2.8 ships Kotlin-native codegen (KSP2-friendly), `RoomRawQuery`, and KMP support — the concrete prerequisite for the L-4 KMP shared-logic bet and the NX-7 sync work, and it runs on the current Kotlin 2.1/AGP 8.7 toolchain (needs Kotlin 2.0+, satisfied). Room 3.0 (March 2026) is a breaking major to defer until after N-1.
   Evidence: androidx Room release notes; Room 3.0 announcement blog; `gradle/libs.versions.toml` (room 2.6.1); Cycle 16 whole-graph migration-test item provides the safety harness.
@@ -3184,13 +3106,6 @@ Net-new items from the second 2026-06-09 research pass (live provider probes, ba
   Touches: new `data/remote/lemmy/` (+ optional wallpapercave) API/repository, `Mappers.kt`, `ContentSource` enum, `ProviderDisclosure.kt` policy rows + runtime switch, `WallpapersViewModel.kt` source chips, `DailyWallpaperWorker.kt` source-priority list, provider cache/rate-limit policy hooks (Cycle 3 engine).
   Acceptance: at least one new source browses with paging, provenance fields (uploader, source page URL, license where exposed), default-on runtime switch, and disclosure row; Wallpaper of the Day can rank by Lemmy votes; provider policy doc updated; Wallpaper Cave only ships if a documented, ToS-clean endpoint exists — otherwise Lemmy-only and Wallpaper Cave is recorded as rejected.
   Complexity: M
-
-- [ ] P2 — **App shortcuts: Shuffle, Rotate now, Search, Downloads**
-  Why: Aura has zero `shortcuts.xml` despite the underlying actions already existing (widget tap-to-shuffle, `TaskerActionReceiver` ROTATE_NOW/SHUFFLE_NOW). Long-press launcher shortcuts are table-stakes launcher integration for a personalization app and a genuine S-size win.
-  Evidence: no shortcuts.xml in `app/src/main/res/xml/`; `TaskerActionReceiver.kt` already routes the actions; Android static/dynamic shortcuts API.
-  Touches: `app/src/main/res/xml/shortcuts.xml` (new), manifest `<meta-data>`, `MainActivity` intent handling for search/downloads deep targets, shortcut icons (monochrome-tinted, themed-icon consistent).
-  Acceptance: long-press on launcher icon offers Shuffle wallpaper, Rotate now, Search, Downloads; each works cold-start and warm; shortcuts have localized-ready labels in `strings.xml`; TalkBack announces them correctly.
-  Complexity: S
 
 - [ ] P2 — **Scheduled automatic backup export of favorites/collections/settings**
   Why: Aura's export is manual-only (`FavoritesExporter` via SAF). Device loss between manual exports loses curation. WallFlow's most-requested data-safety ask (#68) is automatic periodic backup to a user-chosen folder; complements (does not duplicate) Cycle 16's restore-reconciliation items.
@@ -3307,3 +3222,132 @@ This section records net-new parity work from the Zedge official/web/app pass. T
 - Credits, subscriptions, reward ads, paid premium gates, and daily offers: rejected charter contradiction.
 - Push offer notifications and ad-reward prompts: rejected trust risk. Notifications should be feature-triggered only.
 - Zedge content scraping/import as a source: rejected legal/ToS risk.
+
+## Research-Driven Additions
+
+### P1 — Reliability
+
+- [ ] P1 — **Persist provider-health degradation and auto-fallback dead sources**
+  Why: `SourceMetrics` detects in-session persistent failures, but it resets on process death and currently informs diagnostics more than recovery; broken providers should not blank browse, daily, or rotation flows when alternatives exist.
+  Evidence: `app/src/main/java/com/freevibe/service/SourceMetrics.kt`; `app/src/main/java/com/freevibe/ui/screens/settings/SettingsScreen.kt`; WallFlow open issues for Reddit/search/auto-wallpaper failures; Muzei and WallYou multi-source behavior.
+  Touches: `SourceMetrics.kt`, `BackgroundWorkReceiptStore.kt`, `WallpapersViewModel.kt`, `VideoWallpapersViewModel.kt`, `SoundsViewModel.kt`, `DailyWallpaperWorker.kt`, provider diagnostics UI, focused source-metrics tests.
+  Acceptance: persistent source failures are saved for a bounded window, daily/rotation/background picks skip degraded providers when another enabled source can serve content, browse screens show degraded-source copy without hiding local/cached content, diagnostics include the last fallback decision, and tests cover threshold, fallback, and recovery reset.
+  Complexity: M
+
+### P2 — Maintainability and testing
+
+- [ ] P2 — **Decompose SettingsScreen into feature-owned sections**
+  Why: `SettingsScreen.kt` is 168 KB and carries provider keys, scheduler, weather/live wallpaper, generated-content disclosure, community identity/blocking, diagnostics, permissions, background work, and yt-dlp update flows, making every settings change high-risk.
+  Evidence: `app/src/main/java/com/freevibe/ui/screens/settings/SettingsScreen.kt`; `SettingsViewModel.kt`; recent settings-heavy commits; `RESEARCH.md` architecture assessment.
+  Touches: `app/src/main/java/com/freevibe/ui/screens/settings/`, `SettingsViewModel.kt`, settings-focused tests.
+  Acceptance: Settings is split into feature-owned composables/files for provider credentials, automation/scheduler, privacy/permissions, community identity, diagnostics, and updates; route behavior and state remain unchanged; focused settings tests still pass; no new settings section is added to the root file directly.
+  Complexity: M
+
+- [ ] P2 — **Add route-state fixtures for previews and screenshot tests**
+  Why: `rg "@Preview" app/src/main/java app/src/test/java` returns no hits, and the existing screenshot-test roadmap item will be slow to implement without deterministic empty/loading/error/success state fixtures.
+  Evidence: zero `@Preview` hits; existing P1 screenshot-test roadmap item; large Compose screen files (`WallpapersScreen.kt`, `SoundsScreen.kt`, `SettingsScreen.kt`, `WallpaperDetailScreen.kt`).
+  Touches: screen-level state models, new test/debug fixture package, Paparazzi/Roborazzi test setup when that roadmap item lands.
+  Acceptance: fixture states exist for Wallpapers, Wallpaper Detail, Sounds, Settings, Video Wallpapers, and at least one editor screen; fixtures cover empty/loading/error/offline/provider-disabled/large-font/RTL-relevant states; screenshot tests can consume the same fixtures without live network or Firebase.
+  Complexity: M
+
+- [ ] P2 — **Add manifest-backed research and roadmap consistency check**
+  Why: repeated research passes have left stale dependency/runtime claims in planning text, while live manifests already show Node 22 Functions, Room 2.7.2, and NewPipeExtractor v0.26.3.
+  Evidence: `functions/package.json`; `gradle/libs.versions.toml`; `app/build.gradle.kts`; current `ROADMAP.md` and previous `RESEARCH.md` version drift.
+  Touches: new lightweight checker under `tools/`, verify workflow, active roadmap/research sections, allowlist for historical sections.
+  Acceptance: a no-Gradle check compares active `RESEARCH.md`/`ROADMAP.md` dependency and runtime claims against `gradle/libs.versions.toml`, `app/build.gradle.kts`, and `functions/package.json`; stale active claims fail unless explicitly allowlisted as historical; duplicate active roadmap titles are reported.
+  Complexity: S
+
+### P1 - Live wallpaper reliability
+
+- [ ] P1 - Live wallpaper engine recovery receipts and OEM-kill guidance
+  Why: Aura has three live wallpaper engines and some video heartbeat diagnostics, but no cross-engine record of stale frames, surface recreation, or OEM/background kills; UndeadWallpaper's recent deep-sleep and media-info hardening shows this failure class is common in the same product category.
+  Evidence: UndeadWallpaper release notes; `app/src/main/java/com/freevibe/service/VideoWallpaperService.kt`; `app/src/main/java/com/freevibe/service/WeatherWallpaperService.kt`; `app/src/main/java/com/freevibe/service/ParallaxWallpaperService.kt`; `app/src/main/java/com/freevibe/service/CrashDiagnosticsCollector.kt`; `docs/background-work-device-evidence.json`.
+  Touches: live wallpaper engines, `VideoBatteryProfile.kt`, crash/support diagnostics, Settings live wallpaper diagnostics, focused receipt/recovery tests.
+  Acceptance: each live wallpaper engine records bounded local receipts for visibility changes, surface recreation, selected media/path state, last draw timestamp, last error, and recovery action; Settings/support bundle surfaces stale or frozen engine state with OEM battery guidance; engines attempt safe redraw or reload on surface recreation; tests cover receipt serialization and recovery-decision logic.
+  Complexity: M
+
+### P2 - Preview and metadata
+
+- [ ] P2 - Add media technical inspector for video and sound detail flows
+  Why: wallpaper detail already exposes resolution, file type, size, and quality hints, but video and sound flows expose only partial metadata; WallFlow users asked for fullscreen resolution and UndeadWallpaper ships media-info display before live-wallpaper apply decisions.
+  Evidence: WallFlow issue #99; UndeadWallpaper v1.3.0 media-info release; `app/src/main/java/com/freevibe/ui/screens/wallpapers/WallpaperDetailScreen.kt`; `app/src/main/java/com/freevibe/ui/screens/videowallpapers/VideoWallpapersScreen.kt`; `app/src/main/java/com/freevibe/service/VideoWallpaperStorage.kt`; `app/src/main/java/com/freevibe/ui/screens/sounds/SoundDetailScreen.kt`; `app/src/main/java/com/freevibe/data/model/Models.kt`.
+  Touches: video wallpaper cards/details, local video probe metadata, sound detail metadata, shared formatter utilities, mapper/export schemas where metadata already exists.
+  Acceptance: video detail/preview surfaces show resolution, aspect ratio, duration, file size, FPS/codec when known, source, and uploader; sound detail shows duration, format/bitrate/file size when known, license, source, and creator; unknown values are labeled without blocking actions; grid scrolling does not add network calls; formatter tests cover large-font-safe labels.
+  Complexity: M
+
+## Research-Driven Additions (2026-06-12)
+
+### P1 — Security and trust
+
+- [ ] P1 — yt-dlp CVE batch remediation beyond CVE-2026-26331
+  Why: The Risk Register tracks CVE-2026-26331 (netrc-cmd injection) but four additional yt-dlp CVEs exist that affect versions bundled via youtubedl-android:0.18.1. CVE-2026-50019 leaks cookies with the curl file downloader. CVE-2026-50023 allows dangerous file types via insufficient filename sanitization. CVE-2026-50574 enables arbitrary code execution via aria2c manifest downloads. CVE-2025-54072 enables `--exec` command injection on Windows (bypass of CVE-2024-22423).
+  Evidence: NVD entries for CVE-2026-50019, CVE-2026-50023, CVE-2026-50574, CVE-2025-54072; `app/build.gradle.kts` youtubedl-android 0.18.1 pin; `YouTubeRepository.kt` yt-dlp usage.
+  Touches: `app/build.gradle.kts`, youtubedl-android version pin, Risk Register in `ROADMAP.md`, `docs/distribution/supply-chain.md`, native compliance lock.
+  Acceptance: bundled yt-dlp version is verified against all five CVEs; unit test asserts none of the vulnerable flags (--netrc-cmd, --exec, aria2c) are passed via Aura code paths; Risk Register tracks all five CVEs in one row.
+  Complexity: S
+
+- [ ] P1 — Remediate 99 null contentDescription instances
+  Why: 99 `contentDescription = null` instances exist across 20 Compose UI files on non-decorative interactive elements. TalkBack users cannot identify these controls. The European Accessibility Act (EAA, effective June 2025) makes accessibility legally relevant for EU app distribution.
+  Evidence: Grep for `contentDescription\s*=\s*null` across `app/src/main/java/com/freevibe/ui/`; top offenders: `SharedComponents.kt` (10), `WallpapersScreen.kt` (11), `SoundsScreen.kt` (11), `VideoWallpapersScreen.kt` (11), `SoundDetailScreen.kt` (10).
+  Touches: `SharedComponents.kt`, all screen composables with null contentDescriptions, `strings.xml` for new accessibility string resources.
+  Acceptance: zero `contentDescription = null` on non-decorative interactive elements; all new descriptions use `stringResource()` not hardcoded strings; TalkBack manual pass on Wallpapers, Sounds, and Settings tabs identifies no unlabeled interactive controls.
+  Complexity: M
+
+### P1 — Features
+
+- [ ] P1 — "Set With..." intent-filter receiver for wallpaper delegation
+  Why: Peristyle v9.7 added a "Set With..." feature that lets other wallpaper apps delegate wallpaper-setting to Peristyle's crop/apply flow. Adding this to Aura lets users who discover wallpapers in other apps (gallery, file managers, browsers) use Aura's crop, edit, and apply pipeline without leaving their workflow.
+  Evidence: Peristyle v9.7 release; Android `Intent.ACTION_ATTACH_DATA` and `Intent.ACTION_SET_WALLPAPER` intent filters; `WallpaperApplier.kt`; `WallpaperCropScreen.kt`.
+  Touches: `AndroidManifest.xml` (new intent-filter), `MainActivity.kt` (intent handling), `FreeVibeRoot.kt` (deep-link routing to crop/apply), `WallpaperCropViewModel.kt`.
+  Acceptance: selecting "Set wallpaper with Aura" from another app opens Aura's crop/edit/apply flow with the received image; supports `content://`, `file://`, and HTTP URIs via `applyByLocator` scheme dispatch; back navigation returns to the calling app.
+  Complexity: M
+
+### P2 — Accessibility and UX
+
+- [ ] P2 — Reduced motion and animation accessibility
+  Why: Zero code references to `ANIMATOR_DURATION_SCALE`, `prefersReducedMotion`, or reduced-motion accessibility preferences. Live wallpaper particle renderers (fireflies, sakura, embers, sparkles), weather effects (rain, snow, fog), and Compose transitions run at full intensity regardless of user accessibility settings. Android accessibility guidelines recommend respecting system animation scale.
+  Evidence: Grep for `ReducedMotion|reducedMotion|ANIMATOR_DURATION_SCALE` returns zero hits; `VfxParticleRenderer.kt`; `WeatherParticleRenderer.kt`; `TouchEffectRenderer.kt`; Android accessibility animation guidance.
+  Touches: `VfxParticleRenderer.kt`, `WeatherParticleRenderer.kt`, `TouchEffectRenderer.kt`, live wallpaper engines, Compose animation wrappers, `SettingsScreen.kt` (manual animation toggle).
+  Acceptance: when system `ANIMATOR_DURATION_SCALE = 0`, particle/weather/touch effects are disabled or drastically reduced; Compose screen transitions respect the system animation scale; a manual "Reduce animations" toggle in Settings provides the same behavior independent of system setting.
+  Complexity: M
+
+- [ ] P2 — Opus audio output format in AudioTrimmer
+  Why: AudioTrimmer supports MP3/OGG/WAV/FLAC/M4A output but not Opus. Opus at 48kbps delivers better quality than MP3 at 128kbps with a fraction of the file size — ideal for ringtones and notification sounds. Android has native Opus-in-OGG playback support since API 21. Aura's minSdk 26 covers it.
+  Evidence: Opus codec specification; Android supported media formats documentation; `AudioTrimmer.kt` existing convert pipeline (FFmpeg-based); community signal on ringtone fidelity.
+  Touches: `AudioTrimmer.kt` (new Opus output path via FFmpeg), `SoundEditorScreen.kt` (format picker chip), `SoundEditorViewModel.kt`.
+  Acceptance: sound editor format picker includes Opus; output container is `.ogg` with Opus codec; `RingtoneManager.setActualDefaultRingtoneUri` accepts the output on API 26+; file size is measurably smaller than equivalent MP3 output.
+  Complexity: S
+
+### P2 — Architecture
+
+- [ ] P2 — Centralize notification channel creation
+  Why: Notification channels are created independently in three files: `FreeVibeApp.kt` (media_playback), `DailyWallpaperWorker.kt` (daily wallpaper), and `RotationTriggerService.kt` (wallpaper triggers). Scattered creation risks channel-naming inconsistencies, makes it hard to audit channel inventory, and violates the single-responsibility principle.
+  Evidence: `FreeVibeApp.kt:149-157`; `DailyWallpaperWorker.kt:144-151`; `RotationTriggerService.kt:76-80`.
+  Touches: New `NotificationChannels.kt` singleton/object, `FreeVibeApp.kt` (call centralized creation at startup), `DailyWallpaperWorker.kt`, `RotationTriggerService.kt`, `BatchDownloadService.kt`.
+  Acceptance: all notification channels are defined in one file with constants for channel IDs, names, and descriptions; `FreeVibeApp.onCreate()` creates all channels at startup; no other file calls `createNotificationChannel()`.
+  Complexity: S
+
+- [ ] P2 — Split WallpapersViewModel into feature-scoped ViewModels
+  Why: `WallpapersViewModel.kt` is 1262 lines handling wallpaper tab state, Discover cache, find-similar, match-my-theme, EyeDropper color search, category filtering, Community Favorites, daily pick, random wallpaper, and multiple pagination states. This makes testing and modification expensive. The existing ROADMAP tracks the SettingsScreen split but not the ViewModel split.
+  Evidence: `app/src/main/java/com/freevibe/ui/screens/wallpapers/WallpapersViewModel.kt` (1262 lines); WallpapersScreen.kt (1987 lines) depends on this single ViewModel for all tab behavior.
+  Touches: `WallpapersViewModel.kt` → split into `DiscoverViewModel`, `WallpaperSearchViewModel`, `WallpaperTabViewModel`; `WallpapersScreen.kt`; Hilt providers.
+  Acceptance: no single ViewModel exceeds 500 lines; tab-specific state is isolated; existing unit tests pass after refactor; Discover cache behavior is unchanged.
+  Complexity: L
+
+### P2 — Platform
+
+- [ ] P2 — Evaluate Navigation 3 vs. Navigation 2.9 for the N-1 toolchain pass
+  Why: The ROADMAP targets Navigation 2.9 for type-safe routes and predictive back (NX-4, NX-13). However, Navigation 3 shipped stable in November 2025 with a complete Compose-native rewrite: no Fragment dependency, smaller APK, typed keys replacing string routes, `NavDisplay` replacing `NavHost`, and explicit state classes replacing `NavController`. Targeting 2.9 may create a second migration step to 3 within months.
+  Evidence: Navigation 3 stable announcement (Nov 2025); Navigation 3 migration guide; `FreeVibeRoot.kt` (968 lines, all route declarations); N-1 toolchain scope in ROADMAP.
+  Touches: N-1 scope decision; `FreeVibeRoot.kt`; `Screen.kt` (route definitions); every `navController.navigate()` call site.
+  Acceptance: a documented decision (in ROADMAP or RESEARCH) comparing Nav 2.9 vs Nav 3 migration cost, with the chosen path reflected in N-1 scope. If Nav 3: migration plan covers all 23 screen destinations, deep links, predictive back, and widget navigation.
+  Complexity: S (decision) / XL (Nav 3 migration)
+
+### P3 — Observability
+
+- [ ] P3 — Android 17 memory-limit awareness for bitmap-heavy flows
+  Why: Android 17 enforces RAM-based app memory limits via `MemoryLimiter:AnonSwap`. Aura's wallpaper rendering, Coil image caching (256 MB disk + memory cache), ML Kit segmentation, and FFmpeg video crop are memory-intensive. On low-RAM Android 17 devices, these flows may trigger silent kills detectable only via `ApplicationExitInfo.getDescription()`.
+  Evidence: Android 17 behavior changes documentation; `FreeVibeApp.kt` Coil 256 MB disk cache; `ParallaxWallpaperService.kt` ML Kit segmentation bitmap handling; `VideoCropScreen.kt` FFmpeg operations.
+  Touches: `FreeVibeApp.kt` (memory monitoring), `CrashDiagnosticsCollector.kt` (capture `ApplicationExitInfo` on next launch), Settings diagnostics (expose memory-limit kills).
+  Acceptance: crash diagnostics capture `MemoryLimiter:AnonSwap` exit reasons; Settings diagnostics show last memory-related kill; Coil memory cache respects device memory class; documentation records expected memory profile per flow.
+  Complexity: M
