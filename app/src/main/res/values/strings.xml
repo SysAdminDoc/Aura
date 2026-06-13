@@ -373,4 +373,16 @@
     <string name="video_crop_smart">Smart</string>
     <string name="video_crop_cropping">Cropping…</string>
     <string name="video_crop_save_apply">Save loop and apply</string>
+
+    <!-- Downloads -->
+    <string name="downloads_title">Downloads</string>
+    <string name="downloads_active">Active</string>
+    <string name="downloads_file_missing">File missing</string>
+    <string name="downloads_source_unavailable">Source unavailable</string>
+
+    <!-- Wallpaper history -->
+    <string name="history_title">Wallpaper History</string>
+    <string name="history_clear_title">Clear wallpaper history?</string>
+    <string name="history_clear_body">This will remove all records of previously applied wallpapers.</string>
+    <string name="history_clear_confirm">Clear</string>
 </resources>

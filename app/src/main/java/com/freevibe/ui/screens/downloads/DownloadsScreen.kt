@@ -16,13 +16,22 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.semantics.ProgressBarRangeInfo
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.onClick
+import androidx.compose.ui.semantics.progressBarRangeInfo
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.freevibe.R
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.freevibe.data.model.DownloadEntity
 import com.freevibe.data.model.isSourceUnavailable
 import com.freevibe.service.DownloadProgress
+import com.freevibe.ui.components.AuraSnackbarHost
 import com.freevibe.ui.components.AuraStateCard
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
@@ -64,10 +73,10 @@ fun DownloadsScreen(
     }
 
     Scaffold(
-        snackbarHost = { SnackbarHost(snackbarHostState) },
+        snackbarHost = { AuraSnackbarHost(snackbarHostState) },
         topBar = {
             TopAppBar(
-                title = { Text("Downloads") },
+                title = { Text(stringResource(R.string.downloads_title)) },
                 navigationIcon = {
                     IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back") }
                 },
@@ -88,7 +97,7 @@ fun DownloadsScreen(
                     Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
                     verticalArrangement = Arrangement.spacedBy(6.dp),
                 ) {
-                    Text("Active", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary)
+                    Text(stringResource(R.string.downloads_active), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary)
                     activeDownloads.forEach { (id, dl) ->
                         ActiveDownloadCard(dl) { viewModel.dismissActive(id) }
                     }
@@ -149,7 +158,13 @@ fun DownloadsScreen(
 
 @Composable
 private fun ActiveDownloadCard(dl: DownloadProgress, onDismiss: () -> Unit) {
+    val statusLabel = downloadProgressStatusLabel(dl)
+    val dismissLabel = "Dismiss ${dl.fileName}"
     Surface(
+        modifier = Modifier.semantics(mergeDescendants = true) {
+            contentDescription = "${dl.fileName}. $statusLabel"
+            stateDescription = statusLabel
+        },
         color = MaterialTheme.colorScheme.surfaceContainer,
         shape = RoundedCornerShape(8.dp),
         border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.26f)),
@@ -157,21 +172,39 @@ private fun ActiveDownloadCard(dl: DownloadProgress, onDismiss: () -> Unit) {
         Column(Modifier.fillMaxWidth().padding(12.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Icon(
-                    if (dl.isComplete) Icons.Default.CheckCircle else Icons.Default.Download,
+                    if (dl.isComplete) Icons.Default.CheckCircle
+                    else if (dl.error != null) Icons.Default.Error
+                    else Icons.Default.Download,
                     null, Modifier.size(18.dp),
-                    tint = if (dl.isComplete) MaterialTheme.colorScheme.secondary else MaterialTheme.colorScheme.primary,
+                    tint = when {
+                        dl.isComplete -> MaterialTheme.colorScheme.secondary
+                        dl.error != null -> MaterialTheme.colorScheme.error
+                        else -> MaterialTheme.colorScheme.primary
+                    },
                 )
                 Spacer(Modifier.width(8.dp))
                 Text(dl.fileName, Modifier.weight(1f), style = MaterialTheme.typography.labelMedium, maxLines = 1, overflow = TextOverflow.Ellipsis)
                 if (dl.isComplete || dl.error != null) {
-                    IconButton(onClick = onDismiss, Modifier.size(48.dp)) { Icon(Icons.Default.Close, "Dismiss", Modifier.size(16.dp)) }
+                    IconButton(
+                        onClick = onDismiss,
+                        modifier = Modifier
+                            .size(48.dp)
+                            .semantics { onClick(label = dismissLabel, action = null) },
+                    ) {
+                        Icon(Icons.Default.Close, contentDescription = null, modifier = Modifier.size(16.dp))
+                    }
                 }
             }
             if (!dl.isComplete && dl.error == null) {
                 Spacer(Modifier.height(6.dp))
                 LinearProgressIndicator(
                     progress = { dl.progress },
-                    Modifier.fillMaxWidth().height(3.dp),
+                    Modifier
+                        .fillMaxWidth()
+                        .height(4.dp)
+                        .semantics {
+                            progressBarRangeInfo = ProgressBarRangeInfo(dl.progress, 0f..1f)
+                        },
                     color = MaterialTheme.colorScheme.primary,
                     trackColor = MaterialTheme.colorScheme.surfaceContainerHigh,
                 )
@@ -189,9 +222,19 @@ private fun DownloadHistoryCard(
     onDelete: () -> Unit,
 ) {
     val dateFormat = remember { SimpleDateFormat("MMM d, h:mm a", Locale.getDefault()) }
+    val dateLabel = remember(download.downloadedAt) { dateFormat.format(Date(download.downloadedAt)) }
+    val healthLabel = downloadHealthLabel(download, broken, sourceUnavailable)
+    val itemSummary = downloadHistorySummary(download, broken, sourceUnavailable, dateLabel)
+    val openLabel = downloadOpenActionLabel(download, broken)
+    val deleteLabel = "Delete ${download.name.ifEmpty { download.id }}"
 
     Surface(
         onClick = onOpen,
+        modifier = Modifier.semantics(mergeDescendants = true) {
+            contentDescription = itemSummary
+            stateDescription = healthLabel
+            onClick(label = openLabel, action = null)
+        },
         color = MaterialTheme.colorScheme.surfaceContainer,
         shape = RoundedCornerShape(8.dp),
         border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.24f)),
@@ -218,11 +261,11 @@ private fun DownloadHistoryCard(
                             else MaterialTheme.colorScheme.onSurface,
                 )
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Text(dateFormat.format(Date(download.downloadedAt)), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text(dateLabel, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     if (broken) {
-                        Text("File missing", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.error.copy(alpha = 0.8f))
+                        Text(stringResource(R.string.downloads_file_missing), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.error.copy(alpha = 0.8f))
                     } else if (sourceUnavailable) {
-                        Text("Source unavailable", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.error.copy(alpha = 0.8f))
+                        Text(stringResource(R.string.downloads_source_unavailable), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.error.copy(alpha = 0.8f))
                     } else {
                         Text(
                             if (download.type == "WALLPAPER") "Wallpaper" else "Sound",
@@ -232,9 +275,57 @@ private fun DownloadHistoryCard(
                     }
                 }
             }
-            IconButton(onClick = onDelete, Modifier.size(48.dp)) {
-                Icon(Icons.Default.Delete, "Delete", Modifier.size(18.dp), tint = MaterialTheme.colorScheme.error.copy(alpha = 0.7f))
+            IconButton(
+                onClick = onDelete,
+                modifier = Modifier
+                    .size(48.dp)
+                    .semantics { onClick(label = deleteLabel, action = null) },
+            ) {
+                Icon(
+                    Icons.Default.Delete,
+                    contentDescription = null,
+                    modifier = Modifier.size(18.dp),
+                    tint = MaterialTheme.colorScheme.error.copy(alpha = 0.7f),
+                )
             }
         }
     }
+}
+
+internal fun downloadHealthLabel(
+    download: DownloadEntity,
+    broken: Boolean,
+    sourceUnavailable: Boolean,
+): String = when {
+    broken -> "File missing"
+    sourceUnavailable -> "Source unavailable"
+    download.type == "WALLPAPER" -> "Wallpaper"
+    else -> "Sound"
+}
+
+internal fun downloadHistorySummary(
+    download: DownloadEntity,
+    broken: Boolean,
+    sourceUnavailable: Boolean,
+    downloadedAtLabel: String,
+): String {
+    val name = download.name.ifEmpty { download.id }
+    return "$name. ${downloadHealthLabel(download, broken, sourceUnavailable)}. Downloaded $downloadedAtLabel."
+}
+
+internal fun downloadOpenActionLabel(download: DownloadEntity, broken: Boolean): String =
+    if (broken) {
+        "Review missing file"
+    } else {
+        "Open ${download.name.ifEmpty { download.id }}"
+    }
+
+internal fun downloadProgressStatusLabel(download: DownloadProgress): String = when {
+    download.isComplete -> "Download complete"
+    download.error != null -> "Download failed: ${download.error}"
+    download.totalBytes > 0 -> {
+        val percent = (download.progress * 100).toInt().coerceIn(0, 100)
+        "$percent percent downloaded"
+    }
+    else -> "Download in progress"
 }
