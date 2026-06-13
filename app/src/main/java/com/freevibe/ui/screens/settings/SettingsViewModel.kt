@@ -138,6 +138,7 @@ class SettingsViewModel @Inject constructor(
     val weatherEffects = prefs.weatherEffectsEnabled.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
     val adaptiveTint = prefs.adaptiveTintEnabled.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
     val adaptiveTintIntensity = prefs.adaptiveTintIntensity.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0.3f)
+    val reduceAnimations = prefs.reduceAnimations.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
     val darkModeSwitch = prefs.darkModeAutoSwitch.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
     val darkModeWallpaperId = prefs.darkModeWallpaperId.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), "")
     val lightModeWallpaperId = prefs.lightModeWallpaperId.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), "")
@@ -547,6 +548,11 @@ class SettingsViewModel @Inject constructor(
     fun setSchedulerLock(enabled: Boolean) = viewModelScope.launch { prefs.setSchedulerLock(enabled) }
     fun setSchedulerShuffle(shuffle: Boolean) = viewModelScope.launch { prefs.setSchedulerShuffle(shuffle) }
     fun setWeatherEffects(enabled: Boolean) = viewModelScope.launch { prefs.setWeatherEffectsEnabled(enabled) }
+    fun setReduceAnimations(enabled: Boolean) = viewModelScope.launch {
+        prefs.setReduceAnimations(enabled)
+        context.getSharedPreferences("freevibe_weather_wp", android.content.Context.MODE_PRIVATE)
+            .edit().putBoolean("reduce_animations", enabled).apply()
+    }
     fun setAdaptiveTint(enabled: Boolean) = viewModelScope.launch {
         prefs.setAdaptiveTintEnabled(enabled)
         // Bridge to SharedPreferences so WeatherWallpaperService can read it synchronously

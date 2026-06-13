@@ -3284,13 +3284,6 @@ This section records net-new parity work from the Zedge official/web/app pass. T
 
 ### P2 — Accessibility and UX
 
-- [ ] P2 — Reduced motion and animation accessibility
-  Why: Zero code references to `ANIMATOR_DURATION_SCALE`, `prefersReducedMotion`, or reduced-motion accessibility preferences. Live wallpaper particle renderers (fireflies, sakura, embers, sparkles), weather effects (rain, snow, fog), and Compose transitions run at full intensity regardless of user accessibility settings. Android accessibility guidelines recommend respecting system animation scale.
-  Evidence: Grep for `ReducedMotion|reducedMotion|ANIMATOR_DURATION_SCALE` returns zero hits; `VfxParticleRenderer.kt`; `WeatherParticleRenderer.kt`; `TouchEffectRenderer.kt`; Android accessibility animation guidance.
-  Touches: `VfxParticleRenderer.kt`, `WeatherParticleRenderer.kt`, `TouchEffectRenderer.kt`, live wallpaper engines, Compose animation wrappers, `SettingsScreen.kt` (manual animation toggle).
-  Acceptance: when system `ANIMATOR_DURATION_SCALE = 0`, particle/weather/touch effects are disabled or drastically reduced; Compose screen transitions respect the system animation scale; a manual "Reduce animations" toggle in Settings provides the same behavior independent of system setting.
-  Complexity: M
-
 - [ ] P2 — Opus audio output format in AudioTrimmer
   Why: AudioTrimmer supports MP3/OGG/WAV/FLAC/M4A output but not Opus. Opus at 48kbps delivers better quality than MP3 at 128kbps with a fraction of the file size — ideal for ringtones and notification sounds. Android has native Opus-in-OGG playback support since API 21. Aura's minSdk 26 covers it.
   Evidence: Opus codec specification; Android supported media formats documentation; `AudioTrimmer.kt` existing convert pipeline (FFmpeg-based); community signal on ringtone fidelity.

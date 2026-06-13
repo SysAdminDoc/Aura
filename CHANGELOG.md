@@ -3,6 +3,11 @@
 All notable changes to Aura will be documented in this file.
 
 ## Unreleased
+- **Reduced motion accessibility**: when the system `ANIMATOR_DURATION_SCALE`
+  is 0 or the new manual "Reduce animations" toggle in Settings is enabled,
+  all live wallpaper particle effects (weather, VFX, touch ripples) are
+  disabled and the 30 FPS draw loop stops (static background only). Compose
+  transitions already respect the system animation scale natively.
 - **"Set With..." intent-filter receiver**: other apps (gallery, file managers,
   browsers) can now delegate wallpaper-setting to Aura via `ACTION_ATTACH_DATA`
   with `image/*` MIME type. Aura opens the crop/edit/apply flow with the

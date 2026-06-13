@@ -8,6 +8,7 @@ import android.graphics.ColorMatrixColorFilter
 import android.graphics.Paint
 import android.os.Handler
 import android.os.Looper
+import android.provider.Settings
 import android.service.wallpaper.WallpaperService
 import android.view.MotionEvent
 import android.view.SurfaceHolder
@@ -34,6 +35,8 @@ class WeatherWallpaperService : WallpaperService() {
         private var visible = false
         @Volatile private var destroyed = false
         private val frameInterval = 33L // ~30 FPS
+
+        private var reducedMotion = false
 
         // Adaptive tint state
         private var tintEnabled = false
@@ -67,6 +70,7 @@ class WeatherWallpaperService : WallpaperService() {
                 scaledBitmap = wallpaperBitmap?.let { scaleBitmap(it, width, height) }
                 if (oldScaled !== wallpaperBitmap && oldScaled !== scaledBitmap) oldScaled?.recycle()
             }
+            loadReducedMotionFromPrefs()
             loadWeatherFromPrefs()
             loadVfxFromPrefs()
             loadTouchEffectsFromPrefs()
@@ -78,6 +82,7 @@ class WeatherWallpaperService : WallpaperService() {
             super.onVisibilityChanged(visible)
             this.visible = visible
             if (visible) {
+                loadReducedMotionFromPrefs()
                 loadWeatherFromPrefs()
                 loadVfxFromPrefs()
                 loadTouchEffectsFromPrefs()
@@ -160,6 +165,17 @@ class WeatherWallpaperService : WallpaperService() {
             val width = if (rect.width() > 0) rect.width() else resources.displayMetrics.widthPixels
             val height = if (rect.height() > 0) rect.height() else resources.displayMetrics.heightPixels
             return width.coerceAtLeast(1) to height.coerceAtLeast(1)
+        }
+
+        private fun loadReducedMotionFromPrefs() {
+            val prefs = getSharedPreferences("freevibe_weather_wp", MODE_PRIVATE)
+            val manualReduce = prefs.getBoolean("reduce_animations", false)
+            val systemDisabled = Settings.Global.getFloat(
+                contentResolver,
+                Settings.Global.ANIMATOR_DURATION_SCALE,
+                1f,
+            ) == 0f
+            reducedMotion = manualReduce || systemDisabled
         }
 
         private fun loadVfxFromPrefs() {
@@ -273,17 +289,16 @@ class WeatherWallpaperService : WallpaperService() {
                         canvas.drawColor(android.graphics.Color.BLACK)
                     }
 
-                    // Update and draw weather particles
-                    renderer?.update()
-                    renderer?.draw(canvas)
+                    if (!reducedMotion) {
+                        renderer?.update()
+                        renderer?.draw(canvas)
 
-                    // Draw VFX overlay (fireflies, sakura, etc.)
-                    vfxRenderer?.update()
-                    vfxRenderer?.draw(canvas)
+                        vfxRenderer?.update()
+                        vfxRenderer?.draw(canvas)
 
-                    // Draw short-lived touch ripples/spark bursts.
-                    touchRenderer?.update()
-                    touchRenderer?.draw(canvas)
+                        touchRenderer?.update()
+                        touchRenderer?.draw(canvas)
+                    }
                 }
             } catch (_: Exception) {
             } finally {
@@ -292,7 +307,7 @@ class WeatherWallpaperService : WallpaperService() {
                 }
             }
 
-            if (visible) {
+            if (visible && !reducedMotion) {
                 handler.postDelayed(drawRunner, frameInterval)
             }
         }

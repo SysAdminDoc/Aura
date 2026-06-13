@@ -195,6 +195,7 @@ fun SettingsScreen(
     val weatherEffects by viewModel.weatherEffects.collectAsStateWithLifecycle()
     val adaptiveTint by viewModel.adaptiveTint.collectAsStateWithLifecycle()
     val adaptiveTintIntensity by viewModel.adaptiveTintIntensity.collectAsStateWithLifecycle()
+    val reduceAnimations by viewModel.reduceAnimations.collectAsStateWithLifecycle()
     val darkModeSwitch by viewModel.darkModeSwitch.collectAsStateWithLifecycle()
     val darkModeWallpaperId by viewModel.darkModeWallpaperId.collectAsStateWithLifecycle()
     val lightModeWallpaperId by viewModel.lightModeWallpaperId.collectAsStateWithLifecycle()
@@ -1227,6 +1228,13 @@ fun SettingsScreen(
                     confirmButton = { TextButton(onClick = { showTouchEffectsPicker = false }) { Text("Close") } },
                 )
             }
+            SettingsToggle(
+                icon = Icons.Default.Accessibility,
+                title = "Reduce animations",
+                subtitle = "Disable particle, weather, and touch effects on live wallpapers",
+                checked = reduceAnimations,
+                onCheckedChange = { viewModel.setReduceAnimations(it) },
+            )
             // Dark/light mode wallpaper pickers.
             // Earlier revision bailed silently when wallpaperHistory was empty, leaving the
             // user clicking the slot card with no feedback. Now the dialog opens regardless
