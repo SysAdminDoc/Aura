@@ -140,12 +140,23 @@ def validate_required_call_sites(repo_root: Path, call_sites: list[dict[str, Any
 
 def validate_policy(repo_root: Path, policy_path: Path) -> dict[str, Any]:
     policy = require_object(read_json(policy_path), "policy")
-    if policy.get("schemaVersion") != 1:
-        raise YtDlpCvePolicyError("schemaVersion must be 1")
-    if require_string(policy.get("policyKind"), "policyKind") != "ytdlpNetrcCommandCveReachability":
-        raise YtDlpCvePolicyError("policyKind must be ytdlpNetrcCommandCveReachability")
-    if require_string(policy.get("cve"), "cve") != "CVE-2026-26331":
-        raise YtDlpCvePolicyError("cve must be CVE-2026-26331")
+    schema_version = policy.get("schemaVersion")
+    if schema_version not in (1, 2):
+        raise YtDlpCvePolicyError("schemaVersion must be 1 or 2")
+
+    policy_kind = require_string(policy.get("policyKind"), "policyKind")
+    if policy_kind not in ("ytdlpNetrcCommandCveReachability", "ytdlpCveReachability"):
+        raise YtDlpCvePolicyError("policyKind must be ytdlpNetrcCommandCveReachability or ytdlpCveReachability")
+
+    if schema_version == 1:
+        if require_string(policy.get("cve"), "cve") != "CVE-2026-26331":
+            raise YtDlpCvePolicyError("cve must be CVE-2026-26331")
+        tracked_cves = [policy["cve"]]
+        advisory = require_string(policy.get("advisory"), "advisory")
+    else:
+        tracked_cve_entries = require_object_list(policy.get("trackedCves"), "trackedCves")
+        tracked_cves = [require_string(entry.get("cve"), f"trackedCves[{i}].cve") for i, entry in enumerate(tracked_cve_entries)]
+        advisory = tracked_cve_entries[0].get("advisory", "") if tracked_cve_entries else ""
 
     affected_range = require_object(policy.get("affectedVersionRange"), "affectedVersionRange")
     introduced = require_string(affected_range.get("introduced"), "affectedVersionRange.introduced")
@@ -168,14 +179,14 @@ def validate_policy(repo_root: Path, policy_path: Path) -> dict[str, Any]:
     hits = forbidden_option_hits(repo_root, source_roots, forbidden_options)
     if hits:
         raise YtDlpCvePolicyError(
-            "forbidden yt-dlp netrc command option is reachable in Aura source:\n" + "\n".join(hits)
+            "forbidden yt-dlp option is reachable in Aura source:\n" + "\n".join(hits)
         )
 
     status = "affected_not_reachable" if affected else "fixed_or_unaffected"
     return {
         "status": status,
-        "cve": policy["cve"],
-        "advisory": require_string(policy.get("advisory"), "advisory"),
+        "trackedCves": tracked_cves,
+        "advisory": advisory,
         "bundledYtDlpVersion": ytdlp_version,
         "minimumSafeYtDlpVersion": minimum_safe,
         "forbiddenOptions": forbidden_options,

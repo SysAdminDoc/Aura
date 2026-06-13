@@ -10,6 +10,13 @@ All notable changes to Aura will be documented in this file.
   (confirmation for user-upload license), AI-generated (share confirmation),
   and Creative Commons license gates (NC confirmation, ND edit disabled).
   Unavailable-source wallpapers disable all actions.
+- **yt-dlp CVE batch remediation**: expanded `ytdlp-cve-policy.json` from
+  schema v1 (CVE-2026-26331 only) to v2 tracking all 5 yt-dlp CVEs
+  (CVE-2026-26331, CVE-2026-50019, CVE-2026-50023, CVE-2026-50574,
+  CVE-2025-54072). Forbidden options list now covers `--netrc-cmd`,
+  `--cookies`, `aria2c`, `--downloader`, and `--exec`. Policy checker
+  validates all 6 forbidden options; 9 unit tests cover v1 compat and v2
+  rejection of each CVE-related flag. Risk Register consolidated to one row.
 - **Provider policy report reason**: added `PROVIDER_POLICY` to
   `CommunityReportReason` for reporting community uploads that violate
   third-party provider terms (e.g., re-uploaded Pexels/Pixabay content).

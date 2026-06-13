@@ -1424,7 +1424,7 @@ Thirteen items. All scored 18–25. Pull from the top of this list when Now clos
 Themes group Now/Next items so they ship coherently rather than as one-off features.
 
 ### T-A. Dependency hygiene & platform parity
-Spans: **N-1, N-2, N-3, N-4, NX-10, NX-11, yt-dlp CVE-2026-26331 risk row**.
+Spans: **N-1, N-2, N-3, N-4, NX-10, NX-11, yt-dlp CVE batch risk row**.
 Outcome: Aura runs on the current platform with current libraries. Compose Strong Skipping wins, Material 3 Expressive, Photo Picker (rev4: + 9:16 customization on Android 17), WallpaperDescription, Subject Segmentation, EyeDropper colour pick (rev4: Android 17+), Subject Segmentation all land together. NewPipeExtractor bumps to 0.26.1+; bundled yt-dlp re-verified post-CVE-2026-26331.
 
 ### T-B. Lockscreen depth & live-wallpaper engine
@@ -1452,7 +1452,7 @@ Spans: existing 5.5 (battery dashboard), NX-1 (engine pause-on-invisible discipl
 Outcome: Aura's live wallpapers prove their power impact (Facer "Power Impact" rating equivalent). Users with TalkBack / large-font / reduced-motion needs get parity. [DreamPixel battery analysis](https://dreampixelstudio.app/blog/use-live-wallpapers-on-android-without-draining-battery) — lightweight live wallpapers cost <2 % battery/day, heavy 3D/video can cost 5–8 %; Aura's existing auto-15-FPS-below-15 %-battery cap + pause-on-invisible are the relevant primitives.
 
 ### T-H. Trust & hardening
-Spans: existing 2026-05-17 audit pass (downloader sanitization, streaming caps, parallax bitmap-leak fix, AGSL crash-safety), N-2 (Custom Claims server-side enforcement), U-13 (screenshot + integration test expansion), the Risk Register rows for CVE-2026-0073-class platform CVEs + yt-dlp CVE-2026-26331 (new in rev4).
+Spans: existing 2026-05-17 audit pass (downloader sanitization, streaming caps, parallax bitmap-leak fix, AGSL crash-safety), N-2 (Custom Claims server-side enforcement), U-13 (screenshot + integration test expansion), the Risk Register rows for CVE-2026-0073-class platform CVEs + yt-dlp CVE batch (5 CVEs, expanded from rev4).
 Outcome: Every external input (manifest URL, HTTP body, content URI, user-pick) goes through a streaming cap; every internal allocation has a leak-free recycle path; every privilege check has a server-side enforcement layer. The 2026-05-17 pass closed the worst-case OOM-OOM-leak chain in `WallpaperApplier.downloadBitmap` (the call site of every wallpaper apply); same primitives reused in three sibling write paths.
 
 ### T-I. Developer experience & build verification (new in rev4)
@@ -1468,7 +1468,7 @@ Live operational risks ranked by likelihood × blast radius. Update at every rel
 | Risk | Likelihood | Blast | Mitigation in roadmap |
 |------|-----------|-------|-----------------------|
 | NewPipe Extractor stops working on Play-Protect-certified Android (March 2026 maintainer warning, [piunikaweb](https://piunikaweb.com/2026/03/09/newpipe-certified-android-devices-warning/); SABR enforcement [#12126](https://github.com/TeamNewPipe/NewPipe/issues/12126); latest stable extractor **0.26.1** with SABR-only player response fix per the [post-0.28.1 hotfix notes](https://newpipe.net/blog/pinned/announcement/newpipe-0.28.1-released/) — Aura is on 0.24.8) | Medium | High (YouTube sound tab dies) | Abstract `YouTubeRepository.search()` + `resolveStreamUrl()` behind a `SoundExtractor` interface in N-1; ship NewPipeExtractor as the default impl, `NewPipeExtractorKmpAdapter` ([yushosei/NewPipeExtractor-KMP](https://github.com/yushosei/NewPipeExtractor-KMP)) as fallback, and youtubedl-android as last-resort path. Pin `NewPipeExtractor` version comment already in place since v6.12.0; bump to **0.26.1+** in lock-step with monthly upstream patches once N-1 unblocks build verification. |
-| yt-dlp CVE-2026-26331 — arbitrary command injection via `--netrc-cmd` (all versions ≥ 2023.06.21 < 2026.02.21; [GitLab advisory](https://advisories.gitlab.com/pkg/pypi/yt-dlp/CVE-2026-26331/)). Aura ships yt-dlp transitively via `youtubedl-android:0.18.1`. | Low (Aura code never sets `--netrc-cmd` or `netrc_cmd`) | Medium (any contributor adding netrc support without auditing would hit this) | Verify bundled yt-dlp version meets ≥ 2026.02.21; add a guarded grep / unit-test asserting `--netrc-cmd` is not passed through `YouTubeRepository.resolveStreamUrl()`; bump `youtubedl-android` in the N-1 toolchain pass if a release ≥ 0.19.x has shipped with the fixed yt-dlp bundle. Document the rule in the YouTube repository's KDoc. |
+| yt-dlp CVE batch (5 CVEs via youtubedl-android:0.18.1 bundling yt-dlp 2025.11.12): CVE-2026-26331 (`--netrc-cmd` injection), CVE-2026-50019 (`--cookies` leak with curl downloader), CVE-2026-50023 (dangerous file types via filename sanitization), CVE-2026-50574 (arbitrary code exec via `aria2c` manifest), CVE-2025-54072 (`--exec` injection on Windows). | Low (Aura code never passes `--netrc-cmd`, `--exec`, `--cookies`, `aria2c`, or `--downloader`; verified by `docs/security/ytdlp-cve-policy.json` v2 + 9 unit tests) | Medium (any contributor adding these flags without auditing would hit the CVEs) | Policy file (`ytdlp-cve-policy.json` v2) scans all source for 6 forbidden options; `test/tools/ytdlp_cve_policy_check_test.py` rejects each; bump `youtubedl-android` in N-1 toolchain pass when ≥ 0.19.x ships with fixed yt-dlp bundle. |
 | CISA-KEV-class platform CVEs (Aura cannot patch; users may run unpatched OEMs). Recent: CVE-2026-0073 (May 2026, adbd zero-click RCE, [AOSP bulletin](https://source.android.com/docs/security/bulletin/2026/2026-05-01)). | Low | Low (device-level, not Aura's bug) | Existing optional warning-banner placeholder; no roadmap response needed beyond keeping the dependency hygiene cadence (T-A). |
 | Firebase BoM 33.7.0 transitive protobuf vulnerable to CVE-2024-7254 | High | Medium | **N-2** bumps to BoM 34.x |
 | Aura's `VoteRepository` admin auth is client-side spoofable | Medium | Medium (community moderation bypass) | **N-2** Custom Claims |
@@ -3279,12 +3279,6 @@ This section records net-new parity work from the Zedge official/web/app pass. T
 
 ### P1 — Security and trust
 
-- [ ] P1 — yt-dlp CVE batch remediation beyond CVE-2026-26331
-  Why: The Risk Register tracks CVE-2026-26331 (netrc-cmd injection) but four additional yt-dlp CVEs exist that affect versions bundled via youtubedl-android:0.18.1. CVE-2026-50019 leaks cookies with the curl file downloader. CVE-2026-50023 allows dangerous file types via insufficient filename sanitization. CVE-2026-50574 enables arbitrary code execution via aria2c manifest downloads. CVE-2025-54072 enables `--exec` command injection on Windows (bypass of CVE-2024-22423).
-  Evidence: NVD entries for CVE-2026-50019, CVE-2026-50023, CVE-2026-50574, CVE-2025-54072; `app/build.gradle.kts` youtubedl-android 0.18.1 pin; `YouTubeRepository.kt` yt-dlp usage.
-  Touches: `app/build.gradle.kts`, youtubedl-android version pin, Risk Register in `ROADMAP.md`, `docs/distribution/supply-chain.md`, native compliance lock.
-  Acceptance: bundled yt-dlp version is verified against all five CVEs; unit test asserts none of the vulnerable flags (--netrc-cmd, --exec, aria2c) are passed via Aura code paths; Risk Register tracks all five CVEs in one row.
-  Complexity: S
 
 - [ ] P1 — Remediate 99 null contentDescription instances
   Why: 99 `contentDescription = null` instances exist across 20 Compose UI files on non-decorative interactive elements. TalkBack users cannot identify these controls. The European Accessibility Act (EAA, effective June 2025) makes accessibility legally relevant for EU app distribution.
