@@ -11,6 +11,7 @@ enum class CommunityReportReason(val storageValue: String, val label: String) {
     OFFENSIVE("OFFENSIVE", "Offensive"),
     UNSAFE("UNSAFE", "Unsafe"),
     DECEPTIVE("DECEPTIVE", "Deceptive"),
+    PROVIDER_POLICY("PROVIDER_POLICY", "Provider policy violation"),
     OTHER("OTHER", "Other"),
 }
 
@@ -19,6 +20,7 @@ val COMMUNITY_REPORT_REASONS = listOf(
     CommunityReportReason.SOURCE_REMOVED,
     CommunityReportReason.SAFETY,
     CommunityReportReason.SPAM,
+    CommunityReportReason.PROVIDER_POLICY,
     CommunityReportReason.OTHER,
 )
 

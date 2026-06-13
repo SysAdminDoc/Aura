@@ -3,6 +3,16 @@
 All notable changes to Aura will be documented in this file.
 
 ## Unreleased
+- **Wallpaper action capabilities**: added `WallpaperLicensePolicy.kt` with
+  per-wallpaper action-capability gates (APPLY/DOWNLOAD/SHARE/EDIT) mirroring
+  the existing sound license system. Source-specific rules for Bing (download/
+  edit confirmation, share disabled), Reddit (edit disabled), Community
+  (confirmation for user-upload license), AI-generated (share confirmation),
+  and Creative Commons license gates (NC confirmation, ND edit disabled).
+  Unavailable-source wallpapers disable all actions.
+- **Provider policy report reason**: added `PROVIDER_POLICY` to
+  `CommunityReportReason` for reporting community uploads that violate
+  third-party provider terms (e.g., re-uploaded Pexels/Pixabay content).
 - **Locale.ROOT sweep**: fixed 7 remaining machine-use case transformations
   across AI prompt normalization, wallpaper feed term matching, content source
   label formatting, rate-limit host matching, file extension checks, and daily
