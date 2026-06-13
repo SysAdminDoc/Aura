@@ -1,5 +1,6 @@
 package com.freevibe.ui.components
 
+import android.provider.Settings
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
@@ -24,6 +25,7 @@ import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
@@ -43,6 +45,28 @@ private val AuraCardShape = RoundedCornerShape(8.dp)
 private val AuraControlShape = RoundedCornerShape(8.dp)
 private val AuraIconTileShape = RoundedCornerShape(8.dp)
 private val AuraMinimumTouchTarget = 48.dp
+
+// ── Feedback Chrome ────────────────────────────────────────────────
+
+@Composable
+fun AuraSnackbarHost(
+    hostState: SnackbarHostState,
+    modifier: Modifier = Modifier,
+) {
+    SnackbarHost(
+        hostState = hostState,
+        modifier = modifier,
+    ) { data ->
+        Snackbar(
+            snackbarData = data,
+            shape = AuraCardShape,
+            containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+            contentColor = MaterialTheme.colorScheme.onSurface,
+            actionColor = MaterialTheme.colorScheme.primary,
+            dismissActionContentColor = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+    }
+}
 
 // ── Download Progress Overlay ─────────────────────────────────────
 
@@ -183,22 +207,27 @@ fun ShimmerBox(
         MaterialTheme.colorScheme.surfaceContainer.copy(alpha = 0.72f),
     )
 
-    val transition = rememberInfiniteTransition(label = "shimmer")
-    val translateAnim by transition.animateFloat(
-        initialValue = 0f,
-        targetValue = 1000f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(durationMillis = 1200, easing = LinearEasing),
-            repeatMode = RepeatMode.Restart,
-        ),
-        label = "shimmer_translate",
-    )
+    val animationsEnabled = rememberSystemAnimationsEnabled()
+    val brush = if (animationsEnabled) {
+        val transition = rememberInfiniteTransition(label = "shimmer")
+        val translateAnim by transition.animateFloat(
+            initialValue = 0f,
+            targetValue = 1000f,
+            animationSpec = infiniteRepeatable(
+                animation = tween(durationMillis = 1200, easing = LinearEasing),
+                repeatMode = RepeatMode.Restart,
+            ),
+            label = "shimmer_translate",
+        )
 
-    val brush = Brush.linearGradient(
-        colors = shimmerColors,
-        start = Offset(translateAnim - 200f, translateAnim - 200f),
-        end = Offset(translateAnim, translateAnim),
-    )
+        Brush.linearGradient(
+            colors = shimmerColors,
+            start = Offset(translateAnim - 200f, translateAnim - 200f),
+            end = Offset(translateAnim, translateAnim),
+        )
+    } else {
+        SolidColor(MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.88f))
+    }
 
     Box(
         modifier = modifier
@@ -364,8 +393,10 @@ fun CompactSearchField(
     keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
     keyboardActions: KeyboardActions = KeyboardActions.Default,
     shape: Shape = AuraControlShape,
+    clearContentDescription: String? = null,
 ) {
     var isFocused by remember { mutableStateOf(false) }
+    val clearLabel = clearContentDescription ?: stringResource(R.string.common_clear)
 
     Surface(
         modifier = modifier
@@ -430,8 +461,13 @@ fun CompactSearchField(
             )
 
             if (value.isNotEmpty() && onClear != null) {
-                IconButton(onClick = onClear, modifier = Modifier.size(AuraMinimumTouchTarget)) {
-                    Icon(Icons.Default.Close, contentDescription = "Clear", modifier = Modifier.size(14.dp))
+                IconButton(
+                    onClick = onClear,
+                    modifier = Modifier
+                        .size(AuraMinimumTouchTarget)
+                        .semantics { onClick(label = clearLabel, action = null) },
+                ) {
+                    Icon(Icons.Default.Close, contentDescription = clearLabel, modifier = Modifier.size(14.dp))
                 }
             }
         }
@@ -711,5 +747,17 @@ private fun formatBytes(bytes: Long): String {
         bytes < 1024 -> "$bytes B"
         bytes < 1024 * 1024 -> String.format(root, "%.1f KB", bytes / 1024.0)
         else -> String.format(root, "%.1f MB", bytes / (1024.0 * 1024.0))
+    }
+}
+
+@Composable
+private fun rememberSystemAnimationsEnabled(): Boolean {
+    val context = LocalContext.current
+    return remember(context) {
+        Settings.Global.getFloat(
+            context.contentResolver,
+            Settings.Global.ANIMATOR_DURATION_SCALE,
+            1f,
+        ) != 0f
     }
 }

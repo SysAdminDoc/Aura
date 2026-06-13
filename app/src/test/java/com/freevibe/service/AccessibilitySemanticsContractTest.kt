@@ -14,6 +14,8 @@ class AccessibilitySemanticsContractTest {
                 tokens = listOf(
                     "fun DownloadProgressBar",
                     "progressBarRangeInfo = ProgressBarRangeInfo",
+                    "fun AuraSnackbarHost",
+                    "rememberSystemAnimationsEnabled",
                     "fun HighlightPill",
                     "clearAndSetSemantics",
                     "fun SourceBadge",
@@ -22,6 +24,24 @@ class AccessibilitySemanticsContractTest {
                     "onClick(label = action.label",
                     "fun CountBadge",
                     "contentDescription = countDescription",
+                ),
+            ),
+            SemanticsRequirement(
+                path = "src/main/java/com/freevibe/ui/screens/downloads/DownloadsScreen.kt",
+                tokens = listOf(
+                    "fun downloadHistorySummary",
+                    "progressBarRangeInfo = ProgressBarRangeInfo",
+                    "stateDescription = healthLabel",
+                    "onClick(label = openLabel",
+                ),
+            ),
+            SemanticsRequirement(
+                path = "src/main/java/com/freevibe/ui/screens/favorites/FavoritesScreen.kt",
+                tokens = listOf(
+                    "fun favoriteWallpaperSummary",
+                    "fun favoritesBatchProgressSummary",
+                    "progressBarRangeInfo = ProgressBarRangeInfo",
+                    "customActions = listOf",
                 ),
             ),
             SemanticsRequirement(

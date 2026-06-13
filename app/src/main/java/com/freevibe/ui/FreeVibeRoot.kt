@@ -53,6 +53,7 @@ import com.freevibe.ui.screens.sounds.SoundsScreen
 import com.freevibe.ui.screens.wallpapers.WallpaperDetailScreen
 import com.freevibe.ui.screens.wallpapers.WallpapersScreen
 import com.freevibe.ui.screens.aigenerate.AiWallpaperScreen
+import com.freevibe.ui.components.AuraSnackbarHost
 import com.freevibe.ui.components.CountBadge
 
 private const val PREFS_KEY = "freevibe_app"
@@ -173,19 +174,10 @@ fun FreeVibeRoot(
             containerColor = Color.Transparent,
             snackbarHost = {
                 // Lift the snackbar above bottom navigation when visible.
-                SnackbarHost(
+                AuraSnackbarHost(
                     hostState = snackbarHostState,
                     modifier = Modifier.padding(bottom = if (showBottomBar) 72.dp else 0.dp),
-                ) { data ->
-                    Snackbar(
-                        snackbarData = data,
-                        shape = RoundedCornerShape(8.dp),
-                        containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
-                        contentColor = MaterialTheme.colorScheme.onSurface,
-                        actionColor = MaterialTheme.colorScheme.primary,
-                        dismissActionContentColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                }
+                )
             },
             bottomBar = {
                 if (showBottomBar) {

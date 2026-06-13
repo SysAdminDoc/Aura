@@ -71,6 +71,7 @@ import com.freevibe.data.model.stableKey
 import com.freevibe.data.repository.matchesHiddenIds
 import com.freevibe.ui.components.AuraStateAction
 import com.freevibe.ui.components.AuraStateCard
+import com.freevibe.ui.components.AuraSnackbarHost
 import com.freevibe.ui.components.CompactSearchField
 import com.freevibe.ui.components.CommunityGuidelinesDialog
 import com.freevibe.ui.components.CountBadge
@@ -374,7 +375,7 @@ fun SoundsScreen(
 
     Scaffold(
         contentWindowInsets = WindowInsets(0, 0, 0, 0),
-        snackbarHost = { SnackbarHost(snackbarHostState) },
+        snackbarHost = { AuraSnackbarHost(snackbarHostState) },
         floatingActionButton = {
             Column(
                 horizontalAlignment = Alignment.End,
@@ -383,6 +384,7 @@ fun SoundsScreen(
                 if (communityProviderEnabled && state.selectedTab == SoundTab.COMMUNITY) {
                     SmallFloatingActionButton(
                         onClick = startRecording,
+                        modifier = Modifier.size(48.dp),
                         containerColor = MaterialTheme.colorScheme.secondaryContainer,
                     ) {
                         Icon(Icons.Default.Mic, "Record community sound", modifier = Modifier.size(20.dp))
@@ -391,6 +393,7 @@ fun SoundsScreen(
                 if (communityProviderEnabled) {
                     SmallFloatingActionButton(
                         onClick = { uploadAudioPickerLauncher.launch("audio/*") },
+                        modifier = Modifier.size(48.dp),
                         containerColor = MaterialTheme.colorScheme.tertiaryContainer,
                     ) {
                         Icon(Icons.Default.Upload, "Upload community sound", modifier = Modifier.size(20.dp))
@@ -398,6 +401,7 @@ fun SoundsScreen(
                 }
                 SmallFloatingActionButton(
                     onClick = { createAudioPickerLauncher.launch("audio/*") },
+                    modifier = Modifier.size(48.dp),
                     containerColor = MaterialTheme.colorScheme.primaryContainer,
                 ) {
                     Icon(Icons.Default.ContentCut, "Create from music", modifier = Modifier.size(20.dp))
@@ -666,7 +670,7 @@ private fun SoundFilterButton(
 ) {
     FilledTonalIconButton(
         onClick = onClick,
-        modifier = Modifier.size(44.dp),
+        modifier = Modifier.size(48.dp),
     ) {
         Box {
             Icon(Icons.Default.Tune, contentDescription = "Refine sounds", modifier = Modifier.size(18.dp))
@@ -1154,7 +1158,7 @@ private fun SoundCard(
                 IconButton(
                     onClick = onPlayClick,
                     modifier = Modifier
-                        .size(40.dp)
+                        .size(48.dp)
                         .clip(CircleShape)
                         .semantics {
                             contentDescription = playButtonDescription
@@ -1269,7 +1273,7 @@ private fun SoundCard(
             // Playback waveform
             if (isPlaying && sound.duration > 0) {
                 Spacer(Modifier.height(6.dp))
-                MiniWaveform(sound.duration, true, playbackProgress, Modifier.fillMaxWidth().padding(start = 52.dp))
+                MiniWaveform(sound.duration, true, playbackProgress, Modifier.fillMaxWidth().padding(start = 60.dp))
             }
 
             if (sound.source == ContentSource.COMMUNITY && (onUpvote != null || onDownvote != null)) {
@@ -1577,12 +1581,27 @@ private fun QuickApplySheet(
 
 @Composable
 private fun QuickApplyRow(label: String, icon: androidx.compose.ui.graphics.vector.ImageVector, enabled: Boolean, onClick: () -> Unit) {
+    val rowStateDescription = stringResource(if (enabled) R.string.a11y_available else R.string.a11y_disabled)
     Surface(
         onClick = onClick,
         enabled = enabled,
         shape = RoundedCornerShape(8.dp),
-        color = MaterialTheme.colorScheme.surfaceContainer.copy(alpha = 0.45f),
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.2f)),
+        color = if (enabled) {
+            MaterialTheme.colorScheme.surfaceContainer.copy(alpha = 0.58f)
+        } else {
+            MaterialTheme.colorScheme.surfaceContainer.copy(alpha = 0.3f)
+        },
+        border = BorderStroke(
+            1.dp,
+            if (enabled) MaterialTheme.colorScheme.primary.copy(alpha = 0.2f)
+            else MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.18f),
+        ),
+        modifier = Modifier.semantics {
+            stateDescription = rowStateDescription
+            if (enabled) {
+                onClick(label = label, action = null)
+            }
+        },
     ) {
         Row(
             Modifier.fillMaxWidth().padding(vertical = 14.dp, horizontal = 8.dp),
