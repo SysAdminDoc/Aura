@@ -19,6 +19,12 @@ All notable changes to Aura will be documented in this file.
   stale/frozen engine state, surface recreation counts, last error, and
   last recovery action for support triage. Draw receipts are throttled to
   one write per 30 seconds to avoid I/O pressure.
+- **Navigation 3 decision**: evaluated Nav 2.9 vs Nav 3 for the N-1
+  toolchain pass. Decision: skip Nav 2.9, target Navigation 3 directly.
+  Codebase surface: 22 destinations, 51 NavType declarations, 31
+  navigate calls. Nav 3 eliminates string-route boilerplate, enables
+  true predictive-back via NavDisplay, and avoids a two-step migration.
+  N-1 scope, NX-4, NX-13, and all "Navigation 2.9" references updated.
 - **Manifest consistency check**: new `tools/manifest_consistency_check.py`
   compares dependency/runtime version claims in ROADMAP.md and RESEARCH.md
   current-state sections against `gradle/libs.versions.toml`,

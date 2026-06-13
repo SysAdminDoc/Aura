@@ -51,7 +51,11 @@ Top 10 new opportunities in priority order:
 - **Zero @Preview composables:** No Compose Preview functions exist anywhere in the codebase. Prevents visual iteration during development and blocks future screenshot-test infrastructure (Paparazzi/Roborazzi).
 - **Localization readiness:** Only 161 entries in `strings.xml` (English-only). Many UI strings are hardcoded in Kotlin. A localization pipeline (Weblate/Crowdin) cannot start until strings are extracted.
 - **Zero WindowSizeClass / adaptive layout code:** Confirmed by grep. All layouts are phone-first with fixed grid columns. Android 16 mandates adaptive support on ≥600dp displays.
-- **Navigation 3 consideration:** The ROADMAP targets Navigation 2.9 for type-safe routes and predictive back. However, Navigation 3 shipped stable in Nov 2025 with a complete Compose-native rewrite (no Fragment dependency, smaller APK, typed keys replacing string routes). The N-1 toolchain pass should evaluate whether to skip 2.9 and go directly to 3.
+- **Navigation decision (2026-06-13): Skip Nav 2.9, target Nav 3 in N-1.**
+  Codebase surface: 22 composable destinations in FreeVibeRoot.kt, 51 NavType argument declarations, 31 navController.navigate() call sites, 6 BackHandler instances, intent-based deep links (aura://collection, JSON import), widget navigation via initialNavigateTo, 5 bottom nav items.
+  Nav 2.9 would add type-safe route arguments (eliminates 51 NavType declarations + Uri.encode boilerplate) and is a smaller diff, but Nav 3 (stable since Nov 2025) delivers all that plus: Fragment-free NavDisplay, explicit state classes replacing NavController, true predictive-back support (currently declared in manifest but unwired), typed keys, and smaller APK. Migrating to 2.9 first creates a second migration to 3 within months.
+  Cost estimate: ~22 destination conversions (string routes to typed keys), ~31 navigate-call rewrites, NavHost-to-NavDisplay swap, NavController-to-state conversion, bottom nav reintegration, deep link and widget navigation adaptation. No nested NavGraphs to complicate things. Moderate total effort (XL from scratch, but can be staged per-tab).
+  Decision: Nav 3 is the target for N-1. Nav 2.9 is skipped. Migration can be staged: bottom-nav tabs first, then detail/editor screens, then deep links/widget navigation last.
 
 ## Rejected Ideas
 
