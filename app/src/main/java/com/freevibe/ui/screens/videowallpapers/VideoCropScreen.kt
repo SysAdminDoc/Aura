@@ -28,7 +28,9 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.IntSize
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import com.freevibe.R
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.media3.common.MediaItem
 import androidx.media3.common.Player
@@ -287,10 +289,10 @@ fun VideoCropScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Loop & Crop") },
+                title = { Text(stringResource(R.string.video_crop_title)) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, stringResource(R.string.common_back))
                     }
                 },
                 actions = {
@@ -358,18 +360,18 @@ fun VideoCropScreen(
                         if (smartCropInFlight) {
                             CircularProgressIndicator(Modifier.size(14.dp), strokeWidth = 1.5.dp)
                             Spacer(Modifier.width(6.dp))
-                            Text("Detecting…", color = MaterialTheme.colorScheme.primary)
+                            Text(stringResource(R.string.editor_crop_detecting), color = MaterialTheme.colorScheme.primary)
                         } else {
                             Icon(Icons.Default.AutoAwesome, contentDescription = null, modifier = Modifier.size(16.dp))
                             Spacer(Modifier.width(4.dp))
-                            Text("Smart", color = MaterialTheme.colorScheme.primary)
+                            Text(stringResource(R.string.video_crop_smart), color = MaterialTheme.colorScheme.primary)
                         }
                     }
                     TextButton(onClick = {
                         val (s, ox, oy) = clampTransform(minScale, 0f, 0f)
                         scale = s; offsetX = ox; offsetY = oy
                     }) {
-                        Text("Reset", color = MaterialTheme.colorScheme.primary)
+                        Text(stringResource(R.string.common_reset), color = MaterialTheme.colorScheme.primary)
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.surface),
@@ -481,11 +483,11 @@ fun VideoCropScreen(
                 if (isCropping) {
                     CircularProgressIndicator(Modifier.size(20.dp), strokeWidth = 2.dp, color = Color.White)
                     Spacer(Modifier.width(8.dp))
-                    Text("Cropping...")
+                    Text(stringResource(R.string.video_crop_cropping))
                 } else {
                     Icon(Icons.Default.Crop, null, Modifier.size(20.dp))
                     Spacer(Modifier.width(8.dp))
-                    Text("Save loop and apply")
+                    Text(stringResource(R.string.video_crop_save_apply))
                 }
             }
         }

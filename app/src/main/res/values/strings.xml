@@ -369,4 +369,8 @@
     <!-- Video wallpaper refine -->
     <string name="video_refine_title">Refine videos</string>
     <string name="video_reset_filters">Reset filters</string>
+    <string name="video_crop_title">Loop &amp; Crop</string>
+    <string name="video_crop_smart">Smart</string>
+    <string name="video_crop_cropping">Cropping…</string>
+    <string name="video_crop_save_apply">Save loop and apply</string>
 </resources>
