@@ -3,6 +3,12 @@
 All notable changes to Aura will be documented in this file.
 
 ## Unreleased
+- **"Set With..." intent-filter receiver**: other apps (gallery, file managers,
+  browsers) can now delegate wallpaper-setting to Aura via `ACTION_ATTACH_DATA`
+  with `image/*` MIME type. Aura opens the crop/edit/apply flow with the
+  received image. Supports `content://` and `file://` URIs via
+  `ContentResolver.openInputStream()`, in addition to existing HTTP(S) loading.
+  Back navigation returns to the calling app.
 - **Wallpaper action capabilities**: added `WallpaperLicensePolicy.kt` with
   per-wallpaper action-capability gates (APPLY/DOWNLOAD/SHARE/EDIT) mirroring
   the existing sound license system. Source-specific rules for Bing (download/

@@ -1,7 +1,9 @@
 package com.freevibe.ui.screens.editor
 
+import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.freevibe.data.model.Wallpaper
@@ -13,6 +15,7 @@ import com.freevibe.service.WallpaperApplier
 import com.freevibe.service.advertisedLengthExceeds
 import com.freevibe.service.readStreamCapped
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -40,6 +43,7 @@ class WallpaperCropViewModel @Inject constructor(
     private val wallpaperApplier: WallpaperApplier,
     private val okHttpClient: OkHttpClient,
     private val smartCropDetector: SmartCropDetector,
+    @ApplicationContext private val appContext: Context,
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(CropState())
@@ -53,7 +57,13 @@ class WallpaperCropViewModel @Inject constructor(
             return true
         }
         loadedWallpaperKey = wallpaperKey
-        loadFromUrl(wallpaper.fullUrl)
+        val url = wallpaper.fullUrl
+        val scheme = url.substringBefore(":", "").lowercase(java.util.Locale.ROOT)
+        if (scheme == "content" || scheme == "file") {
+            loadFromContentUri(Uri.parse(url))
+        } else {
+            loadFromUrl(url)
+        }
         return true
     }
 
@@ -81,6 +91,37 @@ class WallpaperCropViewModel @Inject constructor(
                             throw Exception("Image too large to crop")
                         }
                         val bytes = readStreamCapped(body.byteStream(), MAX_CROP_BYTES)
+                        BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
+                            ?: throw Exception("Failed to decode image")
+                    }
+                }
+                _state.update { it.copy(bitmap = bitmap, isLoading = false) }
+            } catch (e: Exception) {
+                if (e is kotlinx.coroutines.CancellationException) throw e
+                _state.update { it.copy(isLoading = false, error = e.message) }
+            }
+        }
+    }
+
+    private fun loadFromContentUri(uri: Uri) {
+        viewModelScope.launch {
+            _state.update {
+                it.copy(
+                    bitmap = null,
+                    isLoading = true,
+                    scale = 1f,
+                    offsetX = 0f,
+                    offsetY = 0f,
+                    success = null,
+                    error = null,
+                )
+            }
+            try {
+                val bitmap = withContext(Dispatchers.IO) {
+                    val stream = appContext.contentResolver.openInputStream(uri)
+                        ?: throw Exception("Could not open image")
+                    stream.use {
+                        val bytes = readStreamCapped(it, MAX_CROP_BYTES)
                         BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
                             ?: throw Exception("Failed to decode image")
                     }

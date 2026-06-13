@@ -3282,13 +3282,6 @@ This section records net-new parity work from the Zedge official/web/app pass. T
 
 ### P1 — Features
 
-- [ ] P1 — "Set With..." intent-filter receiver for wallpaper delegation
-  Why: Peristyle v9.7 added a "Set With..." feature that lets other wallpaper apps delegate wallpaper-setting to Peristyle's crop/apply flow. Adding this to Aura lets users who discover wallpapers in other apps (gallery, file managers, browsers) use Aura's crop, edit, and apply pipeline without leaving their workflow.
-  Evidence: Peristyle v9.7 release; Android `Intent.ACTION_ATTACH_DATA` and `Intent.ACTION_SET_WALLPAPER` intent filters; `WallpaperApplier.kt`; `WallpaperCropScreen.kt`.
-  Touches: `AndroidManifest.xml` (new intent-filter), `MainActivity.kt` (intent handling), `FreeVibeRoot.kt` (deep-link routing to crop/apply), `WallpaperCropViewModel.kt`.
-  Acceptance: selecting "Set wallpaper with Aura" from another app opens Aura's crop/edit/apply flow with the received image; supports `content://`, `file://`, and HTTP URIs via `applyByLocator` scheme dispatch; back navigation returns to the calling app.
-  Complexity: M
-
 ### P2 — Accessibility and UX
 
 - [ ] P2 — Reduced motion and animation accessibility

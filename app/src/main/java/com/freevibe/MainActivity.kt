@@ -134,6 +134,7 @@ internal fun buildLaunchWallpaper(
 
 internal fun parseLaunchNavigation(intent: Intent?): LaunchNavigation? {
     if (intent == null) return null
+    parseSetWallpaperNavigation(intent)?.let { return it }
     parseCollectionImportNavigation(intent)?.let { return it }
 
     return buildLaunchNavigation(
@@ -144,6 +145,26 @@ internal fun parseLaunchNavigation(intent: Intent?): LaunchNavigation? {
         sourceName = intent.getStringExtra(EXTRA_DAILY_WALLPAPER_SOURCE),
         width = intent.getIntExtra(EXTRA_DAILY_WALLPAPER_WIDTH, 0),
         height = intent.getIntExtra(EXTRA_DAILY_WALLPAPER_HEIGHT, 0),
+    )
+}
+
+private fun parseSetWallpaperNavigation(intent: Intent): LaunchNavigation? {
+    if (intent.action != Intent.ACTION_ATTACH_DATA) return null
+    val data = intent.data ?: return null
+    val type = intent.type ?: return null
+    if (!type.startsWith("image/")) return null
+    val uriString = data.toString()
+    val wallpaper = Wallpaper(
+        id = "set-with-${uriString.hashCode()}",
+        source = ContentSource.LOCAL,
+        thumbnailUrl = uriString,
+        fullUrl = uriString,
+        width = 0,
+        height = 0,
+    )
+    return LaunchNavigation(
+        route = Screen.WallpaperCrop.createRoute(wallpaper),
+        wallpaper = wallpaper,
     )
 }
 
