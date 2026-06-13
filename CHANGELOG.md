@@ -7,13 +7,14 @@ All notable changes to Aura will be documented in this file.
   across AI prompt normalization, wallpaper feed term matching, content source
   label formatting, rate-limit host matching, file extension checks, and daily
   notification source names. Prevents Turkish-locale garbling.
-- **Localization extraction (editors)**: moved all hardcoded strings from
-  AiWallpaperScreen, WallpaperEditorScreen, WallpaperCropScreen,
+- **Localization extraction (editors + screens)**: moved all hardcoded strings
+  from AiWallpaperScreen, WallpaperEditorScreen, WallpaperCropScreen,
   SoundEditorScreen, CollectionsScreen, CommunityReportsScreen,
-  WallpaperDetailScreen, CategoriesScreen, CreatorProfileScreen,
-  LicensesScreen, WallpaperPreviewScreen, and VideoWallpaperPreviewScreen
-  into strings.xml. Adds ~100 new string resources with shared common strings
-  for repeated labels (Cancel, Back, Home, Lock, Both, Done, etc.).
+  WallpaperDetailScreen, WallpapersScreen, VideoWallpapersScreen,
+  CategoriesScreen, CreatorProfileScreen, LicensesScreen,
+  WallpaperPreviewScreen, and VideoWallpaperPreviewScreen into strings.xml.
+  Adds ~130 new string resources with shared common strings for repeated
+  labels (Cancel, Back, Home, Lock, Both, Done, Save, Discard, etc.).
 - **Premium UI feedback polish**: added a shared inline status banner for
   recoverable provider failures, surfaced last-good-result recovery on
   wallpapers/sounds/video, and tightened Settings/Favorites spacing, state
