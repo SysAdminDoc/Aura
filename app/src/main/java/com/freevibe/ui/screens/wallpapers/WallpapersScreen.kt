@@ -34,6 +34,7 @@ import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.CustomAccessibilityAction
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.customActions
@@ -53,6 +54,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.compose.AsyncImagePainter
 import coil.compose.SubcomposeAsyncImage
 import coil.compose.SubcomposeAsyncImageContent
+import com.freevibe.R
 import com.freevibe.data.model.COMMUNITY_UPLOAD_LICENSES
 import com.freevibe.data.model.CommunityUploadRights
 import com.freevibe.data.model.FavoriteIdentity
@@ -72,6 +74,7 @@ import com.freevibe.ui.components.SearchHistoryDropdown
 import com.freevibe.ui.components.ShimmerBox
 import com.freevibe.ui.components.ShimmerWallpaperGrid
 import com.freevibe.ui.components.SourceBadge
+import com.freevibe.ui.components.AuraSnackbarHost
 import com.freevibe.ui.components.AuraStatusAction
 import com.freevibe.ui.components.AuraStatusBanner
 import com.freevibe.ui.policy.CommunityUploadPolicyKind
@@ -407,7 +410,7 @@ fun WallpapersScreen(
 
                     OutlinedIconButton(
                         onClick = { showFiltersSheet = true },
-                        modifier = Modifier.size(40.dp),
+                        modifier = Modifier.size(48.dp),
                         colors = IconButtonDefaults.outlinedIconButtonColors(
                             containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.42f),
                             contentColor = if (wallpaperFilterCount > 0 || state.selectedColor != null) {
@@ -493,7 +496,7 @@ fun WallpapersScreen(
                         ) {
                             Icon(Icons.Default.AutoAwesome, contentDescription = null, modifier = Modifier.size(14.dp))
                             Spacer(Modifier.width(6.dp))
-                            Text("Generate", maxLines = 1)
+                            Text(stringResource(R.string.feed_generate), maxLines = 1)
                         }
                     }
                     if (state.selectedTab == WallpaperTab.DISCOVER && state.discoverFilter != WallpaperDiscoverFilter.FOR_YOU) {
@@ -705,7 +708,7 @@ fun WallpapersScreen(
             }
         }
 
-        SnackbarHost(
+        AuraSnackbarHost(
             hostState = snackbarHostState,
             modifier = Modifier
                 .align(Alignment.BottomCenter)
@@ -797,6 +800,8 @@ private fun ColorPickerRow(
     onColorSelected: (String) -> Unit,
     onClear: (() -> Unit)? = null,
 ) {
+    val selectedDescription = stringResource(R.string.a11y_selected)
+    val notSelectedDescription = stringResource(R.string.a11y_not_selected)
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -835,7 +840,7 @@ private fun ColorPickerRow(
                     .clickable(onClickLabel = wallpaperColorFilterActionLabel(hex)) { onColorSelected(hex) }
                     .semantics {
                         contentDescription = wallpaperColorFilterActionLabel(hex)
-                        stateDescription = if (selectedColor == hex) "Selected" else "Not selected"
+                        stateDescription = if (selectedColor == hex) selectedDescription else notSelectedDescription
                     },
             )
         }
@@ -866,7 +871,7 @@ private fun WallpaperFiltersSheet(
             .padding(bottom = 24.dp),
         verticalArrangement = Arrangement.spacedBy(14.dp),
     ) {
-        Text("Refine feed", style = MaterialTheme.typography.titleMedium)
+        Text(stringResource(R.string.feed_refine_title), style = MaterialTheme.typography.titleMedium)
         if (selectedTab == WallpaperTab.DISCOVER) {
             Text(
                 "Discover mix",
@@ -932,7 +937,7 @@ private fun WallpaperFiltersSheet(
             TextButton(onClick = it) {
                 Icon(Icons.Default.RestartAlt, contentDescription = null, modifier = Modifier.size(16.dp))
                 Spacer(Modifier.width(6.dp))
-                Text("Reset filters")
+                Text(stringResource(R.string.feed_reset_filters))
             }
         }
     }
@@ -1046,7 +1051,7 @@ private fun WallpaperGrid(
                                 horizontalArrangement = Arrangement.spacedBy(4.dp),
                             ) {
                                 Icon(Icons.Default.AutoAwesome, contentDescription = "Featured", Modifier.size(14.dp), tint = Color(0xFFFFD700))
-                                Text("Wallpaper of the Day", style = MaterialTheme.typography.labelLarge, color = Color.White)
+                                Text(stringResource(R.string.feed_wotd), style = MaterialTheme.typography.labelLarge, color = Color.White)
                             }
                             Text(
                                 pick.category.ifEmpty { "Daily pick" },
@@ -1322,7 +1327,7 @@ private fun WallpaperCard(
                     modifier = Modifier
                         .align(Alignment.TopEnd)
                         .padding(8.dp)
-                        .size(40.dp)
+                        .size(48.dp)
                         .clip(CircleShape)
                         .background(Color.Black.copy(alpha = 0.2f)),
                 ) {
@@ -1603,17 +1608,17 @@ private fun WallpaperUploadDialog(
 
     AlertDialog(
         onDismissRequest = { if (!isUploading) onDismiss() },
-        title = { Text("Upload wallpaper") },
+        title = { Text(stringResource(R.string.feed_upload_title)) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 OutlinedTextField(
                     value = name,
                     onValueChange = { name = it },
-                    label = { Text("Wallpaper name") },
+                    label = { Text(stringResource(R.string.feed_upload_name_label)) },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth(),
                 )
-                Text("Category", style = MaterialTheme.typography.labelMedium)
+                Text(stringResource(R.string.feed_upload_category_label), style = MaterialTheme.typography.labelMedium)
                 FlowRow(
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                     verticalArrangement = Arrangement.spacedBy(8.dp),
@@ -1630,13 +1635,13 @@ private fun WallpaperUploadDialog(
                 OutlinedTextField(
                     value = tagsText,
                     onValueChange = { tagsText = it },
-                    label = { Text("Tags") },
+                    label = { Text(stringResource(R.string.feed_upload_tags_label)) },
                     placeholder = { Text("dark, gradient, lock screen") },
-                    supportingText = { Text("Aura crops to your screen ratio, compresses under 4 MB, and extracts colors.") },
+                    supportingText = { Text(stringResource(R.string.feed_upload_tags_hint)) },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth(),
                 )
-                Text("License", style = MaterialTheme.typography.labelMedium)
+                Text(stringResource(R.string.feed_upload_license_label), style = MaterialTheme.typography.labelMedium)
                 FlowRow(
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                     verticalArrangement = Arrangement.spacedBy(8.dp),
@@ -1653,9 +1658,9 @@ private fun WallpaperUploadDialog(
                 OutlinedTextField(
                     value = sourceUrl,
                     onValueChange = { sourceUrl = it },
-                    label = { Text("Source URL") },
+                    label = { Text(stringResource(R.string.feed_upload_source_label)) },
                     placeholder = { Text("https://example.com/source") },
-                    supportingText = { Text("Optional HTTPS link for credited source material.") },
+                    supportingText = { Text(stringResource(R.string.feed_upload_source_hint)) },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth(),
                 )
@@ -1709,7 +1714,7 @@ private fun WallpaperUploadDialog(
                 enabled = !isUploading && name.isNotBlank() && rightsAttested,
                 shape = RoundedCornerShape(8.dp),
                 modifier = Modifier.heightIn(min = 48.dp),
-            ) { Text("Upload") }
+            ) { Text(stringResource(R.string.feed_upload_button)) }
         },
         dismissButton = {
             TextButton(
@@ -1717,7 +1722,7 @@ private fun WallpaperUploadDialog(
                 enabled = !isUploading,
                 shape = RoundedCornerShape(8.dp),
                 modifier = Modifier.heightIn(min = 48.dp),
-            ) { Text("Cancel") }
+            ) { Text(stringResource(R.string.common_cancel)) }
         },
     )
 }
