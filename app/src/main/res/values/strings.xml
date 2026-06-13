@@ -198,4 +198,34 @@
     <string name="ai_report_title">Report generated wallpaper</string>
     <string name="ai_report_body">Reports are sent for generated-content review. Stability keys and local file paths are not included.</string>
     <string name="common_back">Back</string>
+    <string name="common_save">Save</string>
+    <string name="common_discard">Discard</string>
+    <string name="common_keep_editing">Keep editing</string>
+    <string name="common_home">Home</string>
+    <string name="common_lock">Lock</string>
+    <string name="common_both">Both</string>
+    <string name="common_done">Done</string>
+
+    <!-- Wallpaper editor -->
+    <string name="editor_wallpaper_title">Edit Wallpaper</string>
+    <string name="editor_wallpaper_loading">Opening editor…</string>
+    <string name="editor_wallpaper_unavailable_title">Wallpaper unavailable</string>
+    <string name="editor_wallpaper_unavailable_body">This image could not be restored for editing. Return to Wallpapers and choose another item.</string>
+    <string name="editor_wallpaper_unavailable_action">Back to wallpapers</string>
+    <string name="editor_wallpaper_loading_image">Loading image…</string>
+    <string name="editor_wallpaper_edited_cd">Edited wallpaper</string>
+    <string name="editor_wallpaper_load_failed">Failed to load wallpaper</string>
+    <string name="editor_wallpaper_discard_title">Discard edits?</string>
+    <string name="editor_wallpaper_discard_body">Your filter changes will be lost. Apply them first or discard?</string>
+
+    <!-- Wallpaper crop -->
+    <string name="editor_crop_title">Crop &amp; Position</string>
+    <string name="editor_crop_loading">Opening crop tool…</string>
+    <string name="editor_crop_unavailable_title">Wallpaper unavailable</string>
+    <string name="editor_crop_unavailable_body">This image could not be restored for cropping. Return to Wallpapers and choose another item.</string>
+    <string name="editor_crop_unavailable_action">Back to wallpapers</string>
+    <string name="editor_crop_image_cd">Wallpaper to crop</string>
+    <string name="editor_crop_gesture_hint">Pinch to zoom, drag to position</string>
+    <string name="editor_crop_detecting">Detecting…</string>
+    <string name="editor_crop_smart_crop">Smart Crop</string>
 </resources>

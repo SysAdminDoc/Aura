@@ -25,8 +25,10 @@ import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.IntSize
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.freevibe.R
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.freevibe.data.model.Wallpaper
 import com.freevibe.data.model.WallpaperTarget
@@ -85,10 +87,10 @@ fun WallpaperCropScreen(
         snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             TopAppBar(
-                title = { Text("Crop & Position") },
+                title = { Text(stringResource(R.string.editor_crop_title)) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, stringResource(R.string.common_back))
                     }
                 },
                 actions = {
@@ -96,7 +98,7 @@ fun WallpaperCropScreen(
                         scale = 1f; offsetX = 0f; offsetY = 0f
                         viewModel.resetTransform()
                     }) {
-                        Text("Reset", color = MaterialTheme.colorScheme.primary)
+                        Text(stringResource(R.string.common_reset), color = MaterialTheme.colorScheme.primary)
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.surface),
@@ -113,7 +115,7 @@ fun WallpaperCropScreen(
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     CircularProgressIndicator(strokeWidth = 2.dp)
                     Spacer(Modifier.height(12.dp))
-                    Text("Opening crop tool...", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text(stringResource(R.string.editor_crop_loading), color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             }
             return@Scaffold
@@ -129,10 +131,10 @@ fun WallpaperCropScreen(
             ) {
                 AuraStateCard(
                     icon = Icons.Default.BrokenImage,
-                    title = "Wallpaper unavailable",
-                    description = "This image could not be restored for cropping. Return to Wallpapers and choose another item.",
+                    title = stringResource(R.string.editor_crop_unavailable_title),
+                    description = stringResource(R.string.editor_crop_unavailable_body),
                     tone = MaterialTheme.colorScheme.tertiary,
-                    primaryAction = AuraStateAction("Back to wallpapers", Icons.AutoMirrored.Filled.ArrowBack, onBack),
+                    primaryAction = AuraStateAction(stringResource(R.string.editor_crop_unavailable_action), Icons.AutoMirrored.Filled.ArrowBack, onBack),
                 )
             }
             return@Scaffold
@@ -164,7 +166,7 @@ fun WallpaperCropScreen(
                 state.bitmap?.let { bitmap ->
                     androidx.compose.foundation.Image(
                         bitmap = bitmap.asImageBitmap(),
-                        contentDescription = "Wallpaper to crop",
+                        contentDescription = stringResource(R.string.editor_crop_image_cd),
                         contentScale = ContentScale.Fit,
                         modifier = Modifier
                             .fillMaxSize()
@@ -198,7 +200,7 @@ fun WallpaperCropScreen(
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Text(
-                    "Pinch to zoom, drag to position",
+                    stringResource(R.string.editor_crop_gesture_hint),
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
@@ -240,7 +242,7 @@ fun WallpaperCropScreen(
                     },
                     label = {
                         Text(
-                            if (state.smartCropInProgress) "Detecting…" else "Smart Crop",
+                            stringResource(if (state.smartCropInProgress) R.string.editor_crop_detecting else R.string.editor_crop_smart_crop),
                             style = MaterialTheme.typography.labelSmall,
                         )
                     },
@@ -300,7 +302,7 @@ fun WallpaperCropScreen(
                     modifier = Modifier.weight(1f).heightIn(min = 48.dp),
                     enabled = !state.isApplying && state.bitmap != null,
                     shape = RoundedCornerShape(8.dp),
-                ) { Text("Home") }
+                ) { Text(stringResource(R.string.common_home)) }
                 OutlinedButton(
                     onClick = {
                         viewModel.applyCropped(WallpaperTarget.LOCK, viewportSize.width, viewportSize.height)
@@ -308,7 +310,7 @@ fun WallpaperCropScreen(
                     modifier = Modifier.weight(1f).heightIn(min = 48.dp),
                     enabled = !state.isApplying && state.bitmap != null,
                     shape = RoundedCornerShape(8.dp),
-                ) { Text("Lock") }
+                ) { Text(stringResource(R.string.common_lock)) }
                 Button(
                     onClick = {
                         viewModel.applyCropped(WallpaperTarget.BOTH, viewportSize.width, viewportSize.height)
@@ -318,7 +320,7 @@ fun WallpaperCropScreen(
                     shape = RoundedCornerShape(8.dp),
                 ) {
                     if (state.isApplying) CircularProgressIndicator(Modifier.size(18.dp), strokeWidth = 2.dp)
-                    else Text("Both")
+                    else Text(stringResource(R.string.common_both))
                 }
             }
         }

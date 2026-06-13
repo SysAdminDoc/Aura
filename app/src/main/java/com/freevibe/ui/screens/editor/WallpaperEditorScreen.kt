@@ -14,8 +14,10 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.freevibe.R
 import com.freevibe.data.model.Wallpaper
 import com.freevibe.data.model.WallpaperTarget
 import com.freevibe.ui.components.AuraStateAction
@@ -104,17 +106,17 @@ fun WallpaperEditorScreen(
     if (showDiscardConfirm) {
         AlertDialog(
             onDismissRequest = { showDiscardConfirm = false },
-            title = { Text("Discard edits?") },
-            text = { Text("Your filter changes will be lost. Apply them first or discard?") },
+            title = { Text(stringResource(R.string.editor_wallpaper_discard_title)) },
+            text = { Text(stringResource(R.string.editor_wallpaper_discard_body)) },
             confirmButton = {
                 TextButton(onClick = {
                     showDiscardConfirm = false
                     viewModel.resetAll()
                     onBack()
-                }) { Text("Discard") }
+                }) { Text(stringResource(R.string.common_discard)) }
             },
             dismissButton = {
-                TextButton(onClick = { showDiscardConfirm = false }) { Text("Keep editing") }
+                TextButton(onClick = { showDiscardConfirm = false }) { Text(stringResource(R.string.common_keep_editing)) }
             },
             shape = RoundedCornerShape(8.dp),
         )
@@ -124,13 +126,13 @@ fun WallpaperEditorScreen(
         snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             TopAppBar(
-                title = { Text("Edit Wallpaper") },
+                title = { Text(stringResource(R.string.editor_wallpaper_title)) },
                 navigationIcon = {
-                    IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back") }
+                    IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, stringResource(R.string.common_back)) }
                 },
                 actions = {
                     TextButton(onClick = { viewModel.resetAll() }) {
-                        Text("Reset", color = MaterialTheme.colorScheme.primary)
+                        Text(stringResource(R.string.common_reset), color = MaterialTheme.colorScheme.primary)
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.surface),
@@ -147,7 +149,7 @@ fun WallpaperEditorScreen(
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     CircularProgressIndicator(strokeWidth = 2.dp)
                     Spacer(Modifier.height(12.dp))
-                    Text("Opening editor...", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text(stringResource(R.string.editor_wallpaper_loading), color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             }
             return@Scaffold
@@ -163,10 +165,10 @@ fun WallpaperEditorScreen(
             ) {
                 AuraStateCard(
                     icon = Icons.Default.BrokenImage,
-                    title = "Wallpaper unavailable",
-                    description = "This image could not be restored for editing. Return to Wallpapers and choose another item.",
+                    title = stringResource(R.string.editor_wallpaper_unavailable_title),
+                    description = stringResource(R.string.editor_wallpaper_unavailable_body),
                     tone = MaterialTheme.colorScheme.tertiary,
-                    primaryAction = AuraStateAction("Back to wallpapers", Icons.AutoMirrored.Filled.ArrowBack, onBack),
+                    primaryAction = AuraStateAction(stringResource(R.string.editor_wallpaper_unavailable_action), Icons.AutoMirrored.Filled.ArrowBack, onBack),
                 )
             }
             return@Scaffold
@@ -194,7 +196,7 @@ fun WallpaperEditorScreen(
                                 color = MaterialTheme.colorScheme.primary,
                             )
                             Spacer(Modifier.height(8.dp))
-                            Text("Loading image...", color = Color.White.copy(alpha = 0.6f),
+                            Text(stringResource(R.string.editor_wallpaper_loading_image), color = Color.White.copy(alpha = 0.6f),
                                 style = MaterialTheme.typography.labelSmall)
                         }
                     }
@@ -202,7 +204,7 @@ fun WallpaperEditorScreen(
                         val editedBitmap = state.editedBitmap ?: return@Box
                         Image(
                             bitmap = editedBitmap.asImageBitmap(),
-                            contentDescription = "Edited wallpaper",
+                            contentDescription = stringResource(R.string.editor_wallpaper_edited_cd),
                             contentScale = ContentScale.Fit,
                             modifier = Modifier.fillMaxSize(),
                         )
@@ -212,7 +214,7 @@ fun WallpaperEditorScreen(
                             Icon(Icons.Default.BrokenImage, null, Modifier.size(48.dp),
                                 tint = MaterialTheme.colorScheme.error.copy(alpha = 0.6f))
                             Spacer(Modifier.height(8.dp))
-                            Text("Failed to load wallpaper", color = Color.White.copy(alpha = 0.7f),
+                            Text(stringResource(R.string.editor_wallpaper_load_failed), color = Color.White.copy(alpha = 0.7f),
                                 style = MaterialTheme.typography.bodyMedium)
                         }
                     }
@@ -306,13 +308,13 @@ fun WallpaperEditorScreen(
                     modifier = Modifier.weight(1f).heightIn(min = 48.dp),
                     enabled = !state.isApplying,
                     shape = RoundedCornerShape(8.dp),
-                ) { Text("Home") }
+                ) { Text(stringResource(R.string.common_home)) }
                 OutlinedButton(
                     onClick = { viewModel.apply(WallpaperTarget.LOCK) },
                     modifier = Modifier.weight(1f).heightIn(min = 48.dp),
                     enabled = !state.isApplying,
                     shape = RoundedCornerShape(8.dp),
-                ) { Text("Lock") }
+                ) { Text(stringResource(R.string.common_lock)) }
                 Button(
                     onClick = { viewModel.apply(WallpaperTarget.BOTH) },
                     modifier = Modifier.weight(1f).heightIn(min = 48.dp),
@@ -320,7 +322,7 @@ fun WallpaperEditorScreen(
                     shape = RoundedCornerShape(8.dp),
                 ) {
                     if (state.isApplying) CircularProgressIndicator(Modifier.size(18.dp), strokeWidth = 2.dp)
-                    else Text("Both")
+                    else Text(stringResource(R.string.common_both))
                 }
             }
         }
