@@ -1,5 +1,8 @@
 package com.freevibe.service
 
+import android.content.Context
+import android.content.SharedPreferences
+import dagger.hilt.android.qualifiers.ApplicationContext
 import com.freevibe.data.model.ProviderNetworkPolicy
 import com.freevibe.data.model.providerNetworkPolicyForSourceKey
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -11,20 +14,13 @@ import java.util.concurrent.atomic.AtomicLong
 import javax.inject.Inject
 import javax.inject.Singleton
 
-/**
- * In-memory per-source health telemetry.
- *
- * Diagnostic surface for "why is X tab loading slowly?" — Settings screen
- * exposes a snapshot of recent request counts, success ratios, last error,
- * and latency p50/p95 per content source. Resets on process death; not
- * persisted (the failure modes we care about are within-session).
- *
- * Thread-safe via ConcurrentHashMap + AtomicLong; hooks are fire-and-forget
- * so they can't block or fail their caller. Designed to be wrapped around
- * existing repository calls without changing return types.
- */
 @Singleton
-class SourceMetrics @Inject constructor() {
+class SourceMetrics @Inject constructor(
+    @ApplicationContext context: Context,
+) {
+
+    private val prefs: SharedPreferences =
+        context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
 
     /** Snapshot of one source's stats, taken at read time. */
     data class SourceStats(
@@ -100,7 +96,8 @@ class SourceMetrics @Inject constructor() {
      */
     fun recordSuccess(source: String, latencyMs: Long) {
         if (source.isBlank()) return
-        val e = entries.computeIfAbsent(source) { MutableEntry() }
+        val e = entries.computeIfAbsent(source) { MutableEntry().also { loadPersistedState(source, it) } }
+        val wasDegraded = e.consecutiveFailures.get() >= PERSISTENT_FAILURE_THRESHOLD
         e.total.incrementAndGet()
         e.success.incrementAndGet()
         e.consecutiveFailures.set(0L)
@@ -109,15 +106,14 @@ class SourceMetrics @Inject constructor() {
             e.latencies.addLast(latencyMs.coerceAtLeast(0L))
             while (e.latencies.size > MAX_LATENCY_SAMPLES) e.latencies.pollFirst()
         }
+        if (wasDegraded) persistRecovery(source)
         _version.update { it + 1 }
     }
 
     fun recordFailure(source: String, error: Throwable) {
         if (source.isBlank()) return
-        // Cancellation is structured-concurrency teardown, not a "source failure".
-        // Counting it would conflate the user backing out with the API erroring.
         if (error is kotlinx.coroutines.CancellationException) return
-        val e = entries.computeIfAbsent(source) { MutableEntry() }
+        val e = entries.computeIfAbsent(source) { MutableEntry().also { loadPersistedState(source, it) } }
         e.total.incrementAndGet()
         e.failure.incrementAndGet()
         e.consecutiveFailures.incrementAndGet()
@@ -126,13 +122,13 @@ class SourceMetrics @Inject constructor() {
             ?.let(RequestRedactor::redact)
             ?.take(200)
         e.lastFailureAtMs = System.currentTimeMillis()
+        persistFailureState(source, e)
         _version.update { it + 1 }
     }
 
-    /** Record an intentionally disabled source path, separate from provider failures. */
     fun recordDisabled(source: String) {
         if (source.isBlank()) return
-        val e = entries.computeIfAbsent(source) { MutableEntry() }
+        val e = entries.computeIfAbsent(source) { MutableEntry().also { loadPersistedState(source, it) } }
         e.total.incrementAndGet()
         e.disabled.incrementAndGet()
         e.lastDisabledAtMs = System.currentTimeMillis()
@@ -173,11 +169,65 @@ class SourceMetrics @Inject constructor() {
     /** Forget all recorded stats (developer-facing reset). */
     fun reset() {
         entries.clear()
+        prefs.edit().clear().apply()
         _version.update { it + 1 }
     }
 
+    fun isDegraded(source: String): Boolean {
+        val e = entries[source]
+        if (e != null && e.consecutiveFailures.get() >= PERSISTENT_FAILURE_THRESHOLD) {
+            val elapsed = System.currentTimeMillis() - e.lastFailureAtMs
+            if (elapsed < DEGRADATION_COOLDOWN_MS) return true
+        }
+        val persistedFailures = prefs.getLong("${source}_consecutive_failures", 0L)
+        if (persistedFailures >= PERSISTENT_FAILURE_THRESHOLD) {
+            val persistedLastFailure = prefs.getLong("${source}_last_failure_at", 0L)
+            val elapsed = System.currentTimeMillis() - persistedLastFailure
+            if (elapsed < DEGRADATION_COOLDOWN_MS) return true
+        }
+        return false
+    }
+
+    fun degradedSources(): Set<String> {
+        val keys = mutableSetOf<String>()
+        keys.addAll(entries.keys.filter { isDegraded(it) })
+        val allPrefs = prefs.all
+        for ((key, _) in allPrefs) {
+            if (key.endsWith("_consecutive_failures")) {
+                val source = key.removeSuffix("_consecutive_failures")
+                if (source.isNotBlank() && isDegraded(source)) keys.add(source)
+            }
+        }
+        return keys
+    }
+
+    private fun persistFailureState(source: String, entry: MutableEntry) {
+        prefs.edit()
+            .putLong("${source}_consecutive_failures", entry.consecutiveFailures.get())
+            .putLong("${source}_last_failure_at", entry.lastFailureAtMs)
+            .putString("${source}_last_error", entry.lastErrorClass)
+            .apply()
+    }
+
+    private fun persistRecovery(source: String) {
+        prefs.edit()
+            .putLong("${source}_consecutive_failures", 0L)
+            .apply()
+    }
+
+    private fun loadPersistedState(source: String, entry: MutableEntry) {
+        val persisted = prefs.getLong("${source}_consecutive_failures", 0L)
+        if (persisted > 0L) {
+            entry.consecutiveFailures.set(persisted)
+            entry.lastFailureAtMs = prefs.getLong("${source}_last_failure_at", 0L)
+            entry.lastErrorClass = prefs.getString("${source}_last_error", null)
+        }
+    }
+
     private companion object {
+        const val PREFS_NAME = "source_metrics_degradation"
         const val MAX_LATENCY_SAMPLES = 50
         const val PERSISTENT_FAILURE_THRESHOLD = 10L
+        const val DEGRADATION_COOLDOWN_MS = 24L * 60 * 60 * 1000 // 24 hours
     }
 }

@@ -71,6 +71,7 @@ data class WallpapersUiState(
     val browseTab: WallpaperTab = WallpaperTab.DISCOVER,
     val isUploadingWallpaper: Boolean = false,
     val wallpaperUploadProgress: Float = 0f,
+    val degradedSources: Set<String> = emptySet(),
 )
 
 enum class WallpaperTab { DISCOVER, PEXELS, PIXABAY, REDDIT, WALLHAVEN, COMMUNITY, COLOR, SEARCH }
@@ -159,6 +160,11 @@ class WallpapersViewModel @Inject constructor(
     init {
         fetchDailyPick()
         fetchTopVoted()
+        viewModelScope.launch {
+            sourceMetrics.version.collect {
+                _state.update { s -> s.copy(degradedSources = sourceMetrics.degradedSources()) }
+            }
+        }
     }
 
     private fun fetchTopVoted(seedWallpapers: List<Wallpaper> = emptyList()) {

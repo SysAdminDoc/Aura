@@ -80,6 +80,7 @@ data class SoundsUiState(
     val isRecordingUpload: Boolean = false,
     val recordingStartedAtMs: Long = 0L,
     val recordedUploadUri: Uri? = null,
+    val degradedSources: Set<String> = emptySet(),
 )
 
 enum class SoundTab { RINGTONES, NOTIFICATIONS, ALARMS, YOUTUBE, COMMUNITY, SEARCH }
@@ -163,6 +164,11 @@ class SoundsViewModel @Inject constructor(
         communityAudioRecorder.pruneStaleRecordings()
         loadSounds()
         fetchTopHits()
+        viewModelScope.launch {
+            sourceMetrics.version.collect {
+                _state.update { s -> s.copy(degradedSources = sourceMetrics.degradedSources()) }
+            }
+        }
         // Sync playingId from AudioPlaybackManager
         viewModelScope.launch {
             audioPlaybackManager.currentSoundId.collect { soundId ->

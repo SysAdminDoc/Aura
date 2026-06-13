@@ -519,6 +519,21 @@ fun SoundsScreen(
                 )
             }
 
+            if (state.degradedSources.isNotEmpty() && nonBlockingWarning == null) {
+                AuraStatusBanner(
+                    icon = Icons.Default.GraphicEq,
+                    title = "Some sound sources are temporarily unavailable",
+                    message = soundSourceHealthSummary(state.degradedSources),
+                    tone = MaterialTheme.colorScheme.tertiary,
+                    primaryAction = AuraStatusAction(
+                        label = "Refresh",
+                        icon = Icons.Default.Refresh,
+                        onClick = { viewModel.refresh() },
+                    ),
+                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp),
+                )
+            }
+
             // Content
             Box(modifier = Modifier.fillMaxSize()) {
                 if (state.error != null && displaySounds.isEmpty() && displayTopHits.isEmpty() && !state.isLoading && !state.isRefreshing) {
@@ -1849,4 +1864,9 @@ private fun formatRecordingElapsed(elapsedMs: Long): String {
     val minutes = totalSeconds / 60L
     val seconds = totalSeconds % 60L
     return "$minutes:${seconds.toString().padStart(2, '0')}"
+}
+
+private fun soundSourceHealthSummary(degradedSources: Set<String>): String {
+    val labels = degradedSources.sorted().joinToString(", ")
+    return "Limited source health right now: $labels"
 }

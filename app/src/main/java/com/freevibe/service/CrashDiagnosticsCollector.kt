@@ -117,6 +117,12 @@ class CrashDiagnosticsCollector @Inject constructor(
                     "pending validation=${ytDlpSnapshot.pendingValidation}; " +
                     "rollback available=${ytDlpSnapshot.rollbackAvailable}",
             )
+            val degraded = sourceMetrics.degradedSources()
+            if (degraded.isNotEmpty()) {
+                appendLine("- Degraded sources (auto-fallback active): ${degraded.sorted().joinToString(", ")}")
+            } else {
+                appendLine("- Degraded sources: none")
+            }
             appendLine()
             appendLine(backgroundWork)
             if (liveBackgroundWork != null) {

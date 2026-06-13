@@ -564,6 +564,21 @@ fun WallpapersScreen(
                 )
             }
 
+            if (state.degradedSources.isNotEmpty() && nonBlockingWarning == null) {
+                AuraStatusBanner(
+                    icon = Icons.Default.CloudOff,
+                    title = "Some content sources are temporarily unavailable",
+                    message = wallpaperSourceHealthSummary(state.degradedSources),
+                    tone = MaterialTheme.colorScheme.tertiary,
+                    primaryAction = AuraStatusAction(
+                        label = "Refresh",
+                        icon = Icons.Default.Refresh,
+                        onClick = { viewModel.refresh() },
+                    ),
+                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp),
+                )
+            }
+
             // Content with pull-to-refresh (#4)
             Box(modifier = Modifier.fillMaxSize()) {
                 when {
@@ -1985,3 +2000,8 @@ internal fun isWallpaperHidden(
     wallpaper: Wallpaper,
     hiddenIds: Set<String>,
 ): Boolean = matchesHiddenIds(hiddenIds, wallpaper.stableKey(), wallpaper.id)
+
+private fun wallpaperSourceHealthSummary(degradedSources: Set<String>): String {
+    val labels = degradedSources.sorted().joinToString(", ")
+    return "Limited source health right now: $labels"
+}

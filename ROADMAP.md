@@ -625,14 +625,6 @@ Append-only Cycle 13 handoff. Every item below is source-backed in `docs/researc
 
 Append-only Cycle 14 handoff. Every item below is source-backed in `docs/research/cycle-14-2026-06-04.md`; merge into the existing Now/Next/Later item named in `Touches` when implementation starts.
 
-- [ ] 🤖 🔬 **P0 — Background work status and scheduling ledger**
-  - Why: Aura has periodic auto-rotation, daily wallpaper, weather refresh, Aura Originals download, and trigger one-shots, but Settings does not show WorkManager state, last run, constraint delays, failures, or quota downgrades.
-  - Evidence: `AutoWallpaperWorker.kt`; `DailyWallpaperWorker.kt`; `WeatherUpdateWorker.kt`; `AuraOriginalsDownloader.kt`; `RotationTriggerService.kt`; Android WorkManager and Doze/App Standby docs.
-  - Touches: Settings diagnostics, worker result receipts, WorkManager inspection helpers, support/crash diagnostics, release QA script.
-  - Acceptance: Settings exposes each unique work name, enabled state, last success/failure, last error class, current WorkManager state, constraints, and user-actionable deferral reasons; support bundle includes a redacted background-work section.
-  - Verify: schedule/cancel/reschedule every worker; simulate no network, metered network, low battery, notification denial, Doze, and standby bucket changes; confirm status text matches WorkInfo and local receipts.
-  - Progress 2026-06-07: Cycle 153 added `docs/background-work-scheduling-ledger.md`, `docs/background-work-scheduling-ledger.json`, and `tools/background_work_scheduling_check.py` so every current unique work name, enqueue policy, constraint, deferral reason, and scheduler source term is checked in verify/release before Android build work. Cycle 155 added the support-bundle background-work section with inferred enabled state, network posture, constraints, and explicit pending WorkInfo/Data Saver receipt markers. Cycle 156 added `Settings` > `Diagnostics` > `Background work` with live WorkManager unique-work `WorkInfo` state counts plus metered/Data Saver status. Cycle 157 added persisted last-run receipts for success, retry, failure, error class, and deferral reason. Cycle 158 merged live background receipts into copied/shared support bundles. Cycle 159 added Settings/support-bundle action hints for Data Saver restrictions, metered waits, source failures, network/provider errors, Aura Originals validation retries, permission cues, apply failures, and WorkManager retry/failure states. Cycle 160 added a checked device/emulator evidence packet for WorkManager baseline, Data Saver/metered, low-battery, Doze/App Standby, and rotation-trigger coalescing captures. Remaining work: run and archive the real device/emulator evidence.
-
 - [x] 🤖 🔬 **P0 — Boot-completed permission decision for rotation triggers** — shipped 2026-06-07 (`android.permission.RECEIVE_BOOT_COMPLETED` removed, `docs/rotation-trigger-boot-behavior.md`, `tools/rotation_boot_permission_check.py`).
   - Why: `RECEIVE_BOOT_COMPLETED` is declared, but no boot receiver was found. WorkManager periodic jobs can persist without it, while rotation-trigger dynamic receivers do not restart after reboot until Aura cold-starts.
   - Evidence: `AndroidManifest.xml`; no `BOOT_COMPLETED` receiver/source hit; `FreeVibeApp.reconcileRotationTriggers()`; `RotationTriggerService.kt`; Android Doze/background docs; Play foreground-service declaration docs.
@@ -751,13 +743,6 @@ Append-only Cycle 16 handoff. Every item below is source-backed in `docs/researc
 ## 🔬 Researcher Queue (Cycle 17 — 2026-06-04)
 
 Append-only Cycle 17 handoff. Every item below is source-backed in `docs/research/cycle-17-2026-06-04.md`; merge into the existing Now/Next/Later item named in `Touches` when implementation starts.
-
-- [ ] 🤖 🔬 **P0 — Copyleft/native extractor compliance packet**
-  - Why: NewPipe Extractor is GPL-3.0; youtubedl-android is GPL-3.0 and bundles yt-dlp/Python payloads; the FFmpeg artifact can carry LGPL or GPL obligations depending on build configuration. Aura's docs defer native/FFmpeg/youtubedl SBOM scope.
-  - Evidence: `app/build.gradle.kts`; `docs/distribution/supply-chain.md`; NewPipeExtractor GitHub license; youtubedl-android GitHub license/readme; FFmpeg legal guidance.
-  - Touches: release assets, `docs/legal/third-party-notices.md`, `docs/distribution/channel-strategy.md`, release notes, F-Droid/Izzy preflight, YouTube/video download features.
-  - Acceptance: release docs list exact artifact coordinates, upstream URLs, versions, license IDs, source locations, FFmpeg build/license mode, bundled payload inventory, and any source-offer location for binaries Aura redistributes.
-  - Verify: inspect APK/AAR contents for youtubedl/FFmpeg/Python payloads; confirm notices/source links match shipped versions; dependency version changes fail until the compliance packet is updated.
 
 - [~] 🤖 🔬 **P1 — Runtime dependency and content-source coverage matrix**
   - Why: `ContentSource` includes Audius, ccMixter, SoundCloud, Wikimedia, Internet Archive, NASA, Picsum, Klipy, Community, Bundled, AI-generated, and Local, but the Licenses screen lists only a subset of active/legacy sources.
@@ -3224,15 +3209,6 @@ This section records net-new parity work from the Zedge official/web/app pass. T
 - Zedge content scraping/import as a source: rejected legal/ToS risk.
 
 ## Research-Driven Additions
-
-### P1 — Reliability
-
-- [ ] P1 — **Persist provider-health degradation and auto-fallback dead sources**
-  Why: `SourceMetrics` detects in-session persistent failures, but it resets on process death and currently informs diagnostics more than recovery; broken providers should not blank browse, daily, or rotation flows when alternatives exist.
-  Evidence: `app/src/main/java/com/freevibe/service/SourceMetrics.kt`; `app/src/main/java/com/freevibe/ui/screens/settings/SettingsScreen.kt`; WallFlow open issues for Reddit/search/auto-wallpaper failures; Muzei and WallYou multi-source behavior.
-  Touches: `SourceMetrics.kt`, `BackgroundWorkReceiptStore.kt`, `WallpapersViewModel.kt`, `VideoWallpapersViewModel.kt`, `SoundsViewModel.kt`, `DailyWallpaperWorker.kt`, provider diagnostics UI, focused source-metrics tests.
-  Acceptance: persistent source failures are saved for a bounded window, daily/rotation/background picks skip degraded providers when another enabled source can serve content, browse screens show degraded-source copy without hiding local/cached content, diagnostics include the last fallback decision, and tests cover threshold, fallback, and recovery reset.
-  Complexity: M
 
 ### P2 — Maintainability and testing
 

@@ -3,6 +3,14 @@
 All notable changes to Aura will be documented in this file.
 
 ## Unreleased
+- **Provider health persistence and auto-fallback**: `SourceMetrics` now
+  persists failure state to SharedPreferences with a 24-hour cooldown so
+  degradation survives process death. `isDegraded()` / `degradedSources()`
+  expose persistent health. Daily wallpaper worker skips degraded sources
+  when alternatives exist (Bing/Wallhaven fallback chain). Wallpapers,
+  Sounds, and Video screens show a subtle "Limited source health" banner
+  when degraded sources are active. Diagnostics bundle includes degraded
+  source list for support triage.
 - **Reduced motion accessibility**: when the system `ANIMATOR_DURATION_SCALE`
   is 0 or the new manual "Reduce animations" toggle in Settings is enabled,
   all live wallpaper particle effects (weather, VFX, touch ripples) are

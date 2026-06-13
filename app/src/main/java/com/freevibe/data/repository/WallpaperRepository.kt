@@ -346,14 +346,35 @@ class WallpaperRepository @Inject constructor(
     }
 
     suspend fun getWallpaperOfTheDay(): Wallpaper? {
-        loadSourceSafely { getBingDaily(page = 1) }
-            ?.items
-            ?.firstOrNull()
-            ?.let { return it }
+        val bingDegraded = sourceMetrics.isDegraded(SOURCE_BING)
+        val wallhavenDegraded = sourceMetrics.isDegraded(SOURCE_WALLHAVEN)
 
-        return loadSourceSafely { getWallhaven(page = 1, topRange = "1d") }
-            ?.items
-            ?.firstOrNull()
+        if (!bingDegraded) {
+            loadSourceSafely { getBingDaily(page = 1) }
+                ?.items
+                ?.firstOrNull()
+                ?.let { return it }
+        }
+
+        if (!wallhavenDegraded) {
+            loadSourceSafely { getWallhaven(page = 1, topRange = "1d") }
+                ?.items
+                ?.firstOrNull()
+                ?.let { return it }
+        }
+
+        // Both degraded — try anyway as last resort
+        if (bingDegraded && wallhavenDegraded) {
+            loadSourceSafely { getBingDaily(page = 1) }
+                ?.items
+                ?.firstOrNull()
+                ?.let { return it }
+            return loadSourceSafely { getWallhaven(page = 1, topRange = "1d") }
+                ?.items
+                ?.firstOrNull()
+        }
+
+        return null
     }
 
     // -- Pixabay --
