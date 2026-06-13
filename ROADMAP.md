@@ -3277,20 +3277,6 @@ This section records net-new parity work from the Zedge official/web/app pass. T
 
 ## Research-Driven Additions (2026-06-12)
 
-### P1 — Security and trust
-
-
-### P1 — Features
-
-### P2 — Accessibility and UX
-
-- [ ] P2 — Opus audio output format in AudioTrimmer
-  Why: AudioTrimmer supports MP3/OGG/WAV/FLAC/M4A output but not Opus. Opus at 48kbps delivers better quality than MP3 at 128kbps with a fraction of the file size — ideal for ringtones and notification sounds. Android has native Opus-in-OGG playback support since API 21. Aura's minSdk 26 covers it.
-  Evidence: Opus codec specification; Android supported media formats documentation; `AudioTrimmer.kt` existing convert pipeline (FFmpeg-based); community signal on ringtone fidelity.
-  Touches: `AudioTrimmer.kt` (new Opus output path via FFmpeg), `SoundEditorScreen.kt` (format picker chip), `SoundEditorViewModel.kt`.
-  Acceptance: sound editor format picker includes Opus; output container is `.ogg` with Opus codec; `RingtoneManager.setActualDefaultRingtoneUri` accepts the output on API 26+; file size is measurably smaller than equivalent MP3 output.
-  Complexity: S
-
 ### P2 — Architecture
 
 - [ ] P2 — Split WallpapersViewModel into feature-scoped ViewModels

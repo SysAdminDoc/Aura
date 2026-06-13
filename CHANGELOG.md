@@ -8,6 +8,11 @@ All notable changes to Aura will be documented in this file.
   all live wallpaper particle effects (weather, VFX, touch ripples) are
   disabled and the 30 FPS draw loop stops (static background only). Compose
   transitions already respect the system animation scale natively.
+- **Opus audio output format**: AudioTrimmer now supports Opus codec
+  (`libopus` at 48kbps in OGG container) for convert, trim-with-fade, and
+  standalone fade operations. Sound editor adds a format picker chip row
+  (MP3, OGG, Opus, WAV, FLAC, M4A) between fade controls and apply buttons.
+  Converting reloads the waveform and resets trim/fade state for the new file.
 - **"Set With..." intent-filter receiver**: other apps (gallery, file managers,
   browsers) can now delegate wallpaper-setting to Aura via `ACTION_ATTACH_DATA`
   with `image/*` MIME type. Aura opens the crop/edit/apply flow with the

@@ -320,6 +320,34 @@ class SoundEditorViewModel @Inject constructor(
         }
     }
 
+    fun convertFormat(targetFormat: String) {
+        val path = _state.value.localFilePath ?: return
+        viewModelScope.launch {
+            _state.update { it.copy(isApplying = true, success = null, error = null) }
+            try {
+                val outputPath = audioTrimmer.convert(path, targetFormat).getOrThrow()
+                val waveform = withContext(Dispatchers.Default) { extractWaveform(outputPath) }
+                val duration = withContext(Dispatchers.IO) { getAudioDuration(outputPath) }
+                _state.update {
+                    it.copy(
+                        isApplying = false,
+                        localFilePath = outputPath,
+                        waveform = waveform,
+                        durationMs = duration,
+                        trimStartFraction = 0f,
+                        trimEndFraction = 1f,
+                        fadeInMs = 0,
+                        fadeOutMs = 0,
+                        success = "Converted to ${targetFormat.uppercase(java.util.Locale.ROOT)}",
+                    )
+                }
+            } catch (e: Exception) {
+                if (e is kotlinx.coroutines.CancellationException) throw e
+                _state.update { it.copy(isApplying = false, error = "Conversion failed: ${e.message}") }
+            }
+        }
+    }
+
     fun clearMessages() = _state.update { it.copy(success = null, error = null) }
 
     private fun startPlayback() {

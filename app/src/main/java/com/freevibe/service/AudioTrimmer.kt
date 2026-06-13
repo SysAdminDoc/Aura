@@ -214,6 +214,7 @@ class AudioTrimmer @Inject constructor(
                 "-c:a", when (file.extension.lowercase(java.util.Locale.ROOT)) {
                     "mp3" -> "libmp3lame"
                     "ogg" -> "libvorbis"
+                    "opus" -> "libopus"
                     "flac" -> "flac"
                     "wav" -> "pcm_s16le"
                     "m4a", "aac" -> "aac"
@@ -315,6 +316,7 @@ class AudioTrimmer @Inject constructor(
             val codec = when (targetFormat.lowercase(java.util.Locale.ROOT)) {
                 "mp3" -> listOf("-c:a", "libmp3lame", "-q:a", "2")
                 "ogg" -> listOf("-c:a", "libvorbis", "-q:a", "6")
+                "opus" -> listOf("-c:a", "libopus", "-b:a", "48k")
                 "wav" -> listOf("-c:a", "pcm_s16le")
                 "flac" -> listOf("-c:a", "flac")
                 "m4a", "aac" -> listOf("-c:a", "aac", "-b:a", "192k")

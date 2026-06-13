@@ -416,6 +416,28 @@ fun SoundEditorScreen(
                     }
                 }
 
+                // Format convert
+                Text("Convert Format", style = MaterialTheme.typography.labelLarge)
+                Row(
+                    Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                ) {
+                    val formats = listOf("mp3", "ogg", "opus", "wav", "flac", "m4a")
+                    val currentExt = state.localFilePath
+                        ?.substringAfterLast(".", "")
+                        ?.lowercase(java.util.Locale.ROOT)
+                        ?: ""
+                    for (fmt in formats) {
+                        FilterChip(
+                            selected = currentExt == fmt,
+                            onClick = { if (currentExt != fmt) viewModel.convertFormat(fmt) },
+                            label = { Text(fmt.uppercase(java.util.Locale.ROOT), style = MaterialTheme.typography.labelSmall) },
+                            enabled = !state.isApplying && currentExt != fmt,
+                            modifier = Modifier.weight(1f),
+                        )
+                    }
+                }
+
                 // Apply buttons
                 Text(stringResource(R.string.editor_sound_apply_as), style = MaterialTheme.typography.labelLarge)
                 if (!canWriteSettings) {
