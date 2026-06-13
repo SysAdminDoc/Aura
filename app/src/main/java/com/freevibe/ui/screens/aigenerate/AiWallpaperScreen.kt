@@ -68,8 +68,10 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.freevibe.R
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.compose.AsyncImagePainter
 import coil.compose.SubcomposeAsyncImage
@@ -91,20 +93,20 @@ fun GeneratedWallpaperDisclosureDialog(
 ) {
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Generated wallpaper disclosure") },
+        title = { Text(stringResource(R.string.ai_disclosure_title)) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Text(
-                    "Your prompt is sent to Stability to generate an image. The request uses your Stability key and may spend provider credits.",
+                    stringResource(R.string.ai_disclosure_prompt_body),
                     style = MaterialTheme.typography.bodySmall,
                 )
                 Text(
-                    "Provider pricing and rate limits can change; review your Stability account page before repeated generations.",
+                    stringResource(R.string.ai_disclosure_pricing_body),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
                 Text(
-                    "Generated images are stored locally in Aura so you can preview, save, apply, or delete them. Do not include private, identifying, or unsafe content in prompts.",
+                    stringResource(R.string.ai_disclosure_storage_body),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
@@ -115,7 +117,7 @@ fun GeneratedWallpaperDisclosureDialog(
                 if (!accepted) onAccept()
                 onDismiss()
             }) {
-                Text(if (accepted) "Done" else "Accept")
+                Text(if (accepted) stringResource(R.string.ai_disclosure_done) else stringResource(R.string.ai_disclosure_accept))
             }
         },
         dismissButton = {
@@ -125,10 +127,10 @@ fun GeneratedWallpaperDisclosureDialog(
                         onReset()
                         onDismiss()
                     }) {
-                        Text("Reset")
+                        Text(stringResource(R.string.common_reset))
                     }
                 }
-                TextButton(onClick = onDismiss) { Text("Cancel") }
+                TextButton(onClick = onDismiss) { Text(stringResource(R.string.common_cancel)) }
             }
         },
     )
@@ -220,7 +222,7 @@ fun AiWallpaperScreen(
                     IconButton(onClick = onBack, modifier = Modifier.size(48.dp)) {
                         Icon(
                             Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Back",
+                            contentDescription = stringResource(R.string.common_back),
                             modifier = Modifier.size(20.dp),
                         )
                     }
@@ -232,9 +234,9 @@ fun AiWallpaperScreen(
                             tint = MaterialTheme.colorScheme.primary,
                         )
                         Spacer(Modifier.height(4.dp))
-                        Text("Generate AI Wallpaper", style = MaterialTheme.typography.titleLarge)
+                        Text(stringResource(R.string.ai_header_title), style = MaterialTheme.typography.titleLarge)
                         Text(
-                            "Describe your perfect wallpaper",
+                            stringResource(R.string.ai_header_subtitle),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
@@ -246,7 +248,7 @@ fun AiWallpaperScreen(
                     ) {
                         Icon(
                             Icons.Default.Key,
-                            contentDescription = "API key settings",
+                            contentDescription = stringResource(R.string.ai_api_key_settings),
                             modifier = Modifier.size(18.dp),
                             tint = if (!generatedContentProviderEnabled) {
                                 MaterialTheme.colorScheme.onSurfaceVariant
@@ -274,7 +276,7 @@ fun AiWallpaperScreen(
                     contentPadding = PaddingValues(horizontal = 14.dp, vertical = 12.dp),
                 ) {
                     Text(
-                        "Stability AI API Key",
+                        stringResource(R.string.ai_api_key_label),
                         style = MaterialTheme.typography.labelMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
@@ -284,7 +286,7 @@ fun AiWallpaperScreen(
                         onValueChange = { localApiKey = it },
                         modifier = Modifier.fillMaxWidth(),
                         singleLine = true,
-                        placeholder = { Text("sk-...") },
+                        placeholder = { Text(stringResource(R.string.ai_api_key_placeholder)) },
                         visualTransformation = if (apiKeyVisible) {
                             VisualTransformation.None
                         } else {
@@ -294,7 +296,7 @@ fun AiWallpaperScreen(
                             IconButton(onClick = { apiKeyVisible = !apiKeyVisible }) {
                                 Icon(
                                     if (apiKeyVisible) Icons.Default.Visibility else Icons.Default.VisibilityOff,
-                                    contentDescription = if (apiKeyVisible) "Hide API key" else "Show API key",
+                                    contentDescription = stringResource(if (apiKeyVisible) R.string.ai_api_key_hide else R.string.ai_api_key_show),
                                     modifier = Modifier.size(18.dp),
                                 )
                             }
@@ -308,7 +310,7 @@ fun AiWallpaperScreen(
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
                         Text(
-                            "Get a free key at platform.stability.ai",
+                            stringResource(R.string.ai_api_key_hint),
                             style = MaterialTheme.typography.labelSmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
@@ -319,7 +321,7 @@ fun AiWallpaperScreen(
                             },
                             contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp),
                         ) {
-                            Text("Save", style = MaterialTheme.typography.labelMedium)
+                            Text(stringResource(R.string.ai_api_key_save), style = MaterialTheme.typography.labelMedium)
                         }
                     }
                 }
@@ -334,7 +336,7 @@ fun AiWallpaperScreen(
                 contentPadding = PaddingValues(horizontal = 14.dp, vertical = 12.dp),
             ) {
                 Text(
-                    "Prompt",
+                    stringResource(R.string.ai_prompt_label),
                     style = MaterialTheme.typography.labelMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
@@ -346,7 +348,7 @@ fun AiWallpaperScreen(
                         .fillMaxWidth()
                         .heightIn(min = 100.dp),
                     placeholder = {
-                        Text("A misty Japanese forest at dawn, soft golden light filtering through ancient cedar trees, 4K, ultra detail…")
+                        Text(stringResource(R.string.ai_prompt_placeholder))
                     },
                     keyboardOptions = KeyboardOptions(
                         imeAction = ImeAction.Default,
@@ -356,7 +358,7 @@ fun AiWallpaperScreen(
                 )
                 Spacer(Modifier.height(4.dp))
                 Text(
-                    "${state.prompt.length}/500",
+                    stringResource(R.string.ai_prompt_counter, state.prompt.length),
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.align(Alignment.End),
@@ -372,7 +374,7 @@ fun AiWallpaperScreen(
                 contentPadding = PaddingValues(horizontal = 14.dp, vertical = 12.dp),
             ) {
                 Text(
-                    "Style",
+                    stringResource(R.string.ai_style_label),
                     style = MaterialTheme.typography.labelMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
@@ -425,7 +427,7 @@ fun AiWallpaperScreen(
                         modifier = Modifier.size(18.dp),
                     )
                     Spacer(Modifier.width(8.dp))
-                    Text("Generated wallpapers disabled")
+                    Text(stringResource(R.string.ai_generate_disabled))
                 } else if (state.isGenerating) {
                     CircularProgressIndicator(
                         modifier = Modifier.size(20.dp),
@@ -433,7 +435,7 @@ fun AiWallpaperScreen(
                         strokeWidth = 2.dp,
                     )
                     Spacer(Modifier.width(10.dp))
-                    Text("Generating…")
+                    Text(stringResource(R.string.ai_generating))
                 } else {
                     Icon(
                         Icons.Default.AutoAwesome,
@@ -441,12 +443,12 @@ fun AiWallpaperScreen(
                         modifier = Modifier.size(18.dp),
                     )
                     Spacer(Modifier.width(8.dp))
-                    Text("Generate wallpaper")
+                    Text(stringResource(R.string.ai_generate_button))
                 }
             }
 
             Text(
-                "One request may spend Stability credits. Session requests: ${state.sessionGenerationCount}. Duplicate prompt/style retries ask before another request.",
+                stringResource(R.string.ai_credit_note, state.sessionGenerationCount),
                 modifier = Modifier.padding(horizontal = 14.dp),
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -477,15 +479,15 @@ fun AiWallpaperScreen(
             state.pendingDuplicateConfirmation?.let { duplicate ->
                 AlertDialog(
                     onDismissRequest = { viewModel.dismissDuplicateGeneration() },
-                    title = { Text("Generate again?") },
+                    title = { Text(stringResource(R.string.ai_duplicate_title)) },
                     text = {
                         Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                             Text(
-                                "This prompt and ${duplicate.styleLabel} style already produced a wallpaper this session.",
+                                stringResource(R.string.ai_duplicate_body, duplicate.styleLabel),
                                 style = MaterialTheme.typography.bodySmall,
                             )
                             Text(
-                                "Running it again may spend another Stability credit charge.",
+                                stringResource(R.string.ai_duplicate_credit_warning),
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                             )
@@ -502,12 +504,12 @@ fun AiWallpaperScreen(
                                 viewModel.confirmDuplicateGeneration(localApiKey.ifBlank { apiKey })
                             },
                         ) {
-                            Text("Generate Again")
+                            Text(stringResource(R.string.ai_duplicate_confirm))
                         }
                     },
                     dismissButton = {
                         TextButton(onClick = { viewModel.dismissDuplicateGeneration() }) {
-                            Text("Cancel")
+                            Text(stringResource(R.string.common_cancel))
                         }
                     },
                 )
@@ -540,7 +542,7 @@ fun AiWallpaperScreen(
                     ) {
                         SubcomposeAsyncImage(
                             model = wallpaper.thumbnailUrl,
-                            contentDescription = "Generated wallpaper",
+                            contentDescription = stringResource(R.string.ai_result_cd),
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .aspectRatio(9f / 16f)
@@ -588,7 +590,7 @@ fun AiWallpaperScreen(
                                     modifier = Modifier.size(16.dp),
                                 )
                                 Spacer(Modifier.width(6.dp))
-                                Text(if (state.isSaved) "Saved" else "Save")
+                                Text(stringResource(if (state.isSaved) R.string.ai_saved else R.string.ai_save))
                             }
 
                             Box(modifier = Modifier.weight(1f)) {
@@ -611,7 +613,7 @@ fun AiWallpaperScreen(
                                             modifier = Modifier.size(16.dp),
                                         )
                                         Spacer(Modifier.width(6.dp))
-                                        Text("Set wallpaper")
+                                        Text(stringResource(R.string.ai_set_wallpaper))
                                     }
                                 }
                                 DropdownMenu(
@@ -619,21 +621,21 @@ fun AiWallpaperScreen(
                                     onDismissRequest = { showTargetMenu = false },
                                 ) {
                                     DropdownMenuItem(
-                                        text = { Text("Home screen") },
+                                        text = { Text(stringResource(R.string.ai_target_home)) },
                                         onClick = {
                                             showTargetMenu = false
                                             viewModel.applyWallpaper(WallpaperTarget.HOME)
                                         },
                                     )
                                     DropdownMenuItem(
-                                        text = { Text("Lock screen") },
+                                        text = { Text(stringResource(R.string.ai_target_lock)) },
                                         onClick = {
                                             showTargetMenu = false
                                             viewModel.applyWallpaper(WallpaperTarget.LOCK)
                                         },
                                     )
                                     DropdownMenuItem(
-                                        text = { Text("Both") },
+                                        text = { Text(stringResource(R.string.ai_target_both)) },
                                         onClick = {
                                             showTargetMenu = false
                                             viewModel.applyWallpaper(WallpaperTarget.BOTH)
@@ -654,18 +656,18 @@ fun AiWallpaperScreen(
                                 modifier = Modifier.size(16.dp),
                             )
                             Spacer(Modifier.width(6.dp))
-                            Text("Report generated content")
+                            Text(stringResource(R.string.ai_report_button))
                         }
 
                         if (showGeneratedReportDialog) {
                             CommunityReportDialog(
-                                title = "Report generated wallpaper",
+                                title = stringResource(R.string.ai_report_title),
                                 onDismiss = { showGeneratedReportDialog = false },
                                 onSubmit = { reason, note ->
                                     viewModel.reportGeneratedWallpaper(wallpaper, reason, note)
                                 },
                                 reasons = GENERATED_CONTENT_REPORT_REASONS,
-                                body = "Reports are sent for generated-content review. Stability keys and local file paths are not included.",
+                                body = stringResource(R.string.ai_report_body),
                             )
                         }
                     }

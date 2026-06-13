@@ -17,6 +17,7 @@
     <string name="shortcut_unavailable">Shortcut unavailable</string>
     <string name="common_cancel">Cancel</string>
     <string name="common_close">Close</string>
+    <string name="common_clear">Clear</string>
     <string name="common_refresh">Refresh</string>
     <string name="common_reset">Reset</string>
     <string name="nav_wallpapers">Wallpapers</string>
@@ -84,6 +85,8 @@
     <string name="a11y_apply_video_wallpaper">Apply video wallpaper</string>
     <string name="a11y_applying">Applying</string>
     <string name="a11y_ready">Ready</string>
+    <string name="a11y_available">Available</string>
+    <string name="a11y_disabled">Disabled</string>
     <string name="a11y_selected">Selected</string>
     <string name="a11y_not_selected">Not selected</string>
     <string name="a11y_on">On</string>
@@ -155,4 +158,44 @@
     <string name="settings_ytdlp_update_toast_failed">YouTube extractor update failed: %1$s</string>
     <string name="settings_ytdlp_update_unknown_error">unknown error</string>
     <string name="ytdlp_video_url_update_hint">Could not get video URL. Try updating the YouTube extractor in Settings.</string>
+
+    <!-- AI generation screen -->
+    <string name="ai_disclosure_title">Generated wallpaper disclosure</string>
+    <string name="ai_disclosure_prompt_body">Your prompt is sent to Stability to generate an image. The request uses your Stability key and may spend provider credits.</string>
+    <string name="ai_disclosure_pricing_body">Provider pricing and rate limits can change; review your Stability account page before repeated generations.</string>
+    <string name="ai_disclosure_storage_body">Generated images are stored locally in Aura so you can preview, save, apply, or delete them. Do not include private, identifying, or unsafe content in prompts.</string>
+    <string name="ai_disclosure_done">Done</string>
+    <string name="ai_disclosure_accept">Accept</string>
+    <string name="ai_header_title">Generate AI Wallpaper</string>
+    <string name="ai_header_subtitle">Describe your perfect wallpaper</string>
+    <string name="ai_api_key_label">Stability AI API Key</string>
+    <string name="ai_api_key_placeholder">sk-…</string>
+    <string name="ai_api_key_hint">Get a free key at platform.stability.ai</string>
+    <string name="ai_api_key_save">Save</string>
+    <string name="ai_api_key_show">Show API key</string>
+    <string name="ai_api_key_hide">Hide API key</string>
+    <string name="ai_api_key_settings">API key settings</string>
+    <string name="ai_prompt_label">Prompt</string>
+    <string name="ai_prompt_placeholder">A misty Japanese forest at dawn, soft golden light filtering through ancient cedar trees, 4K, ultra detail…</string>
+    <string name="ai_prompt_counter">%1$d/500</string>
+    <string name="ai_style_label">Style</string>
+    <string name="ai_generate_disabled">Generated wallpapers disabled</string>
+    <string name="ai_generating">Generating…</string>
+    <string name="ai_generate_button">Generate wallpaper</string>
+    <string name="ai_credit_note">One request may spend Stability credits. Session requests: %1$d. Duplicate prompt/style retries ask before another request.</string>
+    <string name="ai_duplicate_title">Generate again?</string>
+    <string name="ai_duplicate_body">This prompt and %1$s style already produced a wallpaper this session.</string>
+    <string name="ai_duplicate_credit_warning">Running it again may spend another Stability credit charge.</string>
+    <string name="ai_duplicate_confirm">Generate Again</string>
+    <string name="ai_result_cd">Generated wallpaper</string>
+    <string name="ai_save">Save</string>
+    <string name="ai_saved">Saved</string>
+    <string name="ai_set_wallpaper">Set wallpaper</string>
+    <string name="ai_target_home">Home screen</string>
+    <string name="ai_target_lock">Lock screen</string>
+    <string name="ai_target_both">Both</string>
+    <string name="ai_report_button">Report generated content</string>
+    <string name="ai_report_title">Report generated wallpaper</string>
+    <string name="ai_report_body">Reports are sent for generated-content review. Stability keys and local file paths are not included.</string>
+    <string name="common_back">Back</string>
 </resources>
