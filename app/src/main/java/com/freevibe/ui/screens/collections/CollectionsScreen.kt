@@ -29,8 +29,10 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.freevibe.R
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -279,7 +281,7 @@ fun CollectionsScreen(
             qrBitmap = remember(state.shareLink) { viewModel.buildQrBitmap(state.shareLink).asImageBitmap() },
             onCopyLink = {
                 clipboard.setText(AnnotatedString(state.shareLink))
-                scope.launch { snackbarHostState.showSnackbar("Collection link copied") }
+                scope.launch { snackbarHostState.showSnackbar(context.getString(R.string.collections_link_copied)) }
             },
             onDismiss = viewModel::dismissQr,
         )
@@ -290,13 +292,13 @@ fun CollectionsScreen(
         topBar = {
             TopAppBar(
                 title = {
-                    Text(selectedCollection?.name ?: "Collections")
+                    Text(selectedCollection?.name ?: stringResource(R.string.collections_title))
                 },
                 navigationIcon = {
                     IconButton(onClick = {
                         if (selectedCollectionId != null) viewModel.clearSelection() else onBack()
                     }) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, stringResource(R.string.common_back))
                     }
                 },
                 actions = {
@@ -304,11 +306,11 @@ fun CollectionsScreen(
                         var showMenu by remember { mutableStateOf(false) }
                         Box {
                             IconButton(onClick = { showMenu = true }) {
-                                Icon(Icons.Default.MoreVert, "More")
+                                Icon(Icons.Default.MoreVert, stringResource(R.string.collections_more))
                             }
                             DropdownMenu(expanded = showMenu, onDismissRequest = { showMenu = false }) {
                                 DropdownMenuItem(
-                                    text = { Text("Share link and file") },
+                                    text = { Text(stringResource(R.string.collections_share_link_and_file)) },
                                     onClick = {
                                         showMenu = false
                                         viewModel.shareCollection(selectedCollection)
@@ -316,7 +318,7 @@ fun CollectionsScreen(
                                     leadingIcon = { Icon(Icons.Default.Share, null) },
                                 )
                                 DropdownMenuItem(
-                                    text = { Text("Show QR code") },
+                                    text = { Text(stringResource(R.string.collections_show_qr)) },
                                     onClick = {
                                         showMenu = false
                                         viewModel.showQr(selectedCollection)
@@ -324,7 +326,7 @@ fun CollectionsScreen(
                                     leadingIcon = { Icon(Icons.Default.QrCode2, null) },
                                 )
                                 DropdownMenuItem(
-                                    text = { Text("Delete collection") },
+                                    text = { Text(stringResource(R.string.collections_delete)) },
                                     onClick = {
                                         showMenu = false
                                         viewModel.deleteCollection(selectedCollection.collectionId)
@@ -335,7 +337,7 @@ fun CollectionsScreen(
                         }
                     } else {
                         IconButton(onClick = { showImportSheet = true }) {
-                            Icon(Icons.Default.FileDownload, "Import collection")
+                            Icon(Icons.Default.FileDownload, stringResource(R.string.collections_import))
                         }
                     }
                 },
@@ -353,8 +355,8 @@ fun CollectionsScreen(
                 ) {
                     AuraStateCard(
                         icon = Icons.Default.Folder,
-                        title = "This collection is empty",
-                        description = "Save wallpapers from detail pages to turn this into a curated set.",
+                        title = stringResource(R.string.collections_empty_title),
+                        description = stringResource(R.string.collections_empty_body),
                         modifier = Modifier.padding(24.dp),
                     )
                 }
@@ -383,7 +385,7 @@ fun CollectionsScreen(
                                         val cid = selectedCollectionId ?: return@combinedClickable
                                         viewModel.removeItem(cid, item)
                                         scope.launch {
-                                            snackbarHostState.showSnackbar("Removed from collection")
+                                            snackbarHostState.showSnackbar(context.getString(R.string.collections_removed))
                                         }
                                     },
                                 ),
@@ -408,8 +410,8 @@ fun CollectionsScreen(
                 ) {
                     AuraStateCard(
                         icon = Icons.Default.CreateNewFolder,
-                        title = "No collections yet",
-                        description = "Use collections to group wallpapers by mood, room, season, or setup.",
+                        title = stringResource(R.string.collections_list_empty_title),
+                        description = stringResource(R.string.collections_list_empty_body),
                         modifier = Modifier.padding(24.dp),
                     )
                 }
@@ -451,9 +453,9 @@ private fun ImportCollectionSheet(
                 .padding(horizontal = 20.dp, vertical = 12.dp),
             verticalArrangement = Arrangement.spacedBy(14.dp),
         ) {
-            Text("Import collection", style = MaterialTheme.typography.titleLarge)
+            Text(stringResource(R.string.collections_import_title), style = MaterialTheme.typography.titleLarge)
             Text(
-                "Paste an Aura collection link, open a shared JSON file, or scan a QR image.",
+                stringResource(R.string.collections_import_body),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
@@ -461,7 +463,7 @@ private fun ImportCollectionSheet(
                 value = link,
                 onValueChange = { link = it },
                 modifier = Modifier.fillMaxWidth(),
-                label = { Text("Aura collection link") },
+                label = { Text(stringResource(R.string.collections_import_link_label)) },
                 singleLine = true,
                 shape = RoundedCornerShape(8.dp),
             )
@@ -473,7 +475,7 @@ private fun ImportCollectionSheet(
             ) {
                 Icon(Icons.Default.Link, contentDescription = null)
                 Spacer(Modifier.width(8.dp))
-                Text("Import link")
+                Text(stringResource(R.string.collections_import_link_button))
             }
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -486,7 +488,7 @@ private fun ImportCollectionSheet(
                 ) {
                     Icon(Icons.Default.FileOpen, contentDescription = null)
                     Spacer(Modifier.width(8.dp))
-                    Text("JSON")
+                    Text(stringResource(R.string.collections_import_json))
                 }
                 OutlinedButton(
                     onClick = onOpenQrImage,
@@ -495,7 +497,7 @@ private fun ImportCollectionSheet(
                 ) {
                     Icon(Icons.Default.QrCodeScanner, contentDescription = null)
                     Spacer(Modifier.width(8.dp))
-                    Text("QR image")
+                    Text(stringResource(R.string.collections_import_qr))
                 }
             }
             Spacer(Modifier.height(12.dp))
@@ -513,7 +515,7 @@ private fun CollectionQrDialog(
     AlertDialog(
         onDismissRequest = onDismiss,
         icon = { Icon(Icons.Default.QrCode2, contentDescription = null) },
-        title = { Text("Collection QR code") },
+        title = { Text(stringResource(R.string.collections_qr_title)) },
         text = {
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
@@ -526,14 +528,14 @@ private fun CollectionQrDialog(
                 ) {
                     Image(
                         bitmap = qrBitmap,
-                        contentDescription = "QR code for ${state.collectionName}",
+                        contentDescription = stringResource(R.string.collections_qr_cd, state.collectionName),
                         modifier = Modifier
                             .padding(12.dp)
                             .size(220.dp),
                     )
                 }
                 Text(
-                    "${state.collectionName} - ${state.itemCount} wallpapers",
+                    stringResource(R.string.collections_qr_info, state.collectionName, state.itemCount),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
@@ -548,12 +550,12 @@ private fun CollectionQrDialog(
         },
         confirmButton = {
             TextButton(onClick = onCopyLink, shape = RoundedCornerShape(8.dp)) {
-                Text("Copy link")
+                Text(stringResource(R.string.collections_qr_copy))
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss, shape = RoundedCornerShape(8.dp)) {
-                Text("Done")
+                Text(stringResource(R.string.common_done))
             }
         },
     )

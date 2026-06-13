@@ -260,4 +260,28 @@
     <string name="editor_sound_guidance_short_body">This clip is under 8s. It can still work well as a notification or alarm.</string>
     <string name="editor_sound_guidance_long">Shorten the selection</string>
     <string name="editor_sound_guidance_long_body">Keep custom ringtones at 30s or less for a cleaner loop and faster apply.</string>
+
+    <!-- Collections -->
+    <string name="collections_title">Collections</string>
+    <string name="collections_more">More</string>
+    <string name="collections_share_link_and_file">Share link and file</string>
+    <string name="collections_show_qr">Show QR code</string>
+    <string name="collections_delete">Delete collection</string>
+    <string name="collections_import">Import collection</string>
+    <string name="collections_empty_title">This collection is empty</string>
+    <string name="collections_empty_body">Save wallpapers from detail pages to turn this into a curated set.</string>
+    <string name="collections_list_empty_title">No collections yet</string>
+    <string name="collections_list_empty_body">Use collections to group wallpapers by mood, room, season, or setup.</string>
+    <string name="collections_removed">Removed from collection</string>
+    <string name="collections_link_copied">Collection link copied</string>
+    <string name="collections_import_title">Import collection</string>
+    <string name="collections_import_body">Paste an Aura collection link, open a shared JSON file, or scan a QR image.</string>
+    <string name="collections_import_link_label">Aura collection link</string>
+    <string name="collections_import_link_button">Import link</string>
+    <string name="collections_import_json">JSON</string>
+    <string name="collections_import_qr">QR image</string>
+    <string name="collections_qr_title">Collection QR code</string>
+    <string name="collections_qr_cd">QR code for %1$s</string>
+    <string name="collections_qr_info">%1$s — %2$d wallpapers</string>
+    <string name="collections_qr_copy">Copy link</string>
 </resources>
