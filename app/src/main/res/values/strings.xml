@@ -228,4 +228,36 @@
     <string name="editor_crop_gesture_hint">Pinch to zoom, drag to position</string>
     <string name="editor_crop_detecting">Detecting…</string>
     <string name="editor_crop_smart_crop">Smart Crop</string>
+
+    <!-- Sound editor -->
+    <string name="editor_sound_create_title">Create Sound</string>
+    <string name="editor_sound_edit_title">Edit Sound</string>
+    <string name="editor_sound_undo">Undo</string>
+    <string name="editor_sound_open_file">Open file</string>
+    <string name="editor_sound_loading">Opening audio editor…</string>
+    <string name="editor_sound_unavailable_title">Sound unavailable</string>
+    <string name="editor_sound_unavailable_body">This sound could not be restored for editing. Return to Sounds and choose another item.</string>
+    <string name="editor_sound_unavailable_action">Back to sounds</string>
+    <string name="editor_sound_no_audio">No audio loaded</string>
+    <string name="editor_sound_preparing_waveform">Preparing waveform…</string>
+    <string name="editor_sound_preparing_hint">This usually takes a few seconds for longer files.</string>
+    <string name="editor_sound_open_title">Open an audio file</string>
+    <string name="editor_sound_open_body">Choose a sound file to trim into a ringtone, notification, or alarm.</string>
+    <string name="editor_sound_browse">Browse files</string>
+    <string name="editor_sound_duration">Duration: %1$s</string>
+    <string name="editor_sound_fade_effects">Fade effects</string>
+    <string name="editor_sound_fade_in">Fade in: %1$d ms</string>
+    <string name="editor_sound_fade_out">Fade out: %1$d ms</string>
+    <string name="editor_sound_apply_as">Set trimmed audio as</string>
+    <string name="editor_sound_apply_ringtone">Ringtone</string>
+    <string name="editor_sound_apply_notification">Notification</string>
+    <string name="editor_sound_apply_alarm">Alarm</string>
+    <string name="editor_sound_discard_title">Discard edits?</string>
+    <string name="editor_sound_discard_body">Your trim, fade, and normalize settings will be lost. Apply them first or discard?</string>
+    <string name="editor_sound_guidance_ready">Ready for ringtone</string>
+    <string name="editor_sound_guidance_ready_body">Ringtones usually work best at 8–30s. Fine-tune the handles, then preview before applying.</string>
+    <string name="editor_sound_guidance_short">Better for notifications</string>
+    <string name="editor_sound_guidance_short_body">This clip is under 8s. It can still work well as a notification or alarm.</string>
+    <string name="editor_sound_guidance_long">Shorten the selection</string>
+    <string name="editor_sound_guidance_long_body">Keep custom ringtones at 30s or less for a cleaner loop and faster apply.</string>
 </resources>

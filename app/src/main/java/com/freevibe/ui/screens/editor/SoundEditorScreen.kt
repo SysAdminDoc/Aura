@@ -160,16 +160,16 @@ fun SoundEditorScreen(
     if (showSoundDiscardConfirm) {
         AlertDialog(
             onDismissRequest = { showSoundDiscardConfirm = false },
-            title = { Text("Discard edits?") },
-            text = { Text("Your trim, fade, and normalize settings will be lost. Apply them first or discard?") },
+            title = { Text(stringResource(R.string.editor_sound_discard_title)) },
+            text = { Text(stringResource(R.string.editor_sound_discard_body)) },
             confirmButton = {
                 TextButton(onClick = {
                     showSoundDiscardConfirm = false
                     onBack()
-                }) { Text("Discard") }
+                }) { Text(stringResource(R.string.common_discard)) }
             },
             dismissButton = {
-                TextButton(onClick = { showSoundDiscardConfirm = false }) { Text("Keep editing") }
+                TextButton(onClick = { showSoundDiscardConfirm = false }) { Text(stringResource(R.string.common_keep_editing)) }
             },
             shape = RoundedCornerShape(8.dp),
         )
@@ -179,18 +179,18 @@ fun SoundEditorScreen(
         snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             TopAppBar(
-                title = { Text(if (soundId == null) "Create Sound" else "Edit Sound") },
+                title = { Text(stringResource(if (soundId == null) R.string.editor_sound_create_title else R.string.editor_sound_edit_title)) },
                 navigationIcon = {
-                    IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back") }
+                    IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, stringResource(R.string.common_back)) }
                 },
                 actions = {
                     if (viewModel.canUndo) {
                         IconButton(onClick = { viewModel.undo() }) {
-                            Icon(Icons.AutoMirrored.Filled.Undo, "Undo")
+                            Icon(Icons.AutoMirrored.Filled.Undo, stringResource(R.string.editor_sound_undo))
                         }
                     }
                     IconButton(onClick = { filePicker.launch("audio/*") }) {
-                        Icon(Icons.Default.FolderOpen, "Open file")
+                        Icon(Icons.Default.FolderOpen, stringResource(R.string.editor_sound_open_file))
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.surface),
@@ -207,7 +207,7 @@ fun SoundEditorScreen(
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     CircularProgressIndicator(strokeWidth = 2.dp)
                     Spacer(Modifier.height(12.dp))
-                    Text("Opening audio editor...", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text(stringResource(R.string.editor_sound_loading), color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             }
             return@Scaffold
@@ -223,10 +223,10 @@ fun SoundEditorScreen(
             ) {
                 AuraStateCard(
                     icon = Icons.Default.MusicOff,
-                    title = "Sound unavailable",
-                    description = "This sound could not be restored for editing. Return to Sounds and choose another item.",
+                    title = stringResource(R.string.editor_sound_unavailable_title),
+                    description = stringResource(R.string.editor_sound_unavailable_body),
                     tone = MaterialTheme.colorScheme.tertiary,
-                    primaryAction = AuraStateAction("Back to sounds", Icons.AutoMirrored.Filled.ArrowBack, onBack),
+                    primaryAction = AuraStateAction(stringResource(R.string.editor_sound_unavailable_action), Icons.AutoMirrored.Filled.ArrowBack, onBack),
                 )
             }
             return@Scaffold
@@ -242,7 +242,7 @@ fun SoundEditorScreen(
         ) {
             // File name
             Text(
-                state.fileName.ifEmpty { "No audio loaded" },
+                state.fileName.ifEmpty { stringResource(R.string.editor_sound_no_audio) },
                 style = MaterialTheme.typography.titleLarge,
             )
 
@@ -259,9 +259,9 @@ fun SoundEditorScreen(
                         ) {
                             CircularProgressIndicator(strokeWidth = 2.dp)
                             Spacer(Modifier.height(10.dp))
-                            Text("Preparing waveform...", style = MaterialTheme.typography.bodyMedium)
+                            Text(stringResource(R.string.editor_sound_preparing_waveform), style = MaterialTheme.typography.bodyMedium)
                             Text(
-                                "This usually takes a few seconds for longer files.",
+                                stringResource(R.string.editor_sound_preparing_hint),
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                             )
@@ -275,11 +275,11 @@ fun SoundEditorScreen(
                 ) {
                     AuraStateCard(
                         icon = Icons.Default.AudioFile,
-                        title = "Open an audio file",
-                        description = "Choose a sound file to trim into a ringtone, notification, or alarm.",
+                        title = stringResource(R.string.editor_sound_open_title),
+                        description = stringResource(R.string.editor_sound_open_body),
                         tone = MaterialTheme.colorScheme.primary,
                         primaryAction = AuraStateAction(
-                            label = "Browse files",
+                            label = stringResource(R.string.editor_sound_browse),
                             icon = Icons.Default.FolderOpen,
                             onClick = { filePicker.launch("audio/*") },
                         ),
@@ -314,7 +314,7 @@ fun SoundEditorScreen(
                         color = MaterialTheme.colorScheme.primary,
                     )
                     Text(
-                        "Duration: ${formatMs(state.trimDurationMs)}",
+                        stringResource(R.string.editor_sound_duration, formatMs(state.trimDurationMs)),
                         style = MaterialTheme.typography.labelMedium,
                     )
                     Text(
@@ -353,7 +353,7 @@ fun SoundEditorScreen(
                 }
 
                 // Fade controls
-                Text("Fade effects", style = MaterialTheme.typography.labelLarge)
+                Text(stringResource(R.string.editor_sound_fade_effects), style = MaterialTheme.typography.labelLarge)
                 Row(
                     Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(16.dp),
@@ -361,7 +361,7 @@ fun SoundEditorScreen(
                     // Fade In
                     Column(modifier = Modifier.weight(1f)) {
                         Text(
-                            "Fade in: ${state.fadeInMs} ms",
+                            stringResource(R.string.editor_sound_fade_in, state.fadeInMs),
                             style = MaterialTheme.typography.labelSmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
@@ -389,7 +389,7 @@ fun SoundEditorScreen(
                     // Fade Out
                     Column(modifier = Modifier.weight(1f)) {
                         Text(
-                            "Fade out: ${state.fadeOutMs} ms",
+                            stringResource(R.string.editor_sound_fade_out, state.fadeOutMs),
                             style = MaterialTheme.typography.labelSmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
@@ -417,7 +417,7 @@ fun SoundEditorScreen(
                 }
 
                 // Apply buttons
-                Text("Set trimmed audio as", style = MaterialTheme.typography.labelLarge)
+                Text(stringResource(R.string.editor_sound_apply_as), style = MaterialTheme.typography.labelLarge)
                 if (!canWriteSettings) {
                     Surface(
                         color = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.55f),
@@ -445,13 +445,13 @@ fun SoundEditorScreen(
                     Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                 ) {
-                    ApplyBtn("Ringtone", Modifier.weight(1f), state.isApplying, enabled = canWriteSettings) {
+                    ApplyBtn(stringResource(R.string.editor_sound_apply_ringtone), Modifier.weight(1f), state.isApplying, enabled = canWriteSettings) {
                         viewModel.applyTrimmed(ContentType.RINGTONE)
                     }
-                    ApplyBtn("Notification", Modifier.weight(1f), state.isApplying, enabled = canWriteSettings) {
+                    ApplyBtn(stringResource(R.string.editor_sound_apply_notification), Modifier.weight(1f), state.isApplying, enabled = canWriteSettings) {
                         viewModel.applyTrimmed(ContentType.NOTIFICATION)
                     }
-                    ApplyBtn("Alarm", Modifier.weight(1f), state.isApplying, enabled = canWriteSettings) {
+                    ApplyBtn(stringResource(R.string.editor_sound_apply_alarm), Modifier.weight(1f), state.isApplying, enabled = canWriteSettings) {
                         viewModel.applyTrimmed(ContentType.ALARM)
                     }
                 }
@@ -475,14 +475,14 @@ private fun TrimGuidance(trimDurationMs: Long) {
         else -> MaterialTheme.colorScheme.onErrorContainer
     }
     val title = when {
-        isIdealRingtoneLength -> "Ready for ringtone"
-        isVeryShort -> "Better for notifications"
-        else -> "Shorten the selection"
+        isIdealRingtoneLength -> stringResource(R.string.editor_sound_guidance_ready)
+        isVeryShort -> stringResource(R.string.editor_sound_guidance_short)
+        else -> stringResource(R.string.editor_sound_guidance_long)
     }
     val body = when {
-        isIdealRingtoneLength -> "Ringtones usually work best at 8-30s. Fine-tune the handles, then preview before applying."
-        isVeryShort -> "This clip is under 8s. It can still work well as a notification or alarm."
-        else -> "Keep custom ringtones at 30s or less for a cleaner loop and faster apply."
+        isIdealRingtoneLength -> stringResource(R.string.editor_sound_guidance_ready_body)
+        isVeryShort -> stringResource(R.string.editor_sound_guidance_short_body)
+        else -> stringResource(R.string.editor_sound_guidance_long_body)
     }
 
     Surface(
