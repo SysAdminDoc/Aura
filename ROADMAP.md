@@ -3314,13 +3314,6 @@ This section records net-new parity work from the Zedge official/web/app pass. T
 
 ### P2 — Architecture
 
-- [ ] P2 — Centralize notification channel creation
-  Why: Notification channels are created independently in three files: `FreeVibeApp.kt` (media_playback), `DailyWallpaperWorker.kt` (daily wallpaper), and `RotationTriggerService.kt` (wallpaper triggers). Scattered creation risks channel-naming inconsistencies, makes it hard to audit channel inventory, and violates the single-responsibility principle.
-  Evidence: `FreeVibeApp.kt:149-157`; `DailyWallpaperWorker.kt:144-151`; `RotationTriggerService.kt:76-80`.
-  Touches: New `NotificationChannels.kt` singleton/object, `FreeVibeApp.kt` (call centralized creation at startup), `DailyWallpaperWorker.kt`, `RotationTriggerService.kt`, `BatchDownloadService.kt`.
-  Acceptance: all notification channels are defined in one file with constants for channel IDs, names, and descriptions; `FreeVibeApp.onCreate()` creates all channels at startup; no other file calls `createNotificationChannel()`.
-  Complexity: S
-
 - [ ] P2 — Split WallpapersViewModel into feature-scoped ViewModels
   Why: `WallpapersViewModel.kt` is 1262 lines handling wallpaper tab state, Discover cache, find-similar, match-my-theme, EyeDropper color search, category filtering, Community Favorites, daily pick, random wallpaper, and multiple pagination states. This makes testing and modification expensive. The existing ROADMAP tracks the SettingsScreen split but not the ViewModel split.
   Evidence: `app/src/main/java/com/freevibe/ui/screens/wallpapers/WallpapersViewModel.kt` (1262 lines); WallpapersScreen.kt (1987 lines) depends on this single ViewModel for all tab behavior.

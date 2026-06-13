@@ -17,6 +17,12 @@ All notable changes to Aura will be documented in this file.
   `--cookies`, `aria2c`, `--downloader`, and `--exec`. Policy checker
   validates all 6 forbidden options; 9 unit tests cover v1 compat and v2
   rejection of each CVE-related flag. Risk Register consolidated to one row.
+- **Centralized notification channels**: extracted all notification channel
+  definitions into `NotificationChannels.kt` singleton. `FreeVibeApp.onCreate()`
+  creates all three channels (media_playback, daily_wallpaper,
+  aura_rotation_triggers) at startup. Removed duplicate channel creation from
+  `DailyWallpaperWorker` and `RotationTriggerService`; both now reference the
+  centralized channel ID constants.
 - **Provider policy report reason**: added `PROVIDER_POLICY` to
   `CommunityReportReason` for reporting community uploads that violate
   third-party provider terms (e.g., re-uploaded Pexels/Pixabay content).

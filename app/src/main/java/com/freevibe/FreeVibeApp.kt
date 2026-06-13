@@ -1,8 +1,6 @@
 package com.freevibe
 
 import android.app.Application
-import android.app.NotificationChannel
-import android.app.NotificationManager
 import android.util.Log
 import androidx.hilt.work.HiltWorkerFactory
 import androidx.work.Configuration
@@ -11,6 +9,7 @@ import coil.ImageLoaderFactory
 import coil.disk.DiskCache
 import coil.memory.MemoryCache
 import com.freevibe.data.local.WallpaperCacheManager
+import com.freevibe.service.NotificationChannels
 import com.freevibe.service.CrashDiagnosticsCollector
 import com.freevibe.service.CrashDiagnosticsText
 import com.freevibe.service.AppCheckInstaller
@@ -77,7 +76,7 @@ class FreeVibeApp : Application(), Configuration.Provider, ImageLoaderFactory {
         super.onCreate()
         setupCrashLogging()
         installAppCheck()
-        createMediaNotificationChannel()
+        NotificationChannels.createAll(this)
         evictStaleCaches()
         startSystemThemeListener()
         initYtDlp()
@@ -146,16 +145,6 @@ class FreeVibeApp : Application(), Configuration.Provider, ImageLoaderFactory {
         }
     }
 
-    private fun createMediaNotificationChannel() {
-        val channel = NotificationChannel(
-            "media_playback",
-            "Sound Preview",
-            NotificationManager.IMPORTANCE_LOW,
-        )
-        channel.description = "Playback controls for sound previews"
-        getSystemService(NotificationManager::class.java)
-            .createNotificationChannel(channel)
-    }
 
     private fun setupCrashLogging() {
         val defaultHandler = Thread.getDefaultUncaughtExceptionHandler()

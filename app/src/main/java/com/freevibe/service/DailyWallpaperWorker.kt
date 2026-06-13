@@ -1,8 +1,6 @@
 package com.freevibe.service
 
 import android.Manifest
-import android.app.NotificationChannel
-import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
@@ -68,7 +66,6 @@ class DailyWallpaperWorker @AssistedInject constructor(
             }
 
             try {
-                createNotificationChannel()
 
                 if (Build.VERSION.SDK_INT >= 33 &&
                     ContextCompat.checkSelfPermission(applicationContext, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
@@ -96,7 +93,7 @@ class DailyWallpaperWorker @AssistedInject constructor(
                     ""
                 }
 
-                val notification = NotificationCompat.Builder(applicationContext, CHANNEL_ID)
+                val notification = NotificationCompat.Builder(applicationContext, NotificationChannels.DAILY_WALLPAPER)
                     .setSmallIcon(R.drawable.ic_notification)
                     .setContentTitle("Wallpaper of the Day")
                     .setContentText("$sourceName daily pick ${sizeText}- tap to preview")
@@ -142,14 +139,6 @@ class DailyWallpaperWorker @AssistedInject constructor(
         return Result.retry()
     }
 
-    private fun createNotificationChannel() {
-        val channel = NotificationChannel(
-            CHANNEL_ID, "Daily Wallpaper",
-            NotificationManager.IMPORTANCE_LOW,
-        ).apply { description = "Daily wallpaper picks from active wallpaper sources" }
-        val manager = applicationContext.getSystemService(NotificationManager::class.java)
-        manager.createNotificationChannel(channel)
-    }
 
     private fun Wallpaper.dailySourceName(): String = when (source) {
         ContentSource.BING -> "Bing"
@@ -159,7 +148,6 @@ class DailyWallpaperWorker @AssistedInject constructor(
 
     companion object {
         const val WORK_NAME = "daily_wallpaper"
-        const val CHANNEL_ID = "daily_wallpaper"
         const val NOTIFICATION_ID = 42
         private const val DAILY_THUMB_MAX_BYTES = 4L * 1024L * 1024L
 

@@ -1,8 +1,6 @@
 package com.freevibe.service
 
 import android.app.Notification
-import android.app.NotificationChannel
-import android.app.NotificationManager
 import android.app.PendingIntent
 import android.app.Service
 import android.content.BroadcastReceiver
@@ -71,25 +69,12 @@ class RotationTriggerService : Service() {
     }
 
     private fun startInForeground() {
-        val mgr = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            mgr.createNotificationChannel(
-                NotificationChannel(
-                    CHANNEL_ID,
-                    "Wallpaper triggers",
-                    NotificationManager.IMPORTANCE_LOW,
-                ).apply {
-                    description = "Listens for unlock/screen-off to rotate the wallpaper."
-                    setShowBadge(false)
-                },
-            )
-        }
         val pendingIntent = PendingIntent.getActivity(
             this, 0,
             packageManager.getLaunchIntentForPackage(packageName),
             PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT,
         )
-        val notif: Notification = NotificationCompat.Builder(this, CHANNEL_ID)
+        val notif: Notification = NotificationCompat.Builder(this, NotificationChannels.ROTATION_TRIGGERS)
             .setSmallIcon(android.R.drawable.ic_menu_gallery)
             .setContentTitle("Aura — wallpaper triggers")
             .setContentText("Rotating on unlock / screen off")
@@ -139,7 +124,6 @@ class RotationTriggerService : Service() {
     }
 
     companion object {
-        private const val CHANNEL_ID = "aura_rotation_triggers"
         private const val NOTIFICATION_ID = 9241
         const val EXTRA_UNLOCK = "extra_unlock"
         const val EXTRA_SCREEN_OFF = "extra_screen_off"
