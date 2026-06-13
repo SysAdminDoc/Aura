@@ -3280,13 +3280,6 @@ This section records net-new parity work from the Zedge official/web/app pass. T
 ### P1 — Security and trust
 
 
-- [ ] P1 — Remediate 99 null contentDescription instances
-  Why: 99 `contentDescription = null` instances exist across 20 Compose UI files on non-decorative interactive elements. TalkBack users cannot identify these controls. The European Accessibility Act (EAA, effective June 2025) makes accessibility legally relevant for EU app distribution.
-  Evidence: Grep for `contentDescription\s*=\s*null` across `app/src/main/java/com/freevibe/ui/`; top offenders: `SharedComponents.kt` (10), `WallpapersScreen.kt` (11), `SoundsScreen.kt` (11), `VideoWallpapersScreen.kt` (11), `SoundDetailScreen.kt` (10).
-  Touches: `SharedComponents.kt`, all screen composables with null contentDescriptions, `strings.xml` for new accessibility string resources.
-  Acceptance: zero `contentDescription = null` on non-decorative interactive elements; all new descriptions use `stringResource()` not hardcoded strings; TalkBack manual pass on Wallpapers, Sounds, and Settings tabs identifies no unlabeled interactive controls.
-  Complexity: M
-
 ### P1 — Features
 
 - [ ] P1 — "Set With..." intent-filter receiver for wallpaper delegation

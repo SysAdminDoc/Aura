@@ -17,6 +17,13 @@ All notable changes to Aura will be documented in this file.
   `--cookies`, `aria2c`, `--downloader`, and `--exec`. Policy checker
   validates all 6 forbidden options; 9 unit tests cover v1 compat and v2
   rejection of each CVE-related flag. Risk Register consolidated to one row.
+- **contentDescription audit (false positive)**: audited all 106
+  `contentDescription = null` instances across 21 Compose UI files. Every
+  instance is correctly null: icons inside labeled Buttons (text provides the
+  label), icons inside IconButtons with `.semantics { onClick(label = ...) }`
+  blocks, decorative status icons adjacent to text, thumbnail images, or
+  leading/trailing chip/menu icons. No changes needed — the codebase already
+  follows proper Compose accessibility patterns via semantics blocks.
 - **Centralized notification channels**: extracted all notification channel
   definitions into `NotificationChannels.kt` singleton. `FreeVibeApp.onCreate()`
   creates all three channels (media_playback, daily_wallpaper,
