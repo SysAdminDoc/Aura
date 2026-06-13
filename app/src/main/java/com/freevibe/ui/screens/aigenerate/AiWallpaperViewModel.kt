@@ -13,6 +13,7 @@ import com.freevibe.data.repository.AiStyle
 import com.freevibe.data.repository.AiWallpaperRepository
 import com.freevibe.data.repository.CommunityReportRepository
 import com.freevibe.data.repository.FavoritesRepository
+import java.util.Locale
 import com.freevibe.data.local.PreferencesManager
 import com.freevibe.service.SourceMetrics
 import com.freevibe.service.WallpaperApplier
@@ -50,7 +51,7 @@ fun generatedWallpaperRequestSignature(
     prompt: String,
     style: AiStyle,
 ): GeneratedWallpaperRequestSignature? {
-    val normalizedPrompt = prompt.trim().replace(GENERATED_PROMPT_WHITESPACE_RE, " ").lowercase()
+    val normalizedPrompt = prompt.trim().replace(GENERATED_PROMPT_WHITESPACE_RE, " ").lowercase(Locale.ROOT)
     if (normalizedPrompt.isBlank()) return null
     return GeneratedWallpaperRequestSignature(normalizedPrompt, style)
 }

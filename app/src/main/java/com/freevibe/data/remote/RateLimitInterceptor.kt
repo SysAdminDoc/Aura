@@ -2,6 +2,7 @@ package com.freevibe.data.remote
 
 import okhttp3.Interceptor
 import okhttp3.Response
+import java.util.Locale
 import java.util.concurrent.TimeUnit
 import kotlin.math.max
 import kotlin.math.min
@@ -57,7 +58,7 @@ class RateLimitInterceptor(
     }
 
     private fun hostMatches(host: String): Boolean {
-        val h = host.lowercase()
+        val h = host.lowercase(Locale.ROOT)
         return hostSuffixes.any { suffix ->
             h == suffix || h.endsWith(".$suffix")
         }

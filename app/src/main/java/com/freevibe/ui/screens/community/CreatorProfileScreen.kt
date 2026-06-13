@@ -29,6 +29,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import java.util.Locale
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -611,7 +612,7 @@ private fun UploadRow(upload: CreatorUploadRef) {
                 color = MaterialTheme.colorScheme.primary.copy(alpha = 0.10f),
             ) {
                 Text(
-                    upload.contentType.take(1).uppercase(),
+                    upload.contentType.take(1).uppercase(Locale.ROOT),
                     modifier = Modifier.padding(horizontal = 10.dp, vertical = 8.dp),
                     style = MaterialTheme.typography.labelLarge,
                     color = MaterialTheme.colorScheme.primary,

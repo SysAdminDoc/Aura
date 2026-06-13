@@ -13,6 +13,7 @@ import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
 import androidx.hilt.work.HiltWorker
+import java.util.Locale
 import androidx.work.*
 import com.freevibe.MainActivity
 import com.freevibe.R
@@ -153,7 +154,7 @@ class DailyWallpaperWorker @AssistedInject constructor(
     private fun Wallpaper.dailySourceName(): String = when (source) {
         ContentSource.BING -> "Bing"
         ContentSource.WALLHAVEN -> "Wallhaven"
-        else -> source.name.lowercase().replaceFirstChar { it.uppercase() }
+        else -> source.name.lowercase(Locale.ROOT).replaceFirstChar { it.uppercase(Locale.ROOT) }
     }
 
     companion object {

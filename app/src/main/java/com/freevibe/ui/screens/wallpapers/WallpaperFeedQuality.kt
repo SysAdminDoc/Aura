@@ -2,6 +2,7 @@ package com.freevibe.ui.screens.wallpapers
 
 import com.freevibe.data.model.ContentSource
 import com.freevibe.data.model.Wallpaper
+import java.util.Locale
 import kotlin.math.max
 
 enum class WallpaperDiscoverFilter { FOR_YOU, AMOLED, HIGH_RES, PORTRAIT, ICON_SAFE }
@@ -236,11 +237,11 @@ private fun String.toPixelHint(): Long {
     return first * second
 }
 
-private fun String.normalizeFeedTerm(): String = lowercase().trim()
+private fun String.normalizeFeedTerm(): String = lowercase(Locale.ROOT).trim()
 
 private fun ContentSource.readableLabel(): String =
     name.split("_").joinToString(" ") { part ->
-        part.lowercase().replaceFirstChar { char -> char.uppercase() }
+        part.lowercase(Locale.ROOT).replaceFirstChar { char -> char.uppercase(Locale.ROOT) }
     }
 
 private val AMOLED_TERMS = setOf(

@@ -7,6 +7,7 @@ import com.freevibe.data.remote.stability.StabilityAiApi
 import com.freevibe.service.advertisedLengthExceeds
 import com.freevibe.service.copyStreamCapped
 import dagger.hilt.android.qualifiers.ApplicationContext
+import java.util.Locale
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -141,7 +142,7 @@ class AiWallpaperRepository @Inject constructor(
         val candidate = file.canonicalFile
         val rootPath = root.path + File.separator
         if (!candidate.path.startsWith(rootPath)) return null
-        if (!candidate.isFile || candidate.extension.lowercase() != "png") return null
+        if (!candidate.isFile || candidate.extension.lowercase(Locale.ROOT) != "png") return null
         return candidate
     }
 
