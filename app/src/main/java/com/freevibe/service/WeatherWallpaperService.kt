@@ -25,6 +25,7 @@ class WeatherWallpaperService : WallpaperService() {
     override fun onCreateEngine(): Engine = WeatherEngine()
 
     inner class WeatherEngine : Engine() {
+        private val receiptStore by lazy { LiveWallpaperReceiptStore.create(this@WeatherWallpaperService) }
         private var renderer: WeatherParticleRenderer? = null
         private var vfxRenderer: VfxParticleRenderer? = null
         private var touchRenderer: TouchEffectRenderer? = null
@@ -52,11 +53,13 @@ class WeatherWallpaperService : WallpaperService() {
         private var tintPaint: Paint? = null
         private var tintPaintBucket: Int = Int.MIN_VALUE
 
+        private var lastDrawReceiptMs = 0L
         private val drawRunner = Runnable { draw() }
 
         override fun onSurfaceCreated(holder: SurfaceHolder) {
             super.onSurfaceCreated(holder)
             setTouchEventsEnabled(true)
+            receiptStore.recordSurfaceCreated(LiveWallpaperReceiptStore.ENGINE_WEATHER, getSharedPreferences("freevibe_weather_wp", MODE_PRIVATE).getString("wallpaper_path", null))
             loadWallpaperBitmap()
         }
 
@@ -81,6 +84,7 @@ class WeatherWallpaperService : WallpaperService() {
         override fun onVisibilityChanged(visible: Boolean) {
             super.onVisibilityChanged(visible)
             this.visible = visible
+            receiptStore.recordVisibilityChanged(LiveWallpaperReceiptStore.ENGINE_WEATHER, visible)
             if (visible) {
                 loadReducedMotionFromPrefs()
                 loadWeatherFromPrefs()
@@ -109,6 +113,7 @@ class WeatherWallpaperService : WallpaperService() {
             super.onSurfaceDestroyed(holder)
             visible = false
             handler.removeCallbacks(drawRunner)
+            receiptStore.recordSurfaceDestroyed(LiveWallpaperReceiptStore.ENGINE_WEATHER)
         }
 
         override fun onDestroy() {
@@ -307,6 +312,11 @@ class WeatherWallpaperService : WallpaperService() {
                 }
             }
 
+            val now = android.os.SystemClock.elapsedRealtime()
+            if (now - lastDrawReceiptMs >= 30_000L) {
+                lastDrawReceiptMs = now
+                receiptStore.recordDraw(LiveWallpaperReceiptStore.ENGINE_WEATHER)
+            }
             if (visible && !reducedMotion) {
                 handler.postDelayed(drawRunner, frameInterval)
             }

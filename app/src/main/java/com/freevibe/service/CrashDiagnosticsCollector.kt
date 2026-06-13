@@ -38,6 +38,7 @@ class CrashDiagnosticsCollector @Inject constructor(
     private val sourceMetrics: SourceMetrics,
     private val backgroundWorkDiagnosticsReader: BackgroundWorkDiagnosticsReader,
     private val ytDlpUpdateManager: YtDlpUpdateManager,
+    private val liveWallpaperReceiptStore: LiveWallpaperReceiptStore,
 ) {
     fun readSummary(): CrashDiagnosticsSummary {
         val logFile = crashLogFile()
@@ -129,6 +130,8 @@ class CrashDiagnosticsCollector @Inject constructor(
                 appendLine()
                 appendLine(CrashDiagnosticsText.formatLiveBackgroundWorkReceipts(liveBackgroundWork))
             }
+            appendLine()
+            appendLine(formatLiveWallpaperReceipts())
             appendLine()
             appendLine("## Last local crash")
             appendLine("- Last crash timestamp: ${summary.lastCrashAt ?: "none recorded"}")
@@ -244,6 +247,32 @@ class CrashDiagnosticsCollector @Inject constructor(
             constraints = listOf("NetworkType.CONNECTED", "battery not low", "foreground-service trigger opt-in"),
         ),
     )
+
+    private fun formatLiveWallpaperReceipts(): String = buildString {
+        appendLine("## Live wallpaper engine receipts")
+        val receipts = liveWallpaperReceiptStore.readAll()
+        val hasAny = receipts.any { it.lastSurfaceCreatedUtc != null }
+        if (!hasAny) {
+            append("- No live wallpaper engine activity recorded.")
+            return@buildString
+        }
+        receipts.forEach { r ->
+            if (r.lastSurfaceCreatedUtc == null) return@forEach
+            appendLine(
+                "- ${r.engine}: " +
+                    "surfaceCreated=${r.lastSurfaceCreatedUtc}; " +
+                    "surfaceDestroyed=${r.lastSurfaceDestroyedUtc ?: "none"}; " +
+                    "lastVisible=${r.lastVisibleUtc ?: "none"}; " +
+                    "lastHidden=${r.lastHiddenUtc ?: "none"}; " +
+                    "lastDraw=${r.lastDrawUtc ?: "none"}; " +
+                    "stale=${r.isStale}; " +
+                    "recreations=${r.surfaceRecreationCount}; " +
+                    "media=${r.mediaPath ?: "none"}; " +
+                    "lastError=${r.lastErrorMessage ?: "none"}${if (r.lastErrorUtc != null) " at ${r.lastErrorUtc}" else ""}; " +
+                    "lastRecovery=${r.lastRecoveryAction ?: "none"}${if (r.lastRecoveryUtc != null) " at ${r.lastRecoveryUtc}" else ""}",
+            )
+        }
+    }.trimEnd()
 
     companion object {
         const val CRASH_LOG_FILE_NAME = "crash.log"

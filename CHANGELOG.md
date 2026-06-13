@@ -11,6 +11,14 @@ All notable changes to Aura will be documented in this file.
   Sounds, and Video screens show a subtle "Limited source health" banner
   when degraded sources are active. Diagnostics bundle includes degraded
   source list for support triage.
+- **Live wallpaper engine recovery receipts**: new `LiveWallpaperReceiptStore`
+  tracks surface lifecycle, visibility changes, draw heartbeats, errors,
+  and recovery actions for all three live wallpaper engines (video, weather,
+  parallax). SharedPreferences-backed with UTC timestamps. Diagnostics
+  bundle now includes a "Live wallpaper engine receipts" section surfacing
+  stale/frozen engine state, surface recreation counts, last error, and
+  last recovery action for support triage. Draw receipts are throttled to
+  one write per 30 seconds to avoid I/O pressure.
 - **Reduced motion accessibility**: when the system `ANIMATOR_DURATION_SCALE`
   is 0 or the new manual "Reduce animations" toggle in Settings is enabled,
   all live wallpaper particle effects (weather, VFX, touch ripples) are

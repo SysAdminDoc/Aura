@@ -3233,15 +3233,6 @@ This section records net-new parity work from the Zedge official/web/app pass. T
   Acceptance: a no-Gradle check compares active `RESEARCH.md`/`ROADMAP.md` dependency and runtime claims against `gradle/libs.versions.toml`, `app/build.gradle.kts`, and `functions/package.json`; stale active claims fail unless explicitly allowlisted as historical; duplicate active roadmap titles are reported.
   Complexity: S
 
-### P1 - Live wallpaper reliability
-
-- [ ] P1 - Live wallpaper engine recovery receipts and OEM-kill guidance
-  Why: Aura has three live wallpaper engines and some video heartbeat diagnostics, but no cross-engine record of stale frames, surface recreation, or OEM/background kills; UndeadWallpaper's recent deep-sleep and media-info hardening shows this failure class is common in the same product category.
-  Evidence: UndeadWallpaper release notes; `app/src/main/java/com/freevibe/service/VideoWallpaperService.kt`; `app/src/main/java/com/freevibe/service/WeatherWallpaperService.kt`; `app/src/main/java/com/freevibe/service/ParallaxWallpaperService.kt`; `app/src/main/java/com/freevibe/service/CrashDiagnosticsCollector.kt`; `docs/background-work-device-evidence.json`.
-  Touches: live wallpaper engines, `VideoBatteryProfile.kt`, crash/support diagnostics, Settings live wallpaper diagnostics, focused receipt/recovery tests.
-  Acceptance: each live wallpaper engine records bounded local receipts for visibility changes, surface recreation, selected media/path state, last draw timestamp, last error, and recovery action; Settings/support bundle surfaces stale or frozen engine state with OEM battery guidance; engines attempt safe redraw or reload on surface recreation; tests cover receipt serialization and recovery-decision logic.
-  Complexity: M
-
 ### P2 - Preview and metadata
 
 - [ ] P2 - Add media technical inspector for video and sound detail flows

@@ -41,6 +41,7 @@ class VideoWallpaperService : WallpaperService() {
     override fun onCreateEngine(): Engine = VideoEngine()
 
     inner class VideoEngine : Engine() {
+        private val receiptStore by lazy { LiveWallpaperReceiptStore.create(this@VideoWallpaperService) }
         private var mediaPlayer: MediaPlayer? = null
         private var gifMovie: Movie? = null
         private var gifStartedAtMs = 0L
@@ -116,6 +117,7 @@ class VideoWallpaperService : WallpaperService() {
             currentHolder = holder
             resolveScreenSize()
             refreshPlaybackProfile()
+            receiptStore.recordSurfaceCreated(LiveWallpaperReceiptStore.ENGINE_VIDEO, getVideoPath())
             initializePlayer(holder)
         }
 
@@ -125,12 +127,14 @@ class VideoWallpaperService : WallpaperService() {
             visible = false
             stopTelemetryHeartbeat()
             releasePlayback()
+            receiptStore.recordSurfaceDestroyed(LiveWallpaperReceiptStore.ENGINE_VIDEO)
             publishVideoTelemetry()
         }
 
         override fun onVisibilityChanged(visible: Boolean) {
             super.onVisibilityChanged(visible)
             this.visible = visible
+            receiptStore.recordVisibilityChanged(LiveWallpaperReceiptStore.ENGINE_VIDEO, visible)
             if (visible) {
                 refreshPlaybackProfile()
                 startTelemetryHeartbeat()
@@ -245,6 +249,7 @@ class VideoWallpaperService : WallpaperService() {
                     "Playing ${videoW}x${videoH} on ${sw}x${sh} screen, mode=$scaleMode, path=$path")
             } catch (e: Exception) {
                 if (BuildConfig.DEBUG) android.util.Log.e("VideoWPService", "Init failed: ${e.message}")
+                receiptStore.recordError(LiveWallpaperReceiptStore.ENGINE_VIDEO, "${e.javaClass.simpleName}: ${e.message}")
                 releasePlayback()
             }
         }
@@ -431,6 +436,7 @@ class VideoWallpaperService : WallpaperService() {
             val runnable = object : Runnable {
                 override fun run() {
                     currentHolder?.let { configureFrameRate(it) } ?: publishVideoTelemetry(refreshPlaybackProfile())
+                    receiptStore.recordDraw(LiveWallpaperReceiptStore.ENGINE_VIDEO)
                     telemetryHandler.postDelayed(this, 30_000L)
                 }
             }

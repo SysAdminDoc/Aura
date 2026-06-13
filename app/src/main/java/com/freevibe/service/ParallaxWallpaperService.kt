@@ -40,6 +40,7 @@ class ParallaxWallpaperService : WallpaperService() {
 
     inner class ParallaxEngine : Engine(), SensorEventListener {
 
+        private val receiptStore by lazy { LiveWallpaperReceiptStore.create(this@ParallaxWallpaperService) }
         private var sensorManager: SensorManager? = null
         private var accelerometer: Sensor? = null
 
@@ -72,6 +73,7 @@ class ParallaxWallpaperService : WallpaperService() {
         // Foreground moves 1.5x the background offset
         private val fgMultiplier = 1.5f
 
+        private var lastDrawReceiptMs = 0L
         private val drawRunner = Runnable { draw() }
 
         private fun getPrefs() = getSharedPreferences("freevibe_parallax", MODE_PRIVATE)
@@ -116,6 +118,7 @@ class ParallaxWallpaperService : WallpaperService() {
 
         override fun onSurfaceCreated(holder: SurfaceHolder) {
             super.onSurfaceCreated(holder)
+            receiptStore.recordSurfaceCreated(LiveWallpaperReceiptStore.ENGINE_PARALLAX, getImagePath())
             loadImage()
         }
 
@@ -132,6 +135,7 @@ class ParallaxWallpaperService : WallpaperService() {
         override fun onVisibilityChanged(visible: Boolean) {
             super.onVisibilityChanged(visible)
             this.visible = visible
+            receiptStore.recordVisibilityChanged(LiveWallpaperReceiptStore.ENGINE_PARALLAX, visible)
             if (visible) {
                 registerSensor()
                 scheduleDraw()
@@ -146,6 +150,7 @@ class ParallaxWallpaperService : WallpaperService() {
             visible = false
             handler.removeCallbacks(drawRunner)
             unregisterSensor()
+            receiptStore.recordSurfaceDestroyed(LiveWallpaperReceiptStore.ENGINE_PARALLAX)
         }
 
         override fun onDestroy() {
@@ -378,6 +383,8 @@ class ParallaxWallpaperService : WallpaperService() {
                         try { segmenter.close() } catch (_: Exception) {}
                         if (destroyed) return@addOnFailureListener
                         if (BuildConfig.DEBUG) android.util.Log.w("ParallaxWP", "Subject segmentation failed, using fallback: ${e.message}")
+                        receiptStore.recordError(LiveWallpaperReceiptStore.ENGINE_PARALLAX, "segmentation: ${e.javaClass.simpleName}: ${e.message}")
+                        receiptStore.recordRecovery(LiveWallpaperReceiptStore.ENGINE_PARALLAX, "fallback to single-layer bitmap")
                         synchronized(bitmapLock) {
                             if (generation != segmentGeneration) return@addOnFailureListener
                             val oldBg = backgroundLayer
@@ -390,6 +397,7 @@ class ParallaxWallpaperService : WallpaperService() {
                     }
             } catch (e: Exception) {
                 if (BuildConfig.DEBUG) android.util.Log.e("ParallaxWP", "Segmenter init error: ${e.message}")
+                receiptStore.recordError(LiveWallpaperReceiptStore.ENGINE_PARALLAX, "segmenter init: ${e.javaClass.simpleName}: ${e.message}")
             }
         }
 
@@ -444,6 +452,11 @@ class ParallaxWallpaperService : WallpaperService() {
                 }
             }
 
+            val now = android.os.SystemClock.elapsedRealtime()
+            if (now - lastDrawReceiptMs >= 30_000L) {
+                lastDrawReceiptMs = now
+                receiptStore.recordDraw(LiveWallpaperReceiptStore.ENGINE_PARALLAX)
+            }
             if (visible) {
                 handler.postDelayed(drawRunner, frameInterval)
             }
