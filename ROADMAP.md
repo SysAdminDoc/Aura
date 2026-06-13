@@ -3219,13 +3219,6 @@ This section records net-new parity work from the Zedge official/web/app pass. T
   Acceptance: fixture states exist for Wallpapers, Wallpaper Detail, Sounds, Settings, Video Wallpapers, and at least one editor screen; fixtures cover empty/loading/error/offline/provider-disabled/large-font/RTL-relevant states; screenshot tests can consume the same fixtures without live network or Firebase.
   Complexity: M
 
-- [ ] P2 — **Add manifest-backed research and roadmap consistency check**
-  Why: repeated research passes have left stale dependency/runtime claims in planning text, while live manifests already show Node 22 Functions, Room 2.7.2, and NewPipeExtractor v0.26.3.
-  Evidence: `functions/package.json`; `gradle/libs.versions.toml`; `app/build.gradle.kts`; current `ROADMAP.md` and previous `RESEARCH.md` version drift.
-  Touches: new lightweight checker under `tools/`, verify workflow, active roadmap/research sections, allowlist for historical sections.
-  Acceptance: a no-Gradle check compares active `RESEARCH.md`/`ROADMAP.md` dependency and runtime claims against `gradle/libs.versions.toml`, `app/build.gradle.kts`, and `functions/package.json`; stale active claims fail unless explicitly allowlisted as historical; duplicate active roadmap titles are reported.
-  Complexity: S
-
 ### P2 - Preview and metadata
 
 - [ ] P2 - Add media technical inspector for video and sound detail flows

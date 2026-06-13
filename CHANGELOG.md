@@ -19,6 +19,12 @@ All notable changes to Aura will be documented in this file.
   stale/frozen engine state, surface recreation counts, last error, and
   last recovery action for support triage. Draw receipts are throttled to
   one write per 30 seconds to avoid I/O pressure.
+- **Manifest consistency check**: new `tools/manifest_consistency_check.py`
+  compares dependency/runtime version claims in ROADMAP.md and RESEARCH.md
+  current-state sections against `gradle/libs.versions.toml`,
+  `app/build.gradle.kts`, and `functions/package.json`. Reports stale
+  claims and duplicate active roadmap titles. Aspirational/target versions
+  in upgrade roadmap items are skipped.
 - **Compose accessibility semantics pass**: Added missing
   `contentDescription` to interactive icons that lacked TalkBack
   element names: VideoWallpapersScreen hide/preview icon buttons,
