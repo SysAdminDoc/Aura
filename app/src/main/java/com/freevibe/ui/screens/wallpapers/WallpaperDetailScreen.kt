@@ -30,10 +30,12 @@ import kotlin.math.absoluteValue
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.freevibe.R
 import com.freevibe.data.model.COMMUNITY_REPORT_REASONS
 import com.freevibe.data.model.ContentSource
 import com.freevibe.data.model.GENERATED_CONTENT_REPORT_REASONS
@@ -115,15 +117,15 @@ fun WallpaperDetailScreen(
                     contentPadding = PaddingValues(24.dp),
                 ) {
                     HighlightPill(
-                        label = "Loading wallpaper",
+                        label = stringResource(R.string.detail_loading_pill),
                         icon = Icons.Default.AutoAwesome,
                         tint = MaterialTheme.colorScheme.secondary,
                     )
                     Spacer(Modifier.height(14.dp))
-                    Text("Preparing the detail view", style = MaterialTheme.typography.titleLarge)
+                    Text(stringResource(R.string.detail_loading_title), style = MaterialTheme.typography.titleLarge)
                     Spacer(Modifier.height(6.dp))
                     Text(
-                        "Aura is restoring the image and its metadata so you can preview, save, or apply it cleanly.",
+                        stringResource(R.string.detail_loading_body),
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
@@ -151,15 +153,15 @@ fun WallpaperDetailScreen(
                         )
                     }
                     Spacer(Modifier.height(14.dp))
-                    Text("Wallpaper unavailable", style = MaterialTheme.typography.titleLarge)
+                    Text(stringResource(R.string.detail_unavailable_title), style = MaterialTheme.typography.titleLarge)
                     Spacer(Modifier.height(6.dp))
                     Text(
-                        "This item is no longer available from its source or couldn't be restored from local state.",
+                        stringResource(R.string.detail_unavailable_body),
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                     Spacer(Modifier.height(16.dp))
-                    FilledTonalButton(onClick = onBack) { Text("Back to feed") }
+                    FilledTonalButton(onClick = onBack) { Text(stringResource(R.string.detail_unavailable_action)) }
                 }
             }
         }
@@ -390,7 +392,7 @@ fun WallpaperDetailScreen(
                                 onClick = { showDetailsPanel = false },
                                 shape = RoundedCornerShape(8.dp),
                             ) {
-                                Text("Show image")
+                                Text(stringResource(R.string.detail_show_image))
                             }
                         }
                         Spacer(Modifier.height(14.dp))
@@ -441,7 +443,7 @@ fun WallpaperDetailScreen(
                                 } else {
                                     Icon(Icons.Default.Wallpaper, null, Modifier.size(18.dp))
                                     Spacer(Modifier.width(8.dp))
-                                    Text("Set wallpaper")
+                                    Text(stringResource(R.string.detail_set_wallpaper))
                                 }
                             }
                             FilledTonalButton(
@@ -453,7 +455,7 @@ fun WallpaperDetailScreen(
                             ) {
                                 Icon(Icons.Default.Visibility, null, Modifier.size(18.dp))
                                 Spacer(Modifier.width(8.dp))
-                                Text("Preview")
+                                Text(stringResource(R.string.detail_preview))
                             }
                         }
 
@@ -743,7 +745,7 @@ fun WallpaperDetailScreen(
             if (showBlockCreatorDialog) {
                 AlertDialog(
                     onDismissRequest = { showBlockCreatorDialog = false },
-                    title = { Text("Block creator?") },
+                    title = { Text(stringResource(R.string.detail_block_title)) },
                     text = { Text(communityBlockConfirmationCopy(CommunityUploadPolicyKind.WALLPAPER)) },
                     confirmButton = {
                         TextButton(
@@ -753,12 +755,12 @@ fun WallpaperDetailScreen(
                             },
                             colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error),
                         ) {
-                            Text("Block")
+                            Text(stringResource(R.string.reports_block_confirm))
                         }
                     },
                     dismissButton = {
                         TextButton(onClick = { showBlockCreatorDialog = false }) {
-                            Text("Cancel")
+                            Text(stringResource(R.string.common_cancel))
                         }
                     },
                 )
@@ -767,7 +769,7 @@ fun WallpaperDetailScreen(
             if (showDeleteUploadDialog) {
                 AlertDialog(
                     onDismissRequest = { showDeleteUploadDialog = false },
-                    title = { Text("Delete upload?") },
+                    title = { Text(stringResource(R.string.detail_delete_title)) },
                     text = { Text(communityOwnerDeleteConfirmationCopy(CommunityUploadPolicyKind.WALLPAPER)) },
                     confirmButton = {
                         TextButton(
@@ -778,12 +780,12 @@ fun WallpaperDetailScreen(
                             },
                             colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error),
                         ) {
-                            Text("Delete")
+                            Text(stringResource(R.string.reports_delete_confirm))
                         }
                     },
                     dismissButton = {
                         TextButton(onClick = { showDeleteUploadDialog = false }) {
-                            Text("Cancel")
+                            Text(stringResource(R.string.common_cancel))
                         }
                     },
                 )
@@ -920,7 +922,7 @@ private fun CompactWallpaperOverlayCard(
                 } else {
                     Icon(Icons.Default.Wallpaper, null, Modifier.size(18.dp))
                     Spacer(Modifier.width(8.dp))
-                    Text("Set")
+                    Text(stringResource(R.string.detail_set))
                 }
             }
             FilledTonalButton(
@@ -932,7 +934,7 @@ private fun CompactWallpaperOverlayCard(
             ) {
                 Icon(Icons.Default.Visibility, null, Modifier.size(18.dp))
                 Spacer(Modifier.width(8.dp))
-                Text("Preview")
+                Text(stringResource(R.string.detail_preview))
             }
         }
 
@@ -1099,7 +1101,7 @@ private fun ApplyOptionsSheet(
                 .padding(bottom = 32.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
-            Text("Set wallpaper", style = MaterialTheme.typography.titleLarge)
+            Text(stringResource(R.string.detail_set_wallpaper_title), style = MaterialTheme.typography.titleLarge)
             Text(
                 "Choose how Aura should apply this wallpaper across your device.",
                 style = MaterialTheme.typography.bodyMedium,
@@ -1142,7 +1144,7 @@ private fun MoreActionsSheet(
                 .padding(bottom = 32.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
-            Text("More actions", style = MaterialTheme.typography.titleLarge)
+            Text(stringResource(R.string.detail_more_actions), style = MaterialTheme.typography.titleLarge)
             if (uploaderName.isNotEmpty()) {
                 Text(
                     "Uploaded by $uploaderName",
@@ -1260,7 +1262,7 @@ private fun CollectionPickerSheet(
                 .padding(bottom = 32.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
-            Text("Save to collection", style = MaterialTheme.typography.titleLarge)
+            Text(stringResource(R.string.detail_save_to_collection), style = MaterialTheme.typography.titleLarge)
             Text(
                 "Keep standout wallpapers grouped so rotation and revisit flows stay tidy.",
                 style = MaterialTheme.typography.bodyMedium,
@@ -1282,7 +1284,7 @@ private fun CollectionPickerSheet(
                         value = newName,
                         onValueChange = { newName = it },
                         modifier = Modifier.weight(1f),
-                        placeholder = { Text("Collection name") },
+                        placeholder = { Text(stringResource(R.string.detail_collection_name_placeholder)) },
                         singleLine = true,
                         shape = RoundedCornerShape(8.dp),
                     )
@@ -1291,7 +1293,7 @@ private fun CollectionPickerSheet(
                         enabled = newName.isNotBlank(),
                         modifier = Modifier.heightIn(min = 48.dp),
                         shape = RoundedCornerShape(8.dp),
-                    ) { Text("Create") }
+                    ) { Text(stringResource(R.string.detail_create)) }
                 }
             } else {
                 SheetOption(Icons.Default.Add, "New collection", "Create a new place to save wallpapers like this") {
