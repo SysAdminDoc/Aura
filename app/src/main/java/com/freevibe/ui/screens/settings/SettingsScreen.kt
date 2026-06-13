@@ -1943,6 +1943,67 @@ fun SettingsScreen(
             )
         }
 
+        // Permissions and sources
+        SettingsSection(
+            title = "Permissions and sources",
+            description = "Every permission Aura requests and how it uses data.",
+        ) {
+            PermissionTransparencyRow(
+                icon = Icons.Default.Wallpaper,
+                permission = "Set wallpaper",
+                scope = "Local",
+                description = "Apply images as home or lock screen wallpaper. No data leaves the device.",
+            )
+            PermissionTransparencyRow(
+                icon = Icons.Default.Language,
+                permission = "Internet",
+                scope = "Remote",
+                description = "Fetch wallpapers, videos, and sounds from Wallhaven, Pexels, Pixabay, YouTube (NewPipe/yt-dlp), and Freesound. Community features use Firebase.",
+            )
+            PermissionTransparencyRow(
+                icon = Icons.Default.Notifications,
+                permission = "Notifications",
+                scope = "Local",
+                description = "Daily wallpaper reminders and download completion alerts. Only active when you enable daily wallpaper or download content.",
+                granted = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                    ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED
+                } else true,
+            )
+            PermissionTransparencyRow(
+                icon = Icons.Default.LocationOn,
+                permission = "Approximate location",
+                scope = "Remote",
+                description = "Weather wallpaper effects fetch local conditions from Open-Meteo. Coordinates are rounded and cleared when weather effects are disabled.",
+                granted = ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED,
+            )
+            PermissionTransparencyRow(
+                icon = Icons.Default.Contacts,
+                permission = "Contacts",
+                scope = "Local",
+                description = "Assign per-contact ringtones. Contact data stays on-device and is never uploaded.",
+                granted = ContextCompat.checkSelfPermission(context, Manifest.permission.WRITE_CONTACTS) == PackageManager.PERMISSION_GRANTED,
+            )
+            PermissionTransparencyRow(
+                icon = Icons.Default.Mic,
+                permission = "Microphone",
+                scope = "Local",
+                description = "Record audio for custom sounds. Recording starts only on tap and stays local until you choose to upload.",
+                granted = ContextCompat.checkSelfPermission(context, Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED,
+            )
+            PermissionTransparencyRow(
+                icon = Icons.Default.Settings,
+                permission = "Modify settings",
+                scope = "Local",
+                description = "Set default ringtone, notification, or alarm sound via system RingtoneManager.",
+            )
+            PermissionTransparencyRow(
+                icon = Icons.Default.PlayCircle,
+                permission = "Foreground service",
+                scope = "Local",
+                description = "Live wallpaper playback and wallpaper rotation triggers. Runs only when live wallpaper or rotation is active.",
+            )
+        }
+
         // About
         SettingsSection(
             title = "About",
@@ -3013,6 +3074,111 @@ private fun SettingsToggle(
                     checked = checked,
                     onCheckedChange = onCheckedChange,
                     colors = SwitchDefaults.colors(checkedTrackColor = MaterialTheme.colorScheme.primary),
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun PermissionTransparencyRow(
+    icon: ImageVector,
+    permission: String,
+    scope: String,
+    description: String,
+    granted: Boolean? = null,
+) {
+    val rowDescription = if (granted != null) {
+        "$permission ($scope) - ${if (granted) "Granted" else "Not granted"} - $description"
+    } else {
+        "$permission ($scope) - $description"
+    }
+    Surface(
+        modifier = Modifier
+            .fillMaxWidth()
+            .semantics(mergeDescendants = true) {
+                contentDescription = rowDescription
+            },
+        color = MaterialTheme.colorScheme.surfaceContainer.copy(alpha = 0.74f),
+        shape = RoundedCornerShape(8.dp),
+        border = androidx.compose.foundation.BorderStroke(
+            1.dp,
+            MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.28f),
+        ),
+        shadowElevation = 1.dp,
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 12.dp),
+            verticalAlignment = Alignment.Top,
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            Surface(
+                shape = RoundedCornerShape(8.dp),
+                color = MaterialTheme.colorScheme.secondary.copy(alpha = 0.12f),
+            ) {
+                Icon(
+                    icon,
+                    null,
+                    tint = MaterialTheme.colorScheme.secondary,
+                    modifier = Modifier
+                        .padding(10.dp)
+                        .size(20.dp),
+                )
+            }
+            Column(modifier = Modifier.weight(1f)) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    Text(permission, style = MaterialTheme.typography.titleMedium)
+                    Surface(
+                        shape = RoundedCornerShape(4.dp),
+                        color = if (scope == "Local") {
+                            MaterialTheme.colorScheme.tertiary.copy(alpha = 0.14f)
+                        } else {
+                            MaterialTheme.colorScheme.primary.copy(alpha = 0.14f)
+                        },
+                    ) {
+                        Text(
+                            text = scope,
+                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
+                            style = MaterialTheme.typography.labelSmall,
+                            color = if (scope == "Local") {
+                                MaterialTheme.colorScheme.tertiary
+                            } else {
+                                MaterialTheme.colorScheme.primary
+                            },
+                        )
+                    }
+                    if (granted != null) {
+                        Surface(
+                            shape = RoundedCornerShape(4.dp),
+                            color = if (granted) {
+                                Color(0xFF2E7D32).copy(alpha = 0.14f)
+                            } else {
+                                MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.10f)
+                            },
+                        ) {
+                            Text(
+                                text = if (granted) "Granted" else "Not granted",
+                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
+                                style = MaterialTheme.typography.labelSmall,
+                                color = if (granted) {
+                                    Color(0xFF2E7D32)
+                                } else {
+                                    MaterialTheme.colorScheme.onSurfaceVariant
+                                },
+                            )
+                        }
+                    }
+                }
+                Spacer(Modifier.height(4.dp))
+                Text(
+                    description,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
         }

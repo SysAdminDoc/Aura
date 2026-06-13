@@ -3170,13 +3170,6 @@ This section records net-new parity work from the Zedge official/web/app pass. T
   Acceptance: Wallpapers, Videos, Ringtones, and Notification Sounds expose the same top-level browse skeleton: Popular, Newest, Categories, Collections/Local; provider-specific filters move under refine controls; empty/error states identify the affected source without breaking local content.
   Complexity: M
 
-- [ ] P2 — **Permission and source transparency panel**
-  Why: Zedge has official permission documentation and prompts users for notifications. Aura's trust position is stronger if permission use and source behavior are visible before prompts, especially in local-first mode.
-  Aura status: partial. Privacy/provider docs and diagnostics exist, but there is no first-run/local settings matrix that ties each permission to the feature that needs it.
-  Touches: Settings privacy/permissions screen, onboarding or first-use prompt copy, provider disclosure, support bundle.
-  Acceptance: Settings > Privacy/Permissions lists media, wallpaper, notification, contacts, weather/location, and network permissions with their local/remote data behavior; first-use permission prompts link to the relevant explanation; notification/offer prompts are never shown unless a user enables a feature that needs notifications.
-  Complexity: S
-
 ### P3 -- Personalization polish parity
 
 - [ ] P3 — **Sticker and text overlay tools in the wallpaper editor**

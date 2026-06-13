@@ -19,6 +19,13 @@ All notable changes to Aura will be documented in this file.
   stale/frozen engine state, surface recreation counts, last error, and
   last recovery action for support triage. Draw receipts are throttled to
   one write per 30 seconds to avoid I/O pressure.
+- **Permission and source transparency panel**: new Settings section
+  between Diagnostics and About lists every manifest permission with
+  its scope (Local/Remote), data behavior description, and live
+  Granted/Not granted status for runtime permissions (notifications,
+  location, contacts, microphone). Covers wallpaper, internet,
+  notifications, location, contacts, microphone, modify settings, and
+  foreground service.
 - **Navigation 3 decision**: evaluated Nav 2.9 vs Nav 3 for the N-1
   toolchain pass. Decision: skip Nav 2.9, target Navigation 3 directly.
   Codebase surface: 22 destinations, 51 NavType declarations, 31
