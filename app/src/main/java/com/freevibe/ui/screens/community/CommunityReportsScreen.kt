@@ -49,8 +49,10 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.freevibe.R
 import com.freevibe.data.model.CommunityBlockReason
 import com.freevibe.data.model.CommunityReportReason
 import androidx.lifecycle.ViewModel
@@ -233,15 +235,15 @@ fun CommunityReportsScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Community reports") },
+                title = { Text(stringResource(R.string.reports_title)) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.common_back))
                     }
                 },
                 actions = {
                     IconButton(onClick = viewModel::refresh) {
-                        Icon(Icons.Default.Refresh, contentDescription = "Refresh reports")
+                        Icon(Icons.Default.Refresh, contentDescription = stringResource(R.string.reports_refresh))
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.surface),
@@ -256,8 +258,8 @@ fun CommunityReportsScreen(
             when {
                 !viewModel.isAdmin -> AuraStateCard(
                     icon = Icons.Default.VerifiedUser,
-                    title = "Admin access required",
-                    description = "Report details are only available to accounts with the admin custom claim.",
+                    title = stringResource(R.string.reports_admin_required_title),
+                    description = stringResource(R.string.reports_admin_required_body),
                     modifier = Modifier
                         .align(Alignment.Center)
                         .padding(24.dp),
@@ -279,13 +281,15 @@ fun CommunityReportsScreen(
                     ) {
                         AuraStateCard(
                             icon = Icons.Default.Report,
-                            title = "No ${selectedStatus.reviewLabel.lowercase(Locale.ROOT)} reports",
-                            description = if (selectedStatus == CommunityReportResolutionStatus.OPEN) {
-                                "New reports will appear here after users submit them from content detail screens."
-                            } else {
-                                "Closed reports will appear here after admins take action."
-                            },
-                            primaryAction = AuraStateAction("Refresh", Icons.Default.Refresh, viewModel::refresh),
+                            title = stringResource(R.string.reports_empty_title, selectedStatus.reviewLabel.lowercase(Locale.ROOT)),
+                            description = stringResource(
+                                if (selectedStatus == CommunityReportResolutionStatus.OPEN) {
+                                    R.string.reports_empty_open_body
+                                } else {
+                                    R.string.reports_empty_closed_body
+                                }
+                            ),
+                            primaryAction = AuraStateAction(stringResource(R.string.common_refresh), Icons.Default.Refresh, viewModel::refresh),
                             modifier = Modifier
                                 .align(Alignment.Center)
                                 .padding(24.dp),
@@ -378,8 +382,8 @@ private fun ReportCard(
     if (showDeleteConfirm && onDeleteUpload != null) {
         AlertDialog(
             onDismissRequest = { if (!busy) showDeleteConfirm = false },
-            title = { Text("Delete upload?") },
-            text = { Text("This removes the community upload file and catalog row after recording a private takedown receipt.") },
+            title = { Text(stringResource(R.string.reports_delete_title)) },
+            text = { Text(stringResource(R.string.reports_delete_body)) },
             confirmButton = {
                 Button(
                     onClick = {
@@ -388,12 +392,12 @@ private fun ReportCard(
                     },
                     enabled = !busy,
                 ) {
-                    Text("Delete")
+                    Text(stringResource(R.string.reports_delete_confirm))
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showDeleteConfirm = false }, enabled = !busy) {
-                    Text("Cancel")
+                    Text(stringResource(R.string.common_cancel))
                 }
             },
         )
@@ -401,8 +405,8 @@ private fun ReportCard(
     if (showBlockConfirm && onBlockUploader != null) {
         AlertDialog(
             onDismissRequest = { if (!busy) showBlockConfirm = false },
-            title = { Text("Block creator?") },
-            text = { Text("This hides future community uploads from this creator in your personal community feeds.") },
+            title = { Text(stringResource(R.string.reports_block_title)) },
+            text = { Text(stringResource(R.string.reports_block_body)) },
             confirmButton = {
                 Button(
                     onClick = {
@@ -411,12 +415,12 @@ private fun ReportCard(
                     },
                     enabled = !busy,
                 ) {
-                    Text("Block")
+                    Text(stringResource(R.string.reports_block_confirm))
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showBlockConfirm = false }, enabled = !busy) {
-                    Text("Cancel")
+                    Text(stringResource(R.string.common_cancel))
                 }
             },
         )
@@ -450,25 +454,25 @@ private fun ReportCard(
             if (report.note.isNotBlank()) {
                 Text(report.note, style = MaterialTheme.typography.bodyMedium)
             }
-            ReportFact("License", report.license)
-            ReportFact("Uploader", report.uploaderName)
-            ReportFact("Uploader UID", report.uploaderUid.take(12))
-            ReportFact("Source", report.sourceUrl)
-            ReportFact("Reporter", report.reporterUid.take(12))
+            ReportFact(stringResource(R.string.reports_fact_license), report.license)
+            ReportFact(stringResource(R.string.reports_fact_uploader), report.uploaderName)
+            ReportFact(stringResource(R.string.reports_fact_uploader_uid), report.uploaderUid.take(12))
+            ReportFact(stringResource(R.string.reports_fact_source), report.sourceUrl)
+            ReportFact(stringResource(R.string.reports_fact_reporter), report.reporterUid.take(12))
             Spacer(Modifier.height(2.dp))
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 Button(onClick = onHide, enabled = !busy) {
                     Icon(Icons.Default.Block, contentDescription = null, modifier = Modifier.size(16.dp))
                     Spacer(Modifier.size(6.dp))
-                    Text("Hide")
+                    Text(stringResource(R.string.reports_action_hide))
                 }
                 OutlinedButton(onClick = onDismiss, enabled = !busy) {
-                    Text("Dismiss")
+                    Text(stringResource(R.string.reports_action_dismiss))
                 }
                 TextButton(onClick = onRestore, enabled = !busy) {
                     Icon(Icons.Default.Restore, contentDescription = null, modifier = Modifier.size(16.dp))
                     Spacer(Modifier.size(6.dp))
-                    Text("Restore")
+                    Text(stringResource(R.string.reports_action_restore))
                 }
             }
             if (onDeleteUpload != null) {
@@ -479,7 +483,7 @@ private fun ReportCard(
                 ) {
                     Icon(Icons.Default.Delete, contentDescription = null, modifier = Modifier.size(16.dp))
                     Spacer(Modifier.size(6.dp))
-                    Text("Delete upload")
+                    Text(stringResource(R.string.reports_action_delete))
                 }
             }
             if (onBlockUploader != null) {
@@ -490,7 +494,7 @@ private fun ReportCard(
                 ) {
                     Icon(Icons.Default.Block, contentDescription = null, modifier = Modifier.size(16.dp))
                     Spacer(Modifier.size(6.dp))
-                    Text("Block creator")
+                    Text(stringResource(R.string.reports_action_block))
                 }
             }
         }

@@ -284,4 +284,29 @@
     <string name="collections_qr_cd">QR code for %1$s</string>
     <string name="collections_qr_info">%1$s — %2$d wallpapers</string>
     <string name="collections_qr_copy">Copy link</string>
+
+    <!-- Community reports (admin) -->
+    <string name="reports_title">Community reports</string>
+    <string name="reports_refresh">Refresh reports</string>
+    <string name="reports_admin_required_title">Admin access required</string>
+    <string name="reports_admin_required_body">Report details are only available to accounts with the admin custom claim.</string>
+    <string name="reports_empty_title">No %1$s reports</string>
+    <string name="reports_empty_open_body">New reports will appear here after users submit them from content detail screens.</string>
+    <string name="reports_empty_closed_body">Closed reports will appear here after admins take action.</string>
+    <string name="reports_delete_title">Delete upload?</string>
+    <string name="reports_delete_body">This removes the community upload file and catalog row after recording a private takedown receipt.</string>
+    <string name="reports_delete_confirm">Delete</string>
+    <string name="reports_block_title">Block creator?</string>
+    <string name="reports_block_body">This hides future community uploads from this creator in your personal community feeds.</string>
+    <string name="reports_block_confirm">Block</string>
+    <string name="reports_fact_license">License</string>
+    <string name="reports_fact_uploader">Uploader</string>
+    <string name="reports_fact_uploader_uid">Uploader UID</string>
+    <string name="reports_fact_source">Source</string>
+    <string name="reports_fact_reporter">Reporter</string>
+    <string name="reports_action_hide">Hide</string>
+    <string name="reports_action_dismiss">Dismiss</string>
+    <string name="reports_action_restore">Restore</string>
+    <string name="reports_action_delete">Delete upload</string>
+    <string name="reports_action_block">Block creator</string>
 </resources>
