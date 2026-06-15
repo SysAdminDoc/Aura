@@ -91,6 +91,12 @@ All notable changes to Aura will be documented in this file.
   `creator`, `curationDate`, and `reviewResult` fields for upstream
   Freesound attribution. CI provenance gate validates CC0 license,
   HTTPS URLs, creator attribution, and review status on all entries.
+- **Baseline profile generated**: 34,521 profiled methods covering
+  Wallpapers, Videos, Sounds, Favorites, and Wallpaper Detail critical
+  journeys. Generated on Samsung S22 Ultra (SM-S908U1, Android 16, API
+  36). Startup profile included. Compiled into release APKs to
+  pre-optimize hot methods via ART for faster cold start and reduced
+  first-scroll jank.
 - **Test suite restored**: fixed 11 pre-existing test compilation and
   runtime failures from the recent audit pass (SourceMetrics context,
   reduceAnimations pref, external automation title, applicationContext
