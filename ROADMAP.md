@@ -1231,6 +1231,20 @@ Thirteen items. All scored 18–25. Pull from the top of this list when Now clos
 - **Risk:** Misplaced `BackHandler` can swallow back navigation entirely — keep each guard narrow (`enabled = state.isInflight || state.hasUnsavedChanges`). Predictive-back animations require Navigation 3 for the NavDisplay integration; gating ties to N-1.
 - **Fit 4 / Impact 3 / Effort 4 / Risk 4 / Deps 4 (N-1) / Novelty 1 = 20 → NEXT.**
 
+### Audit findings (2026-06-15)
+
+- [ ] P2 — Extract shared `rethrowIfCancelled()` utility
+  Why: 9 identical private copies of `fun Throwable.rethrowIfCancelled()` across the codebase; a missed copy during refactoring could silently swallow CancellationException.
+  Where: UploadRepository.kt, WallpaperUploadRepository.kt, WallpaperRepository.kt, SoundsViewModel.kt, VideoWallpapersViewModel.kt, CollectionExporter.kt, CommunityBlockRepository.kt, CommunityReportRepository.kt, CreatorProfileRepository.kt
+
+- [ ] P2 — YtDlpUpdateManager non-atomic rollback/restore
+  Why: `prepareRollback()` and `restoreRollbackIfAvailable()` use `deleteRecursively()` then `copyRecursively()` — a process crash between these calls corrupts the rollback directory, leaving no valid runtime or rollback state. `restoreRollbackIfAvailable` also returns `true` via `getOrDefault(true)` even when `initYtDlp()` fails.
+  Where: service/YtDlpUpdateManager.kt
+
+- [ ] P3 — Missing integration test execution in CI
+  Why: `verify.yml` only runs unit tests (`testDebugUnitTest`); instrumented tests (`DatabaseMigrationTest`, `AccessibilityReleaseGateTest`) are never executed in CI.
+  Where: .github/workflows/verify.yml
+
 ---
 
 ## Later — scoped, deferred
@@ -3239,4 +3253,49 @@ This section records net-new parity work from the Zedge official/web/app pass. T
   Evidence: Android 17 behavior changes documentation; `FreeVibeApp.kt` Coil 256 MB disk cache; `ParallaxWallpaperService.kt` ML Kit segmentation bitmap handling; `VideoCropScreen.kt` FFmpeg operations.
   Touches: `FreeVibeApp.kt` (memory monitoring), `CrashDiagnosticsCollector.kt` (capture `ApplicationExitInfo` on next launch), Settings diagnostics (expose memory-limit kills).
   Acceptance: crash diagnostics capture `MemoryLimiter:AnonSwap` exit reasons; Settings diagnostics show last memory-related kill; Coil memory cache respects device memory class; documentation records expected memory profile per flow.
+  Complexity: M
+
+## Research-Driven Additions
+
+### P1 — Release trust and real-screen verification
+
+- [ ] P1 — Replace synthetic accessibility gate with real Aura screen checks
+  Why: The current connected accessibility gate proves Compose accessibility checks run, but it sets synthetic Button/Switch/Slider content and does not exercise Aura's dense Wallpapers, Sounds, Settings, Video Crop, or live-wallpaper picker surfaces.
+  Evidence: `app/src/androidTest/java/com/freevibe/ui/accessibility/AccessibilityReleaseGateTest.kt`; `docs/qa/accessibility-release-gate.json`; Android Compose accessibility testing docs.
+  Touches: `AccessibilityReleaseGateTest.kt`, `FreeVibeRoot.kt`, screen test tags/semantics, `docs/qa/accessibility-release-gate.json`, `.github/workflows/verify.yml` if connected test execution becomes gated.
+  Acceptance: connected test launches real Aura UI, verifies at least Wallpapers, Sounds, Settings, and one editor/detail flow under accessibility checks, and fails on missing names/touch-target violations in those app surfaces; synthetic-only fixture remains only as a helper if needed.
+  Complexity: M
+
+### P2 — Distribution and media compatibility
+
+- [ ] P2 — Add Play-ready AAB dry-run artifact lane
+  Why: Aura has Play metadata and policy packets, but the release workflow publishes only a universal APK; Google Play requires Android App Bundles for new apps, so Play readiness cannot be validated without a signed `bundleRelease` artifact and Play App Signing assumptions.
+  Evidence: `docs/distribution/play-app-content.json`; `fastlane/metadata/android/en-US/`; `.github/workflows/release.yml`; Android App Bundle docs.
+  Touches: `.github/workflows/release.yml`, `app/build.gradle.kts`, signing docs, `docs/distribution/release-metadata-consistency.json`, `tools/release_artifact_bundle_check.py`, fastlane/Play runbook docs.
+  Acceptance: manual release dry run can produce and upload/archive a signed `.aab` alongside the GitHub APK artifacts; bundle metadata, versionCode/versionName, signing lineage, SHA-256, and Play App Signing owner steps are documented and checked; GitHub/Obtainium APK behavior remains unchanged.
+  Complexity: M
+
+- [ ] P2 — Unify HEIF/AVIF ingestion and metadata-scrub policy
+  Why: Paperize and current Android media stacks validate AVIF/HEIF as normal wallpaper inputs, and Aura's local auto-rotation accepts `.heic`, `.heif`, and `.avif` filenames, but shared media sniffing and community upload policy only recognize JPEG/PNG/GIF/WEBP and do not explicitly test EXIF/location stripping.
+  Evidence: `app/src/main/java/com/freevibe/service/MediaIngestion.kt`; `app/src/main/java/com/freevibe/service/AutoWallpaperWorker.kt`; `app/src/main/java/com/freevibe/data/repository/WallpaperUploadRepository.kt`; Paperize F-Droid feature list.
+  Touches: `MediaIngestion.kt`, `WallpaperUploadRepository.kt`, `WallpaperApplier.kt`, `AutoWallpaperWorker.kt`, upload UI copy, media ingestion tests, privacy/data-safety docs if accepted formats change.
+  Acceptance: one source-backed matrix defines supported image formats per flow; HEIF/AVIF are either accepted and safely transcoded or explicitly rejected with UI copy; metadata/location stripping is tested for community uploads; unsupported formats fail with actionable errors.
+  Complexity: M
+
+### P2 - Evidence Quality and Observability
+
+- [ ] P2 -- Wire planning-doc manifest consistency into CI and current-context docs
+  Why: Current-state planning drift is already detectable locally but not enforced, and agent-facing docs still carry stale stack/version/runtime claims.
+  Evidence: `tools/manifest_consistency_check.py`; `.github/workflows/verify.yml`; `test/tools/`; `CLAUDE.md`; `docs/community-callable-quota-enforcement.md`; `functions/package.json`; `RESEARCH.md`
+  Touches: `tools/manifest_consistency_check.py`, new/updated `test/tools` coverage, `.github/workflows/verify.yml`, `.github/workflows/release.yml` if release-facing docs are included, `CLAUDE.md`, `docs/community-callable-quota-enforcement.md`
+  Acceptance: the manifest consistency check is unit-tested and runs in verify; it checks README/CLAUDE/community callable docs for current stack/runtime claims; stale fixture claims fail; current repo docs pass after stale claims are corrected.
+  Complexity: M
+
+### P3 - Operational Maturity
+
+- [ ] P3 -- Enforce ROADMAP incomplete-only hygiene
+  Why: Repo instructions require ROADMAP to contain only incomplete work, but the current file still contains completed checkmarks, implementation logs, and continuation state that make anti-dup research harder.
+  Evidence: `AGENTS.md`; `ROADMAP.md`; `RESEARCH.md`
+  Touches: `ROADMAP.md`, a lightweight roadmap hygiene validator, `test/tools`, `.github/workflows/verify.yml`, existing changelog/completed-work surfaces if historical entries are moved
+  Acceptance: ROADMAP contains only active incomplete items after cleanup; a verify-time guard rejects new `[x]` items, implementation logs, continuation state, and dated cycle logs; historical context remains available through approved existing history surfaces or git history.
   Complexity: M

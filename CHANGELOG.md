@@ -3,6 +3,16 @@
 All notable changes to Aura will be documented in this file.
 
 ## Unreleased
+- **Deep audit pass**: Fixed callable fallback bypass in both upload repositories
+  (sound + wallpaper) — if the Cloud Function returned an unexpected status or
+  threw a non-`CommunityCallableException` error, the already-uploaded Storage
+  file was deleted without falling through to the direct-database metadata write.
+  Removed wasted API calls in `AutoWallpaperWorker` when rotation source
+  providers are disabled (both scheduler and legacy paths were calling the
+  provider's fetch function before returning success). Fixed sound editor fade
+  slider range: `coerceAtLeast(100f)` let the slider extend past the clip's
+  actual half-duration, mismatching the ViewModel's clamping and causing the
+  thumb to jump on release.
 - **Compact-screen disclosure and collection polish**: community guidelines and
   generated-wallpaper disclosure dialogs now keep long policy copy scrollable
   with bounded dialog corners. Collection import, QR share, and wallpaper-detail
