@@ -27,6 +27,9 @@ PRODUCTION_SCAN_PATHS = (
     "gradle/libs.versions.toml",
     "settings.gradle.kts",
 )
+PRODUCTION_SCAN_EXCLUDES = (
+    "app/src/main/generated/baselineProfiles/",
+)
 TEXT_SUFFIXES = {
     ".gradle",
     ".json",
@@ -150,10 +153,19 @@ def iter_production_files(repo_root: Path) -> list[Path]:
         if not path.exists():
             continue
         if path.is_file():
-            files.append(path)
+            if not is_excluded_production_file(repo_root, path):
+                files.append(path)
             continue
-        files.extend(child for child in path.rglob("*") if child.is_file())
+        files.extend(
+            child for child in path.rglob("*")
+            if child.is_file() and not is_excluded_production_file(repo_root, child)
+        )
     return sorted(files)
+
+
+def is_excluded_production_file(repo_root: Path, path: Path) -> bool:
+    relative = relative_path(repo_root, path)
+    return any(relative.startswith(prefix) for prefix in PRODUCTION_SCAN_EXCLUDES)
 
 
 def validate_no_early_implementation(

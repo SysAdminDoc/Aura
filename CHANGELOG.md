@@ -3,6 +3,15 @@
 All notable changes to Aura will be documented in this file.
 
 ## Unreleased
+- **Planning-doc manifest gate**: expanded `tools/manifest_consistency_check.py`
+  beyond ROADMAP/RESEARCH so current-state README sections and local context
+  docs are checked against Gradle and Functions manifests. `verify.yml` now
+  runs the gate before Gradle work, and new fixture tests reject stale README,
+  local `CLAUDE.md`, and community callable runtime claims.
+- **Sound detail large-text polish**: the ringtone/notification/alarm and
+  secondary sound actions now switch to stacked/wrapped controls at larger font
+  scales, use minimum heights instead of fixed heights, and allow two-line
+  centered labels so 200% text does not clip the primary apply actions.
 - **Provider health persistence and auto-fallback**: `SourceMetrics` now
   persists failure state to SharedPreferences with a 24-hour cooldown so
   degradation survives process death. `isDegraded()` / `degradedSources()`

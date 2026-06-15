@@ -27,6 +27,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import kotlinx.coroutines.launch
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.ProgressBarRangeInfo
 import androidx.compose.ui.semantics.contentDescription
@@ -35,6 +36,7 @@ import androidx.compose.ui.semantics.progressBarRangeInfo
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -75,6 +77,7 @@ fun SoundDetailScreen(
     val state by viewModel.state.collectAsStateWithLifecycle()
     val selectedSound by viewModel.selectedSound.collectAsStateWithLifecycle()
     val topHits by viewModel.topHits.collectAsStateWithLifecycle()
+    val useStackedActions = LocalDensity.current.fontScale >= 1.3f
     val targetSource = fallbackSound?.source
     val targetPreviewUrl = fallbackSound?.previewUrl?.takeIf { it.isNotBlank() }
     val targetDownloadUrl = fallbackSound?.downloadUrl?.takeIf { it.isNotBlank() }
@@ -510,33 +513,71 @@ fun SoundDetailScreen(
                 }
             }
 
-            // 3 Apply buttons side-by-side
-            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                ApplyButton("Ringtone", Icons.Default.Call, !state.isApplying && canWriteSettings && canApplySound, state.isApplying, Modifier.weight(1f)) {
-                    runSoundAction(SoundAction.APPLY, "Apply sound") { viewModel.applySound(s, ContentType.RINGTONE, confirmed = true) }
+            if (useStackedActions) {
+                Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    ApplyButton("Ringtone", Icons.Default.Call, !state.isApplying && canWriteSettings && canApplySound, state.isApplying, Modifier.fillMaxWidth()) {
+                        runSoundAction(SoundAction.APPLY, "Apply sound") { viewModel.applySound(s, ContentType.RINGTONE, confirmed = true) }
+                    }
+                    ApplyButton("Notification", Icons.Default.Notifications, !state.isApplying && canWriteSettings && canApplySound, state.isApplying, Modifier.fillMaxWidth()) {
+                        runSoundAction(SoundAction.APPLY, "Apply sound") { viewModel.applySound(s, ContentType.NOTIFICATION, confirmed = true) }
+                    }
+                    ApplyButton("Alarm", Icons.Default.Alarm, !state.isApplying && canWriteSettings && canApplySound, state.isApplying, Modifier.fillMaxWidth()) {
+                        runSoundAction(SoundAction.APPLY, "Apply sound") { viewModel.applySound(s, ContentType.ALARM, confirmed = true) }
+                    }
                 }
-                ApplyButton("Notification", Icons.Default.Notifications, !state.isApplying && canWriteSettings && canApplySound, state.isApplying, Modifier.weight(1f)) {
-                    runSoundAction(SoundAction.APPLY, "Apply sound") { viewModel.applySound(s, ContentType.NOTIFICATION, confirmed = true) }
-                }
-                ApplyButton("Alarm", Icons.Default.Alarm, !state.isApplying && canWriteSettings && canApplySound, state.isApplying, Modifier.weight(1f)) {
-                    runSoundAction(SoundAction.APPLY, "Apply sound") { viewModel.applySound(s, ContentType.ALARM, confirmed = true) }
+            } else {
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    ApplyButton("Ringtone", Icons.Default.Call, !state.isApplying && canWriteSettings && canApplySound, state.isApplying, Modifier.weight(1f)) {
+                        runSoundAction(SoundAction.APPLY, "Apply sound") { viewModel.applySound(s, ContentType.RINGTONE, confirmed = true) }
+                    }
+                    ApplyButton("Notification", Icons.Default.Notifications, !state.isApplying && canWriteSettings && canApplySound, state.isApplying, Modifier.weight(1f)) {
+                        runSoundAction(SoundAction.APPLY, "Apply sound") { viewModel.applySound(s, ContentType.NOTIFICATION, confirmed = true) }
+                    }
+                    ApplyButton("Alarm", Icons.Default.Alarm, !state.isApplying && canWriteSettings && canApplySound, state.isApplying, Modifier.weight(1f)) {
+                        runSoundAction(SoundAction.APPLY, "Apply sound") { viewModel.applySound(s, ContentType.ALARM, confirmed = true) }
+                    }
                 }
             }
 
-            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                SecondarySoundAction("Trim", Icons.Default.ContentCut, Modifier.weight(1f), enabled = canEditSound) {
-                    runSoundAction(SoundAction.EDIT, "Edit sound") { onEdit(s) }
+            if (useStackedActions) {
+                FlowRow(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                    maxItemsInEachRow = 2,
+                ) {
+                    SecondarySoundAction("Trim", Icons.Default.ContentCut, Modifier.weight(1f).widthIn(min = 136.dp), enabled = canEditSound) {
+                        runSoundAction(SoundAction.EDIT, "Edit sound") { onEdit(s) }
+                    }
+                    SecondarySoundAction("Contact", Icons.Default.Contacts, Modifier.weight(1f).widthIn(min = 136.dp), enabled = canApplySound) {
+                        runSoundAction(SoundAction.APPLY, "Apply sound") { onContactPicker(s) }
+                    }
+                    SecondarySoundAction("Save", Icons.Default.Download, Modifier.weight(1f).widthIn(min = 136.dp), enabled = canDownloadSound) {
+                        runSoundAction(SoundAction.DOWNLOAD, "Save sound") { viewModel.downloadSound(s, confirmed = true) }
+                    }
+                    SecondarySoundAction("Share", Icons.Default.Share, Modifier.weight(1f).widthIn(min = 136.dp), enabled = canShareSound) {
+                        runSoundAction(SoundAction.SHARE, "Share sound") {
+                            val intent = Intent(Intent.ACTION_SEND).apply { type = "text/plain"; putExtra(Intent.EXTRA_TEXT, shareBody); putExtra(Intent.EXTRA_SUBJECT, s.name) }
+                            try { context.startActivity(Intent.createChooser(intent, "Share sound")) } catch (_: Exception) {}
+                        }
+                    }
                 }
-                SecondarySoundAction("Contact", Icons.Default.Contacts, Modifier.weight(1f), enabled = canApplySound) {
-                    runSoundAction(SoundAction.APPLY, "Apply sound") { onContactPicker(s) }
-                }
-                SecondarySoundAction("Save", Icons.Default.Download, Modifier.weight(1f), enabled = canDownloadSound) {
-                    runSoundAction(SoundAction.DOWNLOAD, "Save sound") { viewModel.downloadSound(s, confirmed = true) }
-                }
-                SecondarySoundAction("Share", Icons.Default.Share, Modifier.weight(1f), enabled = canShareSound) {
-                    runSoundAction(SoundAction.SHARE, "Share sound") {
-                        val intent = Intent(Intent.ACTION_SEND).apply { type = "text/plain"; putExtra(Intent.EXTRA_TEXT, shareBody); putExtra(Intent.EXTRA_SUBJECT, s.name) }
-                        try { context.startActivity(Intent.createChooser(intent, "Share sound")) } catch (_: Exception) {}
+            } else {
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    SecondarySoundAction("Trim", Icons.Default.ContentCut, Modifier.weight(1f), enabled = canEditSound) {
+                        runSoundAction(SoundAction.EDIT, "Edit sound") { onEdit(s) }
+                    }
+                    SecondarySoundAction("Contact", Icons.Default.Contacts, Modifier.weight(1f), enabled = canApplySound) {
+                        runSoundAction(SoundAction.APPLY, "Apply sound") { onContactPicker(s) }
+                    }
+                    SecondarySoundAction("Save", Icons.Default.Download, Modifier.weight(1f), enabled = canDownloadSound) {
+                        runSoundAction(SoundAction.DOWNLOAD, "Save sound") { viewModel.downloadSound(s, confirmed = true) }
+                    }
+                    SecondarySoundAction("Share", Icons.Default.Share, Modifier.weight(1f), enabled = canShareSound) {
+                        runSoundAction(SoundAction.SHARE, "Share sound") {
+                            val intent = Intent(Intent.ACTION_SEND).apply { type = "text/plain"; putExtra(Intent.EXTRA_TEXT, shareBody); putExtra(Intent.EXTRA_SUBJECT, s.name) }
+                            try { context.startActivity(Intent.createChooser(intent, "Share sound")) } catch (_: Exception) {}
+                        }
                     }
                 }
             }
@@ -626,12 +667,22 @@ private fun buildSoundShareBody(sound: Sound, capabilities: SoundLicenseCapabili
 @Composable
 private fun ApplyButton(text: String, icon: androidx.compose.ui.graphics.vector.ImageVector, enabled: Boolean, isLoading: Boolean, modifier: Modifier, onClick: () -> Unit) {
     Button(
-        onClick = onClick, modifier = modifier.height(48.dp), enabled = enabled,
+        onClick = onClick, modifier = modifier.heightIn(min = 48.dp), enabled = enabled,
         shape = RoundedCornerShape(8.dp),
         colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.surfaceContainerHigh, contentColor = MaterialTheme.colorScheme.onSurface),
     ) {
         if (isLoading) CircularProgressIndicator(Modifier.size(16.dp), strokeWidth = 2.dp)
-        else { Icon(icon, null, Modifier.size(16.dp)); Spacer(Modifier.width(4.dp)); Text(text, style = MaterialTheme.typography.labelMedium) }
+        else {
+            Icon(icon, null, Modifier.size(16.dp))
+            Spacer(Modifier.width(4.dp))
+            Text(
+                text = text,
+                style = MaterialTheme.typography.labelMedium,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
+                textAlign = TextAlign.Center,
+            )
+        }
     }
 }
 
@@ -646,7 +697,7 @@ private fun SecondarySoundAction(
     Surface(
         onClick = onClick,
         enabled = enabled,
-        modifier = modifier.height(64.dp),
+        modifier = modifier.heightIn(min = 64.dp),
         shape = RoundedCornerShape(8.dp),
         color = MaterialTheme.colorScheme.surfaceContainer,
         contentColor = if (enabled) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.55f),
@@ -658,7 +709,13 @@ private fun SecondarySoundAction(
             verticalArrangement = Arrangement.spacedBy(5.dp),
         ) {
             Icon(icon, contentDescription = label, modifier = Modifier.size(20.dp))
-            Text(label, style = MaterialTheme.typography.labelSmall, maxLines = 1)
+            Text(
+                text = label,
+                style = MaterialTheme.typography.labelSmall,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
+                textAlign = TextAlign.Center,
+            )
         }
     }
 }

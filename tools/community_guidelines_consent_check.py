@@ -33,7 +33,7 @@ REQUIRED_CODE_MARKERS = {
     ],
     "app/src/main/java/com/freevibe/ui/components/CommunityGuidelinesDialog.kt": [
         "CommunityGuidelinesDialog",
-        "Read and accept these rules before using community uploads",
+        "community_guidelines_intro",
         "Reset",
     ],
     "app/src/main/java/com/freevibe/ui/screens/settings/SettingsScreen.kt": [

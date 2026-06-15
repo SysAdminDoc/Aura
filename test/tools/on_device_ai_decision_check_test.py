@@ -114,6 +114,20 @@ class OnDeviceAiDecisionCheckTest(unittest.TestCase):
             with self.assertRaises(OnDeviceAiDecisionError):
                 validate_policy(repo, policy)
 
+    def test_ignores_generated_baseline_profile_text(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            repo = seed_repo(Path(tmpdir))
+            policy = minimal_policy()
+            policy["forbiddenImplementationSignals"] = ["mnn"]
+            write(
+                repo / "app/src/main/generated/baselineProfiles/baseline-prof.txt",
+                "HSPLcom/example/GeneratedProfile;->mnn()V\n",
+            )
+
+            result = validate_policy(repo, policy)
+
+            self.assertEqual("ok", result["status"])
+
     def test_rejects_model_artifact_before_approval(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
             repo = seed_repo(Path(tmpdir))

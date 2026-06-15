@@ -1,9 +1,8 @@
 #!/usr/bin/env python3
-"""Compare dependency/runtime claims in ROADMAP.md and RESEARCH.md against actual manifests.
+"""Compare dependency/runtime claims in current-state docs against actual manifests.
 
-Only checks "current state" sections (State of the Repo, Executive Summary,
-Product Map, Architecture Assessment) where version claims describe what IS
-shipped, not aspirational/target versions in roadmap items.
+Only checks sections where version claims describe what IS shipped, not
+aspirational/target versions in roadmap items.
 """
 
 from __future__ import annotations
@@ -20,6 +19,9 @@ BUILD_GRADLE = Path("app/build.gradle.kts")
 PACKAGE_JSON = Path("functions/package.json")
 ROADMAP = Path("ROADMAP.md")
 RESEARCH = Path("RESEARCH.md")
+README = Path("README.md")
+CLAUDE = Path("CLAUDE.md")
+COMMUNITY_CALLABLE_DOC = Path("docs/community-callable-quota-enforcement.md")
 
 VERSION_PATTERN = re.compile(
     r"(?:^|[\s(,;])(?P<name>"
@@ -47,6 +49,22 @@ CURRENT_STATE_HEADERS_RESEARCH = re.compile(
     r"Architecture\s+Assessment|"
     r"Security,?\s+Privacy"
     r")",
+    re.IGNORECASE,
+)
+
+CURRENT_STATE_HEADERS_README = re.compile(
+    r"^#{1,4}\s+(?:Architecture|Tech\s+Stack|Building)",
+    re.IGNORECASE,
+)
+
+CURRENT_STATE_HEADERS_CLAUDE = re.compile(
+    r"^#{1,4}\s+(?:Tech\s+Stack|Build|Version|Architecture|Sounds\s+System)",
+    re.IGNORECASE,
+)
+
+CURRENT_STATE_HEADERS_COMMUNITY_CALLABLE = re.compile(
+    r"^#{1,4}\s+(?:Community\s+Callable\s+Quota\s+Enforcement|"
+    r"Contract\s+Source|Functions\s+Scaffold\s+Status|Android\s+Client\s+Status)",
     re.IGNORECASE,
 )
 
@@ -291,29 +309,28 @@ def find_duplicate_titles(path: Path) -> list[dict[str, Any]]:
     return dupes
 
 
-def main() -> int:
-    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
-
-    parser = argparse.ArgumentParser(description="Manifest consistency check for Aura planning docs.")
-    parser.add_argument("--json", action="store_true", help="Output machine-readable JSON")
-    args = parser.parse_args()
-
-    catalog = parse_version_catalog(VERSION_CATALOG)
-    gradle = parse_build_gradle(BUILD_GRADLE)
-    npm = parse_package_json(PACKAGE_JSON)
+def validate_manifest_consistency(repo_root: Path = Path(".")) -> dict[str, Any]:
+    catalog = parse_version_catalog(repo_root / VERSION_CATALOG)
+    gradle = parse_build_gradle(repo_root / BUILD_GRADLE)
+    npm = parse_package_json(repo_root / PACKAGE_JSON)
     truth = build_truth(catalog, gradle, npm)
 
-    stale: list[dict[str, Any]] = []
-    stale.extend(find_stale_claims(
-        extract_current_state_lines(ROADMAP, CURRENT_STATE_HEADERS_ROADMAP),
-        truth, str(ROADMAP),
-    ))
-    stale.extend(find_stale_claims(
-        extract_current_state_lines(RESEARCH, CURRENT_STATE_HEADERS_RESEARCH),
-        truth, str(RESEARCH),
-    ))
+    doc_specs = [
+        (ROADMAP, CURRENT_STATE_HEADERS_ROADMAP),
+        (RESEARCH, CURRENT_STATE_HEADERS_RESEARCH),
+        (README, CURRENT_STATE_HEADERS_README),
+        (CLAUDE, CURRENT_STATE_HEADERS_CLAUDE),
+        (COMMUNITY_CALLABLE_DOC, CURRENT_STATE_HEADERS_COMMUNITY_CALLABLE),
+    ]
 
-    dupes = find_duplicate_titles(ROADMAP)
+    stale: list[dict[str, Any]] = []
+    for relative_path, header_re in doc_specs:
+        stale.extend(find_stale_claims(
+            extract_current_state_lines(repo_root / relative_path, header_re),
+            truth, str(relative_path),
+        ))
+
+    dupes = find_duplicate_titles(repo_root / ROADMAP)
 
     result = {
         "stale_claims": stale,
@@ -322,9 +339,24 @@ def main() -> int:
         "status": "fail" if stale or dupes else "ok",
     }
 
+    return result
+
+
+def main() -> int:
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+
+    parser = argparse.ArgumentParser(description="Manifest consistency check for Aura current-state docs.")
+    parser.add_argument("--json", action="store_true", help="Output machine-readable JSON")
+    parser.add_argument("--repo-root", default=".", help="Repository root to validate")
+    args = parser.parse_args()
+
+    result = validate_manifest_consistency(Path(args.repo_root))
+
     if args.json:
         print(json.dumps(result, indent=2, sort_keys=True))
     else:
+        stale = result["stale_claims"]
+        dupes = result["duplicate_titles"]
         if stale:
             print(f"STALE CLAIMS ({len(stale)}):")
             for f in stale:
