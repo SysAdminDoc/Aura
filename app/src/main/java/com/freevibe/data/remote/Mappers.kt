@@ -30,11 +30,11 @@ fun WallhavenWallpaper.toWallpaper() = Wallpaper(
 
 private val BING_COPYRIGHT_REGEX = Regex("""\(([^)]+)\)""")
 
-fun BingImage.toWallpaper() = Wallpaper(
+fun BingImage.toWallpaper(bingBaseUrl: String = BingDailyApi.BASE_URL) = Wallpaper(
     id = "bing_${startDate}_${urlbase.hashCode().toUInt()}",
     source = ContentSource.BING,
-    thumbnailUrl = BingDailyApi.thumbUrl(urlbase),
-    fullUrl = BingDailyApi.fullUrl(urlbase),
+    thumbnailUrl = BingDailyApi.thumbUrl(urlbase, bingBaseUrl),
+    fullUrl = BingDailyApi.fullUrl(urlbase, bingBaseUrl),
     width = 3840,  // UHD
     height = 2160,
     category = "daily",

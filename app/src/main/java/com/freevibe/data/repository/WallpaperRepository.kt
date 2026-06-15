@@ -331,12 +331,12 @@ class WallpaperRepository @Inject constructor(
                 val idx = (page - 1) / marketsCount
                 val marketIndex = (page - 1) % marketsCount
                 val market = BingDailyApi.MARKETS[marketIndex]
-                val response = fetchBingImages(
+                val (response, workingBaseUrl) = fetchBingImages(
                     idx = (idx * 8).coerceAtMost(7),
                     market = market,
                 )
                 SearchResult(
-                    items = response.images.map { it.toWallpaper() },
+                    items = response.images.map { it.toWallpaper(workingBaseUrl) },
                     totalCount = marketsCount * 8,
                     currentPage = page,
                     hasMore = page < marketsCount,
@@ -613,16 +613,20 @@ class WallpaperRepository @Inject constructor(
         hasMore = false,
     )
 
-    private suspend fun fetchBingImages(idx: Int, market: String): com.freevibe.data.remote.bing.BingImageResponse {
+    private suspend fun fetchBingImages(
+        idx: Int,
+        market: String,
+    ): Pair<com.freevibe.data.remote.bing.BingImageResponse, String> {
         var lastRetryableError: Exception? = null
         for (baseUrl in BingDailyApi.FALLBACK_BASE_URLS) {
             try {
-                return bingApi.getImages(
+                val response = bingApi.getImages(
                     url = BingDailyApi.archiveUrl(baseUrl),
                     idx = idx,
                     n = 8,
                     market = market,
                 )
+                return response to baseUrl
             } catch (e: Exception) {
                 e.rethrowIfCancelled()
                 if (!shouldRetryBingHost(e)) throw e

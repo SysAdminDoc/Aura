@@ -40,13 +40,13 @@ interface BingDailyApi {
         fun archiveUrl(baseUrl: String): String =
             baseUrl.trimEnd('/') + "/HPImageArchive.aspx"
 
-        /** Build full-res URL from urlbase */
-        fun fullUrl(urlbase: String): String =
-            "https://www.bing.com${urlbase}_UHD.jpg"
+        /** Build full-res URL from urlbase, using the CDN base that succeeded for the API call. */
+        fun fullUrl(urlbase: String, baseUrl: String = BASE_URL): String =
+            "${baseUrl.trimEnd('/')}${urlbase}_UHD.jpg"
 
-        /** Build thumbnail URL from urlbase */
-        fun thumbUrl(urlbase: String): String =
-            "https://www.bing.com${urlbase}_400x240.jpg"
+        /** Build thumbnail URL from urlbase, using the CDN base that succeeded for the API call. */
+        fun thumbUrl(urlbase: String, baseUrl: String = BASE_URL): String =
+            "${baseUrl.trimEnd('/')}${urlbase}_400x240.jpg"
     }
 }
 
