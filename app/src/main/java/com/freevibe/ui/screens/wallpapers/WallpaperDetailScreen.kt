@@ -15,6 +15,7 @@ import androidx.compose.foundation.pager.VerticalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.*
@@ -1070,6 +1071,9 @@ private fun DetailActionPill(
 ) {
     Surface(
         onClick = onClick,
+        modifier = Modifier.semantics(mergeDescendants = true) {
+            contentDescription = label
+        },
         shape = RoundedCornerShape(8.dp),
         color = tint.copy(alpha = 0.12f),
         border = BorderStroke(1.dp, tint.copy(alpha = 0.12f)),
@@ -1100,6 +1104,8 @@ private fun ApplyOptionsSheet(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
+                .verticalScroll(rememberScrollState())
+                .imePadding()
                 .padding(horizontal = 24.dp)
                 .padding(bottom = 32.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp),
@@ -1143,6 +1149,8 @@ private fun MoreActionsSheet(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
+                .verticalScroll(rememberScrollState())
+                .imePadding()
                 .padding(horizontal = 24.dp)
                 .padding(bottom = 32.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp),
@@ -1261,6 +1269,8 @@ private fun CollectionPickerSheet(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
+                .verticalScroll(rememberScrollState())
+                .imePadding()
                 .padding(horizontal = 24.dp)
                 .padding(bottom = 32.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp),

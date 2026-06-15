@@ -3,6 +3,12 @@
 All notable changes to Aura will be documented in this file.
 
 ## Unreleased
+- **Compact-screen disclosure and collection polish**: community guidelines and
+  generated-wallpaper disclosure dialogs now keep long policy copy scrollable
+  with bounded dialog corners. Collection import, QR share, and wallpaper-detail
+  collection picker flows now stay scrollable and keyboard-aware on short
+  screens. Wallpaper detail horizontal action chips now keep row-level
+  accessibility labels even when partially clipped in the scroller.
 - **Additional release-readiness polish**: Settings API-key and YouTube query
   dialogs now remain scrollable and keyboard-aware on compact screens, with
   password keyboard hints for provider keys. Wallpaper, video wallpaper, AI

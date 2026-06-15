@@ -96,7 +96,10 @@ fun GeneratedWallpaperDisclosureDialog(
         onDismissRequest = onDismiss,
         title = { Text(stringResource(R.string.ai_disclosure_title)) },
         text = {
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Column(
+                modifier = Modifier.verticalScroll(rememberScrollState()),
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
                 Text(
                     stringResource(R.string.ai_disclosure_prompt_body),
                     style = MaterialTheme.typography.bodySmall,
@@ -113,6 +116,7 @@ fun GeneratedWallpaperDisclosureDialog(
                 )
             }
         },
+        shape = RoundedCornerShape(8.dp),
         confirmButton = {
             TextButton(onClick = {
                 if (!accepted) onAccept()

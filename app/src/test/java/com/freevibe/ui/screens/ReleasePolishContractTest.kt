@@ -148,6 +148,45 @@ class ReleasePolishContractTest {
     }
 
     @Test
+    fun `long disclosure dialogs keep policy copy scrollable on compact screens`() {
+        val guidelines = File("src/main/java/com/freevibe/ui/components/CommunityGuidelinesDialog.kt").readText()
+        val aiDisclosure = File("src/main/java/com/freevibe/ui/screens/aigenerate/AiWallpaperScreen.kt")
+            .readText()
+            .substringAfter("fun GeneratedWallpaperDisclosureDialog(")
+            .substringBefore("@OptIn(")
+
+        assertTrue(guidelines.contains("verticalScroll(rememberScrollState())"))
+        assertTrue(guidelines.contains("shape = RoundedCornerShape(8.dp)"))
+        assertTrue(aiDisclosure.contains("verticalScroll(rememberScrollState())"))
+        assertTrue(aiDisclosure.contains("shape = RoundedCornerShape(8.dp)"))
+    }
+
+    @Test
+    fun `collection import and picker forms avoid compact ime occlusion`() {
+        val collections = File("src/main/java/com/freevibe/ui/screens/collections/CollectionsScreen.kt").readText()
+        val importSheet = collections.substringAfter("private fun ImportCollectionSheet(").substringBefore("private fun CollectionQrDialog(")
+        val qrDialog = collections.substringAfter("private fun CollectionQrDialog(").substringBefore("private fun WallpaperCollectionItemEntity.toWallpaper")
+        val detail = File("src/main/java/com/freevibe/ui/screens/wallpapers/WallpaperDetailScreen.kt").readText()
+        val pickerSheet = detail.substringAfter("private fun CollectionPickerSheet(").substringBefore("internal fun wallpaperDetailTitle(")
+
+        assertTrue(importSheet.contains(".verticalScroll(rememberScrollState())"))
+        assertTrue(importSheet.contains(".imePadding()"))
+        assertTrue(qrDialog.contains("verticalScroll(rememberScrollState())"))
+        assertTrue(qrDialog.contains("shape = RoundedCornerShape(8.dp)"))
+        assertTrue(pickerSheet.contains(".verticalScroll(rememberScrollState())"))
+        assertTrue(pickerSheet.contains(".imePadding()"))
+    }
+
+    @Test
+    fun `wallpaper detail horizontal action chips keep labels when clipped`() {
+        val source = File("src/main/java/com/freevibe/ui/screens/wallpapers/WallpaperDetailScreen.kt").readText()
+        val actionPill = source.substringAfter("private fun DetailActionPill(").substringBefore("@OptIn(ExperimentalMaterial3Api::class)")
+
+        assertTrue(actionPill.contains("semantics(mergeDescendants = true)"))
+        assertTrue(actionPill.contains("contentDescription = label"))
+    }
+
+    @Test
     fun `release ui avoids fully circular chrome backdrops`() {
         val uiFiles = listOf(
             "src/main/java/com/freevibe/ui/screens/wallpapers/WallpapersScreen.kt",

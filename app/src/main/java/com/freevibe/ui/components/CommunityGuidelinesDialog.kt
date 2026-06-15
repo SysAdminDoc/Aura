@@ -7,6 +7,9 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material3.AlertDialog
@@ -33,7 +36,10 @@ fun CommunityGuidelinesDialog(
         onDismissRequest = { if (allowDismiss) onDismiss() },
         title = { Text(CommunityGuidelinesPolicy.title) },
         text = {
-            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            Column(
+                modifier = Modifier.verticalScroll(rememberScrollState()),
+                verticalArrangement = Arrangement.spacedBy(10.dp),
+            ) {
                 Text(
                     stringResource(R.string.community_guidelines_intro),
                     style = MaterialTheme.typography.bodyMedium,
@@ -66,6 +72,7 @@ fun CommunityGuidelinesDialog(
                 )
             }
         },
+        shape = RoundedCornerShape(8.dp),
         confirmButton = {
             Button(onClick = onAccept) {
                 Text(stringResource(R.string.community_guidelines_accept))
