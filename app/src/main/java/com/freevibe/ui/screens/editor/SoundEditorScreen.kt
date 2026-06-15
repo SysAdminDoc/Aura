@@ -373,7 +373,7 @@ fun SoundEditorScreen(
                                 viewModel.setFadeIn(it.toLong())
                             },
                             onValueChangeFinished = { fadeInUndoSaved = false },
-                            valueRange = 0f..(state.trimDurationMs / 2f).coerceAtLeast(100f),
+                            valueRange = 0f..(state.trimDurationMs / 2f).coerceAtLeast(1f),
                             modifier = Modifier
                                 .heightIn(min = 40.dp)
                                 .semantics {
@@ -381,7 +381,7 @@ fun SoundEditorScreen(
                                     stateDescription = fadeInState
                                     progressBarRangeInfo = ProgressBarRangeInfo(
                                         state.fadeInMs.toFloat(),
-                                        0f..(state.trimDurationMs / 2f).coerceAtLeast(100f),
+                                        0f..(state.trimDurationMs / 2f).coerceAtLeast(1f),
                                     )
                                 },
                         )
@@ -401,7 +401,7 @@ fun SoundEditorScreen(
                                 viewModel.setFadeOut(it.toLong())
                             },
                             onValueChangeFinished = { fadeOutUndoSaved = false },
-                            valueRange = 0f..(state.trimDurationMs / 2f).coerceAtLeast(100f),
+                            valueRange = 0f..(state.trimDurationMs / 2f).coerceAtLeast(1f),
                             modifier = Modifier
                                 .heightIn(min = 40.dp)
                                 .semantics {
@@ -409,7 +409,7 @@ fun SoundEditorScreen(
                                     stateDescription = fadeOutState
                                     progressBarRangeInfo = ProgressBarRangeInfo(
                                         state.fadeOutMs.toFloat(),
-                                        0f..(state.trimDurationMs / 2f).coerceAtLeast(100f),
+                                        0f..(state.trimDurationMs / 2f).coerceAtLeast(1f),
                                     )
                                 },
                         )
