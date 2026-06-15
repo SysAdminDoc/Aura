@@ -68,6 +68,33 @@ All notable changes to Aura will be documented in this file.
   (confirmation for user-upload license), AI-generated (share confirmation),
   and Creative Commons license gates (NC confirmation, ND edit disabled).
   Unavailable-source wallpapers disable all actions.
+- **Video wallpaper provenance and license policy**: `VideoWallpaperItem`
+  gains `contentSource`, `license`, and `sourcePageUrl` fields. New
+  `VideoWallpaperLicensePolicy.kt` gates APPLY/DOWNLOAD/SHARE per
+  provider: YouTube disables share and requires apply/download
+  confirmation, Reddit requires apply/download confirmation, Pexels and
+  Pixabay require download confirmation. Missing source link or uploader
+  disables share for remote sources. 10 focused tests.
+- **Foreground-service declaration packet**: checked JSON manifest
+  documents both foreground services (AudioPlaybackService/mediaPlayback,
+  RotationTriggerService/specialUse), all three notification channels,
+  Play declaration justifications, and demo-video steps. CI-gated.
+- **Managed storage ledger**: checked JSON ledger documents all 13
+  storage locations (cacheDir, filesDir, databases, DataStore,
+  MediaStore) with path, budget, retention, backup exclusion status,
+  user cleanup action, and uninstall behavior. CI-gated.
+- **Export format golden fixtures**: seven compatibility tests cover v1
+  favorites export schema forward/backward compatibility, including
+  future-version unknown-field resilience and legacy v0 plain-list
+  format parsing.
+- **Aura Originals upstream attribution**: manifest schema gains
+  `creator`, `curationDate`, and `reviewResult` fields for upstream
+  Freesound attribution. CI provenance gate validates CC0 license,
+  HTTPS URLs, creator attribution, and review status on all entries.
+- **Test suite restored**: fixed 11 pre-existing test compilation and
+  runtime failures from the recent audit pass (SourceMetrics context,
+  reduceAnimations pref, external automation title, applicationContext
+  mock). 554/554 tests green.
 - **yt-dlp CVE batch remediation**: expanded `ytdlp-cve-policy.json` from
   schema v1 (CVE-2026-26331 only) to v2 tracking all 5 yt-dlp CVEs
   (CVE-2026-26331, CVE-2026-50019, CVE-2026-50023, CVE-2026-50574,
