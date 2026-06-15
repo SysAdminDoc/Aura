@@ -3,7 +3,6 @@ package com.freevibe.ui.screens.videowallpapers
 import android.net.Uri
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -262,7 +261,7 @@ private fun HomeOverlay() {
                     modifier = Modifier
                         .padding(horizontal = 3.dp)
                         .size(if (i == 1) 8.dp else 6.dp)
-                        .clip(CircleShape)
+                        .clip(RoundedCornerShape(2.dp))
                         .background(Color.White.copy(alpha = if (i == 1) 0.8f else 0.4f)),
                 )
             }
@@ -305,7 +304,7 @@ private fun MockHomeIcon() {
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .clip(CircleShape)
+                .clip(RoundedCornerShape(8.dp))
                 .background(Color.White.copy(alpha = 0.5f)),
         )
     }

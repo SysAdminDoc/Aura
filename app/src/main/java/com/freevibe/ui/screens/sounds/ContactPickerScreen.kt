@@ -9,6 +9,8 @@ import android.provider.ContactsContract
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
@@ -328,7 +330,7 @@ fun ContactPickerScreen(
         ) {
             when (soundResolved) {
                 null -> {
-                    Box(Modifier.fillMaxSize().padding(20.dp), contentAlignment = Alignment.Center) {
+                    Box(Modifier.weight(1f).fillMaxWidth().padding(20.dp), contentAlignment = Alignment.Center) {
                         Column(horizontalAlignment = Alignment.CenterHorizontally) {
                             CircularProgressIndicator(strokeWidth = 2.dp)
                             Spacer(Modifier.height(12.dp))
@@ -338,7 +340,7 @@ fun ContactPickerScreen(
                     return@Scaffold
                 }
                 false -> {
-                    Box(Modifier.fillMaxSize().padding(20.dp), contentAlignment = Alignment.Center) {
+                    Box(Modifier.weight(1f).fillMaxWidth().padding(20.dp), contentAlignment = Alignment.Center) {
                         AuraStateCard(
                             icon = Icons.Default.MusicOff,
                             title = "Sound unavailable",
@@ -392,7 +394,7 @@ fun ContactPickerScreen(
             }
 
             if (state.isLoading) {
-                Box(Modifier.fillMaxSize().padding(20.dp), contentAlignment = Alignment.Center) {
+                Box(Modifier.weight(1f).fillMaxWidth().padding(20.dp), contentAlignment = Alignment.Center) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         CircularProgressIndicator(strokeWidth = 2.dp)
                         Spacer(Modifier.height(12.dp))
@@ -400,7 +402,7 @@ fun ContactPickerScreen(
                     }
                 }
             } else if (state.selectedContact == null) {
-                Box(Modifier.fillMaxSize().padding(20.dp), contentAlignment = Alignment.Center) {
+                Box(Modifier.weight(1f).fillMaxWidth().padding(20.dp), contentAlignment = Alignment.Center) {
                     AuraStateCard(
                         icon = Icons.Default.Contacts,
                         title = "Pick a contact",
@@ -418,7 +420,10 @@ fun ContactPickerScreen(
                     ?: false
                 Column(
                     modifier = Modifier
+                        .weight(1f)
                         .fillMaxWidth()
+                        .verticalScroll(rememberScrollState())
+                        .imePadding()
                         .padding(horizontal = 16.dp, vertical = 8.dp),
                     verticalArrangement = Arrangement.spacedBy(12.dp),
                 ) {

@@ -67,4 +67,55 @@ class ReleasePolishContractTest {
         assertTrue(uploadDialog.contains("FlowRow("))
         assertTrue(uploadDialog.contains("verticalArrangement = Arrangement.spacedBy(8.dp)"))
     }
+
+    @Test
+    fun `creator profile edit dialog is scrollable and keyboard aware`() {
+        val source = File("src/main/java/com/freevibe/ui/screens/community/CreatorProfileScreen.kt").readText()
+        val dialog = source.substringAfter("private fun CreatorProfileEditDialog(").substringBefore("private fun CreatorMetric(")
+
+        assertTrue(dialog.contains("verticalScroll(rememberScrollState())"))
+        assertTrue(dialog.contains("imePadding()"))
+        assertTrue(dialog.contains("KeyboardType.Uri"))
+        assertTrue(dialog.contains("if (!isSaving) onDismiss()"))
+    }
+
+    @Test
+    fun `contact picker selected contact state can scroll on compact screens`() {
+        val source = File("src/main/java/com/freevibe/ui/screens/sounds/ContactPickerScreen.kt").readText()
+        val selectedState = source.substringAfter("state.selectedContact ?: return@Scaffold").substringBefore("ContactAssignmentCard(")
+
+        assertTrue(selectedState.contains(".weight(1f)"))
+        assertTrue(selectedState.contains(".verticalScroll(rememberScrollState())"))
+        assertTrue(selectedState.contains(".imePadding()"))
+    }
+
+    @Test
+    fun `settings radio dialogs expose full row touch targets`() {
+        val source = File("src/main/java/com/freevibe/ui/screens/settings/SettingsScreen.kt").readText()
+        val intervalDialog = source.substringAfter("private fun IntervalPickerDialog(").substringBefore("private data class SettingsBatterySnapshot(")
+        val sourceDialog = source.substringAfter("private fun SourcePickerDialog(")
+
+        assertTrue(intervalDialog.contains(".heightIn(min = 48.dp)"))
+        assertTrue(intervalDialog.contains("role = Role.RadioButton"))
+        assertTrue(intervalDialog.contains("onClick = null"))
+        assertTrue(sourceDialog.contains(".heightIn(min = 48.dp)"))
+        assertTrue(sourceDialog.contains("role = Role.RadioButton"))
+        assertTrue(sourceDialog.contains("onClick = null"))
+    }
+
+    @Test
+    fun `release ui avoids fully circular chrome backdrops`() {
+        val uiFiles = listOf(
+            "src/main/java/com/freevibe/ui/screens/wallpapers/WallpapersScreen.kt",
+            "src/main/java/com/freevibe/ui/screens/wallpapers/WallpaperDetailScreen.kt",
+            "src/main/java/com/freevibe/ui/screens/wallpapers/WallpaperPreviewScreen.kt",
+            "src/main/java/com/freevibe/ui/screens/videowallpapers/VideoWallpaperPreviewScreen.kt",
+            "src/main/java/com/freevibe/ui/screens/videowallpapers/VideoWallpapersScreen.kt",
+            "src/main/java/com/freevibe/ui/screens/sounds/SoundsScreen.kt",
+        )
+
+        uiFiles.forEach { path ->
+            assertTrue("$path should use bounded corner radii instead of CircleShape", !File(path).readText().contains("CircleShape"))
+        }
+    }
 }

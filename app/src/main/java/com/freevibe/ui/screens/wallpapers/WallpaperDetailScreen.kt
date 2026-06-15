@@ -14,7 +14,6 @@ import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.pager.VerticalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -473,7 +472,7 @@ fun WallpaperDetailScreen(
                                     Surface(
                                         onClick = { onSearchColor(hex.removePrefix("#")) },
                                         color = Color(colorInt),
-                                        shape = CircleShape,
+                                        shape = RoundedCornerShape(6.dp),
                                         modifier = Modifier
                                             .size(24.dp)
                                             .semantics { contentDescription = "Search color $hex" },
@@ -1004,7 +1003,7 @@ private fun DetailTopIconButton(
         onClick = onClick,
         modifier = Modifier
             .size(44.dp)
-            .clip(CircleShape)
+            .clip(RoundedCornerShape(8.dp))
             .background(Color.Black.copy(alpha = 0.28f)),
     ) {
         Icon(icon, contentDescription, tint = Color.White, modifier = Modifier.size(20.dp))

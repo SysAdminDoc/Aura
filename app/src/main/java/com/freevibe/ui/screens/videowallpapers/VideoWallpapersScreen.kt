@@ -739,7 +739,7 @@ private fun VideoCard(
                     if (streamUrl == null) {
                         Surface(
                             color = Color.Black.copy(alpha = 0.5f),
-                            shape = androidx.compose.foundation.shape.CircleShape,
+                            shape = RoundedCornerShape(8.dp),
                             modifier = Modifier.size(48.dp),
                         ) {
                             Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
@@ -749,7 +749,7 @@ private fun VideoCard(
                     } else {
                         Surface(
                             color = Color.Black.copy(alpha = 0.45f),
-                            shape = androidx.compose.foundation.shape.CircleShape,
+                            shape = RoundedCornerShape(8.dp),
                             modifier = Modifier.size(44.dp),
                         ) {
                             Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {

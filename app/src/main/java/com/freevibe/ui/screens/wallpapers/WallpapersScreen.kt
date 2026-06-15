@@ -12,7 +12,6 @@ import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.staggeredgrid.*
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
@@ -516,7 +515,7 @@ fun WallpapersScreen(
                                 Box(
                                     modifier = Modifier
                                         .size(12.dp)
-                                        .clip(CircleShape)
+                                        .clip(RoundedCornerShape(4.dp))
                                         .background(parseHexColor(selectedColor)),
                                 )
                             },
@@ -830,7 +829,7 @@ private fun ColorPickerRow(
             Box(
                 modifier = Modifier
                     .size(48.dp)
-                    .clip(CircleShape)
+                    .clip(RoundedCornerShape(8.dp))
                     .background(MaterialTheme.colorScheme.surfaceContainerHigh)
                     .clickable(onClickLabel = clearWallpaperColorFilterLabel()) { onClear() },
                 contentAlignment = Alignment.Center,
@@ -847,10 +846,10 @@ private fun ColorPickerRow(
             Box(
                 modifier = Modifier
                     .size(48.dp)
-                    .clip(CircleShape)
+                    .clip(RoundedCornerShape(8.dp))
                     .background(color)
                     .then(
-                        if (selectedColor == hex) Modifier.border(2.dp, MaterialTheme.colorScheme.primary, CircleShape)
+                        if (selectedColor == hex) Modifier.border(2.dp, MaterialTheme.colorScheme.primary, RoundedCornerShape(8.dp))
                         else Modifier
                     )
                     .clickable(onClickLabel = wallpaperColorFilterActionLabel(hex)) { onColorSelected(hex) }
@@ -1344,7 +1343,7 @@ private fun WallpaperCard(
                         .align(Alignment.TopEnd)
                         .padding(8.dp)
                         .size(48.dp)
-                        .clip(CircleShape)
+                        .clip(RoundedCornerShape(8.dp))
                         .background(Color.Black.copy(alpha = 0.2f)),
                 ) {
                     Icon(

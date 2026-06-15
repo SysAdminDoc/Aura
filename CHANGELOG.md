@@ -3,6 +3,12 @@
 All notable changes to Aura will be documented in this file.
 
 ## Unreleased
+- **Stricter release UI polish**: creator profile editing now stays scrollable
+  and keyboard-aware on compact screens, AI wallpaper prompts avoid IME
+  overlap, contact assignment keeps the selected-contact flow scrollable, and
+  Settings picker rows expose full 48dp radio targets. Preview, feed, detail,
+  sound, and video chrome now use bounded corner radii instead of circular
+  backdrops for more consistent visual language.
 - **Release polish pass**: community report, sound upload, and wallpaper upload
   dialogs now keep form content scrollable and IME-aware on compact screens.
   Sound upload category/license chips wrap instead of overflowing at large text

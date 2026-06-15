@@ -21,6 +21,7 @@ import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -42,8 +43,10 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.onClick
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
@@ -2478,12 +2481,18 @@ private fun IntervalPickerDialog(
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
+                            .heightIn(min = 48.dp)
+                            .selectable(
+                                selected = currentInterval == hours,
+                                onClick = { onSelect(hours) },
+                                role = Role.RadioButton,
+                            )
                             .padding(vertical = 4.dp),
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
                         RadioButton(
                             selected = currentInterval == hours,
-                            onClick = { onSelect(hours) },
+                            onClick = null,
                         )
                         Spacer(Modifier.width(8.dp))
                         Text(label)
@@ -3827,6 +3836,7 @@ private fun WallpaperSlotPickerDialog(
                             Row(
                                 Modifier
                                     .fillMaxWidth()
+                                    .heightIn(min = 48.dp)
                                     .clickable { onPick(entry) }
                                     .padding(vertical = 8.dp),
                                 verticalAlignment = Alignment.CenterVertically,
@@ -3837,6 +3847,8 @@ private fun WallpaperSlotPickerDialog(
                                     entry.wallpaperId.take(20),
                                     style = MaterialTheme.typography.bodySmall,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis,
                                 )
                             }
                         }
@@ -3885,21 +3897,29 @@ private fun SourcePickerDialog(
         text = {
             Column {
                 sources.forEach { (key, label) ->
+                    val isSelected = currentSource == key
+                    val onSelectSource = {
+                        if (key == WALLPAPER_SOURCE_LOCAL_FOLDER && !localFolderReady) {
+                            onChooseLocalFolder()
+                        } else {
+                            onSelect(key)
+                        }
+                    }
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
+                            .heightIn(min = 48.dp)
+                            .selectable(
+                                selected = isSelected,
+                                onClick = onSelectSource,
+                                role = Role.RadioButton,
+                            )
                             .padding(vertical = 4.dp),
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
                         RadioButton(
-                            selected = currentSource == key,
-                            onClick = {
-                                if (key == WALLPAPER_SOURCE_LOCAL_FOLDER && !localFolderReady) {
-                                    onChooseLocalFolder()
-                                } else {
-                                    onSelect(key)
-                                }
-                            },
+                            selected = isSelected,
+                            onClick = null,
                         )
                         Spacer(Modifier.width(8.dp))
                         Text(label)

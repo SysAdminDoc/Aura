@@ -1,6 +1,9 @@
 package com.freevibe.ui.screens.community
 
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -27,6 +30,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardCapitalization
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.res.stringResource
@@ -438,37 +444,64 @@ private fun CreatorProfileEditDialog(
     var avatarUrl by remember(profile) { mutableStateOf(profile.avatarUrl) }
 
     AlertDialog(
-        onDismissRequest = onDismiss,
+        onDismissRequest = { if (!isSaving) onDismiss() },
         title = { Text(stringResource(R.string.profile_edit_title)) },
         text = {
-            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .heightIn(max = 420.dp)
+                    .verticalScroll(rememberScrollState())
+                    .imePadding(),
+                verticalArrangement = Arrangement.spacedBy(10.dp),
+            ) {
                 OutlinedTextField(
                     value = displayName,
                     onValueChange = { displayName = it },
+                    modifier = Modifier.fillMaxWidth(),
                     label = { Text(stringResource(R.string.profile_edit_name_label)) },
                     singleLine = true,
+                    keyboardOptions = KeyboardOptions(
+                        capitalization = KeyboardCapitalization.Words,
+                        imeAction = ImeAction.Next,
+                    ),
                     enabled = !isSaving,
                 )
                 OutlinedTextField(
                     value = bio,
                     onValueChange = { bio = it },
+                    modifier = Modifier.fillMaxWidth(),
                     label = { Text(stringResource(R.string.profile_edit_bio_label)) },
                     minLines = 2,
                     maxLines = 4,
+                    keyboardOptions = KeyboardOptions(
+                        capitalization = KeyboardCapitalization.Sentences,
+                        imeAction = ImeAction.Next,
+                    ),
                     enabled = !isSaving,
                 )
                 OutlinedTextField(
                     value = websiteUrl,
                     onValueChange = { websiteUrl = it },
+                    modifier = Modifier.fillMaxWidth(),
                     label = { Text(stringResource(R.string.profile_edit_website_label)) },
                     singleLine = true,
+                    keyboardOptions = KeyboardOptions(
+                        keyboardType = KeyboardType.Uri,
+                        imeAction = ImeAction.Next,
+                    ),
                     enabled = !isSaving,
                 )
                 OutlinedTextField(
                     value = avatarUrl,
                     onValueChange = { avatarUrl = it },
+                    modifier = Modifier.fillMaxWidth(),
                     label = { Text(stringResource(R.string.profile_edit_avatar_label)) },
                     singleLine = true,
+                    keyboardOptions = KeyboardOptions(
+                        keyboardType = KeyboardType.Uri,
+                        imeAction = ImeAction.Done,
+                    ),
                     enabled = !isSaving,
                 )
             }
