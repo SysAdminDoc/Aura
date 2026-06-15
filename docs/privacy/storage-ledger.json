@@ -1,0 +1,175 @@
+{
+  "status": "checked",
+  "lastReviewed": "2026-06-14",
+  "stores": [
+    {
+      "id": "audio_preview_cache",
+      "path": "cacheDir/audio-preview-cache",
+      "type": "LRU disk cache",
+      "budget": "48 MB",
+      "retention": "LRU eviction; cleared on Android system cache clear",
+      "backupExcluded": true,
+      "userCleanup": "Settings > Clear cache",
+      "uninstallBehavior": "Removed with app",
+      "sourceFile": "AudioPreviewCache.kt"
+    },
+    {
+      "id": "offline_favorites",
+      "path": "filesDir/offline_favorites",
+      "type": "Managed file directory",
+      "budget": "512 MB total, 80 MB per file",
+      "retention": "LRU eviction within budget; orphaned .tmp files pruned",
+      "backupExcluded": true,
+      "userCleanup": "Settings > Clear cache (preserves favorites metadata)",
+      "uninstallBehavior": "Removed with app",
+      "sourceFile": "OfflineFavoritesManager.kt"
+    },
+    {
+      "id": "ai_wallpapers",
+      "path": "filesDir/ai_wallpapers",
+      "type": "Managed file directory",
+      "budget": "50-image cap",
+      "retention": "Oldest pruned when cap exceeded; stale .tmp files cleaned",
+      "backupExcluded": true,
+      "userCleanup": "Delete individual generated wallpapers from favorites",
+      "uninstallBehavior": "Removed with app",
+      "sourceFile": "AiWallpaperRepository.kt"
+    },
+    {
+      "id": "aura_originals",
+      "path": "filesDir/aura_originals",
+      "type": "Downloaded bundle",
+      "budget": "~30 MB (OGG audio pack)",
+      "retention": "Persistent; re-downloaded on first launch if missing",
+      "backupExcluded": true,
+      "userCleanup": "Settings > Clear cache (re-downloads on next launch)",
+      "uninstallBehavior": "Removed with app",
+      "sourceFile": "AuraOriginalsDownloader.kt"
+    },
+    {
+      "id": "parallax_depth",
+      "path": "filesDir/parallax",
+      "type": "Cached bitmap",
+      "budget": "Single wallpaper at a time",
+      "retention": "Replaced on each parallax wallpaper apply",
+      "backupExcluded": true,
+      "userCleanup": "Change or remove parallax wallpaper",
+      "uninstallBehavior": "Removed with app",
+      "sourceFile": "WallpaperApplier.kt"
+    },
+    {
+      "id": "live_wallpaper_media",
+      "path": "filesDir/live_wallpaper.{mp4,gif,mkv,mov,webm}",
+      "type": "Single active file",
+      "budget": "One video file at a time",
+      "retention": "Replaced on each video wallpaper apply",
+      "backupExcluded": true,
+      "userCleanup": "Change or remove video wallpaper",
+      "uninstallBehavior": "Removed with app",
+      "sourceFile": "VideoWallpaperStorage.kt"
+    },
+    {
+      "id": "crash_log",
+      "path": "filesDir/crash.log",
+      "type": "Text log file",
+      "budget": "16 KB (truncated)",
+      "retention": "Overwritten on each crash; no automatic upload",
+      "backupExcluded": true,
+      "userCleanup": "Settings > Diagnostics > Copy/Share (read-only)",
+      "uninstallBehavior": "Removed with app",
+      "sourceFile": "CrashDiagnosticsCollector.kt"
+    },
+    {
+      "id": "coil_cache",
+      "path": "cacheDir/coil_cache",
+      "type": "HTTP disk cache",
+      "budget": "256 MB",
+      "retention": "HTTP cache headers; cleared on system cache clear",
+      "backupExcluded": true,
+      "userCleanup": "Settings > Clear cache",
+      "uninstallBehavior": "Removed with app",
+      "sourceFile": "FreeVibeApp.kt"
+    },
+    {
+      "id": "room_database",
+      "path": "databases/freevibe.db",
+      "type": "SQLite database",
+      "budget": "Unbounded (grows with favorites/downloads/history)",
+      "retention": "Persistent; user data",
+      "backupExcluded": true,
+      "userCleanup": "Clear individual favorites/downloads/history from app",
+      "uninstallBehavior": "Removed with app",
+      "sourceFile": "Database.kt"
+    },
+    {
+      "id": "datastore_prefs",
+      "path": "datastore/freevibe_prefs.preferences_pb",
+      "type": "DataStore protobuf",
+      "budget": "Small (settings only)",
+      "retention": "Persistent; user settings and API keys",
+      "backupExcluded": true,
+      "userCleanup": "Reset individual settings; clear API keys in Settings",
+      "uninstallBehavior": "Removed with app",
+      "sourceFile": "PreferencesManager.kt"
+    },
+    {
+      "id": "mediastore_images",
+      "path": "MediaStore Images (external)",
+      "type": "MediaStore content",
+      "budget": "64 MB per file",
+      "retention": "Persistent; visible in gallery/file manager",
+      "backupExcluded": false,
+      "userCleanup": "Delete from gallery or file manager",
+      "uninstallBehavior": "Retained (user-visible media)",
+      "sourceFile": "DownloadManager.kt"
+    },
+    {
+      "id": "mediastore_audio",
+      "path": "MediaStore Audio (external)",
+      "type": "MediaStore content",
+      "budget": "64 MB per file",
+      "retention": "Persistent; used as ringtone/notification/alarm",
+      "backupExcluded": false,
+      "userCleanup": "Delete from file manager or clear ringtone assignment",
+      "uninstallBehavior": "Retained (user-visible media)",
+      "sourceFile": "DownloadManager.kt"
+    },
+    {
+      "id": "mediastore_videos",
+      "path": "MediaStore Videos (Movies/Aura/)",
+      "type": "MediaStore content",
+      "budget": "Unbounded",
+      "retention": "Persistent; visible in gallery/file manager",
+      "backupExcluded": false,
+      "userCleanup": "Delete from gallery or file manager",
+      "uninstallBehavior": "Retained (user-visible media)",
+      "sourceFile": "VideoWallpapersScreen.kt"
+    }
+  ],
+  "tempDirectories": [
+    {"path": "cacheDir/trimmed", "purpose": "FFmpeg audio temp output", "sourceFile": "AudioTrimmer.kt"},
+    {"path": "cacheDir/downloads", "purpose": "Download staging (64 MB cap)", "sourceFile": "DownloadManager.kt"},
+    {"path": "cacheDir/audio_edit", "purpose": "Sound editor temp (96 MB cap)", "sourceFile": "SoundEditorViewModel.kt"},
+    {"path": "cacheDir/audio_apply", "purpose": "Ringtone apply staging", "sourceFile": "SoundApplier.kt"},
+    {"path": "cacheDir/share_out", "purpose": "FileProvider share outbox", "sourceFile": "ShareOutbox.kt"},
+    {"path": "cacheDir/upload_probe", "purpose": "Upload validation staging", "sourceFile": "UploadRepository.kt"},
+    {"path": "cacheDir/crop_input.mp4", "purpose": "Video crop input (256 MB cap)", "sourceFile": "VideoCropScreen.kt"},
+    {"path": "cacheDir/crop_output.mp4", "purpose": "Video crop FFmpeg output", "sourceFile": "VideoCropScreen.kt"}
+  ],
+  "sharedPreferencesFiles": [
+    "freevibe_widget.xml",
+    "freevibe_app.xml",
+    "aura_votes.xml",
+    "freevibe_live_wp.xml",
+    "freevibe_weather_wp.xml",
+    "freevibe_pixabay_video_cache.xml",
+    "aura_community_identity.xml",
+    "background_work_receipts.xml",
+    "freevibe_selected_content.xml",
+    "freevibe_external_automation.xml",
+    "live_wallpaper_receipts.xml",
+    "source_metrics_degradation.xml",
+    "freevibe_ytdlp_update.xml",
+    "youtubedl-android.xml"
+  ]
+}
