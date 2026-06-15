@@ -2775,8 +2775,12 @@ private fun SettingsOverviewCard(
             if (weatherEffects) add("weather overlays")
             if (adaptiveTint) add("time-of-day tint")
             if (autoPreview) add("sound previews")
-        }.joinToString(" • ").ifBlank {
-            "Aura is set up with calm defaults. Adjust discovery, automation, and playback here whenever you want."
+        }.let { enabled ->
+            if (enabled.isEmpty()) {
+                "Aura is set up with calm defaults. Adjust discovery, automation, and playback here whenever you want."
+            } else {
+                "Active setup: ${enabled.joinToString(" • ")}."
+            }
         }
     }
 
@@ -3072,7 +3076,7 @@ private fun SettingsToggle(
                 )
                 Switch(
                     checked = checked,
-                    onCheckedChange = onCheckedChange,
+                    onCheckedChange = null,
                     colors = SwitchDefaults.colors(checkedTrackColor = MaterialTheme.colorScheme.primary),
                 )
             }

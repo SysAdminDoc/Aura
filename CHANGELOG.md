@@ -8,6 +8,12 @@ All notable changes to Aura will be documented in this file.
   Sound upload category/license chips wrap instead of overflowing at large text
   sizes, and sound detail bottom spacing now uses navigation-bar insets instead
   of fixed padding.
+- **Device-verified wallpaper header polish**: fixed `CompactSearchField`
+  vertical expansion on real devices so the wallpaper header keeps a compact
+  search row instead of consuming the first viewport before wallpaper cards.
+  Settings overview text now renders active personalization as a complete
+  sentence instead of a one-phrase fragment. Settings toggles now expose one
+  labeled row-level accessibility target instead of a separate unlabeled switch.
 - **Planning-doc manifest gate**: expanded `tools/manifest_consistency_check.py`
   beyond ROADMAP/RESEARCH so current-state README sections and local context
   docs are checked against Gradle and Functions manifests. `verify.yml` now

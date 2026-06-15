@@ -7,6 +7,37 @@ import org.junit.Test
 class ReleasePolishContractTest {
 
     @Test
+    fun `compact search field does not consume unconstrained vertical space`() {
+        val source = File("src/main/java/com/freevibe/ui/components/SharedComponents.kt").readText()
+        val searchField = source.substringAfter("fun CompactSearchField(").substringBefore("// ── Source Badge")
+
+        assertTrue(searchField.contains(".fillMaxWidth()"))
+        assertTrue(searchField.contains(".heightIn(min = AuraMinimumTouchTarget)"))
+        assertTrue(!searchField.contains(".fillMaxSize()"))
+    }
+
+    @Test
+    fun `settings overview active setup is a complete sentence`() {
+        val source = File("src/main/java/com/freevibe/ui/screens/settings/SettingsScreen.kt").readText()
+        val overview = source.substringAfter("private fun SettingsOverviewCard(").substringBefore("private fun SettingsMetric(")
+
+        assertTrue(overview.contains("\"Active setup: ${'$'}{enabled.joinToString("))
+        assertTrue(overview.contains("if (enabled.isEmpty())"))
+    }
+
+    @Test
+    fun `settings toggle exposes one labeled accessibility target`() {
+        val source = File("src/main/java/com/freevibe/ui/screens/settings/SettingsScreen.kt").readText()
+        val toggle = source.substringAfter("private fun SettingsToggle(").substringBefore("private fun PermissionTransparencyRow(")
+
+        assertTrue(toggle.contains("semantics(mergeDescendants = true)"))
+        assertTrue(toggle.contains("contentDescription = toggleDescription"))
+        assertTrue(toggle.contains("stateDescription = toggleStateDescription"))
+        assertTrue(toggle.contains("onClick(label = toggleActionLabel"))
+        assertTrue(toggle.contains("onCheckedChange = null"))
+    }
+
+    @Test
     fun `community report dialog is scrollable and ime aware`() {
         val source = File("src/main/java/com/freevibe/ui/components/CommunityReportDialog.kt").readText()
 
