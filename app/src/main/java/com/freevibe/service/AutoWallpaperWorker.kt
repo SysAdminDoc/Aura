@@ -90,22 +90,10 @@ class AutoWallpaperWorker @AssistedInject constructor(
             prefs.schedulerSource.first()
         }.normalizeWallpaperRotationSource()
 
-        if (source == "reddit" && !prefs.redditProviderEnabled.first()) {
-            redditRepo.getMultiSubreddit()
-            return Result.success()
-        }
-        if (source == "wallhaven" && !prefs.wallhavenProviderEnabled.first()) {
-            wallpaperRepo.getWallhaven()
-            return Result.success()
-        }
-        if (source == "pixabay" && !prefs.pixabayProviderEnabled.first()) {
-            wallpaperRepo.getPixabay()
-            return Result.success()
-        }
-        if (source == "bing" && !prefs.bingProviderEnabled.first()) {
-            wallpaperRepo.getBingDaily()
-            return Result.success()
-        }
+        if (source == "reddit" && !prefs.redditProviderEnabled.first()) return Result.success()
+        if (source == "wallhaven" && !prefs.wallhavenProviderEnabled.first()) return Result.success()
+        if (source == "pixabay" && !prefs.pixabayProviderEnabled.first()) return Result.success()
+        if (source == "bing" && !prefs.bingProviderEnabled.first()) return Result.success()
 
         val wallpapers = fetchWallpapers(source)
         if (wallpapers.isEmpty()) return Result.retry()
@@ -131,22 +119,10 @@ class AutoWallpaperWorker @AssistedInject constructor(
         val targetStr = prefs.autoWallpaperTarget.first()
         val target = WallpaperTarget.entries.find { it.name == targetStr } ?: WallpaperTarget.BOTH
 
-        if (source == "reddit" && !prefs.redditProviderEnabled.first()) {
-            redditRepo.getMultiSubreddit()
-            return Result.success()
-        }
-        if (source == "wallhaven" && !prefs.wallhavenProviderEnabled.first()) {
-            wallpaperRepo.getWallhaven()
-            return Result.success()
-        }
-        if (source == "pixabay" && !prefs.pixabayProviderEnabled.first()) {
-            wallpaperRepo.getPixabay()
-            return Result.success()
-        }
-        if (source == "bing" && !prefs.bingProviderEnabled.first()) {
-            wallpaperRepo.getBingDaily()
-            return Result.success()
-        }
+        if (source == "reddit" && !prefs.redditProviderEnabled.first()) return Result.success()
+        if (source == "wallhaven" && !prefs.wallhavenProviderEnabled.first()) return Result.success()
+        if (source == "pixabay" && !prefs.pixabayProviderEnabled.first()) return Result.success()
+        if (source == "bing" && !prefs.bingProviderEnabled.first()) return Result.success()
 
         val wallpapers = fetchWallpapers(source)
         val wallpaper = wallpapers.randomOrNull() ?: return Result.retry()

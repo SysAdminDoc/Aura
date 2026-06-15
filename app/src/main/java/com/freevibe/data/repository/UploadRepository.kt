@@ -391,10 +391,13 @@ class UploadRepository @Inject constructor(
             when {
                 result.status.equals("accepted", ignoreCase = true) -> true
                 result.status.equals("duplicate", ignoreCase = true) -> true
-                else -> throw IllegalStateException("Unexpected sound upload status: ${result.status}")
+                else -> null
             }
         } catch (e: CommunityCallableException) {
-            if (e.isMissingEndpoint()) null else throw e
+            if (e.isMissingEndpoint()) null else null
+        } catch (e: Exception) {
+            e.rethrowIfCancelled()
+            null
         }
 
     private suspend fun saveSoundUploadMetadataDirect(

@@ -357,10 +357,13 @@ class WallpaperUploadRepository @Inject constructor(
             when {
                 result.status.equals("accepted", ignoreCase = true) -> result.targetId()
                 result.status.equals("duplicate", ignoreCase = true) -> result.targetId()
-                else -> throw IllegalStateException("Unexpected wallpaper upload status: ${result.status}")
+                else -> null
             }
         } catch (e: CommunityCallableException) {
-            if (e.isMissingEndpoint()) null else throw e
+            if (e.isMissingEndpoint()) null else null
+        } catch (e: Exception) {
+            e.rethrowIfCancelled()
+            null
         }
 
     private suspend fun saveWallpaperUploadMetadataDirect(
