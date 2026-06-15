@@ -1,0 +1,92 @@
+{
+  "status": "checked",
+  "lastReviewed": "2026-06-14",
+  "manifestVersion": "v6.31.1",
+  "services": [
+    {
+      "class": "com.freevibe.service.AudioPlaybackService",
+      "type": "MediaSessionService",
+      "foregroundServiceType": "mediaPlayback",
+      "manifestPermission": "FOREGROUND_SERVICE_MEDIA_PLAYBACK",
+      "notificationChannel": "media_playback",
+      "notificationImportance": "LOW",
+      "trigger": "User taps play on a sound preview in Sounds tab or Sound Detail",
+      "userVisible": true,
+      "notification": "Media-style playback controls with title and progress",
+      "stopCondition": "Playback ends, user pauses, or task removed while not playing",
+      "whyNotDeferred": "Audio preview must keep the ExoPlayer decoder alive while the user browses; WorkManager cannot provide sub-second playback continuity",
+      "interruptionImpact": "Sound preview stops immediately; no data loss",
+      "notificationDeniedBehavior": "Playback still works but no visible notification controls; user must return to Aura to pause",
+      "bootCompleted": false,
+      "demoVideoSteps": [
+        "Open Aura > Sounds tab",
+        "Tap any sound card to start playback",
+        "Show notification shade with playback controls",
+        "Background the app; playback continues with controls",
+        "Tap pause in notification; playback stops",
+        "Remove app from recents; service stops"
+      ]
+    },
+    {
+      "class": "com.freevibe.service.RotationTriggerService",
+      "type": "Service",
+      "foregroundServiceType": "specialUse",
+      "foregroundServiceSubtype": "wallpaper_rotation_triggers",
+      "manifestPermission": "FOREGROUND_SERVICE_SPECIAL_USE",
+      "notificationChannel": "aura_rotation_triggers",
+      "notificationImportance": "LOW",
+      "trigger": "User enables 'Change on every unlock' or 'Pre-stage on screen off' in Settings",
+      "userVisible": true,
+      "notification": "Low-priority ongoing notification: 'Aura — wallpaper triggers / Rotating on unlock / screen off'",
+      "stopCondition": "User disables both trigger toggles in Settings",
+      "whyNotDeferred": "ACTION_USER_PRESENT and ACTION_SCREEN_OFF cannot be manifest-declared on Android 8+; a foreground service with dynamic BroadcastReceiver is the only way to catch these system events reliably",
+      "interruptionImpact": "Wallpaper rotation stops firing on unlock/screen-off; scheduled periodic rotation (AutoWallpaperWorker) continues independently",
+      "notificationDeniedBehavior": "Service runs without a visible notification on Android 13+; triggers still fire but the user cannot see the ongoing indicator",
+      "bootCompleted": false,
+      "bootBehavior": "Triggers resume after the user opens Aura (FreeVibeApp.reconcileRotationTriggers on cold start); they do not auto-start on boot",
+      "demoVideoSteps": [
+        "Open Aura > Settings > Auto wallpaper rotation section",
+        "Enable 'Change on every unlock'",
+        "Show notification shade with ongoing trigger notification",
+        "Lock and unlock the device; wallpaper changes",
+        "Disable the toggle; notification disappears and service stops"
+      ]
+    }
+  ],
+  "notificationChannels": [
+    {
+      "id": "media_playback",
+      "name": "Sound Preview",
+      "importance": "LOW",
+      "description": "Playback controls for sound previews",
+      "usedBy": "AudioPlaybackService"
+    },
+    {
+      "id": "daily_wallpaper",
+      "name": "Daily Wallpaper",
+      "importance": "LOW",
+      "description": "Daily wallpaper picks from active wallpaper sources",
+      "usedBy": "DailyWallpaperWorker (not a foreground service)"
+    },
+    {
+      "id": "aura_rotation_triggers",
+      "name": "Wallpaper triggers",
+      "importance": "LOW",
+      "showBadge": false,
+      "description": "Listens for unlock/screen-off to rotate the wallpaper.",
+      "usedBy": "RotationTriggerService"
+    }
+  ],
+  "permissions": {
+    "FOREGROUND_SERVICE": "Required base permission for all foreground services",
+    "FOREGROUND_SERVICE_MEDIA_PLAYBACK": "AudioPlaybackService sound preview playback",
+    "FOREGROUND_SERVICE_SPECIAL_USE": "RotationTriggerService wallpaper rotation dynamic broadcast receiver",
+    "POST_NOTIFICATIONS": "Required for all visible notifications on Android 13+"
+  },
+  "ownerActions": [
+    "Record Play Console foreground service declaration for mediaPlayback type",
+    "Record Play Console foreground service declaration for specialUse type with subtype 'wallpaper_rotation_triggers'",
+    "Record demonstration video for each service per demoVideoSteps",
+    "Verify notification-denied behavior on Android 13+ device"
+  ]
+}

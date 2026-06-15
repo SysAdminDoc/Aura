@@ -205,6 +205,9 @@ jobs:
       - name: Privacy data safety matrix
         run: python3 tools/privacy_data_safety_check.py --policy docs/privacy/data-safety.json --repo-root .
 
+      - name: Foreground service declaration packet
+        run: python3 tools/foreground_service_declaration_check.py
+
       - name: Rotation trigger boot permission
         run: python3 tools/rotation_boot_permission_check.py --policy docs/rotation-trigger-boot-behavior.json --repo-root .
 
