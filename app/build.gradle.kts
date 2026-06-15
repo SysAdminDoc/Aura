@@ -115,7 +115,7 @@ dependencies {
         implementation("com.fasterxml.jackson.core:jackson-databind:2.17.3") {
             because("youtubedl-android 0.18.1 pulls jackson-databind 2.11.1, which has published CVEs")
         }
-        implementation("commons-io:commons-io:2.16.1") {
+        implementation("commons-io:commons-io:2.22.0") {
             because("youtubedl-android 0.18.1 pulls commons-io 2.5, which has published CVEs")
         }
     }
