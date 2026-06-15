@@ -2,7 +2,7 @@
 
 All notable changes to Aura will be documented in this file.
 
-## Unreleased
+## v6.31.2 (2026-06-15)
 - **Deep audit pass**: Fixed callable fallback bypass in both upload repositories
   (sound + wallpaper) — if the Cloud Function returned an unexpected status or
   threw a non-`CommunityCallableException` error, the already-uploaded Storage
