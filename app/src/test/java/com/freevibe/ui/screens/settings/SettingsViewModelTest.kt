@@ -349,6 +349,7 @@ class SettingsViewModelTest {
         val context = mockk<Context>(relaxed = true).also {
             every { it.cacheDir } returns cacheDir
             every { it.filesDir } returns cacheDir.parentFile ?: cacheDir
+            every { it.applicationContext } returns it
         }
         val prefs = mockPreferences()
         val historyManager = mockk<WallpaperHistoryManager>(relaxed = true).also {
@@ -467,6 +468,7 @@ class SettingsViewModelTest {
             every { prefs.darkModeWallpaperId } returns flowOf("") // Phase 6.2 dark slot
             every { prefs.lightModeWallpaperId } returns flowOf("") // Phase 6.2 light slot
             every { prefs.stabilityAiKey } returns flowOf("")       // Phase 3.1 AI
+            every { prefs.reduceAnimations } returns flowOf(false) // Reduced-motion a11y
         }
 
     private class FakeBackgroundWorkDiagnosticsReader(

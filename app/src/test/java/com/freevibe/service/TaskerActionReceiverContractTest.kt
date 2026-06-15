@@ -33,7 +33,7 @@ class TaskerActionReceiverContractTest {
         val screen = File("src/main/java/com/freevibe/ui/screens/settings/SettingsScreen.kt").readText()
         val viewModel = File("src/main/java/com/freevibe/ui/screens/settings/SettingsViewModel.kt").readText()
 
-        assertTrue(screen.contains("title = \"External automation\""))
+        assertTrue(screen.contains("settings_external_automation_title"))
         assertTrue(screen.contains("externalAutomationSubtitle(externalAutomationDiagnostics)"))
         assertTrue(screen.contains("ExternalAutomationDiagnosticsSummary(snapshot)"))
         assertTrue(viewModel.contains("setExternalAutomationEnabled"))
