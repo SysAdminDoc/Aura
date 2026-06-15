@@ -205,6 +205,9 @@ jobs:
       - name: Privacy data safety matrix
         run: python3 tools/privacy_data_safety_check.py --policy docs/privacy/data-safety.json --repo-root .
 
+      - name: Aura Originals provenance
+        run: python3 tools/aura_originals_provenance_check.py
+
       - name: Storage ledger
         run: python3 tools/storage_ledger_check.py
 
