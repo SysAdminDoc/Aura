@@ -24,6 +24,9 @@ import kotlinx.coroutines.withContext
  *  - `license`       — CC0 1.0 expected for the bundled pack; tracked anyway
  *                       so attribution can ship in Settings → Licenses.
  *  - `sourceUrl`     — original page (e.g. Freesound URL) for attribution.
+ *  - `creator`       — upstream creator/uploader name for attribution.
+ *  - `curationDate`  — ISO date when the entry was reviewed (YYYY-MM-DD).
+ *  - `reviewResult`  — curation verdict: "approved" or reason for rejection.
  *  - `tags`          — search keywords surfaced in the in-app feed.
  *
  * Curation guidance lives in docs/aura-originals-curation.md.
@@ -46,6 +49,9 @@ data class AuraOriginalsEntry(
     val sha256: String,
     val license: String = "CC0 1.0",
     val sourceUrl: String = "",
+    val creator: String = "",
+    val curationDate: String = "",
+    val reviewResult: String = "",
     val tags: List<String> = emptyList(),
 )
 
