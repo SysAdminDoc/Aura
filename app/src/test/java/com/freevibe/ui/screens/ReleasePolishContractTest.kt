@@ -104,6 +104,50 @@ class ReleasePolishContractTest {
     }
 
     @Test
+    fun `settings credential and youtube edit dialogs avoid ime occlusion`() {
+        val source = File("src/main/java/com/freevibe/ui/screens/settings/SettingsScreen.kt").readText()
+        val apiDialog = source.substringAfter("private fun ProviderApiKeyDialog(").substringBefore("@OptIn(")
+        val ytQueriesDialog = source.substringAfter("// YouTube sound search queries editor").substringBefore("// YouTube blocked words editor")
+        val blockedWordsDialog = source.substringAfter("// YouTube blocked words editor").substringBefore("// Confirm clear cache")
+
+        assertTrue(apiDialog.contains(".verticalScroll(rememberScrollState())"))
+        assertTrue(apiDialog.contains(".imePadding()"))
+        assertTrue(apiDialog.contains("keyboardType = KeyboardType.Password"))
+        assertTrue(apiDialog.contains("imeAction = ImeAction.Done"))
+        assertTrue(ytQueriesDialog.contains(".verticalScroll(rememberScrollState())"))
+        assertTrue(ytQueriesDialog.contains(".imePadding()"))
+        assertTrue(ytQueriesDialog.contains("ImeAction.Next"))
+        assertTrue(blockedWordsDialog.contains(".verticalScroll(rememberScrollState())"))
+        assertTrue(blockedWordsDialog.contains(".imePadding()"))
+        assertTrue(blockedWordsDialog.contains("imeAction = ImeAction.Done"))
+    }
+
+    @Test
+    fun `browse filter controls keep release touch targets and bounded shapes`() {
+        val wallpaperSource = File("src/main/java/com/freevibe/ui/screens/wallpapers/WallpapersScreen.kt").readText()
+        val wallpaperModeBar = wallpaperSource.substringAfter("Spacer(Modifier.height(8.dp))").substringBefore("// Download progress")
+        val wallpaperRefineSheet = wallpaperSource.substringAfter("private fun WallpaperFiltersSheet(").substringBefore("private fun ColorPickerRow(")
+        val videoSource = File("src/main/java/com/freevibe/ui/screens/videowallpapers/VideoWallpapersScreen.kt").readText()
+        val videoModeBar = videoSource.substringAfter("keyboardActions = KeyboardActions(onSearch = {").substringBefore("if (state.degradedSources.isNotEmpty())")
+        val videoRefineSheet = videoSource.substringAfter("private fun VideoFiltersSheet(").substringBefore("private fun videoSourceHealthSummary(")
+        val soundSource = File("src/main/java/com/freevibe/ui/screens/sounds/SoundsScreen.kt").readText()
+        val soundModeBar = soundSource.substringAfter("private fun SoundFilterButton(").substringBefore("private fun soundTabLabel(")
+        val aiSource = File("src/main/java/com/freevibe/ui/screens/aigenerate/AiWallpaperScreen.kt").readText()
+        val aiStylePicker = aiSource.substringAfter("// ── Style picker").substringBefore("// ── Generate button")
+
+        assertTrue(!wallpaperModeBar.contains("heightIn(min = 34.dp)"))
+        assertTrue(wallpaperModeBar.contains("heightIn(min = 48.dp)"))
+        assertTrue(wallpaperModeBar.contains("shape = RoundedCornerShape(8.dp)"))
+        assertTrue(wallpaperRefineSheet.contains("shape = RoundedCornerShape(8.dp)"))
+        assertTrue(!videoModeBar.contains("heightIn(min = 34.dp)"))
+        assertTrue(videoModeBar.contains("heightIn(min = 48.dp)"))
+        assertTrue(videoModeBar.contains("shape = RoundedCornerShape(8.dp)"))
+        assertTrue(videoRefineSheet.contains("shape = RoundedCornerShape(8.dp)"))
+        assertTrue(soundModeBar.contains("shape = RoundedCornerShape(8.dp)"))
+        assertTrue(aiStylePicker.contains("shape = RoundedCornerShape(8.dp)"))
+    }
+
+    @Test
     fun `release ui avoids fully circular chrome backdrops`() {
         val uiFiles = listOf(
             "src/main/java/com/freevibe/ui/screens/wallpapers/WallpapersScreen.kt",

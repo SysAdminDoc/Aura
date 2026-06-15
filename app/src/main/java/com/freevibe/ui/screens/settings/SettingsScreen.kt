@@ -46,6 +46,8 @@ import androidx.compose.ui.semantics.onClick
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.core.app.NotificationManagerCompat
@@ -118,7 +120,12 @@ private fun ProviderApiKeyDialog(
         onDismissRequest = onDismiss,
         title = { Text(title) },
         text = {
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Column(
+                modifier = Modifier
+                    .verticalScroll(rememberScrollState())
+                    .imePadding(),
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
                 Text(
                     description,
                     style = MaterialTheme.typography.bodySmall,
@@ -130,6 +137,10 @@ private fun ProviderApiKeyDialog(
                     modifier = Modifier.fillMaxWidth(),
                     placeholder = { Text(placeholder) },
                     singleLine = true,
+                    keyboardOptions = KeyboardOptions(
+                        keyboardType = KeyboardType.Password,
+                        imeAction = ImeAction.Done,
+                    ),
                 )
             }
         },
@@ -2215,11 +2226,44 @@ fun SettingsScreen(
             onDismissRequest = { showYtSoundEditor = false },
             title = { Text("YouTube Search Queries") },
             text = {
-                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                    Text("Customize what YouTube searches for in each sound tab.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                    OutlinedTextField(value = ringQ, onValueChange = { ringQ = it }, label = { Text("Ringtones") }, modifier = Modifier.fillMaxWidth(), singleLine = false, maxLines = 2)
-                    OutlinedTextField(value = notifQ, onValueChange = { notifQ = it }, label = { Text("Notifications") }, modifier = Modifier.fillMaxWidth(), singleLine = false, maxLines = 2)
-                    OutlinedTextField(value = alarmQ, onValueChange = { alarmQ = it }, label = { Text("Alarms") }, modifier = Modifier.fillMaxWidth(), singleLine = false, maxLines = 2)
+                Column(
+                    modifier = Modifier
+                        .verticalScroll(rememberScrollState())
+                        .imePadding(),
+                    verticalArrangement = Arrangement.spacedBy(12.dp),
+                ) {
+                    Text(
+                        "Customize what YouTube searches for in each sound tab.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                    OutlinedTextField(
+                        value = ringQ,
+                        onValueChange = { ringQ = it },
+                        label = { Text("Ringtones") },
+                        modifier = Modifier.fillMaxWidth(),
+                        singleLine = false,
+                        maxLines = 2,
+                        keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
+                    )
+                    OutlinedTextField(
+                        value = notifQ,
+                        onValueChange = { notifQ = it },
+                        label = { Text("Notifications") },
+                        modifier = Modifier.fillMaxWidth(),
+                        singleLine = false,
+                        maxLines = 2,
+                        keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
+                    )
+                    OutlinedTextField(
+                        value = alarmQ,
+                        onValueChange = { alarmQ = it },
+                        label = { Text("Alarms") },
+                        modifier = Modifier.fillMaxWidth(),
+                        singleLine = false,
+                        maxLines = 2,
+                        keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
+                    )
                 }
             },
             confirmButton = {
@@ -2241,9 +2285,26 @@ fun SettingsScreen(
             onDismissRequest = { showYtBlockedEditor = false },
             title = { Text("Blocked Words") },
             text = {
-                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Text("Comma-separated words. YouTube results containing any of these are hidden.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                    OutlinedTextField(value = blockedText, onValueChange = { blockedText = it }, modifier = Modifier.fillMaxWidth(), singleLine = false, maxLines = 5, placeholder = { Text("compilation,mix,playlist...") })
+                Column(
+                    modifier = Modifier
+                        .verticalScroll(rememberScrollState())
+                        .imePadding(),
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    Text(
+                        "Comma-separated words. YouTube results containing any of these are hidden.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                    OutlinedTextField(
+                        value = blockedText,
+                        onValueChange = { blockedText = it },
+                        modifier = Modifier.fillMaxWidth(),
+                        singleLine = false,
+                        maxLines = 5,
+                        placeholder = { Text("compilation,mix,playlist...") },
+                        keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
+                    )
                     Text("${blockedText.split(",").filter { it.isNotBlank() }.size} words", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             },

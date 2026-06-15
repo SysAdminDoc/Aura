@@ -394,6 +394,7 @@ fun AiWallpaperScreen(
                             label = {
                                 Text(style.label, style = MaterialTheme.typography.labelSmall)
                             },
+                            shape = RoundedCornerShape(8.dp),
                         )
                     }
                 }

@@ -411,6 +411,7 @@ fun WallpapersScreen(
                     OutlinedIconButton(
                         onClick = { showFiltersSheet = true },
                         modifier = Modifier.size(48.dp),
+                        shape = RoundedCornerShape(8.dp),
                         colors = IconButtonDefaults.outlinedIconButtonColors(
                             containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.42f),
                             contentColor = if (wallpaperFilterCount > 0 || state.selectedColor != null) {
@@ -452,7 +453,8 @@ fun WallpapersScreen(
                         FilledTonalButton(
                             onClick = { showSourceMenu = true },
                             contentPadding = PaddingValues(horizontal = 12.dp, vertical = 0.dp),
-                            modifier = Modifier.heightIn(min = 34.dp),
+                            modifier = Modifier.heightIn(min = 48.dp),
+                            shape = RoundedCornerShape(8.dp),
                         ) {
                             Icon(Icons.Default.Explore, contentDescription = null, modifier = Modifier.size(14.dp))
                             Spacer(Modifier.width(6.dp))
@@ -492,7 +494,8 @@ fun WallpapersScreen(
                         FilledTonalButton(
                             onClick = onGenerateClick,
                             contentPadding = PaddingValues(horizontal = 12.dp, vertical = 0.dp),
-                            modifier = Modifier.heightIn(min = 34.dp),
+                            modifier = Modifier.heightIn(min = 48.dp),
+                            shape = RoundedCornerShape(8.dp),
                         ) {
                             Icon(Icons.Default.AutoAwesome, contentDescription = null, modifier = Modifier.size(14.dp))
                             Spacer(Modifier.width(6.dp))
@@ -505,6 +508,7 @@ fun WallpapersScreen(
                             label = { Text(wallpaperFilterLabel(state.discoverFilter), style = MaterialTheme.typography.labelSmall) },
                             leadingIcon = { Icon(Icons.Default.Tune, null, Modifier.size(12.dp)) },
                             trailingIcon = { Icon(Icons.Default.Close, null, Modifier.size(12.dp)) },
+                            shape = RoundedCornerShape(8.dp),
                         )
                     }
                     state.selectedColor?.let { selectedColor ->
@@ -520,6 +524,7 @@ fun WallpapersScreen(
                                 )
                             },
                             trailingIcon = { Icon(Icons.Default.Close, null, Modifier.size(12.dp)) },
+                            shape = RoundedCornerShape(8.dp),
                         )
                     }
                     if (state.selectedTab == WallpaperTab.WALLHAVEN && state.topRange != "1M") {
@@ -528,6 +533,7 @@ fun WallpapersScreen(
                             label = { Text(wallpaperTopRangeLabel(state.topRange), style = MaterialTheme.typography.labelSmall) },
                             leadingIcon = { Icon(Icons.Default.Schedule, null, Modifier.size(12.dp)) },
                             trailingIcon = { Icon(Icons.Default.Close, null, Modifier.size(12.dp)) },
+                            shape = RoundedCornerShape(8.dp),
                         )
                     }
                 }
@@ -904,6 +910,7 @@ private fun WallpaperFiltersSheet(
                         selected = discoverFilter == filter,
                         onClick = { onSelectDiscoverFilter(filter) },
                         label = { Text(wallpaperFilterLabel(filter)) },
+                        shape = RoundedCornerShape(8.dp),
                         leadingIcon = if (discoverFilter == filter) {
                             { Icon(Icons.Default.Check, null, Modifier.size(16.dp)) }
                         } else null,
@@ -940,6 +947,7 @@ private fun WallpaperFiltersSheet(
                         selected = topRange == range,
                         onClick = { onSelectTopRange(range) },
                         label = { Text(label) },
+                        shape = RoundedCornerShape(8.dp),
                         leadingIcon = if (topRange == range) {
                             { Icon(Icons.Default.Check, null, Modifier.size(16.dp)) }
                         } else null,

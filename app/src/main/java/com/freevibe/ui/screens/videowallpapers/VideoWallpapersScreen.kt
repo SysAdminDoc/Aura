@@ -316,7 +316,8 @@ fun VideoWallpapersScreen(
                 FilledTonalButton(
                     onClick = { showOrientationMenu = true },
                     contentPadding = PaddingValues(horizontal = 12.dp, vertical = 0.dp),
-                    modifier = Modifier.heightIn(min = 34.dp),
+                    modifier = Modifier.heightIn(min = 48.dp),
+                    shape = RoundedCornerShape(8.dp),
                 ) {
                     Icon(Icons.Default.CropPortrait, contentDescription = null, modifier = Modifier.size(14.dp))
                     Spacer(Modifier.width(6.dp))
@@ -348,7 +349,8 @@ fun VideoWallpapersScreen(
             OutlinedButton(
                 onClick = { showFiltersSheet = true },
                 contentPadding = PaddingValues(horizontal = 12.dp, vertical = 0.dp),
-                modifier = Modifier.heightIn(min = 34.dp),
+                modifier = Modifier.heightIn(min = 48.dp),
+                shape = RoundedCornerShape(8.dp),
             ) {
                 Box {
                     Icon(Icons.Default.Tune, contentDescription = null, modifier = Modifier.size(14.dp))
@@ -366,6 +368,7 @@ fun VideoWallpapersScreen(
             FilledTonalIconButton(
                 onClick = { galleryLauncher.launch(videoWallpaperMimeTypes()) },
                 modifier = Modifier.size(48.dp),
+                shape = RoundedCornerShape(8.dp),
             ) {
                 Icon(Icons.Default.FolderOpen, "Video or GIF from gallery", modifier = Modifier.size(16.dp))
             }
@@ -1058,6 +1061,7 @@ private fun VideoFiltersSheet(
                     selected = focusFilter == filter,
                     onClick = { onSelectFocus(filter) },
                     label = { Text(videoFocusLabel(filter)) },
+                    shape = RoundedCornerShape(8.dp),
                     leadingIcon = if (focusFilter == filter) {
                         { Icon(Icons.Default.Check, null, Modifier.size(16.dp)) }
                     } else null,
@@ -1080,6 +1084,7 @@ private fun VideoFiltersSheet(
                 AssistChip(
                     onClick = { onQuickSearch(query) },
                     label = { Text(label) },
+                    shape = RoundedCornerShape(8.dp),
                 )
             }
         }

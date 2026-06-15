@@ -686,6 +686,7 @@ private fun SoundFilterButton(
     FilledTonalIconButton(
         onClick = onClick,
         modifier = Modifier.size(48.dp),
+        shape = RoundedCornerShape(8.dp),
     ) {
         Box {
             Icon(Icons.Default.Tune, contentDescription = "Refine sounds", modifier = Modifier.size(18.dp))
@@ -728,6 +729,7 @@ private fun SoundModeBar(
                 selected = selectedTab == tab,
                 onClick = { onSelectTab(tab) },
                 label = { Text(soundTabLabel(tab), maxLines = 1, overflow = TextOverflow.Ellipsis) },
+                shape = RoundedCornerShape(8.dp),
             )
         }
 
@@ -746,6 +748,7 @@ private fun SoundModeBar(
                     trailingIcon = {
                         Icon(Icons.Default.ArrowDropDown, contentDescription = null, modifier = Modifier.size(16.dp))
                     },
+                    shape = RoundedCornerShape(8.dp),
                 )
                 DropdownMenu(
                     expanded = showMoreMenu,

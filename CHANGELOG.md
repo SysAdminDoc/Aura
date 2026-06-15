@@ -3,6 +3,12 @@
 All notable changes to Aura will be documented in this file.
 
 ## Unreleased
+- **Additional release-readiness polish**: Settings API-key and YouTube query
+  dialogs now remain scrollable and keyboard-aware on compact screens, with
+  password keyboard hints for provider keys. Wallpaper, video wallpaper, AI
+  style, and sound browse/filter controls now use explicit 48dp touch-target
+  rows where compact controls previously appeared and align on the app's
+  bounded 8dp control shape.
 - **Stricter release UI polish**: creator profile editing now stays scrollable
   and keyboard-aware on compact screens, AI wallpaper prompts avoid IME
   overlap, contact assignment keeps the selected-contact flow scrollable, and
