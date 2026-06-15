@@ -149,6 +149,9 @@ internal fun mapPixabayVideosToMetadata(
                 popularity = video.views.toLong(),
                 videoWidth = it.width,
                 videoHeight = it.height,
+                contentSource = com.freevibe.data.model.ContentSource.PIXABAY,
+                license = "Pixabay License",
+                sourcePageUrl = "https://pixabay.com/videos/id-${video.id}/",
             )
             urls[item.id] = it.url
             item
@@ -175,6 +178,9 @@ internal fun encodePixabayVideoCache(
         properties.setProperty("${prefix}popularity", item.popularity.toString())
         properties.setProperty("${prefix}videoWidth", item.videoWidth.toString())
         properties.setProperty("${prefix}videoHeight", item.videoHeight.toString())
+        properties.setProperty("${prefix}contentSource", item.contentSource.name)
+        properties.setProperty("${prefix}license", item.license)
+        properties.setProperty("${prefix}sourcePageUrl", item.sourcePageUrl)
         properties.setProperty("${prefix}streamUrl", cached.result.streamUrls[item.id].orEmpty())
     }
     val output = ByteArrayOutputStream()
@@ -212,6 +218,9 @@ internal fun decodePixabayVideoCache(
                 popularity = properties.getProperty("${prefix}popularity")?.toLongOrNull() ?: 0L,
                 videoWidth = properties.getProperty("${prefix}videoWidth")?.toIntOrNull() ?: 0,
                 videoHeight = properties.getProperty("${prefix}videoHeight")?.toIntOrNull() ?: 0,
+                contentSource = runCatching { com.freevibe.data.model.ContentSource.valueOf(properties.getProperty("${prefix}contentSource", "PIXABAY")) }.getOrDefault(com.freevibe.data.model.ContentSource.PIXABAY),
+                license = properties.getProperty("${prefix}license").orEmpty(),
+                sourcePageUrl = properties.getProperty("${prefix}sourcePageUrl").orEmpty(),
             )
             items += item
             urls[id] = streamUrl
@@ -539,7 +548,7 @@ class VideoWallpapersViewModel @Inject constructor(
                                 .firstOrNull { (it.height ?: 0) <= 1920 }
                                 ?: video.videoFiles.firstOrNull { it.link.endsWith(".mp4") }
                             file?.let {
-                                val item = VideoWallpaperItem(id = "px_${video.id}", title = "by ${video.user.name}", thumbnailUrl = video.image, source = "Pexels", duration = video.duration.toLong(), uploaderName = video.user.name, videoWidth = video.width, videoHeight = video.height)
+                                val item = VideoWallpaperItem(id = "px_${video.id}", title = "by ${video.user.name}", thumbnailUrl = video.image, source = "Pexels", duration = video.duration.toLong(), uploaderName = video.user.name, videoWidth = video.width, videoHeight = video.height, contentSource = com.freevibe.data.model.ContentSource.PEXELS, license = "Pexels License", sourcePageUrl = video.url)
                                 streamUrls[item.id] = it.link
                                 _resolvedIds.update { it + item.id }
                                 item
@@ -598,7 +607,7 @@ class VideoWallpapersViewModel @Inject constructor(
                                 val vh = heights.getOrNull(i) ?: 0
 
                                 if (junkPatterns.none { it.containsMatchIn(title) } && !title.contains("#")) {
-                                    val item = VideoWallpaperItem(id = "rd_${videoUrl.hashCode()}", title = title, thumbnailUrl = thumb, source = "Reddit", uploaderName = "r/$sub", popularity = ups, videoWidth = vw, videoHeight = vh)
+                                    val item = VideoWallpaperItem(id = "rd_${videoUrl.hashCode()}", title = title, thumbnailUrl = thumb, source = "Reddit", uploaderName = "r/$sub", popularity = ups, videoWidth = vw, videoHeight = vh, contentSource = com.freevibe.data.model.ContentSource.REDDIT, license = "Reddit", sourcePageUrl = "https://www.reddit.com/r/$sub/")
                                     items.add(item)
                                     streamUrls[item.id] = videoUrl.trimEnd('/') + "/DASH_720.mp4"
                                     _resolvedIds.update { it + item.id }
@@ -649,7 +658,7 @@ class VideoWallpapersViewModel @Inject constructor(
                                     ?: item.thumbnails.firstOrNull()
                                 val tw = thumb?.width?.takeIf { it > 0 } ?: 0
                                 val th = thumb?.height?.takeIf { it > 0 } ?: 0
-                                VideoWallpaperItem(id = "yt_$vid", title = item.name, thumbnailUrl = thumb?.url ?: "", source = "YouTube", duration = item.duration, uploaderName = item.uploaderName ?: "", videoId = vid, popularity = item.viewCount, videoWidth = tw, videoHeight = th)
+                                VideoWallpaperItem(id = "yt_$vid", title = item.name, thumbnailUrl = thumb?.url ?: "", source = "YouTube", duration = item.duration, uploaderName = item.uploaderName ?: "", videoId = vid, popularity = item.viewCount, videoWidth = tw, videoHeight = th, contentSource = com.freevibe.data.model.ContentSource.YOUTUBE, license = "YouTube", sourcePageUrl = "https://www.youtube.com/watch?v=$vid")
                             }
                     } catch (e: Throwable) {
                         e.rethrowIfCancelled()

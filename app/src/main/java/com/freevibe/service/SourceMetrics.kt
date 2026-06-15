@@ -15,12 +15,15 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
-class SourceMetrics @Inject constructor(
-    @ApplicationContext context: Context,
+class SourceMetrics private constructor(
+    private val prefs: SharedPreferences?,
 ) {
 
-    private val prefs: SharedPreferences =
-        context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+    @Inject constructor(@ApplicationContext context: Context) : this(
+        context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE),
+    )
+
+    internal constructor() : this(prefs = null)
 
     /** Snapshot of one source's stats, taken at read time. */
     data class SourceStats(
@@ -169,7 +172,7 @@ class SourceMetrics @Inject constructor(
     /** Forget all recorded stats (developer-facing reset). */
     fun reset() {
         entries.clear()
-        prefs.edit().clear().apply()
+        prefs?.edit()?.clear()?.apply()
         _version.update { it + 1 }
     }
 
@@ -179,9 +182,9 @@ class SourceMetrics @Inject constructor(
             val elapsed = System.currentTimeMillis() - e.lastFailureAtMs
             if (elapsed < DEGRADATION_COOLDOWN_MS) return true
         }
-        val persistedFailures = prefs.getLong("${source}_consecutive_failures", 0L)
+        val persistedFailures = prefs?.getLong("${source}_consecutive_failures", 0L) ?: 0L
         if (persistedFailures >= PERSISTENT_FAILURE_THRESHOLD) {
-            val persistedLastFailure = prefs.getLong("${source}_last_failure_at", 0L)
+            val persistedLastFailure = prefs?.getLong("${source}_last_failure_at", 0L) ?: 0L
             val elapsed = System.currentTimeMillis() - persistedLastFailure
             if (elapsed < DEGRADATION_COOLDOWN_MS) return true
         }
@@ -191,7 +194,7 @@ class SourceMetrics @Inject constructor(
     fun degradedSources(): Set<String> {
         val keys = mutableSetOf<String>()
         keys.addAll(entries.keys.filter { isDegraded(it) })
-        val allPrefs = prefs.all
+        val allPrefs = prefs?.all ?: emptyMap()
         for ((key, _) in allPrefs) {
             if (key.endsWith("_consecutive_failures")) {
                 val source = key.removeSuffix("_consecutive_failures")
@@ -202,25 +205,25 @@ class SourceMetrics @Inject constructor(
     }
 
     private fun persistFailureState(source: String, entry: MutableEntry) {
-        prefs.edit()
-            .putLong("${source}_consecutive_failures", entry.consecutiveFailures.get())
-            .putLong("${source}_last_failure_at", entry.lastFailureAtMs)
-            .putString("${source}_last_error", entry.lastErrorClass)
-            .apply()
+        prefs?.edit()
+            ?.putLong("${source}_consecutive_failures", entry.consecutiveFailures.get())
+            ?.putLong("${source}_last_failure_at", entry.lastFailureAtMs)
+            ?.putString("${source}_last_error", entry.lastErrorClass)
+            ?.apply()
     }
 
     private fun persistRecovery(source: String) {
-        prefs.edit()
-            .putLong("${source}_consecutive_failures", 0L)
-            .apply()
+        prefs?.edit()
+            ?.putLong("${source}_consecutive_failures", 0L)
+            ?.apply()
     }
 
     private fun loadPersistedState(source: String, entry: MutableEntry) {
-        val persisted = prefs.getLong("${source}_consecutive_failures", 0L)
+        val persisted = prefs?.getLong("${source}_consecutive_failures", 0L) ?: 0L
         if (persisted > 0L) {
             entry.consecutiveFailures.set(persisted)
-            entry.lastFailureAtMs = prefs.getLong("${source}_last_failure_at", 0L)
-            entry.lastErrorClass = prefs.getString("${source}_last_error", null)
+            entry.lastFailureAtMs = prefs?.getLong("${source}_last_failure_at", 0L) ?: 0L
+            entry.lastErrorClass = prefs?.getString("${source}_last_error", null)
         }
     }
 

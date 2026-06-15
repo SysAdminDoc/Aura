@@ -397,6 +397,7 @@ class SettingsViewModelTest {
                 backgroundWorkDiagnosticsReader = backgroundWorkDiagnosticsReaderOverride
                     ?: FakeBackgroundWorkDiagnosticsReader(BackgroundWorkDiagnostics()),
                 ytDlpUpdateManager = ytDlpUpdateManager,
+                liveWallpaperReceiptStore = mockk(relaxed = true),
             ),
             backgroundWorkDiagnosticsReader = backgroundWorkDiagnosticsReaderOverride
                 ?: FakeBackgroundWorkDiagnosticsReader(BackgroundWorkDiagnostics()),

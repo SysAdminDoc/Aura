@@ -80,6 +80,9 @@ data class VideoWallpaperItem(
     val popularity: Long = 0, // Views (YouTube), upvotes (Reddit), or 0 (Pexels)
     val videoWidth: Int = 0,
     val videoHeight: Int = 0,
+    val contentSource: com.freevibe.data.model.ContentSource = com.freevibe.data.model.ContentSource.LOCAL,
+    val license: String = "",
+    val sourcePageUrl: String = "",
 ) {
     val isPortrait: Boolean get() = videoHeight > videoWidth
     val isLandscape: Boolean get() = videoWidth > videoHeight
