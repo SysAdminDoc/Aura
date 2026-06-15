@@ -3,6 +3,11 @@
 All notable changes to Aura will be documented in this file.
 
 ## Unreleased
+- **Release polish pass**: community report, sound upload, and wallpaper upload
+  dialogs now keep form content scrollable and IME-aware on compact screens.
+  Sound upload category/license chips wrap instead of overflowing at large text
+  sizes, and sound detail bottom spacing now uses navigation-bar insets instead
+  of fixed padding.
 - **Planning-doc manifest gate**: expanded `tools/manifest_consistency_check.py`
   beyond ROADMAP/RESEARCH so current-state README sections and local context
   docs are checked against Gradle and Functions manifests. `verify.yml` now

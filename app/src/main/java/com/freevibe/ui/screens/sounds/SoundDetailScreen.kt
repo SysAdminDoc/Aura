@@ -632,7 +632,8 @@ fun SoundDetailScreen(
                 }
             }
 
-            Spacer(Modifier.height(80.dp)) // bottom padding for nav bar
+            Spacer(Modifier.height(16.dp))
+            Spacer(Modifier.windowInsetsBottomHeight(WindowInsets.navigationBars))
         }
     }
 }

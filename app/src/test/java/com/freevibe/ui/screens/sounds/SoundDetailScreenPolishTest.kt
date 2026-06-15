@@ -18,7 +18,9 @@ class SoundDetailScreenPolishTest {
         assertTrue(source.contains("heightIn(min = 64.dp)"))
         assertTrue(source.contains("maxLines = 2"))
         assertTrue(source.contains("textAlign = TextAlign.Center"))
+        assertTrue(source.contains("windowInsetsBottomHeight(WindowInsets.navigationBars)"))
         assertFalse(source.contains("modifier.height(48.dp)"))
         assertFalse(source.contains("modifier.height(64.dp)"))
+        assertFalse(source.contains("Spacer(Modifier.height(80.dp))"))
     }
 }
