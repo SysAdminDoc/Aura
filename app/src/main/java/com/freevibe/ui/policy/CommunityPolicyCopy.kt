@@ -28,7 +28,7 @@ fun communityUploadPolicyCopy(kind: CommunityUploadPolicyKind): CommunityUploadP
     CommunityUploadPolicyCopy(
         publicTitle = "Public community listing",
         publicBody = "This ${kind.displayName} becomes public after upload. Its category, selected license, source link, uploader label, tags, public download URL, and sanitized Storage path are stored with the listing.",
-        takedownBody = "You can delete your own listing from its detail screen while this community identity is available. If you lose access, use Settings > Community identity or the privacy-policy deletion request path. Rights holders can report the listing. Confirmed rights reports can hide or delete the ${kind.publicListingName} and its ${kind.uploadedFileName}.",
+        takedownBody = "You can delete your own listing from its detail screen while this community identity is available. If you lose access, use Settings > Community identity to copy or share a deletion request code, or use the privacy-policy hosted web request path if Aura is unavailable. Rights holders can report the listing. Confirmed rights reports can hide or delete the ${kind.publicListingName} and its ${kind.uploadedFileName}.",
         attestation = "I own or have rights to share this ${kind.displayName} under the selected license.",
     )
 

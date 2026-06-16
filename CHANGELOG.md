@@ -3,6 +3,9 @@
 All notable changes to Aura will be documented in this file.
 
 ## v6.31.2 (2026-06-15)
+- **Community upload deletion request copy**: sound and wallpaper upload
+  disclosures now tell users to copy/share the Settings deletion request code
+  or use the privacy-policy hosted web request path if Aura is unavailable.
 - **Community deletion orchestrator apply gate**: the trusted deletion
   orchestrator can now run an explicit RTDB apply mode with request-code,
   plan-hash, OAuth token, and timeout gates, then emit a redacted completion
