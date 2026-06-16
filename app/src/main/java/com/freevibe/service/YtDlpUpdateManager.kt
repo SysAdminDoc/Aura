@@ -183,9 +183,14 @@ class YtDlpUpdateManager @Inject constructor(
 
     private fun prepareRollback(runtimeDir: File) {
         val rollbackDir = rollbackDir()
-        rollbackDir.deleteRecursively()
+        val stagingDir = File(rollbackDir.parentFile, ROLLBACK_STAGING_NAME)
+        stagingDir.deleteRecursively()
         if (runtimeDir.exists()) {
-            runtimeDir.copyRecursively(target = rollbackDir, overwrite = true)
+            runtimeDir.copyRecursively(target = stagingDir, overwrite = true)
+        }
+        rollbackDir.deleteRecursively()
+        if (stagingDir.exists()) {
+            stagingDir.renameTo(rollbackDir)
         }
     }
 
@@ -193,13 +198,25 @@ class YtDlpUpdateManager @Inject constructor(
         val rollbackDir = rollbackDir()
         if (!rollbackDir.exists()) return false
         val runtimeDir = runtimeDir()
-        runtimeDir.deleteRecursively()
-        rollbackDir.copyRecursively(target = runtimeDir, overwrite = true)
+        val staleDir = File(runtimeDir.parentFile, STALE_RUNTIME_NAME)
+        staleDir.deleteRecursively()
+        if (runtimeDir.exists()) {
+            if (!runtimeDir.renameTo(staleDir)) {
+                runtimeDir.deleteRecursively()
+            }
+        }
+        val restored = rollbackDir.copyRecursively(target = runtimeDir, overwrite = true)
+        if (!restored) {
+            runtimeDir.deleteRecursively()
+            if (staleDir.exists()) staleDir.renameTo(runtimeDir)
+            return false
+        }
+        staleDir.deleteRecursively()
         restorePreviousLibraryVersion()
         return runCatching {
             runtime.initYtDlp(context, runtimeDir)
             true
-        }.getOrDefault(true)
+        }.getOrDefault(false)
     }
 
     private fun cleanupRollback() {
@@ -267,6 +284,8 @@ class YtDlpUpdateManager @Inject constructor(
         private const val YTDLP_ANDROID_DIR = "youtubedl-android"
         private const val YTDLP_DIR_NAME = "yt-dlp"
         private const val ROLLBACK_DIR_NAME = "yt-dlp.rollback"
+        private const val ROLLBACK_STAGING_NAME = "yt-dlp.rollback.tmp"
+        private const val STALE_RUNTIME_NAME = "yt-dlp.stale"
         private const val KEY_LAST_STATUS = "lastStatus"
         private const val KEY_LAST_ATTEMPT_AT_MS = "lastAttemptAtMs"
         private const val KEY_LAST_SUCCESS_AT_MS = "lastSuccessAtMs"

@@ -84,6 +84,24 @@ class YtDlpUpdateManagerTest {
     }
 
     @Test
+    fun `extraction failure with broken initYtDlp reports restore failed`() = runTest(dispatcher) {
+        val fixture = createFixture()
+        fixture.runtimeFile.writeText("old")
+        val fakeRuntime = FakeYtDlpRuntime(
+            updateAction = {
+                fixture.runtimeFile.writeText("new")
+            },
+        ).also { it.initYtDlpThrows = true }
+        val manager = fixture.manager(fakeRuntime)
+
+        manager.updateStable()
+        val restored = manager.recordExtractionFailure(IllegalStateException("po token failed"))
+
+        assertFalse(restored)
+        assertEquals(YtDlpUpdateStatus.FAILED, manager.snapshot().lastStatus)
+    }
+
+    @Test
     fun `failed update restores the previous runtime`() = runTest(dispatcher) {
         val fixture = createFixture()
         fixture.runtimeFile.writeText("old")
@@ -154,6 +172,7 @@ class YtDlpUpdateManagerTest {
     ) : YtDlpRuntime {
         var activeVersionName: String? = "bundled"
         var initYtDlpCalls: Int = 0
+        var initYtDlpThrows: Boolean = false
 
         override fun init(context: Context) = Unit
 
@@ -168,6 +187,7 @@ class YtDlpUpdateManagerTest {
 
         override fun initYtDlp(context: Context, runtimeDir: File) {
             initYtDlpCalls += 1
+            if (initYtDlpThrows) throw IllegalStateException("init failed")
         }
     }
 
