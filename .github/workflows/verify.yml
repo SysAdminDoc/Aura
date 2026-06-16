@@ -197,6 +197,9 @@ jobs:
       - name: Network endpoint inventory
         run: python3 tools/network_endpoint_inventory_check.py --inventory docs/security/network-endpoints.json --repo-root .
 
+      - name: YouTube store-risk profile
+        run: python3 tools/youtube_store_risk_check.py --repo-root .
+
       - name: Store metadata preflight
         run: python3 tools/store_metadata_preflight.py --repo-root .
 

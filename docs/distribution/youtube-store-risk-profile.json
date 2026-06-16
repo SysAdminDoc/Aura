@@ -1,0 +1,62 @@
+{
+  "status": "checked",
+  "lastReviewed": "2026-06-16",
+  "decision": "YouTube is a runtime-toggleable optional provider. Store metadata must not position YouTube download/extraction as a primary feature for Play/Izzy channels.",
+  "channels": {
+    "github": {
+      "youtubeEnabled": true,
+      "rationale": "GitHub Releases/Obtainium users choose full functionality. YouTube toggle defaults to enabled.",
+      "metadataPolicy": "Full feature list including YouTube discovery is acceptable in GitHub README and release notes."
+    },
+    "izzyOnDroid": {
+      "youtubeEnabled": true,
+      "rationale": "IzzyOnDroid permits proprietary dependencies and extraction libraries. YouTube toggle defaults to enabled.",
+      "metadataPolicy": "YouTube feature is listed but framed as optional source provider, not primary product pitch."
+    },
+    "fdroidMainline": {
+      "youtubeEnabled": "blocked",
+      "rationale": "F-Droid mainline is blocked until a real FOSS flavor exists. YouTube extraction through NewPipe/yt-dlp is GPL-compatible but Firebase blocks inclusion regardless.",
+      "metadataPolicy": "N/A — not submitted."
+    },
+    "play": {
+      "youtubeEnabled": "cautious",
+      "rationale": "Play IP policy is restrictive around unauthorized downloads and cached audiovisual content. YouTube toggle should default to enabled but listing metadata must not promote unauthorized downloading.",
+      "metadataPolicy": "Do not use phrases like 'download YouTube audio', 'save YouTube videos', 'YouTube ripper'. Frame as 'discover ringtones from YouTube' with clear attribution. Screenshots must not show YouTube download progress or cache management."
+    }
+  },
+  "runtimeBehavior": {
+    "togglePath": "Settings > YouTube provider toggle",
+    "defaultState": "enabled",
+    "disabledBehavior": [
+      "YouTube tab hidden in Sounds",
+      "YouTube search queries not executed",
+      "YouTube video sources skipped in Video Wallpapers",
+      "yt-dlp stream resolution not attempted",
+      "NewPipe search not called",
+      "Existing YouTube favorites remain accessible but marked as provider-disabled"
+    ],
+    "sourceFile": "PreferencesManager.kt (YOUTUBE_PROVIDER_ENABLED key)"
+  },
+  "metadataRiskTerms": {
+    "banned": [
+      "download YouTube",
+      "save YouTube audio",
+      "YouTube ripper",
+      "YouTube downloader",
+      "rip audio from YouTube",
+      "YouTube MP3"
+    ],
+    "cautious": [
+      "YouTube-first",
+      "powered by yt-dlp",
+      "NewPipe extraction"
+    ],
+    "acceptable": [
+      "discover ringtones from YouTube",
+      "YouTube sound search",
+      "video wallpapers from YouTube",
+      "YouTube integration (optional)"
+    ]
+  },
+  "fastlaneMetadataFile": "fastlane/metadata/android/en-US/full_description.txt"
+}
