@@ -96,7 +96,7 @@ test('wallpaper upload callable handler writes metadata, owner index, quota, and
   assert.equal(wallpaper.height, 1920);
   assert.equal(wallpaper.fileSize, 410_000);
   assert.equal(wallpaper.fileType, 'image/jpeg');
-  assert.equal(wallpaper.originalFileName, 'Night Grid.jpg');
+  assert.equal(Object.hasOwn(wallpaper, 'originalFileName'), false);
   assert.equal(wallpaper.uploaderId, OWNER_UID);
   assert.equal(wallpaper.uploaderUid, OWNER_UID);
   assert.equal(wallpaper.uploaderLabel, 'Wall Owner');

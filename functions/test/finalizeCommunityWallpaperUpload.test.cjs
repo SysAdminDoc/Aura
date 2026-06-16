@@ -92,7 +92,6 @@ class FakeWallpaperUploadBackend {
       height: input.payload.height,
       fileSize: input.payload.fileSize,
       fileType: input.payload.fileType,
-      originalFileName: input.payload.originalFileName,
       uploadedAt: input.uploadedAt,
       uploaderId: input.uid,
       uploaderUid: input.uid,
@@ -144,7 +143,6 @@ test("accepted wallpaper upload writes public metadata, owner index, quota, and 
     height: 1920,
     fileSize: 410_000,
     fileType: "image/jpeg",
-    originalFileName: "Night Grid.png",
     uploadedAt: NOW,
     uploaderId: "wallOwner1",
     uploaderUid: "wallOwner1",
@@ -155,6 +153,7 @@ test("accepted wallpaper upload writes public metadata, owner index, quota, and 
     sourceUrl: "https://example.com/source",
     votes: 0,
   });
+  assert.equal(Object.hasOwn(backend.wallpapers.get("wallA"), "originalFileName"), false);
   assert.deepEqual(backend.ownerUploads.get("wallOwner1/wallpapers/wallA"), {
     uploadId: "wallA",
     publicId: "cw_wallA",

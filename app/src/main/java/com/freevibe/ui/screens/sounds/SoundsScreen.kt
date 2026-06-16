@@ -1704,8 +1704,6 @@ private fun UploadDialog(
     var rightsAttested by remember { mutableStateOf(false) }
     var tagsText by remember { mutableStateOf("") }
     val policyCopy = remember { communityUploadPolicyCopy(CommunityUploadPolicyKind.SOUND) }
-    val uploadVisibilityTitle = stringResource(R.string.community_upload_visibility_title)
-    val uploadVisibilityBody = stringResource(R.string.community_upload_visibility_body)
     val categories = listOf("ringtone" to "Ringtone", "notification" to "Notification", "alarm" to "Alarm")
     val parsedTags = remember(tagsText) {
         tagsText.split(',', '#')
@@ -1781,10 +1779,6 @@ private fun UploadDialog(
                 CommunityPolicyNotice(
                     title = policyCopy.publicTitle,
                     body = "${policyCopy.publicBody} ${policyCopy.takedownBody}",
-                )
-                CommunityPolicyNotice(
-                    title = uploadVisibilityTitle,
-                    body = uploadVisibilityBody,
                 )
                 Row(
                     modifier = Modifier.fillMaxWidth(),

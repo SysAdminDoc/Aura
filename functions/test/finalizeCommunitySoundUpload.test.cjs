@@ -80,7 +80,6 @@ class FakeSoundUploadBackend {
       downloadUrl: input.payload.downloadUrl,
       storagePath: input.payload.storagePath,
       fileType: input.payload.fileType,
-      originalFileName: input.payload.originalFileName,
       uploadedAt: input.uploadedAt,
       uploaderId: input.uid,
       uploaderUid: input.uid,
@@ -126,7 +125,6 @@ test("accepted sound upload writes public metadata, owner index, quota, and dedu
     downloadUrl: "https://firebasestorage.googleapis.com/v0/b/aura/o/sounds%2FsoundOwner1%2Fbell.mp3",
     storagePath: "sounds/soundOwner1/1700000000000_soft_bell.mp3",
     fileType: "audio/mpeg",
-    originalFileName: "Soft Bell.mp3",
     uploadedAt: NOW,
     uploaderId: "soundOwner1",
     uploaderUid: "soundOwner1",
@@ -137,6 +135,7 @@ test("accepted sound upload writes public metadata, owner index, quota, and dedu
     sourceUrl: "https://example.com/source",
     votes: 0,
   });
+  assert.equal(Object.hasOwn(backend.sounds.get("soundA"), "originalFileName"), false);
   assert.deepEqual(backend.ownerUploads.get("soundOwner1/sounds/soundA"), {
     uploadId: "soundA",
     publicId: "cu_soundA",

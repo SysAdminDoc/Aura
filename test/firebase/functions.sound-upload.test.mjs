@@ -84,7 +84,7 @@ test('sound upload callable handler writes metadata, owner index, quota, and ded
   assert.equal(sound.downloadUrl, DOWNLOAD_URL);
   assert.equal(sound.storagePath, STORAGE_PATH);
   assert.equal(sound.fileType, 'audio/mpeg');
-  assert.equal(sound.originalFileName, 'Soft Bell.mp3');
+  assert.equal(Object.hasOwn(sound, 'originalFileName'), false);
   assert.equal(sound.uploaderId, OWNER_UID);
   assert.equal(sound.uploaderUid, OWNER_UID);
   assert.equal(sound.uploaderLabel, 'Sound Owner');

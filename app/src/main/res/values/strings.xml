@@ -117,8 +117,6 @@
     <string name="community_recording_body">Record up to 60 seconds. The file stays on this device until you choose Upload, and Discard deletes the local recording.</string>
     <string name="community_recording_stop">Stop</string>
     <string name="community_recording_discard">Discard</string>
-    <string name="community_upload_visibility_title">Public upload</string>
-    <string name="community_upload_visibility_body">Pressing Upload publishes this sound, its category, license, tags, and source URL to the community catalog. Cancel keeps the selected file local.</string>
     <string name="community_guidelines_intro">Read and accept these rules before using community uploads, votes, reports, blocks, follows, or profiles.</string>
     <string name="community_guidelines_retention_note">Aura may hide, remove, or preserve moderation records for content that breaks these guidelines.</string>
     <string name="community_guidelines_accept">I agree</string>

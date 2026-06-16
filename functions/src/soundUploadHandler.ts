@@ -25,7 +25,6 @@ const MAX_NAME = 80;
 const MAX_TAGS = 8;
 const MAX_TAG_LENGTH = 24;
 const MAX_SHORT_TEXT = 120;
-const MAX_FILE_NAME = 240;
 const MAX_URL = 2_048;
 const MAX_STORAGE_PATH = 512;
 const FIREBASE_KEY_REGEX = /[.#$[\]/]/g;
@@ -80,7 +79,6 @@ export interface CommunitySoundUploadPayload {
   readonly downloadUrl: string;
   readonly storagePath: string;
   readonly fileType: string;
-  readonly originalFileName: string;
   readonly uploaderLabel: string;
   readonly license: string;
   readonly rightsAttested: true;
@@ -210,10 +208,6 @@ export function normalizeSoundUploadPayload(
   const tags = normalizeTags(payload.tags);
   const downloadUrl = normalizeHttpsUrl(requiredString(payload, "downloadUrl"), "downloadUrl");
   const fileType = normalizeFileType(requiredString(payload, "fileType"));
-  const originalFileName = normalizeShortText(
-    optionalString(payload, "originalFileName") || fileNameFromStoragePath(storagePath),
-    MAX_FILE_NAME,
-  ) || "community-sound";
   const uploaderLabel = normalizeShortText(optionalString(payload, "uploaderLabel"), MAX_SHORT_TEXT)
     || uploaderUid.slice(0, 8);
   const license = normalizeLicense(requiredString(payload, "license"));
@@ -230,7 +224,6 @@ export function normalizeSoundUploadPayload(
     downloadUrl,
     storagePath,
     fileType,
-    originalFileName,
     uploaderLabel,
     license,
     rightsAttested: true,
@@ -367,10 +360,6 @@ function normalizeOptionalHttpsUrl(value: string, field: string): string {
   const normalized = normalizeShortText(value, MAX_URL);
   if (!normalized) return "";
   return normalizeHttpsUrl(normalized, field);
-}
-
-function fileNameFromStoragePath(storagePath: string): string {
-  return storagePath.split("/").pop() ?? "community-sound";
 }
 
 function normalizeShortText(value: string, maxLength: number): string {
@@ -527,7 +516,6 @@ function buildSoundMetadata(
     downloadUrl: payload.downloadUrl,
     storagePath: payload.storagePath,
     fileType: payload.fileType,
-    originalFileName: payload.originalFileName,
     uploadedAt,
     uploaderId: uploaderUid,
     uploaderUid,

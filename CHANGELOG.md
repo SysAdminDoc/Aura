@@ -3,6 +3,10 @@
 All notable changes to Aura will be documented in this file.
 
 ## v6.31.2 (2026-06-15)
+- **Community upload public-data disclosure**: upload dialogs now disclose owner
+  deletion and deletion-request paths before publishing, and sound/wallpaper
+  upload callables no longer store original local filenames in public catalog
+  metadata.
 - **Provider-policy reports**: the existing "Provider policy violation" report
   reason is now accepted by the community report Cloud Function and RTDB report
   validation, so wallpaper/sound report dialogs can submit provider-specific

@@ -26,7 +26,6 @@ const MAX_TAGS = 8;
 const MAX_TAG_LENGTH = 24;
 const MAX_COLORS = 6;
 const MAX_SHORT_TEXT = 120;
-const MAX_FILE_NAME = 240;
 const MAX_URL = 2_048;
 const MAX_STORAGE_PATH = 512;
 const MAX_WALLPAPER_BYTES = 4 * 1024 * 1024;
@@ -79,7 +78,6 @@ export interface CommunityWallpaperUploadPayload {
   readonly height: number;
   readonly fileSize: number;
   readonly fileType: "image/jpeg";
-  readonly originalFileName: string;
   readonly uploaderLabel: string;
   readonly license: string;
   readonly rightsAttested: true;
@@ -215,10 +213,6 @@ export function normalizeWallpaperUploadPayload(
   const height = normalizePositiveInteger(payload, "height", MAX_WALLPAPER_DIMENSION);
   const fileSize = normalizePositiveInteger(payload, "fileSize", MAX_WALLPAPER_BYTES);
   const fileType = normalizeFileType(requiredString(payload, "fileType"));
-  const originalFileName = normalizeShortText(
-    optionalString(payload, "originalFileName") || fileNameFromStoragePath(storagePath),
-    MAX_FILE_NAME,
-  ) || "community-wallpaper.jpg";
   const uploaderLabel = normalizeShortText(optionalString(payload, "uploaderLabel"), MAX_SHORT_TEXT)
     || uploaderUid.slice(0, 8);
   const license = normalizeLicense(requiredString(payload, "license"));
@@ -241,7 +235,6 @@ export function normalizeWallpaperUploadPayload(
     height,
     fileSize,
     fileType,
-    originalFileName,
     uploaderLabel,
     license,
     rightsAttested: true,
@@ -416,10 +409,6 @@ function normalizePositiveInteger(
   return normalized;
 }
 
-function fileNameFromStoragePath(storagePath: string): string {
-  return storagePath.split("/").pop() ?? "community-wallpaper.jpg";
-}
-
 function normalizeShortText(value: string, maxLength: number): string {
   return value
     .replace(CONTROL_REGEX, " ")
@@ -584,7 +573,6 @@ function buildWallpaperMetadata(
     height: payload.height,
     fileSize: payload.fileSize,
     fileType: payload.fileType,
-    originalFileName: payload.originalFileName,
     uploadedAt,
     uploaderId: uploaderUid,
     uploaderUid,
