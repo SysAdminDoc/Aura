@@ -1,0 +1,106 @@
+{
+  "lastReviewed": "2026-06-16",
+  "formats": {
+    "favorites": {
+      "currentVersion": 1,
+      "sourceFile": "app/src/main/java/com/freevibe/service/FavoritesExporter.kt",
+      "rootClass": "FavoritesExportFile",
+      "itemClass": "FavoriteExportItem",
+      "mimeType": "application/json",
+      "fileExtension": ".json",
+      "maxImportItems": 10000,
+      "fields": {
+        "version": { "type": "Int", "required": true, "since": 1, "description": "Schema version. Must equal 1 for current parser." },
+        "exportedAt": { "type": "Long", "required": true, "since": 1, "description": "Unix epoch millis when the export was created." },
+        "items": { "type": "List<FavoriteExportItem>", "required": true, "since": 1, "description": "Exported favorite entries." }
+      },
+      "itemFields": {
+        "id": { "type": "String", "required": true, "since": 1, "description": "Provider item ID. Sanitized on import." },
+        "source": { "type": "String", "required": true, "since": 1, "description": "ContentSource enum name. Validated against known sources on import." },
+        "type": { "type": "String", "required": true, "since": 1, "description": "WALLPAPER or SOUND." },
+        "thumbnailUrl": { "type": "String", "required": true, "since": 1, "description": "HTTPS thumbnail URL. Required non-blank for WALLPAPER; may be blank for SOUND." },
+        "fullUrl": { "type": "String", "required": true, "since": 1, "description": "HTTPS full-resolution URL. Required non-blank." },
+        "name": { "type": "String", "default": "", "since": 1, "description": "Display name." },
+        "width": { "type": "Int", "default": 0, "since": 1, "description": "Image width in pixels." },
+        "height": { "type": "Int", "default": 0, "since": 1, "description": "Image height in pixels." },
+        "duration": { "type": "Double", "default": 0.0, "since": 1, "description": "Audio duration in seconds." },
+        "tags": { "type": "String?", "since": 1, "description": "Comma-separated tags." },
+        "colors": { "type": "String?", "since": 1, "description": "Comma-separated hex colors." },
+        "category": { "type": "String?", "since": 1, "description": "Provider-assigned category." },
+        "uploaderName": { "type": "String?", "since": 1, "description": "Original uploader/creator name." },
+        "sourcePageUrl": { "type": "String?", "since": 1, "description": "HTTPS link to the original source page." },
+        "license": { "type": "String?", "since": 1, "description": "License identifier or display label." },
+        "fileSize": { "type": "Long?", "since": 1, "description": "File size in bytes." },
+        "fileType": { "type": "String?", "since": 1, "description": "MIME type or file extension." },
+        "views": { "type": "Long?", "since": 1, "description": "View count from provider." },
+        "favoritesCount": { "type": "Long?", "since": 1, "description": "Provider favorite/like count." },
+        "addedAt": { "type": "Long?", "since": 1, "description": "Unix epoch millis when the user favorited this item." },
+        "sourceAvailability": { "type": "String?", "since": 1, "description": "AVAILABLE or SOURCE_UNAVAILABLE. Normalized to AVAILABLE on null/blank." },
+        "sourceAvailabilityReason": { "type": "String?", "since": 1, "description": "Human-readable reason when source is unavailable." }
+      },
+      "importValidation": [
+        "id must be non-blank after trim",
+        "source must match a known ContentSource enum value",
+        "type must be WALLPAPER or SOUND",
+        "thumbnailUrl must be HTTPS (may be blank for SOUND type)",
+        "fullUrl must be non-blank HTTPS",
+        "sourcePageUrl, if present, must be HTTPS",
+        "sourceAvailability is normalized to AVAILABLE if null or blank",
+        "Items exceeding maxImportItems are silently dropped"
+      ],
+      "versionPolicy": {
+        "bumpRule": "Increment version when adding required fields or changing field semantics. Optional nullable fields may be added without a version bump.",
+        "forwardCompat": "Unknown fields are silently ignored by Moshi. Future versions with higher version numbers are rejected with user-visible copy.",
+        "backwardCompat": "Version 1 files remain importable. New optional fields default to null on older exports.",
+        "unsupportedVersionCopy": "This file was exported by a newer version of Aura. Please update the app to import it."
+      },
+      "privacyExclusions": [
+        "Export does not include provider API keys or user credentials",
+        "Export does not include download file paths or device storage locations",
+        "Export does not include community identity UIDs or Firebase auth state",
+        "sourcePageUrl may contain third-party provider URLs with query parameters"
+      ]
+    },
+    "collections": {
+      "currentVersion": 1,
+      "sourceFile": "app/src/main/java/com/freevibe/service/CollectionExporter.kt",
+      "rootClass": "CollectionExportFile",
+      "itemClass": "CollectionExportItem",
+      "mimeType": "application/json",
+      "fileExtension": ".json",
+      "maxImportItems": 500,
+      "fields": {
+        "version": { "type": "Int", "required": true, "since": 1, "description": "Schema version. Must equal 1 for current parser." },
+        "exportedAt": { "type": "Long", "required": true, "since": 1, "description": "Unix epoch millis when the export was created." },
+        "collectionName": { "type": "String", "required": true, "since": 1, "description": "Collection display name, capped at 80 chars on import." },
+        "items": { "type": "List<CollectionExportItem>", "required": true, "since": 1, "description": "Wallpapers in the collection." }
+      },
+      "itemFields": {
+        "wallpaperId": { "type": "String", "required": true, "since": 1, "description": "Provider wallpaper ID. Sanitized on import." },
+        "source": { "type": "String", "required": true, "since": 1, "description": "ContentSource enum name." },
+        "thumbnailUrl": { "type": "String", "required": true, "since": 1, "description": "HTTPS thumbnail URL." },
+        "fullUrl": { "type": "String", "required": true, "since": 1, "description": "HTTPS full-resolution URL." },
+        "width": { "type": "Int", "required": true, "since": 1, "description": "Image width in pixels." },
+        "height": { "type": "Int", "required": true, "since": 1, "description": "Image height in pixels." }
+      },
+      "importValidation": [
+        "wallpaperId must be non-blank after trim",
+        "source must match a known ContentSource enum value",
+        "fullUrl must be non-blank HTTPS",
+        "thumbnailUrl defaults to fullUrl if blank",
+        "Items exceeding maxImportItems are silently dropped",
+        "Duplicate wallpaperId+source pairs are deduplicated"
+      ],
+      "versionPolicy": {
+        "bumpRule": "Increment version when adding required fields or changing field semantics. Optional nullable fields may be added without a version bump.",
+        "forwardCompat": "Unknown fields are silently ignored by Moshi. Future versions with higher version numbers are rejected.",
+        "backwardCompat": "Version 1 files remain importable. New optional fields default to null on older exports.",
+        "unsupportedVersionCopy": "This collection was exported by a newer version of Aura."
+      },
+      "privacyExclusions": [
+        "Export does not include collection creator identity or local IDs",
+        "Shared collections via Firebase include creatorUid for ownership rules"
+      ]
+    }
+  }
+}
