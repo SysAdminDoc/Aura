@@ -7,6 +7,21 @@ import org.junit.Test
 class CommunityReportTest {
 
     @Test
+    fun `community content reports expose provider policy reason`() {
+        assertEquals(
+            listOf(
+                CommunityReportReason.RIGHTS,
+                CommunityReportReason.SOURCE_REMOVED,
+                CommunityReportReason.SAFETY,
+                CommunityReportReason.SPAM,
+                CommunityReportReason.PROVIDER_POLICY,
+                CommunityReportReason.OTHER,
+            ),
+            COMMUNITY_REPORT_REASONS,
+        )
+    }
+
+    @Test
     fun `generated content reports expose required policy categories`() {
         assertEquals(
             listOf(

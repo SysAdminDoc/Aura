@@ -31,6 +31,7 @@ const VALID_REASONS = new Set([
   "SOURCE_REMOVED",
   "SAFETY",
   "SPAM",
+  "PROVIDER_POLICY",
   "OFFENSIVE",
   "UNSAFE",
   "DECEPTIVE",

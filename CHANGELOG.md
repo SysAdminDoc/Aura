@@ -3,6 +3,10 @@
 All notable changes to Aura will be documented in this file.
 
 ## v6.31.2 (2026-06-15)
+- **Provider-policy reports**: the existing "Provider policy violation" report
+  reason is now accepted by the community report Cloud Function and RTDB report
+  validation, so wallpaper/sound report dialogs can submit provider-specific
+  policy concerns instead of falling back to generic safety or rights reasons.
 - **Community write hardening**: community report submission, voting, creator
   follows/profile edits, user blocks, and upload metadata finalization now rely
   on the App Check/Auth-backed Cloud Function callables instead of falling back

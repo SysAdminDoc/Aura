@@ -132,6 +132,35 @@ test("accepted generated content report writes generated reason", async () => {
   );
 });
 
+test("accepted provider policy report writes policy reason", async () => {
+  const backend = new FakeReportBackend();
+  const result = await submitCommunityReportHandler(
+    validRequest({
+      contentId: "WALLPAPER::PEXELS::pexels-123",
+      contentType: "wallpaper",
+      contentSource: "pexels",
+      reason: "provider_policy",
+      note: "Provider terms look mismatched for this item.",
+      sourceUrl: "https://www.pexels.com/photo/example-123/",
+      license: "Pexels License",
+      uploaderName: "Pexels Creator",
+      uploaderUid: "",
+    }),
+    backend,
+  );
+
+  assert.equal(result.status, "accepted");
+  const report = backend.reports.get("reportA");
+  assert.equal(report.contentSource, "PEXELS");
+  assert.equal(report.reason, "PROVIDER_POLICY");
+  assert.equal(report.sourceUrl, "https://www.pexels.com/photo/example-123/");
+  assert.equal(report.license, "Pexels License");
+  assert.equal(
+    backend.dedupe.get("reporter1/reports/WALLPAPER::PEXELS::pexels-123_PROVIDER_POLICY").targetPath,
+    "/community_reports/reportA",
+  );
+});
+
 test("active dedupe marker returns duplicate without writing a second report", async () => {
   const backend = new FakeReportBackend();
   backend.dedupe.set(

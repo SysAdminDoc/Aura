@@ -392,6 +392,18 @@ test('community report intake is callable-owned and admin-readable', async () =>
   await assertFails(unauthenticatedDb().ref('community_reports/anon').set(reportPayload('reporter1')));
   await assertFails(other.ref('community_reports/report2').set(reportPayload('reporter1')));
   await assertFails(admin.ref('community_reports/report3').set(reportPayload('reporter1', { uploaderUid: 'u'.repeat(241) })));
+  await assertSucceeds(admin.ref('community_reports/providerPolicy').set(
+    reportPayload('reporter1', {
+      contentId: 'WALLPAPER::PEXELS::pexels-123',
+      contentKey: 'WALLPAPER::PEXELS::pexels-123',
+      contentType: 'WALLPAPER',
+      contentSource: 'PEXELS',
+      reason: 'PROVIDER_POLICY',
+      sourceUrl: 'https://www.pexels.com/photo/example-123/',
+      license: 'Pexels License',
+      uploaderUid: '',
+    }),
+  ));
   await assertFails(reporter.ref(path).once('value'));
   await assertSucceeds(admin.ref(path).once('value'));
   await assertFails(reporter.ref(path).update({ status: 'HIDDEN' }));

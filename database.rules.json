@@ -116,7 +116,7 @@
         "contentKey": { ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 240" },
         "contentType": { ".validate": "newData.isString() && newData.val().length >= 3 && newData.val().length <= 40 && newData.val() === newData.val().toUpperCase()" },
         "contentSource": { ".validate": "newData.isString() && newData.val().length >= 3 && newData.val().length <= 40 && newData.val() === newData.val().toUpperCase()" },
-        "reason": { ".validate": "newData.val() === 'RIGHTS' || newData.val() === 'SOURCE_REMOVED' || newData.val() === 'SAFETY' || newData.val() === 'SPAM' || newData.val() === 'OTHER'" },
+        "reason": { ".validate": "newData.val() === 'RIGHTS' || newData.val() === 'SOURCE_REMOVED' || newData.val() === 'SAFETY' || newData.val() === 'SPAM' || newData.val() === 'PROVIDER_POLICY' || newData.val() === 'OTHER'" },
         "note": { ".validate": "newData.isString() && newData.val().length <= 500" },
         "sourceUrl": { ".validate": "newData.isString() && newData.val().length <= 2048 && (newData.val() === '' || newData.val().beginsWith('https://'))" },
         "license": { ".validate": "newData.isString() && newData.val().length <= 120" },
