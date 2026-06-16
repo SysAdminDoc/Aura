@@ -581,9 +581,10 @@ class VideoWallpapersViewModel @Inject constructor(
                             val query = if (searchQ != null) "search.json?q=${java.net.URLEncoder.encode(searchQ, "UTF-8")}&restrict_sr=on&sort=top&t=all&type=link&limit=25&raw_json=1" else "top.json?t=all&limit=25&raw_json=1"
                             val url = "https://www.reddit.com/r/$sub/$query" + (if (after != null) "&after=$after" else "")
                             val req = Request.Builder().url(url).header("User-Agent", "Aura/${com.freevibe.BuildConfig.VERSION_NAME} (Android; Open Source)").build()
-                            val resp = okHttpClient.newCall(req).execute()
-                            if (!resp.isSuccessful) { resp.close(); continue }
-                            val body = resp.use { it.body?.string() } ?: continue
+                            val body = okHttpClient.newCall(req).execute().use { resp ->
+                                if (!resp.isSuccessful) return@use null
+                                resp.body?.string()
+                            } ?: continue
                             redditReached = true
 
                             // Per-subreddit after token
