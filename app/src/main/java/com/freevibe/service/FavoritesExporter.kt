@@ -4,6 +4,7 @@ import android.content.Context
 import android.net.Uri
 import com.freevibe.data.local.FavoriteDao
 import com.freevibe.data.model.FavoriteEntity
+import com.freevibe.util.rethrowIfCancelled
 import com.freevibe.data.model.favoriteIdentity
 import com.freevibe.data.model.normalizeSourceAvailability
 import com.squareup.moshi.JsonClass
@@ -47,7 +48,7 @@ class FavoritesExporter @Inject constructor(
                 out.write(json.toByteArray())
             } ?: throw IllegalStateException("Failed to open output stream")
             items.size
-        }
+        }.onFailure { it.rethrowIfCancelled() }
     }
 
     /** Import favorites from a JSON file */
@@ -69,7 +70,7 @@ class FavoritesExporter @Inject constructor(
 
             favoriteDao.insertAll(entities)
             entities.size
-        }
+        }.onFailure { it.rethrowIfCancelled() }
     }
 
     /** Generate export as string (for sharing) */

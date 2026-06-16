@@ -4,6 +4,7 @@ import android.content.Context
 import android.media.MediaMetadataRetriever
 import android.net.Uri
 import android.provider.OpenableColumns
+import com.freevibe.util.rethrowIfCancelled
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -121,7 +122,7 @@ class VideoWallpaperStorage @Inject constructor(
                 tempFile.delete()
                 throw e
             }
-        }
+        }.onFailure { it.rethrowIfCancelled() }
     }
 
     suspend fun prepareDownloadedVideo(
@@ -142,7 +143,7 @@ class VideoWallpaperStorage @Inject constructor(
                 tempFile.delete()
                 throw e
             }
-        }
+        }.onFailure { it.rethrowIfCancelled() }
     }
 
     private fun validatePreparedMotionFile(file: File, extension: String) {

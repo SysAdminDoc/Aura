@@ -6,6 +6,7 @@ import android.graphics.BitmapFactory
 import com.freevibe.data.model.Wallpaper
 import com.freevibe.data.model.WallpaperPair
 import com.freevibe.data.model.WallpaperTarget
+import com.freevibe.util.rethrowIfCancelled
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
@@ -49,7 +50,7 @@ class DualWallpaperService @Inject constructor(
                 home.recycle()
                 lock.recycle()
             }
-        }
+        }.onFailure { it.rethrowIfCancelled() }
     }
 
     /** Apply same wallpaper with different crops to home and lock */
@@ -80,7 +81,7 @@ class DualWallpaperService @Inject constructor(
                 if (lockCrop !== bitmap) lockCrop?.recycle()
                 bitmap.recycle()
             }
-        }
+        }.onFailure { it.rethrowIfCancelled() }
     }
 
     private fun downloadBitmap(url: String): Bitmap {
