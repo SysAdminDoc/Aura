@@ -698,6 +698,7 @@ private suspend fun cropVideoConstrained(
         val outputFile = File(context.filesDir, "live_wallpaper.mp4")
 
         // Map viewport back to video source coordinates
+        if (videoWidth <= 0 || videoHeight <= 0 || viewWidth <= 0 || viewHeight <= 0) return@withContext null
         val fitScaleX = viewWidth.toFloat() / videoWidth
         val fitScaleY = viewHeight.toFloat() / videoHeight
         val fitScale = minOf(fitScaleX, fitScaleY)
