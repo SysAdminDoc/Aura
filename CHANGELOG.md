@@ -3,6 +3,9 @@
 All notable changes to Aura will be documented in this file.
 
 ## v6.31.2 (2026-06-15)
+- **Video wallpaper provenance links**: apply confirmation now shows source,
+  license, creator, provider terms, report, and rights/takedown links for
+  remote video wallpapers, with policy-backed action gating before apply.
 - **Community deletion orchestrator dry-run**: added a trusted operator bundle
   builder that composes request-code lookup, RTDB deletion planning, review,
   local simulation, private executor packaging, REST dry-run receipts, pre-Auth

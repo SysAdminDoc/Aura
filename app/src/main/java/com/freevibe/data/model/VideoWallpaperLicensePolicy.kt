@@ -20,11 +20,18 @@ data class VideoWallpaperActionCapability(
     val reason: String = "",
 )
 
+data class VideoProviderPolicyLinks(
+    val termsUrl: String = "",
+    val reportUrl: String = "",
+    val takedownUrl: String = "",
+)
+
 data class VideoWallpaperLicenseCapabilities(
     val normalizedLicense: String,
     val attributionRequired: Boolean,
     val sourceLinkRequired: Boolean,
     val uploaderRequired: Boolean,
+    val providerPolicyLinks: VideoProviderPolicyLinks,
     val actions: Map<VideoWallpaperAction, VideoWallpaperActionCapability>,
 ) {
     fun capability(action: VideoWallpaperAction): VideoWallpaperActionCapability =
@@ -80,6 +87,7 @@ fun VideoWallpaperItem.videoWallpaperLicenseCapabilities(): VideoWallpaperLicens
         attributionRequired = attributionRequired,
         sourceLinkRequired = sourceLinkRequired,
         uploaderRequired = uploaderRequired,
+        providerPolicyLinks = videoProviderPolicyLinks(contentSource),
         actions = actions,
     )
 }
@@ -106,6 +114,30 @@ fun normalizeVideoWallpaperLicense(source: ContentSource, license: String): Stri
         key.contains("PIXABAY") -> "Pixabay License"
         else -> raw.take(80)
     }
+}
+
+fun videoProviderPolicyLinks(source: ContentSource): VideoProviderPolicyLinks = when (source) {
+    ContentSource.PEXELS -> VideoProviderPolicyLinks(
+        termsUrl = "https://www.pexels.com/terms-of-service/",
+        reportUrl = "https://www.pexels.com/report/",
+        takedownUrl = "https://www.pexels.com/report/",
+    )
+    ContentSource.PIXABAY -> VideoProviderPolicyLinks(
+        termsUrl = "https://pixabay.com/service/terms/",
+        reportUrl = "https://pixabay.com/content-reports/",
+        takedownUrl = "https://pixabay.com/content-reports/",
+    )
+    ContentSource.YOUTUBE -> VideoProviderPolicyLinks(
+        termsUrl = "https://www.youtube.com/t/terms",
+        reportUrl = "https://support.google.com/youtube/answer/2802027",
+        takedownUrl = "https://support.google.com/youtube/answer/2807622",
+    )
+    ContentSource.REDDIT -> VideoProviderPolicyLinks(
+        termsUrl = "https://redditinc.com/policies/data-api-terms",
+        reportUrl = "https://www.reddit.com/report",
+        takedownUrl = "https://support.reddithelp.com/hc/en-us/articles/360043076292-Copyright-overview",
+    )
+    else -> VideoProviderPolicyLinks()
 }
 
 private const val VIDEO_UNKNOWN_LICENSE = "Unknown"

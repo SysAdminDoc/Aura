@@ -17,6 +17,9 @@ class VideoWallpaperLicensePolicyTest {
         ).videoWallpaperLicenseCapabilities()
 
         assertEquals("Pexels License", capabilities.normalizedLicense)
+        assertEquals("https://www.pexels.com/terms-of-service/", capabilities.providerPolicyLinks.termsUrl)
+        assertEquals("https://www.pexels.com/report/", capabilities.providerPolicyLinks.reportUrl)
+        assertEquals("https://www.pexels.com/report/", capabilities.providerPolicyLinks.takedownUrl)
         assertTrue(capabilities.canUse(VideoWallpaperAction.APPLY))
         assertTrue(capabilities.requiresConfirmation(VideoWallpaperAction.DOWNLOAD))
         assertTrue(capabilities.canUse(VideoWallpaperAction.SHARE))
@@ -31,6 +34,9 @@ class VideoWallpaperLicensePolicyTest {
         ).videoWallpaperLicenseCapabilities()
 
         assertEquals("Pixabay License", capabilities.normalizedLicense)
+        assertEquals("https://pixabay.com/service/terms/", capabilities.providerPolicyLinks.termsUrl)
+        assertEquals("https://pixabay.com/content-reports/", capabilities.providerPolicyLinks.reportUrl)
+        assertEquals("https://pixabay.com/content-reports/", capabilities.providerPolicyLinks.takedownUrl)
         assertTrue(capabilities.canUse(VideoWallpaperAction.APPLY))
         assertTrue(capabilities.requiresConfirmation(VideoWallpaperAction.DOWNLOAD))
         assertTrue(capabilities.canUse(VideoWallpaperAction.SHARE))
@@ -45,6 +51,9 @@ class VideoWallpaperLicensePolicyTest {
         ).videoWallpaperLicenseCapabilities()
 
         assertEquals("YouTube", capabilities.normalizedLicense)
+        assertEquals("https://www.youtube.com/t/terms", capabilities.providerPolicyLinks.termsUrl)
+        assertEquals("https://support.google.com/youtube/answer/2802027", capabilities.providerPolicyLinks.reportUrl)
+        assertEquals("https://support.google.com/youtube/answer/2807622", capabilities.providerPolicyLinks.takedownUrl)
         assertTrue(capabilities.requiresConfirmation(VideoWallpaperAction.APPLY))
         assertTrue(capabilities.requiresConfirmation(VideoWallpaperAction.DOWNLOAD))
         assertFalse(capabilities.canUse(VideoWallpaperAction.SHARE))
@@ -59,6 +68,12 @@ class VideoWallpaperLicensePolicyTest {
         ).videoWallpaperLicenseCapabilities()
 
         assertEquals("Reddit", capabilities.normalizedLicense)
+        assertEquals("https://redditinc.com/policies/data-api-terms", capabilities.providerPolicyLinks.termsUrl)
+        assertEquals("https://www.reddit.com/report", capabilities.providerPolicyLinks.reportUrl)
+        assertEquals(
+            "https://support.reddithelp.com/hc/en-us/articles/360043076292-Copyright-overview",
+            capabilities.providerPolicyLinks.takedownUrl,
+        )
         assertTrue(capabilities.requiresConfirmation(VideoWallpaperAction.APPLY))
         assertTrue(capabilities.requiresConfirmation(VideoWallpaperAction.DOWNLOAD))
         assertTrue(capabilities.canUse(VideoWallpaperAction.SHARE))
@@ -72,6 +87,7 @@ class VideoWallpaperLicensePolicyTest {
         ).videoWallpaperLicenseCapabilities()
 
         assertEquals("Local User Content", capabilities.normalizedLicense)
+        assertEquals(VideoProviderPolicyLinks(), capabilities.providerPolicyLinks)
         assertTrue(capabilities.canUse(VideoWallpaperAction.APPLY))
         assertTrue(capabilities.canUse(VideoWallpaperAction.DOWNLOAD))
         assertTrue(capabilities.canUse(VideoWallpaperAction.SHARE))

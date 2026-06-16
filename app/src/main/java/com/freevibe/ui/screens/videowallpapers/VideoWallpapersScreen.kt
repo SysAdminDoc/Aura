@@ -1,6 +1,7 @@
 package com.freevibe.ui.screens.videowallpapers
 
 import android.content.Context
+import android.content.Intent
 import android.net.Uri
 import android.util.Log
 import android.widget.Toast
@@ -9,6 +10,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -45,6 +47,12 @@ import androidx.media3.common.Player
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.freevibe.R
+import com.freevibe.data.model.VideoProviderPolicyLinks
+import com.freevibe.data.model.VideoWallpaperAction
+import com.freevibe.data.model.canUseVideoAction
+import com.freevibe.data.model.requiresVideoActionConfirmation
+import com.freevibe.data.model.videoActionMessage
+import com.freevibe.data.model.videoWallpaperLicenseCapabilities
 import com.freevibe.data.repository.matchesHiddenIds
 import com.freevibe.service.MAX_VIDEO_WALLPAPER_BYTES
 import com.freevibe.service.VIDEO_WALLPAPER_SCALE_MODE_FIT
@@ -546,12 +554,14 @@ fun VideoWallpapersScreen(
     confirmItem?.let { item ->
         val streamUrl = viewModel.getStreamUrl(item.id)
         val needsCrop = item.hasDimensions && item.isLandscape
+        val capabilities = remember(item) { item.videoWallpaperLicenseCapabilities() }
+        val canApplyVideo = remember(item) { item.canUseVideoAction(VideoWallpaperAction.APPLY) }
         var selectedScaleMode by remember(item.id) { mutableStateOf(VIDEO_WALLPAPER_SCALE_MODE_ZOOM) }
         AlertDialog(
             onDismissRequest = { confirmItem = null },
             title = { Text(stringResource(R.string.video_wallpaper_title)) },
             text = {
-                Column {
+                Column(Modifier.verticalScroll(rememberScrollState())) {
                     Text(item.title, style = MaterialTheme.typography.bodyMedium)
                     if (item.hasDimensions) {
                         Spacer(Modifier.height(2.dp))
@@ -559,6 +569,21 @@ fun VideoWallpapersScreen(
                     }
                     Spacer(Modifier.height(4.dp))
                     Text("${item.loopBadge()} · ${item.batteryBadge()} · ${item.fitBadge(state.orientation)}", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.primary)
+                    Spacer(Modifier.height(12.dp))
+                    VideoProvenanceBlock(
+                        item = item,
+                        normalizedLicense = capabilities.normalizedLicense,
+                        policyLinks = capabilities.providerPolicyLinks,
+                        onOpenUrl = { url -> openExternalUrl(context, url) },
+                    )
+                    if (item.requiresVideoActionConfirmation(VideoWallpaperAction.APPLY)) {
+                        Spacer(Modifier.height(8.dp))
+                        Text(
+                            item.videoActionMessage(VideoWallpaperAction.APPLY),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.tertiary,
+                        )
+                    }
                     Spacer(Modifier.height(12.dp))
                     Text(
                         "Presentation",
@@ -596,7 +621,7 @@ fun VideoWallpapersScreen(
             },
             confirmButton = {
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    if (streamUrl != null) {
+                    if (streamUrl != null && canApplyVideo) {
                         if (needsCrop) {
                             OutlinedButton(onClick = { viewModel.applyVideoWallpaper(item, selectedScaleMode); confirmItem = null }) { Text(stringResource(R.string.video_apply)) }
                             Button(onClick = {
@@ -618,7 +643,7 @@ fun VideoWallpapersScreen(
                             }
                             Button(onClick = { viewModel.applyVideoWallpaper(item, selectedScaleMode); confirmItem = null }) { Text(stringResource(R.string.video_apply)) }
                         }
-                    } else {
+                    } else if (canApplyVideo) {
                         Button(onClick = { viewModel.applyVideoWallpaper(item, selectedScaleMode); confirmItem = null }) { Text(stringResource(R.string.video_apply)) }
                     }
                 }
@@ -684,6 +709,8 @@ private fun VideoCard(
     val applyingLabel = stringResource(R.string.a11y_applying)
     val readyLabel = stringResource(R.string.a11y_ready)
     val voteStateDescription = stringResource(R.string.a11y_vote_count, voteCount)
+    val canApplyVideo = remember(item) { item.canUseVideoAction(VideoWallpaperAction.APPLY) }
+    val applyBlockedMessage = remember(item) { item.videoActionMessage(VideoWallpaperAction.APPLY).ifBlank { "Unavailable" } }
 
     Card(
         modifier = Modifier.semantics {
@@ -891,12 +918,16 @@ private fun VideoCard(
             Spacer(Modifier.width(4.dp))
             Button(
                 onClick = onApply,
-                enabled = !isApplying,
+                enabled = !isApplying && canApplyVideo,
                 shape = RoundedCornerShape(8.dp),
                 modifier = Modifier
                     .heightIn(min = 48.dp)
                     .semantics {
-                        stateDescription = if (isApplying) applyingLabel else readyLabel
+                        stateDescription = when {
+                            isApplying -> applyingLabel
+                            !canApplyVideo -> applyBlockedMessage
+                            else -> readyLabel
+                        }
                         onClick(label = applyVideoLabel, action = null)
                     },
             ) {
@@ -909,6 +940,76 @@ private fun VideoCard(
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun VideoProvenanceBlock(
+    item: VideoWallpaperItem,
+    normalizedLicense: String,
+    policyLinks: VideoProviderPolicyLinks,
+    onOpenUrl: (String) -> Unit,
+) {
+    Text(
+        "Source and rights",
+        style = MaterialTheme.typography.labelLarge,
+        color = MaterialTheme.colorScheme.onSurface,
+    )
+    Spacer(Modifier.height(4.dp))
+    Text(
+        listOf(item.source, normalizedLicense)
+            .filter { it.isNotBlank() }
+            .joinToString(" · "),
+        style = MaterialTheme.typography.bodySmall,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+    )
+    if (item.uploaderName.isNotBlank()) {
+        Text(
+            item.uploaderName,
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+        )
+    }
+    Spacer(Modifier.height(8.dp))
+    androidx.compose.foundation.layout.FlowRow(
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        VideoPolicyLinkButton("Source", Icons.Default.Link, item.sourcePageUrl, onOpenUrl)
+        VideoPolicyLinkButton("Terms", Icons.Default.Policy, policyLinks.termsUrl, onOpenUrl)
+        VideoPolicyLinkButton("Report", Icons.Default.Report, policyLinks.reportUrl, onOpenUrl)
+        VideoPolicyLinkButton("Rights", Icons.Default.Info, policyLinks.takedownUrl, onOpenUrl)
+    }
+}
+
+@Composable
+private fun VideoPolicyLinkButton(
+    label: String,
+    icon: ImageVector,
+    url: String,
+    onOpenUrl: (String) -> Unit,
+) {
+    if (url.isBlank()) return
+    OutlinedButton(
+        onClick = { onOpenUrl(url) },
+        modifier = Modifier.heightIn(min = 40.dp),
+        shape = RoundedCornerShape(8.dp),
+        contentPadding = PaddingValues(horizontal = 10.dp, vertical = 6.dp),
+    ) {
+        Icon(icon, contentDescription = null, modifier = Modifier.size(16.dp))
+        Spacer(Modifier.width(6.dp))
+        Text(label, maxLines = 1, overflow = TextOverflow.Ellipsis)
+    }
+}
+
+private fun openExternalUrl(context: Context, url: String) {
+    if (url.isBlank()) return
+    runCatching {
+        context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)))
+    }.onFailure {
+        Toast.makeText(context, "Could not open link", Toast.LENGTH_SHORT).show()
     }
 }
 
