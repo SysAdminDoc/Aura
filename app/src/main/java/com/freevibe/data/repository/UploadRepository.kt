@@ -3,6 +3,7 @@ package com.freevibe.data.repository
 import android.content.Context
 import android.net.Uri
 import android.provider.OpenableColumns
+import com.freevibe.util.rethrowIfCancelled
 import android.webkit.MimeTypeMap
 import com.freevibe.data.local.PreferencesManager
 import com.freevibe.data.model.COMMUNITY_GUIDELINES_REQUIRED_MESSAGE
@@ -504,7 +505,3 @@ internal fun sanitizeUploadStorageSegment(segment: String): String =
         .ifBlank { "user" }
 
 internal fun shouldDisplayCommunityUpload(votes: Int): Boolean = votes >= 0
-
-private fun Throwable.rethrowIfCancelled() {
-    if (this is CancellationException) throw this
-}

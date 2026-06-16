@@ -2,6 +2,7 @@ package com.freevibe.data.repository
 
 import com.freevibe.data.local.PreferencesManager
 import com.freevibe.data.local.WallpaperCacheManager
+import com.freevibe.util.rethrowIfCancelled
 import com.freevibe.data.model.ContentSource
 import com.freevibe.data.model.SearchResult
 import com.freevibe.data.model.Wallpaper
@@ -91,10 +92,6 @@ internal fun shouldRetryBingHost(error: Throwable): Boolean = when (error) {
     is SSLException,
     -> true
     else -> false
-}
-
-private fun Throwable.rethrowIfCancelled() {
-    if (this is CancellationException) throw this
 }
 
 private const val DISCOVER_PER_SOURCE_TIMEOUT_MS = 4_500L

@@ -3,6 +3,7 @@ package com.freevibe.data.repository
 import com.freevibe.data.local.PreferencesManager
 import com.freevibe.data.model.COMMUNITY_GUIDELINES_REQUIRED_MESSAGE
 import com.freevibe.data.model.CommunityBlockReason
+import com.freevibe.util.rethrowIfCancelled
 import com.freevibe.data.model.CommunityUserBlockInput
 import com.freevibe.data.model.normalizeCommunityBlockedUserIds
 import com.freevibe.data.model.sanitizeCommunityOwnerKey
@@ -240,7 +241,3 @@ internal fun parseBlockedUsers(snapshot: DataSnapshot): List<CommunityBlockedUse
 
 private fun communityBlockReasonFromStorage(value: String?): CommunityBlockReason =
     CommunityBlockReason.entries.firstOrNull { it.storageValue == value } ?: CommunityBlockReason.OTHER
-
-private fun Throwable.rethrowIfCancelled() {
-    if (this is CancellationException) throw this
-}

@@ -7,6 +7,7 @@ import android.widget.Toast
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.freevibe.data.local.PreferencesManager
+import com.freevibe.util.rethrowIfCancelled
 import com.freevibe.data.remote.pexels.PexelsApi
 import com.freevibe.data.remote.pixabay.PixabayVideo
 import com.freevibe.data.repository.YouTubeRepository
@@ -872,8 +873,4 @@ class VideoWallpapersViewModel @Inject constructor(
         private val REDDIT_WIDTH_REGEX = Regex(""""reddit_video"\s*:\s*\{[^}]*"width"\s*:\s*(\d+)""")
         private val REDDIT_HEIGHT_REGEX = Regex(""""reddit_video"\s*:\s*\{[^}]*"height"\s*:\s*(\d+)""")
     }
-}
-
-internal fun Throwable.rethrowIfCancelled() {
-    if (this is CancellationException) throw this
 }

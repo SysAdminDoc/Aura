@@ -5,6 +5,7 @@ import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.freevibe.data.model.CommunityReportInput
+import com.freevibe.util.rethrowIfCancelled
 import com.freevibe.data.model.CommunityReportReason
 import com.freevibe.data.model.CommunityUploadRights
 import com.freevibe.data.model.CommunityBlockReason
@@ -1592,10 +1593,6 @@ private fun reportSourceUrl(primary: String, fallback: String): String =
 
 private fun Sound.matchesCommunityUploader(uploaderId: String): Boolean =
     sanitizeCommunityOwnerKey(communityUploaderId).let { it.isNotBlank() && it == sanitizeCommunityOwnerKey(uploaderId) }
-
-internal fun Throwable.rethrowIfCancelled() {
-    if (this is CancellationException) throw this
-}
 
 private fun Sound.youtubeVideoId(): String? =
     takeIf { source == ContentSource.YOUTUBE }

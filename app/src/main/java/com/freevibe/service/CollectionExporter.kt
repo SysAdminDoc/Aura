@@ -6,6 +6,7 @@ import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.net.Uri
 import com.freevibe.data.local.CollectionDao
+import com.freevibe.util.rethrowIfCancelled
 import com.freevibe.data.model.WallpaperCollectionEntity
 import com.freevibe.data.model.WallpaperCollectionItemEntity
 import com.google.firebase.database.FirebaseDatabase
@@ -351,7 +352,3 @@ internal fun buildCollectionImportItems(items: List<CollectionExportItem>): List
         }
         .distinctBy { item -> item.source to item.wallpaperId }
         .toList()
-
-private fun Throwable.rethrowIfCancelled() {
-    if (this is CancellationException) throw this
-}

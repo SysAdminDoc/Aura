@@ -3,6 +3,7 @@ package com.freevibe.data.repository
 import com.freevibe.data.local.PreferencesManager
 import com.freevibe.data.model.COMMUNITY_GUIDELINES_REQUIRED_MESSAGE
 import com.freevibe.data.model.CommunityFollowInput
+import com.freevibe.util.rethrowIfCancelled
 import com.freevibe.data.model.ContentSource
 import com.freevibe.data.model.CreatorProfileUpdateInput
 import com.freevibe.data.model.Sound
@@ -361,10 +362,6 @@ private suspend fun VoteRepository.getVoteCountsOnce(ids: List<String>): Map<Str
             }.awaitAll()
         }
     }.toMap()
-}
-
-private fun Throwable.rethrowIfCancelled() {
-    if (this is CancellationException) throw this
 }
 
 private fun CreatorProfileUpdateInput.toPublicProfile(): CreatorPublicProfile =

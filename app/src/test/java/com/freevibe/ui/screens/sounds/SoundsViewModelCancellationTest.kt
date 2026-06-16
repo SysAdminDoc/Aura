@@ -1,5 +1,6 @@
 package com.freevibe.ui.screens.sounds
 
+import com.freevibe.util.rethrowIfCancelled
 import kotlinx.coroutines.CancellationException
 import org.junit.Assert.assertSame
 import org.junit.Test

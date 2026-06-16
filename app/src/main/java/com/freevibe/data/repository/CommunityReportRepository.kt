@@ -1,6 +1,7 @@
 package com.freevibe.data.repository
 
 import com.freevibe.data.model.CommunityReportInput
+import com.freevibe.util.rethrowIfCancelled
 import com.freevibe.data.model.CommunityReportRecord
 import com.freevibe.data.model.CommunityReportReason
 import com.freevibe.data.model.CommunityReportResolutionStatus
@@ -304,8 +305,4 @@ private fun snapshotToCommunityReport(child: DataSnapshot): CommunityReportRecor
         resolverUid = child.child("resolverUid").getValue(String::class.java).orEmpty(),
         resolvedAt = child.child("resolvedAt").getValue(Long::class.java) ?: 0L,
     )
-}
-
-private fun Throwable.rethrowIfCancelled() {
-    if (this is CancellationException) throw this
 }

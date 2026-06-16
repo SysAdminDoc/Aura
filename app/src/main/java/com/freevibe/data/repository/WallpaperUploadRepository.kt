@@ -8,6 +8,7 @@ import android.net.Uri
 import android.provider.OpenableColumns
 import android.webkit.MimeTypeMap
 import com.freevibe.data.local.PreferencesManager
+import com.freevibe.util.rethrowIfCancelled
 import com.freevibe.data.model.COMMUNITY_GUIDELINES_REQUIRED_MESSAGE
 import com.freevibe.data.model.CommunityUploadDeleteReason
 import com.freevibe.data.model.CommunityUploadKind
@@ -612,7 +613,3 @@ private fun normalizeCropRect(rect: Rect, maxWidth: Int, maxHeight: Int): Rect {
 
 private fun DataSnapshot.stringList(childName: String): List<String> =
     child(childName).children.mapNotNull { it.getValue(String::class.java) }
-
-private fun Throwable.rethrowIfCancelled() {
-    if (this is CancellationException) throw this
-}

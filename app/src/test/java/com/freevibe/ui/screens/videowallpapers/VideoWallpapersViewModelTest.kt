@@ -4,6 +4,7 @@ import com.freevibe.data.remote.pixabay.PixabayVideo
 import com.freevibe.data.remote.pixabay.PixabayVideoFile
 import com.freevibe.data.remote.pixabay.PixabayVideoFiles
 import com.freevibe.data.repository.sanitizeVoteKey
+import com.freevibe.util.rethrowIfCancelled
 import kotlinx.coroutines.CancellationException
 import okhttp3.Headers
 import okhttp3.Protocol
