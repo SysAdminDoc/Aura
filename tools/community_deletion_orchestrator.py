@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Build a trusted dry-run bundle for Aura community deletion requests."""
+"""Build or apply a trusted bundle for Aura community deletion requests."""
 
 from __future__ import annotations
 
@@ -14,6 +14,7 @@ if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
 from tools.community_account_deletion_apply_simulator import simulate_account_deletion_apply
+from tools.community_account_deletion_completion_receipt import build_completion_receipt, dump_completion_receipt
 from tools.community_account_deletion_executor_package import build_executor_package
 from tools.community_account_deletion_plan import (
     build_account_deletion_plan,
@@ -46,16 +47,22 @@ from tools.community_deletion_request_lookup import (
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
-        description="Build an Aura community deletion trusted dry-run bundle."
+        description="Build or apply an Aura community deletion trusted bundle."
     )
     parser.add_argument("--database-export", required=True, help="JSON export containing community RTDB roots.")
     parser.add_argument("--request-code", required=True, help="Verified AURA- deletion request code.")
     parser.add_argument("--database-url", required=True, help="Realtime Database root URL used for the REST dry-run receipt.")
     parser.add_argument("--operator", required=True, help="Private operator initials or ticket handle.")
     parser.add_argument("--support-reference", required=True, help="User-safe support ticket/reference label.")
+    parser.add_argument("--mode", choices=("dry-run", "apply"), default="dry-run", help="Default is dry-run and never contacts Firebase.")
+    parser.add_argument("--access-token", help="OAuth2 access token for apply mode. Apply mode also reads FIREBASE_DATABASE_ACCESS_TOKEN.")
+    parser.add_argument("--confirm-request-code", help="Required in apply mode; must equal the normalized request code.")
+    parser.add_argument("--confirm-plan-hash", help="Required in apply mode; must match the reviewed RTDB deletion plan hash.")
+    parser.add_argument("--timeout-seconds", type=int, default=30, help="HTTP timeout for apply mode.")
     parser.add_argument("--output", help="Optional private orchestration bundle path. Defaults to stdout.")
     parser.add_argument("--requester-receipt-output", help="Optional requester-safe JSON receipt path.")
     parser.add_argument("--requester-receipt-text-output", help="Optional requester-safe human-readable receipt path.")
+    parser.add_argument("--completion-receipt-output", help="Optional requester-safe JSON completion receipt path for apply mode.")
     return parser.parse_args()
 
 
@@ -250,12 +257,23 @@ def orchestration_status(upload_inventory: dict[str, Any]) -> str:
     return "readyForTrustedRtdbApply"
 
 
+def applied_orchestration_status(upload_inventory: dict[str, Any]) -> str:
+    if upload_inventory.get("blockedCount", 0) > 0:
+        return "trustedRtdbAppliedWithUploadReview"
+    return "trustedRtdbApplied"
+
+
 def build_deletion_orchestration(
     database_export: Any,
     request_code: str,
     database_url: str,
     operator: str,
     support_reference: str,
+    mode: str = "dry-run",
+    access_token: str | None = None,
+    confirm_request_code: str | None = None,
+    confirm_plan_hash: str | None = None,
+    timeout_seconds: int = 30,
     orchestrated_at: str | None = None,
 ) -> dict[str, Any]:
     database = require_object(database_export, "Database export")
@@ -282,7 +300,11 @@ def build_deletion_orchestration(
     rest_dry_run = execute_package(
         executor_package,
         database_url,
-        mode="dry-run",
+        mode=mode,
+        access_token=access_token,
+        confirm_request_code=confirm_request_code,
+        confirm_plan_hash=confirm_plan_hash,
+        timeout_seconds=timeout_seconds,
         executed_at=timestamp,
     )
     upload_inventory = build_upload_inventory(
@@ -312,10 +334,21 @@ def build_deletion_orchestration(
         timestamp,
     )
 
-    return {
+    applied = rest_dry_run.get("executionStatus") == "applied"
+    completion_receipt = None
+    if applied:
+        completion_receipt = build_completion_receipt(
+            executor_package,
+            rest_dry_run,
+            normalized_code,
+            support_reference=support_reference_value,
+            completed_at=timestamp,
+        )
+
+    orchestration = {
         "schemaVersion": 1,
-        "orchestrationKind": "communityDeletionTrustedDryRun",
-        "orchestrationStatus": orchestration_status(upload_inventory),
+        "orchestrationKind": "communityDeletionTrustedExecution" if applied else "communityDeletionTrustedDryRun",
+        "orchestrationStatus": applied_orchestration_status(upload_inventory) if applied else orchestration_status(upload_inventory),
         "requestCode": normalized_code,
         "supportReference": support_reference_value,
         "operator": operator_label,
@@ -323,7 +356,7 @@ def build_deletion_orchestration(
         "uidKeySuffix": review.get("uidKeySuffix"),
         "uidKeyHash": review.get("uidKeyHash"),
         "rtdb": {
-            "executionMode": "dry-run",
+            "executionMode": mode,
             "executionStatus": rest_dry_run.get("executionStatus"),
             "updateCount": executor_package.get("updateCount"),
             "planHash": review.get("planHash"),
@@ -373,6 +406,9 @@ def build_deletion_orchestration(
         },
         "executorWarning": "Private orchestration bundle: contains full UID-derived evidence, RTDB update paths, Storage handles, and database labels. Do not publish.",
     }
+    if completion_receipt is not None:
+        orchestration["completionReceipt"] = completion_receipt
+    return orchestration
 
 
 def dump_orchestration(orchestration: dict[str, Any]) -> str:
@@ -388,6 +424,11 @@ def main() -> int:
             args.database_url,
             operator=args.operator,
             support_reference=args.support_reference,
+            mode=args.mode,
+            access_token=args.access_token,
+            confirm_request_code=args.confirm_request_code,
+            confirm_plan_hash=args.confirm_plan_hash,
+            timeout_seconds=args.timeout_seconds,
         )
     except (OSError, ValueError) as exc:
         print(f"error: {exc}", file=sys.stderr)
@@ -406,6 +447,15 @@ def main() -> int:
         output = Path(args.requester_receipt_text_output)
         output.parent.mkdir(parents=True, exist_ok=True)
         output.write_text(format_requester_receipt(orchestration["requesterSafeReceipt"]), encoding="utf-8")
+        print(f"wrote {output}")
+
+    if args.completion_receipt_output:
+        if "completionReceipt" not in orchestration:
+            print("error: --completion-receipt-output requires --mode apply", file=sys.stderr)
+            return 1
+        output = Path(args.completion_receipt_output)
+        output.parent.mkdir(parents=True, exist_ok=True)
+        output.write_text(dump_completion_receipt(orchestration["completionReceipt"]), encoding="utf-8")
         print(f"wrote {output}")
 
     orchestration_text = dump_orchestration(orchestration)

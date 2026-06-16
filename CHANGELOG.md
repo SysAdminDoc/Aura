@@ -3,6 +3,10 @@
 All notable changes to Aura will be documented in this file.
 
 ## v6.31.2 (2026-06-15)
+- **Community deletion orchestrator apply gate**: the trusted deletion
+  orchestrator can now run an explicit RTDB apply mode with request-code,
+  plan-hash, OAuth token, and timeout gates, then emit a redacted completion
+  receipt while preserving dry-run as the default.
 - **Video wallpaper provenance links**: apply confirmation now shows source,
   license, creator, provider terms, report, and rights/takedown links for
   remote video wallpapers, with policy-backed action gating before apply.

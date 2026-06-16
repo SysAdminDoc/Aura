@@ -17,6 +17,19 @@ UID = "firebase-uid-123"
 REQUEST_CODE = deletion_request_code(UID)
 
 
+class FakeResponse:
+    status = 200
+
+    def __enter__(self) -> "FakeResponse":
+        return self
+
+    def __exit__(self, *_args: object) -> None:
+        return None
+
+    def read(self) -> bytes:
+        return b'{"ok":true}'
+
+
 def seeded_database() -> dict[str, object]:
     return {
         "votes": {
@@ -111,6 +124,47 @@ class CommunityDeletionOrchestratorTest(unittest.TestCase):
         self.assertNotIn("creator_profiles", requester_text)
         self.assertNotIn("sounds/firebase-uid-123", requester_text)
         self.assertNotIn("aura.firebaseio.com", requester_text)
+
+    def test_apply_mode_uses_guarded_rest_patch_and_completion_receipt(self) -> None:
+        dry_run = build_deletion_orchestration(
+            seeded_database(),
+            REQUEST_CODE,
+            "https://aura.firebaseio.com",
+            operator="ops-1",
+            support_reference="ticket-123",
+            orchestrated_at="2026-06-16T12:00:00Z",
+        )
+
+        with mock.patch("tools.community_account_deletion_rest_executor.urllib.request.urlopen", return_value=FakeResponse()) as urlopen:
+            orchestration = build_deletion_orchestration(
+                seeded_database(),
+                REQUEST_CODE,
+                "https://aura.firebaseio.com",
+                operator="ops-1",
+                support_reference="ticket-123",
+                mode="apply",
+                access_token="token",
+                confirm_request_code=REQUEST_CODE,
+                confirm_plan_hash=dry_run["rtdb"]["planHash"],
+                orchestrated_at="2026-06-16T12:00:00Z",
+            )
+
+        request = urlopen.call_args.args[0]
+        self.assertEqual("PATCH", request.method)
+        self.assertEqual("Bearer token", request.headers["Authorization"])
+        self.assertEqual("https://aura.firebaseio.com/.json", request.full_url)
+        self.assertEqual("communityDeletionTrustedExecution", orchestration["orchestrationKind"])
+        self.assertEqual("trustedRtdbAppliedWithUploadReview", orchestration["orchestrationStatus"])
+        self.assertEqual("apply", orchestration["rtdb"]["executionMode"])
+        self.assertEqual("applied", orchestration["rtdb"]["executionStatus"])
+
+        completion = orchestration["completionReceipt"]
+        completion_text = json.dumps(completion, sort_keys=True)
+        self.assertEqual("completed", completion["completionStatus"])
+        self.assertEqual(REQUEST_CODE, completion["requestCode"])
+        self.assertNotIn(UID, completion_text)
+        self.assertNotIn("creator_profiles", completion_text)
+        self.assertNotIn("aura.firebaseio.com", completion_text)
 
     def test_upload_inventory_blocks_missing_handles_and_orphan_owner_indexes(self) -> None:
         inventory = build_upload_inventory(
