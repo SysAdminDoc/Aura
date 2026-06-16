@@ -3,6 +3,7 @@ package com.freevibe.service
 import android.content.ContentValues
 import android.content.Context
 import android.content.Intent
+import com.freevibe.util.rethrowIfCancelled
 import android.media.RingtoneManager
 import android.net.Uri
 import android.os.Build
@@ -67,7 +68,7 @@ class SoundApplier @Inject constructor(
             RingtoneManager.setActualDefaultRingtoneUri(context, ringtoneType, uri)
 
             uri
-        }
+        }.onFailure { it.rethrowIfCancelled() }
     }
 
     /** Save audio without applying - just download to storage */
@@ -79,7 +80,7 @@ class SoundApplier @Inject constructor(
         runCatching {
             saveUrlToMediaStore(fileName.replace(SANITIZE_REGEX, "_"), type, url)
                 ?: throw IllegalStateException("Failed to save audio to MediaStore")
-        }
+        }.onFailure { it.rethrowIfCancelled() }
     }
 
     /** Apply a local audio file (e.g. trimmed output) as system sound */
@@ -105,7 +106,7 @@ class SoundApplier @Inject constructor(
             RingtoneManager.setActualDefaultRingtoneUri(context, ringtoneType, uri)
 
             uri
-        }
+        }.onFailure { it.rethrowIfCancelled() }
     }
 
     private fun saveToMediaStore(

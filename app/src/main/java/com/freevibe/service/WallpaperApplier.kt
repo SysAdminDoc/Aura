@@ -6,6 +6,7 @@ import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.Rect
 import com.freevibe.data.model.WallpaperTarget
+import com.freevibe.util.rethrowIfCancelled
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -46,7 +47,7 @@ class WallpaperApplier @Inject constructor(
             } finally {
                 bitmap.recycle()
             }
-        }
+        }.onFailure { it.rethrowIfCancelled() }
     }
 
     /**
@@ -74,7 +75,7 @@ class WallpaperApplier @Inject constructor(
             } finally {
                 if (!bitmap.isRecycled) bitmap.recycle()
             }
-        }
+        }.onFailure { it.rethrowIfCancelled() }
     }
 
     /** Apply wallpaper from an already-loaded bitmap */
@@ -90,7 +91,7 @@ class WallpaperApplier @Inject constructor(
             }
             wallpaperManager.setBitmap(bitmap, null, true, flag)
             Unit
-        }
+        }.onFailure { it.rethrowIfCancelled() }
     }
 
     /**
@@ -135,7 +136,7 @@ class WallpaperApplier @Inject constructor(
                     .apply()
                 file.absolutePath
             }
-        }
+        }.onFailure { it.rethrowIfCancelled() }
     }
 
     /**
@@ -170,7 +171,7 @@ class WallpaperApplier @Inject constructor(
                 .putString("image_path", file.absolutePath)
                 .apply()
             file.absolutePath
-        }
+        }.onFailure { it.rethrowIfCancelled() }
     }
 
     /** Check if wallpaper operations are supported */
