@@ -228,18 +228,21 @@ async function seed(path, value) {
   });
 }
 
-test('community sound metadata enforces auth, uploader ownership, and deletion authority', async () => {
+test('community sound metadata is callable-owned while preserving owner deletion authority', async () => {
   const owner = dbFor('sound-owner');
   const other = dbFor('sound-other');
   const anonymous = unauthenticatedDb();
+  const admin = adminDb();
 
-  await assertSucceeds(owner.ref('community_sounds/sound1').set(soundMetadata('sound-owner')));
+  await assertFails(owner.ref('community_sounds/sound1').set(soundMetadata('sound-owner')));
+  await assertSucceeds(admin.ref('community_sounds/sound1').set(soundMetadata('sound-owner')));
   await assertSucceeds(anonymous.ref('community_sounds/sound1').once('value'));
   await assertFails(anonymous.ref('community_sounds/anon').set(soundMetadata('sound-owner')));
   await assertFails(owner.ref('community_sounds/cross-owner').set(soundMetadata('sound-other')));
-  await assertFails(owner.ref('community_sounds/bad-path').set(
+  await assertFails(admin.ref('community_sounds/bad-path').set(
     soundMetadata('sound-owner', { storagePath: 'wallpapers/sound-owner/not-a-sound.jpg' }),
   ));
+  await assertFails(owner.ref('community_sounds/sound1').update({ name: 'Edited' }));
 
   await assertFails(other.ref('community_sounds/sound1').remove());
   await assertSucceeds(owner.ref('community_sounds/sound1').remove());
@@ -248,35 +251,74 @@ test('community sound metadata enforces auth, uploader ownership, and deletion a
   await assertSucceeds(adminDb().ref('community_sounds/adminDelete').remove());
 });
 
-test('community wallpaper metadata enforces auth, uploader ownership, and storage path shape', async () => {
+test('community wallpaper metadata is callable-owned while preserving owner deletion authority', async () => {
   const owner = dbFor('wall-owner');
   const other = dbFor('wall-other');
+  const admin = adminDb();
 
-  await assertSucceeds(owner.ref('community_wallpapers/wall1').set(wallpaperMetadata('wall-owner')));
+  await assertFails(owner.ref('community_wallpapers/wall1').set(wallpaperMetadata('wall-owner')));
+  await assertSucceeds(admin.ref('community_wallpapers/wall1').set(wallpaperMetadata('wall-owner')));
   await assertSucceeds(unauthenticatedDb().ref('community_wallpapers/wall1').once('value'));
   await assertFails(unauthenticatedDb().ref('community_wallpapers/anon').set(wallpaperMetadata('wall-owner')));
   await assertFails(owner.ref('community_wallpapers/cross-owner').set(wallpaperMetadata('wall-other')));
-  await assertFails(owner.ref('community_wallpapers/bad-path').set(
+  await assertFails(admin.ref('community_wallpapers/bad-path').set(
     wallpaperMetadata('wall-owner', { storagePath: 'sounds/wall-owner/not-wallpaper.mp3' }),
   ));
+  await assertFails(owner.ref('community_wallpapers/wall1').update({ name: 'Edited' }));
 
   await assertFails(other.ref('community_wallpapers/wall1').remove());
   await assertSucceeds(owner.ref('community_wallpapers/wall1').remove());
 });
 
-test('owner upload indexes stay private to the owner and admins', async () => {
+test('owner upload indexes are callable-owned while owners can delete their own index rows', async () => {
   const owner = dbFor('index-owner');
   const other = dbFor('index-other');
   const admin = adminDb();
   const payload = ownerIndexPayload({ uploadId: 'sound1', uid: 'index-owner' });
   const path = 'owner_uploads/index-owner/sounds/sound1';
 
-  await assertSucceeds(owner.ref(path).set(payload));
+  await assertFails(owner.ref(path).set(payload));
+  await assertSucceeds(admin.ref(path).set(payload));
   await assertSucceeds(owner.ref(path).once('value'));
   await assertSucceeds(admin.ref(path).once('value'));
   await assertFails(other.ref(path).once('value'));
   await assertFails(other.ref(path).set(payload));
   await assertFails(owner.ref(path).set({ ...payload, uploadId: 'different' }));
+  await assertFails(owner.ref(path).update({ title: 'Edited' }));
+  await assertSucceeds(owner.ref(path).remove());
+});
+
+test('votes, follows, and creator profiles reject direct user writes', async () => {
+  const user = dbFor('callable-user');
+  const admin = adminDb();
+
+  await assertFails(user.ref('votes/content1/upvotes').set(1));
+  await assertSucceeds(admin.ref('votes/content1/upvotes').set(1));
+  await assertFails(user.ref('votes/content1/voters/callable-user').set(true));
+  await assertSucceeds(admin.ref('votes/content1/voters/callable-user').set(true));
+  await assertFails(user.ref('voters/content1/callable-user').set(true));
+  await assertSucceeds(admin.ref('voters/content1/callable-user').set(true));
+
+  const followPayload = {
+    creatorId: 'creator1',
+    label: 'Creator One',
+    followedAt: nowMs(),
+  };
+  await assertFails(user.ref('creator_follows/callable-user/creator1').set(followPayload));
+  await assertSucceeds(admin.ref('creator_follows/callable-user/creator1').set(followPayload));
+
+  const profilePayload = {
+    profileUid: 'callable-user',
+    displayName: 'Aura Maker',
+    bio: 'Builds AMOLED packs',
+    websiteUrl: 'https://example.com/profile',
+    avatarUrl: '',
+    createdAt: nowMs(),
+    updatedAt: nowMs(),
+  };
+  await assertFails(user.ref('creator_profiles/callable-user').set(profilePayload));
+  await assertSucceeds(admin.ref('creator_profiles/callable-user').set(profilePayload));
+  await assertSucceeds(unauthenticatedDb().ref('creator_profiles/callable-user').once('value'));
 });
 
 test('community upload deletion tombstones stay private and validate ownership evidence', async () => {
@@ -339,16 +381,17 @@ test('community upload deletion tombstones stay private and validate ownership e
   ));
 });
 
-test('community report intake is reporter-owned and admin-readable', async () => {
+test('community report intake is callable-owned and admin-readable', async () => {
   const reporter = dbFor('reporter1');
   const other = dbFor('reporter2');
   const admin = adminDb();
   const path = 'community_reports/report1';
 
-  await assertSucceeds(reporter.ref(path).set(reportPayload('reporter1', { uploaderUid: 'uploader-1' })));
+  await assertFails(reporter.ref(path).set(reportPayload('reporter1', { uploaderUid: 'uploader-1' })));
+  await assertSucceeds(admin.ref(path).set(reportPayload('reporter1', { uploaderUid: 'uploader-1' })));
   await assertFails(unauthenticatedDb().ref('community_reports/anon').set(reportPayload('reporter1')));
   await assertFails(other.ref('community_reports/report2').set(reportPayload('reporter1')));
-  await assertFails(reporter.ref('community_reports/report3').set(reportPayload('reporter1', { uploaderUid: 'u'.repeat(241) })));
+  await assertFails(admin.ref('community_reports/report3').set(reportPayload('reporter1', { uploaderUid: 'u'.repeat(241) })));
   await assertFails(reporter.ref(path).once('value'));
   await assertSucceeds(admin.ref(path).once('value'));
   await assertFails(reporter.ref(path).update({ status: 'HIDDEN' }));
@@ -453,7 +496,7 @@ test('community quota and dedupe ledgers are admin-only', async () => {
   await assertSucceeds(admin.ref(quotaPath).once('value'));
 });
 
-test('community user block lists stay private and maintain an admin reverse index', async () => {
+test('community user block lists are callable-owned, private, and maintain an admin reverse index', async () => {
   const blocker = dbFor('blocker1');
   const blocked = dbFor('blocked1');
   const other = dbFor('block-other');
@@ -464,24 +507,28 @@ test('community user block lists stay private and maintain an admin reverse inde
 
   await assertFails(unauthenticatedDb().ref(listPath).set(payload));
   await assertFails(other.ref(listPath).set(payload));
-  await assertSucceeds(blocker.ref(listPath).set(payload));
+  await assertFails(blocker.ref(listPath).set(payload));
+  await assertSucceeds(admin.ref(listPath).set(payload));
   await assertSucceeds(blocker.ref(listPath).once('value'));
   await assertFails(blocked.ref(listPath).once('value'));
   await assertSucceeds(admin.ref(listPath).once('value'));
 
-  await assertFails(blocker.ref('community_user_blocks/blocker1/blocked-mismatch').set(payload));
-  await assertFails(blocker.ref('community_user_blocks/blocker1/blocker1').set(
+  await assertFails(admin.ref('community_user_blocks/blocker1/blocked-mismatch').set(payload));
+  await assertFails(admin.ref('community_user_blocks/blocker1/blocker1').set(
     userBlockPayload({ blockerUid: 'blocker1', blockedUid: 'blocker1' }),
   ));
 
-  await assertSucceeds(blocker.ref(reversePath).set(payload));
+  await assertFails(blocker.ref(reversePath).set(payload));
+  await assertSucceeds(admin.ref(reversePath).set(payload));
   await assertFails(blocker.ref(reversePath).once('value'));
   await assertFails(blocked.ref(reversePath).once('value'));
   await assertSucceeds(admin.ref(reversePath).once('value'));
   await assertFails(other.ref(reversePath).set(payload));
 
-  await assertSucceeds(blocker.ref(listPath).remove());
-  await assertSucceeds(blocker.ref(reversePath).remove());
+  await assertFails(blocker.ref(listPath).remove());
+  await assertFails(blocker.ref(reversePath).remove());
+  await assertSucceeds(admin.ref(listPath).remove());
+  await assertSucceeds(admin.ref(reversePath).remove());
 });
 
 test('collection share tokens use the app path, public reads, and bounded payloads', async () => {

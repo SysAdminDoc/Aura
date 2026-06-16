@@ -8,8 +8,6 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.FirebaseDatabase
-import com.google.firebase.database.MutableData
-import com.google.firebase.database.Transaction
 import com.google.firebase.database.ValueEventListener
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.channels.awaitClose
@@ -20,8 +18,6 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.updateAndGet
 import kotlinx.coroutines.tasks.await
-import kotlin.coroutines.resume
-import kotlinx.coroutines.suspendCancellableCoroutine
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -237,67 +233,24 @@ class VoteRepository @Inject constructor(
         identityProvider.ensureSignedIn()
         if (hasVoted(safeId, alreadySanitized = true)) return false
 
-        if (!identityProvider.currentFirebaseUid().isNullOrBlank()) {
-            upvoteWithCallableOrNull(contentId)?.let { return it }
-        }
-
-        return upvoteWithDirectDatabase(safeId)
+        return upvoteWithCallable(contentId)
     }
 
-    private suspend fun upvoteWithCallableOrNull(contentId: String): Boolean? =
+    private suspend fun upvoteWithCallable(contentId: String): Boolean =
         try {
             callableClient.recordCommunityVote(contentId).status.equals("accepted", ignoreCase = true)
         } catch (e: CommunityCallableException) {
-            if (e.isMissingEndpoint()) {
-                null
-            } else {
-                if (com.freevibe.BuildConfig.DEBUG) {
-                    Log.w("VoteRepo", "recordCommunityVote failed: ${e.message}")
-                }
-                false
+            if (com.freevibe.BuildConfig.DEBUG) {
+                Log.w("VoteRepo", "recordCommunityVote failed: ${e.message}")
             }
+            false
+        } catch (e: Exception) {
+            if (e is kotlinx.coroutines.CancellationException) throw e
+            if (com.freevibe.BuildConfig.DEBUG) {
+                Log.w("VoteRepo", "recordCommunityVote failed: ${e.message}")
+            }
+            false
         }
-
-    private suspend fun upvoteWithDirectDatabase(safeId: String): Boolean {
-        val votesRefInstance = votesRef ?: return false
-        val votersRefInstance = votersRef
-        val voterId = sanitizeKey(identityProvider.ensureSignedIn())
-        return suspendCancellableCoroutine { continuation ->
-            votesRefInstance.child(safeId).runTransaction(object : Transaction.Handler {
-                override fun doTransaction(data: MutableData): Transaction.Result {
-                    val nestedVoters = data.child("voters")
-                    if (nestedVoters.child(voterId).getValue(Boolean::class.java) == true) {
-                        return Transaction.abort()
-                    }
-
-                    val currentVotes = data.child("upvotes").getValue(Int::class.java) ?: 0
-                    data.child("upvotes").value = currentVotes + 1
-                    data.child("voters").child(voterId).value = true
-                    return Transaction.success(data)
-                }
-
-                override fun onComplete(error: DatabaseError?, committed: Boolean, snapshot: DataSnapshot?) {
-                    if (!continuation.isActive) return
-
-                    if (error != null) {
-                        if (com.freevibe.BuildConfig.DEBUG) {
-                            Log.w("VoteRepo", "upvote failed for $safeId: ${error.message}")
-                        }
-                        continuation.resume(false)
-                        return
-                    }
-
-                    if (committed) {
-                        // Mirror the voter marker to the legacy path so older installs keep seeing the vote.
-                        votersRefInstance?.child(safeId)?.child(voterId)?.setValue(true)
-                        continuation.resume(true)
-                    } else {
-                        continuation.resume(false)
-                    }
-                }
-            })
-        }
-    }
 
     // ── Downvote / Hide ──
 

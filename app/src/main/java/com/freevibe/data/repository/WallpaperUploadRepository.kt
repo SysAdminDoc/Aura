@@ -16,9 +16,7 @@ import com.freevibe.data.model.CommunityWallpaperUploadMetadataInput
 import com.freevibe.data.model.ContentSource
 import com.freevibe.data.model.SearchResult
 import com.freevibe.data.model.Wallpaper
-import com.freevibe.data.model.buildCommunityOwnerUploadIndexPayload
 import com.freevibe.data.model.buildCommunityUploadDeleteUpdates
-import com.freevibe.data.model.communityOwnerUploadIndexPath
 import com.freevibe.data.model.isCommunityUserBlocked
 import com.freevibe.data.model.sanitizeCommunityUploadKey
 import com.freevibe.data.model.validateCommunityUploadRights
@@ -155,48 +153,21 @@ class WallpaperUploadRepository @Inject constructor(
                 uploadTask.await()
                 val downloadUrl = storageRef.downloadUrl.await().toString()
                 var uploadKey = ""
-                if (!identityProvider.currentFirebaseUid().isNullOrBlank()) {
-                    finalizeWallpaperUploadWithCallableOrNull(
-                        name = sanitizedName,
-                        category = normalizedCategory,
-                        tags = normalizedTags,
-                        colors = prepared.colors,
-                        downloadUrl = downloadUrl,
-                        storagePath = storagePath,
-                        width = prepared.width,
-                        height = prepared.height,
-                        fileSize = prepared.bytes.size,
-                        originalFileName = uploadInfo.originalFileName,
-                        uploaderLabel = uploaderLabel,
-                        rights = validatedRights,
-                    )?.let { key ->
-                        uploadKey = key
-                        metadataSaved = true
-                    }
-                }
-                if (!metadataSaved) {
-                    val wallpapersRefInstance = wallpapersRef ?: throw IllegalStateException("Firebase Database not available")
-                    val databaseRoot = database?.reference ?: throw IllegalStateException("Firebase Database not available")
-                    uploadKey = saveWallpaperUploadMetadataDirect(
-                        wallpapersRefInstance = wallpapersRefInstance,
-                        databaseRoot = databaseRoot,
-                        uploaderId = uploaderId,
-                        name = sanitizedName,
-                        category = normalizedCategory,
-                        tags = normalizedTags,
-                        colors = prepared.colors,
-                        downloadUrl = downloadUrl,
-                        storagePath = storagePath,
-                        width = prepared.width,
-                        height = prepared.height,
-                        fileSize = prepared.bytes.size,
-                        originalFileName = uploadInfo.originalFileName,
-                        uploadedAt = timestamp,
-                        uploaderLabel = uploaderLabel,
-                        rights = validatedRights,
-                    )
-                    metadataSaved = true
-                }
+                uploadKey = finalizeWallpaperUploadWithCallable(
+                    name = sanitizedName,
+                    category = normalizedCategory,
+                    tags = normalizedTags,
+                    colors = prepared.colors,
+                    downloadUrl = downloadUrl,
+                    storagePath = storagePath,
+                    width = prepared.width,
+                    height = prepared.height,
+                    fileSize = prepared.bytes.size,
+                    originalFileName = uploadInfo.originalFileName,
+                    uploaderLabel = uploaderLabel,
+                    rights = validatedRights,
+                )
+                metadataSaved = true
 
                 Result.success(
                     Wallpaper(
@@ -318,7 +289,7 @@ class WallpaperUploadRepository @Inject constructor(
             COMMUNITY_GUIDELINES_REQUIRED_MESSAGE
         }
 
-    private suspend fun finalizeWallpaperUploadWithCallableOrNull(
+    private suspend fun finalizeWallpaperUploadWithCallable(
         name: String,
         category: String,
         tags: List<String>,
@@ -331,7 +302,10 @@ class WallpaperUploadRepository @Inject constructor(
         originalFileName: String,
         uploaderLabel: String,
         rights: CommunityUploadRights,
-    ): String? =
+    ): String {
+        if (identityProvider.currentFirebaseUid().isNullOrBlank()) {
+            throw IllegalStateException("Community upload service requires Firebase Auth")
+        }
         try {
             val result = callableClient.finalizeCommunityWallpaperUpload(
                 CommunityWallpaperUploadMetadataInput(
@@ -354,76 +328,17 @@ class WallpaperUploadRepository @Inject constructor(
                     sourceUrl = rights.sourceUrl,
                 ),
             )
-            when {
+            return when {
                 result.status.equals("accepted", ignoreCase = true) -> result.targetId()
                 result.status.equals("duplicate", ignoreCase = true) -> result.targetId()
-                else -> null
+                else -> throw IllegalStateException("Unexpected wallpaper upload status: ${result.status}")
             }
         } catch (e: CommunityCallableException) {
-            if (e.isMissingEndpoint()) null else null
+            throw IllegalStateException("Community upload service is unavailable", e)
         } catch (e: Exception) {
             e.rethrowIfCancelled()
-            null
+            throw e
         }
-
-    private suspend fun saveWallpaperUploadMetadataDirect(
-        wallpapersRefInstance: com.google.firebase.database.DatabaseReference,
-        databaseRoot: com.google.firebase.database.DatabaseReference,
-        uploaderId: String,
-        name: String,
-        category: String,
-        tags: List<String>,
-        colors: List<String>,
-        downloadUrl: String,
-        storagePath: String,
-        width: Int,
-        height: Int,
-        fileSize: Int,
-        originalFileName: String,
-        uploadedAt: Long,
-        uploaderLabel: String,
-        rights: CommunityUploadRights,
-    ): String {
-        val pushRef = wallpapersRefInstance.push()
-        val key = pushRef.key ?: throw IllegalStateException("Could not create wallpaper record")
-        val metadata = mapOf(
-            "name" to name,
-            "category" to category,
-            "tags" to tags,
-            "colors" to colors,
-            "thumbnailUrl" to downloadUrl,
-            "fullUrl" to downloadUrl,
-            "downloadUrl" to downloadUrl,
-            "storagePath" to storagePath,
-            "width" to width,
-            "height" to height,
-            "fileSize" to fileSize,
-            "fileType" to "image/jpeg",
-            "originalFileName" to originalFileName,
-            "uploadedAt" to uploadedAt,
-            "uploaderId" to uploaderId,
-            "uploaderUid" to uploaderId,
-            "uploaderLabel" to uploaderLabel,
-            "license" to rights.license,
-            "rightsAttested" to true,
-            "rightsAttestedAt" to uploadedAt,
-            "sourceUrl" to rights.sourceUrl,
-            "votes" to 0,
-        )
-        val ownerIndex = buildCommunityOwnerUploadIndexPayload(
-            kind = CommunityUploadKind.WALLPAPER,
-            uploadId = key,
-            storagePath = storagePath,
-            title = name,
-            createdAt = uploadedAt,
-        )
-        databaseRoot.updateChildren(
-            mapOf(
-                "/community_wallpapers/$key" to metadata,
-                communityOwnerUploadIndexPath(CommunityUploadKind.WALLPAPER, uploaderId, key) to ownerIndex,
-            ),
-        ).await()
-        return key
     }
 
     private fun snapshotToWallpaper(child: DataSnapshot, blockedUploaderIds: Set<String> = emptySet()): Wallpaper? {

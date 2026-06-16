@@ -3,7 +3,7 @@
     "votes": {
       "$contentId": {
         ".read": true,
-        ".write": "auth != null",
+        ".write": "auth != null && auth.token.admin === true",
         "upvotes": {
           ".validate": "newData.isNumber() && newData.val() >= 0"
         },
@@ -18,7 +18,7 @@
       "$contentId": {
         ".read": true,
         "$voterId": {
-          ".write": "auth != null && (auth.uid === $voterId || auth.token.admin === true)",
+          ".write": "auth != null && auth.token.admin === true",
           ".validate": "newData.val() === true"
         }
       }
@@ -33,7 +33,7 @@
     "community_sounds": {
       ".read": true,
       "$uploadId": {
-        ".write": "auth != null && (!data.exists() || data.child('uploaderUid').val() === auth.uid || auth.token.admin === true)",
+        ".write": "auth != null && (auth.token.admin === true || (data.exists() && !newData.exists() && (data.child('uploaderUid').val() === auth.uid || data.child('uploaderId').val() === auth.uid)))",
         "name": { ".validate": "newData.isString() && newData.val().length <= 80" },
         "category": { ".validate": "newData.val() === 'ringtone' || newData.val() === 'notification' || newData.val() === 'alarm'" },
         "tags": {
@@ -50,7 +50,7 @@
     "community_wallpapers": {
       ".read": true,
       "$uploadId": {
-        ".write": "auth != null && (!data.exists() || data.child('uploaderUid').val() === auth.uid || auth.token.admin === true)",
+        ".write": "auth != null && (auth.token.admin === true || (data.exists() && !newData.exists() && (data.child('uploaderUid').val() === auth.uid || data.child('uploaderId').val() === auth.uid)))",
         "name": { ".validate": "newData.isString() && newData.val().length <= 80" },
         "category": { ".validate": "newData.val() === 'abstract' || newData.val() === 'amoled' || newData.val() === 'nature' || newData.val() === 'minimal' || newData.val() === 'city' || newData.val() === 'space' || newData.val() === 'other'" },
         "uploaderUid": { ".validate": "newData.isString() && (newData.val() === auth.uid || auth.token.admin === true)" },
@@ -64,9 +64,10 @@
     "owner_uploads": {
       "$uid": {
         ".read": "auth != null && (auth.uid === $uid || auth.token.admin === true)",
-        ".write": "auth != null && (auth.uid === $uid || auth.token.admin === true)",
+        ".write": "auth != null && auth.token.admin === true",
         "sounds": {
           "$uploadId": {
+            ".write": "auth != null && (auth.token.admin === true || (auth.uid === $uid && data.exists() && !newData.exists()))",
             "uploadId": { ".validate": "newData.isString() && newData.val() === $uploadId" },
             "publicId": { ".validate": "newData.isString() && newData.val().length > 3 && newData.val().beginsWith('cu_')" },
             "contentType": { ".validate": "newData.val() === 'SOUND'" },
@@ -78,6 +79,7 @@
         },
         "wallpapers": {
           "$uploadId": {
+            ".write": "auth != null && (auth.token.admin === true || (auth.uid === $uid && data.exists() && !newData.exists()))",
             "uploadId": { ".validate": "newData.isString() && newData.val() === $uploadId" },
             "publicId": { ".validate": "newData.isString() && newData.val().length > 3 && newData.val().beginsWith('cw_')" },
             "contentType": { ".validate": "newData.val() === 'WALLPAPER'" },
@@ -109,7 +111,7 @@
       ".indexOn": ["status"],
       ".read": "auth != null && auth.token.admin === true",
       "$reportId": {
-        ".write": "auth != null && (!data.exists() || auth.token.admin === true)",
+        ".write": "auth != null && auth.token.admin === true",
         "contentId": { ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 240" },
         "contentKey": { ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 240" },
         "contentType": { ".validate": "newData.isString() && newData.val().length >= 3 && newData.val().length <= 40 && newData.val() === newData.val().toUpperCase()" },
@@ -198,19 +200,19 @@
     "creator_profiles": {
       ".read": true,
       "$uid": {
-        ".write": "auth != null && (auth.uid === $uid || auth.token.admin === true)"
+        ".write": "auth != null && auth.token.admin === true"
       }
     },
     "creator_follows": {
       ".read": "auth != null",
       "$followerUid": {
-        ".write": "auth != null && auth.uid === $followerUid"
+        ".write": "auth != null && auth.token.admin === true"
       }
     },
     "community_user_blocks": {
       "$blockerUid": {
         ".read": "auth != null && (auth.uid === $blockerUid || auth.token.admin === true)",
-        ".write": "auth != null && (auth.uid === $blockerUid || auth.token.admin === true)",
+        ".write": "auth != null && auth.token.admin === true",
         "$blockedUid": {
           ".validate": "newData.hasChildren(['blockerUid', 'blockedUid', 'createdAt', 'reason']) && newData.child('blockerUid').val() === $blockerUid && newData.child('blockedUid').val() === $blockedUid && $blockerUid !== $blockedUid",
           "blockerUid": { ".validate": "newData.isString() && newData.val() === $blockerUid" },
@@ -224,7 +226,7 @@
       "$blockedUid": {
         ".read": "auth != null && auth.token.admin === true",
         "$blockerUid": {
-          ".write": "auth != null && (auth.uid === $blockerUid || auth.token.admin === true)",
+          ".write": "auth != null && auth.token.admin === true",
           ".validate": "newData.hasChildren(['blockerUid', 'blockedUid', 'createdAt', 'reason']) && newData.child('blockerUid').val() === $blockerUid && newData.child('blockedUid').val() === $blockedUid && $blockerUid !== $blockedUid",
           "blockerUid": { ".validate": "newData.isString() && newData.val() === $blockerUid" },
           "blockedUid": { ".validate": "newData.isString() && newData.val() === $blockedUid" },

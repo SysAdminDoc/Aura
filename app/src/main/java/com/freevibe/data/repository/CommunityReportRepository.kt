@@ -7,7 +7,6 @@ import com.freevibe.data.model.CommunityReportResolutionStatus
 import com.freevibe.data.model.CommunityTakedownAction
 import com.freevibe.data.model.CommunityUploadDeleteReason
 import com.freevibe.data.model.CommunityUploadKind
-import com.freevibe.data.model.buildCommunityReportPayload
 import com.freevibe.data.model.buildCommunityReportResolutionPayload
 import com.freevibe.data.model.buildCommunityTakedownReceiptPayload
 import com.freevibe.data.model.buildCommunityUploadDeleteUpdates
@@ -47,41 +46,23 @@ class CommunityReportRepository @Inject constructor(
     private val reportsRef get() = database?.child("community_reports")
 
     suspend fun submitReport(input: CommunityReportInput): Result<String> = try {
-        val reporterUid = identityProvider.ensureSignedIn()
-        val callableReportId = submitReportWithCallableOrNull(input)
-        if (callableReportId != null) {
-            Result.success(callableReportId)
-        } else {
-            submitReportWithDirectDatabase(input, reporterUid)
-        }
+        identityProvider.ensureSignedIn()
+        Result.success(submitReportWithCallable(input))
     } catch (e: Exception) {
         e.rethrowIfCancelled()
         Result.failure(e)
     }
 
-    private suspend fun submitReportWithCallableOrNull(input: CommunityReportInput): String? {
-        if (identityProvider.currentFirebaseUid().isNullOrBlank()) return null
+    private suspend fun submitReportWithCallable(input: CommunityReportInput): String {
+        if (identityProvider.currentFirebaseUid().isNullOrBlank()) {
+            throw IllegalStateException("Community report service requires Firebase Auth")
+        }
         return try {
             callableClient.submitCommunityReport(input).targetId()
         } catch (e: CommunityCallableException) {
             e.rethrowIfCancelled()
-            if (e.isMissingEndpoint()) null else throw e
+            throw IllegalStateException("Community report service is unavailable", e)
         }
-    }
-
-    private suspend fun submitReportWithDirectDatabase(
-        input: CommunityReportInput,
-        reporterUid: String,
-    ): Result<String> {
-        val reports = reportsRef ?: throw IllegalStateException("Firebase Database not available")
-        val payload = buildCommunityReportPayload(
-            input = input,
-            reporterUid = reporterUid,
-            reportedAt = System.currentTimeMillis(),
-        )
-        val ref = reports.push()
-        ref.setValue(payload).await()
-        return Result.success(ref.key.orEmpty())
     }
 
     fun reports(

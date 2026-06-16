@@ -12,9 +12,7 @@ import com.freevibe.data.model.CommunityUploadRights
 import com.freevibe.data.model.CommunitySoundUploadMetadataInput
 import com.freevibe.data.model.ContentSource
 import com.freevibe.data.model.Sound
-import com.freevibe.data.model.buildCommunityOwnerUploadIndexPayload
 import com.freevibe.data.model.buildCommunityUploadDeleteUpdates
-import com.freevibe.data.model.communityOwnerUploadIndexPath
 import com.freevibe.data.model.isCommunityUserBlocked
 import com.freevibe.data.model.sanitizeCommunityUploadKey
 import com.freevibe.data.model.validateCommunityUploadRights
@@ -153,41 +151,18 @@ class UploadRepository @Inject constructor(
             // Get download URL
             val downloadUrl = storageRef.downloadUrl.await().toString()
 
-            if (!identityProvider.currentFirebaseUid().isNullOrBlank()) {
-                finalizeSoundUploadWithCallableOrNull(
-                    name = sanitizedName,
-                    category = normalizedCategory,
-                    tags = normalizedTags,
-                    downloadUrl = downloadUrl,
-                    storagePath = storagePath,
-                    fileType = normalizedMimeType,
-                    originalFileName = uploadInfo.originalFileName,
-                    uploaderLabel = uploaderLabel,
-                    rights = validatedRights,
-                )?.let {
-                    metadataSaved = true
-                }
-            }
-            if (!metadataSaved) {
-                val uploadsRefInstance = uploadsRef ?: throw IllegalStateException("Firebase Database not available")
-                val databaseRoot = database?.reference ?: throw IllegalStateException("Firebase Database not available")
-                saveSoundUploadMetadataDirect(
-                    uploadsRefInstance = uploadsRefInstance,
-                    databaseRoot = databaseRoot,
-                    uploaderId = uploaderId,
-                    name = sanitizedName,
-                    category = normalizedCategory,
-                    tags = normalizedTags,
-                    downloadUrl = downloadUrl,
-                    storagePath = storagePath,
-                    fileType = normalizedMimeType,
-                    originalFileName = uploadInfo.originalFileName,
-                    uploadedAt = timestamp,
-                    uploaderLabel = uploaderLabel,
-                    rights = validatedRights,
-                )
-                metadataSaved = true
-            }
+            finalizeSoundUploadWithCallable(
+                name = sanitizedName,
+                category = normalizedCategory,
+                tags = normalizedTags,
+                downloadUrl = downloadUrl,
+                storagePath = storagePath,
+                fileType = normalizedMimeType,
+                originalFileName = uploadInfo.originalFileName,
+                uploaderLabel = uploaderLabel,
+                rights = validatedRights,
+            )
+            metadataSaved = true
 
             Result.success(downloadUrl)
         } finally {
@@ -361,7 +336,7 @@ class UploadRepository @Inject constructor(
             COMMUNITY_GUIDELINES_REQUIRED_MESSAGE
         }
 
-    private suspend fun finalizeSoundUploadWithCallableOrNull(
+    private suspend fun finalizeSoundUploadWithCallable(
         name: String,
         category: String,
         tags: List<String>,
@@ -371,7 +346,10 @@ class UploadRepository @Inject constructor(
         originalFileName: String,
         uploaderLabel: String,
         rights: CommunityUploadRights,
-    ): Boolean? =
+    ) {
+        if (identityProvider.currentFirebaseUid().isNullOrBlank()) {
+            throw IllegalStateException("Community upload service requires Firebase Auth")
+        }
         try {
             val result = callableClient.finalizeCommunitySoundUpload(
                 CommunitySoundUploadMetadataInput(
@@ -389,65 +367,16 @@ class UploadRepository @Inject constructor(
                 ),
             )
             when {
-                result.status.equals("accepted", ignoreCase = true) -> true
-                result.status.equals("duplicate", ignoreCase = true) -> true
-                else -> null
+                result.status.equals("accepted", ignoreCase = true) -> Unit
+                result.status.equals("duplicate", ignoreCase = true) -> Unit
+                else -> throw IllegalStateException("Unexpected sound upload status: ${result.status}")
             }
         } catch (e: CommunityCallableException) {
-            if (e.isMissingEndpoint()) null else null
+            throw IllegalStateException("Community upload service is unavailable", e)
         } catch (e: Exception) {
             e.rethrowIfCancelled()
-            null
+            throw e
         }
-
-    private suspend fun saveSoundUploadMetadataDirect(
-        uploadsRefInstance: com.google.firebase.database.DatabaseReference,
-        databaseRoot: com.google.firebase.database.DatabaseReference,
-        uploaderId: String,
-        name: String,
-        category: String,
-        tags: List<String>,
-        downloadUrl: String,
-        storagePath: String,
-        fileType: String,
-        originalFileName: String,
-        uploadedAt: Long,
-        uploaderLabel: String,
-        rights: CommunityUploadRights,
-    ) {
-        val pushRef = uploadsRefInstance.push()
-        val uploadKey = pushRef.key ?: throw IllegalStateException("Could not create sound upload record")
-        val metadata = mapOf(
-            "name" to name,
-            "category" to category,
-            "tags" to tags,
-            "downloadUrl" to downloadUrl,
-            "storagePath" to storagePath,
-            "fileType" to fileType,
-            "originalFileName" to originalFileName,
-            "uploadedAt" to uploadedAt,
-            "uploaderId" to uploaderId,
-            "uploaderUid" to uploaderId,
-            "uploaderLabel" to uploaderLabel,
-            "license" to rights.license,
-            "rightsAttested" to true,
-            "rightsAttestedAt" to uploadedAt,
-            "sourceUrl" to rights.sourceUrl,
-            "votes" to 0,
-        )
-        val ownerIndex = buildCommunityOwnerUploadIndexPayload(
-            kind = CommunityUploadKind.SOUND,
-            uploadId = uploadKey,
-            storagePath = storagePath,
-            title = name,
-            createdAt = uploadedAt,
-        )
-        databaseRoot.updateChildren(
-            mapOf(
-                "/community_sounds/$uploadKey" to metadata,
-                communityOwnerUploadIndexPath(CommunityUploadKind.SOUND, uploaderId, uploadKey) to ownerIndex,
-            ),
-        ).await()
     }
 
     private fun resolveUploadFileInfo(localUri: Uri, fallbackName: String): UploadFileInfo {

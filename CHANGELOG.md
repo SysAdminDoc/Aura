@@ -3,6 +3,12 @@
 All notable changes to Aura will be documented in this file.
 
 ## v6.31.2 (2026-06-15)
+- **Community write hardening**: community report submission, voting, creator
+  follows/profile edits, user blocks, and upload metadata finalization now rely
+  on the App Check/Auth-backed Cloud Function callables instead of falling back
+  to client-side Realtime Database writes. RTDB rules now keep those mutation
+  paths callable/admin-owned while preserving public reads and owner delete
+  authority for existing upload records.
 - **Deep audit pass**: Fixed callable fallback bypass in both upload repositories
   (sound + wallpaper) — if the Cloud Function returned an unexpected status or
   threw a non-`CommunityCallableException` error, the already-uploaded Storage

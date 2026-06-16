@@ -132,14 +132,10 @@ class CreatorProfileRepository @Inject constructor(
         withContext(Dispatchers.IO) {
             runCatching {
                 ensureCommunityEnabled()
-                val profileUid = identityProvider.ensureSignedIn()
+                identityProvider.ensureSignedIn()
                 val normalizedInput = normalizeCreatorProfileInput(input)
-                if (!identityProvider.currentFirebaseUid().isNullOrBlank()) {
-                    updateCreatorProfileWithCallableOrNull(normalizedInput)?.let {
-                        return@runCatching normalizedInput.toPublicProfile()
-                    }
-                }
-                updateCreatorProfileWithDirectDatabase(profileUid, normalizedInput)
+                updateCreatorProfileWithCallable(normalizedInput)
+                normalizedInput.toPublicProfile()
             }.onFailure { it.rethrowIfCancelled() }
         }
 
@@ -147,12 +143,7 @@ class CreatorProfileRepository @Inject constructor(
         runCatching {
             ensureCommunityEnabled()
             identityProvider.ensureSignedIn()
-            if (!identityProvider.currentFirebaseUid().isNullOrBlank()) {
-                setCreatorFollowWithCallableOrNull(creatorId, label, following = true)?.let {
-                    return@runCatching Unit
-                }
-            }
-            followCreatorWithDirectDatabase(creatorId, label)
+            setCreatorFollowWithCallable(creatorId, label, following = true)
             Unit
         }.onFailure { it.rethrowIfCancelled() }
     }
@@ -161,98 +152,53 @@ class CreatorProfileRepository @Inject constructor(
         runCatching {
             ensureCommunityEnabled()
             identityProvider.ensureSignedIn()
-            if (!identityProvider.currentFirebaseUid().isNullOrBlank()) {
-                setCreatorFollowWithCallableOrNull(creatorId, label = "", following = false)?.let {
-                    return@runCatching Unit
-                }
-            }
-            unfollowCreatorWithDirectDatabase(creatorId)
+            setCreatorFollowWithCallable(creatorId, label = "", following = false)
             Unit
         }.onFailure { it.rethrowIfCancelled() }
     }
 
-    private suspend fun setCreatorFollowWithCallableOrNull(
+    private suspend fun setCreatorFollowWithCallable(
         creatorId: String,
         label: String,
         following: Boolean,
-    ): Boolean? =
-        try {
-            val result = callableClient.setCreatorFollow(
+    ) {
+        requireFirebaseAuth("Creator follow service")
+        val result = try {
+            callableClient.setCreatorFollow(
                 CommunityFollowInput(
                     creatorId = creatorId,
                     label = label,
                     following = following,
                 ),
             )
-            when {
-                result.status.equals("accepted", ignoreCase = true) -> true
-                result.status.equals("duplicate", ignoreCase = true) -> true
-                else -> throw IllegalStateException("Unexpected creator follow status: ${result.status}")
-            }
         } catch (e: CommunityCallableException) {
-            if (e.isMissingEndpoint()) null else throw e
+            throw IllegalStateException("Creator follow service is unavailable", e)
         }
-
-    private suspend fun updateCreatorProfileWithCallableOrNull(input: CreatorProfileUpdateInput): Boolean? =
-        try {
-            val result = callableClient.updateCreatorProfile(input)
-            when {
-                result.status.equals("accepted", ignoreCase = true) -> true
-                result.status.equals("duplicate", ignoreCase = true) -> true
-                else -> throw IllegalStateException("Unexpected creator profile status: ${result.status}")
-            }
-        } catch (e: CommunityCallableException) {
-            if (e.isMissingEndpoint()) null else throw e
+        when {
+            result.status.equals("accepted", ignoreCase = true) -> Unit
+            result.status.equals("duplicate", ignoreCase = true) -> Unit
+            else -> throw IllegalStateException("Unexpected creator follow status: ${result.status}")
         }
-
-    private suspend fun updateCreatorProfileWithDirectDatabase(
-        profileUid: String,
-        input: CreatorProfileUpdateInput,
-    ): CreatorPublicProfile {
-        val db = database ?: throw IllegalStateException("Firebase Database not available")
-        val now = System.currentTimeMillis()
-        val profileRef = db.child("creator_profiles").child(profileUid)
-        val createdAt = profileRef.get().await()
-            .child("createdAt")
-            .getValue(Long::class.java)
-            ?.takeIf { it > 0L }
-            ?: now
-        profileRef.setValue(
-            mapOf(
-                "profileUid" to profileUid,
-                "displayName" to input.displayName,
-                "bio" to input.bio,
-                "websiteUrl" to input.websiteUrl,
-                "avatarUrl" to input.avatarUrl,
-                "createdAt" to createdAt,
-                "updatedAt" to now,
-            ),
-        ).await()
-        return input.toPublicProfile()
     }
 
-    private suspend fun followCreatorWithDirectDatabase(creatorId: String, label: String) {
-        val db = database ?: throw IllegalStateException("Firebase Database not available")
-        val currentUserId = voteRepo.sanitizeKey(identityProvider.ensureSignedIn())
-        val safeCreatorId = voteRepo.sanitizeKey(creatorId)
-        db.child("creator_follows")
-            .child(currentUserId)
-            .child(safeCreatorId)
-            .setValue(
-                mapOf(
-                    "creatorId" to creatorId,
-                    "label" to label,
-                    "followedAt" to System.currentTimeMillis(),
-                ),
-            )
-            .await()
+    private suspend fun updateCreatorProfileWithCallable(input: CreatorProfileUpdateInput) {
+        requireFirebaseAuth("Creator profile service")
+        val result = try {
+            callableClient.updateCreatorProfile(input)
+        } catch (e: CommunityCallableException) {
+            throw IllegalStateException("Creator profile service is unavailable", e)
+        }
+        when {
+            result.status.equals("accepted", ignoreCase = true) -> Unit
+            result.status.equals("duplicate", ignoreCase = true) -> Unit
+            else -> throw IllegalStateException("Unexpected creator profile status: ${result.status}")
+        }
     }
 
-    private suspend fun unfollowCreatorWithDirectDatabase(creatorId: String) {
-        val db = database ?: throw IllegalStateException("Firebase Database not available")
-        val currentUserId = voteRepo.sanitizeKey(identityProvider.ensureSignedIn())
-        val safeCreatorId = voteRepo.sanitizeKey(creatorId)
-        db.child("creator_follows").child(currentUserId).child(safeCreatorId).removeValue().await()
+    private fun requireFirebaseAuth(surfaceName: String) {
+        if (identityProvider.currentFirebaseUid().isNullOrBlank()) {
+            throw IllegalStateException("$surfaceName requires Firebase Auth")
+        }
     }
 
     private suspend fun getFollowedCreatorIds(): Set<String> {
