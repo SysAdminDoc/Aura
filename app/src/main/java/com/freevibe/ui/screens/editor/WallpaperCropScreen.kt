@@ -32,6 +32,7 @@ import com.freevibe.R
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.freevibe.data.model.Wallpaper
 import com.freevibe.data.model.WallpaperTarget
+import com.freevibe.ui.components.AuraSnackbarHost
 import com.freevibe.ui.components.AuraStateAction
 import com.freevibe.ui.components.AuraStateCard
 import kotlinx.coroutines.launch
@@ -84,7 +85,7 @@ fun WallpaperCropScreen(
     }
 
     Scaffold(
-        snackbarHost = { SnackbarHost(snackbarHostState) },
+        snackbarHost = { AuraSnackbarHost(snackbarHostState) },
         topBar = {
             TopAppBar(
                 title = { Text(stringResource(R.string.editor_crop_title)) },

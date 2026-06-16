@@ -37,6 +37,7 @@ import com.freevibe.R
 import com.freevibe.data.model.ContentType
 import com.freevibe.data.model.Sound
 import com.freevibe.data.model.stableKey
+import com.freevibe.ui.components.AuraSnackbarHost
 import com.freevibe.ui.components.AuraStateAction
 import com.freevibe.ui.components.AuraStateCard
 import kotlinx.coroutines.launch
@@ -176,7 +177,7 @@ fun SoundEditorScreen(
     }
 
     Scaffold(
-        snackbarHost = { SnackbarHost(snackbarHostState) },
+        snackbarHost = { AuraSnackbarHost(snackbarHostState) },
         topBar = {
             TopAppBar(
                 title = { Text(stringResource(if (soundId == null) R.string.editor_sound_create_title else R.string.editor_sound_edit_title)) },

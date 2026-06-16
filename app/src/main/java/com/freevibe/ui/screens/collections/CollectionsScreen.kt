@@ -48,6 +48,7 @@ import com.freevibe.data.repository.CollectionRepository
 import com.freevibe.service.CollectionExporter
 import com.freevibe.service.CollectionImportResult
 import com.freevibe.service.SelectedContentHolder
+import com.freevibe.ui.components.AuraSnackbarHost
 import com.freevibe.ui.components.AuraStateCard
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -290,7 +291,7 @@ fun CollectionsScreen(
     }
 
     Scaffold(
-        snackbarHost = { SnackbarHost(snackbarHostState) },
+        snackbarHost = { AuraSnackbarHost(snackbarHostState) },
         topBar = {
             TopAppBar(
                 title = {

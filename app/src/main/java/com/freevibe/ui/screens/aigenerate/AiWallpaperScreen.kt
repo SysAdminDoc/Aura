@@ -50,7 +50,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -80,6 +79,7 @@ import coil.compose.SubcomposeAsyncImageContent
 import com.freevibe.data.model.GENERATED_CONTENT_REPORT_REASONS
 import com.freevibe.data.model.WallpaperTarget
 import com.freevibe.data.repository.AiStyle
+import com.freevibe.ui.components.AuraSnackbarHost
 import com.freevibe.ui.components.CommunityReportDialog
 import com.freevibe.ui.components.GlassCard
 import com.freevibe.ui.components.HighlightPill
@@ -198,7 +198,7 @@ fun AiWallpaperScreen(
     }
 
     Scaffold(
-        snackbarHost = { SnackbarHost(snackbarHostState) },
+        snackbarHost = { AuraSnackbarHost(snackbarHostState) },
         containerColor = Color.Transparent,
     ) { padding ->
         Column(

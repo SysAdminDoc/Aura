@@ -48,6 +48,7 @@ import com.freevibe.data.model.isSourceUnavailable
 import com.freevibe.data.model.stableKey
 import com.freevibe.service.ParallaxWallpaperService
 import com.freevibe.ui.LiveWallpaperLaunchMode
+import com.freevibe.ui.components.AuraSnackbarHost
 import com.freevibe.ui.components.CommunityReportDialog
 import com.freevibe.ui.components.GlassCard
 import com.freevibe.ui.components.HighlightPill
@@ -271,7 +272,7 @@ fun WallpaperDetailScreen(
     val compactOverlayBottomPadding = maxOf(8.dp, navigationBottomPadding / 4)
     val expandedOverlayBottomPadding = navigationBottomPadding + 14.dp
 
-    Scaffold(snackbarHost = { SnackbarHost(snackbarHostState) }) { padding ->
+    Scaffold(snackbarHost = { AuraSnackbarHost(snackbarHostState) }) { padding ->
         Box(
             modifier = Modifier
                 .fillMaxSize()

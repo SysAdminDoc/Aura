@@ -231,25 +231,12 @@ fun FreeVibeRoot(
                                             }
                                         },
                                         icon = {
-                                            if (screen == Screen.Favorites && favoritesCount > 0) {
-                                                Box {
-                                                    Icon(
-                                                        imageVector = if (selected) screen.selectedIcon else screen.icon,
-                                                        contentDescription = screenTitle,
-                                                    )
-                                                    CountBadge(
-                                                        count = favoritesCount,
-                                                        modifier = Modifier
-                                                            .align(Alignment.TopEnd)
-                                                            .offset(x = 10.dp, y = (-7).dp),
-                                                    )
-                                                }
-                                            } else {
-                                                Icon(
-                                                    imageVector = if (selected) screen.selectedIcon else screen.icon,
-                                                    contentDescription = screenTitle,
-                                                )
-                                            }
+                                            BottomNavIcon(
+                                                screen = screen,
+                                                selected = selected,
+                                                screenTitle = screenTitle,
+                                                favoritesCount = favoritesCount,
+                                            )
                                         },
                                         label = {
                                             Text(
@@ -964,5 +951,43 @@ private fun isBottomNavDestination(
     if (destination == null) return false
     return destination.hierarchy.any { navDestination ->
         screen.matchesDestination(navDestination.route)
+    }
+}
+
+@Composable
+private fun BottomNavIcon(
+    screen: Screen,
+    selected: Boolean,
+    screenTitle: String,
+    favoritesCount: Int,
+) {
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(3.dp),
+    ) {
+        Box {
+            Icon(
+                imageVector = if (selected) screen.selectedIcon else screen.icon,
+                contentDescription = screenTitle,
+                modifier = Modifier.size(22.dp),
+            )
+            if (screen == Screen.Favorites && favoritesCount > 0) {
+                CountBadge(
+                    count = favoritesCount,
+                    modifier = Modifier
+                        .align(Alignment.TopEnd)
+                        .offset(x = 10.dp, y = (-7).dp),
+                )
+            }
+        }
+        Box(
+            modifier = Modifier
+                .width(if (selected) 18.dp else 10.dp)
+                .height(2.dp)
+                .background(
+                    color = if (selected) MaterialTheme.colorScheme.primary else Color.Transparent,
+                    shape = RoundedCornerShape(1.dp),
+                ),
+        )
     }
 }

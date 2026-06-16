@@ -2,6 +2,16 @@
 
 All notable changes to Aura will be documented in this file.
 
+## v6.31.3 (2026-06-16)
+- **Premium UX polish pass**: unified browse headers for sounds and video
+  wallpapers, added clearer tab/source-specific copy, made bottom navigation
+  selection visible beyond color alone, and standardized Aura snackbar feedback
+  across detail, editor, collection, generated-wallpaper, sound, and wallpaper
+  flows.
+- **Accessibility and state feedback**: shared state/status components now mark
+  headings and polite live regions so loading, degraded-source, empty, and error
+  states read more predictably.
+
 ## v6.31.2 (2026-06-15)
 - **Community upload deletion request copy**: sound and wallpaper upload
   disclosures now tell users to copy/share the Settings deletion request code

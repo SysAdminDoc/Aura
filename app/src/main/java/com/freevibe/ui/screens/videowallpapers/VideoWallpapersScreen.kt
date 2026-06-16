@@ -64,6 +64,8 @@ import com.freevibe.service.normalizeVideoWallpaperScaleMode
 import com.freevibe.service.videoWallpaperMimeTypes
 import com.freevibe.ui.components.AuraStateAction
 import com.freevibe.ui.components.AuraStateCard
+import com.freevibe.ui.components.AuraScreenHeader
+import com.freevibe.ui.components.AuraSnackbarHost
 import com.freevibe.ui.components.AuraStatusAction
 import com.freevibe.ui.components.AuraStatusBanner
 import com.freevibe.ui.components.CompactSearchField
@@ -290,97 +292,108 @@ fun VideoWallpapersScreen(
 
     Scaffold(
         contentWindowInsets = WindowInsets(0, 0, 0, 0),
-        snackbarHost = { SnackbarHost(snackbarHostState) },
+        snackbarHost = { AuraSnackbarHost(snackbarHostState) },
     ) { scaffoldPadding ->
     Column(Modifier.fillMaxSize().padding(scaffoldPadding)) {
-        // Search bar
-        CompactSearchField(
-            value = searchQuery,
-            onValueChange = { searchQuery = it },
-            placeholder = "Search live wallpapers",
+        AuraScreenHeader(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 12.dp, vertical = 3.dp),
-            onClear = {
-                searchQuery = ""
-                viewModel.search("")
-                focusManager.clearFocus()
-            },
-            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
-            keyboardActions = KeyboardActions(onSearch = {
-                viewModel.search(searchQuery); focusManager.clearFocus()
-            }),
-        )
-
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 12.dp, vertical = 2.dp)
-                .horizontalScroll(rememberScrollState()),
-            horizontalArrangement = Arrangement.spacedBy(6.dp),
-            verticalAlignment = Alignment.CenterVertically,
+                .padding(horizontal = 10.dp, vertical = 6.dp),
+            label = "Motion wallpapers",
+            icon = Icons.Default.SlowMotionVideo,
+            title = videoHeaderTitle(state.searchQuery, state.orientation),
+            subtitle = videoHeaderSubtitle(
+                query = state.searchQuery,
+                orientation = state.orientation,
+                resultCount = visibleItems.size,
+            ),
+            tint = MaterialTheme.colorScheme.secondary,
         ) {
-            Box {
-                FilledTonalButton(
-                    onClick = { showOrientationMenu = true },
+            CompactSearchField(
+                value = searchQuery,
+                onValueChange = { searchQuery = it },
+                placeholder = "Search live wallpapers",
+                modifier = Modifier.fillMaxWidth(),
+                onClear = {
+                    searchQuery = ""
+                    viewModel.search("")
+                    focusManager.clearFocus()
+                },
+                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
+                keyboardActions = KeyboardActions(onSearch = {
+                    viewModel.search(searchQuery)
+                    focusManager.clearFocus()
+                }),
+            )
+            Spacer(Modifier.height(8.dp))
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .horizontalScroll(rememberScrollState()),
+                horizontalArrangement = Arrangement.spacedBy(6.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Box {
+                    FilledTonalButton(
+                        onClick = { showOrientationMenu = true },
+                        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 0.dp),
+                        modifier = Modifier.heightIn(min = 48.dp),
+                        shape = RoundedCornerShape(8.dp),
+                    ) {
+                        Icon(Icons.Default.CropPortrait, contentDescription = null, modifier = Modifier.size(14.dp))
+                        Spacer(Modifier.width(6.dp))
+                        Text(orientationLabel(state.orientation))
+                        Spacer(Modifier.width(4.dp))
+                        Icon(Icons.Default.ArrowDropDown, contentDescription = null, modifier = Modifier.size(16.dp))
+                    }
+                    DropdownMenu(
+                        expanded = showOrientationMenu,
+                        onDismissRequest = { showOrientationMenu = false },
+                    ) {
+                        OrientationFilter.entries.forEach { filter ->
+                            DropdownMenuItem(
+                                text = { Text(orientationLabel(filter)) },
+                                onClick = {
+                                    showOrientationMenu = false
+                                    viewModel.setOrientation(filter)
+                                },
+                                leadingIcon = {
+                                    if (state.orientation == filter) {
+                                        Icon(Icons.Default.Check, contentDescription = null, modifier = Modifier.size(16.dp))
+                                    }
+                                },
+                            )
+                        }
+                    }
+                }
+
+                OutlinedButton(
+                    onClick = { showFiltersSheet = true },
                     contentPadding = PaddingValues(horizontal = 12.dp, vertical = 0.dp),
                     modifier = Modifier.heightIn(min = 48.dp),
                     shape = RoundedCornerShape(8.dp),
                 ) {
-                    Icon(Icons.Default.CropPortrait, contentDescription = null, modifier = Modifier.size(14.dp))
-                    Spacer(Modifier.width(6.dp))
-                    Text(orientationLabel(state.orientation))
-                    Spacer(Modifier.width(4.dp))
-                    Icon(Icons.Default.ArrowDropDown, contentDescription = null, modifier = Modifier.size(16.dp))
-                }
-                DropdownMenu(
-                    expanded = showOrientationMenu,
-                    onDismissRequest = { showOrientationMenu = false },
-                ) {
-                    OrientationFilter.entries.forEach { filter ->
-                        DropdownMenuItem(
-                            text = { Text(orientationLabel(filter)) },
-                            onClick = {
-                                showOrientationMenu = false
-                                viewModel.setOrientation(filter)
-                            },
-                            leadingIcon = {
-                                if (state.orientation == filter) {
-                                    Icon(Icons.Default.Check, contentDescription = null, modifier = Modifier.size(16.dp))
-                                }
-                            },
+                    Box {
+                        Icon(Icons.Default.Tune, contentDescription = null, modifier = Modifier.size(14.dp))
+                        CountBadge(
+                            count = videoFilterCount,
+                            modifier = Modifier
+                                .align(Alignment.TopEnd)
+                                .offset(x = 10.dp, y = (-8).dp),
                         )
                     }
+                    Spacer(Modifier.width(8.dp))
+                    Text(if (videoFilterCount > 0) videoFocusLabel(state.focusFilter) else "Filters")
+                }
+
+                FilledTonalIconButton(
+                    onClick = { galleryLauncher.launch(videoWallpaperMimeTypes()) },
+                    modifier = Modifier.size(48.dp),
+                    shape = RoundedCornerShape(8.dp),
+                ) {
+                    Icon(Icons.Default.FolderOpen, "Video or GIF from gallery", modifier = Modifier.size(16.dp))
                 }
             }
-
-            OutlinedButton(
-                onClick = { showFiltersSheet = true },
-                contentPadding = PaddingValues(horizontal = 12.dp, vertical = 0.dp),
-                modifier = Modifier.heightIn(min = 48.dp),
-                shape = RoundedCornerShape(8.dp),
-            ) {
-                Box {
-                    Icon(Icons.Default.Tune, contentDescription = null, modifier = Modifier.size(14.dp))
-                    CountBadge(
-                        count = videoFilterCount,
-                        modifier = Modifier
-                            .align(Alignment.TopEnd)
-                            .offset(x = 10.dp, y = (-8).dp),
-                    )
-                }
-                Spacer(Modifier.width(8.dp))
-                Text(if (videoFilterCount > 0) videoFocusLabel(state.focusFilter) else "Filters")
-            }
-
-            FilledTonalIconButton(
-                onClick = { galleryLauncher.launch(videoWallpaperMimeTypes()) },
-                modifier = Modifier.size(48.dp),
-                shape = RoundedCornerShape(8.dp),
-            ) {
-                Icon(Icons.Default.FolderOpen, "Video or GIF from gallery", modifier = Modifier.size(16.dp))
-            }
-
         }
 
         if (state.degradedSources.isNotEmpty()) {
@@ -1033,6 +1046,31 @@ private fun videoEmptyState(
         "No video wallpapers found",
         "Try another focus filter or switch the ${orientation.label()} view.",
     )
+}
+
+private fun videoHeaderTitle(
+    query: String,
+    orientation: OrientationFilter,
+): String = when {
+    query.isNotBlank() -> "Motion results for \"$query\""
+    orientation == OrientationFilter.PORTRAIT -> "Portrait motion wallpapers"
+    orientation == OrientationFilter.LANDSCAPE -> "Landscape clips, ready to fit"
+    else -> "Live wallpaper discovery"
+}
+
+private fun videoHeaderSubtitle(
+    query: String,
+    orientation: OrientationFilter,
+    resultCount: Int,
+): String = when {
+    query.isNotBlank() ->
+        "$resultCount result${if (resultCount == 1) "" else "s"} matched your motion wallpaper search."
+    resultCount > 0 && orientation == OrientationFilter.PORTRAIT ->
+        "$resultCount portrait-friendly clip${if (resultCount == 1) "" else "s"} with preview, crop, and apply controls."
+    resultCount > 0 ->
+        "$resultCount clip${if (resultCount == 1) "" else "s"} available. Use Fit or Crop before applying landscape media."
+    else ->
+        "Search sources or choose a local video/GIF when you already have the right loop."
 }
 
 private fun OrientationFilter.label(): String = when (this) {

@@ -1,0 +1,5 @@
+v6.31.3
+- Refined Sounds and Video browse headers with clearer context, hierarchy, and source-specific status copy.
+- Added a non-color selected indicator to bottom navigation for clearer orientation.
+- Standardized Aura snackbar feedback across detail, editor, collection, generated wallpaper, sound, and wallpaper flows.
+- Improved accessibility semantics for shared status and state surfaces.

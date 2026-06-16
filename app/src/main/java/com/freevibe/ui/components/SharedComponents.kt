@@ -29,10 +29,13 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.onClick
 import androidx.compose.ui.semantics.progressBarRangeInfo
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
+import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.ProgressBarRangeInfo
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -475,6 +478,46 @@ fun CompactSearchField(
     }
 }
 
+@Composable
+fun AuraScreenHeader(
+    label: String,
+    icon: ImageVector,
+    title: String,
+    subtitle: String,
+    modifier: Modifier = Modifier,
+    tint: Color = MaterialTheme.colorScheme.primary,
+    contentPadding: PaddingValues = PaddingValues(horizontal = 12.dp, vertical = 12.dp),
+    content: @Composable ColumnScope.() -> Unit,
+) {
+    GlassCard(
+        modifier = modifier.fillMaxWidth(),
+        contentPadding = contentPadding,
+        highlightHeight = 64.dp,
+        shadowElevation = 2.dp,
+    ) {
+        HighlightPill(
+            label = label,
+            icon = icon,
+            tint = tint,
+        )
+        Spacer(Modifier.height(10.dp))
+        Text(
+            text = title,
+            modifier = Modifier.semantics { heading() },
+            style = MaterialTheme.typography.titleLarge,
+            color = MaterialTheme.colorScheme.onSurface,
+        )
+        Spacer(Modifier.height(4.dp))
+        Text(
+            text = subtitle,
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+        Spacer(Modifier.height(12.dp))
+        content()
+    }
+}
+
 // ── Source Badge ───────────────────────────────────────────────────
 
 @Composable
@@ -546,6 +589,7 @@ fun AuraStatusBanner(
             .fillMaxWidth()
             .semantics {
                 contentDescription = "$title. $message"
+                liveRegion = LiveRegionMode.Polite
             },
         shape = AuraCardShape,
         color = tone.copy(alpha = 0.095f),
@@ -661,6 +705,7 @@ fun AuraStateCard(
         Spacer(Modifier.height(14.dp))
         Text(
             title,
+            modifier = Modifier.semantics { heading() },
             style = MaterialTheme.typography.titleLarge,
             color = MaterialTheme.colorScheme.onSurface,
         )

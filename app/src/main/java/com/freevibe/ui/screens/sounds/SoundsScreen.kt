@@ -72,10 +72,10 @@ import com.freevibe.data.repository.matchesHiddenIds
 import com.freevibe.ui.components.AuraStateAction
 import com.freevibe.ui.components.AuraStateCard
 import com.freevibe.ui.components.AuraSnackbarHost
+import com.freevibe.ui.components.AuraScreenHeader
 import com.freevibe.ui.components.CompactSearchField
 import com.freevibe.ui.components.CommunityGuidelinesDialog
 import com.freevibe.ui.components.CountBadge
-import com.freevibe.ui.components.GlassCard
 import com.freevibe.ui.components.CommunityPolicyNotice
 import com.freevibe.ui.components.SearchHistoryDropdown
 import com.freevibe.ui.components.ShimmerSoundList
@@ -410,14 +410,19 @@ fun SoundsScreen(
         },
     ) { scaffoldPadding ->
         Column(modifier = Modifier.fillMaxSize().padding(scaffoldPadding)) {
-            GlassCard(
+            AuraScreenHeader(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 10.dp, vertical = 6.dp),
-                shape = RoundedCornerShape(8.dp),
-                contentPadding = PaddingValues(horizontal = 10.dp, vertical = 10.dp),
-                highlightHeight = 56.dp,
-                shadowElevation = 2.dp,
+                label = soundHeaderLabel(state.selectedTab),
+                icon = soundTabIcon(state.selectedTab),
+                title = soundHeaderTitle(state.selectedTab, state.query),
+                subtitle = soundHeaderSubtitle(
+                    tab = state.selectedTab,
+                    query = state.query,
+                    resultCount = displaySounds.size + displayTopHits.size,
+                ),
+                tint = if (isYouTubeTab) Color(0xFFFF6A5B) else MaterialTheme.colorScheme.secondary,
             ) {
                 Box {
                     Row(
@@ -676,6 +681,42 @@ private fun soundTabIcon(tab: SoundTab): androidx.compose.ui.graphics.vector.Ima
     SoundTab.YOUTUBE -> Icons.Default.SmartDisplay
     SoundTab.COMMUNITY -> Icons.Default.Groups
     SoundTab.SEARCH -> Icons.Default.Search
+}
+
+private fun soundHeaderLabel(tab: SoundTab): String = when (tab) {
+    SoundTab.RINGTONES -> "Ringtone studio"
+    SoundTab.NOTIFICATIONS -> "Notification sounds"
+    SoundTab.ALARMS -> "Alarm tones"
+    SoundTab.YOUTUBE -> "YouTube import"
+    SoundTab.COMMUNITY -> "Community library"
+    SoundTab.SEARCH -> "Sound search"
+}
+
+private fun soundHeaderTitle(tab: SoundTab, query: String): String = when {
+    tab == SoundTab.SEARCH && query.isNotBlank() -> "Results for \"$query\""
+    tab == SoundTab.YOUTUBE && query.isNotBlank() -> "YouTube results"
+    tab == SoundTab.YOUTUBE -> "Find sound from YouTube"
+    tab == SoundTab.COMMUNITY -> "Browse community sounds"
+    tab == SoundTab.NOTIFICATIONS -> "Short alerts that stay clear"
+    tab == SoundTab.ALARMS -> "Alarm tones with presence"
+    else -> "Ringtone-ready sounds"
+}
+
+private fun soundHeaderSubtitle(
+    tab: SoundTab,
+    query: String,
+    resultCount: Int,
+): String = when {
+    tab == SoundTab.YOUTUBE && query.isBlank() ->
+        "Paste a video URL or search for short clips Aura can preview, trim, and apply."
+    tab == SoundTab.COMMUNITY && resultCount == 0 ->
+        "Upload, record, or browse user-shared clips once community content is available."
+    tab == SoundTab.SEARCH && query.isNotBlank() ->
+        "$resultCount result${if (resultCount == 1) "" else "s"} matched your search."
+    resultCount > 0 ->
+        "$resultCount curated result${if (resultCount == 1) "" else "s"} ready to preview or apply."
+    else ->
+        "Preview, trim, download, or long-press a result for quick apply."
 }
 
 @Composable

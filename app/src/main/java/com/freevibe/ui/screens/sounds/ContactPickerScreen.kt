@@ -34,6 +34,7 @@ import com.freevibe.data.model.ContentType
 import com.freevibe.data.model.Sound
 import com.freevibe.data.remote.toSound
 import com.freevibe.data.repository.FavoritesRepository
+import com.freevibe.ui.components.AuraSnackbarHost
 import com.freevibe.ui.components.AuraStateAction
 import com.freevibe.ui.components.AuraStateCard
 import com.freevibe.service.BundledContentProvider
@@ -312,7 +313,7 @@ fun ContactPickerScreen(
     }
 
     Scaffold(
-        snackbarHost = { SnackbarHost(snackbarHostState) },
+        snackbarHost = { AuraSnackbarHost(snackbarHostState) },
         topBar = {
             TopAppBar(
                 title = { Text("Assign to Contact") },
