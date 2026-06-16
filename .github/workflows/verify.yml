@@ -181,6 +181,9 @@ jobs:
       - name: Gradle wrapper policy
         run: python3 tools/gradle_wrapper_check.py --properties gradle/wrapper/gradle-wrapper.properties
 
+      - name: Target 37 toolchain gate
+        run: python3 tools/target37_toolchain_gate.py --repo-root .
+
       - name: Provider credential release guard
         run: python3 tools/provider_credential_release_check.py --app-gradle app/build.gradle.kts --release-workflow .github/workflows/release.yml --local-properties local.properties
 
