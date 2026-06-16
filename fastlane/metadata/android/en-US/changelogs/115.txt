@@ -1,0 +1,5 @@
+v6.31.4
+- Settings feedback now uses Aura's shared snackbar surface instead of raw Android toasts.
+- Settings radio pickers use one full-row 48dp selectable pattern for clearer touch and accessibility behavior.
+- Empty Favorites states now include a direct Import backup action for restoring saved wallpapers and sounds.
+- Added release-polish contract coverage for these UX safeguards.

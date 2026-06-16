@@ -12,7 +12,6 @@ import android.net.Uri
 import android.os.BatteryManager
 import android.os.Build
 import android.provider.Settings
-import android.widget.Toast
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -79,6 +78,7 @@ import com.freevibe.ui.LiveWallpaperLaunchMode
 import com.freevibe.ui.components.CommunityGuidelinesDialog
 import com.freevibe.ui.components.GlassCard
 import com.freevibe.ui.components.HighlightPill
+import com.freevibe.ui.components.AuraSnackbarHost
 import com.freevibe.ui.screens.aigenerate.GeneratedWallpaperDisclosureDialog
 import com.freevibe.ui.launchLiveWallpaperPicker
 import kotlinx.coroutines.delay
@@ -180,6 +180,10 @@ fun SettingsScreen(
 ) {
     val context = LocalContext.current
     val diagnosticsScope = rememberCoroutineScope()
+    val snackbarHostState = remember { SnackbarHostState() }
+    fun showSettingsFeedback(message: String) {
+        diagnosticsScope.launch { snackbarHostState.showSnackbar(message) }
+    }
     val autoWpEnabled by viewModel.autoWpEnabled.collectAsStateWithLifecycle()
     val autoWpInterval by viewModel.autoWpInterval.collectAsStateWithLifecycle()
     val autoWpSource by viewModel.autoWpSource.collectAsStateWithLifecycle()
@@ -325,15 +329,13 @@ fun SettingsScreen(
                 "auto" -> viewModel.setAutoWpSource(WALLPAPER_SOURCE_LOCAL_FOLDER)
                 "scheduler" -> viewModel.setSchedulerSource(WALLPAPER_SOURCE_LOCAL_FOLDER)
             }
-            Toast.makeText(
-                context,
+            showSettingsFeedback(
                 if (persisted) {
                     "Local wallpaper folder saved"
                 } else {
                     "Folder selected. If rotation cannot read it, choose the folder again."
                 },
-                Toast.LENGTH_LONG,
-            ).show()
+            )
         }
     }
 
@@ -366,14 +368,14 @@ fun SettingsScreen(
                         tag = "SettingsParallaxGallery",
                     )
                 ) {
-                    LiveWallpaperLaunchMode.DIRECT -> Toast.makeText(context, "Aura Parallax opened. Set wallpaper to finish.", Toast.LENGTH_LONG).show()
-                    LiveWallpaperLaunchMode.CHOOSER -> Toast.makeText(context, "Choose 'Aura Parallax' in the picker, then tap Set wallpaper.", Toast.LENGTH_LONG).show()
-                    null -> Toast.makeText(context, "Photo ready. Open Settings > Wallpaper > Live Wallpapers to finish.", Toast.LENGTH_LONG).show()
+                    LiveWallpaperLaunchMode.DIRECT -> showSettingsFeedback("Aura Parallax opened. Set wallpaper to finish.")
+                    LiveWallpaperLaunchMode.CHOOSER -> showSettingsFeedback("Choose 'Aura Parallax' in the picker, then tap Set wallpaper.")
+                    null -> showSettingsFeedback("Photo ready. Open Settings > Wallpaper > Live Wallpapers to finish.")
                 }
                 viewModel.clearParallaxGalleryResult()
             }
             is com.freevibe.ui.screens.settings.ParallaxGalleryResult.Failure -> {
-                Toast.makeText(context, "Couldn't use that photo: ${result.message}", Toast.LENGTH_LONG).show()
+                showSettingsFeedback("Couldn't use that photo: ${result.message}")
                 viewModel.clearParallaxGalleryResult()
             }
             else -> Unit
@@ -390,19 +392,19 @@ fun SettingsScreen(
                     )
                 ) {
                     LiveWallpaperLaunchMode.DIRECT -> {
-                        Toast.makeText(context, "Aura Video Wallpaper opened. Set wallpaper to finish.", Toast.LENGTH_LONG).show()
+                        showSettingsFeedback("Aura Video Wallpaper opened. Set wallpaper to finish.")
                     }
                     LiveWallpaperLaunchMode.CHOOSER -> {
-                        Toast.makeText(context, "Choose 'Aura Video Wallpaper' in the picker, then tap Set wallpaper.", Toast.LENGTH_LONG).show()
+                        showSettingsFeedback("Choose 'Aura Video Wallpaper' in the picker, then tap Set wallpaper.")
                     }
                     null -> {
-                        Toast.makeText(context, "Motion wallpaper selected. Open Settings > Wallpaper > Live Wallpapers to finish setup.", Toast.LENGTH_LONG).show()
+                        showSettingsFeedback("Motion wallpaper selected. Open Settings > Wallpaper > Live Wallpapers to finish setup.")
                     }
                 }
                 viewModel.clearVideoWallpaperSelectionResult()
             }
             is VideoWallpaperSelectionResult.Failure -> {
-                Toast.makeText(context, result.message, Toast.LENGTH_LONG).show()
+                showSettingsFeedback(result.message)
                 viewModel.clearVideoWallpaperSelectionResult()
             }
             else -> Unit
@@ -410,28 +412,28 @@ fun SettingsScreen(
     }
     LaunchedEffect(communityBlockAction.message, communityBlockAction.error) {
         communityBlockAction.message?.let {
-            Toast.makeText(context, it, Toast.LENGTH_LONG).show()
+            showSettingsFeedback(it)
             viewModel.clearCommunityBlockAction()
         }
         communityBlockAction.error?.let {
-            Toast.makeText(context, it, Toast.LENGTH_LONG).show()
+            showSettingsFeedback(it)
             viewModel.clearCommunityBlockAction()
         }
     }
     LaunchedEffect(communityIdentityCleanup.message, communityIdentityCleanup.error) {
         communityIdentityCleanup.message?.let {
-            Toast.makeText(context, it, Toast.LENGTH_LONG).show()
+            showSettingsFeedback(it)
             viewModel.clearCommunityIdentityCleanupState()
         }
         communityIdentityCleanup.error?.let {
-            Toast.makeText(context, it, Toast.LENGTH_LONG).show()
+            showSettingsFeedback(it)
             viewModel.clearCommunityIdentityCleanupState()
         }
     }
-    val ytDlpUpdateNotice = ytDlpUpdateToastMessage(ytDlpUpdate)
+    val ytDlpUpdateNotice = ytDlpUpdateFeedbackMessage(ytDlpUpdate)
     LaunchedEffect(ytDlpUpdate.completedStatus, ytDlpUpdate.error) {
         ytDlpUpdateNotice?.let {
-            Toast.makeText(context, it, Toast.LENGTH_LONG).show()
+            showSettingsFeedback(it)
             viewModel.clearYtDlpUpdateNotice()
         }
     }
@@ -558,21 +560,26 @@ fun SettingsScreen(
         )
     }
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(
-                Brush.verticalGradient(
-                    listOf(
-                        MaterialTheme.colorScheme.background,
-                        MaterialTheme.colorScheme.surface,
-                        MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.88f),
+    Scaffold(
+        snackbarHost = { AuraSnackbarHost(snackbarHostState) },
+        containerColor = Color.Transparent,
+    ) { scaffoldPadding ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(scaffoldPadding)
+                .background(
+                    Brush.verticalGradient(
+                        listOf(
+                            MaterialTheme.colorScheme.background,
+                            MaterialTheme.colorScheme.surface,
+                            MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.88f),
+                        ),
                     ),
-                ),
-            )
-            .verticalScroll(rememberScrollState()),
-        horizontalAlignment = Alignment.CenterHorizontally,
-    ) {
+                )
+                .verticalScroll(rememberScrollState()),
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
         TopAppBar(
             modifier = Modifier.fillMaxWidth(),
             title = { Text("Settings", style = MaterialTheme.typography.headlineSmall) },
@@ -733,13 +740,7 @@ fun SettingsScreen(
                 icon = Icons.Default.Forum,
                 title = "Reddit source discontinued",
                 subtitle = "Public feeds are retired; saved Reddit wallpapers keep attribution and unavailable-source states",
-                onClick = {
-                    Toast.makeText(
-                        context,
-                        "Reddit public feeds are no longer available in Aura.",
-                        Toast.LENGTH_LONG,
-                    ).show()
-                },
+                onClick = { showSettingsFeedback("Reddit public feeds are no longer available in Aura.") },
             )
             SettingsToggle(
                 icon = Icons.Default.ImageSearch,
@@ -770,8 +771,12 @@ fun SettingsScreen(
                     cleanupBusy = communityIdentityCleanup.clearing,
                     onRefresh = viewModel::refreshCommunityIdentitySummary,
                     onClearLocal = viewModel::clearLocalCommunityIdentity,
-                    onCopyCode = { code -> copyCommunityDeletionCode(context, code) },
-                    onShareRequest = { summary -> shareCommunityDeletionRequest(context, summary) },
+                    onCopyCode = { code ->
+                        copyCommunityDeletionCode(context, code) { message -> showSettingsFeedback(message) }
+                    },
+                    onShareRequest = { summary ->
+                        shareCommunityDeletionRequest(context, summary) { message -> showSettingsFeedback(message) }
+                    },
                     onDismiss = { showCommunityIdentity = false },
                 )
             }
@@ -889,11 +894,14 @@ fun SettingsScreen(
                     text = {
                         Column {
                             intervals.forEach { (min, label) ->
-                                Row(Modifier.fillMaxWidth().padding(vertical = 4.dp), verticalAlignment = Alignment.CenterVertically) {
-                                    RadioButton(selected = schedulerInterval == min, onClick = { viewModel.setSchedulerInterval(min); showSchedulerInterval = false })
-                                    Spacer(Modifier.width(8.dp))
-                                    Text(label)
-                                }
+                                SettingsRadioOptionRow(
+                                    label = label,
+                                    selected = schedulerInterval == min,
+                                    onClick = {
+                                        viewModel.setSchedulerInterval(min)
+                                        showSchedulerInterval = false
+                                    },
+                                )
                             }
                         }
                     },
@@ -922,31 +930,28 @@ fun SettingsScreen(
                     text = {
                         Column {
                             sources.forEach { (key, label) ->
-                                Row(Modifier.fillMaxWidth().padding(vertical = 4.dp), verticalAlignment = Alignment.CenterVertically) {
-                                    RadioButton(
-                                        selected = schedulerSource == key,
-                                        onClick = {
-                                            if (key == "collection") {
-                                                showSchedulerSource = false
-                                                showCollectionPicker = true
-                                            } else if (
-                                                key == WALLPAPER_SOURCE_LOCAL_FOLDER &&
-                                                !isLocalWallpaperFolderReady(
-                                                    localWallpaperFolderUri,
-                                                    localFolderPermissionActive,
-                                                )
-                                            ) {
-                                                showSchedulerSource = false
-                                                chooseLocalWallpaperFolder("scheduler")
-                                            } else {
-                                                viewModel.setSchedulerSource(key)
-                                                showSchedulerSource = false
-                                            }
-                                        },
-                                    )
-                                    Spacer(Modifier.width(8.dp))
-                                    Text(label)
-                                }
+                                SettingsRadioOptionRow(
+                                    label = label,
+                                    selected = schedulerSource == key,
+                                    onClick = {
+                                        if (key == "collection") {
+                                            showSchedulerSource = false
+                                            showCollectionPicker = true
+                                        } else if (
+                                            key == WALLPAPER_SOURCE_LOCAL_FOLDER &&
+                                            !isLocalWallpaperFolderReady(
+                                                localWallpaperFolderUri,
+                                                localFolderPermissionActive,
+                                            )
+                                        ) {
+                                            showSchedulerSource = false
+                                            chooseLocalWallpaperFolder("scheduler")
+                                        } else {
+                                            viewModel.setSchedulerSource(key)
+                                            showSchedulerSource = false
+                                        }
+                                    },
+                                )
                             }
                         }
                     },
@@ -979,23 +984,14 @@ fun SettingsScreen(
                         } else {
                             Column(modifier = Modifier.heightIn(max = 360.dp).verticalScroll(rememberScrollState())) {
                                 collections.forEach { c ->
-                                    Row(
-                                        Modifier
-                                            .fillMaxWidth()
-                                            .clickable {
-                                                viewModel.setSchedulerCollection(c.collectionId)
-                                                showCollectionPicker = false
-                                            }
-                                            .padding(vertical = 8.dp),
-                                        verticalAlignment = Alignment.CenterVertically,
-                                    ) {
-                                        RadioButton(selected = activeId == c.collectionId, onClick = {
+                                    SettingsRadioOptionRow(
+                                        label = c.name,
+                                        selected = activeId == c.collectionId,
+                                        onClick = {
                                             viewModel.setSchedulerCollection(c.collectionId)
                                             showCollectionPicker = false
-                                        })
-                                        Spacer(Modifier.width(8.dp))
-                                        Text(c.name, style = MaterialTheme.typography.bodyLarge)
-                                    }
+                                        },
+                                    )
                                 }
                             }
                         }
@@ -1188,16 +1184,16 @@ fun SettingsScreen(
                     text = {
                         Column {
                             effects.forEach { (key, label) ->
-                                Row(Modifier.fillMaxWidth().padding(vertical = 4.dp), verticalAlignment = Alignment.CenterVertically) {
-                                    RadioButton(selected = currentVfx == key, onClick = {
+                                SettingsRadioOptionRow(
+                                    label = label,
+                                    selected = currentVfx == key,
+                                    onClick = {
                                         currentVfx = key
                                         context.getSharedPreferences("freevibe_weather_wp", Context.MODE_PRIVATE)
                                             .edit().putString("vfx_effect", key).apply()
                                         showVfxPicker = false
-                                    })
-                                    Spacer(Modifier.width(8.dp))
-                                    Text(label)
-                                }
+                                    },
+                                )
                             }
                         }
                     },
@@ -1226,16 +1222,16 @@ fun SettingsScreen(
                     text = {
                         Column {
                             modes.forEach { (key, label) ->
-                                Row(Modifier.fillMaxWidth().padding(vertical = 4.dp), verticalAlignment = Alignment.CenterVertically) {
-                                    RadioButton(selected = touchEffectStrength == key, onClick = {
+                                SettingsRadioOptionRow(
+                                    label = label,
+                                    selected = touchEffectStrength == key,
+                                    onClick = {
                                         touchEffectStrength = key
                                         context.getSharedPreferences("freevibe_weather_wp", Context.MODE_PRIVATE)
                                             .edit().putString("touch_effect_strength", key).apply()
                                         showTouchEffectsPicker = false
-                                    })
-                                    Spacer(Modifier.width(8.dp))
-                                    Text(label)
-                                }
+                                    },
+                                )
                             }
                         }
                     },
@@ -1436,14 +1432,14 @@ fun SettingsScreen(
                     text = {
                         Column {
                             listOf(15 to "15 FPS (battery saver)", 30 to "30 FPS (balanced)", 60 to "60 FPS (smooth)").forEach { (fps, label) ->
-                                Row(Modifier.fillMaxWidth().padding(vertical = 4.dp), verticalAlignment = Alignment.CenterVertically) {
-                                    RadioButton(selected = videoFpsLimit == fps, onClick = {
+                                SettingsRadioOptionRow(
+                                    label = label,
+                                    selected = videoFpsLimit == fps,
+                                    onClick = {
                                         viewModel.setVideoFpsLimit(fps)
                                         showFpsPicker = false
-                                    })
-                                    Spacer(Modifier.width(8.dp))
-                                    Text(label)
-                                }
+                                    },
+                                )
                             }
                         }
                     },
@@ -1918,10 +1914,14 @@ fun SettingsScreen(
                                 crashDiagnosticsBusy = true
                                 try {
                                     val bundle = viewModel.buildCrashDiagnosticsBundle()
-                                    copyCrashDiagnosticsBundle(context, bundle)
+                                    copyCrashDiagnosticsBundle(
+                                        context = context,
+                                        bundle = bundle,
+                                        onFeedback = { message -> showSettingsFeedback(message) },
+                                    )
                                     viewModel.refreshCrashDiagnostics()
                                 } catch (_: Exception) {
-                                    Toast.makeText(context, "Could not build diagnostics", Toast.LENGTH_SHORT).show()
+                                    showSettingsFeedback("Could not build diagnostics")
                                 } finally {
                                     crashDiagnosticsBusy = false
                                 }
@@ -1942,10 +1942,14 @@ fun SettingsScreen(
                                     crashDiagnosticsBusy = true
                                     try {
                                         val bundle = viewModel.buildCrashDiagnosticsBundle()
-                                        shareCrashDiagnosticsBundle(context, bundle)
+                                        shareCrashDiagnosticsBundle(
+                                            context = context,
+                                            bundle = bundle,
+                                            onFeedback = { message -> showSettingsFeedback(message) },
+                                        )
                                         viewModel.refreshCrashDiagnostics()
                                     } catch (_: Exception) {
-                                        Toast.makeText(context, "Could not build diagnostics", Toast.LENGTH_SHORT).show()
+                                        showSettingsFeedback("Could not build diagnostics")
                                     } finally {
                                         crashDiagnosticsBusy = false
                                     }
@@ -2051,6 +2055,7 @@ fun SettingsScreen(
 
         Spacer(Modifier.height(32.dp))
     }
+    }
 
     // Interval picker
     if (showIntervalPicker) {
@@ -2093,22 +2098,14 @@ fun SettingsScreen(
             text = {
                 Column {
                     listOf(1 to "1 column", 2 to "2 columns", 3 to "3 columns", 4 to "4 columns").forEach { (count, label) ->
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(vertical = 4.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                        ) {
-                            RadioButton(
-                                selected = gridColumns == count,
-                                onClick = {
-                                    viewModel.setGridColumns(count)
-                                    showColumnsPicker = false
-                                },
-                            )
-                            Spacer(Modifier.width(8.dp))
-                            Text(label)
-                        }
+                        SettingsRadioOptionRow(
+                            label = label,
+                            selected = gridColumns == count,
+                            onClick = {
+                                viewModel.setGridColumns(count)
+                                showColumnsPicker = false
+                            },
+                        )
                     }
                 }
             },
@@ -2126,20 +2123,14 @@ fun SettingsScreen(
             text = {
                 Column {
                     listOf("" to "Any resolution", "1920x1080" to "1920x1080 (FHD)", "2560x1440" to "2560x1440 (QHD)", "3840x2160" to "3840x2160 (4K)").forEach { (res, label) ->
-                        Row(
-                            modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                        ) {
-                            RadioButton(
-                                selected = preferredRes == res,
-                                onClick = {
-                                    viewModel.setPreferredRes(res)
-                                    showResPicker = false
-                                },
-                            )
-                            Spacer(Modifier.width(8.dp))
-                            Text(label)
-                        }
+                        SettingsRadioOptionRow(
+                            label = label,
+                            selected = preferredRes == res,
+                            onClick = {
+                                viewModel.setPreferredRes(res)
+                                showResPicker = false
+                            },
+                        )
                     }
                 }
             },
@@ -2525,6 +2516,37 @@ private fun communityIdentitySuffixLabel(summary: CommunityIdentitySummary): Str
     if (summary.identitySuffix == "Not created") summary.identitySuffix else "...${summary.identitySuffix}"
 
 @Composable
+private fun SettingsRadioOptionRow(
+    label: String,
+    selected: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .heightIn(min = 48.dp)
+            .selectable(
+                selected = selected,
+                onClick = onClick,
+                role = Role.RadioButton,
+            )
+            .padding(vertical = 4.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        RadioButton(
+            selected = selected,
+            onClick = null,
+        )
+        Spacer(Modifier.width(8.dp))
+        Text(
+            text = label,
+            style = MaterialTheme.typography.bodyLarge,
+        )
+    }
+}
+
+@Composable
 private fun IntervalPickerDialog(
     currentInterval: Long,
     onDismiss: () -> Unit,
@@ -2539,25 +2561,11 @@ private fun IntervalPickerDialog(
         text = {
             Column {
                 intervals.forEach { (hours, label) ->
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .heightIn(min = 48.dp)
-                            .selectable(
-                                selected = currentInterval == hours,
-                                onClick = { onSelect(hours) },
-                                role = Role.RadioButton,
-                            )
-                            .padding(vertical = 4.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
-                        RadioButton(
-                            selected = currentInterval == hours,
-                            onClick = null,
-                        )
-                        Spacer(Modifier.width(8.dp))
-                        Text(label)
-                    }
+                    SettingsRadioOptionRow(
+                        label = label,
+                        selected = currentInterval == hours,
+                        onClick = { onSelect(hours) },
+                    )
                 }
             }
         },
@@ -3550,7 +3558,7 @@ private fun ytDlpUpdateStatusLabel(status: YtDlpUpdateStatus): String = when (st
 }
 
 @Composable
-private fun ytDlpUpdateToastMessage(state: YtDlpUpdateUiState): String? =
+private fun ytDlpUpdateFeedbackMessage(state: YtDlpUpdateUiState): String? =
     when (state.completedStatus) {
         YtDlpUpdateStatus.ALREADY_UP_TO_DATE -> stringResource(R.string.settings_ytdlp_update_toast_current)
         YtDlpUpdateStatus.UPDATED_PENDING_VALIDATION -> stringResource(R.string.settings_ytdlp_update_toast_updated)
@@ -3563,19 +3571,31 @@ private fun ytDlpUpdateToastMessage(state: YtDlpUpdateUiState): String? =
         else -> null
     }
 
-private fun copyCrashDiagnosticsBundle(context: Context, bundle: String) {
+private fun copyCrashDiagnosticsBundle(
+    context: Context,
+    bundle: String,
+    onFeedback: (String) -> Unit,
+) {
     val clipboard = context.getSystemService(ClipboardManager::class.java)
     clipboard.setPrimaryClip(ClipData.newPlainText("Aura diagnostics", bundle))
-    Toast.makeText(context, "Diagnostics copied", Toast.LENGTH_SHORT).show()
+    onFeedback("Diagnostics copied")
 }
 
-private fun copyCommunityDeletionCode(context: Context, code: String) {
+private fun copyCommunityDeletionCode(
+    context: Context,
+    code: String,
+    onFeedback: (String) -> Unit,
+) {
     val clipboard = context.getSystemService(ClipboardManager::class.java)
     clipboard.setPrimaryClip(ClipData.newPlainText("Aura deletion request code", code))
-    Toast.makeText(context, "Deletion request code copied", Toast.LENGTH_SHORT).show()
+    onFeedback("Deletion request code copied")
 }
 
-private fun shareCommunityDeletionRequest(context: Context, summary: CommunityIdentitySummary) {
+private fun shareCommunityDeletionRequest(
+    context: Context,
+    summary: CommunityIdentitySummary,
+    onFeedback: (String) -> Unit,
+) {
     val intent = Intent(Intent.ACTION_SEND).apply {
         type = "text/plain"
         putExtra(Intent.EXTRA_SUBJECT, COMMUNITY_DELETION_REQUEST_SUBJECT)
@@ -3584,11 +3604,15 @@ private fun shareCommunityDeletionRequest(context: Context, summary: CommunityId
     try {
         context.startActivity(Intent.createChooser(intent, "Share deletion request"))
     } catch (_: Exception) {
-        Toast.makeText(context, "No app can share deletion requests", Toast.LENGTH_SHORT).show()
+        onFeedback("No app can share deletion requests")
     }
 }
 
-private fun shareCrashDiagnosticsBundle(context: Context, bundle: String) {
+private fun shareCrashDiagnosticsBundle(
+    context: Context,
+    bundle: String,
+    onFeedback: (String) -> Unit,
+) {
     val intent = Intent(Intent.ACTION_SEND).apply {
         type = "text/plain"
         putExtra(Intent.EXTRA_SUBJECT, "Aura diagnostics bundle")
@@ -3597,7 +3621,7 @@ private fun shareCrashDiagnosticsBundle(context: Context, bundle: String) {
     try {
         context.startActivity(Intent.createChooser(intent, "Share diagnostics"))
     } catch (_: Exception) {
-        Toast.makeText(context, "No app can share diagnostics", Toast.LENGTH_SHORT).show()
+        onFeedback("No app can share diagnostics")
     }
 }
 
@@ -3966,25 +3990,11 @@ private fun SourcePickerDialog(
                             onSelect(key)
                         }
                     }
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .heightIn(min = 48.dp)
-                            .selectable(
-                                selected = isSelected,
-                                onClick = onSelectSource,
-                                role = Role.RadioButton,
-                            )
-                            .padding(vertical = 4.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
-                        RadioButton(
-                            selected = isSelected,
-                            onClick = null,
-                        )
-                        Spacer(Modifier.width(8.dp))
-                        Text(label)
-                    }
+                    SettingsRadioOptionRow(
+                        label = label,
+                        selected = isSelected,
+                        onClick = onSelectSource,
+                    )
                 }
             }
         },

@@ -42,6 +42,7 @@ import com.freevibe.data.model.FavoriteEntity
 import com.freevibe.data.model.isSourceUnavailable
 import com.freevibe.data.model.stableKey
 import com.freevibe.ui.components.AuraSnackbarHost
+import com.freevibe.ui.components.AuraStateAction
 import com.freevibe.ui.components.AuraStateCard
 import kotlinx.coroutines.launch
 
@@ -349,8 +350,13 @@ fun FavoritesScreen(
                     if (sortedWallpapers.isEmpty()) {
                         EmptyState(
                             title = "No favorite wallpapers yet",
-                            description = "Long-press a wallpaper in the feed or save from detail to build a personal library.",
+                            description = "Save wallpapers from detail, or restore a previous Aura backup to rebuild your personal library.",
                             icon = Icons.Default.Wallpaper,
+                            primaryAction = AuraStateAction(
+                                label = "Import backup",
+                                icon = Icons.Default.Download,
+                                onClick = { importLauncher.launch(arrayOf("application/json")) },
+                            ),
                         )
                     } else {
                         LazyVerticalGrid(
@@ -480,8 +486,13 @@ fun FavoritesScreen(
                     if (sortedSounds.isEmpty()) {
                         EmptyState(
                             title = "No favorite sounds yet",
-                            description = "Save ringtones, notifications, and alarms here for quick playback and export.",
+                            description = "Save ringtones, notifications, and alarms here, or restore an Aura backup when moving devices.",
                             icon = Icons.Default.MusicNote,
+                            primaryAction = AuraStateAction(
+                                label = "Import backup",
+                                icon = Icons.Default.Download,
+                                onClick = { importLauncher.launch(arrayOf("application/json")) },
+                            ),
                         )
                     } else {
                         LazyColumn(
@@ -609,6 +620,7 @@ private fun EmptyState(
     title: String,
     description: String,
     icon: androidx.compose.ui.graphics.vector.ImageVector,
+    primaryAction: AuraStateAction? = null,
 ) {
     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
         AuraStateCard(
@@ -616,6 +628,7 @@ private fun EmptyState(
             title = title,
             description = description,
             modifier = Modifier.padding(24.dp),
+            primaryAction = primaryAction,
         )
     }
 }

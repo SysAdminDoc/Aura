@@ -2,6 +2,17 @@
 
 All notable changes to Aura will be documented in this file.
 
+## v6.31.4 (2026-06-16)
+- **Settings feedback and picker polish**: Settings now uses Aura's shared
+  snackbar feedback instead of raw Android toasts, and repeated radio pickers
+  now share one full-row 48dp selectable pattern for clearer touch,
+  keyboard, and screen-reader behavior.
+- **Favorites recovery empty states**: empty wallpaper and sound favorites now
+  expose a direct Import backup action with clearer restore-focused copy,
+  reducing first-run and device-migration dead ends.
+- **Release-polish guardrails**: expanded contract coverage for Settings
+  snackbar feedback, shared picker rows, and Favorites restore actions.
+
 ## v6.31.3 (2026-06-16)
 - **Premium UX polish pass**: unified browse headers for sounds and video
   wallpapers, added clearer tab/source-specific copy, made bottom navigation

@@ -92,15 +92,54 @@ class ReleasePolishContractTest {
     @Test
     fun `settings radio dialogs expose full row touch targets`() {
         val source = File("src/main/java/com/freevibe/ui/screens/settings/SettingsScreen.kt").readText()
+        val radioRow = source.substringAfter("private fun SettingsRadioOptionRow(").substringBefore("@Composable\nprivate fun IntervalPickerDialog(")
         val intervalDialog = source.substringAfter("private fun IntervalPickerDialog(").substringBefore("private data class SettingsBatterySnapshot(")
         val sourceDialog = source.substringAfter("private fun SourcePickerDialog(")
 
-        assertTrue(intervalDialog.contains(".heightIn(min = 48.dp)"))
-        assertTrue(intervalDialog.contains("role = Role.RadioButton"))
-        assertTrue(intervalDialog.contains("onClick = null"))
-        assertTrue(sourceDialog.contains(".heightIn(min = 48.dp)"))
-        assertTrue(sourceDialog.contains("role = Role.RadioButton"))
-        assertTrue(sourceDialog.contains("onClick = null"))
+        assertTrue(radioRow.contains(".heightIn(min = 48.dp)"))
+        assertTrue(radioRow.contains("role = Role.RadioButton"))
+        assertTrue(radioRow.contains("onClick = null"))
+        assertTrue(intervalDialog.contains("SettingsRadioOptionRow("))
+        assertTrue(sourceDialog.contains("SettingsRadioOptionRow("))
+    }
+
+    @Test
+    fun `settings feedback uses aura snackbar chrome instead of raw toasts`() {
+        val source = File("src/main/java/com/freevibe/ui/screens/settings/SettingsScreen.kt").readText()
+
+        assertTrue(source.contains("snackbarHost = { AuraSnackbarHost(snackbarHostState) }"))
+        assertTrue(source.contains("fun showSettingsFeedback(message: String)"))
+        assertTrue(source.contains("copyCrashDiagnosticsBundle("))
+        assertTrue(source.contains("onFeedback: (String) -> Unit"))
+        assertTrue(!source.contains("Toast.makeText"))
+    }
+
+    @Test
+    fun `settings inline picker dialogs use shared full row radio targets`() {
+        val source = File("src/main/java/com/freevibe/ui/screens/settings/SettingsScreen.kt").readText()
+        val screen = source.substringAfter("fun SettingsScreen(").substringBefore("@Composable\n@OptIn(ExperimentalLayoutApi::class)\nprivate fun CommunityIdentityDialog(")
+
+        assertTrue(screen.contains("showSchedulerInterval"))
+        assertTrue(screen.contains("showSchedulerSource"))
+        assertTrue(screen.contains("showFpsPicker"))
+        assertTrue(screen.contains("showColumnsPicker"))
+        assertTrue(screen.contains("showResPicker"))
+        assertTrue(screen.split("SettingsRadioOptionRow(").size >= 8)
+        assertTrue(!screen.contains("RadioButton(selected = schedulerInterval"))
+        assertTrue(!screen.contains("RadioButton(selected = videoFpsLimit"))
+        assertTrue(!screen.contains("RadioButton(selected = gridColumns"))
+        assertTrue(!screen.contains("RadioButton(selected = preferredRes"))
+    }
+
+    @Test
+    fun `favorites empty states expose restore action instead of a dead end`() {
+        val source = File("src/main/java/com/freevibe/ui/screens/favorites/FavoritesScreen.kt").readText()
+
+        assertTrue(source.contains("No favorite wallpapers yet"))
+        assertTrue(source.contains("No favorite sounds yet"))
+        assertTrue(source.contains("primaryAction = AuraStateAction("))
+        assertTrue(source.contains("label = \"Import backup\""))
+        assertTrue(source.contains("importLauncher.launch(arrayOf(\"application/json\"))"))
     }
 
     @Test
