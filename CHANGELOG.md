@@ -3,6 +3,11 @@
 All notable changes to Aura will be documented in this file.
 
 ## v6.31.2 (2026-06-15)
+- **Community deletion orchestrator dry-run**: added a trusted operator bundle
+  builder that composes request-code lookup, RTDB deletion planning, review,
+  local simulation, private executor packaging, REST dry-run receipts, pre-Auth
+  upload Storage-handle inventory, retry guidance, and requester-safe receipt
+  output without contacting Firebase in dry-run mode.
 - **Target-37 toolchain gate**: added a release preflight that keeps the current
   SDK-35 lane green but blocks any partial API 37 compile/target bump unless
   AGP, Gradle, and the installed Android SDK platform/build-tools floor are
