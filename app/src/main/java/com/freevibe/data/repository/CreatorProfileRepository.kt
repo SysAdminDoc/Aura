@@ -348,15 +348,23 @@ internal fun aggregateCreatorStats(
 
 private suspend fun VoteRepository.getVoteCountsOnce(ids: List<String>): Map<String, Int> {
     if (ids.isEmpty()) return emptyMap()
-    val db = try { FirebaseDatabase.getInstance().reference.child("votes") } catch (_: Exception) { return emptyMap() }
+    val db = try {
+        FirebaseDatabase.getInstance().reference.child("votes")
+    } catch (e: Exception) {
+        e.rethrowIfCancelled()
+        return emptyMap()
+    }
     return ids.distinct().chunked(50).flatMap { chunk ->
         coroutineScope {
             chunk.map { id ->
                 async(Dispatchers.IO) {
                     val safeId = sanitizeKey(id)
-                    val count = runCatching {
+                    val count = try {
                         db.child(safeId).child("upvotes").get().await().getValue(Int::class.java) ?: 0
-                    }.getOrDefault(0)
+                    } catch (e: Exception) {
+                        e.rethrowIfCancelled()
+                        0
+                    }
                     id to count
                 }
             }.awaitAll()
