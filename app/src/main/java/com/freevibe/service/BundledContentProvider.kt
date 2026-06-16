@@ -233,22 +233,26 @@ class BundledContentProvider @Inject constructor() {
         previewFile: String,
         tags: List<String>,
     ): Sound {
-        // Freesound preview URLs follow: /data/previews/{id_prefix}/{filename}-hq.mp3
-        // id_prefix is the id divided by 1000 (integer), e.g. 411089 -> 411
         val idPrefix = previewId / 1000
         val previewUrl = "https://freesound.org/data/previews/$idPrefix/$previewFile-hq.mp3"
+        val creator = extractFreesoundCreator(previewFile)
         return Sound(
             id = id,
             source = ContentSource.BUNDLED,
             name = name,
-            description = "Aura Picks - curated for quality",
+            description = if (creator != null) "Aura Picks · by $creator on Freesound" else "Aura Picks",
             previewUrl = previewUrl,
             downloadUrl = previewUrl,
             duration = duration,
             tags = tags,
             license = "CC0 1.0",
-            uploaderName = "Aura Picks",
+            uploaderName = creator ?: "Aura Picks",
             sourcePageUrl = "https://freesound.org/s/$previewId/",
         )
+    }
+
+    private fun extractFreesoundCreator(previewFile: String): String? {
+        val parts = previewFile.split("__")
+        return if (parts.size >= 2) parts[1].replace("-", " ") else null
     }
 }
