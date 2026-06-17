@@ -2,6 +2,38 @@
 
 All notable changes to Aura will be documented in this file.
 
+## v6.32.1 (2026-06-17)
+- **Reddit provider restored**: `isProviderEnabled()` always returned false
+  (pref value read and discarded) — Reddit wallpaper feeds were completely dead.
+- **Bitmap leak fixes**: QR decode in CollectionExporter now recycles bitmap
+  after pixel extraction; applyDarken recycles result on canvas draw failure;
+  ParallaxWallpaperService handles Bitmap.copy null on OOM.
+- **CancellationException rethrow** in SmartCropDetector, SoundUrlResolver,
+  ContactRingtoneService, and AudioTrimmer (trim/normalize/convert).
+- **Thread safety**: UploadRepository community uploads uses synchronizedSet
+  and AtomicReference for cross-thread snapshot access.
+- **Performance**: fetchWallpapersByKeys parallelized with async/awaitAll
+  and 8s per-key timeout; recordDisabledProvider no longer fires real API
+  requests for disabled providers.
+- **Security**: AudioPreviewCache disables cross-protocol redirects
+  (HTTPS-to-HTTP downgrade prevention).
+- **Reliability**: SoundEditorViewModel onPrepared callback guards against
+  released MediaPlayer race with stopPlayback.
+
+## v6.32.0 (2026-06-17)
+- **Community Favorites hydration**: Top-voted community wallpapers that exist
+  only in Firebase RTDB now resolve in the Community Favorites row instead of
+  silently dropping. fetchTopVoted detects cw_ IDs missing from Room cache and
+  fetches metadata from /community_wallpapers.
+- **Scheduled automatic backup**: New AutoBackupWorker exports favorites to a
+  user-chosen SAF folder on a configurable interval (daily/weekly). Old backups
+  are pruned to keep the last N copies. Preferences for backup enable, folder
+  URI, interval, and keep count.
+- **Rotation-time darken effect**: Optional darken (0-100%, off by default)
+  applied to auto-rotated and triggered wallpapers via a brightness ColorMatrix
+  in WallpaperApplier. Improves status-bar and clock legibility on bright
+  rotated wallpapers.
+
 ## v6.31.4 (2026-06-16)
 - **Settings feedback and picker polish**: Settings now uses Aura's shared
   snackbar feedback instead of raw Android toasts, and repeated radio pickers
