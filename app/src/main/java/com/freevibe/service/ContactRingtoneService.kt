@@ -4,6 +4,7 @@ import android.content.ContentValues
 import android.content.Context
 import android.net.Uri
 import android.provider.ContactsContract
+import com.freevibe.util.rethrowIfCancelled
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -70,7 +71,7 @@ class ContactRingtoneService @Inject constructor(
 
                 val updated = resolver.update(contactUri, values, null, null)
                 if (updated == 0) throw IllegalStateException("Failed to update contact ringtone")
-            }
+            }.onFailure { it.rethrowIfCancelled() }
         }
 
     /** Clear custom ringtone for a contact (revert to default) */
@@ -86,6 +87,6 @@ class ContactRingtoneService @Inject constructor(
                     .build()
                 resolver.update(contactUri, values, null, null)
                 Unit
-            }
+            }.onFailure { it.rethrowIfCancelled() }
         }
 }

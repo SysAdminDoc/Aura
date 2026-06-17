@@ -873,7 +873,7 @@ class WallpapersViewModel @Inject constructor(
                     return@launch
                 }
                 if (isProviderDisabledTab(currentTab)) {
-                    recordDisabledProvider(currentTab, currentPage)
+                    recordDisabledProvider(currentTab)
                     _state.update {
                         it.copy(
                             wallpapers = emptyList(),
@@ -1181,14 +1181,15 @@ class WallpapersViewModel @Inject constructor(
         else -> false
     }
 
-    private suspend fun recordDisabledProvider(tab: WallpaperTab, page: Int) {
-        when (tab) {
-            WallpaperTab.WALLHAVEN -> wallpaperRepo.getWallhaven(page = page)
-            WallpaperTab.PEXELS -> wallpaperRepo.getPexelsCurated(page)
-            WallpaperTab.PIXABAY -> wallpaperRepo.getPixabay(page)
-            WallpaperTab.COMMUNITY -> wallpaperUploadRepo.getCommunityWallpapers()
-            else -> Unit
+    private fun recordDisabledProvider(tab: WallpaperTab) {
+        val source = when (tab) {
+            WallpaperTab.WALLHAVEN -> SOURCE_WALLHAVEN
+            WallpaperTab.PEXELS -> "pexels"
+            WallpaperTab.PIXABAY -> "pixabay"
+            WallpaperTab.COMMUNITY -> "community"
+            else -> return
         }
+        sourceMetrics.recordDisabled(source)
     }
 
     private fun redditDisabledMessage(): String =

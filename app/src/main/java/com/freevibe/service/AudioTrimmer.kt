@@ -5,6 +5,7 @@ import android.media.MediaCodec
 import android.media.MediaExtractor
 import android.media.MediaFormat
 import android.media.MediaMuxer
+import com.freevibe.util.rethrowIfCancelled
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -182,7 +183,7 @@ class AudioTrimmer @Inject constructor(
             }
 
             outputFile.absolutePath
-        }
+        }.onFailure { it.rethrowIfCancelled() }
     }
 
     /**
@@ -301,7 +302,7 @@ class AudioTrimmer @Inject constructor(
                 throw Exception("Normalization failed (exit $exitCode)")
             }
             inputPath
-        }
+        }.onFailure { it.rethrowIfCancelled() }
     }
 
     /** Convert audio format via FFmpeg */
@@ -345,7 +346,7 @@ class AudioTrimmer @Inject constructor(
                 output.delete()
                 throw Exception("Conversion failed (exit $exitCode)")
             }
-        }
+        }.onFailure { it.rethrowIfCancelled() }
     }
 
     /** Clean up trimmed files cache */

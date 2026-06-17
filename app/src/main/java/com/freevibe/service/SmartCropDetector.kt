@@ -2,6 +2,7 @@ package com.freevibe.service
 
 import android.graphics.Bitmap
 import android.graphics.RectF
+import com.freevibe.util.rethrowIfCancelled
 import com.google.mlkit.vision.common.InputImage
 import com.google.mlkit.vision.segmentation.subject.SubjectSegmentation
 import com.google.mlkit.vision.segmentation.subject.SubjectSegmenterOptions
@@ -81,7 +82,8 @@ class SmartCropDetector @Inject constructor() {
                 (maxX + 1).toFloat(),
                 (maxY + 1).toFloat(),
             )
-        } catch (_: Exception) {
+        } catch (e: Exception) {
+            e.rethrowIfCancelled()
             null
         } finally {
             try { segmenter.close() } catch (_: Exception) {}

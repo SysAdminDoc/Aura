@@ -490,7 +490,12 @@ class ParallaxWallpaperService : WallpaperService() {
                 }
                 cropped
             } else {
-                if (scaled === src) src.copy(src.config ?: Bitmap.Config.ARGB_8888, false) else scaled
+                if (scaled === src) {
+                    src.copy(src.config ?: Bitmap.Config.ARGB_8888, false)
+                        ?: throw OutOfMemoryError("Bitmap.copy returned null")
+                } else {
+                    scaled
+                }
             }
         }
 

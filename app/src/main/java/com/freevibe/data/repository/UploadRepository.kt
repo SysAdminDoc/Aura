@@ -255,8 +255,8 @@ class UploadRepository @Inject constructor(
         } else {
             uploadsRefInstance.limitToLast(limit)
         }
-        val blockedUploaderIds = mutableSetOf<String>()
-        var lastSnapshot: DataSnapshot? = null
+        val blockedUploaderIds = java.util.Collections.synchronizedSet(mutableSetOf<String>())
+        val lastSnapshotRef = java.util.concurrent.atomic.AtomicReference<DataSnapshot?>(null)
 
         fun emitSounds(snapshot: DataSnapshot) {
             val blocked = blockedUploaderIds.toSet()
@@ -305,13 +305,13 @@ class UploadRepository @Inject constructor(
             communityBlockRepo.blockedUserIds().collect { blockedIds ->
                 blockedUploaderIds.clear()
                 blockedUploaderIds.addAll(blockedIds)
-                lastSnapshot?.let(::emitSounds)
+                lastSnapshotRef.get()?.let(::emitSounds)
             }
         }
 
         val listener = object : ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot) {
-                lastSnapshot = snapshot
+                lastSnapshotRef.set(snapshot)
                 emitSounds(snapshot)
             }
 

@@ -37,9 +37,13 @@ import kotlin.math.min
 import kotlin.math.roundToInt
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.withTimeoutOrNull
 
 private val WALLPAPER_UPLOAD_NAME_SANITIZE_REGEX = Regex("[^a-zA-Z0-9_\\- ]")
 private val WALLPAPER_UPLOAD_TAG_SANITIZE_REGEX = Regex("[^a-z0-9_\\- ]")
@@ -260,14 +264,20 @@ class WallpaperUploadRepository @Inject constructor(
         if (keys.isEmpty()) return@withContext emptyList()
         val ref = wallpapersRef ?: return@withContext emptyList()
         val blockedUploaderIds = communityBlockRepo.blockedUserIdsOnce()
-        keys.mapNotNull { key ->
-            try {
-                val snapshot = ref.child(key).get().await()
-                if (snapshot.exists()) snapshotToWallpaper(snapshot, blockedUploaderIds) else null
-            } catch (e: Exception) {
-                e.rethrowIfCancelled()
-                null
-            }
+        coroutineScope {
+            keys.map { key ->
+                async {
+                    try {
+                        withTimeoutOrNull(8_000L) {
+                            val snapshot = ref.child(key).get().await()
+                            if (snapshot.exists()) snapshotToWallpaper(snapshot, blockedUploaderIds) else null
+                        }
+                    } catch (e: Exception) {
+                        e.rethrowIfCancelled()
+                        null
+                    }
+                }
+            }.awaitAll().filterNotNull()
         }
     }
 

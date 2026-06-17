@@ -1,6 +1,7 @@
 package com.freevibe.service
 
 import com.freevibe.data.model.ContentSource
+import com.freevibe.util.rethrowIfCancelled
 import com.freevibe.data.model.Sound
 import com.freevibe.data.repository.YouTubeRepository
 import kotlinx.coroutines.Dispatchers
@@ -45,22 +46,28 @@ class SoundUrlResolver @Inject constructor(
 
     private fun canFetch(url: String): Boolean {
         val request = Request.Builder().url(url).head().build()
-        return runCatching {
+        return try {
             okHttpClient.newCall(request).execute().use { response ->
                 response.isSuccessful || response.code == 405
             }
-        }.getOrDefault(false)
+        } catch (e: Exception) {
+            e.rethrowIfCancelled()
+            false
+        }
     }
 
     private fun resolveFromSourcePage(pageUrl: String): String? {
         if (!pageUrl.contains("freesound.org", ignoreCase = true)) return null
         val request = Request.Builder().url(pageUrl).build()
-        val html = runCatching {
+        val html = try {
             okHttpClient.newCall(request).execute().use { response ->
                 if (!response.isSuccessful) return null
                 response.body?.string().orEmpty()
             }
-        }.getOrNull().orEmpty()
+        } catch (e: Exception) {
+            e.rethrowIfCancelled()
+            ""
+        }
         if (html.isBlank()) return null
 
         val patterns = HTML_AUDIO_URL_PATTERNS

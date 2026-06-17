@@ -340,16 +340,21 @@ class WallpaperApplier @Inject constructor(
     private fun applyDarken(src: Bitmap, percent: Int): Bitmap {
         val brightness = -2.55f * percent
         val result = Bitmap.createBitmap(src.width, src.height, Bitmap.Config.ARGB_8888)
-        val canvas = Canvas(result)
-        val paint = Paint().apply {
-            colorFilter = ColorMatrixColorFilter(ColorMatrix(floatArrayOf(
-                1f, 0f, 0f, 0f, brightness,
-                0f, 1f, 0f, 0f, brightness,
-                0f, 0f, 1f, 0f, brightness,
-                0f, 0f, 0f, 1f, 0f,
-            )))
+        try {
+            val canvas = Canvas(result)
+            val paint = Paint().apply {
+                colorFilter = ColorMatrixColorFilter(ColorMatrix(floatArrayOf(
+                    1f, 0f, 0f, 0f, brightness,
+                    0f, 1f, 0f, 0f, brightness,
+                    0f, 0f, 1f, 0f, brightness,
+                    0f, 0f, 0f, 1f, 0f,
+                )))
+            }
+            canvas.drawBitmap(src, 0f, 0f, paint)
+        } catch (t: Throwable) {
+            result.recycle()
+            throw t
         }
-        canvas.drawBitmap(src, 0f, 0f, paint)
         return result
     }
 

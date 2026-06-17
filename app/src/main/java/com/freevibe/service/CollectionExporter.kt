@@ -255,9 +255,12 @@ class CollectionExporter @Inject constructor(
     private fun decodeQrText(uri: Uri): String {
         val bitmap = context.contentResolver.openInputStream(uri)?.use(BitmapFactory::decodeStream)
             ?: throw IllegalArgumentException("Could not read the selected QR image.")
-        val pixels = IntArray(bitmap.width * bitmap.height)
-        bitmap.getPixels(pixels, 0, bitmap.width, 0, 0, bitmap.width, bitmap.height)
-        val source = RGBLuminanceSource(bitmap.width, bitmap.height, pixels)
+        val w = bitmap.width
+        val h = bitmap.height
+        val pixels = IntArray(w * h)
+        bitmap.getPixels(pixels, 0, w, 0, 0, w, h)
+        bitmap.recycle()
+        val source = RGBLuminanceSource(w, h, pixels)
         val binaryBitmap = BinaryBitmap(HybridBinarizer(source))
         return MultiFormatReader().decode(
             binaryBitmap,

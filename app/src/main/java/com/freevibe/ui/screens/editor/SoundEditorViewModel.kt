@@ -360,8 +360,13 @@ class SoundEditorViewModel @Inject constructor(
             player = android.media.MediaPlayer().apply {
                 setDataSource(path)
                 setOnPreparedListener { mp ->
-                    mp.seekTo(startMs)
-                    mp.start()
+                    if (player == null) return@setOnPreparedListener
+                    try {
+                        mp.seekTo(startMs)
+                        mp.start()
+                    } catch (_: IllegalStateException) {
+                        return@setOnPreparedListener
+                    }
                     _state.update { it.copy(isPlaying = true) }
 
                     playbackJob?.cancel()
