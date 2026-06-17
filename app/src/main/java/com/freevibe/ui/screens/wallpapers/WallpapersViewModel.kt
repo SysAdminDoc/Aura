@@ -181,8 +181,18 @@ class WallpapersViewModel @Inject constructor(
 
                 val allIds = topIds.flatMap { (voteKey, _) -> extractWallpaperLookupIds(voteKey) }.distinct()
                 val cachedWallpapers = cacheManager.getByIds(allIds)
-                val wallpapers = (seedWallpapers + cachedWallpapers).distinctBy { it.stableKey() }
-                if (com.freevibe.BuildConfig.DEBUG) android.util.Log.d("WallpapersVM", "Resolved ${wallpapers.size} wallpapers from seed/cache for ${allIds.size} ID variants")
+                val resolvedIds = (seedWallpapers + cachedWallpapers).map { it.id }.toSet()
+                val missingCommunityKeys = allIds
+                    .filter { it.startsWith("cw_") && it !in resolvedIds }
+                    .map { it.removePrefix("cw_") }
+                    .toSet()
+                val remoteWallpapers = if (missingCommunityKeys.isNotEmpty()) {
+                    wallpaperUploadRepo.fetchWallpapersByKeys(missingCommunityKeys)
+                } else {
+                    emptyList()
+                }
+                val wallpapers = (seedWallpapers + cachedWallpapers + remoteWallpapers).distinctBy { it.stableKey() }
+                if (com.freevibe.BuildConfig.DEBUG) android.util.Log.d("WallpapersVM", "Resolved ${wallpapers.size} wallpapers (${remoteWallpapers.size} hydrated from RTDB) for ${allIds.size} ID variants")
 
                 val voteMap = topIds.toMap()
                 val ambiguousLegacyIds = wallpapers

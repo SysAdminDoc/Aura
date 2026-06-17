@@ -256,6 +256,21 @@ class WallpaperUploadRepository @Inject constructor(
         }
     }
 
+    suspend fun fetchWallpapersByKeys(keys: Set<String>): List<Wallpaper> = withContext(Dispatchers.IO) {
+        if (keys.isEmpty()) return@withContext emptyList()
+        val ref = wallpapersRef ?: return@withContext emptyList()
+        val blockedUploaderIds = communityBlockRepo.blockedUserIdsOnce()
+        keys.mapNotNull { key ->
+            try {
+                val snapshot = ref.child(key).get().await()
+                if (snapshot.exists()) snapshotToWallpaper(snapshot, blockedUploaderIds) else null
+            } catch (e: Exception) {
+                e.rethrowIfCancelled()
+                null
+            }
+        }
+    }
+
     suspend fun getCommunityWallpapers(limit: Int = 60): SearchResult<Wallpaper> = withContext(Dispatchers.IO) {
         if (!isCommunityProviderEnabled()) {
             sourceMetrics.recordDisabled(SOURCE_COMMUNITY)
