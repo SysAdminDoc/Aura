@@ -124,6 +124,18 @@ class PreferencesManager @Inject constructor(
     suspend fun setRotateOnUnlock(v: Boolean) = set(Keys.ROTATE_ON_UNLOCK, v)
     suspend fun setRotateOnScreenOff(v: Boolean) = set(Keys.ROTATE_ON_SCREEN_OFF, v)
 
+    // ── Auto-backup ─────────────────────────────────────────────
+
+    val autoBackupEnabled: Flow<Boolean> = get(Keys.AUTO_BACKUP_ENABLED, false)
+    val autoBackupFolderUri: Flow<String> = get(Keys.AUTO_BACKUP_FOLDER_URI, "")
+    val autoBackupIntervalHours: Flow<Long> = get(Keys.AUTO_BACKUP_INTERVAL_HOURS, 24L)
+    val autoBackupKeepCount: Flow<Int> = get(Keys.AUTO_BACKUP_KEEP_COUNT, 5)
+
+    suspend fun setAutoBackupEnabled(v: Boolean) = set(Keys.AUTO_BACKUP_ENABLED, v)
+    suspend fun setAutoBackupFolderUri(uri: String) = set(Keys.AUTO_BACKUP_FOLDER_URI, uri.trim())
+    suspend fun setAutoBackupIntervalHours(hours: Long) = set(Keys.AUTO_BACKUP_INTERVAL_HOURS, hours)
+    suspend fun setAutoBackupKeepCount(count: Int) = set(Keys.AUTO_BACKUP_KEEP_COUNT, count)
+
     // ── Sound settings ────────────────────────────────────────────
 
     val autoPreviewSounds: Flow<Boolean> = get(Keys.AUTO_PREVIEW, true)
@@ -275,6 +287,10 @@ class PreferencesManager @Inject constructor(
         val PIXABAY_PROVIDER_ENABLED = booleanPreferencesKey("pixabay_provider_enabled")
         val COMMUNITY_PROVIDER_ENABLED = booleanPreferencesKey("community_provider_enabled")
         val COMMUNITY_GUIDELINES_ACCEPTED_VERSION = intPreferencesKey("community_guidelines_accepted_version")
+        val AUTO_BACKUP_ENABLED = booleanPreferencesKey("auto_backup_enabled")
+        val AUTO_BACKUP_FOLDER_URI = stringPreferencesKey("auto_backup_folder_uri")
+        val AUTO_BACKUP_INTERVAL_HOURS = longPreferencesKey("auto_backup_interval_hours")
+        val AUTO_BACKUP_KEEP_COUNT = intPreferencesKey("auto_backup_keep_count")
         val AUTO_WP_ENABLED = booleanPreferencesKey("auto_wp_enabled")
         val AUTO_WP_INTERVAL = longPreferencesKey("auto_wp_interval")
         val AUTO_WP_SOURCE = stringPreferencesKey("auto_wp_source")
