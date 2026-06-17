@@ -33,7 +33,7 @@ class AudioPreviewCache @Inject constructor(
         .setUserAgent("Aura/${BuildConfig.VERSION_NAME} (Android; Open Source)")
         .setConnectTimeoutMs(15_000)
         .setReadTimeoutMs(20_000)
-        .setAllowCrossProtocolRedirects(true)
+        .setAllowCrossProtocolRedirects(false)
 
     private val cache = SimpleCache(
         File(context.cacheDir, "audio-preview-cache"),
