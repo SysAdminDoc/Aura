@@ -2134,13 +2134,6 @@ Items below are sourced from exhaustive external research against competitors, p
   Acceptance: Coil 3.x compiles and loads images correctly; `maxBitmapSize` is configured; disk cache behavior preserved; KMP migration path documented.
   Complexity: M
 
-- [ ] P1 -- **Migrate sound preview UI to Media3 1.10 Material3 composables**
-  Why: Media3 1.10 ships `PlayerComposable`, `ProgressSlider`, and `PlaybackSpeedControl` in the `media3-ui-compose-material3` module. Aura's hand-rolled waveform/progress/speed control in `SoundDetailScreen` and `SoundEditorScreen` is ~300 LOC that can be replaced with library code styled to match Material 3. Also enables `experimentalSetDynamicSchedulingEnabled()` for battery savings.
-  Evidence: Media3 1.10 release blog; current Media3 version is 1.5.1 (4 minor versions behind); NX-9 roadmap item.
-  Touches: `app/build.gradle.kts`, `SoundDetailScreen.kt`, `SoundEditorScreen.kt`, `AudioPlaybackManager.kt`, `VideoWallpaperPreviewScreen.kt`.
-  Acceptance: Sound preview uses Media3 Material3 composables; dynamic scheduling opt-in behind Settings toggle; hand-rolled player UI reduced by >200 LOC.
-  Complexity: M
-
 ### P2 -- Feature parity and differentiation
 
 - [ ] P2 -- **FOSS build flavor isolating Firebase and Play Services**
@@ -2151,13 +2144,6 @@ Items below are sourced from exhaustive external research against competitors, p
   Complexity: XL
 
 ### P2 -- Observability and testing
-
-- [ ] P2 -- **200% font and large display-size smoke pass**
-  Why: Android 14+ supports 200% nonlinear font scaling. Aura's dense chips, cards, overlays, bottom sheets, and editor timelines may clip or overlap. No smoke screenshots exist at large font sizes.
-  Evidence: Cycle 5 researcher item; Android 14 nonlinear font-scaling docs; Aura compact UI.
-  Touches: Typography/layout constraints, chip/card rows, bottom sheets, dialogs, editor controls, screenshot QA.
-  Acceptance: Primary flows remain usable at 200% font and large display size; controls keep 48dp touch targets where feasible; no text overlaps controls.
-  Complexity: M
 
 ### P3 -- Future positioning
 
@@ -2175,14 +2161,6 @@ Net-new items from the second 2026-06-09 research pass (live provider probes, ba
 ### P0 — Production breakage and hard deadlines
 
 ### P1 — Reliability of the YouTube spine and aging strata
-
-- [ ] P1 — **Room 2.6.1 → 2.8.x persistence refresh**
-  Why: Room 2.8 ships Kotlin-native codegen (KSP2-friendly), `RoomRawQuery`, and KMP support — the concrete prerequisite for the L-4 KMP shared-logic bet and the NX-7 sync work, and it runs on the current Kotlin 2.1/AGP 8.7 toolchain (needs Kotlin 2.0+, satisfied). Room 3.0 (March 2026) is a breaking major to defer until after N-1.
-  Evidence: androidx Room release notes; Room 3.0 announcement blog; `gradle/libs.versions.toml` (room 2.6.1); Cycle 16 whole-graph migration-test item provides the safety harness.
-  Touches: `gradle/libs.versions.toml`, `app/schemas/` (export verification), DAOs if codegen surfaces nullability strictness, `FreeVibeDatabase`, Cycle-16 migration test gate.
-  Acceptance: all 14 schema versions still migrate v1→v14 under the whole-graph migration test; KSP processing succeeds with Kotlin codegen; no behavior change in favorites/downloads/collections flows; Room 3.0 explicitly deferred with a note.
-  Blocked 2026-06-12: Room 2.8.4 KSP failed locally with `AbstractMethodError` in Room's kotlinx-serialization bundle serializer under Kotlin 2.1.0/KSP 2.1.0-1.0.29. Aura is on Room 2.7.2 now to satisfy WorkManager 2.11.2 without taking the larger Kotlin/KSP/toolchain upgrade.
-  Complexity: M
 
 ### P2 — Replacement sources and quick wins
 
@@ -2382,13 +2360,6 @@ This section records net-new parity work from the Zedge official/web/app pass. T
   Complexity: L
 
 ### P3 — Observability
-
-- [ ] P3 — Tag OkHttp calls for source diagnostics after the next OkHttp upgrade
-  Why: Aura already exposes `SourceMetrics`, but request-purpose attribution is spread across repositories; newer OkHttp interceptor behavior creates a low-risk path to attach typed source/purpose metadata at the client/interceptor layer.
-  Evidence: `gradle/libs.versions.toml`; `app/src/main/java/com/freevibe/service/SourceMetrics.kt`; `app/src/main/java/com/freevibe/di/AppModule.kt`; OkHttp changelog.
-  Touches: `gradle/libs.versions.toml`, `AppModule.kt`, repository request builders/interceptors, `SourceMetrics.kt`, Settings diagnostics tests.
-  Acceptance: source/provider name and request purpose are attached as typed OkHttp call tags or equivalent interceptor metadata; diagnostics attribute timeout/header failures to the source without URL parsing; tests cover Wallhaven, Pexels, YouTube metadata, and Firebase-excluded calls.
-  Complexity: M
 
 ## Deep Audit Findings (2026-06-17) — deferred items
 

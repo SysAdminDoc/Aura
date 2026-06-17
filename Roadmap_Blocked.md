@@ -31,6 +31,11 @@ N-1 itself is the largest single gate. Until it lands, these items cannot procee
 - **P3 — Missing integration test execution in CI** (Next audit findings)
   - Instrumented tests need CI infrastructure that N-1 build verification would establish.
 
+- **P1 — Room 2.8.x persistence refresh**
+  - Blocker: Room 2.8.4 KSP failed locally with `AbstractMethodError` in Room's kotlinx-serialization bundle serializer under Kotlin 2.1.0 / KSP 2.1.0-1.0.29.
+  - Current state: Aura is on Room 2.7.2 to satisfy WorkManager 2.11.2 without taking the larger Kotlin/KSP/toolchain upgrade.
+  - Resume when N-1 upgrades Kotlin/KSP. Acceptance remains: all schema versions migrate cleanly, KSP succeeds with Kotlin codegen, and favorites/downloads/collections behavior is unchanged.
+
 ### N-1-gated Next items (NX)
 
 - **NX-1** — GL/AGSL live wallpaper engine migration (Media3 ExoPlayer + AGSL pipeline)
@@ -177,6 +182,11 @@ These items require adb-connected device or Android 17 emulator testing:
 - **P1 — Preserve item-level license and provenance through durable flows** (Cycle 17)
   - Entity fields and export preservation shipped.
   - Remaining: action-capability fields (restrict download/share/edit based on license terms) need design + Room migration + UI gating.
+
+- **P3 — Tag OkHttp calls for source diagnostics after the next OkHttp upgrade**
+  - Current state: Aura exposes `SourceMetrics`, but request-purpose attribution is still spread across repositories.
+  - Blocker: roadmap item explicitly depends on newer OkHttp call-tag/interceptor behavior after the next OkHttp upgrade.
+  - Resume when OkHttp is upgraded beyond the current pinned stack and repository request builders can be updated/tested together.
 
 ---
 
