@@ -1,5 +1,7 @@
 package com.freevibe.service
 
+import android.app.ActivityManager
+import android.app.ApplicationExitInfo
 import android.content.Context
 import android.os.Build
 import com.freevibe.BuildConfig
@@ -133,6 +135,11 @@ class CrashDiagnosticsCollector @Inject constructor(
             appendLine()
             appendLine(formatLiveWallpaperReceipts())
             appendLine()
+            val exitInfoSection = formatRecentExitInfo()
+            if (exitInfoSection.isNotBlank()) {
+                appendLine(exitInfoSection)
+                appendLine()
+            }
             appendLine("## Last local crash")
             appendLine("- Last crash timestamp: ${summary.lastCrashAt ?: "none recorded"}")
             appendLine("- Crash log bytes: ${summary.crashLogBytes}")
@@ -273,6 +280,41 @@ class CrashDiagnosticsCollector @Inject constructor(
             )
         }
     }.trimEnd()
+
+    private fun formatRecentExitInfo(): String {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.R) return ""
+        val am = context.getSystemService(Context.ACTIVITY_SERVICE) as? ActivityManager ?: return ""
+        val exits = runCatching {
+            am.getHistoricalProcessExitReasons(context.packageName, 0, 5)
+        }.getOrNull()
+        if (exits.isNullOrEmpty()) return ""
+        return buildString {
+            appendLine("## Recent process exits (API 30+)")
+            for (info in exits) {
+                val reason = exitReasonName(info.reason)
+                val desc = info.description?.take(200) ?: "none"
+                val ts = timestampWithZone(info.timestamp)
+                appendLine("- [$ts] $reason: $desc (importance=${info.importance}, pss=${info.pss}KB)")
+            }
+        }.trimEnd()
+    }
+
+    private fun exitReasonName(reason: Int): String = when (reason) {
+        ApplicationExitInfo.REASON_EXIT_SELF -> "EXIT_SELF"
+        ApplicationExitInfo.REASON_SIGNALED -> "SIGNALED"
+        ApplicationExitInfo.REASON_LOW_MEMORY -> "LOW_MEMORY"
+        ApplicationExitInfo.REASON_CRASH -> "CRASH"
+        ApplicationExitInfo.REASON_CRASH_NATIVE -> "CRASH_NATIVE"
+        ApplicationExitInfo.REASON_ANR -> "ANR"
+        ApplicationExitInfo.REASON_INITIALIZATION_FAILURE -> "INIT_FAILURE"
+        ApplicationExitInfo.REASON_PERMISSION_CHANGE -> "PERMISSION_CHANGE"
+        ApplicationExitInfo.REASON_EXCESSIVE_RESOURCE_USAGE -> "EXCESSIVE_RESOURCE"
+        ApplicationExitInfo.REASON_USER_REQUESTED -> "USER_REQUESTED"
+        ApplicationExitInfo.REASON_USER_STOPPED -> "USER_STOPPED"
+        ApplicationExitInfo.REASON_DEPENDENCY_DIED -> "DEPENDENCY_DIED"
+        ApplicationExitInfo.REASON_OTHER -> "OTHER"
+        else -> "UNKNOWN($reason)"
+    }
 
     companion object {
         const val CRASH_LOG_FILE_NAME = "crash.log"
