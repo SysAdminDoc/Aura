@@ -2,111 +2,96 @@
 
 ## Executive Summary
 
-Aura is a mature open-source Android personalization app (wallpapers, video wallpapers, ringtones, sounds) at v6.31.1 with ~49K lines of Kotlin, 87 test files, and a 1600-line ROADMAP covering security, compliance, distribution, and platform migration. It is the only FOSS app combining wallpapers and ringtones — a validated market gap since Zedge (100M+ installs, Trustpilot 1.6 stars) is the only commercial combo app and users actively seek alternatives. Aura's strongest asset is trust: no ads, no subscription, no tracking, MIT license, extensive privacy/release documentation.
-
-Top 10 new opportunities in priority order:
-1. Remediate 99 `contentDescription = null` instances across 20 UI files (accessibility)
-2. Track 4 additional yt-dlp CVEs beyond the one already in the Risk Register
-3. Add time-of-day wallpaper rotation (distinct from existing adaptive tint)
-4. Add "Set With..." intent-filter so other apps can delegate wallpaper-setting to Aura
-5. Add reduced-motion / animation accessibility support
-6. Evaluate Navigation 3 (stable since Nov 2025) vs. the planned Navigation 2.9 upgrade
-7. Add Opus audio output format in AudioTrimmer for better ringtone quality/size
-8. Centralize notification channel creation (currently in 3 separate files)
-9. Split WallpapersViewModel (1262 lines) alongside the already-planned SettingsScreen split
-10. Add Compose @Preview functions for UI development (currently zero exist)
+Aura is a mature open-source Android personalization app for wallpapers, video wallpapers, sounds, ringtone assignment, community uploads, scheduler automation, diagnostics, and signed GitHub/Obtainium distribution. Its strongest current shape is a privacy-forward, no-ads Android alternative to Zedge/Backdrops/Wallpaper Engine that already has broad source coverage and unusually strong policy tooling. The highest-value direction is not more surface catalog breadth; it is making remote/community data, media metadata, release evidence, and large-screen/accessibility behavior feel as reliable as the local-first core. Priority opportunities: 1. hydrate Community Favorites from remote upload metadata instead of local cache only; 2. stop using YouTube thumbnail size as video orientation metadata; 3. finish real-screen accessibility, AAB, HEIF/AVIF, screenshot, and adaptive-layout work already in the roadmap; 4. split the Sounds browse/playback stack like the existing Settings and Wallpapers refactor tracks; 5. use newer OkHttp request metadata hooks to make source diagnostics more precise after the dependency bump.
 
 ## Product Map
 
-- **Core workflows:** Browse multi-source wallpapers → preview → apply (home/lock/both); browse YouTube sounds → preview → trim/fade → apply as ringtone/notification/alarm; import local videos/GIFs → crop → set as live wallpaper; schedule automatic wallpaper rotation; manage favorites, collections, downloads, diagnostics.
-- **User personas:** Ad-free Zedge refugees, privacy-focused Android users, AMOLED enthusiasts, wallpaper power users, offline collection curators, community contributors.
-- **Platforms:** Android 8.0+ (minSdk 26), target SDK 35, Kotlin 2.1.0 / Compose / Material 3. Distribution via GitHub Releases + Obtainium; IzzyOnDroid near-term; F-Droid blocked until FOSS flavor isolates Firebase/GMS.
-- **Key integrations:** Wallhaven, Pexels, Pixabay, Bing Daily, Reddit (legacy), YouTube (NewPipe + yt-dlp), Freesound (legacy), Firebase (community), ML Kit (parallax), Open-Meteo (weather), Stability AI (generation).
+- Core workflows: browse/search/apply static wallpapers, live video wallpapers, GIF/video crops, sounds, ringtones, notification sounds, and alarms; edit/crop/preview media; rotate wallpapers by scheduler or external automation; manage favorites, downloads, collections, profiles, reports, backups, and diagnostics.
+- User personas: privacy-focused Android personalization users, ad-free Zedge replacement seekers, local/offline wallpaper curators, live-wallpaper and video-loop users, ringtone/sound users, community contributors, and maintainers preparing store/F-Droid/Izzy release channels.
+- Platforms and distribution: Android app, minSdk 26, targetSdk 35, package `com.freevibe`; GitHub Releases and Obtainium are primary; Play, Izzy, and F-Droid readiness are partially tracked through policy docs and roadmap items.
+- Key integrations and data flows: Wallhaven, Bing, Pexels, Pixabay, YouTube via NewPipe plus yt-dlp, Freesound/Audius/ccMixter/Reddit/SoundCloud surfaces, Open-Meteo, Firebase Auth/RTDB/Storage/Functions/App Check, ML Kit segmentation, Stability BYO generation, Room, DataStore, MediaStore, SAF, WorkManager, Glance widgets, and Media3 playback.
 
 ## Competitive Landscape
 
-- **Zedge** (100M+ installs): Broad catalog, AI generation, 24H dynamic wallpapers, marketplace. Learn from: time-of-day wallpaper rotation, unified search. Avoid: ads, credits, subscription traps, cluttered UI (51% of complaints are ads).
-- **WallYou** (FOSS, actively maintained): Material 3, Zedge/WallpaperCave/Unsplash sources, predictive back, Material You color extraction. Learn from: Lemmy source, Unsplash integration, sub-15min intervals. Avoid: broken auto-changer reliability (#230, #266).
-- **Backdrops** (5M+): Handcrafted in-house wallpapers, zero upsell. Learn from: "zero junk" philosophy, AMOLED category, icon-pack pairings. Avoid: small library, no ringtones.
-- **Peristyle** (FOSS, very active): Polished local-gallery manager, Crowdin i18n, SD card support. Learn from: "Set With..." intent delegation (v9.7), external storage handling. Avoid: local-only scope.
-- **WallFlow** (FOSS, semi-dormant): TFLite object detection for smart crop, AVIF support requested. Learn from: EXIF tag preservation, post-processing effects. Avoid: single-source dependency, project stagnation.
-- **Tapet**: 100% offline procedural generation, 200+ pattern algorithms. Learn from: offline-first generation, palette continuity. Avoid: abstract-only styles.
-- **Resplash** (FOSS): Unsplash API frontend, Muzei integration, EXIF data display. Learn from: Unsplash as high-quality free source, photographer credit patterns. Avoid: single-source limitation.
-- **Muzei** (FOSS): Mature plugin API (`MuzeiArtProvider`), Wear OS, blur/dim controls. Learn from: plugin ecosystem, lock/home different-source requests (#794). Avoid: no manual browsing.
+- Zedge: Does broad unified discovery across wallpapers, live wallpapers, ringtones, notifications, and AI tools well. Aura should learn from unified search and content breadth, while avoiding ads, credits, subscription pressure, promotional push, and tracking-heavy trust erosion.
+- Backdrops and Panels: Show the value of curated collections, creator presentation, and daily freshness. Aura should learn from curation and attribution quality, while avoiding subscription-first wallpaper gating and privacy backlash.
+- Wallpaper Engine and UndeadWallpaper: Set expectations for video wallpaper playlists, local video/GIF handling, per-wallpaper controls, and media-engine stability. Aura should learn from explicit media metadata and playback controls, while avoiding desktop-only assumptions and battery-heavy effects.
+- Paperize and Peristyle: Establish local/offline folder workflows, home/lock separation, simple rotation, and clear image-format expectations. Aura should learn from local-library depth and format clarity, while preserving its richer remote/community scope.
+- WallYou and WallFlow: Show FOSS Material 3 source aggregation, saved searches, tablet/wide-screen awareness, and lightweight browsing. Aura should learn from tablet posture and source clarity, while avoiding stale single-source or scheduler claims without device evidence.
+- Muzei: Provides the mature Android precedent for a live-wallpaper source/provider API. Aura should learn from versioned extension boundaries, while avoiding a mode where the app becomes only a passive wallpaper provider.
 
 ## Security, Privacy, and Reliability
 
-- **yt-dlp CVE batch:** The Risk Register tracks CVE-2026-26331 but 4 additional CVEs exist: CVE-2026-50019 (cookie leak with curl downloader), CVE-2026-50023 (dangerous file type via filename sanitization), CVE-2026-50574 (arbitrary code execution via aria2c manifests), CVE-2025-54072 (`--exec` command injection on Windows, bypass of CVE-2024-22423). Aura should pin yt-dlp ≥ 2026.02.21 and verify bundled version covers all five.
-- **99 `contentDescription = null` instances** across 20 UI files: `SharedComponents.kt` (10), `SoundsScreen.kt` (11), `WallpapersScreen.kt` (11), `VideoWallpapersScreen.kt` (11), `SoundDetailScreen.kt` (10), `AiWallpaperScreen.kt` (6), `CollectionsScreen.kt` (6), `CommunityReportsScreen.kt` (5). These are non-decorative interactive elements that need accessibility labels.
-- **Zero reduced-motion support:** No code references `ANIMATOR_DURATION_SCALE`, `prefersReducedMotion`, or `ReducedMotion`. Live wallpaper particle renderers, weather effects, and Compose animations run at full intensity regardless of user accessibility preferences.
-- **Notification channels scattered:** Created independently in `FreeVibeApp.kt` (media_playback), `DailyWallpaperWorker.kt` (daily), and `RotationTriggerService.kt` (triggers). Should be centralized for consistency and to prevent channel-creation race conditions.
-- **Android 17 memory limits:** New `MemoryLimiter:AnonSwap` enforcement may affect Aura's bitmap-heavy wallpaper rendering and Coil image caching on low-RAM devices.
-- **European Accessibility Act (EAA):** Took effect June 28, 2025. Legally relevant for EU distribution via F-Droid/IzzyOnDroid. Aura's current accessibility posture (99 null contentDescriptions, zero reduced-motion support, zero @Preview for visual regression testing) needs attention.
+- Verified risk: `app/src/main/java/com/freevibe/ui/screens/wallpapers/WallpapersViewModel.kt` resolves top-voted community wallpaper IDs through `cacheManager.getByIds(...)`; `VoteRepository.getTopVotedIds(...)` returns only IDs/counts; `WallpapersScreen.kt` only renders the top-voted row when resolved local wallpaper objects exist. Community Favorites can disappear for valid remote-only uploads.
+- Verified risk: `app/src/main/java/com/freevibe/ui/screens/videowallpapers/VideoWallpapersViewModel.kt` still uses YouTube thumbnail dimensions as a proxy for video orientation. `app/src/main/java/com/freevibe/service/VideoWallpaperStorage.kt` already probes local video width, height, duration, MIME, and orientation-style metadata, so remote-video browse behavior is weaker than local media handling.
+- Verified risk: real Aura accessibility coverage is still incomplete. The existing roadmap already owns replacing synthetic accessibility gates with checks against real Wallpapers, Sounds, Settings, editor, and detail flows; this remains higher value than another synthetic control test.
+- Verified risk: format support policy is inconsistent across flows. The existing roadmap already owns HEIF/AVIF acceptance, rejection copy, and metadata-scrub tests because `MediaIngestion.kt`, `AutoWallpaperWorker.kt`, and `WallpaperUploadRepository.kt` expose different effective format rules.
+- Verified guardrail: `.github/workflows/verify.yml` now runs manifest consistency, media ingestion, accessibility release-gate checks, dependency review, lint, tests, assemble, and native compliance. New research should not re-add the older "wire manifest consistency into CI" item as if it were still absent.
+- Needs live validation: App Check enforcement, callable rollout behavior, background-work evidence, AAB dry-run artifacts, low-RAM bitmap behavior, and large-screen behavior still require owner project/device evidence rather than static repo inspection.
+- Likely low current fit: Android 17 local-network permission changes do not map to Aura's current public integration model; contact privacy is relevant only to existing sharing/contact roadmap work, not a new urgent item.
 
 ## Architecture Assessment
 
-- **SettingsScreen.kt (3736 lines):** Already noted in ROADMAP for splitting. Owns provider keys, automation, weather/live wallpaper, community identity, diagnostics, permissions, and yt-dlp flows.
-- **WallpapersViewModel.kt (1262 lines):** Large ViewModel handling wallpaper state, tabs, findSimilar, matchMyTheme, cached discover, and multiple load operations. Candidate for splitting into tab-specific or feature-specific ViewModels.
-- **FreeVibeRoot.kt (968 lines):** NavHost with all route declarations. Will grow further with Navigation 3 migration.
-- **Zero @Preview composables:** No Compose Preview functions exist anywhere in the codebase. Prevents visual iteration during development and blocks future screenshot-test infrastructure (Paparazzi/Roborazzi).
-- **Localization readiness:** Only 161 entries in `strings.xml` (English-only). Many UI strings are hardcoded in Kotlin. A localization pipeline (Weblate/Crowdin) cannot start until strings are extracted.
-- **Zero WindowSizeClass / adaptive layout code:** Confirmed by grep. All layouts are phone-first with fixed grid columns. Android 16 mandates adaptive support on ≥600dp displays.
-- **Navigation decision (2026-06-13): Skip Nav 2.9, target Nav 3 in N-1.**
-  Codebase surface: 22 composable destinations in FreeVibeRoot.kt, 51 NavType argument declarations, 31 navController.navigate() call sites, 6 BackHandler instances, intent-based deep links (aura://collection, JSON import), widget navigation via initialNavigateTo, 5 bottom nav items.
-  Nav 2.9 would add type-safe route arguments (eliminates 51 NavType declarations + Uri.encode boilerplate) and is a smaller diff, but Nav 3 (stable since Nov 2025) delivers all that plus: Fragment-free NavDisplay, explicit state classes replacing NavController, true predictive-back support (currently declared in manifest but unwired), typed keys, and smaller APK. Migrating to 2.9 first creates a second migration to 3 within months.
-  Cost estimate: ~22 destination conversions (string routes to typed keys), ~31 navigate-call rewrites, NavHost-to-NavDisplay swap, NavController-to-state conversion, bottom nav reintegration, deep link and widget navigation adaptation. No nested NavGraphs to complicate things. Moderate total effort (XL from scratch, but can be staged per-tab).
-  Decision: Nav 3 is the target for N-1. Nav 2.9 is skipped. Migration can be staged: bottom-nav tabs first, then detail/editor screens, then deep links/widget navigation last.
+- `SettingsScreen.kt`, `WallpapersScreen.kt`, `SoundsScreen.kt`, `SoundsViewModel.kt`, `WallpaperDetailScreen.kt`, `WallpapersViewModel.kt`, `VideoWallpapersScreen.kt`, and `FreeVibeRoot.kt` are the largest user-facing files. Existing roadmap items cover Settings and Wallpapers ViewModel decomposition; Sounds browse/playback/upload/YouTube/community state still needs an equivalent split.
+- `SelectedContentHolder.kt` persists selected wallpaper and sound state across process death, but intentionally keeps the wallpaper pager list in memory only. Existing NX-4/replacement-state roadmap work covers this; do not add a duplicate.
+- No Compose `@Preview` fixtures were found and no Material3 adaptive APIs were found in source. Existing screenshot, route-fixture, and adaptive-layout items remain the right implementation path before aggressive UI polish refactors.
+- Source diagnostics are already visible through `SourceMetrics`, but many OkHttp requests are built across repositories and services without a shared typed request-purpose tag. Newer OkHttp interceptor/builder changes create a low-risk follow-up after Aura moves beyond its current 5.3.2 dependency.
+- Documentation hygiene remains important, but the active roadmap already contains incomplete-only ROADMAP cleanup and validator work. New research should append only implementation-ready deltas and avoid another broad documentation cleanup item.
 
 ## Rejected Ideas
 
-- **Unsplash as a new wallpaper source:** Investigated based on WallYou, WallFlow, and Resplash precedent. Unsplash API terms prohibit wallpaper-app use cases that replicate Unsplash's core service. WallYou works around bot-blocking, which is a ToS gray area. Aura's trust positioning conflicts with this. Source: Unsplash API terms.
-- **Lemmy communities as wallpaper source:** Investigated based on WallYou v14 implementation. Niche user base, Reddit-like API surface. Better as a future NX-5 plugin than a core source. Low impact relative to existing Wallhaven/Pexels/Pixabay coverage.
-- **Artist marketplace / revenue share (Walli model):** Users praise Walli's artist compensation. But marketplace, payment rails, and creator accounts conflict with Aura's charter (R-3, R-4). Community tips via GitHub Sponsors/Liberapay are the accepted alternative.
-- **Google Photos album as wallpaper source:** Investigated from Paperize #531. Requires account-bound cloud API, adds a Google dependency Aura is trying to reduce, and SAF/Photo Picker already covers local gallery. Rejected in prior research.
-- **Notification.ProgressStyle (Android 16):** Multi-step progress notifications. Investigated for download/apply feedback. Low value since Aura's downloads are typically fast and the existing notification system works. Defer to a polish pass.
+- Zedge-style ads, credits, streaks, reward prompts, or subscription pressure: rejected because they contradict Aura's no-ads/no-tracking trust posture.
+- Panels-style account-first paid wallpaper feed: rejected because curation is useful, but the commercial model and privacy perception are a poor fit.
+- Core Unsplash or scraped Zedge ingestion: rejected for policy, licensing, and trust risk; any experimental provider should live behind the future source/plugin boundary.
+- Full Wallpaper Engine desktop parity or KLWP-grade scripting: rejected as too broad for the Android-first product; media metadata, playlists, and scoped presets are better fits.
+- Bulk YouTube download expansion: rejected because Aura's current YouTube surface is intentionally constrained by legal-mode and provider-control work.
+- Google Photos cloud album sync: rejected because SAF, Photo Picker, local folders, and backup/export flows satisfy the use case without adding account-bound cloud dependency.
+- New roadmap items for Play AAB, HEIF/AVIF, synthetic accessibility replacement, screenshot fixtures, adaptive layouts, or ROADMAP hygiene: rejected as duplicates of existing active roadmap entries.
 
 ## Sources
 
-**OSS projects:**
-- https://github.com/ammargitham/WallFlow/issues
-- https://github.com/you-apps/WallYou/issues
-- https://github.com/Anthonyy232/Paperize/issues
-- https://github.com/Hamza417/Peristyle
-- https://github.com/maocide/UndeadWallpaper
+**OSS and adjacent projects:**
+- https://github.com/you-apps/WallYou
+- https://github.com/Anthonyy232/Paperize
+- https://f-droid.org/en/packages/com.anthonyla.paperize/
+- https://apt.izzysoft.de/ftp/repo/fdroid/index/apk/app.simple.peri
+- https://github.com/ammargitham/WallFlow
 - https://github.com/muzei/muzei
-- https://github.com/patzly/doodle-android
-- https://github.com/T8RIN/ImageToolbox
+- https://api.muzei.co/reference/com.google.android.apps.muzei.api.provider/index.html
+- https://github.com/maocide/UndeadWallpaper
+- https://github.com/AlynxZhou/alynx-live-wallpaper
 
-**Commercial and market signal:**
+**Commercial and community signals:**
 - https://play.google.com/store/apps/details?id=net.zedge.android
-- https://backdrops.io/
-- https://play.google.com/store/apps/details?id=com.shanga.walli
-- https://play.google.com/store/apps/details?id=com.sharpregion.tapet
+- https://help.zedge.net/hc/en-us/articles/360024313191-ZEDGE-for-Android-FAQ
+- https://play.google.com/store/apps/details?id=com.backdrops.wallpapers
+- https://play.google.com/store/apps/details?id=io.wallpaperengine.weclient
+- https://www.wallpaperengine.io/
+- https://www.theverge.com/2024/9/24/24253023/mkbhd-panels-wallpaper-app-response-criticism
+- https://www.reddit.com/r/fossdroid/comments/1fym2hz/open_source_wallpaper_changer_from_internal/
 
-**Platform and library:**
+**Platform and standards:**
+- https://developer.android.com/about/versions/16/behavior-changes-16
 - https://developer.android.com/about/versions/17/behavior-changes-17
-- https://developer.android.com/about/versions/17/changes/bg-audio
-- https://developer.android.com/about/versions/16/features
-- https://developer.android.com/reference/android/app/wallpaper/WallpaperDescription
-- https://android-developers.googleblog.com/2025/11/jetpack-navigation-3-is-stable.html
-- https://android-developers.googleblog.com/2026/03/media3-110-is-out.html
-- https://coil-kt.github.io/coil/upgrading_to_coil3/
-- https://developer.android.com/build/releases/agp-9-0-0-release-notes
-- https://kotlinlang.org/docs/whatsnew23.html
+- https://developer.android.com/guide/app-bundle
+- https://developer.android.com/training/testing/ui-tests/screenshot
+- https://developer.android.com/develop/ui/compose/accessibility/testing
+- https://developer.android.com/ndk/reference/group/image-decoder
+- https://android.googlesource.com/platform/frameworks/base/+/refs/heads/main/media/java/android/media/MediaMetadataRetriever.java
+- https://android-developers.googleblog.com/2025/05/prepare-play-apps-for-devices-with-16kb-page-size.html
 
-**Security:**
-- https://advisories.gitlab.com/pkg/pypi/yt-dlp/CVE-2026-26331/
-- https://nvd.nist.gov/vuln/detail/CVE-2026-50019
-- https://nvd.nist.gov/vuln/detail/CVE-2026-50023
-- https://nvd.nist.gov/vuln/detail/CVE-2026-50574
-- https://nvd.nist.gov/vuln/detail/CVE-2025-54072
-
-**Community signal:**
-- https://www.reddit.com/r/androidapps/ (wallpaper app recommendations 2025-2026)
-- https://www.reddit.com/r/Android/ (Zedge alternative discussions)
+**Dependencies and security:**
+- https://developer.android.com/jetpack/androidx/releases/media3
+- https://developer.android.com/jetpack/androidx/releases/work
+- https://coil-kt.github.io/coil/changelog/
+- https://square.github.io/okhttp/changelogs/changelog/
+- https://firebase.google.com/support/release-notes/admin/node
+- https://www.sonarsource.com/blog/ytdlnis-argument-injection-rce
 
 ## Open Questions
 
-- Should the N-1 toolchain pass target Navigation 2.9 or skip directly to Navigation 3? Navigation 3 is stable but requires a non-trivial migration of all routing/destination logic.
-- Which physical device/emulator matrix is available for the Android 17 memory-limit and background-audio-hardening validation?
-- Is the European Accessibility Act (EAA) compliance relevant to Aura's current distribution scope (GitHub Releases, Obtainium, IzzyOnDroid)?
+- Which physical devices and Android API levels should be treated as release-blocking for accessibility, scheduler, large-screen, and low-memory evidence?
+- Should Play readiness target a private internal-app-sharing AAB first, or a complete public Play launch packet?
+- Should HEIF/AVIF be accepted everywhere through safe transcode, or intentionally rejected from community upload while remaining local-only?
+- Which Firebase path should be authoritative for hydrating top-voted community wallpaper metadata when the local Room cache misses?
+- Should the Sounds decomposition land before or after the Media3 1.10 playback-widget migration already represented in the roadmap?

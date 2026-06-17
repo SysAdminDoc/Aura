@@ -3291,3 +3291,39 @@ This section records net-new parity work from the Zedge official/web/app pass. T
   Touches: `ROADMAP.md`, a lightweight roadmap hygiene validator, `test/tools`, `.github/workflows/verify.yml`, existing changelog/completed-work surfaces if historical entries are moved
   Acceptance: ROADMAP contains only active incomplete items after cleanup; a verify-time guard rejects new `[x]` items, implementation logs, continuation state, and dated cycle logs; historical context remains available through approved existing history surfaces or git history.
   Complexity: M
+
+## Research-Driven Additions
+
+### P1 — Reliability and Source Completeness
+
+- [ ] P1 — Hydrate Community Favorites from remote upload metadata
+  Why: The top-voted community row currently depends on Firebase vote IDs resolving to seed or Room-cached wallpapers, so valid remote-only uploads can make the row disappear.
+  Evidence: `app/src/main/java/com/freevibe/ui/screens/wallpapers/WallpapersViewModel.kt`; `app/src/main/java/com/freevibe/data/repository/VoteRepository.kt`; `app/src/main/java/com/freevibe/ui/screens/wallpapers/WallpapersScreen.kt`; Zedge and Backdrops catalog expectations.
+  Touches: `VoteRepository.kt`, community wallpaper metadata repository/cache, `WallpapersViewModel.kt`, `WallpapersScreen.kt`, Room cache tests.
+  Acceptance: top-voted Firebase IDs hydrate full community wallpaper metadata when not already locally cached; hydrated items are cached into Room; missing/deleted/private IDs are skipped with a diagnostic count; a test proves a remote-only vote ID renders in Community Favorites without prior local cache.
+  Complexity: M
+
+- [ ] P1 — Replace YouTube thumbnail-orientation proxy with stream metadata probe
+  Why: YouTube browse items currently use thumbnail dimensions as video orientation, while Android and Aura's local video pipeline expose real width, height, rotation, duration, and MIME metadata.
+  Evidence: `app/src/main/java/com/freevibe/ui/screens/videowallpapers/VideoWallpapersViewModel.kt`; `app/src/main/java/com/freevibe/service/VideoWallpaperStorage.kt`; Android `MediaMetadataRetriever`; Wallpaper Engine and UndeadWallpaper media-info expectations.
+  Touches: `YouTubeRepository.kt`, `VideoWallpapersViewModel.kt`, `VideoWallpaperStorage.kt`, video metadata cache/schema if needed, video browse/detail tests.
+  Acceptance: YouTube items store probed or display-correct width, height, rotation, duration, and MIME/codec when available before orientation filtering or apply decisions; unknown metadata is labeled as unknown and never inferred from thumbnails; tests cover a rotated portrait clip.
+  Complexity: M
+
+### P2 — Maintainability
+
+- [ ] P2 — Split Sounds browse and playback surface into feature-owned modules
+  Why: `SoundsScreen.kt` and `SoundsViewModel.kt` are among the largest user-facing files and combine browse tabs, YouTube resolution, community uploads, playback, top hits, downloads, editor routing, and diagnostics.
+  Evidence: `app/src/main/java/com/freevibe/ui/screens/sounds/SoundsScreen.kt`; `app/src/main/java/com/freevibe/ui/screens/sounds/SoundsViewModel.kt`; existing Settings and Wallpapers decomposition roadmap items; Media3 1.10 playback-widget direction.
+  Touches: `app/src/main/java/com/freevibe/ui/screens/sounds/`, `SoundsViewModel.kt`, `SoundUiTokens.kt`, sound playback state, YouTube/community/upload state, tests.
+  Acceptance: browse/feed, playback/progress, upload/community, and YouTube resolution state are split into feature-owned composables/state holders; no single Sounds file owns all flows; existing sound tests pass; a new contract test covers tab switching while playback continues.
+  Complexity: L
+
+### P3 — Observability
+
+- [ ] P3 — Tag OkHttp calls for source diagnostics after the next OkHttp upgrade
+  Why: Aura already exposes `SourceMetrics`, but request-purpose attribution is spread across repositories; newer OkHttp interceptor behavior creates a low-risk path to attach typed source/purpose metadata at the client/interceptor layer.
+  Evidence: `gradle/libs.versions.toml`; `app/src/main/java/com/freevibe/service/SourceMetrics.kt`; `app/src/main/java/com/freevibe/di/AppModule.kt`; OkHttp changelog.
+  Touches: `gradle/libs.versions.toml`, `AppModule.kt`, repository request builders/interceptors, `SourceMetrics.kt`, Settings diagnostics tests.
+  Acceptance: source/provider name and request purpose are attached as typed OkHttp call tags or equivalent interceptor metadata; diagnostics attribute timeout/header failures to the source without URL parsing; tests cover Wallhaven, Pexels, YouTube metadata, and Firebase-excluded calls.
+  Complexity: M
