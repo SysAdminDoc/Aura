@@ -166,7 +166,8 @@ class AutoWallpaperWorker @AssistedInject constructor(
     }
 
     private suspend fun applyAndRecord(wallpaper: Wallpaper, target: WallpaperTarget): Result {
-        return wallpaperApplier.applyByLocator(wallpaper.fullUrl, target).fold(
+        val darkenPercent = prefs.autoWallpaperDarkenPercent.first()
+        return wallpaperApplier.applyByLocator(wallpaper.fullUrl, target, darkenPercent = darkenPercent).fold(
             onSuccess = {
                 historyManager.record(wallpaper, target)
                 Result.success()

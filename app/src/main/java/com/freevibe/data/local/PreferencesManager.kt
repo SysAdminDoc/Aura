@@ -123,6 +123,8 @@ class PreferencesManager @Inject constructor(
     suspend fun setAutoWallpaperRequiresIdle(v: Boolean) = set(Keys.AUTO_WP_REQUIRES_IDLE, v)
     suspend fun setRotateOnUnlock(v: Boolean) = set(Keys.ROTATE_ON_UNLOCK, v)
     suspend fun setRotateOnScreenOff(v: Boolean) = set(Keys.ROTATE_ON_SCREEN_OFF, v)
+    val autoWallpaperDarkenPercent: Flow<Int> = get(Keys.AUTO_WP_DARKEN_PERCENT, 0)
+    suspend fun setAutoWallpaperDarkenPercent(v: Int) = set(Keys.AUTO_WP_DARKEN_PERCENT, v.coerceIn(0, 100))
 
     // ── Auto-backup ─────────────────────────────────────────────
 
@@ -306,6 +308,7 @@ class PreferencesManager @Inject constructor(
         val AUTO_WP_REQUIRES_IDLE = booleanPreferencesKey("auto_wp_requires_idle")
         val ROTATE_ON_UNLOCK = booleanPreferencesKey("rotate_on_unlock")
         val ROTATE_ON_SCREEN_OFF = booleanPreferencesKey("rotate_on_screen_off")
+        val AUTO_WP_DARKEN_PERCENT = intPreferencesKey("auto_wp_darken_percent")
         val PREF_RESOLUTION = stringPreferencesKey("pref_resolution")
         val REDDIT_SUBS = stringPreferencesKey("reddit_subreddits")
         val REDDIT_VIDEO_SUBS = stringPreferencesKey("reddit_video_subreddits")

@@ -4,6 +4,10 @@ import android.app.WallpaperManager
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.graphics.Canvas
+import android.graphics.ColorMatrix
+import android.graphics.ColorMatrixColorFilter
+import android.graphics.Paint
 import android.graphics.Rect
 import com.freevibe.data.model.WallpaperTarget
 import com.freevibe.util.rethrowIfCancelled
@@ -60,11 +64,17 @@ class WallpaperApplier @Inject constructor(
         locator: String,
         target: WallpaperTarget = WallpaperTarget.BOTH,
         cropRect: Rect? = null,
+        darkenPercent: Int = 0,
     ): Result<Unit> = withContext(Dispatchers.IO) {
         runCatching {
-            val bitmap = decodeFromLocator(locator)
+            var bitmap = decodeFromLocator(locator)
                 ?: throw IllegalStateException("Failed to decode wallpaper image")
             try {
+                if (darkenPercent > 0) {
+                    val darkened = applyDarken(bitmap, darkenPercent.coerceIn(1, 100))
+                    bitmap.recycle()
+                    bitmap = darkened
+                }
                 val flag = when (target) {
                     WallpaperTarget.HOME -> WallpaperManager.FLAG_SYSTEM
                     WallpaperTarget.LOCK -> WallpaperManager.FLAG_LOCK
@@ -325,6 +335,22 @@ class WallpaperApplier @Inject constructor(
             buffer.write(chunk, 0, read)
         }
         return buffer.toByteArray()
+    }
+
+    private fun applyDarken(src: Bitmap, percent: Int): Bitmap {
+        val brightness = -2.55f * percent
+        val result = Bitmap.createBitmap(src.width, src.height, Bitmap.Config.ARGB_8888)
+        val canvas = Canvas(result)
+        val paint = Paint().apply {
+            colorFilter = ColorMatrixColorFilter(ColorMatrix(floatArrayOf(
+                1f, 0f, 0f, 0f, brightness,
+                0f, 1f, 0f, 0f, brightness,
+                0f, 0f, 1f, 0f, brightness,
+                0f, 0f, 0f, 1f, 0f,
+            )))
+        }
+        canvas.drawBitmap(src, 0f, 0f, paint)
+        return result
     }
 
     private companion object {
