@@ -56,6 +56,20 @@ internal fun VideoWallpaperItem.fitBadge(orientation: OrientationFilter): String
     else -> "Needs crop"
 }
 
+internal fun VideoWallpaperItem.videoTechnicalSummary(): String {
+    val dimensions = if (hasDimensions) {
+        "${videoWidth}x${videoHeight} (${if (isPortrait) "Portrait" else "Landscape"})"
+    } else {
+        "Unknown video dimensions"
+    }
+    val rotation = videoRotationDegrees
+        .takeIf { it != 0 }
+        ?.let { "rotated ${it}deg" }
+    val codec = videoCodec.takeIf { it.isNotBlank() }
+    val mime = videoMimeType.takeIf { it.isNotBlank() }
+    return listOfNotNull(dimensions, rotation, codec, mime).joinToString(" · ")
+}
+
 internal fun VideoWallpaperItem.previewAspectRatio(): Float = when {
     hasDimensions -> (videoWidth.toFloat() / videoHeight.toFloat()).coerceIn(0.56f, 1.8f)
     else -> 9f / 16f

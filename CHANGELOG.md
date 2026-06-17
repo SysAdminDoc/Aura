@@ -2,6 +2,12 @@
 
 All notable changes to Aura will be documented in this file.
 
+## v6.32.2 (2026-06-17)
+- **YouTube video metadata reliability**: video wallpaper search now probes
+  yt-dlp stream metadata for dimensions, rotation, duration, MIME type, and
+  codec instead of using thumbnail dimensions as orientation data. Unknown
+  metadata is labeled as unknown instead of being inferred from thumbnails.
+
 ## v6.32.1 (2026-06-17)
 - **Reddit provider restored**: `isProviderEnabled()` always returned false
   (pref value read and discarded) — Reddit wallpaper feeds were completely dead.

@@ -7,6 +7,8 @@
 **Code version at write:** v6.31.1 / versionCode 112 (per `app/build.gradle.kts`; release/lint Gradle runs are memory-heavy on this Windows workstation, so rerun APK compilation only when explicitly needed).
 **Charter:** personalization, AMOLED-first, free-by-default, multi-source content aggregation, community-fed catalog, polite live wallpapers (battery-aware, pause-on-invisible).
 
+> **Blocked items** are tracked in [Roadmap_Blocked.md](Roadmap_Blocked.md) — items requiring owner/Firebase Console actions, physical device testing, production database access, or the N-1 toolchain upgrade.
+
 ---
 
 ## ▶ Implementer Instructions (for the build machine)
@@ -108,1016 +110,184 @@ Preserved verbatim from prior passes; do not edit unless a regression occurred.
 
 ## 🔬 Researcher Queue (Cycle 1 — 2026-06-04)
 
-Append-only Cycle 1 handoff. Every item below is source-backed in `docs/research/cycle-1-2026-06-04.md`; merge into the existing Now/Next/Later item named in `Touches` when implementation starts instead of creating a second parallel feature.
-
-- [~] 🤖 🔬 **P0 — Add Firebase App Check for community writes**
-  - Why: Anonymous Firebase Auth proves a user session, not that writes originate from Aura. Community uploads/votes now have server-side admin Custom Claims, but RTDB/Storage writes are still cheap for non-Aura clients to automate.
-  - Evidence: `database.rules.json:9`, `database.rules.json:41`, `database.rules.json:52`, `app/build.gradle.kts:201-204`; Firebase App Check docs support Realtime Database and Cloud Storage and recommend monitoring metrics before enforcement.
-  - Touches: N-2 follow-up; `gradle/libs.versions.toml`, `app/build.gradle.kts`, `FreeVibeApp.kt`, Firebase console setup, `docs/firebase-admin-claims.md`, new App Check rollout doc.
-  - Acceptance: debug provider works for emulator/dev builds; release builds send Play Integrity App Check tokens; Firebase metrics are monitored before enforcement; RTDB/Storage enforcement can be enabled without locking out legitimate users.
-  - Verify: debug-provider upload/vote on emulator; release-device upload/vote; Firebase App Check request metrics; RTDB/Storage rules still reject unauthenticated writes.
-  - Progress 2026-06-07: Cycle 53 added debug/release App Check provider installers, Firebase BoM-managed App Check dependencies, startup installation before Firebase-backed community warm-up, dependency verification metadata, generated notice lock refresh, and `docs/community-app-check-rollout.md`. Cycle 54 added `CommunityQuotaPolicies`, protected admin-only quota/dedupe ledger namespaces, and `docs/community-quota-rate-limits.md`. Cycle 57 added tracked Storage rules plus local Emulator Suite coverage for community upload blobs. Cycle 58 added RTDB Emulator Suite coverage for upload metadata, owner indexes, reports, quota ledgers, dedupe ledgers, and collection shares. Cycle 63 added callable function contract metadata, protected write-path coverage, limited-use App Check token decisions, and `docs/community-callable-quota-enforcement.md`. Cycle 91 added `docs/community-callable-contract.json` and `tools/community_callable_contract_check.py` to make the callable contract backend-checkable and pin quota reset days to UTC. Cycle 93 added the Node 20 TypeScript `functions/` project, fail-closed App Check/Auth callable exports, a manifest-synced contract mirror, a UTC quota decision engine, backend manifest coverage, and CI tests. Cycle 94 implemented the `submitCommunityReport` handler core with server-derived reporter UID, report normalization, HTTPS source validation, UTC quota reservation, duplicate handling, and focused Functions tests. Cycle 95 implemented the `recordCommunityVote` handler core with content ID normalization, existing voter-marker idempotency, UTC quota reservation, dedupe handling, vote tally transactions, legacy voter-marker mirroring, and focused Functions tests. Cycle 96 refined follow dedupe to creator ID plus desired state and implemented the `setCreatorFollow` handler core with no-op state idempotency, UTC quota reservation, action-specific dedupe handling, final follow-row set/remove writes, and focused Functions tests. Cycle 97 refined block dedupe to blocked UID plus desired state and implemented the `setCommunityUserBlock` handler core with self-block rejection, no-op state idempotency, UTC quota reservation, action-specific dedupe handling, private block/reverse-index set/remove writes, and focused Functions tests. Cycle 98 implemented the `finalizeCommunitySoundUpload` handler core with server-allocated upload IDs, Storage path ownership checks, storage-path dedupe, public metadata writes, and owner-index writes. Cycle 99 implemented the matching `finalizeCommunityWallpaperUpload` handler core with JPEG metadata bounds. Cycle 100 refined profile edit dedupe to profile UID plus normalized public profile hash and implemented the `updateCreatorProfile` handler core. Cycle 101 added RTDB-emulator-backed profile handler persistence coverage for profile, quota, dedupe, and unchanged-profile idempotency writes, then wired that script into the Firebase backend CI lane. Cycle 102 added matching report handler persistence coverage for report, quota, dedupe, and duplicate report writes. Cycle 103 added matching vote handler persistence coverage for vote tally, nested and legacy voter markers, quota, dedupe, and repeat-vote idempotency writes. Cycle 104 added matching follow handler persistence coverage for follow writes, unfollow removals, quota, dedupe, and no-op unfollow idempotency writes. Cycle 105 added matching user block handler persistence coverage for private block rows, reverse-index rows, unblock removals, quota, dedupe, and no-op unblock idempotency writes. Cycle 106 added matching sound upload handler persistence coverage for public metadata, owner index, quota, storage-path dedupe, and duplicate upload idempotency writes. Cycle 107 added matching wallpaper upload handler persistence coverage for public metadata, owner index, quota, storage-path dedupe, and duplicate upload idempotency writes. Cycle 108 added Android report callable client code with limited-use App Check token selection and callable-first report submission. Cycle 109 added Android vote callable payload/client code and callable-first vote submission. Cycle 110 added Android follow callable payload/client code and callable-first follow/unfollow submission. Cycle 111 added Android user-block callable payload/client code and callable-first block/unblock submission. Cycle 112 added Android sound upload finalizer callable payload/client code and callable-first metadata finalization after Storage upload. Cycle 113 added Android wallpaper upload finalizer callable payload/client code and callable-first metadata finalization after Storage upload. Cycle 114 added Android profile edit callable payload/client code and callable-first creator profile updates. Cycle 115 added checked Android callable wire-protocol coverage. Remaining work: live callable invocation evidence, Firebase Console registration, debug-token registration, metrics burn-in, direct-rule tightening, and RTDB/Storage App Check enforcement.
-
-- [~] 🤖 🔬 **P1 — Baseline Profile + Macrobenchmark gate for startup and grid jank** — harness shipped 2026-06-04; physical-device generation/metrics pending because no adb target is attached.
-  - Why: Aura claims instant startup and L-8 targets <1.5 s cold start, but there is no benchmark/profile module to prove startup, first-scroll, or dense-grid smoothness.
-  - Evidence: `README.md:23`, `ROADMAP.md:359-362`; source search now includes `androidx.benchmark`, `androidx.baselineprofile`, `ProfileInstaller`, Macrobenchmark tests, and manual performance CI artifact upload.
-  - Touches: L-8 / U-13; `settings.gradle.kts`, `gradle/libs.versions.toml`, app Gradle config, `baselineprofile`, `.github/workflows/performance.yml`, `docs/performance/baseline-profile.md`.
-  - Acceptance: generated profile covers Wallpapers, Videos, Sounds, Favorites, and Wallpaper Detail; Macrobenchmark captures startup and scroll metrics; profile/no-profile results are attached to CI or release notes.
-  - Verify: `:app:generateBaselineProfile`; `:baselineprofile:connectedBenchmarkReleaseAndroidTest` on a physical device, not emulator-only; compare startup and frame metrics before/after profile.
-  - Blocker: `adb devices` returned no attached devices on 2026-06-04, so profile generation and metric comparison remain a physical-device follow-up.
-
-- [x] 🤖 🔬 **P1 — Fold Android developer verification + release provenance into NX-8** — shipped 2026-06-04 (`docs/distribution/developer-verification.md`, release-note verification status, Izzy checklist, branch-protection owner action).
-  - Why: Aura's distribution path is GitHub Releases/Obtainium/F-Droid/Izzy, and Android developer verification begins affecting non-Play installs on certified devices in select regions in September 2026.
-  - Evidence: Android developer verification docs; current `obtainium.json`; NX-8 still has per-ABI splits/F-Droid/Izzy pending.
-  - Touches: NX-8; release workflow, GitHub release template, `docs/distribution`, fastlane metadata, checksums/SBOM/provenance, signing-key continuity docs.
-  - Acceptance: package registration path is documented for owner action; releases publish SHA-256 checksums; Obtainium/Izzy/F-Droid install paths are documented; branch protection requiring `verify` is enabled or explicitly marked owner-blocked.
-  - Verify: owner confirms package registration status; install/update via Obtainium; compare APK checksum to release note; `git tag v*` release attaches expected APK assets.
-
-- [x] 🤖 🔬 **P1 — Rotation trigger foreground-service policy hardening** — shipped 2026-06-07 (`docs/rotation-trigger-fgs-policy.md`, `tools/rotation_fgs_policy_check.py`, Play packet owner evidence row).
-  - Why: The unlock/screen-off rotation feature uses a long-lived `specialUse` foreground service. Android docs allow `specialUse`, but Play reviews the manifest property/use case, so Aura needs a policy-ready runbook and fallback decision.
-  - Evidence: `app/src/main/AndroidManifest.xml:29`, `app/src/main/AndroidManifest.xml:150-155`; Android foreground-service docs require enough manifest/Play Console explanation for `specialUse`.
-  - Touches: NX-6; `RotationTriggerService.kt`, manifest property text, Settings rotation copy, fastlane/release policy notes, exact-alarm/WorkManager fallback decision.
-  - Acceptance: service runs only while user-enabled triggers are active; notification copy explains the active trigger; Play declaration text exists; exact-alarm alternative is scoped without silently adding a restricted permission.
-  - Verify: toggle unlock/screen-off triggers on/off; inspect foreground notification; Android 14+ background/doze manual pass; Play policy declaration reviewed by owner before submission.
-  - Completed 2026-06-07: Cycle 152 added a checked policy packet for the `specialUse` service type, manifest subtype, source safeguards, Settings opt-in terms, Play Console declaration text, owner demo-video evidence action, and verify/release workflow wiring. The owner still must archive Play Console declaration evidence before Play production.
-
-- [~] 🤖 🔬 **P1 — Source provenance panel + community report queue**
-  - Why: Aura aggregates third-party content and hosts community uploads. It already stores source URLs/uploader/license fields, but users need consistent provenance, and moderators need a report intake that does not rely on public comments or ad hoc downvotes.
-  - Evidence: `Mappers.kt` maps `sourcePageUrl`/`uploaderName`, `WallpaperDetailScreen.kt` and `SoundDetailScreen.kt` show source fields; Pexels/Pixabay expose creator/source metadata; YouTube branding guidance calls for clear source attribution in mixed-source apps; Zedge requires account + metadata for uploads.
-  - Touches: T-E / N-2; models/entities, `WallpaperDetailScreen.kt`, `SoundDetailScreen.kt`, RTDB moderation/report queue, rules, licenses screen.
-  - Acceptance: every detail screen has compact source/provenance affordance; community entries have a report action; reports are App-Checked/authenticated; admins can resolve/hide/unhide through Custom Claim rules.
-  - Verify: manual detail-screen pass by source (Pexels/Pixabay/Reddit/YouTube/community/bundled); Firebase rules tests for report/create/read and admin resolution.
-  - Progress 2026-06-07: Cycle 51 added private report payload validation, `CommunityReportRepository`, `/community_reports` and `/community_report_resolutions` rules, sound/wallpaper detail report dialogs, ViewModel report submission with source/license/uploader context, and `docs/support/community-reporting.md`. Cycle 52 added the admin-only open report queue, Settings navigation, report status index, and Hide/Dismiss/Restore actions wired to `/moderation/{contentId}` plus resolution metadata. Cycle 53 installed App Check providers client-side and documented the monitor-before-enforcement path. Cycle 54 defined the report quota policy and protected backend ledger namespaces. Cycle 56 added owner-gated visible delete actions for new community sound and wallpaper uploads that have Cycle 55 deletion handles. Cycle 60 added private rights-confirmed takedown receipts tied to current upload deletion handles. Cycle 62 added admin status filters for Hidden, Dismissed, and Restored closed-report review. Cycle 63 defined the `submitCommunityReport` callable contract with Auth, App Check, limited-use token, quota ledger, dedupe ledger, and final report write requirements. Cycle 91 added a machine-checked callable contract manifest covering all community write surfaces. Cycle 94 added the first handler-backed `submitCommunityReport` Functions implementation with focused accepted, duplicate, quota, Auth, and App Check tests. Cycle 95 added the handler-backed `recordCommunityVote` Functions implementation with existing-vote idempotency, quota, dedupe, Auth, and App Check tests. Cycles 101-107 added RTDB-emulator-backed callable handler persistence tests for profile, report, vote, follow, user block, sound upload, and wallpaper upload writes. Cycle 108 added Android callable-first report submission. Cycle 109 added Android callable-first vote submission. Cycle 110 added Android callable-first follow/unfollow submission. Cycle 111 added Android callable-first block/unblock submission. Cycle 112 added Android callable-first sound upload metadata finalization. Cycle 113 added Android callable-first wallpaper upload metadata finalization. Cycle 114 added Android callable-first profile edits. Cycle 115 added checked Android callable wire-protocol coverage. Remaining work: add live callable invocation evidence, deploy evidence, and direct-rule tightening.
-
-- [ ] 🤖 🔬 **P2 — Video wallpaper playlists and per-video behavior profiles**
-  - Why: Aura has local video import, Fit/Fill, crop, thumbnails, Smart Crop, and battery dashboard, but users with multiple clips still apply one video at a time. Focused FOSS video-wallpaper competitors now expose playlists, shuffle/loop, smart start times, and one-shot behavior.
-  - Evidence: UndeadWallpaper feature set; Aura `VideoWallpapersScreen`, `VideoCropScreen`, and `VideoWallpaperService` already own the core local-video primitives.
-  - Touches: NX-1 after GL/AGSL/ExoPlayer engine migration; Room migration, video ViewModel, video wallpaper engine, Settings/apply sheet.
-  - Acceptance: users can create a video wallpaper profile with ordered clips, shuffle/loop/one-shot, per-clip crop/fit/FPS, missing-media recovery, and low-battery FPS cap.
-  - Verify: create/reorder/delete playlist, apply it, reboot, test unlock behavior, delete one media URI, verify graceful fallback and battery cap.
+All items shipped or moved to Roadmap_Blocked.md.
 
 ---
 
 ## 🔬 Researcher Queue (Cycle 2 — 2026-06-04)
 
-Append-only Cycle 2 handoff. Every item below is source-backed in `docs/research/cycle-2-2026-06-04.md`; merge into the existing Now/Next/Later item named in `Touches` when implementation starts.
-
-- [x] 🤖 🔬 **P0 — Release workflow must publish signed release APKs, not debug APKs** — shipped 2026-06-04 (`release.yml` signed `assembleRelease`, debuggable guard, `apksigner`, SHA-256 checksums, release-note fingerprint, `docs/distribution/release-signing.md`).
-  - Why: The tag-triggered release workflow is named "Build & Release APK", but it runs `assembleDebug` and uploads from `app/build/outputs/apk/debug`. GitHub/Obtainium users need a signed, non-debuggable release artifact.
-  - Evidence: `.github/workflows/release.yml:37-44`; Android command-line docs distinguish debug APKs from release builds and say release builds should be signed; `apksigner` can verify APK signatures and certificate fingerprints.
-  - Touches: NX-8; `.github/workflows/release.yml`, signing docs, GitHub release template, `obtainium.json`, future per-ABI split outputs.
-  - Acceptance: tag workflow builds signed release/universal plus any split APKs; fails if the uploaded APK is debuggable; runs `apksigner verify --print-certs`; publishes SHA-256 checksums and versionCode/versionName; release notes identify the signing certificate fingerprint.
-  - Verify: dry-run tag on a non-public test tag or workflow_dispatch; install/update through Obtainium; compare checksum from release notes; confirm `android:debuggable=false`.
-
-- [x] 🤖 🔬 **P0 — Decide full-vs-foss distribution flavor before F-Droid work** — shipped 2026-06-04 (`docs/distribution/channel-strategy.md`, `tools/fdroid_preflight.py`). Decision: keep the full build for GitHub/Obtainium/Izzy; block F-Droid mainline until a real `foss` flavor removes or isolates Firebase, Google Services, and Play Services ML Kit.
-  - Why: Aura wants F-Droid/Izzy/GitHub distribution, but current dependencies include Firebase, Google Services, Play Services ML Kit, and no product flavors. F-Droid mainline eligibility is not credible until proprietary dependency boundaries are explicit.
-  - Evidence: `app/build.gradle.kts:10`, `app/build.gradle.kts:201-204`, `app/build.gradle.kts:223`, `app/build.gradle.kts:226`; F-Droid policy/FAQ says F-Droid cannot build apps that depend on proprietary Google/Firebase libraries.
-  - Touches: NX-8, N-2, N-3, Cycle 1 App Check item; build flavors, source sets, DI boundaries, community upload/vote feature flags, segmentation fallback.
-  - Acceptance: documented matrix for GitHub/Obtainium/Izzy/F-Droid; `full` keeps Firebase/community/App Check; `foss` either disables those surfaces or swaps acceptable dependencies; CI proves selected variants; F-Droid metadata is blocked until the matrix is resolved.
-  - Verify: `assembleFullRelease` and `assembleFossRelease` or an explicit documented decision not to pursue F-Droid mainline; dependency tree review for the FOSS flavor; Izzy/F-Droid preflight notes.
-
-- [x] 🤖 🔬 **P1 — Add a supply-chain verification lane** — shipped 2026-06-04 (`actions/attest@v4` release attestations, Dependency Review PR workflow, OpenSSF Scorecard SARIF workflow, `gradle/verification-metadata.xml`, `docs/distribution/supply-chain.md`).
-  - Why: A side-loaded personalization app needs dependency and artifact provenance beyond a GitHub release asset link, especially with extractor/native/FFmpeg-style dependencies.
-  - Evidence: source search found no `gradle/verification-metadata.xml`, dependency locking, Dependency Review, OpenSSF Scorecard, SBOM, artifact attestation, or checksum publication; Gradle and GitHub docs provide these controls.
-  - Touches: NX-8, NX-12, N-1; Gradle verification metadata, GitHub workflow permissions, Dependency Review, OpenSSF Scorecard, release checksum/attestation generation, SBOM plan.
-  - Acceptance: dependency checksum metadata committed; PRs run dependency/license review and Scorecard; release artifacts publish SHA-256 files and GitHub artifact attestations; SBOM scope is documented even if generation is deferred.
-  - Verify: dependency-change PR triggers review; Gradle fails on checksum drift; GitHub release shows checksums and attestation; Scorecard result is visible to maintainers.
-
-- [x] 🤖 🔬 **P1 — Opt-in crash/ANR diagnostics bundle** — shipped 2026-06-04 (`CrashDiagnosticsCollector`, Settings Copy/Share dialog, crash report issue template, `docs/support/crash-diagnostics.md`).
-  - Why: Aura avoids automatic analytics, but GitHub/Obtainium/F-Droid users still need a way to send actionable crash evidence after release-only issues.
-  - Evidence: `FreeVibeApp.kt` writes a local `filesDir/crash.log`; no Crashlytics/Sentry dependency was found; Android vitals/Play crash dashboards are Play-centric and not enough for non-Play installs.
-  - Touches: Settings diagnostics, issue template, local crash-log export, support docs.
-  - Acceptance: Settings exposes last crash timestamp and a "copy/export diagnostics" action; bundle includes app version, Android version, ABI, active source/provider, sanitized crash log tail, and reproduction fields; nothing uploads automatically.
-  - Verify: synthetic crash writes log; export redacts paths/tokens/API keys; issue template accepts bundle; network monitor confirms no automatic upload.
+All items shipped or moved to Roadmap_Blocked.md.
 
 ---
 
 ## 🔬 Researcher Queue (Cycle 3 — 2026-06-04)
 
-Append-only Cycle 3 handoff. Every item below is source-backed in `docs/research/cycle-3-2026-06-04.md`; merge into the existing Now/Next/Later item named in `Touches` when implementation starts.
-
-- [x] 🤖 🔬 **P1 — Pexels usage guardrail and fallback plan**
-  - Why: Pexels specifically rejects standalone wallpaper/gallery API replication. Aura must prove Pexels is an enhancement source, not the product's core inventory.
-  - Evidence: Pexels API wallpaper-app guidance; Aura uses Pexels in wallpaper/video discovery and style-biased feeds.
-  - Touches: wallpaper/video source weights, onboarding defaults, provider copy, source detail attribution, fallback source selection.
-  - Acceptance: Pexels is not the sole or default required source for any first-run flow; Pexels results always show source/creator context in search/detail; provider can be disabled remotely/configurably without breaking feeds; docs explain the allowed enhancement use case.
-  - Verify: turn off Pexels and run Wallpapers/Videos first-run; source badges/links visible; no auto-rotation defaults depend only on Pexels.
-  - Completed 2026-06-06: Cycle 47 added Discover and video-wallpaper enhancement guards so Pexels-only batches are dropped unless non-Pexels base inventory is present. Focused tests prove disabled-Pexels Discover still returns Wallhaven/Pixabay, Pexels API calls are skipped, Pexels photo rows keep creator/source-page metadata, and video batches keep Pexels only when Pixabay/Reddit/YouTube-style fallback inventory is present. `docs/research/cycle-47-2026-06-06.md` records the checked Pexels policy source.
-
-- [x] 🤖 🔬 **P1 — YouTube legal-mode/offline-risk switch**
-  - Why: Aura's YouTube feature set searches, resolves, caches, and downloads audio/video through NewPipe/yt-dlp, while YouTube's official policy is restrictive around undocumented access, downloads, caching, offline playback, and background playback.
-  - Evidence: `YouTubeRepository.kt` NewPipe/yt-dlp stream extraction; `VideoWallpapersViewModel.kt` yt-dlp download path; YouTube API developer policies.
-  - Touches: YouTube repository abstraction, Sounds YouTube tab, video wallpaper YouTube source, Settings provider toggles, distribution docs, issue templates.
-  - Acceptance: distributor can disable YouTube features; first-run does not require YouTube; UI clearly labels YouTube as optional; fallback sources remain useful; no YouTube download/cache happens when legal mode disables it.
-  - Verify: disable YouTube and run Sounds/Videos; bundled sound and community paths still work; source metrics record disabled state separately from provider outage.
-
-- [~] 🤖 🔬 **P2 — Source deletion and takedown reconciliation**
-  - Why: Reddit and other user-generated sources can delete, hide, suspend, or remove content after Aura cached it.
-  - Evidence: Reddit developer terms require handling removed/deleted/protected content; Aura stores Reddit permalinks and authors and can cache favorites/downloads.
-  - Touches: detail reload paths, favorites/download metadata, source health, report queue from Cycle 1, cache cleanup.
-  - Acceptance: source-deleted content stops appearing in remote catalog; favorites/downloads show unavailable/source-deleted state; user can remove local copy; moderator/report queue can hide community mirrors of removed content.
-  - Verify: simulate source reload failure/deleted marker; favorite remains navigable but not misrepresented as live remote content; report queue accepts removal reason.
-  - Progress 2026-06-06: Cycle 46 added Room-backed `sourceAvailability`/`sourceAvailabilityReason` metadata for favorites and download history, v15 migration/schema, favorite export/import preservation, provider source names in new download records, and UI badges/detail warnings that hide live-source affordances when saved items are marked source-unavailable. Cycle 48 added a shared remote-gone classifier for explicit 404/410/gone/removed/deleted failures and wired wallpaper/sound apply/download paths plus download history to mark saved records `SOURCE_UNAVAILABLE`. Remaining work: provider catalog reload pruning and community moderation/report queue integration.
+All items shipped or moved to Roadmap_Blocked.md.
 
 ---
 
 ## 🔬 Researcher Queue (Cycle 4 — 2026-06-04)
 
-Append-only Cycle 4 handoff. Every item below is source-backed in `docs/research/cycle-4-2026-06-04.md`; merge into the existing Now/Next/Later item named in `Touches` when implementation starts.
-
-- [ ] 🤖 🔬 **P0 — Community upload public-data lifecycle and deletion workflow**
-  - Why: Community sounds/wallpapers and collection shares are public-readable, and upload metadata includes Firebase download URLs, uploader labels/IDs, file names, tags, and categories. Users need to know uploads are public and need removal controls.
-  - Evidence: `database.rules.json` public reads; `UploadRepository.kt` public download URL metadata; Firebase rules guidance; Cycle 1 report queue and Cycle 3 takedown items.
-  - Touches: upload dialogs, RTDB rules, Storage metadata, creator profile repository, report queue, `docs/privacy/community-data.md`.
-  - Acceptance: upload flow says content and metadata become public; metadata excludes unnecessary original filenames or clearly justifies them; owner field names are consistent; users can delete their uploads or request removal; admin moderation hides public catalog entries and has retention notes.
-  - Verify: Firebase rules tests for owner delete/admin hide/public read; upload/delete manual pass; public catalog no longer exposes unneeded metadata; removal path documented in privacy policy.
-  - Progress 2026-06-06: Cycle 55 added `storagePath` metadata for new sound/wallpaper uploads, private `/owner_uploads/{uid}` indexes, owner repository delete methods, RTDB owner-index rules, and `docs/community-upload-deletion.md`. Cycle 56 added owner-visible detail delete actions. Cycle 57 added tracked Storage rules plus emulator tests for owner-only blob create/delete, public reads, MIME/size ceilings, and unmanaged-path denial. Cycle 58 added RTDB emulator tests for public metadata reads, owner creates/deletes, owner-index privacy, report authorization, quota ledgers, and collection shares. Cycle 60 added private admin takedown receipts that must match current upload `storagePath` handles. Cycle 61 added confirmed admin delete actions that consume those receipts, remove Storage and metadata rows, and record retry state. Cycle 65 added Storage orphan cleanup policy. Cycle 66 added `tools/community_upload_backfill_plan.py`, tests, and `docs/community-upload-backfill.md` for dry-run legacy `storagePath` and owner-index backfill planning. Cycle 67 added private owner/admin deletion tombstones plus `docs/community-deletion-retention-policy.md`. Remaining work: public request copy and live backfill evidence after owner access is confirmed.
-
-- [~] 🤖 🔬 **P1 — Android 17 Contact Picker and contacts-permission minimization**
-  - Why: Per-contact ringtone assignment requests broad contacts read/write permissions immediately on screen entry. Android 17 provides a picker that gives selected-contact read access without broad address-book access.
-  - Evidence: `ContactPickerScreen.kt` immediate `READ_CONTACTS`/`WRITE_CONTACTS` launcher; Android 17 Contact Picker docs; Play User Data contact restrictions.
-  - Touches: `ContactPickerScreen`, `ContactRingtoneService`, permission copy, Settings privacy screen, API 37 test plan.
-  - Acceptance: API 37+ uses system Contact Picker for contact selection; broad read contacts permission is not requested before the user selects a contact; write permission is requested only when needed to set the ringtone; older devices retain a just-in-time fallback.
-  - Verify: API 37 picker flow; API 35 fallback flow; deny read/write permissions and confirm app degrades to "choose another apply target"; no automatic prompt on screen entry.
-  - Progress 2026-06-11: Removed the broad `READ_CONTACTS` manifest permission and replaced screen-entry read/write prompts with Android system contact-pick selection plus just-in-time `WRITE_CONTACTS` at ringtone apply. Remaining work: API 37 device/emulator verification and any direct Android 17 Contact Picker API cleanup after the compile-SDK uplift.
+All items shipped or moved to Roadmap_Blocked.md.
 
 ---
 
 ## 🔬 Researcher Queue (Cycle 5 — 2026-06-04)
 
-Append-only Cycle 5 handoff. Every item below is source-backed in `docs/research/cycle-5-2026-06-04.md`; merge into the existing Now/Next/Later item named in `Touches` when implementation starts.
-
-- [ ] 🤖 🔬 **P1 — 200% font, display-size, and contrast audit**
-  - Why: Android 14 supports 200% nonlinear font scaling. Aura's dense chips, cards, overlays, bottom sheets, and editor timelines may clip or overlap at large fonts.
-  - Evidence: Android 14 nonlinear font-scaling docs; Android touch-target and color-contrast guidance; Aura compact UI/search findings.
-  - Touches: typography/layout constraints, chip/card rows, bottom sheets, dialogs, editor controls, Material color roles, screenshot QA.
-  - Acceptance: primary flows remain usable at 200% font and large display size; controls keep at least 48 dp touch targets where feasible; critical text/icon contrast passes scanner thresholds; no text overlaps controls.
-  - Verify: manual screenshots at 200% font; Accessibility Scanner contrast/touch-target results; dark/light/high-contrast pass.
-
-- [ ] 🤖 🔬 **P2 — Widget and live-wallpaper accessibility/localization coverage**
-  - Why: Widgets and live-wallpaper picker metadata are not covered by normal Compose screen traversal but are visible entry points for Aura.
-  - Evidence: `FreeVibeWidget.kt`, `freevibe_widget_info.xml`, live-wallpaper XML metadata; Android Accessibility Scanner manual workflow.
-  - Touches: Glance widget copy/actions, keyguard widget state, live-wallpaper labels/descriptions, launcher/picker QA.
-  - Acceptance: widget actions have localized labels and useful spoken descriptions; live-wallpaper picker labels/descriptions are localized; keyguard widget and launcher widget remain usable at large font/display settings.
-  - Verify: add widget, keyguard placement where available, trigger widget actions, inspect picker labels, run scanner/manual TalkBack pass.
+All items shipped or moved to Roadmap_Blocked.md.
 
 ---
 
 ## 🔬 Researcher Queue (Cycle 6 — 2026-06-04)
 
-Append-only Cycle 6 handoff. Every item below is source-backed in `docs/research/cycle-6-2026-06-04.md`; merge into the existing Now/Next/Later item named in `Touches` when implementation starts.
-
-- [ ] 🤖 🔬 **P2 — Managed storage ledger and cache cleanup policy**
-  - Why: Aura stores previews, offline favorites, edited audio, generated wallpapers, live wallpaper media, share artifacts, downloads, and provider metadata across several directories and MediaStore.
-  - Evidence: `AudioPreviewCache` 48 MB, offline favorites 512 MB, `file_paths.xml`, Settings cache cleanup copy, backup rules from Cycle 4.
-  - Touches: Settings storage screen, cache managers, backup/privacy docs, release QA.
-  - Acceptance: `docs/privacy/storage-ledger.md` lists each directory/store, budget, retention, backup status, user cleanup action, and uninstall behavior; Settings cleanup copy matches actual behavior.
-  - Verify: smoke-run all media flows, list files/directories, run clear cache, confirm retained/deleted state matches the ledger.
+All items shipped or moved to Roadmap_Blocked.md.
 
 ---
 
 ## 🔬 Researcher Queue (Cycle 7 — 2026-06-04)
 
-Append-only Cycle 7 handoff. Every item below is source-backed in `docs/research/cycle-7-2026-06-04.md`; merge into the existing Now/Next/Later item named in `Touches` when implementation starts.
-
-- [x] 🤖 🔬 **P0 — AI generation disclosure and consent gate** — shipped 2026-06-07 (Cycle 133; persisted prompt/privacy disclosure before Stability requests).
-  - Why: Aura sends user prompts to Stability AI, uses the user's API key and credits, stores generated PNGs locally, and stores prompt-derived metadata when saved.
-  - Evidence: `AiWallpaperRepository.generate()` multipart prompt/API-key call; `AiWallpaperViewModel.saveToFavorites()` prompt-derived favorite name; Stability API key and credit docs; Stability Acceptable Use Policy.
-  - Touches: `AiWallpaperScreen`, Settings API-key card, Settings privacy screen, `docs/privacy/ai-generation.md`, release privacy checklist.
-  - Acceptance: first AI generation shows a concise disclosure before the network call; disclosure covers prompt sharing, key/credit use, local storage, retention/deletion, and Stability policy boundaries; user can review it later in Settings.
-  - Verify: first-run disclosure appears once; deny/cancel does not call Stability; accepted state persists; Settings reset/review works; privacy docs and Data safety matrix include prompt sharing and generated-image storage.
-  - Progress 2026-06-07: Cycle 133 added a DataStore-backed generated-content disclosure flag, blocked generation until prompt, key, and disclosure acceptance are present, added a shared disclosure dialog for the generated wallpaper flow and Settings review/reset path, and documented prompt sharing, provider key/credit use, local generated-image storage, diagnostics redaction expectations, and release checklist in `docs/privacy/ai-generation.md`.
-
-- [x] 🤖 🔬 **P0 — AI-generated content report/flag path** — shipped 2026-06-07 (Cycle 134; generated result and favorite report actions).
-  - Why: Google Play requires AI-generating apps to include in-app reporting or flagging for offensive generated content without requiring users to exit the app.
-  - Evidence: Google Play AI-generated content policy; Aura has text-to-image generation and no report/flag action on generated results or saved AI favorites.
-  - Touches: AI result screen, Favorites detail actions, report storage/diagnostics path, moderation/report docs, privacy policy.
-  - Acceptance: generated AI wallpapers and saved AI favorites expose a report/flag action; report categories cover offensive/unsafe/deceptive/other; reports do not include the user's API key; release docs define retention and moderation response.
-  - Verify: generate result -> report; saved favorite -> report; report survives process restart if local; report export/redaction path omits keys; Play policy checklist has an AI report row.
-  - Progress 2026-06-07: Cycle 134 added generated-content report reasons, exposed report actions on generated wallpaper results and saved generated wallpaper detail views, allowed `AI_GENERATED` reports independently of the Community source switch, extended the `submitCommunityReport` callable reason allowlist, and documented generated-report retention, moderation response, and provider-key/local-path exclusions.
-
-- [x] 🤖 🔬 **P1 — BYO Stability key hardening and release guard** — shipped 2026-06-07 (Cycle 135; Stability paid-secret sentinel guard).
-  - Why: User-supplied keys are appropriate, but release builds should not accidentally ship a bundled Stability key, and stored keys should have a documented security posture.
-  - Evidence: `BuildConfig.STABILITY_AI_KEY` from `local.properties`; `PreferencesManager.stabilityAiKey` DataStore flow; Android security guidance on source-code API keys and Keystore.
-  - Touches: release preflight, `docs/privacy/API-key-storage.md`, Settings key UI, diagnostics redaction test, optional encrypted-storage migration plan.
-  - Acceptance: release verification fails on nonblank bundled `STABILITY_AI_KEY` unless explicitly marked internal; docs explain where keys are stored and excluded from backup; diagnostics and reports redact all provider keys; encryption migration decision is recorded.
-  - Verify: static/release-preflight test with blank and nonblank keys; diagnostics export key-redaction fixture; backup/data-extraction matrix still excludes key storage.
-  - Progress 2026-06-07: Cycle 135 extended the provider credential storage guard with an exact `stability-ai-key` sentinel requiring DataStore-backed `paidSensitiveSecret` classification, blank `STABILITY_AI_KEY` / `stability.ai.key` release defaults, explicit Clear control documentation, `stability.ai.key` redaction coverage, and the recorded no-Keystore migration decision.
-
-- [x] 🤖 🔬 **P1 — AI credit, rate-limit, and duplicate-generation guardrails** — shipped 2026-06-07 (Cycle 136; session count and duplicate confirmation).
-  - Why: Stability requests consume credits, pricing can change, and repeat taps or retries can spend user-owned credits unexpectedly.
-  - Evidence: Stability pricing docs; Aura handles 402/429 after the fact; `cancelGeneration()` warns cancellation may not refund once provider billing has started.
-  - Touches: `AiWallpaperViewModel`, AI screen state, Settings/provider docs, local generation history.
-  - Acceptance: UI states one request may spend provider credits; active generation disables duplicate submits; retrying the same prompt/style after a recent success requires confirmation; optional local session/day count is visible; 402/429 messages link to the right provider action.
-  - Verify: rapid taps create one request; same prompt retry asks confirmation; 402/429 tests still map cleanly; cancel copy does not imply refunds.
-  - Progress 2026-06-07: Cycle 136 added ViewModel-level in-flight request rejection, session request counting, same prompt/style duplicate confirmation after a successful generation, Stability account/cooldown copy for 402/429 errors, generated wallpaper disclosure updates, and focused JVM coverage for the request gates and provider error copy.
-
-- [x] 🤖 🔬 **P1 — Prompt metadata retention and deletion policy** — shipped 2026-06-07 (Cycle 137; prompt-free generated favorites and file cleanup).
-  - Why: Aura stores prompt snippets in favorite names and prompt words in tags, which can preserve sensitive user text even after the generated image is no longer visible.
-  - Evidence: `AiWallpaperRepository` mines five prompt words for tags; `AiWallpaperViewModel.saveToFavorites()` stores `AI: ${prompt.take(60)}`; Cycle 4 privacy matrix covers local user content.
-  - Touches: favorite naming, tag creation, AI deletion flow, privacy/storage ledgers, Room migration if metadata fields change.
-  - Acceptance: prompt-derived metadata is opt-in or easy to clear; deleting an AI wallpaper removes generated file and prompt-derived favorite/tag metadata; privacy docs classify prompts as local sensitive user content and third-party-shared request content.
-  - Verify: save with sensitive prompt; clear/delete flow removes prompt text from Room and generated file; search no longer finds deleted prompt words; backup matrix matches behavior.
-  - Progress 2026-06-07: Cycle 137 stopped mining prompt words into generated wallpaper tags, saved generated favorites with the generic `Generated wallpaper` name and safe non-prompt tags only, deleted app-private generated PNGs when generated favorites are removed after the Undo window, added focused prompt-retention and generated-file cleanup tests, and updated generated wallpaper privacy docs.
-
-- [x] 🤖 🔬 **P2 — On-device AI wallpaper decision gate** — shipped 2026-06-07 (Cycle 139; evidence packet and verify-time guard).
-  - Why: Local generation could improve privacy and cost control, but it has unresolved hardware, battery, storage, licensing, and moderation constraints.
-  - Evidence: U-2/U-14 roadmap notes; Qualcomm/local-dream references in Appendix D; Stability hosted generation currently shipped.
-  - Touches: U-2 research, model licensing notes, performance/battery test plan, FOSS flavor strategy.
-  - Acceptance: revisit criteria list required device baseline, model size, expected latency, battery/thermal budget, license compatibility, moderation/report behavior, and fallback to hosted/BYO mode.
-  - Verify: no on-device generation implementation starts without meeting the criteria; any prototype includes battery/profile evidence and license review.
-  - Progress 2026-06-07: Cycle 139 added `docs/ai/on-device-wallpaper-decision.json`, `docs/ai/on-device-wallpaper-decision.md`, `tools/on_device_ai_decision_check.py`, focused backend tests, and verify workflow wiring. The current decision is `hold`, Stability BYO-key generation remains the only supported generation path, and production on-device runtime dependencies or model artifacts are blocked until the evidence criteria are met.
+All items shipped or moved to Roadmap_Blocked.md.
 
 ---
 
 ## 🔬 Researcher Queue (Cycle 8 — 2026-06-04)
 
-Append-only Cycle 8 handoff. Every item below is source-backed in `docs/research/cycle-8-2026-06-04.md`; merge into the existing Now/Next/Later item named in `Touches` when implementation starts.
-
-- [~] 🤖 🔬 **P0 — Store listing metadata preflight**
-  - Why: Aura's committed short description is 81 characters, while Google Play's limit is 80 characters, and there is no automated check for title/description/changelog/listing asset limits.
-  - Evidence: `fastlane/metadata/android/en-US/short_description.txt`; Google Play preview asset docs; Google Play metadata policy.
-  - Touches: `tools/store_metadata_preflight.*`, fastlane metadata, release checklist, CI/release workflow.
-  - Acceptance: preflight checks title <=30, short description <=80, full description present, current versionCode changelog present, no stale FreeVibe naming, required privacy URL placeholder present, and required screenshot/feature-graphic files present.
-  - Verify: run preflight against current metadata and see the known short-description/screenshot/privacy failures; fix metadata later and confirm the preflight passes.
-  - Progress 2026-06-07: Cycle 138 added `tools/store_metadata_preflight.py`, focused backend tests, verify/release workflow text-mode enforcement, release workflow policy coverage, a Play-compliant short description, and a public privacy-policy URL in Fastlane metadata. Asset validation mode is implemented and tested, but the screenshot/feature-graphic requirement remains open under the P1 screenshot and feature-graphic pipeline because the repo still has only one current screenshot artifact.
-
-- [x] 🤖 🔬 **P0 — Public privacy policy and in-app privacy link** — shipped 2026-06-07 (Cycle 140; Settings link and release gate).
-  - Why: Google Play requires a privacy-policy link in Play Console and a privacy-policy link or text in the app for every app; Aura has no tracked `docs/privacy` policy document today.
-  - Evidence: Cycle 4 privacy inventory; Cycle 7 AI prompt/key findings; Cycle 88 privacy policy; Google Play User Data and Data safety policy docs.
-  - Touches: `docs/privacy/privacy-policy.md`, Settings privacy screen, README, distribution docs, release checklist.
-  - Acceptance: policy covers developer/contact, data types, collection/sharing, third-party services, sensitive permissions, local storage, retention/deletion, community uploads, AI prompts, diagnostics, and no-sale/no-ads/no-tracking claims; public non-PDF URL plan exists; Settings links it.
-  - Verify: privacy policy rows reconcile with Data safety matrix; app link opens; release checklist blocks missing URL/text.
-  - Progress 2026-06-07: Cycle 88 added `docs/privacy/privacy-policy.md`; Cycle 140 added Settings > About > Privacy policy, README privacy copy, `docs/privacy/privacy-policy-link.json`, `tools/privacy_policy_link_check.py`, focused backend tests, verify/release workflow gates, and release-doc/security-policy coverage for the public URL.
-
-- [x] 🤖 🔬 **P0 — Play app-content declaration packet** — shipped 2026-06-07 (Cycle 145; checked owner-ready packet with explicit owner actions).
-  - Why: Aura's public community uploads, AI generation, contacts, weather location, microphone recording, and third-party provider calls affect Play forms and reviewer expectations.
-  - Evidence: community upload metadata, AI generation, contacts/weather/microphone permissions; Google Play Data safety, content rating, UGC, and AI-generated-content policies.
-  - Touches: `docs/distribution/play-app-content.md`, Data safety matrix, content rating notes, target audience decision, permissions justification, UGC/AI report queue docs.
-  - Acceptance: one owner-ready document covers Data safety answers, content rating questionnaire notes, target audience, ads declaration, app access instructions, UGC moderation/report/block flow, AI-generated-content reporting, and sensitive-permission justifications.
-  - Verify: owner can walk Play Console App content forms from the doc; every sensitive permission and user-generated/AI-generated feature has a row; no "unknown" rows remain before Play submission.
-  - Progress 2026-06-07: Cycle 145 added `docs/distribution/play-app-content.md`, `docs/distribution/play-app-content.json`, `tools/play_app_content_packet_check.py`, focused tests, verify/release workflow gates, release-doc coverage, and explicit owner actions for hosted deletion URL publication, UGC terms/guidelines consent, live content rating questionnaire completion, and App content receipt capture. Cycle 146 implemented the UGC guidelines consent action with versioned policy storage, shared consent UI, community repository/UI gates, `docs/legal/community-guidelines.md`, and `tools/community_guidelines_consent_check.py`; remaining owner actions are hosted deletion URL publication, live content rating questionnaire completion, and App content receipt capture.
-
-- [ ] 🤖 🔬 **P1 — Screenshot and feature-graphic pipeline**
-  - Why: Aura has one root screenshot and no committed fastlane screenshot directories or feature graphic; Play requires at least two screenshots and a feature graphic and recommends four phone screenshots.
-  - Evidence: `screenshot.png` 1080x2340; `app/src/main/ic_launcher-playstore.png` 512x512; no tracked `fastlane/metadata/android/en-US/images`; Google Play preview asset docs; F-Droid metadata docs.
-  - Touches: screenshot capture script/runbook, `fastlane/metadata/android/en-US/images/phoneScreenshots/`, feature graphic asset, alt-text notes, release checklist.
-  - Acceptance: at least four current 9:16 phone screenshots cover Wallpapers, Videos, Sounds/editor, and Settings/Favorites/community; feature graphic exists; assets avoid stale device frames, third-party trademarks, Play badges, and sensitive user content; alt text is documented.
-  - Verify: image-dimension preflight; manual visual review; fastlane metadata includes expected files; README screenshot and store screenshots do not drift.
-  - Progress 2026-06-07: Cycle 150 added `docs/distribution/store-assets.md`, `docs/distribution/store-assets.json`, `tools/store_asset_pipeline_check.py`, focused tests, verify/release workflow gates, release metadata/security workflow policy coverage, and release-doc/README coverage. The checked status is `capturePending`; actual Fastlane screenshots and feature graphic remain open before `tools/store_metadata_preflight.py --repo-root . --require-assets --min-phone-screenshots 4` can become mandatory.
-
-- [x] 🤖 🔬 **P1 — Alternative-store anti-feature and permission disclosure matrix** — shipped 2026-06-07 (Cycle 147; checked channel/anti-feature/permission/network/dependency packet).
-  - Why: Aura is full-only today and uses Firebase, Google Services, Play Services ML Kit, YouTube extraction, and third-party network services. IzzyOnDroid/F-Droid-style users need explicit disclosure.
-  - Evidence: `docs/distribution/channel-strategy.md`; `tools/fdroid_preflight.py`; F-Droid inclusion and anti-feature docs; IzzyOnDroid APK/security notes.
-  - Touches: `docs/distribution/channel-strategy.md`, `docs/distribution/alt-store-metadata.md`, Izzy submission notes, README, fastlane full description.
-  - Acceptance: each channel lists artifact source, signing/checksum, license, proprietary dependencies, network services, sensitive permissions with purpose, AI key behavior, UGC moderation, and likely anti-feature labels; F-Droid mainline remains blocked until the FOSS flavor criteria pass.
-  - Verify: run F-Droid preflight; compare APK manifest permissions against the disclosure matrix; owner can paste Izzy-sensitive-permission explanations without re-researching.
-  - Progress 2026-06-07: Cycle 147 added `docs/distribution/alt-store-metadata.md`, `docs/distribution/alt-store-metadata.json`, `tools/alt_store_metadata_check.py`, focused tests, verify/release workflow gates, release-doc coverage, and README/channel-strategy links. The matrix covers GitHub Releases, Obtainium, IzzyOnDroid, F-Droid mainline blocked state, NonFreeDep/NonFreeNet/Tracking/Ads/TetheredNet notes, all 15 manifest permissions, all 15 reviewed network endpoint IDs, and 8 proprietary dependency markers.
-
-- [x] 🤖 🔬 **P2 — Release metadata consistency gate** — shipped 2026-06-07 (Cycle 148; checked package/version/Fastlane/README/privacy/release artifact consistency).
-  - Why: README, fastlane metadata, changelogs, generated GitHub release notes, privacy docs, and Play/Data safety answers can drift from shipped behavior.
-  - Evidence: release workflow generates artifact-only notes; fastlane changelog exists for 112; Cycle 4/7/8 docs add privacy and AI policy rows.
-  - Touches: release checklist, preflight script, docs/distribution, changelog workflow, README.
-  - Acceptance: release checklist requires current versionName/versionCode, changelog, README claim review, privacy/Data safety review, store metadata review, screenshot review, and alt-store disclosure review before tag publishing.
-  - Verify: dry-run metadata preflight on current tree; intentional stale version/changelog fixture fails; tag release notes still include signing/provenance data.
-  - Progress 2026-06-07: Cycle 148 added `docs/distribution/release-metadata-consistency.md`, `docs/distribution/release-metadata-consistency.json`, `tools/release_metadata_consistency_check.py`, focused tests, verify/release workflow gates, and release-doc/README coverage. The gate reconciles `app/build.gradle.kts`, Fastlane title/short/full/changelog text, README links, privacy URL, Play App content packet, alternative-store packet, release preflight commands, and expected GitHub release artifacts.
-
-- [x] 🤖 🔬 **P2 — SBOM readiness gate** — shipped 2026-06-07 (Cycle 149; checked deferred SBOM decision, current evidence floor, and future CycloneDX/SPDX scope).
-  - Why: Aura has dependency notice, native compliance, checksum, and attestation controls, but the SBOM generation decision was only a prose deferral and could drift before the N-1 toolchain upgrade.
-  - Evidence: `docs/distribution/supply-chain.md`; CycloneDX Gradle plugin docs; SPDX overview; GitHub artifact attestation docs.
-  - Touches: `docs/distribution/sbom-readiness.md`, release/verify workflows, release docs, supply-chain docs, README.
-  - Acceptance: current status stays `deferredUntilN1ToolchainUpgrade`; current evidence paths exist; future SBOM artifact names and scope are source-backed; verify/release workflows run the readiness check before Android build work.
-  - Verify: run `tools/sbom_readiness_check.py`; stale status, missing evidence path, missing future artifact, or missing workflow command fixtures fail.
-  - Progress 2026-06-07: Cycle 149 added `docs/distribution/sbom-readiness.md`, `docs/distribution/sbom-readiness.json`, `tools/sbom_readiness_check.py`, focused tests, verify/release workflow gates, release metadata/security workflow policy coverage, and release/supply-chain/README docs. SBOM generation remains deferred until N-1, but the release evidence floor and future artifact contract are now checked.
+All items shipped or moved to Roadmap_Blocked.md.
 
 ---
 
 ## 🔬 Researcher Queue (Cycle 9 — 2026-06-04)
 
-Append-only Cycle 9 handoff. Every item below is source-backed in `docs/research/cycle-9-2026-06-04.md`; merge into the existing Now/Next/Later item named in `Touches` when implementation starts.
-
-- [~] 🤖 🔬 **P0 — Firebase rules test and deploy harness**
-  - Why: Aura has tracked RTDB rules but no tracked Firebase deploy config, Storage rules file, emulator config, or rules test harness.
-  - Evidence: `database.rules.json`; missing `firebase.json`, `.firebaserc`, `storage.rules`, and rules-unit test files; Firebase Emulator Suite docs; Firebase RTDB/Storage rules docs.
-  - Touches: `firebase.json`, `.firebaserc` or documented project alias policy, `database.rules.json`, new `storage.rules`, rules tests, CI/release checklist, `docs/firebase-admin-claims.md`.
-  - Acceptance: emulator-backed tests cover public read, authenticated write, owner update/delete, admin moderation, votes/voters, reports, creator profiles, and collection shares; deploy and rollback commands are documented; CI or a release preflight runs the rules suite.
-  - Verify: rules tests fail on unauthenticated writes and non-owner updates; admin Custom Claim tests pass; `firebase emulators:exec` or equivalent command exits cleanly before deploy.
-  - Progress 2026-06-06: Cycle 57 added `firebase.json`, `storage.rules`, local npm rules-unit-testing scripts, `docs/firebase-rules-harness.md`, and Storage emulator tests for owner-only community upload blobs. Cycle 58 added the Database emulator config, RTDB rules tests, a combined `test:firebase-rules` script, deploy-compatible `database.rules.json` cleanup, and app-matched `shared_collections` rules. Cycle 59 added a path-gated `firebase-rules` job to the main `verify` workflow. Cycle 64 added `tools/community_backend_manifest.py`, `docs/community-backend-manifest.json`, CI manifest checking, and `docs/community-backend-runbook.md` with preflight, dry-run, deploy, rollback, and evidence steps. Remaining work: run and archive a real production-project dry run after owner access is confirmed.
-
-- [ ] 🤖 🔬 **P0 — Community owner field normalization and delete/takedown flow**
-  - Why: RTDB rules authorize owners through `uploaderUid`, while upload repositories write `uploaderId`; Aura cannot safely promise self-service delete/edit or owner-only metadata writes until this is consistent.
-  - Evidence: `database.rules.json`; `UploadRepository.kt`; `WallpaperUploadRepository.kt`; Cycle 4 community data lifecycle finding; Firebase Storage delete docs.
-  - Touches: upload metadata schema, migration/backfill plan, RTDB rules, Storage delete path, upload detail actions, privacy/community-data docs.
-  - Acceptance: one canonical owner field is used for sounds and wallpapers; existing metadata is migrated or dual-read safely; owners can delete their metadata and Storage object; admins can takedown content; failed blob/metadata deletes leave auditable retry state.
-  - Verify: owner delete removes feed item and Storage object; non-owner delete fails in rules tests; admin takedown hides/removes as designed; orphan retry path is exercised.
-  - Progress 2026-06-06: Cycle 55 kept `uploaderUid` as the rules-authoritative owner field for new upload delete methods, stored `storagePath`, wrote private owner indexes, and added owner-only repository deletes for new rows with deletion handles. Cycle 56 added visible owner actions. Cycle 57 added Storage rules tests for owner/admin blob deletion and cross-owner rejection. Cycle 58 added RTDB rules tests for owner metadata delete, admin metadata delete, owner-index privacy, and cross-owner rejection. Cycle 60 added rights takedown receipts that validate against current upload handles. Cycle 61 added admin delete actions with `STARTED`/`SUCCEEDED`/`FAILED` receipt state. Remaining work: legacy backfill and deletion retention/tombstone policy.
-
-- [~] 🤖 🔬 **P1 — Storage rules and orphan lifecycle cleanup**
-  - Why: Upload size/type/path checks currently live in app code, but Storage needs server-side enforcement and cleanup for orphaned blobs or removed content.
-  - Evidence: no tracked `storage.rules`; sound uploads allow 20 MB locally; wallpaper uploads compress to 4 MB locally; Firebase Storage rules docs expose `request.resource.size` and `request.resource.contentType`; Cloud Storage lifecycle docs.
-  - Touches: `storage.rules`, Storage emulator tests, upload repositories, cleanup job/runbook, lifecycle policy docs, release checklist.
-  - Acceptance: Storage rules restrict writes to authenticated owner paths, enforce sound/image MIME and size ceilings, define read behavior, and block cross-user overwrite/delete; lifecycle or cleanup process handles abandoned temp/orphan objects without deleting valid public uploads.
-  - Verify: emulator tests reject oversize/wrong-type/cross-owner uploads; metadata-save failure cleanup still works; orphan cleanup dry run reports expected objects before delete.
-  - Progress 2026-06-06: Cycle 57 added tracked `storage.rules`, `firebase.json`, and emulator tests for sound/wallpaper owner creates, public reads, MIME/size ceilings, blocked overwrites, owner/admin deletes, cross-owner rejection, anonymous rejection, and unmanaged path denial. Cycle 59 wired the combined Firebase rules suite into CI for rules-related changes. Cycle 65 added `docs/community-storage-lifecycle-policy.md`, `tools/community_storage_orphan_report.py`, unittest coverage, and CI execution for backend lifecycle/tool changes. Remaining work: run real exported Storage/RTDB orphan reports after owner access is confirmed and add a future temp-prefix lifecycle rule if upload finalization moves to temporary paths.
-
-- [~] 🤖 🔬 **P1 — App Check and community abuse throttling**
-  - Why: Anonymous Auth and vote markers do not prove requests come from Aura or prevent scripted uploads, votes, reports, follows, and profile writes at scale.
-  - Evidence: `CommunityIdentityProvider.ensureSignedIn()` anonymous/fallback identity; `VoteRepository.upvote()` voter marker; no App Check init/runbook found; Firebase App Check docs for RTDB and Storage.
-  - Touches: App Check initialization, debug-provider docs, Firebase console enforcement runbook, upload/vote/report quota design, backend counters or Cloud Functions if needed, release checklist.
-  - Acceptance: App Check is installed with Play Integrity plus debug/dev instructions; request metrics are monitored before enforcement; RTDB and Storage enforcement dates are recorded; abuse quotas exist for uploads, reports, votes, follows, and profile edits.
-  - Verify: debug build works with debug token; release build obtains valid token; monitor-mode metrics are reviewed; after enforcement, unauthenticated/unverified scripted requests fail while normal app flows pass.
-  - Progress 2026-06-07: Cycle 53 installed debug and Play Integrity providers, added the rollout runbook, compiled debug and release variants, refreshed dependency verification metadata, and refreshed generated notice locks. Cycle 54 added a typed quota policy for reports, sound uploads, wallpaper uploads, votes, follows, and profile edits, plus protected admin-only quota/dedupe ledgers in RTDB rules. Cycle 57 added Storage rules and Storage emulator tests. Cycle 58 added RTDB emulator tests for admin-only quota and dedupe ledgers. Cycle 63 added callable names, payload schemas, final write paths, protected ledger coverage, and limited-use App Check token decisions to the quota policy model. Cycles 94-100 implemented all callable handlers, Cycles 101-107 added RTDB-emulator-backed handler persistence coverage, Cycle 108 added Android callable-first report submission, Cycle 109 added Android callable-first vote submission, Cycle 110 added Android callable-first follow/unfollow submission, Cycle 111 added Android callable-first block/unblock submission, Cycle 112 added Android callable-first sound upload metadata finalization, Cycle 113 added Android callable-first wallpaper upload metadata finalization, Cycle 114 added Android callable-first profile edits, and Cycle 115 added checked Android callable wire-protocol coverage. Remaining work: console metrics/enforcement evidence, live callable invocation evidence, and direct-rule tightening.
-
-- [~] 🤖 🔬 **P1 — Moderation report queue and audit trail**
-  - Why: The current `/moderation/{contentId}=true` boolean hides content but does not capture report reason, reporter privacy, resolver, timestamp, status, appeal/restore, or block semantics required for public UGC operations.
-  - Evidence: `VoteRepository.moderateHide()` and `moderateUnhide()`; `database.rules.json` moderation path; Cycle 1 report queue item; Cycle 8 Play UGC policy review.
-  - Touches: report models/repository, report actions in content detail screens, RTDB rules, admin moderation UI, privacy/report docs, Play app-content packet.
-  - Acceptance: users can report community content with categories; reports are App-Checked/authenticated and rate-limited; admins can resolve/hide/unhide with reason and timestamp; audit entries record resolver UID without exposing reporter identity publicly; block-user behavior is defined or deferred with an owner decision.
-  - Verify: report create/read/admin-resolve rules tests; manual report -> admin hide -> feed removal -> unhide flow; reporter data is not public; Play UGC checklist row is complete.
-  - Progress 2026-06-07: Cycle 51 added report reasons, private report intake, admin-only read/update rules, resolution metadata records, and detail-screen report submission. Cycle 52 added admin Settings access, open-report subscription, report cards, status-indexed RTDB rules, Hide/Dismiss/Restore actions, and moderation hide/unhide wiring. Cycle 53 installed App Check providers and the rollout runbook. Cycle 54 defined the quota policy and reserved admin-only report quota/dedupe ledgers. Cycle 58 added RTDB emulator tests for authenticated report creation, reporter UID validation, admin-only reads, admin status updates, and admin-only resolution receipts. Cycle 60 added admin-only rights takedown receipt rules and emulator coverage. Cycle 61 added admin delete actions for rights-confirmed community upload reports. Cycle 62 added status filters for closed moderation queues. Cycle 63 added the callable quota enforcement contract and report submission migration sequence. Cycle 68 reserved private block-user paths, admin reverse indexes, rules coverage, and callable quota metadata. Cycle 70 added block-list repository support and feed/profile filtering. Cycle 71 added visible detail-screen block actions for community sounds and wallpapers. Cycle 72 added Settings blocked-creators review and unblock actions. Cycle 73 added optional report uploader UID metadata plus report-card and creator-profile block actions. Cycles 94-100 implemented all callable handlers, Cycles 101-107 added RTDB-emulator-backed handler persistence coverage, Cycle 108 added Android callable-first report submission, Cycle 109 added Android callable-first vote submission, Cycle 110 added Android callable-first follow/unfollow submission, Cycle 111 added Android callable-first block/unblock submission, Cycle 112 added Android callable-first sound upload metadata finalization, Cycle 113 added Android callable-first wallpaper upload metadata finalization, and Cycle 114 added Android callable-first profile edits. Remaining work: full callable protocol coverage, owner-approved deploy evidence, and direct-rule tightening.
-
-- [ ] 🤖 🔬 **P2 — Community backend operations runbook**
-  - Why: Community backend changes can break public reads/writes independently from APK builds, and Aura has no single release artifact tying rules, App Check, Storage cleanup, moderation, and deletion evidence together.
-  - Evidence: `docs/firebase-admin-claims.md` manual deploy notes; missing Firebase deploy config; Cycle 8 release metadata packet; Firebase and Cloud Storage lifecycle docs.
-  - Touches: `docs/community-backend-runbook.md`, release checklist, deploy/rollback notes, incident/takedown notes, App Check enforcement ledger, Storage lifecycle policy evidence.
-  - Acceptance: runbook records current deployed rules hash/version, deploy command, rollback command, App Check monitor/enforce status, rules test command, cleanup cadence, takedown SLA, and owner/admin deletion verification steps.
-  - Verify: dry-run release checklist includes backend evidence; a simulated bad rules deploy has a rollback path; a sample takedown/delete case leaves documented evidence without leaking user data.
-  - Progress 2026-06-06: Cycle 64 added the deterministic backend manifest, CI manifest gate, and `docs/community-backend-runbook.md` for preflight, dry run, deploy, rollback, App Check rollback separation, and release checklist evidence. Cycle 65 added the Storage lifecycle/orphan cleanup policy, offline orphan-report tool, and two-report manual deletion gate. Remaining work: takedown SLA packet, owner/admin deletion verification evidence, and live orphan report evidence after owner access is confirmed.
+All items shipped or moved to Roadmap_Blocked.md.
 
 ---
 
 ## 🔬 Researcher Queue (Cycle 10 — 2026-06-04)
 
-Append-only Cycle 10 handoff. Every item below is source-backed in `docs/research/cycle-10-2026-06-04.md`; merge into the existing Now/Next/Later item named in `Touches` when implementation starts.
-
-- [ ] 🤖 🔬 **P0 — API 37 toolchain and target-SDK release gate**
-  - Why: Aura is on compile/target SDK 35 and AGP 8.7.3; Android 17 SDK docs require compile/target SDK 37 and AGP 8.9.0-rc01+ for API 37 work.
-  - Evidence: `app/build.gradle.kts`; `baselineprofile/build.gradle.kts`; `gradle/libs.versions.toml`; Android 17 SDK setup docs; Android 17 Platform Stability blog.
-  - Touches: N-1; Gradle catalog, app/baseline profile Gradle files, Android Studio/SDK setup docs, CI image, dependency verification metadata, release preflight.
-  - Acceptance: app and baselineprofile modules compile at SDK 37, target SDK 37 is enabled deliberately, AGP meets the documented minimum, metadata skip workaround is removed or justified, Android 17 emulator/device smoke lane exists, and target-37 behavior changes are checklist-gated.
-  - Verify: `:app:assembleDebug`, `:app:testDebugUnitTest`, lint/manifest checks where feasible, Android 17 emulator install/smoke, and target-37 compat checklist signed off before release.
-
-- [~] 🤖 🔬 **P0 — Android 17 Contact Picker migration for contact ringtones**
-  - Why: Aura requests broad `READ_CONTACTS` and `WRITE_CONTACTS` together, while Android 17 offers selected-contact read access through the system Contact Picker.
-  - Evidence: `AndroidManifest.xml`; `ContactPickerScreen.kt`; `ContactRingtoneService.kt`; Android 17 Contact Picker docs; Android 17 target-SDK Contacts Provider behavior notes.
-  - Touches: Cycle 4 contact-permission item; contact picker UI, ringtone apply flow, permission copy, privacy/Data safety docs, Play app-content packet.
-  - Acceptance: API 37+ selection uses the system Contact Picker without broad `READ_CONTACTS` when possible; any `WRITE_CONTACTS` request is just-in-time for applying or clearing the ringtone; older devices keep a just-in-time fallback; unsupported write cases explain the limitation.
-  - Verify: select contact on Android 17 without `READ_CONTACTS`; apply ringtone with/without `WRITE_CONTACTS`; clear ringtone; denied permission path; older-device fallback; Data safety row updated.
-  - Progress 2026-06-11: Local fallback now uses Android contact-pick selection without declaring `READ_CONTACTS`, runtime write permission is requested only on apply, and Data safety/Play/alt-store rows reflect the narrower contact surface. Remaining work: API 37 picker smoke and clear-ringtone flow validation after the Android 17 toolchain lane unlocks.
-
-- [ ] 🤖 🔬 **P1 — Android 17 large-screen/adaptive-layout smoke gate**
-  - Why: Target-37 apps cannot rely on orientation/resizability/aspect restrictions on `sw > 600dp` displays, and Aura has no formal window-size-class navigation or list-detail layout code.
-  - Evidence: no manifest orientation lock found; no `WindowSizeClass`/`NavigationSuiteScaffold`/`ListDetailPaneScaffold`; fixed two-column grids in several screens; Android 17 form-factor behavior docs.
-  - Touches: N-1/NX adaptive work; `FreeVibeRoot.kt`, wallpaper/category/favorites/collections grids, detail screens, screenshot/runbook matrix.
-  - Acceptance: tablet, foldable, landscape, split-screen, and desktop-windowing smoke tests are documented; no critical clipping/off-screen controls in primary flows; adaptive-nav/list-detail follow-ups are filed or implemented.
-  - Verify: Android 17 large-screen emulator screenshots for Wallpapers, Wallpaper Detail, Sounds, Contact Picker, Collections, Favorites, Settings, Video Crop, and AI Generation.
-
-- [ ] 🤖 🔬 **P1 — Android 17 background-audio hardening regression suite**
-  - Why: Aura has a Media3 `mediaPlayback` foreground service, but Android 17 can silently fail audio interactions when lifecycle/foreground-service state is invalid.
-  - Evidence: `AudioPlaybackService.kt`; manifest `FOREGROUND_SERVICE_MEDIA_PLAYBACK` and `foregroundServiceType="mediaPlayback"`; Android 17 background audio hardening docs.
-  - Touches: audio preview service, Sounds/detail playback, notification/foreground-service copy, manual QA script, release checklist.
-  - Acceptance: playback behavior is defined for visible, backgrounded, task-removed, and notification-permission states; logcat/dumpsys checks show no `AudioHardening` failures in supported flows; unsupported flows fail visibly.
-  - Verify: start preview -> background -> resume; task remove while playing/not playing; notification permission denied/allowed; `adb dumpsys audio` and logcat checked for package-prefixed `AudioHardening` entries.
-
-- [ ] 🤖 🔬 **P1 — Target-37 privacy/security compatibility preflight**
-  - Why: Android 17 adds mandatory local-network handling for target-37 apps, ECH, default Certificate Transparency, stricter reflection/static-final behavior, Contacts Provider privacy changes, and safer native DCL constraints.
-  - Evidence: no current `ACCESS_LOCAL_NETWORK`, sockets, `NsdManager`, `WifiManager`, or `.local` discovery hits; `network_security_config.xml` cleartext exception for `ccmixter.org`; Android 17 behavior-change docs; local-network permission docs.
-  - Touches: release preflight script, network/provider docs, `network_security_config.xml` review, dependency/native-loading scan, contact-provider query audit, privacy policy/Data safety.
-  - Acceptance: preflight fails on new LAN APIs without a declared decision, flags broad contacts queries and private reflection patterns, documents the `ccmixter.org` cleartext exception, and records CT/ECH provider compatibility review.
-  - Verify: static grep/preflight run; Android 17 network smoke across Wallhaven/Pexels/Pixabay/Freesound/ccMixter/YouTube/AI/Firebase; no local-network permission prompt appears in current flows.
-
-- [ ] 🤖 🔬 **P2 — Direct Android 17 API cleanup for shipped bridges**
-  - Why: EyeDropper and Photo Picker 9:16 behavior shipped through raw string/reflection bridges that should become direct API usage once compileSdk 37 lands.
-  - Evidence: `WallpapersScreen.kt`; `AuraPickVisualMedia.kt`; `PhotoPickerCustomization.kt`; Android Intent API reference; Android 17 Beta 3 Photo Picker blog; `CHANGELOG.md` bridge notes.
-  - Touches: NX-10/NX-11 follow-up; wallpaper picker, collection import picker, parallax photo picker, changelog/release notes, fallback logging.
-  - Acceptance: direct `Intent.ACTION_OPEN_EYE_DROPPER`/`Intent.EXTRA_COLOR` and direct Photo Picker customization API are primary paths on compileSdk 37; fallback logging remains for missing system components; reflection/raw constants are isolated or deleted.
-  - Verify: Android 17 device/emulator EyeDropper result; Photo Picker 9:16 grid on all three call sites; Android 16 and below keep default picker behavior; debug logs show no unexpected reflection failure.
+All items shipped or moved to Roadmap_Blocked.md.
 
 ---
 
 ## 🔬 Researcher Queue (Cycle 11 — 2026-06-04)
 
-Append-only Cycle 11 handoff. Every item below is source-backed in `docs/research/cycle-11-2026-06-04.md`; merge into the existing Now/Next/Later item named in `Touches` when implementation starts.
-
-- [x] 🤖 🔬 **P0 — Sensitive-permission inventory and release preflight** — shipped 2026-06-07 (Cycle 141; manifest permission Data safety gate).
-  - Why: Aura declares `WRITE_SETTINGS`, microphone, coarse location, contacts, notification, foreground-service, legacy storage, and alarm-related permissions, but no single docs-side ledger maps each permission to a current feature, user action, Data safety row, denial path, retention decision, and store declaration.
-  - Evidence: `AndroidManifest.xml`; `fastlane/metadata/android/en-US/full_description.txt`; `docs/privacy/data-safety.md`; Play permissions/sensitive-API policy; Play personal/sensitive user-data policy; Play Data safety docs.
-  - Touches: Cycle 4 privacy matrix; Cycle 8 app-content packet; `docs/privacy/data-safety.md`, `docs/distribution/play-app-content.md`, release preflight/static manifest check, fastlane metadata.
-  - Acceptance: every manifest permission has a row for purpose, triggering UI, data accessed, collection/sharing, retention, denial behavior, Play declaration status, alternate-store disclosure, and owner signoff; new permissions fail release preflight until the row exists; listing/privacy/Data safety claims are internally consistent.
-  - Verify: parse merged manifest and compare with ledger; review Play Data safety fields for location, contacts, voice/sound recordings, other audio files, crash/diagnostics, user-generated content, and device IDs; confirm fastlane copy does not contradict the ledger.
-  - Progress 2026-06-07: Cycle 141 added `docs/privacy/data-safety.md`, `docs/privacy/data-safety.json`, `tools/privacy_data_safety_check.py`, focused tests, and verify/release workflow gates. The live matrix covers all 15 manifest permissions and fails if permissions or `maxSdkVersion` values drift without a reviewed row.
-
-- [ ] 🤖 🔬 **P1 — Foreground-service and notification declaration packet**
-  - Why: Aura declares `mediaPlayback` and `specialUse` foreground services; Play target-34+ updates require service-type descriptions, user-impact explanations, and demonstration videos, while Android notification permission denial changes user-visible notification behavior.
-  - Evidence: `AndroidManifest.xml`; `AudioPlaybackService.kt`; `RotationTriggerService.kt`; `SettingsScreen.kt`; Android foreground-service type docs; Play foreground-service declaration docs; Android notification-permission docs.
-  - Touches: Play app-content packet, notification/channel copy, rotation-trigger settings, audio playback QA script, release checklist.
-  - Acceptance: packet lists every foreground service, type, trigger, user-visible notification, why delay/deferral is not equivalent, interruption impact, and demo-video script; notification-denied behavior is documented for playback and rotation triggers; no `BOOT_COMPLETED` media-playback launch exists.
-  - Verify: start/stop playback and rotation triggers, inspect `dumpsys activity services`/notification state, deny `POST_NOTIFICATIONS`, capture demo-video steps, and compare manifest services with Play declaration rows.
+All items shipped or moved to Roadmap_Blocked.md.
 
 ---
 
 ## 🔬 Researcher Queue (Cycle 12 — 2026-06-04)
 
-Append-only Cycle 12 handoff. Every item below is source-backed in `docs/research/cycle-12-2026-06-04.md`; merge into the existing Now/Next/Later item named in `Touches` when implementation starts.
-
-- [ ] 🤖 🔬 **P0 — Accountless community deletion contract**
-  - Why: Anonymous community data spans Auth, RTDB, Storage, local identity prefs, votes, follows, creator profile state, and public uploads; deleting only the Firebase user would orphan public data.
-  - Evidence: `CommunityIdentityProvider`; `UploadRepository`; `WallpaperUploadRepository`; `VoteRepository`; `CreatorProfileRepository`; `database.rules.json`; Play account-deletion and Data safety docs; Firebase Auth/RTDB/Storage delete docs.
-  - Touches: Settings community/privacy controls, creator profile screen, `docs/privacy/privacy-policy.md`, Data safety matrix, community backend runbook, Firebase rules/tests.
-  - Acceptance: in-app deletion path lets users delete their community identity and associated data; scope explicitly includes uploads, Storage objects, upload metadata, vote markers, follows, profiles, collection shares, local fallback UUID, and local community caches; any retained moderation/abuse record is disclosed with reason and retention.
-  - Verify: seed user with sound upload, wallpaper upload, votes, follows, profile data, and collection share; run deletion; confirm RTDB/Storage/Auth/local prefs reflect the documented result and public feeds no longer expose deleted content.
-  - Progress 2026-06-07: Cycle 74 added `docs/community-account-deletion-policy.md` plus `tools/community_account_deletion_plan.py` to build a dry-run RTDB null-update plan for vote markers, follows, creator profiles, block indexes, and community shares. Cycle 75 added Settings > Community identity with auth label, redacted identity suffix, and deletion request code display without creating an identity. Cycle 76 added a redacted shareable deletion request draft plus user/operator support docs. Cycle 77 added `tools/community_deletion_request_lookup.py` to map request codes to candidate UID evidence in RTDB exports. Cycle 78 added `tools/community_account_deletion_review.py` to cross-check lookup output against dry-run null-update plans and emit redacted review receipts. Cycle 79 added `tools/community_account_deletion_apply_simulator.py` to verify reviewed plan hashes, simulate null updates against a copied export, and emit hashed simulation receipts while keeping retained roots protected. Cycle 80 added `tools/community_account_deletion_executor_package.py` to validate the full artifact chain and produce the private RTDB null-update payload. Cycle 81 added `tools/community_account_deletion_rest_executor.py` with dry-run default and explicit request-code, plan-hash, database URL, and OAuth token gates for RTDB REST `PATCH` apply mode. Cycle 82 added `tools/community_account_deletion_completion_receipt.py` to validate applied REST receipts and emit redacted requester-facing completion receipts. Cycle 83 added `docs/support/community-account-deletion-web-intake.md` and `tools/community_deletion_web_intake.py` for private hosted request intake validation. Cycle 84 added `tools/community_account_deletion_cleanup_sequence.py` to order post-completion local device cleanup, Firebase Auth deletion, and public upload handoff. Cycle 85 added Settings > Community identity > Clear local to remove the current device fallback identity after support confirms backend completion. Cycle 86 added `tools/community_account_deletion_auth_package.py` to build private Firebase Auth deletion packages after lookup and backend completion evidence match. Cycle 87 added `tools/community_account_deletion_upload_plan.py` to enumerate owned public uploads and blocked handle rows before any owner/admin deletion workflow runs. Cycle 88 added `docs/privacy/privacy-policy.md`, `docs/support/community-account-deletion-web-url.json`, and `tools/community_deletion_web_url_check.py` to gate the hosted web deletion URL from pending owner publication to a live HTTPS link. Cycle 89 added `tools/community_account_deletion_auth_execution_receipt.py` to validate owner-approved Auth deletion evidence and emit a redacted post-delete receipt. Cycle 90 added `tools/community_account_deletion_upload_execution_receipt.py` to validate owner/admin public-upload deletion evidence and emit a redacted receipt. Actual owner-run Auth/upload deletion and hosted URL publication remain open.
-
-- [ ] 🤖 🔬 **P0 — Firebase deletion orchestrator and web request runbook**
-  - Why: Play expects a web deletion resource for users who uninstalled or cannot access the app; an Android-only deletion button cannot satisfy those requests, especially for anonymous Firebase identities.
-  - Evidence: Play account-deletion web-resource requirements; `database.rules.json` owner/admin paths; missing `firebase.json`/rules test harness from Cycle 9; Firebase `removeValue()`, `updateChildren(null)`, Storage `delete()`, and Auth `delete()` docs.
-  - Touches: Cloud Function or trusted admin script, support/deletion request page, identity-verification receipt, Firebase rules tests, admin runbook, release checklist.
-  - Acceptance: trusted deletion job can accept a verified UID/deletion code, enumerate all user-owned RTDB paths and Storage objects, delete/anonymize according to policy, delete the Auth user where possible, and record a minimal nonpublic audit receipt; web/email request instructions are discoverable from the privacy policy.
-  - Verify: emulator/admin dry run with seeded data; deletion failure retry path; post-delete public read checks; web-request support script produces a human-readable receipt without exposing other users' data.
-
-- [ ] 🤖 🔬 **P1 — Owner indexes and Storage deletion handles for community uploads**
-  - Why: Upload metadata stores public download URLs but not a canonical `storagePath` or per-owner upload index, making owner deletion and admin web deletion dependent on broad scans and brittle URL parsing.
-  - Evidence: `UploadRepository.uploadSound()` Storage path and RTDB metadata; `WallpaperUploadRepository.uploadWallpaper()` Storage path and RTDB metadata; `database.rules.json`; Firebase RTDB/Storage delete docs.
-  - Touches: upload metadata schema, RTDB rules, new owner index (`owner_uploads/{uid}` or equivalent), Storage rules, migration/backfill script, community backend runbook.
-  - Progress 2026-06-06: Cycle 55 added `CommunityUploadOwnership.kt`, `storagePath` metadata, `/owner_uploads/{uid}/sounds|wallpapers/{uploadId}` writes, owner delete update builders, repository delete methods, and RTDB rules for owner/admin index access. Cycle 56 added owner-visible app deletes. Cycle 57 added Storage rules and emulator tests for upload blob authorization. Cycle 58 added RTDB emulator tests for upload metadata and owner-index authorization. Cycle 66 added dry-run legacy backfill planning from Firebase Storage URLs to canonical `storagePath` plus owner-index update payloads. Cycle 67 added owner/admin deletion tombstones with owner-scoped Storage handle validation and a retention policy. Remaining work: run the planner against a fresh production RTDB export and add trusted apply tooling if service-account handling is approved.
-  - Acceptance: new uploads store `storagePath`, owner UID, content type, and upload ID in both public metadata and an owner-scoped index; rules allow owners/admins to delete their own records; legacy uploads are backfilled or marked "admin-only deletion until migrated."
-  - Verify: upload sound/wallpaper, inspect metadata/index, delete by owner from app and by admin script, confirm Storage object deletion and public feed removal; rules tests reject cross-owner deletes.
-
-- [ ] 🤖 🔬 **P1 — Vote, follow, profile, and moderation deletion semantics**
-  - Why: Vote markers prevent duplicate voting, follows create both outbound user data and inbound creator references, and moderated content may need an audit trail. These cannot all use the same "hard delete" rule without policy decisions.
-  - Evidence: `VoteRepository.upvote()` nested and legacy voter markers; `CreatorProfileRepository.followCreator()`/`unfollowCreator()`; `database.rules.json` moderation and follow paths; Play deletion-retention guidance.
-  - Touches: deletion contract, privacy policy, RTDB schema, moderation runbook, abuse-prevention design, rules tests.
-  - Acceptance: deletion policy separately defines behavior for public uploads, vote counts, voter markers, outbound follows, inbound follows to a deleted creator, creator profile labels, moderation records, and abuse-prevention tombstones; retained records are nonpublic and minimized.
-  - Verify: deletion seed with voted content, followed creators, followers of deleted creator, and moderated upload; confirm post-delete counts, visibility, and retention match the policy.
-  - Progress 2026-06-07: Cycle 67 defined the upload deletion subset in `docs/community-deletion-retention-policy.md` and implemented private upload tombstones. Cycle 68 reserved private user block lists and admin-only reverse indexes in `docs/community-block-user-policy.md`. Cycle 70 added Android block-list repository support plus community feed and creator profile filtering by private block state. Cycle 71 added confirmed `Block creator` actions on community sound and wallpaper detail surfaces. Cycle 72 added Settings review/unblock UI for blocked creators. Cycle 73 added report-card and creator-profile block entry points when canonical uploader IDs are available. Cycle 74 added the dry-run account deletion planner and policy: delete per-user vote markers, follows, creator profile rows, block rows/indexes, and share rows; retain aggregate vote counts and private moderation audit records. Cycle 75 added the read-only Settings identity/deletion request code surface. Cycle 77 added request-code lookup tooling, Cycle 78 added a redacted review receipt gate, Cycle 79 added an offline apply simulator, Cycle 80 added the private executor package builder, Cycle 81 added the guarded RTDB REST executor, Cycle 82 added a user-safe completion receipt after applied REST receipts, Cycle 83 added web-intake validation for private hosted request exports, Cycle 84 added local/Auth cleanup sequencing after backend completion, Cycle 85 added in-app local fallback identity cleanup, Cycle 86 added private Auth deletion packages, Cycle 87 added private public-upload deletion handoff plans, Cycle 88 added a privacy-policy-backed hosted URL manifest gate, Cycle 89 added a redacted Auth execution receipt gate, Cycle 90 added a redacted upload execution receipt gate, and Cycle 97 added the handler-backed `setCommunityUserBlock` callable. Remaining work: owner-approved production execution evidence, hosted URL publication, block callable emulator coverage, Android migration, and direct RTDB rule tightening.
-
-- [ ] 🤖 🔬 **P2 — Community data receipt/export surface**
-  - Why: Users need a way to understand and request deletion of an anonymous identity, especially after reinstall or when using the web deletion path.
-  - Evidence: `CreatorProfileScreen` currently shows uploads/votes/follows/leaderboard but no UID, export, or delete controls; `CommunityIdentityProvider.currentAuthLabel()` already exposes auth type; Play web deletion guidance.
-  - Touches: creator profile/settings UI, support docs, privacy policy, deletion request page, diagnostics redaction.
-  - Acceptance: UI shows auth type, UID suffix/deletion code, owned upload IDs, follow count, vote count or vote-marker count, and links to delete/export/community privacy details; export/share output redacts full tokens and does not include other users' private data.
-  - Verify: signed-out/local/Firebase-anonymous states; export before and after upload/vote/follow; deletion request code maps to the correct UID in admin tooling; diagnostics bundle redacts the full UID unless explicitly copied by the user.
-  - Progress 2026-06-07: Cycle 75 added Settings > Community identity with auth type, redacted identity suffix, copyable deletion request code when a Firebase identity exists, and no identity creation while viewing the panel. Cycle 76 added a redacted share request draft and `docs/support/community-account-deletion.md`. Cycle 77 added admin lookup tooling for request-code-to-UID evidence. Cycle 78 added a redacted review receipt that proves lookup and deletion-plan consistency before future trusted apply. Cycle 79 added an offline simulation receipt for reviewed deletion plans. Cycle 80 added a private executor package that preserves the full RTDB update payload only for trusted operators. Cycle 81 added a guarded dry-run/apply REST executor for the private package. Cycle 82 added a redacted completion receipt that is safe to share after an applied REST receipt. Cycle 83 added a private web-intake receipt for users who cannot open the app. Cycle 88 added a privacy policy and hosted URL publication manifest for the web request route. Cycle 89 added a redacted Auth execution receipt after owner-approved Firebase Auth deletion evidence. Cycle 92 added checked hosted web page copy for owner publication. Remaining work: owned upload IDs, follow/vote marker counts, export output, live hosted URL publication, and production evidence.
+All items shipped or moved to Roadmap_Blocked.md.
 
 ---
 
 ## 🔬 Researcher Queue (Cycle 13 — 2026-06-04)
 
-Append-only Cycle 13 handoff. Every item below is source-backed in `docs/research/cycle-13-2026-06-04.md`; merge into the existing Now/Next/Later item named in `Touches` when implementation starts.
-
-- [~] 🤖 🔬 **P0 — Unified provenance and action-capability model**
-  - Why: Sounds carry `license`, wallpapers generally do not, video wallpaper items have a separate metadata shape, and the static licenses screen does not prove whether a specific item can be edited, applied, downloaded, shared, bundled, or kept offline.
-  - Evidence: `Models.kt`; `Mappers.kt`; `FreesoundV2Repository.kt`; `CcMixterRepository.kt`; `AudiusRepository.kt`; `SoundCloudRepository.kt`; `WallpaperDetailScreen.kt`; `SoundDetailScreen.kt`; Pexels/Pixabay/Freesound/YouTube/Reddit policy docs.
-  - Touches: content models/entities, migrations, remote mappers, favorites/downloads/cache restoration, detail/share/apply/edit flows, provider policy docs, licenses screen.
-  - Acceptance: every content item can expose source, source page, creator/uploader, normalized license, provider terms, takedown/report URL, and allowed actions; unsupported or risky actions are disabled or require source-specific confirmation; favorites/downloads preserve provenance.
-  - Verify: fixture items for Pexels, Pixabay, Reddit, YouTube, Freesound, ccMixter, Audius, SoundCloud, community, bundled, AI-generated, and local content render provenance consistently across cards, detail screens, share sheets, favorites, downloads, and editors.
-  - Progress 2026-06-06: Cycle 49 implemented the sound-specific action-capability slice: normalized license metadata, favorite-license persistence, detail/share/apply/download/contact gates, and matrix tests. Cycle 50 added selected license/source/attestation metadata for community sounds and wallpapers, plus wallpaper license preservation and detail display. 2026-06-13: added `WallpaperLicensePolicy.kt` with per-wallpaper action-capability gates (APPLY/DOWNLOAD/SHARE/EDIT) and 14 matrix tests covering Pexels, Pixabay, Bing, Reddit, Community, Local, AI-generated, Wallhaven, CC BY-NC, CC BY-ND, unavailable-source, missing-source-link, and unknown-license scenarios. Remaining provenance slices: video wallpapers, provider takedown/report URL integration.
-
-- [ ] 🤖 🔬 **P0 — IP takedown/report queue for community and mirrored content**
-  - Why: Google Play can require evidence of rights to use copyrighted content, and Aura needs one route for community-upload reports plus another for provider/source-deletion reconciliation.
-  - Evidence: `database.rules.json` moderation boolean; no rights-holder report queue found; Cycle 9 moderation queue item; Google Play IP policy; Reddit developer terms; Pexels/Pixabay report-content links.
-  - Touches: report repository/model, RTDB rules, admin moderation UI, detail-screen report actions, privacy/support docs, community backend runbook.
-  - Acceptance: users and rights holders can report community uploads with IP/license/safety/source-removed reasons; admins can hide/delete/restore with timestamp/reason; third-party mirrored entries can be marked source-deleted/unavailable; takedown status is not exposed in a way that leaks reporter identity.
-  - Verify: report -> admin hide/delete -> public feed removal -> restore flow; rights-holder report from detail/source screen; source-deleted Reddit/Pexels/Pixabay fixture stops appearing as live catalog content; rules tests block non-admin resolution.
-  - Progress 2026-06-07: Cycle 51 added private rights/source/safety/spam report intake from sound and wallpaper details. Cycle 52 added admin review, hide, dismiss, restore, and moderation wiring. Cycle 60 added private rights-confirmed takedown receipts for community upload hides with current deletion handles. Cycle 61 added confirmed admin delete actions for qualifying community upload reports. Cycle 62 added closed-report status filters for admin review. Cycle 63 defined the App-Checked callable quota contract for report submission. Cycle 68 added the block-user data contract. Cycle 69 added public upload/report/delete takedown copy. Cycle 70 added block-list repository reads/writes and feed/profile filtering. Cycle 71 added confirmed block actions to community sound and wallpaper detail surfaces. Cycle 72 added Settings blocked-creators review and unblock actions. Cycle 73 added report uploader UID metadata and admin report-card block actions. Cycles 94-100 implemented callable handlers, Cycles 101-107 added RTDB-emulator-backed handler coverage, Cycle 108 added Android callable-first report submission, Cycle 109 added Android callable-first vote submission, Cycle 110 added Android callable-first follow/unfollow submission, Cycle 111 added Android callable-first block/unblock submission, Cycle 112 added Android callable-first sound upload metadata finalization, Cycle 113 added Android callable-first wallpaper upload metadata finalization, and Cycle 114 added Android callable-first profile edits. Remaining work: full callable protocol coverage, owner-approved deploy evidence, and direct-rule tightening.
-
-- [ ] 🤖 🔬 **P1 — YouTube store-risk containment profile**
-  - Why: Aura's Play-facing listing currently promotes YouTube-first ringtone discovery and video wallpapers, while Play IP policy and YouTube developer policies are restrictive around unauthorized downloads, cached audiovisual content, offline playback, and infringement encouragement.
-  - Evidence: `fastlane/metadata/android/en-US/full_description.txt`; `SoundsViewModel.kt` YouTube tab and pasted-URL import; `VideoWallpapersViewModel.kt` YouTube video path; YouTube API policies; Google Play IP policy; Cycle 3 YouTube legal-mode item.
-  - Touches: distribution/channel strategy, build/runtime provider switches, Sounds/Videos UI, fastlane metadata, screenshots, release checklist.
-  - Acceptance: Play/Izzy/F-Droid/GitHub distribution profiles declare whether YouTube is enabled; disabled profiles remove YouTube tabs/search/default queries/video wallpaper paths and avoid promotional copy/screenshots that encourage unauthorized downloads; fallback sources remain useful.
-  - Verify: run app with YouTube disabled and browse Sounds/Videos; confirm no yt-dlp/NewPipe resolution or cache writes; review Play metadata/screenshots for copyrighted-download language; GitHub profile can still enable YouTube when explicitly chosen.
-
-- [~] 🤖 🔬 **P1 — Community upload rights attestation and license metadata**
-  - Why: Community uploads publish audio/wallpaper metadata with `uploaderId`/`uploaderLabel`, but no explicit rights attestation, license, source URL, model/property release state, or takedown contact. Community sounds currently show `license = "User Upload"`.
-  - Evidence: `UploadRepository.uploadSound()`; `WallpaperUploadRepository.uploadWallpaper()`; `SoundsScreen.kt` upload dialog; Play IP policy; Pixabay/Pexels third-party-rights warnings.
-  - Touches: upload dialogs, metadata schema, RTDB rules, community cards/detail screens, privacy/policy docs, deletion/takedown runbook.
-  - Acceptance: uploader must attest they own or have rights to share the media, choose a license/usage label, optionally provide source URL/credit, acknowledge public visibility and takedown rules, and understand that infringing content may be removed; metadata stores that evidence.
-  - Verify: upload blocked until attestation complete; uploaded metadata includes license/source/rights fields; detail and report flows show license/takedown context; admin can remove content by rights reason.
-  - Progress 2026-06-06: Cycle 50 added `CommunityUploadRights.kt`, sound/wallpaper upload dialog license chips, rights confirmation, optional HTTPS source URL capture, upload-path validation before media upload, stored license/rights/source fields, RTDB rule validation, community sound selected-license action gates, wallpaper license mapping, detail display, and `docs/legal/community-upload-rights.md`. Cycles 51-52 added report/detail actions plus admin hide/restore resolution. Cycle 60 added private rights-confirmed takedown receipts tied to current `storagePath` handles. Cycle 61 added rights-confirmed admin delete actions for new rows with deletion handles. Cycle 69 added visible public-listing, rights-takedown, and private-retention copy to upload/report/delete dialogs. Remaining work: legacy/backfill coverage and callable upload finalization.
-
-- [ ] 🤖 🔬 **P1 — Aura Originals provenance gate**
-  - Why: The curation guide correctly requires CC0, source URL, and sha256, but the release gate does not yet prove every bundled sound has reviewed provenance and a retroactive removal path.
-  - Evidence: `docs/aura-originals-curation.md`; `AuraOriginalsManifest.kt`; `aura_originals_manifest.json`; Freesound API/license terms; Cycle 5 Aura Originals queue.
-  - Touches: Aura Originals manifest, downloader verification, licenses screen, CI/source-probe job, release checklist, takedown/removal runbook.
-  - Acceptance: manifest entries include source URL, normalized license, sha256, curator/review date, removal status, and replacement plan; CI checks URL reachability/hash/duplicate IDs; only reviewed CC0 or approved-compatible assets ship in the first-run pack.
-  - Verify: manifest fixture with valid/invalid license and hash; downloader rejects mismatches; licenses/provenance screen lists bundled attributions; removal of an entry stops new installs from receiving it.
-
-- [ ] 🤖 🔬 **P2 — Source-deleted and rights-revoked local states**
-  - Why: Cached/favorited/downloaded third-party media can outlive a provider deletion or rights change, and Aura currently has no explicit UI state for "source removed", "rights revoked", or "local copy only".
-  - Evidence: `FavoriteEntity`; `WallpaperCacheEntity`; `DownloadEntity`; detail restore paths; Reddit developer terms; Pexels/Pixabay report-content links; Cycle 3 source-deletion item.
-  - Touches: cache/favorite/download metadata, detail reload paths, source-health diagnostics, storage cleanup, user copy, report/takedown queue.
-  - Acceptance: stale/source-deleted media stops appearing in remote catalog, favorites/downloads show a clear unavailable/local-only state, users can delete local copies, and provider terms decide whether offline copies are retained or purged.
-  - Verify: simulate deleted Reddit post, removed Pexels/Pixabay result, unavailable YouTube video, and deleted community upload; detail screens do not misrepresent source status; cleanup removes policy-required local copies.
-  - Progress 2026-06-06: Cycle 46 added persisted unavailable-source state and saved-surface UI. Cycle 48 added explicit removed/gone failure classification for remote 404/410/gone/removed/deleted signals and marks saved favorites/download history unavailable when apply/download or re-download paths prove upstream removal.
+All items shipped or moved to Roadmap_Blocked.md.
 
 ---
 
 ## 🔬 Researcher Queue (Cycle 14 — 2026-06-04)
 
-Append-only Cycle 14 handoff. Every item below is source-backed in `docs/research/cycle-14-2026-06-04.md`; merge into the existing Now/Next/Later item named in `Touches` when implementation starts.
-
-- [x] 🤖 🔬 **P0 — Boot-completed permission decision for rotation triggers** — shipped 2026-06-07 (`android.permission.RECEIVE_BOOT_COMPLETED` removed, `docs/rotation-trigger-boot-behavior.md`, `tools/rotation_boot_permission_check.py`).
-  - Why: `RECEIVE_BOOT_COMPLETED` is declared, but no boot receiver was found. WorkManager periodic jobs can persist without it, while rotation-trigger dynamic receivers do not restart after reboot until Aura cold-starts.
-  - Evidence: `AndroidManifest.xml`; no `BOOT_COMPLETED` receiver/source hit; `FreeVibeApp.reconcileRotationTriggers()`; `RotationTriggerService.kt`; Android Doze/background docs; Play foreground-service declaration docs.
-  - Touches: manifest, optional boot receiver, rotation-trigger settings, FGS declaration packet, permission ledger, release QA.
-  - Acceptance: either remove `RECEIVE_BOOT_COMPLETED` and document "rotation triggers resume after opening Aura", or add a boot receiver that starts `RotationTriggerService` only when the user opted in and only with clear notification/FGS evidence.
-  - Verify: reboot with triggers off/on; inspect foreground service and notification state before opening app; merged manifest permission diff; Play declaration matches chosen behavior.
-  - Completed 2026-06-07: Cycle 151 removed the unused permission, updated Data safety and alternative-store disclosure packets to the 14-permission manifest, documented that rotation triggers resume after opening Aura, and added a verify/release gate that fails if the permission, boot receiver source terms, workflow wiring, or disclosure text drift.
-
-- [ ] 🤖 🔬 **P1 — Rotation trigger reliability and expedited-work fallback tests**
-  - Why: Unlock/screen-off and Tasker actions enqueue expedited `AutoWallpaperWorker` with `RUN_AS_NON_EXPEDITED_WORK_REQUEST`, so rotations can be delayed by quota, battery-not-low, network, Doze, App Standby, or `ExistingWorkPolicy.KEEP` coalescing.
-  - Evidence: `RotationTriggerService.enqueueRotation()`; `TaskerActionReceiver.kt`; Android WorkManager expedited/quota docs; Android Doze/App Standby docs.
-  - Touches: trigger settings copy, Tasker docs, worker diagnostics, manual QA script, FGS declaration packet.
-  - Acceptance: UI/docs say trigger actions enqueue a constrained rotation attempt; diagnostics show coalesced/downgraded/deferred attempts; visible manual rotation path reports immediate success/failure separately from background attempts.
-  - Verify: repeated unlocks, screen-off, and Tasker broadcasts under active/rare/restricted standby buckets; expedited quota exhaustion; no network; low battery; confirm one-shot coalescing and user-facing deferral reason.
-
-- [x] 🤖 🔬 **P1 — WorkManager unique-work policy matrix** — shipped 2026-06-07 (`docs/background-work-scheduling-ledger.md`, `tools/background_work_scheduling_check.py`).
-  - Why: Auto-wallpaper uses `UPDATE`, daily/weather/Aura Originals use `KEEP`, and future interval/constraint/manifest changes can silently leave stale work unless the intended policy is documented.
-  - Evidence: `AutoWallpaperWorker.scheduleWithConstraints()`; `DailyWallpaperWorker.schedule()`; `WeatherUpdateWorker.schedule()`; `AuraOriginalsDownloader.enqueue()`; WorkManager periodic-work docs.
-  - Touches: `docs/background-work-runbook.md`, Settings scheduling code, release checklist, worker tests.
-  - Acceptance: runbook lists unique work name, work type, enqueue policy, interval, flex/initial delay, constraints, retry/backoff, schedule trigger, cancel trigger, and when changes require update/cancel/re-enqueue or versioned work names.
-  - Verify: unit/static test compares declared runbook rows with code constants; changing scheduler interval/constraints updates work; daily/weather/originals do not duplicate work; Aura Originals manifest revision can force needed refresh.
-  - Completed 2026-06-07: Cycle 153 added a source-backed scheduling ledger and validator covering `auto_wallpaper`, `daily_wallpaper`, `weather_update`, `aura_originals_download`, and `rotation_trigger_oneshot`, including work type, enqueue API, policy, timing, constraints, backoff, trigger/cancel behavior, deferral reasons, source URLs, release docs, and verify/release wiring.
-
-- [ ] 🤖 🔬 **P1 — Background network and data-saver posture**
-  - Why: Weather refresh uses connected network every 30 minutes, daily wallpaper fetches Reddit daily, Aura Originals requires unmetered network, and auto-rotation can fetch remote wallpapers unless Wi-Fi-only is enabled.
-  - Evidence: `WeatherUpdateWorker.kt`; `DailyWallpaperWorker.kt`; `AuraOriginalsDownloader.kt`; `AutoWallpaperWorker.kt`; Settings Wi-Fi/charging/idle controls; Android Doze/App Standby and WorkManager constraint docs.
-  - Touches: settings copy, worker constraints, Data safety/provider policy docs, diagnostics, release QA.
-  - Acceptance: each background network job declares metered/unmetered behavior, user toggle, provider/data impact, retry behavior, and failure UX; weather optionally supports unmetered-only or lower cadence; Data Saver/low battery states are tested.
-  - Verify: metered vs unmetered network, Data Saver on/off, no network, low battery, weather enabled/disabled, daily notifications denied/granted, provider failures.
-  - Progress 2026-06-07: Cycle 154 added `docs/background-work-network-posture.md`, `docs/background-work-network-posture.json`, and `tools/background_work_network_check.py` so each scheduled work row has checked connected/unmetered network posture, metered behavior, Data Saver gap text, privacy surface, release risk, source terms, release docs, and verify/release workflow wiring. Cycle 155 added support-bundle pending markers for Data Saver receipts. Cycle 156 added Settings Data Saver and active metered-network receipts. Cycle 158 merged live Data Saver receipts into support bundles. Cycle 159 added action hints for restricted-background and metered/unmetered cases. Cycle 160 added the capture-pending device/emulator evidence gate for metered/Data Saver, low battery, Doze/App Standby, and rotation-trigger coalescing. Remaining work: run and archive the real capture packet.
-
-- [ ] 🤖 🔬 **P2 — Battery/vitals regression lab for live wallpapers and schedulers**
-  - Why: Video live wallpapers have FPS caps and a battery dashboard, but release planning needs measured evidence for battery saver, charging state, foreground-service time, background jobs, and network usage.
-  - Evidence: `VideoWallpaperService.kt`; `VideoBatteryProfile.kt`; `SettingsScreen.kt` battery dashboard; Android vitals categories; Doze/App Standby docs.
-  - Touches: manual QA scripts, `docs/performance/battery-lab.md`, release checklist, diagnostics/support bundle, video wallpaper settings.
-  - Acceptance: lab records effective FPS, requested FPS, battery percent, charging state, foreground/background visibility, FGS time, job count, network bytes, and user-visible copy for low-battery auto-caps.
-  - Verify: run video wallpaper visible/hidden, charging/unplugged, low battery, battery saver on/off, scheduled rotation active, daily/weather enabled; compare dumpsys/batterystats outputs before release.
+All items shipped or moved to Roadmap_Blocked.md.
 
 ---
 
 ## 🔬 Researcher Queue (Cycle 15 — 2026-06-04)
 
-Append-only Cycle 15 handoff. Every item below is source-backed in `docs/research/cycle-15-2026-06-04.md`; merge into the existing Now/Next/Later item named in `Touches` when implementation starts.
-
-- [x] 🤖 🔬 **P0 — Cleartext release gate and ccMixter HTTPS-only decision** — shipped 2026-06-07 (Cycle 129; HTTPS-only ccMixter and release cleartext guard).
-  - Why: The manifest disables cleartext globally, but `network_security_config.xml` permits cleartext for all `ccmixter.org` subdomains and `CcMixterRepository` retries over HTTP on TLS failure.
-  - Evidence: `AndroidManifest.xml`; `network_security_config.xml`; `CcMixterRepository.buildCcMixterFallbackUrl()`; Android cleartext-communications and Network Security Configuration docs; Cycle 6/10 cleartext notes.
-  - Touches: ccMixter repository, provider policy matrix, network security config, release preflight, source-health UI, Izzy/store metadata.
-  - Acceptance: release builds do not downgrade ccMixter to HTTP by default; either ccMixter is HTTPS-only, disabled/degraded when HTTPS fails, or explicitly debug/internal-only with provider-policy approval and expiration.
-  - Verify: static check for `cleartextTrafficPermitted="true"` and provider `http://` URLs; simulated `SSLException` does not fetch HTTP in release; release metadata reports no cleartext traffic unless an approved exception exists.
-  - Progress 2026-06-07: Cycle 129 removed the ccMixter HTTP fallback and `ccmixter.org` cleartext domain exception, added `tools/cleartext_release_check.py` with focused tests, wired the guard into verify and release workflows, required it in the release workflow security policy, and updated endpoint/supply-chain release docs. `CcMixterRepositoryTest` now proves TLS failures propagate without an HTTP downgrade.
-
-- [x] 🤖 🔬 **P0 — Provider credential release guard for BuildConfig/local.properties** — shipped 2026-06-07 (Cycle 131; release guard plus packaged APK scan).
-  - Why: `app/build.gradle.kts` can bake Pexels, Pixabay, Freesound, SoundCloud, and Stability AI values from `local.properties` into `BuildConfig`, making local release APKs leak quota-bearing or paid provider credentials.
-  - Evidence: `app/build.gradle.kts`; `docs/distribution/release-signing.md`; `PreferencesManager.kt`; Android security checklist on API-key storage; Stability key handling from Cycle 7.
-  - Touches: Gradle release preflight, release workflow, `docs/distribution/release-signing.md`, provider settings copy, APK artifact scan.
-  - Acceptance: release builds fail when optional provider keys/client IDs are nonblank unless an explicit internal-build flag is set; public GitHub/Obtainium/Izzy builds ship blank defaults and require user-entered keys where needed.
-  - Verify: set fake keys in `local.properties` and confirm release preflight fails; internal override path succeeds with a warning; `strings`/APK scan proves sentinel keys are absent from public release artifacts.
-  - Progress 2026-06-07: Cycle 125 added `tools/provider_credential_release_check.py`, focused tests, verify/release workflow wiring, release workflow policy coverage, and release docs. The guard statically proves blank Gradle defaults, blank release `local.properties` provider values, local nonblank-key failure, and explicit internal override warning. Cycle 131 added `tools/provider_credential_apk_scan.py`, focused APK fixture tests, release workflow wiring after signed APK packaging, release workflow policy coverage, and release runbook updates so signed APKs are scanned for nonblank provider values before notices, checksums, uploads, or tagged publication. Owner-run signed dry-run evidence remains a release checklist item, not a code blocker.
-
-- [x] 🤖 🔬 **P1 — Provider credential storage classification and Keystore decision** — shipped 2026-06-07 (Cycle 130; provider credential storage policy and no-Keystore disclosure).
-  - Why: User-entered provider keys live in DataStore and are excluded from backup/device transfer, but app-private DataStore is not Keystore-backed encrypted storage.
-  - Evidence: `PreferencesManager.kt`; `backup_rules.xml`; `data_extraction_rules.xml`; Android Keystore and security checklist docs; Cycle 4 backup/privacy item.
-  - Touches: provider settings, key-storage helper, backup matrix, privacy/data-safety docs, diagnostics support docs.
-  - Acceptance: every provider credential is classified as public client ID, optional quota key, or paid/sensitive secret; sensitive keys either use Keystore-backed encrypted storage or have a documented no-strong-at-rest-protection disclosure and user control.
-  - Verify: set every key, inspect backup/transfer exclusions, rotate/delete keys, export diagnostics, and confirm no raw key appears in app backup artifacts or support bundles.
-  - Progress 2026-06-07: Cycle 130 added `docs/security/provider-credential-storage.json`, `docs/security/provider-credential-storage.md`, `tools/provider_credential_storage_check.py`, focused policy tests, verify/release workflow wiring, privacy/support/supply-chain docs, and a Freesound Settings API-key clear control. The checked decision keeps current optional provider keys in app-private DataStore with backup/device-transfer exclusions and documents that this is not strong at-rest protection. Cycle 132 consolidated provider key dialogs around explicit Save/Clear/Cancel actions and extended the storage policy guard so the Settings Clear path remains checked.
-
-- [x] 🤖 🔬 **P1 — Redacted URL and request logging contract** — shipped 2026-06-07 (Cycle 127; shared request redactor for crash diagnostics and source metrics).
-  - Why: Wallhaven, Pixabay, Freesound, and SoundCloud credentials are sent in query strings, while SoundCloud also embeds `client_id` in stream URLs. Raw URLs must not enter logs, source metrics, crash messages, diagnostics, or UI.
-  - Evidence: `WallhavenApi.kt`; `PixabayApi.kt`; `FreesoundV2Api.kt`; `SoundCloudApi.kt`; `SoundCloudRepository.kt`; `CrashDiagnosticsCollector.kt`; provider auth docs.
-  - Touches: shared URL redactor, SourceMetrics/source-health UI, provider repositories, debug logging policy, diagnostics bundle, tests.
-  - Acceptance: code has one reusable redacted URL/request formatter; source metrics and diagnostics store host/source/status/error class, not raw authenticated URLs; providers use header auth where officially supported.
-  - Verify: mock failures containing authenticated URLs for each provider; debug/release diagnostics and logs contain redacted query values; source-health cards show no secrets.
-  - Progress 2026-06-07: Cycle 127 added `RequestRedactor`, moved crash diagnostics provider-secret redaction onto that shared contract, added request formatter tests for host/path/status output, and redacts `SourceMetrics` failure messages before Settings can display them.
-
-- [x] 🤖 🔬 **P1 — Diagnostics redaction fixture suite for provider secrets** — shipped 2026-06-07 (Cycle 126; provider-specific sanitizer fixture suite and dotted property redaction).
-  - Why: Crash diagnostics are user-copyable and already redact broad token shapes, but the release gate needs provider-specific tests for real Aura credential formats.
-  - Evidence: `CrashDiagnosticsCollector.kt`; `docs/support/crash-diagnostics.md`; provider query/header shapes; Cycle 2 diagnostics export item.
-  - Touches: JVM tests for `CrashDiagnosticsText`, support docs, issue template, future background/source diagnostics.
-  - Acceptance: fixtures cover `apikey`, `key`, `token`, `client_id`, `Authorization: Bearer`, assignment-style `apiKey`, `stability.ai.key`, `local.properties`, `file://`, and app-private paths.
-  - Verify: synthetic crash log export keeps provider/source context but redacts every secret value; regression test fails on any raw sentinel key.
-  - Progress 2026-06-07: Cycle 126 extended `CrashDiagnosticsText.sanitize()` for dotted provider credential assignment names, added provider-shaped sentinel fixtures covering Wallhaven, Pixabay, Freesound, SoundCloud, Pexels, Settings, `local.properties`, `file://`, and app-private paths, and updated support/issue-template copy.
-
-- [x] 🤖 🔬 **P2 — Network endpoint and credential inventory runbook** — shipped 2026-06-07 (Cycle 128; checked endpoint manifest, runbook, and scanner).
-  - Why: Aura depends on many remote providers plus Firebase, Open-Meteo, direct media URLs, NewPipe/yt-dlp, and optional AI generation; target-SDK and store reviews need an auditable endpoint/security inventory.
-  - Evidence: Retrofit API modules; provider repositories; `AppModule.kt`; Cycle 10 Android 17 network preflight; Android Network Security Configuration docs.
-  - Touches: `docs/security/network-endpoints.md`, provider policy matrix, release checklist, privacy/data-safety matrix, static scanner.
-  - Acceptance: runbook lists endpoint host, scheme, auth location, cleartext status, data sent, media cached, rate limit/cache policy, fallback behavior, kill switch, and release owner for every network surface.
-  - Verify: static endpoint scan matches the runbook; adding a new host/provider fails CI until the runbook and privacy/provider policy rows are updated.
-  - Progress 2026-06-07: Cycle 128 added `docs/security/network-endpoints.json`, `docs/security/network-endpoints.md`, `tools/network_endpoint_inventory_check.py`, live tool tests, and verify workflow wiring. The scanner currently covers 19 reviewed literal hosts across 15 endpoint surfaces.
+All items shipped or moved to Roadmap_Blocked.md.
 
 ---
 
 ## 🔬 Researcher Queue (Cycle 16 — 2026-06-04)
 
-Append-only Cycle 16 handoff. Every item below is source-backed in `docs/research/cycle-16-2026-06-04.md`; merge into the existing Now/Next/Later item named in `Touches` when implementation starts.
-
-- [x] 🤖 🔬 **P0 — Collection share-token backend path and rules alignment**
-  - Why: `CollectionExporter` publishes and imports `shared_collections/{token}/payload`, while `database.rules.json` grants collection-share access under `collection_shares/{token}`. RTDB access is denied by default without a matching rule.
-  - Evidence: `CollectionExporter.kt`; `database.rules.json`; Firebase RTDB core rules docs; Cycle 9/12 community backend findings.
-  - Touches: collection sharing, RTDB rules, Firebase emulator tests, collection import UI, privacy/community data docs.
-  - Acceptance: code and rules use one canonical share-token path; rules validate payload shape, version, item count, payload length, creator UID, createdAt, owner overwrite/delete, and admin cleanup.
-  - Verify: emulator tests cover publish, public read-by-token, owner/admin overwrite/delete, unauthenticated write denial, malformed payload denial, and oversized payload denial; app share/import succeeds against emulator rules.
-  - Progress 2026-06-06: Cycle 58 switched tracked rules to `shared_collections/{token}`, added `createdByUid` to published shares, bounded version/payload/name/item-count/created-at fields, allowed owner/admin cleanup, blocked non-owner overwrites, kept public token reads, denied the old `collection_shares` path, and added emulator coverage.
-
-- [ ] 🤖 🔬 **P2 — Export format compatibility and provenance schema policy**
-  - Why: Favorites and collections export format version 1 payloads do not yet document how future provenance, source-deleted state, license/action-capability, or local-only metadata will migrate.
-  - Evidence: `FavoritesExporter.kt`; `CollectionExporter.kt`; Cycle 13 provenance/action-capability item; Room v12-v14 source-aware migrations.
-  - Touches: `docs/data/export-format.md`, exporter models, import compatibility tests, provenance model, release notes.
-  - Acceptance: export schemas have documented required/optional fields, forward/backward compatibility behavior, version bump rules, provenance fields, privacy exclusions, and unsupported-version user copy.
-  - Verify: golden JSON fixtures for current and prior formats; future-version rejection text; legacy favorites-list import still works; collection v1 imports remain stable after provenance fields are added.
+All items shipped or moved to Roadmap_Blocked.md.
 
 ---
 
 ## 🔬 Researcher Queue (Cycle 17 — 2026-06-04)
 
-Append-only Cycle 17 handoff. Every item below is source-backed in `docs/research/cycle-17-2026-06-04.md`; merge into the existing Now/Next/Later item named in `Touches` when implementation starts.
-
-- [~] 🤖 🔬 **P1 — Runtime dependency and content-source coverage matrix**
-  - Why: `ContentSource` includes Audius, ccMixter, SoundCloud, Wikimedia, Internet Archive, NASA, Picsum, Klipy, Community, Bundled, AI-generated, and Local, but the Licenses screen lists only a subset of active/legacy sources.
-  - Evidence: `ContentSource`; `LicensesScreen.kt`; provider repositories; Cycle 3 provider-policy findings; F-Droid anti-feature definitions.
-  - Touches: provider policy, Licenses screen, Settings provider toggles, `docs/legal/provider-policy.md`, store/repository metadata.
-  - Acceptance: one matrix maps every runtime dependency and every `ContentSource` value to license/terms URL, attribution fields, action capabilities, cache/deletion policy, provider toggle, anti-feature/disclosure notes, and shipped/dormant status.
-  - Verify: unit/static test compares Gradle runtime dependency inventory and `ContentSource.entries` to the matrix; adding a source or dependency fails until the matrix and notices update.
-  - Progress 2026-06-05: content-source coverage is now code-backed by `ProviderDisclosure`, exposed in the Licenses screen, documented in `docs/legal/provider-policy.md`, and guarded by `ProviderDisclosureTest`. The dependency side is improved with visible rows for Firebase, Play services, ML Kit, NewPipe, youtubedl-android, yt-dlp, FFmpeg, ZXing, ProfileInstaller, Palette, desugaring, Kotlin coroutines, and serialization, but generated dependency inventory and notice-diff gating remain open.
-
-- [ ] 🤖 🔬 **P1 — Preserve item-level license and provenance through durable flows**
-  - Why: Sounds can display license/uploader/source metadata when live objects carry it, but `FavoriteEntity` does not persist sound license; wallpapers do not have a license field; exports do not yet document license/provenance compatibility.
-  - Evidence: `SoundDetailScreen.kt`; `WallpaperDetailScreen.kt`; `FavoriteEntity`; `Mappers.kt`; `FavoritesExporter.kt`; `CollectionExporter.kt`; Cycle 13 provenance/action-capability item.
-  - Touches: favorite/download/collection entities, Room migration, exporter schemas, detail screens, apply/share/download/editor gates.
-  - Acceptance: favorites, downloads, collections, imports, exports, and restored records preserve normalized license, original source page, uploader/creator, provider item ID, and action capabilities where known.
-  - Verify: golden export/import fixtures for CC0, CC BY, CC BY-NC, YouTube, SoundCloud, community, bundled, and local items; favorite/restore/detail UI still shows source license; restricted actions respect capability fields.
-
-- [ ] 🤖 🔬 **P1 — Store/repository disclosure source of truth**
-  - Why: Google Play IP policy, F-Droid anti-feature labeling, Izzy review, GitHub release notes, README, and in-app notices all need consistent answers about third-party content, non-free services, extractor/downloader features, and bundled assets.
-  - Evidence: `README.md`; `docs/distribution/channel-strategy.md`; `docs/distribution/supply-chain.md`; Google Play intellectual-property policy; F-Droid anti-feature docs.
-  - Touches: release checklist, README/legal docs, fastlane/metadata, Obtainium/Izzy/F-Droid notes, Settings Licenses/Privacy screens.
-  - Acceptance: a single docs/legal source drives in-app notice copy, release metadata, anti-feature declarations, third-party content disclaimers, and provider/source policy links.
-  - Verify: release checklist fails if dependency/source matrix changes without metadata review; generated release notes include notice/source disclosure links; F-Droid/Izzy draft metadata matches the matrix.
-
-- [ ] 🤖 🔬 **P2 — Bundled/Aura Picks upstream attribution policy**
-  - Why: Bundled Aura Picks currently use Freesound CC0 source URLs, but visible uploader data is generic and detail UI suppresses the upstream creator for the bundled label.
-  - Evidence: `BundledContentProvider.kt`; `SoundDetailScreen.kt`; Freesound source-page URLs in bundled sound entries; README third-party content note.
-  - Touches: Aura Originals/bundled manifest, curation review docs, sound detail provenance, release notices.
-  - Acceptance: bundled content metadata records upstream creator, source asset URL, source license, curation date, review result, and whether Aura can redistribute/bundle it; UI can show concise Aura Picks branding without hiding upstream attribution.
-  - Verify: bundled manifest fixture validates every item has source/license/creator fields; Sound detail exposes a source/provenance affordance; generated notices include bundled third-party assets.
+All items shipped or moved to Roadmap_Blocked.md.
 
 ## 🔬 Researcher Queue (Cycle 18 — 2026-06-06)
 
-Append-only Cycle 18 handoff. Every item below is source-backed in `docs/research/cycle-18-2026-06-06.md`; merge into the Cycle 17 generated-notices/native-compliance items when implementation starts.
-
-- [~] 🤖 🔬 **P0 — Native/copyleft artifact inspection packet**
-  - Why: `io.github.junkfood02.youtubedl-android:library:0.18.1` bundles yt-dlp and Python, and `:ffmpeg:0.18.1` supplies FFmpeg binaries. Generic Maven notice tools will not prove exact payload versions, FFmpeg build mode, ABI files, or source-offer links.
-  - Result: Cycle 23 added `tools/native_compliance_inventory.py`, committed `docs/legal/native-compliance.md`, and wired release CI to publish/checksum `NATIVE-COMPLIANCE.md` with the APK and `THIRD-PARTY-NOTICES.md`.
-  - Evidence: `app/build.gradle.kts`; `AudioTrimmer.kt`; `VideoCropScreen.kt`; youtubedl-android README; FFmpeg legal guidance; NewPipeExtractor GPL-3.0 license.
-  - Touches: `tools/`, release workflow, `docs/legal/native-compliance.md`, `docs/distribution/supply-chain.md`, release notes, uploaded release artifacts.
-  - Acceptance remaining: dependency version changes should fail until the packet is regenerated and reviewed; exact FFmpeg configure/source correspondence remains a release-owner review item.
-  - Verify: release artifact bundle includes the native/copyleft packet; future dependency-drift gate detects stale native packet evidence.
-
-- [ ] 🤖 🔬 **P1 — Release workflow publishes notice/SBOM artifacts**
-  - Why: GitHub/Obtainium users can currently inspect APK checksums and attestations, but not third-party notices or dependency/license inventory before installing the app.
-  - Evidence: `.github/workflows/release.yml` uploads APK, `SHA256SUMS.txt`, release notes, apksigner output, and aapt badging only; Cycle 18 found no notice/SBOM upload.
-  - Touches: `.github/workflows/release.yml`, release notes, `docs/distribution/release-signing.md`, `docs/distribution/supply-chain.md`.
-  - Acceptance: release artifacts include `THIRD-PARTY-NOTICES.md`, dependency license JSON, optional CycloneDX/SPDX SBOM, and native/copyleft packet; release notes link to each artifact.
-  - Verify: workflow dry run uploads all expected files with `if-no-files-found: error`; tag release attachment list includes notices next to the APK and checksum.
+All items shipped or moved to Roadmap_Blocked.md.
 
 ## 🔬 Researcher Queue (Cycle 19 — 2026-06-06)
 
-Append-only Cycle 19 handoff. Every item below is source-backed in `docs/research/cycle-19-2026-06-06.md`; use it to choose the first implementation spike for the generated-notices lane.
-
-- [ ] 🤖 🔬 **P1 — Notice artifacts become part of release checksums**
-  - Why: The release workflow currently checksums only the APK. If third-party notices and native compliance packets are release evidence, users should be able to verify those artifacts too.
-  - Evidence: `.github/workflows/release.yml`; Cycle 19 release workflow insertion-point analysis.
-  - Touches: release workflow steps between APK verification, checksum generation, release notes, artifact upload, and tag attachment.
-  - Acceptance: notice/SBOM/native packet files are generated before `SHA256SUMS.txt`, included in checksums, uploaded in workflow artifacts, and attached or linked on tag releases.
-  - Verify: manual workflow dry run shows checksum rows for APK plus notice artifacts and release notes mention each artifact.
+All items shipped or moved to Roadmap_Blocked.md.
 
 ## 🔬 Researcher Queue (Cycle 20 — 2026-06-06)
 
-Append-only Cycle 20 handoff. Every item below is source-backed in `docs/research/cycle-20-2026-06-06.md`; use it to turn the generated-notices lane from planning into implementation.
+All items shipped or moved to Roadmap_Blocked.md.
 
 ## 🔬 Researcher Queue (Cycle 21 — 2026-06-06)
 
-Append-only Cycle 21 handoff. Every item below is source-backed in `docs/research/cycle-21-2026-06-06.md`; use it to implement generated notices without forcing unreviewed UI dependency convergence.
-
-- [ ] 🤖 🔬 **P1 — AboutLibraries remains a secondary custom-Compose option**
-  - Why: AboutLibraries 14.2.1 configured on Aura's current toolchain, but default exports were incomplete and Windows compliance export logged path errors. It should not displace the working plugin-only Google path unless a follow-up config pass proves complete coverage.
-  - Evidence: Cycle 20 AboutLibraries spike; Cycle 21 plugin-only Google notice success.
-  - Touches: version catalog, app Gradle plugin config, Licenses UI only if Google resources/custom markdown are insufficient.
-  - Acceptance: no AboutLibraries adoption before a documented config pass includes Aura's actual release runtime graph; AboutLibraries 15.x remains blocked until the N-1 AGP upgrade because v15 requires AGP 8.13.
-  - Verify: if revisited, `aboutlibraries.json` must include NewPipeExtractor, youtubedl-android, Firebase, Play services ML Kit, ZXing, Palette, and ProfileInstaller.
+All items shipped or moved to Roadmap_Blocked.md.
 
 ## 🔬 Researcher Queue (Cycle 22 — 2026-06-06)
 
-Append-only Cycle 22 handoff. Every item below is source-backed in `docs/research/cycle-22-2026-06-06.md`; use it to finish hardening the new generated-notice lane and continue into native/copyleft payload evidence.
-
-- [~] 🤖 🔬 **P1 — Release workflow packages notices with checksums**
-  - Result: `.github/workflows/release.yml` now runs `:app:releaseOssLicensesTask`, writes `release/THIRD-PARTY-NOTICES.md`, includes it in `SHA256SUMS.txt`, uploads it as a workflow artifact, and attaches it to tagged GitHub Releases.
-  - Evidence: workflow diff plus `docs/distribution/supply-chain.md` release verification updates.
-  - Risk: the full `assembleRelease` workflow was not run locally because `CLAUDE.md` warns repeated APK/lint builds can exhaust this workstation; GitHub Actions remains the real validation environment.
-  - Verify: next tagged or manual release workflow should show checksum rows for both APK and `THIRD-PARTY-NOTICES.md`; release notes should mention the notices artifact.
-
-- [x] 🤖 🔬 **P0 — Restore ProviderDisclosure unit-test execution in real repo environment** — shipped 2026-06-06.
-  - Result: the code-backed provider policy guard now runs in the real repo with the local Android SDK path and Android Studio JBR.
-  - Evidence: `:app:testDebugUnitTest --tests com.freevibe.data.legal.ProviderDisclosureTest` passed after debug OSS task POM checksums were added to `gradle/verification-metadata.xml`.
-  - Touches: local developer setup docs, CI/unit-test runbook, not production code.
-  - Acceptance: focused `ProviderDisclosureTest` passes after generated-notice changes.
-  - Verify: focused unit-test command passes and the Licenses screen still has complete "Content Sources" rows from `ProviderDisclosure.kt`.
-
-- [x] 🤖 🔬 **P0 — Native/copyleft payload inspector for youtubedl-android and FFmpeg** — shipped 2026-06-06.
-  - Why: the generated Google notices cover Maven dependency coordinates and license texts, but they still do not inspect shipped AAR payload files, FFmpeg build mode, yt-dlp/Python payload versions, or GPL/LGPL source-offer evidence.
-  - Result: `tools/native_compliance_inventory.py` reads resolved Gradle cache artifacts, optionally inspects a final APK, and writes `NATIVE-COMPLIANCE.md`; release CI now generates, checksums, uploads, and attaches that packet.
-  - Evidence: Cycle 18 native/copyleft packet item; Cycle 22 generated-notice implementation gap; `docs/legal/native-compliance.md`; `docs/research/cycle-23-2026-06-06.md`.
-  - Touches: `tools/native_compliance_inventory.*`, `docs/legal/native-compliance.md`, release workflow artifact list, youtubedl-android AAR cache paths.
-  - Acceptance: local tool inspects resolved youtubedl-android library/ffmpeg AARs without full APK assembly, lists payload paths and licenses, and identifies the source/build references Aura must publish.
-  - Verify: report names youtubedl-android library, youtubedl-android ffmpeg, yt-dlp/Python payload notes, QuickJS, FFmpeg binary paths, and NewPipeExtractor GPL evidence.
+All items shipped or moved to Roadmap_Blocked.md.
 
 ## 🔬 Researcher Queue (Cycle 23 — 2026-06-06)
 
-Append-only Cycle 23 implementation record. The completed item is source-backed in `docs/research/cycle-23-2026-06-06.md`; use the open item as the next implementation entry point.
-
-- [x] 🤖 🔬 **P0 — Native/copyleft release packet shipped**
-  - Result: release artifacts now include `NATIVE-COMPLIANCE.md` with AAR hashes, optional final-APK payload entries, youtubedl-android/yt-dlp/Python/QuickJS/FFmpeg/NewPipeExtractor references, and explicit FFmpeg source-correspondence review notes.
-  - Evidence: `tools/native_compliance_inventory.py`, `docs/legal/native-compliance.md`, `.github/workflows/release.yml`, `docs/distribution/supply-chain.md`.
-  - Verification: `python -m py_compile tools/native_compliance_inventory.py`; `python tools\native_compliance_inventory.py --output docs\legal\native-compliance.md`.
-  - Remaining risk: Cycle 30 later extracted embedded FFmpeg configure lines from the 0.18.1 AAR; exact Termux package commit, patches, dependency source set, and build logs still remain a release-owner review requirement.
-
-- [x] 🤖 🔬 **P0 — Release-runtime license drift gate** — shipped 2026-06-06.
-  - Why: Aura now publishes human-readable Google OSS notices and a native packet, but nothing fails a build when release-runtime dependencies or native payload versions drift without reviewed metadata.
-  - Result: `tools/dependency_notice_lock.py` writes/checks `docs/legal/dependency-notices.lock.json`; PR/main verify and release workflows now fail when generated release dependency notices drift.
-  - Evidence: Cycle 18 dependency license drift item; `gradle/verification-metadata.xml`; `.github/workflows/release.yml`; `.github/workflows/verify.yml`; `docs/distribution/supply-chain.md`; generated `dependencies.json`.
-  - Touches: `tools/`, `docs/legal/dependency-notices.lock.json`, optional curated override JSON, release workflow, CI verification docs.
-  - Acceptance: deterministic check compares release dependency coordinates, generated notice input hashes, and notice-section hashes to a committed lockfile; added/removed/changed dependencies or notices fail until reviewed.
-  - Verify: `:app:releaseOssLicensesTask` passed; `python tools\dependency_notice_lock.py --mode check --lockfile docs\legal\dependency-notices.lock.json` returned status `ok` with 251 dependencies and 288 notice sections.
+All items shipped or moved to Roadmap_Blocked.md.
 
 ## 🔬 Researcher Queue (Cycle 24 — 2026-06-06)
 
-Append-only Cycle 24 implementation record. The completed item is source-backed in `docs/research/cycle-24-2026-06-06.md`; use the open item as the next implementation entry point.
-
-- [x] 🤖 🔬 **P0 — Dependency notice lockfile and CI gate shipped**
-  - Result: `docs/legal/dependency-notices.lock.json` records 251 sorted release dependency coordinates, 288 notice section hashes, and input hashes for Google OSS generated files.
-  - Evidence: `tools/dependency_notice_lock.py`, `.github/workflows/verify.yml`, `.github/workflows/release.yml`, `docs/distribution/supply-chain.md`.
-  - Verification: `:app:releaseOssLicensesTask` passed; `python -m py_compile tools\dependency_notice_lock.py tools\google_oss_to_markdown.py tools\native_compliance_inventory.py`; lock check returned status `ok`.
-  - Remaining risk: Google OSS outputs still do not provide source URLs or license IDs per dependency coordinate, so a curated overlay remains future work.
-
-- [x] 🤖 🔬 **P0 — Native packet freshness gate** — shipped 2026-06-06.
-  - Why: the dependency notice lockfile now catches generated Google OSS notice drift, but youtubedl-android, NewPipeExtractor, yt-dlp, Python, QuickJS, and FFmpeg payload evidence can still become stale if versions change without regenerating `docs/legal/native-compliance.md`.
-  - Result: `tools/native_compliance_inventory.py` now has `write-lock` and `check-lock` modes; `docs/legal/native-compliance.lock.json` records current native/copyleft artifact hashes and extracted payload facts; PR/main verify and release workflows fail on native evidence drift.
-  - Evidence: `tools/native_compliance_inventory.py`, `docs/legal/native-compliance.md`, `docs/legal/native-compliance.lock.json`, `docs/legal/dependency-notices.lock.json`, `app/build.gradle.kts`.
-  - Touches: `tools/`, `docs/legal/native-compliance.md`, release workflow, verify workflow, `docs/distribution/supply-chain.md`.
-  - Acceptance: check mode compares current resolved native/copyleft artifact hashes and extracted payload facts to a machine-readable lock; version/hash drift fails until reviewed.
-  - Verify: `python tools\native_compliance_inventory.py --mode check-lock --lockfile docs\legal\native-compliance.lock.json` returned status `ok` with 8 coordinates, 23 artifact records, and 36 payload entries.
+All items shipped or moved to Roadmap_Blocked.md.
 
 ## 🔬 Researcher Queue (Cycle 25 — 2026-06-06)
 
-Append-only Cycle 25 implementation record. The completed item is source-backed in `docs/research/cycle-25-2026-06-06.md`; use the open item as the next implementation entry point.
-
-- [x] 🤖 🔬 **P0 — Native compliance lockfile and freshness gate shipped**
-  - Result: native/copyleft artifact hashes, payload entries, yt-dlp facts, and Python payload facts are now locked in `docs/legal/native-compliance.lock.json`.
-  - Evidence: `tools/native_compliance_inventory.py`, `docs/legal/native-compliance.lock.json`, `.github/workflows/verify.yml`, `.github/workflows/release.yml`, `docs/distribution/supply-chain.md`.
-  - Verification: `python -m py_compile tools\native_compliance_inventory.py`; `python tools\native_compliance_inventory.py --mode check-lock --lockfile docs\legal\native-compliance.lock.json`; `python tools\native_compliance_inventory.py --output docs\legal\native-compliance.md`.
-  - Remaining risk: FFmpeg exact configure/source correspondence remains release-owner review work because the AAR does not encode it.
-
-- [x] 🤖 🔬 **P0 — Curated high-risk dependency overlay** — shipped 2026-06-06.
-  - Why: generated notices, dependency locks, and native locks now catch drift, but Aura still lacks a curated machine-readable overlay for source URLs, license IDs, app usage, and review notes on high-risk dependencies and native payloads.
-  - Evidence: `docs/legal/dependency-notices.lock.json`, `docs/legal/native-compliance.lock.json`, `docs/legal/native-compliance.md`, `ProviderDisclosure.kt`.
-  - Touches: `docs/legal/dependency-notice-overrides.json`, `tools/`, `docs/distribution/supply-chain.md`, Settings licenses handoff.
-  - Acceptance: high-risk dependencies and payloads have reviewed source URLs, license IDs, usage descriptions, and release-review notes; stale or orphaned overlay entries fail against the dependency/native locks.
-  - Verify: removing or renaming an overlay coordinate fails; adding a high-risk dependency without an overlay fails; reviewed overlay updates restore green status.
+All items shipped or moved to Roadmap_Blocked.md.
 
 ## 🔬 Researcher Queue (Cycle 26 — 2026-06-06)
 
-Append-only Cycle 26 implementation record. The completed item is source-backed in `docs/research/cycle-26-2026-06-06.md`; use the open item as the next implementation entry point.
-
-- [x] 🤖 🔬 **P0 — Curated high-risk dependency overlay shipped**
-  - Result: `docs/legal/dependency-notice-overrides.json` now records required source URL, license ID, usage, target, and release-review metadata for Firebase, Play services, ML Kit subject segmentation, NewPipeExtractor, youtubedl-android, yt-dlp, Python, QuickJS, FFmpeg, ProfileInstaller, and ZXing.
-  - Evidence: `tools/dependency_overlay_check.py`, `docs/legal/dependency-notice-overrides.json`, `.github/workflows/verify.yml`, `.github/workflows/release.yml`, `docs/distribution/supply-chain.md`.
-  - Verification: `python -m py_compile tools\dependency_overlay_check.py`; `python tools\dependency_overlay_check.py --overlay docs\legal\dependency-notice-overrides.json`.
-  - Remaining risk: exact FFmpeg configure/source correspondence remains release-owner review work because the resolved AAR still does not encode it.
-
-- [x] 🤖 🔬 **P1 — Release compliance artifact dry-run validation** — shipped 2026-06-06.
-  - Why: the release workflow now generates and attaches `THIRD-PARTY-NOTICES.md`, `NATIVE-COMPLIANCE.md`, `SHA256SUMS.txt`, and release notes, but the full GitHub Actions packaging path still needs a non-tag dry-run proof after the lock/overlay gates landed.
-  - Evidence: `.github/workflows/release.yml`, `docs/distribution/supply-chain.md`, `docs/legal/dependency-notices.lock.json`, `docs/legal/native-compliance.lock.json`, `docs/legal/dependency-notice-overrides.json`.
-  - Touches: release workflow, dry-run docs, release artifact checklist, optional workflow-dispatch artifact naming.
-  - Acceptance: workflow-dispatch or local CI-equivalent dry run proves notices, native packet, checksums, release notes, and APK packaging are produced together; failures leave actionable diagnostics.
-  - Verify: dry-run release lane completes without creating a public tag/release, or an equivalent documented local packaging script proves the same artifact set.
+All items shipped or moved to Roadmap_Blocked.md.
 
 ## 🔬 Researcher Queue (Cycle 27 — 2026-06-06)
 
-Append-only Cycle 27 implementation record. The completed item is source-backed in `docs/research/cycle-27-2026-06-06.md`; use the open item as the next implementation entry point.
-
-- [x] 🤖 🔬 **P1 — Release compliance artifact dry-run validation shipped**
-  - Result: manual release workflow runs now validate the final release bundle before workflow-artifact upload, while tag releases validate the same bundle before GitHub Release upload.
-  - Evidence: `tools/release_artifact_bundle_check.py`, `.github/workflows/release.yml`, `docs/distribution/release-dry-run.md`, `docs/distribution/release-signing.md`, `docs/distribution/supply-chain.md`.
-  - Verification: `python -m py_compile tools\release_artifact_bundle_check.py`; local temporary bundle smoke test; release-compliance Python compile and lock checks.
-  - Remaining risk: the full signed APK workflow still needs an actual GitHub Actions manual run with repository secrets, which cannot be executed from the local workspace.
-
-- [x] 🤖 🔬 **P1 — Preserve raw release notice inputs as workflow artifacts** — shipped 2026-06-06.
-  - Why: `THIRD-PARTY-NOTICES.md` is reviewer-friendly, but raw Google OSS inputs are still useful when investigating dependency drift or a license-section hash change after the fact.
-  - Evidence: `app/build/generated/third_party_licenses/release/dependencies.json`, generated `third_party_license_metadata`, generated `third_party_licenses`, `tools/google_oss_to_markdown.py`, `docs/legal/dependency-notices.lock.json`.
-  - Touches: release workflow, supply-chain docs, optional archive/checksum script.
-  - Acceptance: manual and tag release runs upload raw Google OSS input files or a small archive beside the markdown notice packet without changing the public APK install path.
-  - Verify: workflow artifact contains raw notice inputs; checksums or an archive manifest prove the raw files match the markdown and lockfile inputs.
+All items shipped or moved to Roadmap_Blocked.md.
 
 ## 🔬 Researcher Queue (Cycle 28 — 2026-06-06)
 
-Append-only Cycle 28 implementation record. The completed item is source-backed in `docs/research/cycle-28-2026-06-06.md`; use the open item as the next implementation entry point.
-
-- [x] 🤖 🔬 **P1 — Raw release notice input archive shipped**
-  - Result: release runs now publish `GOOGLE-OSS-RAW-INPUTS.zip` with raw Google OSS `dependencies.json`, `third_party_license_metadata`, `third_party_licenses`, and `MANIFEST.json`.
-  - Evidence: `tools/google_oss_raw_archive.py`, `.github/workflows/release.yml`, `tools/release_artifact_bundle_check.py`, `docs/distribution/release-dry-run.md`, `docs/distribution/supply-chain.md`.
-  - Verification: `python -m py_compile tools\google_oss_raw_archive.py`; local temporary generated-root archive smoke test; release-compliance Python compile and lock checks.
-  - Remaining risk: actual public release artifacts still need a real GitHub Actions manual dry run with repository signing secrets.
-
-- [x] 🤖 🔬 **P1 — User-facing dependency notice access path** — shipped 2026-06-06.
-  - Why: release artifacts now contain generated dependency notices, but the in-app Settings licenses surface still relies on manual rows for runtime/native dependencies.
-  - Evidence: `LicensesScreen.kt`, `ProviderDisclosure.kt`, `THIRD-PARTY-NOTICES.md`, `GOOGLE-OSS-RAW-INPUTS.zip`, `docs/distribution/supply-chain.md`.
-  - Touches: Settings licenses screen, release docs, possible generated-asset packaging decision.
-  - Acceptance: Settings exposes a clear path for users to review generated third-party notices without replacing content-source provider disclosures.
-  - Verify: local UI/resource path test or documented release-asset link path; no runtime dependency convergence regression from stock Google OSS notice activity.
+All items shipped or moved to Roadmap_Blocked.md.
 
 ## 🔬 Researcher Queue (Cycle 29 — 2026-06-06)
 
-Append-only Cycle 29 implementation record. The completed item is source-backed in `docs/research/cycle-29-2026-06-06.md`; use the open item as the next implementation entry point.
-
-- [x] 🤖 🔬 **P1 — User-facing dependency notice access shipped**
-  - Result: Settings > Open source licenses now opens a licenses screen with a first section for generated release notice artifacts.
-  - Evidence: `LicensesScreen.kt`, `SettingsScreen.kt`, `LicensesScreenTest`, `docs/research/cycle-29-2026-06-06.md`.
-  - Verification: focused `:app:testDebugUnitTest --tests com.freevibe.ui.screens.licenses.LicensesScreenTest` passed.
-  - Remaining risk: the latest-release links depend on a public GitHub Release existing with the expected artifacts.
-
-- [x] 🤖 🔬 **P0 — FFmpeg source-correspondence evidence shipped**
-  - Why: native locks and native packets identify FFmpeg payloads, but the resolved youtubedl-android FFmpeg AAR still needs a documented configure/source correspondence path for complete release-owner review.
-  - Evidence: `docs/legal/native-compliance.md`, `docs/legal/native-compliance.lock.json`, `docs/legal/dependency-notice-overrides.json`, `tools/native_compliance_inventory.py`.
-  - Touches: native compliance docs, release checklist, dependency overlay notes, possible source archive/link evidence.
-  - Acceptance: release owners have a documented source/configure correspondence path for the resolved youtubedl-android FFmpeg payload or an explicit unresolved-owner-action record with exact missing evidence.
-  - Verify: source URL/configure evidence is recorded; native compliance packet and release checklist point to it; unresolved gaps fail a documented manual review checklist.
-  - Result: Cycle 30 added `docs/legal/ffmpeg-source-correspondence.md`, extracted embedded FFmpeg 7.1.1 configure evidence from all four ABI payloads into `tools/native_compliance_inventory.py`, refreshed `docs/legal/native-compliance.md` and `docs/legal/native-compliance.lock.json`, and updated the release checklist/overlay.
-  - Verification: Python compile, native lock check, native markdown regeneration, dependency notice lock check, dependency overlay check, and diff checks passed.
-  - Remaining risk: the exact Termux package commit, patches, dependency source set, and build logs still need owner confirmation before publishing changed FFmpeg payloads.
+All items shipped or moved to Roadmap_Blocked.md.
 
 ## 🔬 Researcher Queue (Cycle 31 — 2026-06-06)
 
-Append-only Cycle 31 implementation record. The completed item is source-backed in `docs/research/cycle-31-2026-06-06.md`; use the open item as the next implementation entry point.
-
-- [x] 🤖 🔬 **P1 — Release dependency license policy gate**
-  - Why: generated notices, native locks, and curated overlays now prove dependency/payload drift, but Aura still lacks an explicit policy check that fails newly introduced disallowed or owner-review-required license IDs before release.
-  - Evidence: `docs/legal/dependency-notice-overrides.json`, `docs/legal/dependency-notices.lock.json`, `docs/legal/native-compliance.lock.json`, `tools/dependency_overlay_check.py`, `tools/dependency_notice_lock.py`.
-  - Touches: release-compliance tools, `docs/legal`, `.github/workflows/verify.yml`, `.github/workflows/release.yml`, `docs/distribution/supply-chain.md`.
-  - Acceptance: high-risk and disallowed license policy is encoded in a deterministic checked file or tool mode; PR/main/release checks fail when generated notices or overlays introduce unreviewed license IDs.
-  - Verify: sentinel overlay/lock fixture or local temporary copy proves an unreviewed license fails and reviewed metadata restores green status.
-
-- [x] 🤖 🔬 **P1 — Raw Google OSS archive retention policy**
-  - Why: `GOOGLE-OSS-RAW-INPUTS.zip` now preserves exact generated notice inputs and is attached to workflow artifacts plus tagged public releases, but Aura has not decided whether the raw archive should stay publicly attached forever or move to workflow-artifact retention after a validation window.
-  - Evidence: `.github/workflows/release.yml`, `tools/google_oss_raw_archive.py`, `tools/release_artifact_bundle_check.py`, `docs/distribution/supply-chain.md`, `docs/distribution/release-dry-run.md`.
-  - Touches: release workflow, release bundle validator, supply-chain docs, release dry-run docs, roadmap/state files.
-  - Acceptance: release-owner retention decision is documented; workflow and bundle validator behavior matches that decision; release verification steps tell owners where to find raw Google OSS inputs.
-  - Verify: local release-bundle smoke test or focused validator test proves the selected raw-archive expectation is enforced.
-
-- [x] 🤖 🔬 **P1 — Custom in-app dependency notice viewer**
-  - Why: Settings links to generated release artifacts, but the app still relies on manual dependency rows and cannot browse the generated dependency notice corpus in-app.
-  - Evidence: `app/src/main/java/com/freevibe/ui/screens/licenses/LicensesScreen.kt`, `tools/google_oss_to_markdown.py`, generated Google OSS raw resources, `docs/legal/dependency-notices.lock.json`.
-  - Touches: licenses screen models/UI/tests, generated notice parsing strategy, release notice docs, roadmap/state files.
-  - Acceptance: Aura has a feasible current-toolchain path for browsing generated dependency notices in-app without adding the risky stock Google runtime dependency; implementation is either shipped or a precise blocker-backed plan is recorded.
-  - Verify: focused licenses-screen unit tests or parser tests cover generated notice mapping and manual/provider disclosure preservation.
-
-- [x] 🤖 🔬 **P1 — Generated notice search and high-risk alignment**
-  - Why: the in-app generated notice viewer now lists generated entries, but a 288-entry notice corpus needs search/filtering and better alignment with curated high-risk overlay entries before it is comfortable for repeated owner review.
-  - Evidence: `GeneratedDependencyNotices.kt`, `LicensesScreen.kt`, `docs/legal/dependency-notice-overrides.json`, `docs/legal/dependency-license-policy.json`.
-  - Touches: licenses screen UI/tests, generated notice models, curated high-risk labels, roadmap/state files.
-  - Acceptance: generated notices can be filtered by dependency name or license label; high-risk overlay surfaces are easy to find without scrolling the whole generated list.
-  - Verify: focused parser/UI model tests cover filtering and high-risk matching.
-
-- [x] 🤖 🔬 **P1 — Generated notice metadata parity guard**
-  - Why: the in-app viewer parses `third_party_license_metadata` at runtime, but CI only locks generated notice sections through the Python lockfile. A lightweight parity check should prove the raw metadata count and parser assumptions stay aligned with the lock.
-  - Evidence: `GeneratedDependencyNotices.kt`, `tools/dependency_notice_lock.py`, `docs/legal/dependency-notices.lock.json`, generated Google OSS raw resources.
-  - Touches: release-compliance tools/tests, docs/legal lock docs, roadmap/state files.
-  - Acceptance: a deterministic check fails when generated raw metadata rows diverge from the locked notice-section count or contain malformed ranges.
-  - Verify: focused Python fixture or temporary generated-root smoke test proves malformed metadata fails and current generated outputs pass.
-
-- [x] 🤖 🔬 **P1 — Runtime provider kill-switch behavior matrix**
-  - Why: Aura has many provider toggles and legacy/dormant sources, but disabled-provider behavior is still mostly implicit. Users and release owners need predictable behavior when a provider is disabled, missing credentials, or temporarily unavailable.
-  - Evidence: `ProviderDisclosure.kt`, `PreferencesManager.kt`, `SettingsScreen.kt`, repository entry points for YouTube, Reddit, Pexels, Pixabay, community uploads, bundled content, and legacy sound providers.
-  - Touches: provider settings/disclosure docs, focused provider tests, roadmap/state files.
-  - Acceptance: current provider kill-switch and disabled-state behavior is mapped in a checked doc or tests; at least one high-risk implicit path is either fixed or captured with a concrete follow-up.
-  - Verify: focused unit tests or static checks prove disabled/missing provider states do not silently route users into unavailable sources.
+All items shipped or moved to Roadmap_Blocked.md.
 
 ---
 
 ## Now — execute this cycle
 
-Five items. Four landed in the 2026-05-16 autonomous batch (N-2..N-5, marked
-`[~]` and detailed in the Implementation Log). N-1 remains; it requires a build
-environment that can run `./gradlew :app:assembleDebug`.
-
-- [ ] **N-1** — Toolchain upgrade triad (AGP/Gradle/Kotlin/Compose BOM/Hilt). Deferred from the 2026-05-16 pass; needs JDK+SDK to verify.
-- [~] **N-2** — Firebase BoM 34.13.0 + Custom Claims admin path. Code + rules shipped; deploy `database.rules.json` + grant claims to existing admins to complete the rollout.
-- [~] **N-3** — Subject Segmentation + AGSL pipeline scaffold. Code shipped; concrete AGSL effects ship in NX-1/NX-2 follow-ups.
-- [~] **N-4** — Photo Picker + monochrome themed icon. Code shipped. WallpaperDescription scaffolding is comment-only until N-1 unlocks compileSdk 36.
-- [~] **N-5** — Aura Originals manifest schema + first-launch downloader. Infrastructure shipped; curation pass adds the actual sound entries to `assets/aura_originals_manifest.json`.
-
-### N-1. Toolchain upgrade triad (AGP 9 + Gradle 9 + Kotlin 2.3 + Compose BOM May 2026 + Hilt 2.59)
-
-- **Source(s):** [AGP 9.0 release notes](https://developer.android.com/build/releases/agp-9-0-0-release-notes); [AGP 9.1 notes](https://developer.android.com/build/releases/agp-9-1-0-release-notes); [Kotlin 2.3](https://kotlinlang.org/docs/whatsnew23.html); [Compose Apr-26 update](https://android-developers.googleblog.com/2026/04/jetpack-compose-april-2026-updates.html); [Dagger 2.59 release](https://github.com/google/dagger/releases/tag/dagger-2.59); [Compose Strong Skipping](https://developer.android.com/develop/ui/compose/performance/stability/strongskipping); [Android 17 SDK 37 adaptive requirement](https://developer.android.com/about/versions/17/release-notes).
-- **Why now:** Hilt 2.59 requires AGP 9 + Gradle 9.1; AGP 9 makes Kotlin built-in; KSP1 is incompatible with Kotlin 2.3+. Aura is two minor versions behind Kotlin, four minor behind Media3, six minor behind Hilt. Drift compounds. Compose Strong Skipping (default Compose Compiler 2.x) is a free ~20 % LazyGrid recomposition win once the BOM bumps.
-- **Scope:** AGP 8.7.3 → 9.2.x, Gradle 8.12 → 9.5+, Kotlin 2.1.0 → 2.3.20, KSP1 → KSP2, Compose BOM `2024.12.01` → `2026.05.00`, Material 3 1.3.1 → 1.4.x, Hilt 2.53.1 → 2.59.x, Lifecycle 2.8.7 → 2.10.x, Navigation 2.8.5 → 3.x (skip 2.9, decision 2026-06-13), Coroutines 1.9.0 → 1.10.x. Re-audit every `@Stable`/`@Immutable` annotation under Strong Skipping. Re-run `assembleDebug` / `testDebugUnitTest` / `lintDebug`. Verify NewPipeExtractor 0.24.8 still compiles against the new toolchain (it's the most fragile pin).
-- **Risk:** R8 keep-rule regressions; Hilt 2.59 generation differences on Kotlin 2.3; KSP2 incremental cache may need a clean. Mitigation: feature freeze for this pass; track APK size + cold-start delta.
-- **Fit 5 / Impact 4 / Effort 2 / Risk 3 / Deps 3 / Novelty 1 = 18 → upgraded to Now because it gates N-3, N-4, NX-2, NX-7.**
-
-### N-2. Firebase BoM 34.x + admin auth via Firebase Custom Claims
-
-- **Source(s):** [Firebase Android release notes](https://firebase.google.com/support/release-notes/android); [`protobuf` CVE-2024-7254 advisory in BoM 34](https://github.com/firebase/firebase-android-sdk/releases); [VoteRepository.kt:75 TODO](app/src/main/java/com/freevibe/data/repository/VoteRepository.kt#L75); [Firebase Custom Claims docs](https://firebase.google.com/docs/auth/admin/custom-claims).
-- **Why now:** Aura ships Firebase BoM 33.7.0. BoM 34.x updates transitive `protobuf-javalite` past CVE-2024-7254 and removes the deprecated KTX libraries. The admin-device-hash check in `VoteRepository` is documented in code as spoofable on rooted devices; Custom Claims move authorization server-side. Real risk: community uploads continue scaling.
-- **Scope:** Bump BoM to 34.x; migrate Firebase init off KTX-namespaced helpers if they go away; move `adminDeviceIdHashes` to a `custom_claims.admin` boolean enforced by RTDB Security Rules; ship `.rules` file in repo and CI-verify with `firebase deploy --only database:rules --project=verify`. Clear DB migration path required if RTDB → Firestore later (N-9 in Next).
-- **Risk:** Existing community-upload sessions keyed on anonymous device ID will lose admin status until they refresh through the new claim. Mitigation: dual-check during a one-cycle window.
-- **Fit 5 / Impact 4 / Effort 4 / Risk 4 / Deps 5 / Novelty 2 = 24 → NOW.**
-
-### N-3. Subject Segmentation API + AGSL effects pipeline
-
-- **Source(s):** [ML Kit Subject Segmentation reference](https://developers.google.com/ml-kit/vision/subject-segmentation/android); current pin `com.google.mlkit:segmentation-selfie:16.0.0-beta6`; [AGSL `RuntimeColorFilter` + `RuntimeXfermode` Android 16 docs](https://developer.android.com/about/versions/16/features); [AGSL Compose patterns](https://medium.com/androiddevelopers/agsl-made-in-the-shade-r-7d06d14fe02a); [Pixel Live Effects (Shape / Weather / Cinematic) coverage](https://9to5google.com/2025/06/10/android-16-qpr1-beta-2-adds-live-effects-section-to-wallpaper-picker/); [WallFlow smart-crop reference](https://github.com/ammargitham/WallFlow).
-- **Why now:** Selfie-segmentation is still on `16.0.0-beta6` two years after Google's beta tag — production risk. Subject Segmentation API (API 24+, multi-subject) is GA and out of beta. AGSL `RuntimeColorFilter`/`RuntimeXfermode` is the path forward for Aura's image-effect pipeline (Aura currently composes effects in Canvas). Direct parity with Pixel's "Shape" cutout and "Cinematic" depth effect with no dependency on Pixel-only system features.
-- **Scope:** Swap `ParallaxWallpaperService` segmenter to Subject Segmentation. Add `AgslEffectPipeline` that exposes `RuntimeShader`-backed filters reusable from wallpaper editor + live wallpapers. Ship three first-class effects: subject cutout with color-matched background ("Shape"); subject-aware depth parallax ("Cinematic", replacement for current Canvas parallax); subject-aware tint passthrough for weather wallpapers (subject untinted, background tinted).
-- **Risk:** AGSL needs Android 13+. minSdk 26 forces a fallback path; current Canvas pipeline becomes the fallback. ML Kit unbundled APK overhead (~4.5 MB + JNI spike — see existing pitfall log in CHANGELOG, [googlesamples/mlkit#386](https://github.com/googlesamples/mlkit/issues/386)).
-- **Fit 5 / Impact 5 / Effort 3 / Risk 4 / Deps 4 / Novelty 4 = 25 → NOW.**
-
-### N-4. Android Photo Picker migration + Monochrome themed app icon + Android 16 `WallpaperDescription`
-
-- **Source(s):** [Photo Picker behavior change Android 14+](https://developer.android.com/about/versions/14/changes/partial-photo-video-access); [Adaptive icons & monochrome](https://developer.android.com/develop/ui/views/launch/icon_design_adaptive); [WallpaperDescription reference](https://developer.android.com/reference/android/app/wallpaper/WallpaperDescription); [WallpaperInstance reference](https://developer.android.com/reference/android/app/wallpaper/WallpaperInstance); [UndeadWallpaper #48 — monochrome request](https://github.com/maocide/UndeadWallpaper/issues/48); [Doodle issues on AMOLED variants](https://github.com/patzly/doodle-android/issues/38).
-- **Why now:** Aura still declares `READ_EXTERNAL_STORAGE` (maxSdkVersion=28) and uses `ActivityResultContracts.OpenDocument()` for video / GIF. Image imports for community uploads and gallery wallpaper-crop should use Photo Picker — no permission prompt, better UX, scoped-storage compliant. Monochrome layer is a 30-minute fix that's been requested in every adjacent OSS app's tracker. WallpaperDescription/Instance is Android 16 baseline for letting one `WallpaperService` expose distinct home / lock / time-of-day variants — directly relevant to Aura's parallax + weather + AI wallpapers.
-- **Scope:** Replace gallery `OpenDocument` for image-MIME paths with `PickVisualMedia` (multi-select for batch import). Add `<adaptive-icon><monochrome>` drawable layer to `mipmap-anydpi-v26/ic_launcher.xml`. Declare `WallpaperDescription` metadata on `VideoWallpaperService`, `WeatherWallpaperService`, `ParallaxWallpaperService` so the system picker treats them as a single configurable engine instead of three separate live wallpapers. Wire matching `WallpaperInstance` for the home/lock split where Aura's `applyByLocator` already supports it.
-- **Risk:** WallpaperDescription is Android 16+ only — keep legacy `<service>` declarations as fallback.
-- **Fit 5 / Impact 4 / Effort 4 / Risk 5 / Deps 5 / Novelty 3 = 26 → NOW.**
-
-### N-5. Aura Originals — bundled CC0 sound pack (long-promised Phase 1.1)
-
-- **Source(s):** Aura ROADMAP Phase 1.1 (was P0 in prior priority matrix); [Freesound API + CC0 license walkthrough](https://opensource.creativecommons.org/blog/entries/freesound-intro/); [F-Droid Inclusion How-To](https://f-droid.org/docs/Inclusion_How-To/); [iOS 17/18 tone packs as cultural reference](https://www.zedge.net/find/ringtones/discord); [Ringdroid retirement signal making this niche open](https://forum.f-droid.org/t/ringtone-maker-app/22600); [WorkManager 2.10 + setExpedited download pattern](https://developer.android.com/reference/androidx/work/WorkRequest.Builder#setExpedited(androidx.work.OutOfQuotaPolicy)).
-- **Why now:** First-run currently demands the network. The "Aura Picks" carousel went URL-backed-prebuffered in v6.13.0 but the actual bundle never shipped. Every commercial competitor ships day-one content; Aura's instant-startup story is undermined the moment the user disables Wi-Fi or hits a rate limit.
-- **Scope:** Curate 200–500 CC0 sounds across ringtones (8–30s), notifications (1–5s), alarms (10–40s). Audit each for CC0 attribution + sha256 manifest for retroactive removal (per existing Round 3 note). Ship as a `WorkManager` first-launch download (~30 MB OGG) into `filesDir/aura_originals/` rather than bloating the APK. Update Room schema with `is_bundled` flag + `sha256` column (migration v14 → v15). Surface as "Aura Originals" tab + badge.
-- **Risk:** CC0 misattribution on Freesound is well-documented; require a moderator review pass on every bundled file. Audio fidelity normalization needed (per Round 3 warning that preview-hq-mp3 is re-encoded; the bundle should use originals).
-- **Fit 5 / Impact 5 / Effort 2 / Risk 3 / Deps 5 / Novelty 4 = 24 → NOW.**
+All five Now items (N-1 through N-5) have been moved to [Roadmap_Blocked.md](Roadmap_Blocked.md).
+N-1 requires a build environment; N-2 through N-5 have code shipped but remaining work requires Firebase Console owner access or physical device testing.
 
 ---
 
 ## Next — queued, scored, ready
 
-Thirteen items. All scored 18–25. Pull from the top of this list when Now closes. Four new items added in rev4 (NX-10..NX-13) sit at the back of the queue but score well; promote ahead of older items only when their dependencies (N-1 toolchain, primarily) are unblocked.
+Remaining actionable items. Most N-1-gated items have been moved to [Roadmap_Blocked.md](Roadmap_Blocked.md). NX-3, NX-10, NX-11, NX-12 shipped and were removed. NX-6 and NX-8 remain partially actionable.
 
 ### NX-1. GL/AGSL live wallpaper engine migration (T-9 reframed)
 
-- **Source(s):** [AlynxZhou/alynx-live-wallpaper](https://github.com/AlynxZhou/alynx-live-wallpaper) (ExoPlayer + OpenGL ES reference); [maocide/UndeadWallpaper](https://github.com/maocide/UndeadWallpaper) (gapless OpenGL + ExoPlayer); [Media3 1.9 dav1d-based AV1 extension](https://android-developers.googleblog.com/2025/12/media3-190-whats-new.html); [Media3 1.6 pre-warming decoders](https://android-developers.googleblog.com/2025/03/media3-1-6-0-is-now-available.html); [patzly/pallax-android archive note](https://github.com/patzly/pallax-android) (Canvas-based live wallpapers were archived due to rendering inefficiency — direct cautionary tale); [GLSurfaceView RGB_565 banding pitfall](https://www.learnopengles.com/how-to-use-opengl-es-2-in-an-android-live-wallpaper/); [scale-types issue](https://github.com/AlynxZhou/alynx-live-wallpaper/issues/14).
-- **Why next:** Aura's `VideoWallpaperService` uses `MediaPlayer` with `setVolume(0,0)`. Moving to Media3 ExoPlayer + AGSL/OpenGL pipeline lands four wins at once: gapless transitions; AV1 decode where hardware supports it; per-video focus rectangle / pan + zoom (Pixel Live Effects "Cinematic" parity); proper aspect-ratio handling. The existing Canvas-based parallax should also migrate behind AGSL `RuntimeColorFilter` for the same reason — Pallax was archived because Canvas live wallpapers can't keep up.
-- **Scope:** Vendor a thin `GLWallpaperService` base in `com.freevibe.wallpaper.gl/`. Pause render thread on `Engine.onVisibilityChanged(false)`. Add `media3-ui-compose` for the preview surface. Replace `VideoWallpaperService` MediaPlayer path with ExoPlayer + `samplerExternalOES` shader. Keep the Canvas GIF renderer (already battery-bounded). Add Pan / Zoom / Focus controls in the apply sheet. Per-video FPS cap + quality preset (Wallpaper Engine parity).
-- **Risk:** Largest refactor in 12 months. AV1 hardware decode is ~10 % of install base ([Meta engineering analysis](https://engineering.fb.com/2025/09/24/video-engineering/video-streaming-with-av1-video-codec-mobile-devices-meta-white-paper/)). Battery regression risk if the new pipeline skips invisible-pause.
-- **Fit 4 / Impact 5 / Effort 1 / Risk 2 / Deps 3 / Novelty 4 = 19 → NEXT.**
+Moved to [Roadmap_Blocked.md](Roadmap_Blocked.md) (N-1-gated).
 
 ### NX-2. Lockscreen depth — Subject-aware clock-tuck + lockscreen Glance widgets — `[~]` widget surface enabled 2026-05-17 rev4-impl
 
-> Lockscreen Glance widget surface enabled: `res/xml/freevibe_widget_info.xml` widget category bumped from `home_screen` to `home_screen|keyguard`. On Android 16 QPR2+ (December 2025 stable) the existing `FreeVibeWidget` is now placeable on the lockscreen surface without any Glance code change — the widget already reads from `WallpaperHistoryManager` so it shows the most-recent applied wallpaper as a background. Older Android versions silently ignore the `keyguard` bit. Clock-tuck (subject-aware mask blending) + the dedicated daily-pick lockscreen widget variant still pending — those need a `WallpaperHistoryManager.subjectMask` field, a new lockscreen-only `daily_pick_widget_info.xml`, and the Glance composable. Held until the user has tested the existing widget on a Pixel 9 / 10 lockscreen so we know which size to design for.
-
-
-
-- **Source(s):** [Android 16 QPR2 lock-screen widgets on phones](https://www.androidauthority.com/lock-screen-widgets-on-phones-android-16-qpr2-3589668/); [Glance 1.2 release notes](https://developer.android.com/jetpack/androidx/releases/glance); [One UI 8.5 Adaptive Lock Screen Clock](https://www.sammyfans.com/2025/09/28/one-ui-8-adaptive-lock-screen-clock/); [Nothing OS 4.1 depth effect](https://gadgets.beebom.com/guides/nothing-os-4-1-features); [iOS-style Depth Effect](https://www.one4studio.com/glossary/parallax-wallpaper); [Muzei issue #794 — different sources for lock and home](https://github.com/muzei/muzei/issues/794); [Doodle issue #92 — static lockscreen wallpaper](https://github.com/patzly/doodle-android/issues/92).
-- **Why next:** Aura's `dualWallpapers` already handles home/lock pairs. What's missing is the *subject-aware* depth effect that iOS, Nothing OS, and One UI all ship. With N-3's Subject Segmentation in place, "clock tucks behind wallpaper subject" is a derivative feature. Lock-screen Glance widgets land on phones in Android 16 QPR2; Aura's existing Glance widget should opt-in (`not_keyguard` category check) so it can run as a lockscreen daily-pick.
-- **Scope:** Generate clock-mask Bitmap on apply via subject segmentation; persist to `wallpaper_history` table. New live-wallpaper engine renders subject foreground layer over an artificially deepened background blur, with a hint surface that the system lockscreen renderer overlays the clock against. Ship a lockscreen Glance widget variant of Daily Pick. Add a "Lock screen only" option to wallpaper apply (Doodle parity).
-- **Risk:** Engine-side clock-position estimation is heuristic on non-Pixel devices; ship as Pixel + Samsung allowlist initially.
-- **Fit 5 / Impact 4 / Effort 2 / Risk 4 / Deps 3 / Novelty 5 = 23 → NEXT.**
-
-### NX-3. Smart Crop with Subject Segmentation (Phase 6.5 finally) — `[x]` wallpaper + video variants shipped 2026-05-17 rev4-impl(.2)
-
-> Wallpaper + video variants both shipped. **Wallpaper**: new `SmartCropCalculator.kt` (pure geometry, 7 unit tests) + `SmartCropDetector.kt` (ML Kit Subject Segmentation via the same unbundled segmenter that N-3 wired into `ParallaxWallpaperService`, accessed via reflection on the `SubjectSegmentationResult` type so the file is robust against minor ML Kit API drift). `WallpaperCropViewModel.applySmartCrop` is a suspend function returning the new `(scale, offsetX, offsetY)` transform; the composable launches it via `rememberCoroutineScope().launch` and syncs local `rememberSaveable` gesture state on success. UI: Smart Crop FilterChip with sparkle icon + Detecting… spinner; "Couldn't detect a subject — drag to position manually" snackbar fallback. **Video**: TopAppBar action button on `VideoCropScreen` extracts a frame at loop start via `MediaMetadataRetriever.getFrameAtTime(OPTION_CLOSEST_SYNC)`, runs the same `SmartCropDetector` against it, then pans the video so the detected subject lands at the viewport centre. Keeps the user's current zoom (different from wallpaper variant, which auto-zooms — video editors don't want to lose their carefully chosen crop scale). Translates subject pixel-coords through `fitScale * scale` to match `VideoCropScreen.clampTransform`'s coordinate system. Both variants share the detector; geometry differs only by viewport-coordinate convention.
-
-
-
-- **Source(s):** Aura Phase 6.5 (never shipped); [ML Kit Subject Segmentation Android](https://developers.google.com/ml-kit/vision/subject-segmentation/android); [WallFlow Plus smart crop](https://github.com/ammargitham/WallFlow); [WallYou advanced cropping](https://github.com/you-apps/WallYou/issues/189); [Paperize vertical scrolling crop](https://github.com/Anthonyy232/Paperize/issues/428).
-- **Why next:** N-3 lands Subject Segmentation; smart crop becomes a 2-day feature. Aura's existing pinch-zoom + aspect presets already give you most of the chrome; the missing piece is auto-positioning the crop rectangle to keep the primary subject in frame when reshaping landscape → portrait.
-- **Scope:** Smart Crop toggle in `WallpaperCropScreen` + `VideoCropScreen`. When enabled, run Subject Segmentation, compute bounding box, center crop rectangle on it. Compare against rule-of-thirds heuristic for non-portrait outputs. Fall back to existing center-crop if confidence < 0.5.
-- **Risk:** Slow on low-end devices; gate on Performance Class.
-- **Fit 5 / Impact 4 / Effort 4 / Risk 5 / Deps 2 (depends on N-3) / Novelty 3 = 23 → NEXT.**
+Moved to [Roadmap_Blocked.md](Roadmap_Blocked.md) (N-1-gated).
 
 ### NX-4. SelectedContentHolder removal (Phase 7.2) — `[~]` process-death survival shipped 2026-05-17 rev4-impl
 
-> Singleton now persists the **single selected wallpaper + selected sound** to a `freevibe_selected_content` SharedPreferences file via Moshi JSON on every `select*` call. On Hilt construction the holder lazy-restores from disk so after process death the detail screen's primary item is intact. `wallpaperList` (the pager-supporting list) intentionally still in memory only — process-death restoration of a 50-item URL list would jam the cold start with prefetch; the detail screen already handles the "list lost" case by collapsing to single-item display.
->
-> Full sweep — nav-graph-scoped `SelectionViewModel` backed by `SavedStateHandle` + `ViewModelScenario` process-death tests + delete `SelectedContentHolder.kt` — still queued. It's the wider refactor that touches every detail/pager screen and rides Navigation 3 typed keys (N-1-gated). This NX-4 rev4-impl closes the worst-case "wallpaper detail blank on resume" bug class without that refactor.
-
-
-
-- **Source(s):** Aura Phase 7.2; [Navigation Compose 2.9 type-safe routes](https://developer.android.com/jetpack/androidx/releases/navigation); [Lifecycle 2.10 `ViewModelScenario` for process-death testing](https://developer.android.com/jetpack/androidx/releases/lifecycle); existing `SelectedContentHolder.kt` (in-memory singleton).
-- **Why next:** The singleton bridges screens but doesn't survive process death — a well-documented gotcha in CLAUDE.md. Navigation 3 typed keys can pass enums and value classes; combined with `SavedStateHandle`, you can replace the holder with a per-nav-graph ViewModel and serialize selection state. Removes a class of "wallpaper detail blank on resume" bugs.
-- **Scope:** Move `selectedWallpaper`, `wallpaperList`, `selectedSound`, `pendingCategoryQuery` to a nav-graph-scoped `SelectionViewModel` backed by `SavedStateHandle`. Add a `ViewModelScenario` test for process-death restoration. Delete `SelectedContentHolder.kt`.
-- **Risk:** Touches every detail/pager screen. Diff will be wide but mechanical.
-- **Fit 5 / Impact 3 / Effort 3 / Risk 4 / Deps 3 / Novelty 1 = 19 → NEXT.**
+Moved to [Roadmap_Blocked.md](Roadmap_Blocked.md) (N-1-gated).
 
 ### NX-5. Plugin / source ABI — Muzei-compatible "Aura Sources"
 
-- **Source(s):** [Muzei Art Provider docs](https://api.muzei.co/); [MuzeiArtProvider source on GitHub](https://github.com/muzei/muzei/blob/main/muzei-api/src/main/java/com/google/android/apps/muzei/api/provider/MuzeiArtProvider.java); [Ian Lake's Muzei 3.0 announcement](https://medium.com/muzei/announcing-muzei-live-wallpaper-3-0-d167dd5795a4); [Pixiv4Muzei3 reference plugin](https://github.com/yellowbluesky/PixivforMuzei3); [HK Vision Muzei plugin reference](https://github.com/hossain-khan/android-hk-vision-muzei-plugin); [LiveWallpaperIt Muzei Reddit plugin](https://github.com/TBog/live-wallpaper-it); [Aura T-8 deferred note](docs/research/iter-1-scored.md); [Muzei plugin breaking-changes history](https://github.com/muzei/muzei/wiki/Changelog).
-- **Why next:** Adopting Muzei's `MuzeiArtProvider` IPC contract lets Aura *consume* every existing Muzei source (Pixiv, Reddit, HK Vision, etc.) without writing any source-specific code; it also lets Aura *publish* itself as a Muzei source so Muzei users see Aura content. Two extensible ecosystems for the price of one. Avoids the "Muzei 1.x → 2.x broke everything" trap by versioning from day one.
-- **Scope:** New `aura-sources` module exposing `AuraArtProvider` (Muzei-API-compatible). Wire `MuzeiArtSource` discovery via `PackageManager` query. Implement the inverse: a thin `MuzeiSourceBridge` repository that calls into installed Muzei providers and exposes their results in Aura's Discover. Version the contract from `v1`. Ship Pixiv source as a reference plugin in the repo.
-- **Risk:** Muzei's API is GPL-3 in places; verify license bridge. Wear-Os mismatch warning in Muzei #869 — be careful.
-- **Fit 4 / Impact 4 / Effort 2 / Risk 3 / Deps 3 / Novelty 5 = 21 → NEXT.**
+Moved to [Roadmap_Blocked.md](Roadmap_Blocked.md) (N-1-gated).
 
 ### NX-6. Scheduler triggers — per-app exclusion, screen-off pre-stage, sub-15-min intervals, per-unlock — `[~]` per-unlock + screen-off pre-stage shipped 2026-05-17 rev4-impl
 
@@ -1135,11 +305,7 @@ Thirteen items. All scored 18–25. Pull from the top of this list when Now clos
 
 ### NX-7. Favorites sync via Firestore + Google sign-in (Phase 7.3)
 
-- **Source(s):** Aura Phase 7.3; existing `default_web_client_id` blocker noted in Phase 4.3; [Firebase Auth Android docs](https://firebase.google.com/docs/auth/android/google-signin); [Room 2.8 schema defaults](https://developer.android.com/jetpack/androidx/releases/room); [Firestore offline persistence](https://firebase.google.com/docs/firestore/manage-data/enable-offline); [Aura existing FavoritesExporter](app/src/main/java/com/freevibe/service/FavoritesExporter.kt).
-- **Why next:** Once N-2 lands BoM 34 + Custom Claims, the Google sign-in OAuth client can be wired without a separate trust review. Favorites are the only stateful user data not already in cloud (community uploads + votes + creator follows already are). Sync lets users move devices without losing their library and lays the ground for Wear OS / desktop companions.
-- **Scope:** Google sign-in optional (no degradation for anonymous users). New Firestore collection `users/{uid}/favorites` with bidirectional sync against the local Room favorites table. Conflict resolution = last-write-wins by timestamp. Reuse FavoritesExporter's JSON schema for cross-device interop. Strong test coverage for sign-in / sign-out state changes.
-- **Risk:** Firestore quota; Anonymous-Firebase-identity → Google-auth account-link path is fragile (must `linkWithCredential` not re-create). Document the failure mode for users who sign in on two devices simultaneously.
-- **Fit 4 / Impact 4 / Effort 2 / Risk 3 / Deps 3 (N-2) / Novelty 2 = 18 → NEXT.**
+Moved to [Roadmap_Blocked.md](Roadmap_Blocked.md) (N-1-gated).
 
 ### NX-8. Distribution to F-Droid + IzzyOnDroid + Obtainium — `[~]` release integrity + metadata partials shipped
 
@@ -1161,83 +327,19 @@ Thirteen items. All scored 18–25. Pull from the top of this list when Now clos
 - **Risk:** F-Droid forbids non-free dependencies. Firebase Storage may push you to the IzzyOnDroid track only (which permits proprietary deps). NewPipe Extractor + youtubedl-android are GPL and OK.
 - **Fit 5 / Impact 4 / Effort 3 / Risk 4 / Deps 3 / Novelty 2 = 21 → NEXT.**
 
+> **Note:** Remaining work (per-ABI splits, F-Droid mainline, Izzy submission, branch protection) requires owner actions. See [Roadmap_Blocked.md](Roadmap_Blocked.md).
+
 ### NX-9. Media3 1.10 Material3 playback composables + dynamic scheduling
 
-- **Source(s):** [Media3 1.10 release blog](https://android-developers.googleblog.com/2026/03/media3-110-is-out.html); [Media3 1.10 dev blog post](https://developer.android.com/blog/posts/media3-1-10-is-out); [Media3 release page](https://developer.android.com/jetpack/androidx/releases/media3); [Compose 2026 ExoPlayer guide](https://medium.com/@ramadan123sayed/media-player-in-jetpack-compose-the-complete-2026-guide-exoplayer-media3-1-10-0a25af46ce7d); existing `SoundDetailScreen.kt` hand-rolled waveform + progress; existing `WallpaperPreviewScreen` video preview.
-- **Why next:** Aura's sound preview UI rolls its own waveform + progress + speed control across `SoundDetailScreen`, `SoundEditorScreen`, and the YouTube tab. Media3 1.10 (March 2026) adds Material3-styled composables — `PlayerComposable` (combines `ContentFrame` + controls), `ProgressSlider`, `PlaybackSpeedControl` — that replace ~300 LOC of custom UI with library code styled to match the rest of the app. Bonus: `ExoPlayer.Builder.experimentalSetDynamicSchedulingEnabled()` ships in 1.10 as an experimental power-saver for the in-app video preview surface — direct fit for Aura's battery-discipline charter.
-- **Scope:** Bump Media3 1.5.1 → 1.10.0 (sequenced inside N-1's lockstep toolchain pass; the new composables compile against Compose BOM 2026.05 only). Migrate `WallpaperPreviewScreen` video preview to `PlayerComposable` + `ContentFrame` + Aura's existing `GlassCard` chrome. Replace the hand-rolled scrubber in `SoundDetailScreen` with `ProgressSlider`. Add `PlaybackSpeedControl` to `SoundEditorScreen` (currently no in-editor speed control). Opt into `experimentalSetDynamicSchedulingEnabled()` behind a Settings → Advanced → Dynamic scheduling toggle for the video preview surface.
-- **Risk:** Library composables don't yet expose Aura's rectangular 4-12dp radius/letter-spacing design system from v6.16.0 polish — may need a thin theming wrapper. Experimental dynamic-scheduling API can be removed in any minor release; flag for monitoring.
-- **Fit 4 / Impact 3 / Effort 3 / Risk 4 / Deps 3 (N-1) / Novelty 2 = 19 → NEXT.**
-
-### NX-10. Android 17 EyeDropper API — pixel-pick → wallpaper colour search — `[~]` shipped 2026-05-17 rev4-impl-2
-
-> EyeDropper FAB lands in `WallpapersScreen` `FloatingActionTray` on the Discover tab. Raw-string Intent (`"android.intent.action.OPEN_EYE_DROPPER"` + `"android.intent.extra.COLOR"`) keeps the integration compatible with compileSdk 35 — no API 37 class refs at compile time. `eyeDropperAvailable` probes `PackageManager.resolveActivity` so the FAB hides on builds where the system EyeDropper app hasn't been installed yet (un-updated GSI). On pick, the returned `Int` colour flows through new `WallpapersViewModel.searchByPickedColor()` which strips alpha and converts to the 6-char hex Wallhaven's `colors=` query expects. No fallback path needed — Android 16 and below silently keep the existing Material You + Wallhaven palette flow because the FAB is hidden when the API isn't on the device. Future surface: the same launcher could seed `AiWallpaperScreen` prompts and community-upload colour tags; held to confirm Android 17 install-base + user signal first.
-
-
-
-- **Source(s):** [Android 17 Beta 2 EyeDropper announce — 9to5Google](https://9to5google.com/2026/02/26/android-17-beta-2-contacts-and-display-color-access/); [Android Engineers Substack walkthrough](https://androidengineers.substack.com/p/introducing-the-android-17-eye-dropper); [ProAndroidDev EyeDropper API deep-dive (Mar 2026)](https://proandroiddev.com/exploring-the-eyedropper-api-android-17-9d7be86aaa16); [Android 17 release notes](https://developer.android.com/about/versions/17/release-notes); [Android Authority first look](https://www.androidauthority.com/android-17-eyedropper-color-picker-3610073/); existing `WallpapersViewModel.matchMyTheme` (Material You accent → Wallhaven `colors=` query).
-- **Why next:** Aura's flagship "Match my theme" feature seeds Wallhaven colour search from the system Material You accent. EyeDropper (`Intent.ACTION_OPEN_EYE_DROPPER`, `Intent.EXTRA_COLOR`) ships in Android 17 (Beta 2, locked in Beta 3) and lets the user pick **any** on-screen pixel without screen-recording permission or accessibility-service abuse. Direct fit: "pick a colour from anywhere → seed wallpaper search → match my desk lamp / album art / favourite jacket". No OSS wallpaper app uses it yet — leapfrog opportunity tracked at zero implementation cost.
-- **Scope:** Wallpaper search bar + AI generation prompt + community-upload tag editor each get an EyeDropper FAB. Implement behind `Build.VERSION.SDK_INT >= 37` gate (no fallback needed — Android 16 and below keep the existing Material You + Wallhaven palette flow). Launch via `ActivityResultContracts.StartActivityForResult` since the API returns `Intent.EXTRA_COLOR` as an `Int`. Convert to nearest `WallhavenPurity`-safe colour query and to a Wallhaven `colors=` hex.
-- **Risk:** Android 17+ only — install base hits ~10 % by EOY 2026, mainstream by Q2 2027. Settings → Advanced toggle to surface the feature on supported devices avoids dead UI on older versions.
-- **Fit 4 / Impact 3 / Effort 4 / Risk 4 / Deps 3 (N-1 raises targetSdk) / Novelty 4 = 22 → NEXT.**
-
-### NX-11. Android 17 Photo Picker 9:16 portrait customization (N-4 follow-up) — `[~]` shipped 2026-05-17 rev4-impl-2
-
-> Drop-in `AuraPickVisualMedia` subclass of `ActivityResultContracts.PickVisualMedia` overrides `createIntent` and calls `PhotoPickerCustomization.apply9x16AspectRatio(intent)` before launching. The helper does the actual API-37-only API call via reflection (`PhotoPickerUiCustomizationParams.Builder().setGridAspectRatio(9, 16).build()` + `Intent.putExtra(EXTRA_PHOTO_PICKER_UI_CUSTOMIZATION_PARAMS, params)`) so the integration ships at compileSdk 35 today and becomes a straight-line call once N-1 unlocks compileSdk 37. Wired at three call sites: wallpaper community upload (`WallpapersScreen`), collection QR import (`CollectionsScreen`), parallax-from-photo (`SettingsScreen`). Reflection failure is logged DEBUG and never throws — picker falls back to its default 1:1 grid. Android 16 and below pass through transparently.
-
-
-
-- **Source(s):** [Android Developers Blog — Android 17 Beta 3 PhotoPickerUiCustomizationParams](https://android-developers.googleblog.com/2026/03/the-third-beta-of-android-17.html); [Android 17 release notes (Photo Picker section)](https://developer.android.com/about/versions/17/release-notes); [Photo Picker docs](https://developer.android.com/training/data-storage/shared/photo-picker); existing `PickVisualMedia.ImageOnly` call sites in `WallpapersScreen` community upload + `CollectionsScreen` QR import (landed in N-4 / commit `b0ae1fe`).
-- **Why next:** N-4 migrated image imports to the system Photo Picker. Android 17 adds `PhotoPickerUiCustomizationParams` to switch the picker's grid from 1:1 squares to 9:16 portrait thumbnails — the canonical wallpaper-app aspect ratio. Every wallpaper Aura ships at is portrait; every gallery picker today crops thumbnails wrong. This is the smallest, highest-fit follow-up to N-4 on the platform.
-- **Scope:** Wrap existing `PickVisualMedia` launchers in a version-gated builder. On Android 17+, attach `PhotoPickerUiCustomizationParams.Builder().setGridAspectRatio(9, 16).build()`. No code-change for older versions. One commit, ~30 LOC.
-- **Risk:** API only available on API 37+. Test against the embedded photo picker on Pixel 6+ once N-1 unlocks compileSdk 37.
-- **Fit 5 / Impact 3 / Effort 5 / Risk 5 / Deps 3 (N-1) / Novelty 2 = 23 → NEXT.**
-
-### NX-12. CI build verification on every push / PR (workflow gap) — `[~]` shipped 2026-05-17 rev4-impl
-
-> Shipped `.github/workflows/verify.yml` — triggers on `push: main` + `pull_request: main` + `workflow_dispatch`. Runs `assembleDebug` + `testDebugUnitTest` + `lintDebug` on JDK 17 with Gradle cache. Stubs `local.properties` so signing/API-key lookups don't fail in CI (release.yml stays the source of truth for signed builds). Uploads test + lint reports as artifacts on failure with 14-day retention. `concurrency` group cancels superseded runs so CI doesn't queue up on rapid pushes. Branch protection requiring `verify` must still be enabled on `main` by the repo owner.
-
-
-
-- **Source(s):** existing [`.github/workflows/release.yml`](.github/workflows/release.yml) — `on: push: tags: ['v*']` + `workflow_dispatch` only; no PR / branch protection trigger; no unit-test or lint step; [GitHub Actions Android template](https://github.com/actions/starter-workflows/blob/main/ci/android.yml); [Gradle build cache action `gradle/actions/setup-gradle`](https://github.com/gradle/actions); [F-Droid Reproducible Builds requirements](https://f-droid.org/en/docs/Reproducible_Builds/) (NX-8 depends on a clean build environment); existing 49 unit-test files awaiting CI runs.
-- **Why next:** Every Implementation Pass since 2026-04-25 has been **static-review-only** because the executing environment has no JDK/SDK. The N-1 toolchain triad (AGP 9 / Gradle 9 / Kotlin 2.3) cannot be honestly tested without a build-verified CI lane — bumping versions blind is a known regression vector for KSP2, Hilt, and Compose Strong Skipping. The current `release.yml` only fires on tag, so PRs and `main` pushes go un-verified. This is the dev-experience gap blocking N-1, NX-1, and most of T-A.
-- **Scope:** New `.github/workflows/verify.yml` triggered on `push: branches: [main]` and `pull_request: branches: [main]`. Jobs: setup JDK 17 → cache Gradle → `./gradlew assembleDebug testDebugUnitTest lintDebug`. Upload `app/build/reports/{tests,lint-results-debug.html}` as artifacts on failure. Optionally: `./gradlew :app:assembleRelease` behind a manually-fired `release-dry-run` job that uses a CI-only signing key (no leak risk; release.yml stays the source of truth). Enable branch protection on `main` requiring `verify` to pass. F-Droid reproducible-build verification is a stretch follow-up — defer to NX-8.
-- **Risk:** Workflow drift if `verify.yml` and `release.yml` diverge — mitigate by extracting the build steps into a shared composite action or a reusable workflow. Secrets-leak risk on PRs from forks — keep all signing keys out of `verify.yml`; restrict release jobs to `pull_request_target` only if absolutely needed (default: no).
-- **Fit 5 / Impact 4 / Effort 4 / Risk 5 / Deps 4 / Novelty 1 = 23 → NEXT.**
+Moved to [Roadmap_Blocked.md](Roadmap_Blocked.md) (N-1-gated).
 
 ### NX-13. Predictive-back wiring through Compose NavHost transitions — `[~]` partial, 4 of ~18 screens 2026-05-17 rev4-impl(.2)
 
-> BackHandler discipline now covers four in-flight / unsaved-changes screens:
-> - **`AiWallpaperScreen`** — back during generation cancels the in-flight Stability AI job (new `AiWallpaperViewModel.cancelGeneration()` + `generationJob: Job` tracker + `onCleared()` defensive cancel). Saves the user's API credit budget when they back out of a slow generation.
-> - **`VideoCropScreen`** — back while the FFmpeg subprocess is running toasts "Cropping in progress — please wait" and holds the screen so the cropped file has somewhere to land. Doesn't kill ffmpeg (its lifecycle is process-not-coroutine).
-> - **`WallpaperEditorScreen`** (rev4-impl-2) — back with dirty filter state (any non-default brightness / contrast / saturation / warmth / blur / AMOLED / vignette / grain) opens a "Discard edits?" `AlertDialog` with Keep editing / Discard. Discard calls `resetAll()` then `onBack()`.
-> - **`SoundEditorScreen`** (rev4-impl-2) — same pattern for trim fractions + fade-in/out (`trimStartFraction != 0f || trimEndFraction != 1f || fadeInMs != 0L || fadeOutMs != 0L`). Apply paths bypass the dialog by clearing the guard before `onBack` fires.
->
-> Remaining 14 detail/preview/picker screens (WallpaperDetailScreen, SoundDetailScreen, WallpaperPreviewScreen, VideoWallpaperPreviewScreen, ContactPickerScreen, and the rest) still rely on default activity finish. Full NavHost predictive-back-aware transitions ride on Navigation 3 which is N-1-gated. Hold the remainder until N-1 lands.
-
-
-
-- **Source(s):** [Predictive back in Compose docs](https://developer.android.com/develop/ui/compose/system/predictive-back); [Navigation 2.9 predictive-back integration](https://medium.com/@androidlab/androidx-navigation-2-9-6-complete-feature-breakdown-4b09ccd637dd); [Android 14 predictive back behaviour change](https://developer.android.com/about/versions/14/behavior-changes-14#predictive-back-gesture); existing `AndroidManifest.xml:50` (`android:enableOnBackInvokedCallback="true"`); existing `BackHandler` use confined to `CollectionsScreen.kt` + `FavoritesScreen.kt` (only 2 of ~22 detail/editor screens).
-- **Why next:** Aura's manifest opts in to predictive back. Without per-screen `BackHandler` discipline, Compose detail / editor / preview / picker screens fall back to default activity finish — the user gets no smooth peek-the-previous-screen animation that Android 14+ defaults to. With Navigation 2.9's predictive-back integration landing in N-1, every detail screen (WallpaperDetailScreen, SoundDetailScreen, AiWallpaperScreen, CollectionsScreen, WallpaperEditorScreen, VideoCropScreen, SoundEditorScreen, ContactPickerScreen) should declare a `BackHandler` for in-flight state cleanup (cancel coroutines, save scroll position) and animate `progress` smoothly through `PredictiveBackHandler`.
-- **Scope:** Audit all 22 screens. Add `BackHandler` to 18 missing ones with the right cleanup (cancel any in-flight FFmpeg / yt-dlp / segmenter job, save selection state). Switch NavHost to Navigation Compose 2.9's predictive-back-aware transitions in the same commit that bumps Navigation in N-1. Add a `PredictiveBackHandler` to one or two high-value flows (WallpaperEditor crop preview pull-to-dismiss; SoundEditor unsaved-changes confirm).
-- **Risk:** Misplaced `BackHandler` can swallow back navigation entirely — keep each guard narrow (`enabled = state.isInflight || state.hasUnsavedChanges`). Predictive-back animations require Navigation 3 for the NavDisplay integration; gating ties to N-1.
-- **Fit 4 / Impact 3 / Effort 4 / Risk 4 / Deps 4 (N-1) / Novelty 1 = 20 → NEXT.**
+Moved to [Roadmap_Blocked.md](Roadmap_Blocked.md) (N-1-gated).
 
 ### Audit findings (2026-06-15)
 
-- [ ] P2 — Extract shared `rethrowIfCancelled()` utility
-  Why: 9 identical private copies of `fun Throwable.rethrowIfCancelled()` across the codebase; a missed copy during refactoring could silently swallow CancellationException.
-  Where: UploadRepository.kt, WallpaperUploadRepository.kt, WallpaperRepository.kt, SoundsViewModel.kt, VideoWallpapersViewModel.kt, CollectionExporter.kt, CommunityBlockRepository.kt, CommunityReportRepository.kt, CreatorProfileRepository.kt
-
-- [ ] P2 — YtDlpUpdateManager non-atomic rollback/restore
-  Why: `prepareRollback()` and `restoreRollbackIfAvailable()` use `deleteRecursively()` then `copyRecursively()` — a process crash between these calls corrupts the rollback directory, leaving no valid runtime or rollback state. `restoreRollbackIfAvailable` also returns `true` via `getOrDefault(true)` even when `initYtDlp()` fails.
-  Where: service/YtDlpUpdateManager.kt
-
-- [ ] P3 — Missing integration test execution in CI
-  Why: `verify.yml` only runs unit tests (`testDebugUnitTest`); instrumented tests (`DatabaseMigrationTest`, `AccessibilityReleaseGateTest`) are never executed in CI.
-  Where: .github/workflows/verify.yml
-
----
+P2 items shipped (removed). P3 missing integration tests moved to [Roadmap_Blocked.md](Roadmap_Blocked.md).
 
 ## Later — scoped, deferred
 
@@ -3091,21 +2193,9 @@ Net-new items from the second 2026-06-09 research pass (live provider probes, ba
   Acceptance: at least one new source browses with paging, provenance fields (uploader, source page URL, license where exposed), default-on runtime switch, and disclosure row; Wallpaper of the Day can rank by Lemmy votes; provider policy doc updated; Wallpaper Cave only ships if a documented, ToS-clean endpoint exists — otherwise Lemmy-only and Wallpaper Cave is recorded as rejected.
   Complexity: M
 
-- [ ] P2 — **Scheduled automatic backup export of favorites/collections/settings**
-  Why: Aura's export is manual-only (`FavoritesExporter` via SAF). Device loss between manual exports loses curation. WallFlow's most-requested data-safety ask (#68) is automatic periodic backup to a user-chosen folder; complements (does not duplicate) Cycle 16's restore-reconciliation items.
-  Evidence: WallFlow issue #68; `FavoritesExporter.kt`/`CollectionExporter.kt` already produce the JSON payloads; WorkManager + persisted SAF tree URI is the standard pattern.
-  Touches: new `AutoBackupWorker` in `service/`, Settings > Data section (folder picker, frequency, keep-last-N), `BackgroundWorkReceiptStore` row, `docs/` data-safety note (backups stay local, no network).
-  Acceptance: opt-in scheduled export (daily/weekly) writes a timestamped JSON to the chosen SAF folder, prunes to N copies, survives reboot, records a receipt in the background-work diagnostics, and never runs when the folder permission was revoked (surfaces a fix-it notice instead).
-  Complexity: M
 
 ### P3 — Polish parity
 
-- [ ] P3 — **Rotation-time legibility effects (auto-darken/blur for scheduled wallpapers)**
-  Why: Bright rotated wallpapers make status-bar/clock text illegible; WallFlow's top-reacted open enhancement (#73) and Paperize's shipped change-time effects (darken/blur/vignette/grayscale) both validate applying a user-set effect during automatic rotation. Aura's editor already has these filters but `AutoWallpaperWorker` applies raw images.
-  Evidence: WallFlow issue #73; Paperize README effects list; `WallpaperEditorScreen` filter pipeline vs `AutoWallpaperWorker.kt` (no effect hook).
-  Touches: `AutoWallpaperWorker.kt`, `WallpaperApplier.kt` (optional bitmap-effect stage), Settings > Auto wallpaper (effect toggle + intensity), reuse editor's ColorMatrix/blur code paths.
-  Acceptance: optional darken/blur (off by default) applies to every scheduled/triggered rotation including widget shuffle; intensity preview shown in Settings; no effect applied to manual applies unless chosen; rotation latency increase stays under ~1s on a mid-range device.
-  Complexity: M
 
 ## Research-Driven Additions (2026-06-10 — pass 4)
 
@@ -3240,12 +2330,6 @@ This section records net-new parity work from the Zedge official/web/app pass. T
 
 ### P3 — Observability
 
-- [ ] P3 — Android 17 memory-limit awareness for bitmap-heavy flows
-  Why: Android 17 enforces RAM-based app memory limits via `MemoryLimiter:AnonSwap`. Aura's wallpaper rendering, Coil image caching (256 MB disk + memory cache), ML Kit segmentation, and FFmpeg video crop are memory-intensive. On low-RAM Android 17 devices, these flows may trigger silent kills detectable only via `ApplicationExitInfo.getDescription()`.
-  Evidence: Android 17 behavior changes documentation; `FreeVibeApp.kt` Coil 256 MB disk cache; `ParallaxWallpaperService.kt` ML Kit segmentation bitmap handling; `VideoCropScreen.kt` FFmpeg operations.
-  Touches: `FreeVibeApp.kt` (memory monitoring), `CrashDiagnosticsCollector.kt` (capture `ApplicationExitInfo` on next launch), Settings diagnostics (expose memory-limit kills).
-  Acceptance: crash diagnostics capture `MemoryLimiter:AnonSwap` exit reasons; Settings diagnostics show last memory-related kill; Coil memory cache respects device memory class; documentation records expected memory profile per flow.
-  Complexity: M
 
 ## Research-Driven Additions
 
@@ -3285,30 +2369,8 @@ This section records net-new parity work from the Zedge official/web/app pass. T
 
 ### P3 - Operational Maturity
 
-- [ ] P3 -- Enforce ROADMAP incomplete-only hygiene
-  Why: Repo instructions require ROADMAP to contain only incomplete work, but the current file still contains completed checkmarks, implementation logs, and continuation state that make anti-dup research harder.
-  Evidence: `AGENTS.md`; `ROADMAP.md`; `RESEARCH.md`
-  Touches: `ROADMAP.md`, a lightweight roadmap hygiene validator, `test/tools`, `.github/workflows/verify.yml`, existing changelog/completed-work surfaces if historical entries are moved
-  Acceptance: ROADMAP contains only active incomplete items after cleanup; a verify-time guard rejects new `[x]` items, implementation logs, continuation state, and dated cycle logs; historical context remains available through approved existing history surfaces or git history.
-  Complexity: M
 
 ## Research-Driven Additions
-
-### P1 — Reliability and Source Completeness
-
-- [ ] P1 — Hydrate Community Favorites from remote upload metadata
-  Why: The top-voted community row currently depends on Firebase vote IDs resolving to seed or Room-cached wallpapers, so valid remote-only uploads can make the row disappear.
-  Evidence: `app/src/main/java/com/freevibe/ui/screens/wallpapers/WallpapersViewModel.kt`; `app/src/main/java/com/freevibe/data/repository/VoteRepository.kt`; `app/src/main/java/com/freevibe/ui/screens/wallpapers/WallpapersScreen.kt`; Zedge and Backdrops catalog expectations.
-  Touches: `VoteRepository.kt`, community wallpaper metadata repository/cache, `WallpapersViewModel.kt`, `WallpapersScreen.kt`, Room cache tests.
-  Acceptance: top-voted Firebase IDs hydrate full community wallpaper metadata when not already locally cached; hydrated items are cached into Room; missing/deleted/private IDs are skipped with a diagnostic count; a test proves a remote-only vote ID renders in Community Favorites without prior local cache.
-  Complexity: M
-
-- [ ] P1 — Replace YouTube thumbnail-orientation proxy with stream metadata probe
-  Why: YouTube browse items currently use thumbnail dimensions as video orientation, while Android and Aura's local video pipeline expose real width, height, rotation, duration, and MIME metadata.
-  Evidence: `app/src/main/java/com/freevibe/ui/screens/videowallpapers/VideoWallpapersViewModel.kt`; `app/src/main/java/com/freevibe/service/VideoWallpaperStorage.kt`; Android `MediaMetadataRetriever`; Wallpaper Engine and UndeadWallpaper media-info expectations.
-  Touches: `YouTubeRepository.kt`, `VideoWallpapersViewModel.kt`, `VideoWallpaperStorage.kt`, video metadata cache/schema if needed, video browse/detail tests.
-  Acceptance: YouTube items store probed or display-correct width, height, rotation, duration, and MIME/codec when available before orientation filtering or apply decisions; unknown metadata is labeled as unknown and never inferred from thumbnails; tests cover a rotated portrait clip.
-  Complexity: M
 
 ### P2 — Maintainability
 
@@ -3327,3 +2389,17 @@ This section records net-new parity work from the Zedge official/web/app pass. T
   Touches: `gradle/libs.versions.toml`, `AppModule.kt`, repository request builders/interceptors, `SourceMetrics.kt`, Settings diagnostics tests.
   Acceptance: source/provider name and request purpose are attached as typed OkHttp call tags or equivalent interceptor metadata; diagnostics attribute timeout/header failures to the source without URL parsing; tests cover Wallhaven, Pexels, YouTube metadata, and Firebase-excluded calls.
   Complexity: M
+
+## Deep Audit Findings (2026-06-17) — deferred items
+
+- [ ] P2 — Add withTimeout to Firebase .get().await() calls across repositories
+  Why: All Firebase RTDB .get().await() calls run without timeouts. On flaky mobile networks, Firebase's internal retry can hang 30s+ causing indefinite loading states.
+  Where: VoteRepository.kt, CreatorProfileRepository.kt, CommunityBlockRepository.kt, UploadRepository.kt, WallpaperUploadRepository.kt (fetchWallpapersByKeys already has 8s timeout).
+
+- [ ] P2 — CreatorProfileRepository.getDashboard triggers up to 160 individual Firebase reads
+  Why: Dashboard loads both sound/wallpaper uploads (80 each) then calls getVoteCountsOnce per upload ID, each a separate Firebase read. Cold dashboard load can take multiple seconds.
+  Where: CreatorProfileRepository.kt lines 249-261.
+
+- [ ] P3 — WallpaperEditorViewModel OOM downscale produces half-res output without user notification
+  Why: When applyColorMatrix catches OutOfMemoryError, it creates a half-size bitmap. The user sees a low-res preview and applies a low-res wallpaper without any indication it was downscaled.
+  Where: WallpaperEditorViewModel.kt lines 220-225.

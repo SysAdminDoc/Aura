@@ -90,6 +90,9 @@ data class VideoWallpaperItem(
     val popularity: Long = 0, // Views (YouTube), upvotes (Reddit), or 0 (Pexels)
     val videoWidth: Int = 0,
     val videoHeight: Int = 0,
+    val videoRotationDegrees: Int = 0,
+    val videoMimeType: String = "",
+    val videoCodec: String = "",
     val contentSource: com.freevibe.data.model.ContentSource = com.freevibe.data.model.ContentSource.LOCAL,
     val license: String = "",
     val sourcePageUrl: String = "",
@@ -576,10 +579,8 @@ fun VideoWallpapersScreen(
             text = {
                 Column(Modifier.verticalScroll(rememberScrollState())) {
                     Text(item.title, style = MaterialTheme.typography.bodyMedium)
-                    if (item.hasDimensions) {
-                        Spacer(Modifier.height(2.dp))
-                        Text("${item.videoWidth}x${item.videoHeight} (${if (item.isPortrait) "Portrait" else "Landscape"})", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                    }
+                    Spacer(Modifier.height(2.dp))
+                    Text(item.videoTechnicalSummary(), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     Spacer(Modifier.height(4.dp))
                     Text("${item.loopBadge()} · ${item.batteryBadge()} · ${item.fitBadge(state.orientation)}", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.primary)
                     Spacer(Modifier.height(12.dp))

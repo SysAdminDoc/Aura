@@ -11,6 +11,7 @@ import com.freevibe.util.rethrowIfCancelled
 import com.freevibe.data.remote.pexels.PexelsApi
 import com.freevibe.data.remote.pixabay.PixabayVideo
 import com.freevibe.data.repository.YouTubeRepository
+import com.freevibe.data.repository.YouTubeVideoMetadata
 import com.freevibe.data.repository.VoteRepository
 import com.freevibe.data.repository.pixabayRateLimitBackoffMillis
 import com.freevibe.service.MAX_VIDEO_WALLPAPER_BYTES
@@ -26,6 +27,7 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ensureActive
@@ -34,6 +36,8 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Semaphore
+import kotlinx.coroutines.sync.withPermit
 import kotlinx.coroutines.withContext
 import okhttp3.OkHttpClient
 import okhttp3.Request
@@ -49,6 +53,7 @@ import javax.inject.Inject
 internal const val PIXABAY_VIDEO_CACHE_TTL_MS = 24 * 60 * 60 * 1000L
 private const val PIXABAY_VIDEO_CACHE_PREFS = "freevibe_pixabay_video_cache"
 private const val PIXABAY_VIDEO_RATE_LIMITED_UNTIL_KEY = "pixabay_video_rate_limited_until_ms"
+private const val YOUTUBE_VIDEO_METADATA_PROBE_LIMIT = 12
 
 internal data class VideoLoadProgress(
     val hasMore: Boolean,
@@ -70,6 +75,17 @@ internal data class PixabayVideoMetadataResult(
 internal data class CachedPixabayVideoMetadata(
     val result: PixabayVideoMetadataResult,
     val cachedAtMs: Long,
+)
+
+internal data class YouTubeVideoSearchItem(
+    val videoId: String,
+    val title: String,
+    val thumbnailUrl: String,
+    val thumbnailWidth: Int,
+    val thumbnailHeight: Int,
+    val duration: Long,
+    val uploaderName: String,
+    val viewCount: Long,
 )
 
 internal fun resolveVideoLoadProgress(
@@ -127,6 +143,28 @@ internal fun keepPexelsVideosAsEnhancement(
     val hasBaseInventory = items.any { !it.source.equals("Pexels", ignoreCase = true) }
     return if (hasBaseInventory) items else items.filterNot { it.source.equals("Pexels", ignoreCase = true) }
 }
+
+internal fun mapYouTubeVideoSearchItem(
+    item: YouTubeVideoSearchItem,
+    metadata: YouTubeVideoMetadata?,
+): VideoWallpaperItem = VideoWallpaperItem(
+    id = "yt_${item.videoId}",
+    title = item.title,
+    thumbnailUrl = item.thumbnailUrl,
+    source = "YouTube",
+    duration = metadata?.durationSeconds?.takeIf { it > 0 } ?: item.duration,
+    uploaderName = item.uploaderName,
+    videoId = item.videoId,
+    popularity = item.viewCount,
+    videoWidth = metadata?.width?.takeIf { it > 0 } ?: 0,
+    videoHeight = metadata?.height?.takeIf { it > 0 } ?: 0,
+    videoRotationDegrees = metadata?.rotationDegrees ?: 0,
+    videoMimeType = metadata?.mimeType.orEmpty(),
+    videoCodec = metadata?.videoCodec.orEmpty(),
+    contentSource = com.freevibe.data.model.ContentSource.YOUTUBE,
+    license = "YouTube",
+    sourcePageUrl = "https://www.youtube.com/watch?v=${item.videoId}",
+)
 
 internal fun mapPixabayVideosToMetadata(
     videos: List<PixabayVideo>,
@@ -647,21 +685,37 @@ class VideoWallpapersViewModel @Inject constructor(
                         val query = searchQ?.let { "$it$orientSuffix" } ?: ytQueries[s.ytQueryIndex % ytQueries.size]
                         val extractor = service.getSearchExtractor(query)
                         extractor.fetchPage()
-                        extractor.initialPage.items
+                        val youtubeCandidates = extractor.initialPage.items
                             .filterIsInstance<StreamInfoItem>()
                             .filter { it.duration in 5..120 }
                             .filter { item -> junkPatterns.none { it.containsMatchIn(item.name) } }
                             .filter { !it.name.contains("#") }
                             .sortedByDescending { it.viewCount }
+                            .take(YOUTUBE_VIDEO_METADATA_PROBE_LIMIT)
                             .map { item ->
                                 val vid = item.url.substringAfter("v=").substringBefore("&")
-                                // Use thumbnail dimensions as proxy for video orientation
                                 val thumb = item.thumbnails.firstOrNull { it.width > 0 && it.height > 0 }
                                     ?: item.thumbnails.firstOrNull()
-                                val tw = thumb?.width?.takeIf { it > 0 } ?: 0
-                                val th = thumb?.height?.takeIf { it > 0 } ?: 0
-                                VideoWallpaperItem(id = "yt_$vid", title = item.name, thumbnailUrl = thumb?.url ?: "", source = "YouTube", duration = item.duration, uploaderName = item.uploaderName ?: "", videoId = vid, popularity = item.viewCount, videoWidth = tw, videoHeight = th, contentSource = com.freevibe.data.model.ContentSource.YOUTUBE, license = "YouTube", sourcePageUrl = "https://www.youtube.com/watch?v=$vid")
+                                YouTubeVideoSearchItem(
+                                    videoId = vid,
+                                    title = item.name,
+                                    thumbnailUrl = thumb?.url ?: "",
+                                    thumbnailWidth = thumb?.width?.takeIf { it > 0 } ?: 0,
+                                    thumbnailHeight = thumb?.height?.takeIf { it > 0 } ?: 0,
+                                    duration = item.duration,
+                                    uploaderName = item.uploaderName ?: "",
+                                    viewCount = item.viewCount,
+                                )
                             }
+                        val metadataProbeSemaphore = Semaphore(4)
+                        youtubeCandidates.map { candidate ->
+                            async(Dispatchers.IO) {
+                                val metadata = metadataProbeSemaphore.withPermit {
+                                    youtubeRepo.getVideoMetadata(candidate.videoId)
+                                }
+                                mapYouTubeVideoSearchItem(candidate, metadata)
+                            }
+                        }.awaitAll()
                     } catch (e: Throwable) {
                         e.rethrowIfCancelled()
                         failedSources += "YouTube"
@@ -759,7 +813,7 @@ class VideoWallpapersViewModel @Inject constructor(
 
             // Pre-resolve YouTube URLs
             mixed.filter { youtubeEnabled && it.source == "YouTube" && !streamUrls.containsKey(it.id) }.let { ytItems ->
-                val sem = kotlinx.coroutines.sync.Semaphore(5)
+                val sem = Semaphore(5)
                 ytItems.forEach { item ->
                     launch {
                         sem.acquire()

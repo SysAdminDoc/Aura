@@ -17,6 +17,77 @@ import org.schabi.newpipe.extractor.stream.StreamInfoItem
 import javax.inject.Inject
 import javax.inject.Singleton
 
+internal data class VideoDisplayDimensions(
+    val width: Int,
+    val height: Int,
+)
+
+internal data class YouTubeVideoMetadata(
+    val width: Int = 0,
+    val height: Int = 0,
+    val rotationDegrees: Int = 0,
+    val durationSeconds: Long = 0L,
+    val mimeType: String = "",
+    val videoCodec: String = "",
+) {
+    val hasDimensions: Boolean get() = width > 0 && height > 0
+}
+
+internal fun displayCorrectVideoDimensions(
+    width: Int,
+    height: Int,
+    rotationDegrees: Int,
+): VideoDisplayDimensions {
+    val normalizedRotation = ((rotationDegrees % 360) + 360) % 360
+    val shouldSwap = normalizedRotation == 90 || normalizedRotation == 270
+    return if (shouldSwap && width > 0 && height > 0) {
+        VideoDisplayDimensions(width = height, height = width)
+    } else {
+        VideoDisplayDimensions(width = width.coerceAtLeast(0), height = height.coerceAtLeast(0))
+    }
+}
+
+internal fun parseYtDlpVideoMetadataOutput(raw: String): YouTubeVideoMetadata? {
+    val fields = raw.lineSequence()
+        .map { it.trim() }
+        .mapNotNull { line ->
+            val separator = line.indexOf('=')
+            if (separator <= 0) return@mapNotNull null
+            line.substring(0, separator).trim() to line.substring(separator + 1).trim()
+        }
+        .toMap()
+
+    val rawWidth = fields["width"].asPositiveInt()
+    val rawHeight = fields["height"].asPositiveInt()
+    val rotation = fields["rotation"].asIntOrZero()
+    val display = displayCorrectVideoDimensions(
+        width = rawWidth,
+        height = rawHeight,
+        rotationDegrees = rotation,
+    )
+    val duration = fields["duration"].asDurationSeconds()
+    val ext = fields["ext"].normalizedYtDlpValue()
+    val codec = fields["vcodec"].normalizedYtDlpValue()
+    val mimeType = videoMimeTypeForExtension(ext)
+
+    val hasMetadata = display.width > 0 ||
+        display.height > 0 ||
+        rotation != 0 ||
+        duration > 0 ||
+        mimeType.isNotBlank() ||
+        codec.isNotBlank()
+    if (!hasMetadata) return null
+
+    return YouTubeVideoMetadata(
+        width = display.width,
+        height = display.height,
+        rotationDegrees = rotation,
+        durationSeconds = duration,
+        mimeType = mimeType,
+        videoCodec = codec,
+    )
+}
+
 /**
  * YouTube search + stream extraction via NewPipe Extractor.
  * Scrapes YouTube directly — no API key, no Piped instances, no quotas.
@@ -212,6 +283,40 @@ class YouTubeRepository @Inject constructor(
         }
     }
 
+    internal suspend fun getVideoMetadata(videoId: String): YouTubeVideoMetadata? = withContext(Dispatchers.IO) {
+        if (!isProviderEnabled()) {
+            sourceMetrics.recordDisabled(sourceName)
+            return@withContext null
+        }
+        try {
+            sourceMetrics.measure(sourceName) {
+                val url = "https://www.youtube.com/watch?v=$videoId"
+                val request = com.yausername.youtubedl_android.YoutubeDLRequest(url)
+                request.addOption("-f", "bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best")
+                request.addOption("--skip-download")
+                request.addOption("--no-playlist")
+                request.addOption("--print", "width=%(width)s")
+                request.addOption("--print", "height=%(height)s")
+                request.addOption("--print", "rotation=%(rotation)s")
+                request.addOption("--print", "duration=%(duration)s")
+                request.addOption("--print", "ext=%(ext)s")
+                request.addOption("--print", "vcodec=%(vcodec)s")
+                val response = com.yausername.youtubedl_android.YoutubeDL.getInstance().execute(request)
+                val metadata = parseYtDlpVideoMetadataOutput(response.out.orEmpty())
+                if (metadata != null) {
+                    ytDlpUpdateManager.recordExtractionSuccess()
+                }
+                metadata
+            }
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            ytDlpUpdateManager.recordExtractionFailure(e)
+            if (BuildConfig.DEBUG) android.util.Log.e("YouTubeRepo", "getVideoMetadata failed for $videoId: ${e.javaClass.simpleName}: ${e.message}")
+            null
+        }
+    }
+
     private suspend fun isProviderEnabled(): Boolean = prefs.youtubeProviderEnabled.first()
 
     private suspend fun recordEmptyExtractorResult() {
@@ -240,6 +345,42 @@ class YouTubeRepository @Inject constructor(
         uploaderName = uploaderName ?: "Unknown",
         sourcePageUrl = url,
     )
+}
+
+private fun String?.normalizedYtDlpValue(): String =
+    this
+        ?.trim()
+        ?.takeUnless { it.equals("NA", ignoreCase = true) || it.equals("none", ignoreCase = true) }
+        .orEmpty()
+
+private fun String?.asPositiveInt(): Int =
+    normalizedYtDlpValue()
+        .toDoubleOrNull()
+        ?.toInt()
+        ?.takeIf { it > 0 }
+        ?: 0
+
+private fun String?.asIntOrZero(): Int =
+    normalizedYtDlpValue()
+        .toDoubleOrNull()
+        ?.toInt()
+        ?: 0
+
+private fun String?.asDurationSeconds(): Long =
+    normalizedYtDlpValue()
+        .toDoubleOrNull()
+        ?.toLong()
+        ?.takeIf { it > 0L }
+        ?: 0L
+
+private fun videoMimeTypeForExtension(ext: String): String = when (ext.lowercase(java.util.Locale.ROOT)) {
+    "mp4", "m4v" -> "video/mp4"
+    "webm" -> "video/webm"
+    "mkv" -> "video/x-matroska"
+    "mov" -> "video/quicktime"
+    "3gp", "3gpp" -> "video/3gpp"
+    "ogv", "ogg" -> "video/ogg"
+    else -> ""
 }
 
 /**

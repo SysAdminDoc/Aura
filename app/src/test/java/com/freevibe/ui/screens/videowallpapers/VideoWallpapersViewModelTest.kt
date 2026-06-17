@@ -3,6 +3,7 @@ package com.freevibe.ui.screens.videowallpapers
 import com.freevibe.data.remote.pixabay.PixabayVideo
 import com.freevibe.data.remote.pixabay.PixabayVideoFile
 import com.freevibe.data.remote.pixabay.PixabayVideoFiles
+import com.freevibe.data.repository.YouTubeVideoMetadata
 import com.freevibe.data.repository.sanitizeVoteKey
 import com.freevibe.util.rethrowIfCancelled
 import kotlinx.coroutines.CancellationException
@@ -125,6 +126,44 @@ class VideoWallpapersViewModelTest {
         assertEquals("https://cdn.example.com/one.mp4", result.streamUrls["pbv_1"])
         assertEquals("Pixabay", result.items.first().source)
         assertEquals(720, result.items.first().videoHeight)
+    }
+
+    @Test
+    fun `youtube mapper does not use thumbnail dimensions as video dimensions`() {
+        val item = mapYouTubeVideoSearchItem(
+            item = youtubeSearchItem(
+                thumbnailWidth = 1280,
+                thumbnailHeight = 720,
+            ),
+            metadata = null,
+        )
+
+        assertFalse(item.hasDimensions)
+        assertEquals(0, item.videoWidth)
+        assertEquals(0, item.videoHeight)
+        assertEquals("Unknown video dimensions", item.videoTechnicalSummary())
+    }
+
+    @Test
+    fun `youtube mapper stores probed metadata when available`() {
+        val item = mapYouTubeVideoSearchItem(
+            item = youtubeSearchItem(duration = 45),
+            metadata = YouTubeVideoMetadata(
+                width = 1080,
+                height = 1920,
+                rotationDegrees = 90,
+                durationSeconds = 12,
+                mimeType = "video/mp4",
+                videoCodec = "avc1.640028",
+            ),
+        )
+
+        assertTrue(item.hasDimensions)
+        assertEquals(1080, item.videoWidth)
+        assertEquals(1920, item.videoHeight)
+        assertEquals(90, item.videoRotationDegrees)
+        assertEquals(12L, item.duration)
+        assertEquals("1080x1920 (Portrait) · rotated 90deg · avc1.640028 · video/mp4", item.videoTechnicalSummary())
     }
 
     @Test
@@ -294,6 +333,21 @@ class VideoWallpapersViewModelTest {
         ),
         views = 123,
         user = "Pixabay maker",
+    )
+
+    private fun youtubeSearchItem(
+        thumbnailWidth: Int = 0,
+        thumbnailHeight: Int = 0,
+        duration: Long = 16,
+    ) = YouTubeVideoSearchItem(
+        videoId = "abc123",
+        title = "Aurora loop",
+        thumbnailUrl = "https://img.youtube.com/vi/abc123/maxresdefault.jpg",
+        thumbnailWidth = thumbnailWidth,
+        thumbnailHeight = thumbnailHeight,
+        duration = duration,
+        uploaderName = "Channel",
+        viewCount = 12_000,
     )
 
     private fun http429(vararg headers: Pair<String, String>): HttpException {
