@@ -5,6 +5,7 @@ import com.freevibe.di.IoDispatcher
 import com.yausername.youtubedl_android.YoutubeDL
 import dagger.hilt.android.qualifiers.ApplicationContext
 import java.io.File
+import java.io.IOException
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlinx.coroutines.CancellationException
@@ -184,13 +185,13 @@ class YtDlpUpdateManager @Inject constructor(
     private fun prepareRollback(runtimeDir: File) {
         val rollbackDir = rollbackDir()
         val stagingDir = File(rollbackDir.parentFile, ROLLBACK_STAGING_NAME)
-        stagingDir.deleteRecursively()
+        deleteManagedRecursively(stagingDir)
         if (runtimeDir.exists()) {
-            runtimeDir.copyRecursively(target = stagingDir, overwrite = true)
+            copyManagedDirectory(runtimeDir, stagingDir)
         }
-        rollbackDir.deleteRecursively()
+        deleteManagedRecursively(rollbackDir)
         if (stagingDir.exists()) {
-            stagingDir.renameTo(rollbackDir)
+            moveManagedDirectory(stagingDir, rollbackDir)
         }
     }
 
@@ -199,28 +200,89 @@ class YtDlpUpdateManager @Inject constructor(
         if (!rollbackDir.exists()) return false
         val runtimeDir = runtimeDir()
         val staleDir = File(runtimeDir.parentFile, STALE_RUNTIME_NAME)
-        staleDir.deleteRecursively()
-        if (runtimeDir.exists()) {
-            if (!runtimeDir.renameTo(staleDir)) {
-                runtimeDir.deleteRecursively()
+        var movedCurrentRuntime = false
+        var restoreTargetTouched = false
+        return try {
+            deleteManagedRecursively(staleDir)
+            if (runtimeDir.exists()) {
+                movedCurrentRuntime = runtimeDir.renameTo(staleDir)
+                restoreTargetTouched = true
+                if (!movedCurrentRuntime) {
+                    deleteManagedRecursively(runtimeDir)
+                }
             }
-        }
-        val restored = rollbackDir.copyRecursively(target = runtimeDir, overwrite = true)
-        if (!restored) {
-            runtimeDir.deleteRecursively()
-            if (staleDir.exists()) staleDir.renameTo(runtimeDir)
+            restoreTargetTouched = true
+            copyManagedDirectory(rollbackDir, runtimeDir)
+            restorePreviousLibraryVersion()
+            val initialized = runCatching {
+                runtime.initYtDlp(context, runtimeDir)
+            }.isSuccess
+            if (!initialized) {
+                tryDeleteManagedRecursively(staleDir)
+                return false
+            }
+            tryDeleteManagedRecursively(staleDir)
+            true
+        } catch (_: IOException) {
+            if (restoreTargetTouched) {
+                tryDeleteManagedRecursively(runtimeDir)
+            }
+            if (movedCurrentRuntime) {
+                runCatching { restoreStaleRuntime(staleDir, runtimeDir) }
+            }
             return false
         }
-        staleDir.deleteRecursively()
-        restorePreviousLibraryVersion()
-        return runCatching {
-            runtime.initYtDlp(context, runtimeDir)
-            true
-        }.getOrDefault(false)
     }
 
     private fun cleanupRollback() {
-        rollbackDir().deleteRecursively()
+        tryDeleteManagedRecursively(rollbackDir())
+    }
+
+    private fun copyManagedDirectory(source: File, target: File) {
+        requireManagedYtDlpPath(source)
+        requireManagedYtDlpPath(target)
+        if (!source.isDirectory) {
+            throw IOException("${source.name} is not a directory")
+        }
+        if (!source.copyRecursively(target = target, overwrite = true)) {
+            throw IOException("Failed to copy ${source.name} to ${target.name}")
+        }
+    }
+
+    private fun moveManagedDirectory(source: File, target: File) {
+        requireManagedYtDlpPath(source)
+        requireManagedYtDlpPath(target)
+        if (!source.renameTo(target)) {
+            copyManagedDirectory(source, target)
+            deleteManagedRecursively(source)
+        }
+    }
+
+    private fun restoreStaleRuntime(staleDir: File, runtimeDir: File) {
+        if (!staleDir.exists()) return
+        deleteManagedRecursively(runtimeDir)
+        moveManagedDirectory(staleDir, runtimeDir)
+    }
+
+    private fun deleteManagedRecursively(path: File) {
+        requireManagedYtDlpPath(path)
+        if (path.exists() && !path.deleteRecursively()) {
+            throw IOException("Failed to delete ${path.name}")
+        }
+    }
+
+    private fun tryDeleteManagedRecursively(path: File) {
+        runCatching { deleteManagedRecursively(path) }
+    }
+
+    private fun requireManagedYtDlpPath(path: File) {
+        val root = ytdlpRoot().canonicalFile
+        val candidate = path.canonicalFile
+        val rootPath = root.path.trimEnd(File.separatorChar)
+        val candidatePath = candidate.path.trimEnd(File.separatorChar)
+        require(candidatePath != rootPath && candidatePath.startsWith("$rootPath${File.separator}")) {
+            "Refusing to modify unmanaged yt-dlp path: $candidatePath"
+        }
     }
 
     private fun rememberPreviousLibraryVersion() {
@@ -266,11 +328,14 @@ class YtDlpUpdateManager @Inject constructor(
         }
     }
 
+    private fun ytdlpRoot(): File =
+        File(context.noBackupFilesDir, YTDLP_ANDROID_DIR)
+
     private fun runtimeDir(): File =
-        File(File(context.noBackupFilesDir, YTDLP_ANDROID_DIR), YTDLP_DIR_NAME)
+        File(ytdlpRoot(), YTDLP_DIR_NAME)
 
     private fun rollbackDir(): File =
-        File(File(context.noBackupFilesDir, YTDLP_ANDROID_DIR), ROLLBACK_DIR_NAME)
+        File(ytdlpRoot(), ROLLBACK_DIR_NAME)
 
     private inline fun writeMetadata(block: android.content.SharedPreferences.Editor.() -> Unit) {
         metadataPrefs.edit().apply(block).apply()

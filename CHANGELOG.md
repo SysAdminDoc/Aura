@@ -2,6 +2,11 @@
 
 All notable changes to Aura will be documented in this file.
 
+## v6.32.5 (2026-06-18)
+- **yt-dlp rollback hardening**: guarded recursive cleanup to the managed
+  yt-dlp runtime directory and made rollback restore failures preserve the
+  currently installed runtime instead of risking a half-copied recovery state.
+
 ## v6.32.4 (2026-06-18)
 - **Community reliability**: bounded Firebase RTDB reads with an 8-second
   timeout across community votes, uploads, creator profiles, moderation reports,

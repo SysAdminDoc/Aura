@@ -53,7 +53,7 @@ class AutoBackupWorker @AssistedInject constructor(
                 return Result.failure()
             }
 
-            val timestamp = FILENAME_FORMAT.get()!!.format(Date())
+            val timestamp = timestampFormatter().format(Date())
             val fileName = "aura_backup_$timestamp.json"
 
             val newDocUri = DocumentsContract.createDocument(
@@ -135,6 +135,9 @@ class AutoBackupWorker @AssistedInject constructor(
         private val FILENAME_FORMAT = object : ThreadLocal<SimpleDateFormat>() {
             override fun initialValue() = SimpleDateFormat("yyyy-MM-dd_HHmmss", Locale.ROOT)
         }
+
+        private fun timestampFormatter(): SimpleDateFormat =
+            FILENAME_FORMAT.get() ?: SimpleDateFormat("yyyy-MM-dd_HHmmss", Locale.ROOT).also(FILENAME_FORMAT::set)
 
         suspend fun schedule(context: Context) {
             val prefs = PreferencesManager(context)

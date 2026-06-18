@@ -98,7 +98,30 @@ class YtDlpUpdateManagerTest {
         val restored = manager.recordExtractionFailure(IllegalStateException("po token failed"))
 
         assertFalse(restored)
+        assertEquals("old", fixture.runtimeFile.readText())
         assertEquals(YtDlpUpdateStatus.FAILED, manager.snapshot().lastStatus)
+    }
+
+    @Test
+    fun `corrupted rollback preserves current runtime and reports restore failed`() = runTest(dispatcher) {
+        val fixture = createFixture()
+        fixture.runtimeFile.writeText("old")
+        val fakeRuntime = FakeYtDlpRuntime(
+            updateAction = {
+                fixture.runtimeFile.writeText("new")
+            },
+        )
+        val manager = fixture.manager(fakeRuntime)
+
+        manager.updateStable()
+        fixture.rollbackDir.deleteRecursively()
+        fixture.rollbackDir.writeText("not a rollback directory")
+        val restored = manager.recordExtractionFailure(IllegalStateException("po token failed"))
+
+        assertFalse(restored)
+        assertEquals("new", fixture.runtimeFile.readText())
+        assertEquals(YtDlpUpdateStatus.FAILED, manager.snapshot().lastStatus)
+        assertFalse(manager.snapshot().pendingValidation)
     }
 
     @Test

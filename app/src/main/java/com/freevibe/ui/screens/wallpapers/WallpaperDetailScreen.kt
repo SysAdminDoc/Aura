@@ -486,11 +486,11 @@ fun WallpaperDetailScreen(
                         }
 
                         // Material You extracted theme colors
-                        if (colorPalette != null) {
+                        val palette = colorPalette
+                        if (palette != null) {
                             Spacer(Modifier.height(16.dp))
                             DetailSectionTitle("Your theme colors")
                             Spacer(Modifier.height(8.dp))
-                            val palette = colorPalette!!
                             val scrollState = rememberScrollState()
                             Row(
                                 modifier = Modifier

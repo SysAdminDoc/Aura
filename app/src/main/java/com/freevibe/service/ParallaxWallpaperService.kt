@@ -336,13 +336,14 @@ class ParallaxWallpaperService : WallpaperService() {
                                 }
                             }
 
-                            fgBitmap = try {
+                            val foreground = try {
                                 Bitmap.createBitmap(bmpW, bmpH, Bitmap.Config.ARGB_8888)
                             } catch (e: OutOfMemoryError) {
                                 if (BuildConfig.DEBUG) android.util.Log.w("ParallaxWP", "fgBitmap OOM: ${e.message}")
                                 return@addOnSuccessListener
                             }
-                            fgBitmap!!.setPixels(fgPixels, 0, bmpW, 0, 0, bmpW, bmpH)
+                            foreground.setPixels(fgPixels, 0, bmpW, 0, 0, bmpW, bmpH)
+                            fgBitmap = foreground
 
                             synchronized(bitmapLock) {
                                 if (generation != segmentGeneration) return@addOnSuccessListener
