@@ -2,6 +2,11 @@
 
 All notable changes to Aura will be documented in this file.
 
+## v6.32.6 (2026-06-18)
+- **External link safety**: Settings, licenses, video policy links, and
+  wallpaper source links now use a shared launcher that rejects local/script
+  schemes and shows consistent feedback when Android has no handler.
+
 ## v6.32.5 (2026-06-18)
 - **yt-dlp rollback hardening**: guarded recursive cleanup to the managed
   yt-dlp runtime directory and made rollback restore failures preserve the

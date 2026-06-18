@@ -1,7 +1,6 @@
 package com.freevibe.ui.screens.videowallpapers
 
 import android.content.Context
-import android.content.Intent
 import android.net.Uri
 import android.util.Log
 import android.widget.Toast
@@ -72,6 +71,7 @@ import com.freevibe.ui.components.CompactSearchField
 import com.freevibe.ui.components.CountBadge
 import com.freevibe.ui.LiveWallpaperLaunchMode
 import com.freevibe.ui.launchLiveWallpaperPicker
+import com.freevibe.ui.util.openExternalUrl
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -1015,15 +1015,6 @@ private fun VideoPolicyLinkButton(
         Icon(icon, contentDescription = null, modifier = Modifier.size(16.dp))
         Spacer(Modifier.width(6.dp))
         Text(label, maxLines = 1, overflow = TextOverflow.Ellipsis)
-    }
-}
-
-private fun openExternalUrl(context: Context, url: String) {
-    if (url.isBlank()) return
-    runCatching {
-        context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)))
-    }.onFailure {
-        Toast.makeText(context, "Could not open link", Toast.LENGTH_SHORT).show()
     }
 }
 

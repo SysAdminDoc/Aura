@@ -3,7 +3,6 @@ package com.freevibe.ui.screens.wallpapers
 import android.app.WallpaperManager
 import android.content.ComponentName
 import android.content.Intent
-import android.net.Uri
 import androidx.compose.animation.*
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
@@ -58,6 +57,7 @@ import com.freevibe.ui.policy.COMMUNITY_REPORT_TAKEDOWN_COPY
 import com.freevibe.ui.policy.communityBlockConfirmationCopy
 import com.freevibe.ui.policy.communityOwnerDeleteConfirmationCopy
 import com.freevibe.ui.launchLiveWallpaperPicker
+import com.freevibe.ui.util.openExternalUrl
 import coil.compose.AsyncImagePainter
 import coil.compose.SubcomposeAsyncImage
 import coil.compose.SubcomposeAsyncImageContent
@@ -608,13 +608,7 @@ fun WallpaperDetailScreen(
                                     icon = Icons.Default.Link,
                                     label = "Source",
                                     tint = MaterialTheme.colorScheme.secondary,
-                                    onClick = {
-                                        runCatching {
-                                            context.startActivity(
-                                                Intent(Intent.ACTION_VIEW, Uri.parse(wp.sourcePageUrl))
-                                            )
-                                        }
-                                    },
+                                    onClick = { openExternalUrl(context, wp.sourcePageUrl) },
                                 )
                             }
                             if (communityProviderEnabled) {

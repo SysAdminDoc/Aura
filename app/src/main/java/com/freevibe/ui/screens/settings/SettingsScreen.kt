@@ -81,6 +81,7 @@ import com.freevibe.ui.components.HighlightPill
 import com.freevibe.ui.components.AuraSnackbarHost
 import com.freevibe.ui.screens.aigenerate.GeneratedWallpaperDisclosureDialog
 import com.freevibe.ui.launchLiveWallpaperPicker
+import com.freevibe.ui.util.openExternalUrl
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.text.DateFormat
@@ -96,12 +97,6 @@ private enum class SettingsPermissionPrompt {
     DAILY_NOTIFICATION_RECOVERY,
     WEATHER_LOCATION_REQUEST,
     WEATHER_LOCATION_RECOVERY,
-}
-
-private fun openExternalUrl(context: Context, url: String) {
-    try {
-        context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)))
-    } catch (_: Exception) {}
 }
 
 @Composable

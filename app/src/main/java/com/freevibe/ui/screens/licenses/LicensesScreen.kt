@@ -1,7 +1,5 @@
 package com.freevibe.ui.screens.licenses
 
-import android.content.Intent
-import android.net.Uri
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.foundation.verticalScroll
@@ -22,6 +20,7 @@ import androidx.compose.ui.unit.dp
 import com.freevibe.R
 import com.freevibe.data.legal.providerDisclosures
 import com.freevibe.ui.components.CompactSearchField
+import com.freevibe.ui.util.openExternalUrl
 
 data class OssLicense(
     val name: String,
@@ -248,11 +247,7 @@ private fun SectionHeader(title: String, detail: String? = null) {
 private fun LicenseCard(lic: OssLicense) {
     val context = LocalContext.current
     Surface(
-        onClick = {
-            try {
-                context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(lic.url)))
-            } catch (_: Exception) {}
-        },
+        onClick = { openExternalUrl(context, lic.url) },
         color = MaterialTheme.colorScheme.surfaceContainer,
         shape = RoundedCornerShape(8.dp),
     ) {
