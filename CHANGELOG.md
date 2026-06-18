@@ -2,6 +2,11 @@
 
 All notable changes to Aura will be documented in this file.
 
+## v6.32.7 (2026-06-18)
+- **Collection import safety**: QR-code collection imports now cap input bytes,
+  validate decoded image dimensions before bitmap allocation, and always recycle
+  decoded bitmaps after ZXing scans.
+
 ## v6.32.6 (2026-06-18)
 - **External link safety**: Settings, licenses, video policy links, and
   wallpaper source links now use a shared launcher that rejects local/script

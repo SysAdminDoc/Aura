@@ -41,6 +41,9 @@ import javax.inject.Singleton
 private val FILENAME_SANITIZE_REGEX = Regex("[^a-zA-Z0-9_-]")
 private val SHARE_TOKEN_REGEX = Regex("^[A-Za-z0-9_-]{8,80}$")
 private const val MAX_IMPORT_BYTES = 512 * 1024
+private const val MAX_QR_IMAGE_BYTES = 4L * 1024 * 1024
+private const val MAX_QR_IMAGE_DIMENSION = 4096
+private const val MAX_QR_IMAGE_PIXELS = 12_000_000L
 private const val MAX_IMPORT_ITEMS = 250
 private const val CURRENT_VERSION = 1
 
@@ -256,19 +259,43 @@ class CollectionExporter @Inject constructor(
     }
 
     private fun decodeQrText(uri: Uri): String {
-        val bitmap = context.contentResolver.openInputStream(uri)?.use(BitmapFactory::decodeStream)
-            ?: throw IllegalArgumentException("Could not read the selected QR image.")
-        val w = bitmap.width
-        val h = bitmap.height
-        val pixels = IntArray(w * h)
-        bitmap.getPixels(pixels, 0, w, 0, 0, w, h)
-        bitmap.recycle()
-        val source = RGBLuminanceSource(w, h, pixels)
-        val binaryBitmap = BinaryBitmap(HybridBinarizer(source))
-        return MultiFormatReader().decode(
-            binaryBitmap,
-            mapOf(DecodeHintType.POSSIBLE_FORMATS to listOf(BarcodeFormat.QR_CODE)),
-        ).text
+        val bytes = try {
+            context.contentResolver.openInputStream(uri)?.use { input ->
+                readStreamCapped(input, MAX_QR_IMAGE_BYTES)
+            }
+        } catch (e: MediaIngestionLimitExceeded) {
+            throw IllegalArgumentException("QR image is too large to import safely.", e)
+        } ?: throw IllegalArgumentException("Could not read the selected QR image.")
+        val bounds = BitmapFactory.Options().apply { inJustDecodeBounds = true }
+        BitmapFactory.decodeByteArray(bytes, 0, bytes.size, bounds)
+        val width = bounds.outWidth
+        val height = bounds.outHeight
+        val pixels = width.toLong() * height.toLong()
+        if (
+            width <= 0 ||
+            height <= 0 ||
+            width > MAX_QR_IMAGE_DIMENSION ||
+            height > MAX_QR_IMAGE_DIMENSION ||
+            pixels > MAX_QR_IMAGE_PIXELS
+        ) {
+            throw IllegalArgumentException("QR image is too large to import safely.")
+        }
+        val bitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
+            ?: throw IllegalArgumentException("Could not decode the selected QR image.")
+        return try {
+            val w = bitmap.width
+            val h = bitmap.height
+            val pixels = IntArray(w * h)
+            bitmap.getPixels(pixels, 0, w, 0, 0, w, h)
+            val source = RGBLuminanceSource(w, h, pixels)
+            val binaryBitmap = BinaryBitmap(HybridBinarizer(source))
+            MultiFormatReader().decode(
+                binaryBitmap,
+                mapOf(DecodeHintType.POSSIBLE_FORMATS to listOf(BarcodeFormat.QR_CODE)),
+            ).text
+        } finally {
+            bitmap.recycle()
+        }
     }
 }
 
