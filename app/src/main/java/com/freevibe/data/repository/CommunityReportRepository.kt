@@ -25,7 +25,6 @@ import com.google.firebase.database.DatabaseReference
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ValueEventListener
 import com.google.firebase.storage.FirebaseStorage
-import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
@@ -106,7 +105,9 @@ class CommunityReportRepository @Inject constructor(
         val reportKey = sanitizeCommunityReportKey(reportId)
         val resolverUid = identityProvider.ensureSignedIn()
         val resolvedAt = System.currentTimeMillis()
-        val reportSnapshot = db.child("community_reports").child(reportKey).get().await()
+        val reportSnapshot = awaitFirebaseRead("Community report metadata") {
+            db.child("community_reports").child(reportKey).get().await()
+        }
         val resolution = buildCommunityReportResolutionPayload(
             reportId = reportKey,
             status = status,
@@ -148,7 +149,9 @@ class CommunityReportRepository @Inject constructor(
         val reportKey = sanitizeCommunityReportKey(reportId)
         val resolverUid = identityProvider.ensureSignedIn()
         val startedAt = System.currentTimeMillis()
-        val reportSnapshot = db.child("community_reports").child(reportKey).get().await()
+        val reportSnapshot = awaitFirebaseRead("Community report metadata") {
+            db.child("community_reports").child(reportKey).get().await()
+        }
         val target = resolveTakedownTargetOrNull(
             db = db,
             reportKey = reportKey,
@@ -245,7 +248,9 @@ private suspend fun resolveTakedownTargetOrNull(
     val uploadId = communityTakedownUploadIdFromContentId(contentId, kind)
     if (uploadId.isBlank()) return null
 
-    val metadataSnapshot = db.child(kind.metadataRoot).child(uploadId).get().await()
+    val metadataSnapshot = awaitFirebaseRead("Reported upload metadata") {
+        db.child(kind.metadataRoot).child(uploadId).get().await()
+    }
     if (!metadataSnapshot.exists()) return null
     val storagePath = metadataSnapshot.child("storagePath").getValue(String::class.java).orEmpty()
     val uploaderUid = metadataSnapshot.child("uploaderUid").getValue(String::class.java)

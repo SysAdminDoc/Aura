@@ -213,6 +213,7 @@
     <string name="editor_wallpaper_loading_image">Loading image…</string>
     <string name="editor_wallpaper_edited_cd">Edited wallpaper</string>
     <string name="editor_wallpaper_load_failed">Failed to load wallpaper</string>
+    <string name="editor_wallpaper_quality_warning_title">Reduced-resolution edit</string>
     <string name="editor_wallpaper_discard_title">Discard edits?</string>
     <string name="editor_wallpaper_discard_body">Your filter changes will be lost. Apply them first or discard?</string>
 

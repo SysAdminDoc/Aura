@@ -21,6 +21,7 @@ import com.freevibe.R
 import com.freevibe.data.model.Wallpaper
 import com.freevibe.data.model.WallpaperTarget
 import com.freevibe.ui.components.AuraSnackbarHost
+import com.freevibe.ui.components.AuraStatusBanner
 import com.freevibe.ui.components.AuraStateAction
 import com.freevibe.ui.components.AuraStateCard
 
@@ -227,6 +228,16 @@ fun WallpaperEditorScreen(
                         color = MaterialTheme.colorScheme.primary,
                     )
                 }
+            }
+
+            state.qualityWarning?.let { warning ->
+                AuraStatusBanner(
+                    icon = Icons.Default.Warning,
+                    title = stringResource(R.string.editor_wallpaper_quality_warning_title),
+                    message = warning,
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                    tone = MaterialTheme.colorScheme.tertiary,
+                )
             }
 
             // Preset chips

@@ -57,6 +57,7 @@ class WallpaperEditorViewModelTest {
             assertNull(state.editedBitmap)
             assertFalse(state.isProcessing)
             assertFalse(state.isApplying)
+            assertNull(state.qualityWarning)
             cancelAndIgnoreRemainingEvents()
         }
     }
@@ -97,5 +98,32 @@ class WallpaperEditorViewModelTest {
             assertNull(awaitItem().success)
             cancelAndIgnoreRemainingEvents()
         }
+    }
+
+    @Test
+    fun `downscale warning describes reduced render dimensions`() {
+        val warning = wallpaperEditorDownscaleWarning(
+            sourceWidth = 4000,
+            sourceHeight = 3000,
+            renderedWidth = 2000,
+            renderedHeight = 1500,
+        )
+
+        assertEquals(
+            "Memory was tight, so this edit is rendered at about 50% resolution. It can still be applied, but a smaller source image will preserve full detail.",
+            warning,
+        )
+    }
+
+    @Test
+    fun `downscale warning is absent for full size renders`() {
+        assertNull(
+            wallpaperEditorDownscaleWarning(
+                sourceWidth = 4000,
+                sourceHeight = 3000,
+                renderedWidth = 4000,
+                renderedHeight = 3000,
+            ),
+        )
     }
 }

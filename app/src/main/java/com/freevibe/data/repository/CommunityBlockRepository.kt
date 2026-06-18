@@ -92,10 +92,12 @@ class CommunityBlockRepository @Inject constructor(
             val currentUid = identityProvider.currentFirebaseUid() ?: return@withContext emptySet()
             val db = database ?: return@withContext emptySet()
             parseBlockedUserIds(
-                db.child("community_user_blocks")
-                    .child(sanitizeCommunityOwnerKey(currentUid))
-                    .get()
-                    .await(),
+                awaitFirebaseRead("Community block list") {
+                    db.child("community_user_blocks")
+                        .child(sanitizeCommunityOwnerKey(currentUid))
+                        .get()
+                        .await()
+                },
             )
         } catch (e: Exception) {
             e.rethrowIfCancelled()

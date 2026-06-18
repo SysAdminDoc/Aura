@@ -14,10 +14,8 @@ import com.freevibe.service.CommunityIdentityProvider
 import com.freevibe.service.SourceMetrics
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.FirebaseDatabase
-import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
-import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.tasks.await
@@ -206,7 +204,9 @@ class CreatorProfileRepository @Inject constructor(
         val db = database ?: return emptySet()
         val currentUserId = voteRepo.sanitizeKey(identityProvider.ensureSignedIn())
         return try {
-            db.child("creator_follows").child(currentUserId).get().await()
+            awaitFirebaseRead("Creator follows") {
+                db.child("creator_follows").child(currentUserId).get().await()
+            }
                 .children
                 .mapNotNull { child ->
                     child.child("creatorId").getValue(String::class.java) ?: child.key
@@ -222,7 +222,9 @@ class CreatorProfileRepository @Inject constructor(
     private suspend fun readCreatorProfile(profileUid: String): CreatorPublicProfile {
         val db = database ?: return CreatorPublicProfile()
         return try {
-            val snapshot = db.child("creator_profiles").child(profileUid).get().await()
+            val snapshot = awaitFirebaseRead("Creator profile") {
+                db.child("creator_profiles").child(profileUid).get().await()
+            }
             CreatorPublicProfile(
                 displayName = snapshot.child("displayName").getValue(String::class.java).orEmpty(),
                 bio = snapshot.child("bio").getValue(String::class.java).orEmpty(),
@@ -249,8 +251,16 @@ class CreatorProfileRepository @Inject constructor(
     private suspend fun fetchCommunityUploads(limit: Int): List<CreatorUploadRef> {
         val db = database ?: return emptyList()
         return coroutineScope {
-            val soundTask = async { db.child("community_sounds").limitToLast(limit).get().await().children.mapNotNull(::soundUploadRef) }
-            val wallpaperTask = async { db.child("community_wallpapers").limitToLast(limit).get().await().children.mapNotNull(::wallpaperUploadRef) }
+            val soundTask = async {
+                awaitFirebaseRead("Community sound uploads") {
+                    db.child("community_sounds").limitToLast(limit).get().await()
+                }.children.mapNotNull(::soundUploadRef)
+            }
+            val wallpaperTask = async {
+                awaitFirebaseRead("Community wallpaper uploads") {
+                    db.child("community_wallpapers").limitToLast(limit).get().await()
+                }.children.mapNotNull(::wallpaperUploadRef)
+            }
             val uploads = (soundTask.await() + wallpaperTask.await())
                 .filter { it.creatorId.isNotBlank() }
                 .sortedByDescending { it.uploadedAt }
@@ -354,22 +364,15 @@ private suspend fun VoteRepository.getVoteCountsOnce(ids: List<String>): Map<Str
         e.rethrowIfCancelled()
         return emptyMap()
     }
-    return ids.distinct().chunked(50).flatMap { chunk ->
-        coroutineScope {
-            chunk.map { id ->
-                async(Dispatchers.IO) {
-                    val safeId = sanitizeKey(id)
-                    val count = try {
-                        db.child(safeId).child("upvotes").get().await().getValue(Int::class.java) ?: 0
-                    } catch (e: Exception) {
-                        e.rethrowIfCancelled()
-                        0
-                    }
-                    id to count
-                }
-            }.awaitAll()
-        }
-    }.toMap()
+    val snapshot = try {
+        awaitFirebaseRead("Community vote counts") { db.get().await() }
+    } catch (e: Exception) {
+        e.rethrowIfCancelled()
+        return emptyMap()
+    }
+    return ids.distinct().associateWith { id ->
+        snapshot.child(sanitizeKey(id)).child("upvotes").getValue(Int::class.java) ?: 0
+    }
 }
 
 private fun CreatorProfileUpdateInput.toPublicProfile(): CreatorPublicProfile =

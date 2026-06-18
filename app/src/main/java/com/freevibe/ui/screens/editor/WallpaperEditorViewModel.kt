@@ -17,6 +17,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import kotlin.math.roundToInt
 import javax.inject.Inject
 
 data class EditorState(
@@ -35,6 +36,12 @@ data class EditorState(
     val isLoadingImage: Boolean = false,
     val success: String? = null,
     val error: String? = null,
+    val qualityWarning: String? = null,
+)
+
+private data class FilterRenderResult(
+    val bitmap: Bitmap,
+    val qualityWarning: String?,
 )
 
 @HiltViewModel
@@ -62,7 +69,7 @@ class WallpaperEditorViewModel @Inject constructor(
     fun clearError() = _state.update { it.copy(error = null) }
 
     fun setSourceBitmap(bitmap: Bitmap) {
-        _state.update { it.copy(originalBitmap = bitmap, editedBitmap = bitmap) }
+        _state.update { it.copy(originalBitmap = bitmap, editedBitmap = bitmap, qualityWarning = null) }
     }
 
     fun updateBrightness(value: Float) {
@@ -111,6 +118,7 @@ class WallpaperEditorViewModel @Inject constructor(
                 editedBitmap = it.originalBitmap,
                 brightness = 0f, contrast = 1f, saturation = 1f, blurRadius = 0f,
                 vignette = 0f, grain = 0f, amoledCrush = 0f, warmth = 0f,
+                qualityWarning = null,
             )
         }
     }
@@ -144,6 +152,7 @@ class WallpaperEditorViewModel @Inject constructor(
                     isLoadingImage = true,
                     success = null,
                     error = null,
+                    qualityWarning = null,
                 )
             }
             try {
@@ -176,14 +185,15 @@ class WallpaperEditorViewModel @Inject constructor(
         if (s.brightness == 0f && s.contrast == 1f && s.saturation == 1f &&
             s.blurRadius == 0f && s.vignette == 0f && s.grain == 0f &&
             s.amoledCrush == 0f && s.warmth == 0f) {
-            _state.update { it.copy(editedBitmap = original) }
+            _state.update { it.copy(editedBitmap = original, qualityWarning = null) }
             return
         }
         filterJob?.cancel()
         filterJob = viewModelScope.launch {
             _state.update { it.copy(isProcessing = true) }
             val result = withContext(Dispatchers.Default) {
-                var bmp = applyColorMatrix(original, s.brightness, s.contrast, s.saturation, s.warmth)
+                val matrixResult = applyColorMatrix(original, s.brightness, s.contrast, s.saturation, s.warmth)
+                var bmp = matrixResult.bitmap
                 if (s.blurRadius > 0.5f) {
                     val prev = bmp
                     bmp = stackBlur(bmp, s.blurRadius.toInt().coerceIn(1, 25))
@@ -204,9 +214,15 @@ class WallpaperEditorViewModel @Inject constructor(
                     bmp = applyGrain(bmp, s.grain)
                     if (prev !== original && prev !== bmp) prev.recycle()
                 }
-                bmp
+                FilterRenderResult(bmp, matrixResult.qualityWarning)
             }
-            _state.update { it.copy(editedBitmap = result, isProcessing = false) }
+            _state.update {
+                it.copy(
+                    editedBitmap = result.bitmap,
+                    isProcessing = false,
+                    qualityWarning = result.qualityWarning,
+                )
+            }
         }
     }
 
@@ -216,13 +232,23 @@ class WallpaperEditorViewModel @Inject constructor(
         contrast: Float,
         saturation: Float,
         warmth: Float = 0f,
-    ): Bitmap {
+    ): FilterRenderResult {
         val result = try {
             Bitmap.createBitmap(src.width, src.height, Bitmap.Config.ARGB_8888)
         } catch (_: OutOfMemoryError) {
             val scale = 0.5f
-            Bitmap.createBitmap((src.width * scale).toInt(), (src.height * scale).toInt(), Bitmap.Config.ARGB_8888)
+            Bitmap.createBitmap(
+                (src.width * scale).toInt().coerceAtLeast(1),
+                (src.height * scale).toInt().coerceAtLeast(1),
+                Bitmap.Config.ARGB_8888,
+            )
         }
+        val qualityWarning = wallpaperEditorDownscaleWarning(
+            sourceWidth = src.width,
+            sourceHeight = src.height,
+            renderedWidth = result.width,
+            renderedHeight = result.height,
+        )
         val canvas = Canvas(result)
         val paint = Paint()
 
@@ -276,7 +302,7 @@ class WallpaperEditorViewModel @Inject constructor(
             canvas.drawBitmap(src, 0f, 0f, paint)
         }
 
-        return result
+        return FilterRenderResult(result, qualityWarning)
     }
 
     private fun stackBlur(src: Bitmap, radius: Int): Bitmap {
@@ -349,4 +375,18 @@ class WallpaperEditorViewModel @Inject constructor(
         /** Max bytes accepted when downloading a wallpaper for editing. */
         private const val MAX_EDIT_BYTES = 64L * 1024 * 1024
     }
+}
+
+internal fun wallpaperEditorDownscaleWarning(
+    sourceWidth: Int,
+    sourceHeight: Int,
+    renderedWidth: Int,
+    renderedHeight: Int,
+): String? {
+    if (sourceWidth <= 0 || sourceHeight <= 0 || renderedWidth <= 0 || renderedHeight <= 0) return null
+    if (renderedWidth >= sourceWidth && renderedHeight >= sourceHeight) return null
+    val widthRatio = renderedWidth.toFloat() / sourceWidth.toFloat()
+    val heightRatio = renderedHeight.toFloat() / sourceHeight.toFloat()
+    val percent = (minOf(widthRatio, heightRatio) * 100f).roundToInt().coerceIn(1, 99)
+    return "Memory was tight, so this edit is rendered at about $percent% resolution. It can still be applied, but a smaller source image will preserve full detail."
 }

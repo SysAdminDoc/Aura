@@ -35,7 +35,6 @@ import javax.inject.Singleton
 import kotlin.math.max
 import kotlin.math.min
 import kotlin.math.roundToInt
-import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
@@ -43,7 +42,6 @@ import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
-import kotlinx.coroutines.withTimeoutOrNull
 
 private val WALLPAPER_UPLOAD_NAME_SANITIZE_REGEX = Regex("[^a-zA-Z0-9_\\- ]")
 private val WALLPAPER_UPLOAD_TAG_SANITIZE_REGEX = Regex("[^a-z0-9_\\- ]")
@@ -210,7 +208,9 @@ class WallpaperUploadRepository @Inject constructor(
             val safeUploadId = sanitizeCommunityUploadKey(uploadId)
             require(safeUploadId.isNotBlank()) { "Wallpaper upload ID is required" }
 
-            val snapshot = wallpapersRefInstance.child(safeUploadId).get().await()
+            val snapshot = awaitFirebaseRead("Wallpaper upload metadata") {
+                wallpapersRefInstance.child(safeUploadId).get().await()
+            }
             if (snapshot.exists()) {
                 val uploaderUid = snapshot.child("uploaderUid").getValue(String::class.java)
                     ?: snapshot.child("uploaderId").getValue(String::class.java)
@@ -247,7 +247,9 @@ class WallpaperUploadRepository @Inject constructor(
             val safeUploadId = sanitizeCommunityUploadKey(uploadId)
             if (safeUploadId.isBlank()) return@withContext false
 
-            val snapshot = wallpapersRefInstance.child(safeUploadId).get().await()
+            val snapshot = awaitFirebaseRead("Wallpaper upload ownership") {
+                wallpapersRefInstance.child(safeUploadId).get().await()
+            }
             if (!snapshot.exists()) return@withContext false
             val uploaderUid = snapshot.child("uploaderUid").getValue(String::class.java)
                 ?: snapshot.child("uploaderId").getValue(String::class.java)
@@ -268,7 +270,7 @@ class WallpaperUploadRepository @Inject constructor(
             keys.map { key ->
                 async {
                     try {
-                        withTimeoutOrNull(8_000L) {
+                        awaitFirebaseRead("Community wallpaper metadata") {
                             val snapshot = ref.child(key).get().await()
                             if (snapshot.exists()) snapshotToWallpaper(snapshot, blockedUploaderIds) else null
                         }
@@ -288,7 +290,9 @@ class WallpaperUploadRepository @Inject constructor(
         }
         val ref = wallpapersRef ?: return@withContext SearchResult(emptyList(), 0, 1, false)
         val blockedUploaderIds = communityBlockRepo.blockedUserIdsOnce()
-        val snapshot = ref.orderByChild("uploadedAt").limitToLast(limit).get().await()
+        val snapshot = awaitFirebaseRead("Community wallpapers") {
+            ref.orderByChild("uploadedAt").limitToLast(limit).get().await()
+        }
         val wallpapers = snapshot.children.mapNotNull { child -> snapshotToWallpaper(child, blockedUploaderIds) }
             .sortedWith(
                 compareByDescending<Wallpaper> { wallpaper ->

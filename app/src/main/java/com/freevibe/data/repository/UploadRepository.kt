@@ -28,7 +28,6 @@ import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ValueEventListener
 import com.google.firebase.storage.FirebaseStorage
 import dagger.hilt.android.qualifiers.ApplicationContext
-import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
@@ -184,7 +183,9 @@ class UploadRepository @Inject constructor(
         val safeUploadId = sanitizeCommunityUploadKey(uploadId)
         require(safeUploadId.isNotBlank()) { "Sound upload ID is required" }
 
-        val snapshot = uploadsRefInstance.child(safeUploadId).get().await()
+        val snapshot = awaitFirebaseRead("Sound upload metadata") {
+            uploadsRefInstance.child(safeUploadId).get().await()
+        }
         if (snapshot.exists()) {
             val uploaderUid = snapshot.child("uploaderUid").getValue(String::class.java)
                 ?: snapshot.child("uploaderId").getValue(String::class.java)
@@ -220,7 +221,9 @@ class UploadRepository @Inject constructor(
             val safeUploadId = sanitizeCommunityUploadKey(uploadId)
             if (safeUploadId.isBlank()) return false
 
-            val snapshot = uploadsRefInstance.child(safeUploadId).get().await()
+            val snapshot = awaitFirebaseRead("Sound upload ownership") {
+                uploadsRefInstance.child(safeUploadId).get().await()
+            }
             if (!snapshot.exists()) return false
             val uploaderUid = snapshot.child("uploaderUid").getValue(String::class.java)
                 ?: snapshot.child("uploaderId").getValue(String::class.java)

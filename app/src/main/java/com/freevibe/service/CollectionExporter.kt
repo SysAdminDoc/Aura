@@ -6,6 +6,7 @@ import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.net.Uri
 import com.freevibe.data.local.CollectionDao
+import com.freevibe.data.repository.awaitFirebaseRead
 import com.freevibe.util.rethrowIfCancelled
 import com.freevibe.data.model.WallpaperCollectionEntity
 import com.freevibe.data.model.WallpaperCollectionItemEntity
@@ -97,11 +98,13 @@ class CollectionExporter @Inject constructor(
             val token = extractCollectionShareToken(input)
                 ?: throw IllegalArgumentException("Paste an Aura collection link or share token.")
             val db = database ?: throw IllegalStateException("Firebase Database not available")
-            val json = db.child("shared_collections")
-                .child(token)
-                .child("payload")
-                .get()
-                .await()
+            val json = awaitFirebaseRead("Shared collection") {
+                db.child("shared_collections")
+                    .child(token)
+                    .child("payload")
+                    .get()
+                    .await()
+            }
                 .getValue(String::class.java)
                 ?: throw IllegalStateException("Collection link is expired or unavailable.")
             importJson(json)

@@ -2,6 +2,18 @@
 
 All notable changes to Aura will be documented in this file.
 
+## v6.32.4 (2026-06-18)
+- **Community reliability**: bounded Firebase RTDB reads with an 8-second
+  timeout across community votes, uploads, creator profiles, moderation reports,
+  blocked-user lists, and shared collection imports so flaky networks fail into
+  existing error/empty states instead of leaving screens loading indefinitely.
+- **Creator dashboard performance**: replaced per-upload vote-count reads with a
+  single timed vote-index read, eliminating the cold-load fan-out that could
+  trigger dozens of individual Firebase requests.
+- **Wallpaper editor trust**: when memory pressure forces an edited preview to
+  render below the source resolution, the editor now shows a persistent
+  reduced-resolution warning instead of silently applying a lower-detail output.
+
 ## v6.32.3 (2026-06-17)
 - **Compose screenshot coverage**: added Roborazzi JVM screenshot tests with
   deterministic route-state fixtures for wallpapers, sound detail, settings,

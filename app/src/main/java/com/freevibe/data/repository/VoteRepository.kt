@@ -218,8 +218,10 @@ class VoteRepository @Inject constructor(
             identityProvider.knownIdentityIds()
                 .map(::sanitizeKey)
                 .any { voterId ->
-                    votesRef?.child(safeId)?.child("voters")?.child(voterId)?.get()?.await()?.exists() == true ||
-                        votersRef?.child(safeId)?.child(voterId)?.get()?.await()?.exists() == true
+                    awaitFirebaseRead("Community vote status") {
+                        votesRef?.child(safeId)?.child("voters")?.child(voterId)?.get()?.await()?.exists() == true ||
+                            votersRef?.child(safeId)?.child(voterId)?.get()?.await()?.exists() == true
+                    }
                 }
         } catch (e: Exception) {
             if (e is kotlinx.coroutines.CancellationException) throw e
@@ -348,7 +350,7 @@ class VoteRepository @Inject constructor(
         if (!isCommunityAccessEnabled()) return emptyList()
         val votesRefInstance = votesRef ?: return emptyList()
         return try {
-            val snapshot = votesRefInstance.get().await()
+            val snapshot = awaitFirebaseRead("Community vote leaderboard") { votesRefInstance.get().await() }
             snapshot.children.mapNotNull { child ->
                 val key = child.key ?: return@mapNotNull null
                 val upvotes = child.child("upvotes").getValue(Int::class.java) ?: 0
