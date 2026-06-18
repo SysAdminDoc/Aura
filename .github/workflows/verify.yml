@@ -325,6 +325,9 @@ jobs:
       - name: Unit tests (debug)
         run: ./gradlew :app:testDebugUnitTest --stacktrace --no-daemon
 
+      - name: Screenshot tests (debug)
+        run: ./gradlew :app:verifyRoborazziDebug --stacktrace --no-daemon
+
       - name: Lint (debug)
         run: ./gradlew :app:lintDebug --stacktrace --no-daemon
 

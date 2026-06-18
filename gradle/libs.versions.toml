@@ -27,6 +27,8 @@ junit4 = "4.13.2"
 coroutines-test = "1.9.0"
 turbine = "1.2.0"
 mockk = "1.13.13"
+robolectric = "4.16.1"
+roborazzi = "1.64.0"
 androidx-test-ext-junit = "1.2.1"
 androidx-test-runner = "1.6.2"
 androidx-uiautomator = "2.3.0"
@@ -117,6 +119,10 @@ junit4 = { group = "junit", name = "junit", version.ref = "junit4" }
 coroutines-test = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-test", version.ref = "coroutines-test" }
 turbine = { group = "app.cash.turbine", name = "turbine", version.ref = "turbine" }
 mockk = { group = "io.mockk", name = "mockk", version.ref = "mockk" }
+robolectric = { group = "org.robolectric", name = "robolectric", version.ref = "robolectric" }
+roborazzi = { group = "io.github.takahirom.roborazzi", name = "roborazzi", version.ref = "roborazzi" }
+roborazzi-compose = { group = "io.github.takahirom.roborazzi", name = "roborazzi-compose", version.ref = "roborazzi" }
+roborazzi-junit-rule = { group = "io.github.takahirom.roborazzi", name = "roborazzi-junit-rule", version.ref = "roborazzi" }
 androidx-test-ext-junit = { group = "androidx.test.ext", name = "junit", version.ref = "androidx-test-ext-junit" }
 androidx-test-runner = { group = "androidx.test", name = "runner", version.ref = "androidx-test-runner" }
 androidx-uiautomator = { group = "androidx.test.uiautomator", name = "uiautomator", version.ref = "androidx-uiautomator" }
@@ -134,3 +140,4 @@ kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", versi
 baselineprofile = { id = "androidx.baselineprofile", version.ref = "baseline-profile" }
 hilt = { id = "com.google.dagger.hilt.android", version.ref = "hilt" }
 ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
+roborazzi = { id = "io.github.takahirom.roborazzi", version.ref = "roborazzi" }

@@ -2,6 +2,12 @@
 
 All notable changes to Aura will be documented in this file.
 
+## v6.32.3 (2026-06-17)
+- **Compose screenshot coverage**: added Roborazzi JVM screenshot tests with
+  deterministic route-state fixtures for wallpapers, sound detail, settings,
+  video wallpapers, and the wallpaper editor. CI now verifies the golden
+  captures on every push.
+
 ## v6.32.2 (2026-06-17)
 - **YouTube video metadata reliability**: video wallpaper search now probes
   yt-dlp stream metadata for dimensions, rotation, duration, MIME type, and
