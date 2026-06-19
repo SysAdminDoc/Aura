@@ -1,5 +1,7 @@
 package com.freevibe.ui.screens.settings
 
+import android.content.Intent
+import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.freevibe.data.local.PreferencesManager
@@ -268,19 +270,17 @@ class SettingsViewModel @Inject constructor(
     }
 
     fun setLocalWallpaperFolderUri(uri: String) = viewModelScope.launch {
-        prefs.setLocalWallpaperFolderUri(uri)
+        val nextUri = uri.trim()
+        val previousUri = prefs.localWallpaperFolderUri.first().trim()
+        prefs.setLocalWallpaperFolderUri(nextUri)
+        if (previousUri.isNotBlank() && previousUri != nextUri) {
+            releasePersistedUriPermission(previousUri, Intent.FLAG_GRANT_READ_URI_PERMISSION)
+        }
     }
 
     fun clearLocalWallpaperFolderUri() = viewModelScope.launch {
-        val uri = localWallpaperFolderUri.value
-        if (uri.isNotBlank()) {
-            runCatching {
-                context.contentResolver.releasePersistableUriPermission(
-                    android.net.Uri.parse(uri),
-                    android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION,
-                )
-            }
-        }
+        val uri = prefs.localWallpaperFolderUri.first().trim()
+        if (uri.isNotBlank()) releasePersistedUriPermission(uri, Intent.FLAG_GRANT_READ_URI_PERMISSION)
         prefs.setLocalWallpaperFolderUri("")
     }
 
@@ -335,20 +335,25 @@ class SettingsViewModel @Inject constructor(
     }
 
     fun setAutoBackupFolderUri(uri: String) = viewModelScope.launch {
-        prefs.setAutoBackupFolderUri(uri)
+        val nextUri = uri.trim()
+        val previousUri = prefs.autoBackupFolderUri.first().trim()
+        prefs.setAutoBackupFolderUri(nextUri)
+        if (previousUri.isNotBlank() && previousUri != nextUri) {
+            releasePersistedUriPermission(
+                previousUri,
+                Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION,
+            )
+        }
         if (autoBackupEnabled.value) AutoBackupWorker.schedule(context)
     }
 
     fun clearAutoBackupFolderUri() = viewModelScope.launch {
-        val uri = autoBackupFolderUri.value
+        val uri = prefs.autoBackupFolderUri.first().trim()
         if (uri.isNotBlank()) {
-            runCatching {
-                context.contentResolver.releasePersistableUriPermission(
-                    android.net.Uri.parse(uri),
-                    android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION or
-                        android.content.Intent.FLAG_GRANT_WRITE_URI_PERMISSION,
-                )
-            }
+            releasePersistedUriPermission(
+                uri,
+                Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION,
+            )
         }
         prefs.setAutoBackupEnabled(false)
         prefs.setAutoBackupFolderUri("")
@@ -363,6 +368,12 @@ class SettingsViewModel @Inject constructor(
     fun setAutoBackupKeepCount(count: Int) = viewModelScope.launch {
         prefs.setAutoBackupKeepCount(count.coerceAtLeast(1))
         if (autoBackupEnabled.value) AutoBackupWorker.schedule(context)
+    }
+
+    private fun releasePersistedUriPermission(uriString: String, flags: Int) {
+        runCatching {
+            context.contentResolver.releasePersistableUriPermission(Uri.parse(uriString), flags)
+        }
     }
 
     // T-6: Source diagnostics. Emits live snapshots while the dialog is visible.

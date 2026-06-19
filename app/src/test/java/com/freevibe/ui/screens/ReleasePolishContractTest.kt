@@ -169,9 +169,44 @@ class ReleasePolishContractTest {
         assertTrue(source.contains("val autoBackupFolderUri = prefs.autoBackupFolderUri.stateIn"))
         assertTrue(backupSlice.contains("AutoBackupWorker.schedule(context)"))
         assertTrue(backupSlice.contains("AutoBackupWorker.cancel(context)"))
-        assertTrue(backupSlice.contains("releasePersistableUriPermission"))
+        assertTrue(backupSlice.contains("prefs.autoBackupFolderUri.first().trim()"))
+        assertTrue(backupSlice.contains("previousUri.isNotBlank() && previousUri != nextUri"))
+        assertTrue(backupSlice.contains("releasePersistedUriPermission("))
         assertTrue(backupSlice.contains("setAutoBackupIntervalHours"))
         assertTrue(backupSlice.contains("setAutoBackupKeepCount"))
+    }
+
+    @Test
+    fun `settings folder grants are released when replaced or cleared`() {
+        val source = File("src/main/java/com/freevibe/ui/screens/settings/SettingsViewModel.kt").readText()
+
+        assertTrue(source.contains("private fun releasePersistedUriPermission(uriString: String, flags: Int)"))
+        assertTrue(source.contains("prefs.localWallpaperFolderUri.first().trim()"))
+        assertTrue(source.contains("prefs.autoBackupFolderUri.first().trim()"))
+        assertTrue(source.contains("releasePersistedUriPermission(previousUri, Intent.FLAG_GRANT_READ_URI_PERMISSION)"))
+        assertTrue(source.contains("Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION"))
+        assertTrue(source.contains("context.contentResolver.releasePersistableUriPermission(Uri.parse(uriString), flags)"))
+    }
+
+    @Test
+    fun `settings permission recovery reports dead settings intents`() {
+        val source = File("src/main/java/com/freevibe/ui/screens/settings/SettingsScreen.kt").readText()
+
+        assertTrue(source.contains("fun openNotificationSettings(): Boolean"))
+        assertTrue(source.contains("fun openAppSettings(): Boolean"))
+        assertTrue(source.contains("val settingsOpened = when (prompt)"))
+        assertTrue(source.contains("if (!settingsOpened)"))
+        assertTrue(source.contains("Android settings could not be opened on this device."))
+    }
+
+    @Test
+    fun `auto backup worker clamps persisted retention before pruning`() {
+        val source = File("src/main/java/com/freevibe/service/AutoBackupWorker.kt").readText()
+
+        assertTrue(source.contains("prefs.autoBackupKeepCount.first().coerceAtLeast(1)"))
+        assertTrue(source.contains("val safeKeepCount = keepCount.coerceAtLeast(1)"))
+        assertTrue(source.contains("backupFiles.size <= safeKeepCount"))
+        assertTrue(source.contains("backupFiles.drop(safeKeepCount)"))
     }
 
     @Test

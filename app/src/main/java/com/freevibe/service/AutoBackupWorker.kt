@@ -74,7 +74,7 @@ class AutoBackupWorker @AssistedInject constructor(
 
             val count = favoritesExporter.export(newDocUri).getOrThrow()
 
-            val keepCount = prefs.autoBackupKeepCount.first()
+            val keepCount = prefs.autoBackupKeepCount.first().coerceAtLeast(1)
             pruneOldBackups(treeUri, treeDocId, keepCount)
 
             receiptStore.recordSuccess(WORK_NAME)
@@ -102,6 +102,7 @@ class AutoBackupWorker @AssistedInject constructor(
     }
 
     private fun pruneOldBackups(treeUri: Uri, treeDocId: String, keepCount: Int) {
+        val safeKeepCount = keepCount.coerceAtLeast(1)
         val childrenUri = DocumentsContract.buildChildDocumentsUriUsingTree(treeUri, treeDocId)
         val projection = arrayOf(
             DocumentsContract.Document.COLUMN_DOCUMENT_ID,
@@ -119,10 +120,10 @@ class AutoBackupWorker @AssistedInject constructor(
             }
         }
 
-        if (backupFiles.size <= keepCount) return
+        if (backupFiles.size <= safeKeepCount) return
 
         backupFiles.sortByDescending { it.second }
-        val toDelete = backupFiles.drop(keepCount)
+        val toDelete = backupFiles.drop(safeKeepCount)
         for ((docId, _) in toDelete) {
             val docUri = DocumentsContract.buildDocumentUriUsingTree(treeUri, docId)
             runCatching { DocumentsContract.deleteDocument(applicationContext.contentResolver, docUri) }

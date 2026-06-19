@@ -2,6 +2,14 @@
 
 All notable changes to Aura will be documented in this file.
 
+## v6.32.9 (2026-06-19)
+- **Backup reliability hardening**: scheduled favorites backup now clamps
+  persisted retention values at runtime before pruning, preventing corrupt
+  preferences from crashing cleanup or deleting more backups than intended.
+- **Settings recovery polish**: changing local/backup folders releases stale
+  SAF grants, and permission recovery dialogs now show calm feedback if Android
+  settings cannot be opened on an OEM build.
+
 ## v6.32.8 (2026-06-19)
 - **Settings automation polish**: surfaced scheduled favorites backup with
   writable-folder validation, interval and retention controls, and clear paused

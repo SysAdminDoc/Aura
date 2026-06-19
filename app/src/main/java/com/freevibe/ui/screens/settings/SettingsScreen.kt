@@ -286,32 +286,33 @@ fun SettingsScreen(
         WeatherUpdateWorker.clearStoredWeatherState(context)
     }
 
-    fun openNotificationSettings() {
-        val intent = Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS).apply {
-            putExtra(Settings.EXTRA_APP_PACKAGE, context.packageName)
-        }
-        try {
-            context.startActivity(intent)
-        } catch (_: android.content.ActivityNotFoundException) {
-            // Some OEM Android builds (e.g. custom MIUI/EMUI skins without the stock settings
-            // activity) don't handle ACTION_APP_NOTIFICATION_SETTINGS and crash with ANFE.
-            // Fall back to the app-details page which every Android install ships.
-            try {
-                context.startActivity(
-                    Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS)
-                        .setData(Uri.fromParts("package", context.packageName, null))
-                )
-            } catch (_: Exception) {}
-        } catch (_: Exception) {}
-    }
-
-    fun openAppSettings() {
-        try {
+    fun openAppSettings(): Boolean {
+        return try {
             context.startActivity(
                 Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS)
                     .setData(Uri.fromParts("package", context.packageName, null))
             )
-        } catch (_: Exception) {}
+            true
+        } catch (_: Exception) {
+            false
+        }
+    }
+
+    fun openNotificationSettings(): Boolean {
+        val intent = Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS).apply {
+            putExtra(Settings.EXTRA_APP_PACKAGE, context.packageName)
+        }
+        return try {
+            context.startActivity(intent)
+            true
+        } catch (_: android.content.ActivityNotFoundException) {
+            // Some OEM Android builds (e.g. custom MIUI/EMUI skins without the stock settings
+            // activity) don't handle ACTION_APP_NOTIFICATION_SETTINGS and crash with ANFE.
+            // Fall back to the app-details page which every Android install ships.
+            openAppSettings()
+        } catch (_: Exception) {
+            false
+        }
     }
 
     // Video wallpaper picker
@@ -565,19 +566,24 @@ fun SettingsScreen(
                 TextButton(
                     onClick = {
                         settingsPermissionPrompt = null
-                        when (prompt) {
+                        val settingsOpened = when (prompt) {
                             SettingsPermissionPrompt.DAILY_NOTIFICATION_REQUEST -> {
                                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                                     notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
                                 } else {
                                     setDailyWallpaperEnabled(true)
                                 }
+                                true
                             }
                             SettingsPermissionPrompt.DAILY_NOTIFICATION_RECOVERY -> openNotificationSettings()
                             SettingsPermissionPrompt.WEATHER_LOCATION_REQUEST -> {
                                 locationPermissionLauncher.launch(Manifest.permission.ACCESS_COARSE_LOCATION)
+                                true
                             }
                             SettingsPermissionPrompt.WEATHER_LOCATION_RECOVERY -> openAppSettings()
+                        }
+                        if (!settingsOpened) {
+                            showSettingsFeedback("Android settings could not be opened on this device.")
                         }
                     },
                 ) {

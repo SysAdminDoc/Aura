@@ -1,0 +1,6 @@
+Aura 6.32.9
+
+Recent highlights:
+- Hardened scheduled favorites backup retention so bad saved preferences cannot crash cleanup or over-prune backup files.
+- Replaced stale folder-grant handling for local rotation and backup folders, releasing old SAF grants after a new folder is saved.
+- Added Settings feedback when Android permission-recovery settings screens cannot be opened on an OEM build.
