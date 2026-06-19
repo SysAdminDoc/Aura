@@ -143,6 +143,38 @@ class ReleasePolishContractTest {
     }
 
     @Test
+    fun `settings exposes backup and rotation legibility controls`() {
+        val source = File("src/main/java/com/freevibe/ui/screens/settings/SettingsScreen.kt").readText()
+
+        assertTrue(source.contains("val autoWallpaperDarkenPercent by viewModel.autoWallpaperDarkenPercent.collectAsStateWithLifecycle()"))
+        assertTrue(source.contains("val autoBackupEnabled by viewModel.autoBackupEnabled.collectAsStateWithLifecycle()"))
+        assertTrue(source.contains("SettingsValueSlider("))
+        assertTrue(source.contains("title = \"Rotation dimming\""))
+        assertTrue(source.contains("title = \"Scheduled favorites backup\""))
+        assertTrue(source.contains("title = \"Backup folder\""))
+        assertTrue(source.contains("Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION"))
+        assertTrue(source.contains("hasPersistedWritePermission(context, autoBackupFolderUri)"))
+        assertTrue(source.contains("enableAutoBackupAfterFolder"))
+        assertTrue(source.contains("chooseAutoBackupFolder(enableAfterSelection = true)"))
+        assertTrue(source.contains("showAutoBackupIntervalPicker"))
+        assertTrue(source.contains("showAutoBackupKeepPicker"))
+    }
+
+    @Test
+    fun `settings viewmodel schedules and cancels local backup work`() {
+        val source = File("src/main/java/com/freevibe/ui/screens/settings/SettingsViewModel.kt").readText()
+        val backupSlice = source.substringAfter("fun setAutoBackupEnabled(").substringBefore("// T-6: Source diagnostics")
+
+        assertTrue(source.contains("val autoBackupEnabled = prefs.autoBackupEnabled.stateIn"))
+        assertTrue(source.contains("val autoBackupFolderUri = prefs.autoBackupFolderUri.stateIn"))
+        assertTrue(backupSlice.contains("AutoBackupWorker.schedule(context)"))
+        assertTrue(backupSlice.contains("AutoBackupWorker.cancel(context)"))
+        assertTrue(backupSlice.contains("releasePersistableUriPermission"))
+        assertTrue(backupSlice.contains("setAutoBackupIntervalHours"))
+        assertTrue(backupSlice.contains("setAutoBackupKeepCount"))
+    }
+
+    @Test
     fun `settings credential and youtube edit dialogs avoid ime occlusion`() {
         val source = File("src/main/java/com/freevibe/ui/screens/settings/SettingsScreen.kt").readText()
         val apiDialog = source.substringAfter("private fun ProviderApiKeyDialog(").substringBefore("@OptIn(")

@@ -459,6 +459,11 @@ class SettingsViewModelTest {
             every { prefs.autoWallpaperRequiresCharging } returns flowOf(false)
             every { prefs.autoWallpaperRequiresWiFiOnly } returns flowOf(false)
             every { prefs.autoWallpaperRequiresIdle } returns flowOf(false)
+            every { prefs.autoWallpaperDarkenPercent } returns flowOf(0)
+            every { prefs.autoBackupEnabled } returns flowOf(false)
+            every { prefs.autoBackupFolderUri } returns flowOf("")
+            every { prefs.autoBackupIntervalHours } returns flowOf(24L)
+            every { prefs.autoBackupKeepCount } returns flowOf(5)
             every { prefs.rotateOnUnlock } returns flowOf(false)
             every { prefs.rotateOnScreenOff } returns flowOf(false)
             // Added in v6.13/v6.14 — these StateFlow-backed VM fields fail-fast on

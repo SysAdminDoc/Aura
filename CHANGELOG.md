@@ -2,6 +2,14 @@
 
 All notable changes to Aura will be documented in this file.
 
+## v6.32.8 (2026-06-19)
+- **Settings automation polish**: surfaced scheduled favorites backup with
+  writable-folder validation, interval and retention controls, and clear paused
+  states when SAF permission needs repair.
+- **Rotation legibility control**: added a Settings dimming slider for
+  auto-rotated and trigger-rotated wallpapers so bright images can be made more
+  readable behind the clock and status bar.
+
 ## v6.32.7 (2026-06-18)
 - **Collection import safety**: QR-code collection imports now cap input bytes,
   validate decoded image dimensions before bitmap allocation, and always recycle

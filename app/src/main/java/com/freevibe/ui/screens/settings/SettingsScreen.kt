@@ -87,6 +87,7 @@ import kotlinx.coroutines.launch
 import java.text.DateFormat
 import java.util.Date
 import java.util.Locale
+import kotlin.math.roundToInt
 
 private const val AURA_SOURCE_URL = "https://github.com/SysAdminDoc/Aura"
 private const val AURA_PRIVACY_POLICY_URL = "https://github.com/SysAdminDoc/Aura/blob/main/docs/privacy/privacy-policy.md"
@@ -186,6 +187,11 @@ fun SettingsScreen(
     val autoWpRequiresCharging by viewModel.autoWpRequiresCharging.collectAsStateWithLifecycle()
     val autoWpRequiresWiFi by viewModel.autoWpRequiresWiFi.collectAsStateWithLifecycle()
     val autoWpRequiresIdle by viewModel.autoWpRequiresIdle.collectAsStateWithLifecycle()
+    val autoWallpaperDarkenPercent by viewModel.autoWallpaperDarkenPercent.collectAsStateWithLifecycle()
+    val autoBackupEnabled by viewModel.autoBackupEnabled.collectAsStateWithLifecycle()
+    val autoBackupFolderUri by viewModel.autoBackupFolderUri.collectAsStateWithLifecycle()
+    val autoBackupIntervalHours by viewModel.autoBackupIntervalHours.collectAsStateWithLifecycle()
+    val autoBackupKeepCount by viewModel.autoBackupKeepCount.collectAsStateWithLifecycle()
     val rotateOnUnlock by viewModel.rotateOnUnlock.collectAsStateWithLifecycle()
     val rotateOnScreenOff by viewModel.rotateOnScreenOff.collectAsStateWithLifecycle()
     val autoPreview by viewModel.autoPreview.collectAsStateWithLifecycle()
@@ -256,6 +262,9 @@ fun SettingsScreen(
     }
     val localFolderPermissionActive = remember(localWallpaperFolderUri) {
         hasPersistedReadPermission(context, localWallpaperFolderUri)
+    }
+    val autoBackupFolderPermissionActive = remember(autoBackupFolderUri) {
+        hasPersistedWritePermission(context, autoBackupFolderUri)
     }
 
     fun setDailyWallpaperEnabled(enabled: Boolean) {
@@ -337,6 +346,36 @@ fun SettingsScreen(
     fun chooseLocalWallpaperFolder(target: String? = null) {
         pendingLocalFolderSource = target
         localFolderPickerLauncher.launch(null)
+    }
+
+    var enableAutoBackupAfterFolder by remember { mutableStateOf(false) }
+    val backupFolderPickerLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.OpenDocumentTree()
+    ) { uri: Uri? ->
+        val shouldEnableAfterFolder = enableAutoBackupAfterFolder
+        enableAutoBackupAfterFolder = false
+        if (uri != null) {
+            val persisted = runCatching {
+                context.contentResolver.takePersistableUriPermission(
+                    uri,
+                    Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION,
+                )
+            }.isSuccess
+            viewModel.setAutoBackupFolderUri(uri.toString())
+            if (persisted && shouldEnableAfterFolder) {
+                viewModel.setAutoBackupEnabled(true)
+                showSettingsFeedback("Backup folder saved. Scheduled backup is on.")
+            } else if (persisted) {
+                showSettingsFeedback("Backup folder saved")
+            } else {
+                showSettingsFeedback("Folder selected. If backups cannot write there, choose the folder again.")
+            }
+        }
+    }
+
+    fun chooseAutoBackupFolder(enableAfterSelection: Boolean = false) {
+        enableAutoBackupAfterFolder = enableAfterSelection
+        backupFolderPickerLauncher.launch(null)
     }
 
     val videoPickerLauncher = rememberLauncherForActivityResult(
@@ -473,6 +512,8 @@ fun SettingsScreen(
     var showBackgroundWorkDiagnostics by remember { mutableStateOf(false) }
     var showExternalAutomationDiagnostics by remember { mutableStateOf(false) }
     var showCrashDiagnostics by remember { mutableStateOf(false) }
+    var showAutoBackupIntervalPicker by remember { mutableStateOf(false) }
+    var showAutoBackupKeepPicker by remember { mutableStateOf(false) }
     var crashDiagnosticsBusy by remember { mutableStateOf(false) }
     var touchEffectStrength by remember {
         mutableStateOf(
@@ -652,6 +693,19 @@ fun SettingsScreen(
                     onCheckedChange = { viewModel.setAutoWallpaperRequiresIdle(it) },
                 )
             }
+            SettingsValueSlider(
+                icon = Icons.Default.Brightness4,
+                title = "Rotation dimming",
+                subtitle = rotationDarkenSubtitle(
+                    percent = autoWallpaperDarkenPercent,
+                    rotationActive = autoWpEnabled || schedulerEnabled || rotateOnUnlock || rotateOnScreenOff,
+                ),
+                valueLabel = darkenPercentLabel(autoWallpaperDarkenPercent),
+                value = autoWallpaperDarkenPercent.toFloat(),
+                valueRange = 0f..100f,
+                steps = 9,
+                onValueChange = { viewModel.setAutoWallpaperDarkenPercent(it.roundToInt()) },
+            )
             SettingsItem(
                 icon = Icons.Default.FolderOpen,
                 title = "Local rotation folder",
@@ -994,6 +1048,64 @@ fun SettingsScreen(
                     confirmButton = { TextButton(onClick = { showCollectionPicker = false }) { Text("Cancel") } },
                 )
             }
+        }
+
+        // Library backup
+        SettingsSection(
+            title = "Library Backup",
+            description = "Keep favorites recoverable without creating an account or uploading your library.",
+        ) {
+            SettingsToggle(
+                icon = Icons.Default.FolderOpen,
+                title = "Scheduled favorites backup",
+                subtitle = autoBackupStatusSubtitle(
+                    enabled = autoBackupEnabled,
+                    folderUri = autoBackupFolderUri,
+                    folderPermissionActive = autoBackupFolderPermissionActive,
+                    intervalHours = autoBackupIntervalHours,
+                    keepCount = autoBackupKeepCount,
+                ),
+                checked = autoBackupEnabled,
+                onCheckedChange = { enabled ->
+                    if (!enabled) {
+                        viewModel.setAutoBackupEnabled(false)
+                    } else if (!autoBackupFolderPermissionActive) {
+                        chooseAutoBackupFolder(enableAfterSelection = true)
+                        showSettingsFeedback("Choose a writable folder before enabling scheduled backups.")
+                    } else {
+                        viewModel.setAutoBackupEnabled(true)
+                    }
+                },
+            )
+            SettingsItem(
+                icon = Icons.Default.FolderOpen,
+                title = "Backup folder",
+                subtitle = autoBackupFolderSubtitle(
+                    folderUri = autoBackupFolderUri,
+                    folderPermissionActive = autoBackupFolderPermissionActive,
+                ),
+                onClick = { chooseAutoBackupFolder() },
+            )
+            if (autoBackupFolderUri.isNotBlank()) {
+                SettingsItem(
+                    icon = Icons.Default.DeleteOutline,
+                    title = "Clear backup folder",
+                    subtitle = "Disable scheduled backup and remove Aura's saved folder grant",
+                    onClick = { viewModel.clearAutoBackupFolderUri() },
+                )
+            }
+            SettingsItem(
+                icon = Icons.Default.Timer,
+                title = "Backup interval",
+                subtitle = formatAutoBackupInterval(autoBackupIntervalHours),
+                onClick = { showAutoBackupIntervalPicker = true },
+            )
+            SettingsItem(
+                icon = Icons.Default.History,
+                title = "Backups to keep",
+                subtitle = autoBackupRetentionLabel(autoBackupKeepCount),
+                onClick = { showAutoBackupKeepPicker = true },
+            )
         }
 
         // Smart Features
@@ -2085,6 +2197,61 @@ fun SettingsScreen(
         )
     }
 
+    if (showAutoBackupIntervalPicker) {
+        val intervals = listOf(
+            12L to "Every 12 hours",
+            24L to "Daily",
+            168L to "Weekly",
+            720L to "Monthly",
+        )
+        AlertDialog(
+            onDismissRequest = { showAutoBackupIntervalPicker = false },
+            title = { Text("Backup interval") },
+            text = {
+                Column {
+                    intervals.forEach { (hours, label) ->
+                        SettingsRadioOptionRow(
+                            label = label,
+                            selected = autoBackupIntervalHours == hours,
+                            onClick = {
+                                viewModel.setAutoBackupIntervalHours(hours)
+                                showAutoBackupIntervalPicker = false
+                            },
+                        )
+                    }
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = { showAutoBackupIntervalPicker = false }) { Text("Cancel") }
+            },
+        )
+    }
+
+    if (showAutoBackupKeepPicker) {
+        val keepCounts = listOf(3, 5, 10, 20)
+        AlertDialog(
+            onDismissRequest = { showAutoBackupKeepPicker = false },
+            title = { Text("Backups to keep") },
+            text = {
+                Column {
+                    keepCounts.forEach { count ->
+                        SettingsRadioOptionRow(
+                            label = autoBackupRetentionLabel(count),
+                            selected = autoBackupKeepCount == count,
+                            onClick = {
+                                viewModel.setAutoBackupKeepCount(count)
+                                showAutoBackupKeepPicker = false
+                            },
+                        )
+                    }
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = { showAutoBackupKeepPicker = false }) { Text("Cancel") }
+            },
+        )
+    }
+
     // #9: Grid columns picker
     if (showColumnsPicker) {
         AlertDialog(
@@ -3158,6 +3325,92 @@ private fun SettingsToggle(
 }
 
 @Composable
+private fun SettingsValueSlider(
+    icon: ImageVector,
+    title: String,
+    subtitle: String,
+    valueLabel: String,
+    value: Float,
+    valueRange: ClosedFloatingPointRange<Float>,
+    steps: Int,
+    onValueChange: (Float) -> Unit,
+) {
+    val description = stringResource(R.string.a11y_title_subtitle, title, "$subtitle. $valueLabel")
+    Surface(
+        modifier = Modifier
+            .fillMaxWidth()
+            .heightIn(min = 110.dp)
+            .semantics(mergeDescendants = false) {
+                contentDescription = description
+            },
+        color = MaterialTheme.colorScheme.surfaceContainer.copy(alpha = 0.74f),
+        shape = RoundedCornerShape(8.dp),
+        border = androidx.compose.foundation.BorderStroke(
+            1.dp,
+            MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.28f),
+        ),
+        shadowElevation = 1.dp,
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 14.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            Surface(
+                shape = RoundedCornerShape(8.dp),
+                color = MaterialTheme.colorScheme.secondary.copy(alpha = 0.12f),
+            ) {
+                Icon(
+                    icon,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.secondary,
+                    modifier = Modifier
+                        .padding(10.dp)
+                        .size(20.dp),
+                )
+            }
+            Column(modifier = Modifier.weight(1f)) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(title, style = MaterialTheme.typography.titleMedium)
+                        Spacer(Modifier.height(2.dp))
+                        Text(
+                            subtitle,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
+                    Surface(
+                        shape = RoundedCornerShape(6.dp),
+                        color = MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.74f),
+                    ) {
+                        Text(
+                            valueLabel,
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 5.dp),
+                            style = MaterialTheme.typography.labelMedium,
+                            color = MaterialTheme.colorScheme.onSurface,
+                        )
+                    }
+                }
+                Slider(
+                    value = value.coerceIn(valueRange.start, valueRange.endInclusive),
+                    onValueChange = onValueChange,
+                    valueRange = valueRange,
+                    steps = steps,
+                    modifier = Modifier.fillMaxWidth(),
+                )
+            }
+        }
+    }
+}
+
+@Composable
 private fun PermissionTransparencyRow(
     icon: ImageVector,
     permission: String,
@@ -3833,6 +4086,60 @@ private fun hasPersistedReadPermission(context: Context, uriString: String): Boo
         }
     }.getOrDefault(false)
 }
+
+private fun hasPersistedWritePermission(context: Context, uriString: String): Boolean {
+    if (uriString.isBlank()) return false
+    return runCatching {
+        context.contentResolver.persistedUriPermissions.any { permission ->
+            permission.isWritePermission && permission.uri.toString() == uriString
+        }
+    }.getOrDefault(false)
+}
+
+private fun darkenPercentLabel(percent: Int): String =
+    if (percent <= 0) "Off" else "${percent.coerceIn(0, 100)}%"
+
+private fun rotationDarkenSubtitle(percent: Int, rotationActive: Boolean): String = when {
+    percent <= 0 && rotationActive -> "Keep rotated wallpapers unchanged"
+    percent <= 0 -> "Saved for the next auto-rotation or trigger you enable"
+    rotationActive -> "Darkens rotated wallpapers for clock and status-bar legibility"
+    else -> "Dimming is ready but no rotation trigger is active"
+}
+
+private fun autoBackupStatusSubtitle(
+    enabled: Boolean,
+    folderUri: String,
+    folderPermissionActive: Boolean,
+    intervalHours: Long,
+    keepCount: Int,
+): String = when {
+    !enabled && folderUri.isBlank() -> "Choose a folder to unlock local, account-free scheduled backups"
+    !enabled && !folderPermissionActive -> "Folder permission needs repair before backup can be enabled"
+    !enabled -> "Ready. ${formatAutoBackupInterval(intervalHours)} and keeping ${keepCount.coerceAtLeast(1)} files"
+    folderUri.isBlank() -> "Choose a backup folder to start scheduled exports"
+    !folderPermissionActive -> "Paused. Folder permission needs repair before Aura can write backups"
+    else -> "${formatAutoBackupInterval(intervalHours)}; keeping ${keepCount.coerceAtLeast(1)} newest backups"
+}
+
+private fun autoBackupFolderSubtitle(
+    folderUri: String,
+    folderPermissionActive: Boolean,
+): String = when {
+    folderUri.isBlank() -> "Choose where Aura should write JSON backup files"
+    folderPermissionActive -> "Writable folder selected for scheduled backup"
+    else -> "Permission needs repair; choose the folder again"
+}
+
+private fun formatAutoBackupInterval(hours: Long): String = when (hours) {
+    12L -> "Every 12 hours"
+    24L -> "Daily"
+    168L -> "Weekly"
+    720L -> "Monthly"
+    else -> "Every ${hours.coerceAtLeast(1)} hours"
+}
+
+private fun autoBackupRetentionLabel(keepCount: Int): String =
+    "Keep ${keepCount.coerceAtLeast(1)} newest backup${if (keepCount == 1) "" else "s"}"
 
 private fun countSelectedStyles(raw: String): Int =
     raw.split(",").count { it.trim().isNotBlank() }

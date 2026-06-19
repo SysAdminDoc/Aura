@@ -10,6 +10,7 @@ import com.freevibe.data.repository.CommunityBlockRepository
 import com.freevibe.data.repository.VoteRepository
 import com.freevibe.di.IoDispatcher
 import com.freevibe.service.AutoWallpaperWorker
+import com.freevibe.service.AutoBackupWorker
 import com.freevibe.service.BackgroundWorkDiagnostics
 import com.freevibe.service.BackgroundWorkDiagnosticsReader
 import com.freevibe.service.CommunityIdentityProvider
@@ -125,6 +126,11 @@ class SettingsViewModel @Inject constructor(
     val autoWpRequiresCharging = prefs.autoWallpaperRequiresCharging.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
     val autoWpRequiresWiFi = prefs.autoWallpaperRequiresWiFiOnly.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
     val autoWpRequiresIdle = prefs.autoWallpaperRequiresIdle.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
+    val autoWallpaperDarkenPercent = prefs.autoWallpaperDarkenPercent.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0)
+    val autoBackupEnabled = prefs.autoBackupEnabled.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
+    val autoBackupFolderUri = prefs.autoBackupFolderUri.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), "")
+    val autoBackupIntervalHours = prefs.autoBackupIntervalHours.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 24L)
+    val autoBackupKeepCount = prefs.autoBackupKeepCount.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 5)
     // NX-6: per-unlock / screen-off trigger opt-ins. Drive RotationTriggerService lifecycle.
     val rotateOnUnlock = prefs.rotateOnUnlock.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
     val rotateOnScreenOff = prefs.rotateOnScreenOff.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
@@ -313,6 +319,50 @@ class SettingsViewModel @Inject constructor(
     fun setAutoWallpaperRequiresIdle(v: Boolean) = viewModelScope.launch {
         prefs.setAutoWallpaperRequiresIdle(v)
         if (autoWpEnabled.value) AutoWallpaperWorker.schedule(context, autoWpInterval.value * 60)
+    }
+
+    fun setAutoWallpaperDarkenPercent(percent: Int) = viewModelScope.launch {
+        prefs.setAutoWallpaperDarkenPercent(percent)
+    }
+
+    fun setAutoBackupEnabled(enabled: Boolean) = viewModelScope.launch {
+        prefs.setAutoBackupEnabled(enabled)
+        if (enabled) {
+            AutoBackupWorker.schedule(context)
+        } else {
+            AutoBackupWorker.cancel(context)
+        }
+    }
+
+    fun setAutoBackupFolderUri(uri: String) = viewModelScope.launch {
+        prefs.setAutoBackupFolderUri(uri)
+        if (autoBackupEnabled.value) AutoBackupWorker.schedule(context)
+    }
+
+    fun clearAutoBackupFolderUri() = viewModelScope.launch {
+        val uri = autoBackupFolderUri.value
+        if (uri.isNotBlank()) {
+            runCatching {
+                context.contentResolver.releasePersistableUriPermission(
+                    android.net.Uri.parse(uri),
+                    android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION or
+                        android.content.Intent.FLAG_GRANT_WRITE_URI_PERMISSION,
+                )
+            }
+        }
+        prefs.setAutoBackupEnabled(false)
+        prefs.setAutoBackupFolderUri("")
+        AutoBackupWorker.cancel(context)
+    }
+
+    fun setAutoBackupIntervalHours(hours: Long) = viewModelScope.launch {
+        prefs.setAutoBackupIntervalHours(hours.coerceAtLeast(1L))
+        if (autoBackupEnabled.value) AutoBackupWorker.schedule(context)
+    }
+
+    fun setAutoBackupKeepCount(count: Int) = viewModelScope.launch {
+        prefs.setAutoBackupKeepCount(count.coerceAtLeast(1))
+        if (autoBackupEnabled.value) AutoBackupWorker.schedule(context)
     }
 
     // T-6: Source diagnostics. Emits live snapshots while the dialog is visible.
