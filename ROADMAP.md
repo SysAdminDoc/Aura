@@ -2111,13 +2111,6 @@ Items below are sourced from exhaustive external research against competitors, p
 
 ### P1 -- Accessibility, localization, and platform parity
 
-- [ ] P1 -- **Compose UI screenshot tests with Paparazzi or Roborazzi**
-  Why: 50 unit-test files but zero Compose screenshot tests. Theme changes (AMOLED/light/Material You), accessibility scaling, and RTL layout regressions are invisible without visual regression testing. Paparazzi runs on JVM without an emulator.
-  Evidence: No `paparazzi` or `roborazzi` dependency found; U-13 roadmap item notes this gap; Compose Compiler 2.x changes screenshot stability.
-  Touches: `app/build.gradle.kts`, new test module or test files, CI workflow.
-  Acceptance: Screenshot tests cover Wallpapers grid, Sound Detail, Settings, and at least one editor screen in AMOLED and light themes; CI runs them on every push.
-  Complexity: M
-
 - [ ] P1 -- **NavigationSuiteScaffold for tablet/foldable adaptive layout**
   Why: Aura has zero `WindowSizeClass`, `NavigationSuiteScaffold`, or `ListDetailPaneScaffold` usage. On tablets and foldables, the bottom nav is cramped and the wallpaper grid doesn't scale. WallFlow ships a multi-pane tablet layout. Play Store ranks large-screen-optimized apps higher. Android 17 target-37 apps cannot rely on orientation restrictions on sw>600dp.
   Evidence: Grep for `WindowSizeClass`, `NavigationSuiteScaffold`, `ListDetailPaneScaffold` returns zero hits; WallFlow tablet support; Android 17 form-factor behavior docs; L-10 roadmap item.
@@ -2279,13 +2272,6 @@ This section records net-new parity work from the Zedge official/web/app pass. T
   Acceptance: Settings is split into feature-owned composables/files for provider credentials, automation/scheduler, privacy/permissions, community identity, diagnostics, and updates; route behavior and state remain unchanged; focused settings tests still pass; no new settings section is added to the root file directly.
   Complexity: M
 
-- [ ] P2 — **Add route-state fixtures for previews and screenshot tests**
-  Why: `rg "@Preview" app/src/main/java app/src/test/java` returns no hits, and the existing screenshot-test roadmap item will be slow to implement without deterministic empty/loading/error/success state fixtures.
-  Evidence: zero `@Preview` hits; existing P1 screenshot-test roadmap item; large Compose screen files (`WallpapersScreen.kt`, `SoundsScreen.kt`, `SettingsScreen.kt`, `WallpaperDetailScreen.kt`).
-  Touches: screen-level state models, new test/debug fixture package, Paparazzi/Roborazzi test setup when that roadmap item lands.
-  Acceptance: fixture states exist for Wallpapers, Wallpaper Detail, Sounds, Settings, Video Wallpapers, and at least one editor screen; fixtures cover empty/loading/error/offline/provider-disabled/large-font/RTL-relevant states; screenshot tests can consume the same fixtures without live network or Firebase.
-  Complexity: M
-
 ### P2 - Preview and metadata
 
 - [ ] P2 - Add media technical inspector for video and sound detail flows
@@ -2362,15 +2348,3 @@ This section records net-new parity work from the Zedge official/web/app pass. T
 ### P3 — Observability
 
 ## Deep Audit Findings (2026-06-17) — deferred items
-
-- [ ] P2 — Add withTimeout to Firebase .get().await() calls across repositories
-  Why: All Firebase RTDB .get().await() calls run without timeouts. On flaky mobile networks, Firebase's internal retry can hang 30s+ causing indefinite loading states.
-  Where: VoteRepository.kt, CreatorProfileRepository.kt, CommunityBlockRepository.kt, UploadRepository.kt, WallpaperUploadRepository.kt (fetchWallpapersByKeys already has 8s timeout).
-
-- [ ] P2 — CreatorProfileRepository.getDashboard triggers up to 160 individual Firebase reads
-  Why: Dashboard loads both sound/wallpaper uploads (80 each) then calls getVoteCountsOnce per upload ID, each a separate Firebase read. Cold dashboard load can take multiple seconds.
-  Where: CreatorProfileRepository.kt lines 249-261.
-
-- [ ] P3 — WallpaperEditorViewModel OOM downscale produces half-res output without user notification
-  Why: When applyColorMatrix catches OutOfMemoryError, it creates a half-size bitmap. The user sees a low-res preview and applies a low-res wallpaper without any indication it was downscaled.
-  Where: WallpaperEditorViewModel.kt lines 220-225.
