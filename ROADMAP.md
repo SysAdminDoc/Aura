@@ -512,6 +512,68 @@ P2 items shipped (removed). P3 missing integration tests moved to [Roadmap_Block
 
 ---
 
+## Research-Driven Additions (2026-06-19)
+
+Findings from exhaustive competitor analysis (23 wallpaper apps, 13 ringtone apps, 15 video wallpaper apps), Android 17 platform API review, community signal mining (Reddit, XDA, GitHub issues across WallYou/Paperize/Muzei/Zedge), and dependency changelog review. Full evidence in RESEARCH.md.
+
+- [ ] P1 — Android 17 background audio hardening compliance
+  Why: API 37 silently fails audio playback without visible activity or foreground service — sound preview and ringtone apply paths must be verified against the new silent-failure semantics
+  Evidence: developer.android.com/about/versions/17/changes/bg-audio; all apps on Android 17 affected
+  Touches: AudioPlaybackService.kt, AudioPlaybackManager.kt, SoundApplier.kt, SoundsViewModel.kt
+  Acceptance: Sound preview, ringtone apply, and alarm set all work on an API 37 device/emulator without silent failure; foreground service lifecycle verified under WIU constraints
+  Complexity: S
+
+- [ ] P2 — SoundsViewModel decomposition
+  Why: SoundsViewModel is the largest monolith — handles YouTube search, community tab, playback state, upload flow, and tab management in one file; same class of problem WallpapersViewModel had before its decomposition
+  Evidence: codebase scan — SoundsViewModel.kt responsibility count and line count vs decomposed WallpapersViewModel/SettingsScreen patterns
+  Touches: SoundsViewModel.kt, SoundsScreen.kt, SoundDetailScreen.kt, SoundCollections.kt
+  Acceptance: Three focused ViewModels (browse/playback/upload) with clear boundaries; all existing unit tests pass unchanged
+  Complexity: M
+
+- [ ] P2 — OEM battery optimization guidance in Settings
+  Why: Auto-wallpaper stopping is the number one reliability complaint across all FOSS wallpaper changers — Samsung, Xiaomi, and OnePlus aggressively kill background workers; users don't know the fix is in their device settings
+  Evidence: WallYou GitHub #230, #239, #259; Paperize issue reports; DontKillMyApp.com per-OEM documentation; XDA threads on wallpaper changer reliability
+  Touches: SettingsScreen.kt, SettingsViewModel.kt, new OemBatteryGuidance.kt
+  Acceptance: Settings > Wallpaper rotation shows manufacturer-auto-detected guidance with deep-link to the relevant OEM battery settings page; covers Samsung, Xiaomi, OnePlus, Huawei at minimum
+  Complexity: S
+
+- [ ] P2 — Ringtone shuffle from favorites
+  Why: RandTune proves per-call ringtone randomization from a playlist is a compelling feature users want; no FOSS app offers this; Aura already has per-contact ringtone infrastructure via ContactRingtoneService
+  Evidence: RandTune (Google Play com.ezgood.randtunereborn); community requests for variety without manual switching; Zedge does not offer this either
+  Touches: SoundApplier.kt, ContactRingtoneService.kt, PreferencesManager.kt, SettingsScreen.kt, FavoritesRepository.kt
+  Acceptance: Settings toggle enables random ringtone from favorited sounds on each incoming call; rotation excludes recently-played to avoid repeats; per-contact overrides still take precedence
+  Complexity: M
+
+- [ ] P2 — NASA APOD wallpaper source
+  Why: NASA Astronomy Picture of the Day is a top-5 community-requested wallpaper source across WallYou, Muzei, and Reddit; zero-auth REST API delivers one curated high-quality image per day
+  Evidence: WallYou multi-source model; Muzei NASA APOD plugin is the most popular Muzei plugin; r/androidapps recurring request threads
+  Touches: new NasaApodApi.kt, new NasaApodRepository.kt, WallpaperRepository.kt, WallpapersViewModel.kt, ContentSource.kt (new enum value)
+  Acceptance: NASA APOD appears in Discover feed as a daily card; image loads without auth; source badge shows NASA attribution; tapping opens detail with astronomy description text
+  Complexity: S
+
+- [ ] P2 — AV1 video wallpaper codec preference
+  Why: AV1 hardware decode now available on majority of active Android devices (Android 13+ mandates it for new device certification); 30-50% smaller files than H.265 at equivalent quality; saves storage and bandwidth for cached video wallpapers
+  Evidence: ScientiaMobile AV1 adoption report 2026; Meta engineering report (50%+ video watch via AV1); Android 13 CDD hardware decode mandate; existing risk register row underestimates current install base
+  Touches: VideoWallpaperService.kt, VideoWallpaperStorage.kt, VideoCropScreen.kt
+  Acceptance: Video download path prefers AV1 when MediaCodecList reports hardware decode capability; falls back to H.264/H.265 otherwise; no software-decode AV1 path (battery drain); risk register AV1 row updated
+  Complexity: S
+
+- [ ] P3 — Compose @Preview fixtures for key screens
+  Why: Zero @Preview composables across 178 source files; previews are the standard Compose development-time visual feedback mechanism that all active competitors ship (Paperize, WallYou, Peristyle); Roborazzi tests exist but require full test execution and don't support interactive iteration
+  Evidence: grep for @Preview returns 0 results in app/src/main; competitor repos all ship previews
+  Touches: WallpaperDetailScreen.kt, SoundDetailScreen.kt, SettingsScreen.kt, OnboardingScreen.kt, FavoritesScreen.kt
+  Acceptance: At least 5 key screens have @Preview composables with light and dark theme variants; previews render in Android Studio without errors
+  Complexity: S
+
+- [ ] P3 — On-device wallpaper style learning
+  Why: Vanderwaals (AGPL-3.0, Nov 2025) proves MobileNetV4-Conv-Small is viable for on-device visual preference learning on Android; could rank and reorder Discover feed by learned taste profile without server-side analytics or telemetry
+  Evidence: github.com/avinaxhroy/Vanderwaals (6000+ wallpapers with ML-driven personalization, zero analytics); distinct from U-2 (on-device generation) — this is recommendation not generation
+  Touches: new StylePreferenceModel.kt, WallpaperRepository.kt, WallpapersViewModel.kt, WallpaperFeedQuality.kt
+  Acceptance: Aura tracks apply/favorite/skip signals locally; Discover feed reorders by learned preference after 20+ interactions; model stays on-device with no telemetry; user can reset learned preferences in Settings
+  Complexity: L
+
+---
+
 ## Themes — cross-cutting initiatives
 
 Themes group Now/Next items so they ship coherently rather than as one-off features.
