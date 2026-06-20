@@ -162,6 +162,13 @@ class PreferencesManager @Inject constructor(
     suspend fun ringtoneShuffleLastAppliedId(): String = get(Keys.RINGTONE_SHUFFLE_LAST_APPLIED_ID, "").first()
     suspend fun setRingtoneShuffleLastAppliedId(id: String) = set(Keys.RINGTONE_SHUFFLE_LAST_APPLIED_ID, id)
 
+    val lastAppliedRingtoneUri: kotlinx.coroutines.flow.Flow<String> = get(Keys.LAST_APPLIED_RINGTONE_URI, "")
+    suspend fun setLastAppliedRingtoneUri(uri: String) = set(Keys.LAST_APPLIED_RINGTONE_URI, uri)
+    val lastAppliedNotificationUri: kotlinx.coroutines.flow.Flow<String> = get(Keys.LAST_APPLIED_NOTIFICATION_URI, "")
+    suspend fun setLastAppliedNotificationUri(uri: String) = set(Keys.LAST_APPLIED_NOTIFICATION_URI, uri)
+    val lastAppliedAlarmUri: kotlinx.coroutines.flow.Flow<String> = get(Keys.LAST_APPLIED_ALARM_URI, "")
+    suspend fun setLastAppliedAlarmUri(uri: String) = set(Keys.LAST_APPLIED_ALARM_URI, uri)
+
     // ── Sound settings ────────────────────────────────────────────
 
     val autoPreviewSounds: Flow<Boolean> = get(Keys.AUTO_PREVIEW, true)
@@ -373,5 +380,8 @@ class PreferencesManager @Inject constructor(
         val RINGTONE_SHUFFLE_ENABLED = booleanPreferencesKey("ringtone_shuffle_enabled")
         val RINGTONE_SHUFFLE_INTERVAL_HOURS = longPreferencesKey("ringtone_shuffle_interval_hours")
         val RINGTONE_SHUFFLE_LAST_APPLIED_ID = stringPreferencesKey("ringtone_shuffle_last_applied_id")
+        val LAST_APPLIED_RINGTONE_URI = stringPreferencesKey("last_applied_ringtone_uri")
+        val LAST_APPLIED_NOTIFICATION_URI = stringPreferencesKey("last_applied_notification_uri")
+        val LAST_APPLIED_ALARM_URI = stringPreferencesKey("last_applied_alarm_uri")
     }
 }

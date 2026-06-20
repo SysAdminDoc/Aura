@@ -10,6 +10,7 @@ import android.os.Build
 import android.os.Environment
 import android.provider.MediaStore
 import android.provider.Settings
+import com.freevibe.data.local.PreferencesManager
 import com.freevibe.data.model.ContentType
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
@@ -28,6 +29,7 @@ private val SANITIZE_REGEX = Regex("[^a-zA-Z0-9._-]")
 class SoundApplier @Inject constructor(
     @ApplicationContext private val context: Context,
     private val okHttpClient: OkHttpClient,
+    private val prefs: PreferencesManager,
 ) {
     /** Check if app has WRITE_SETTINGS permission */
     fun canWriteSettings(): Boolean = Settings.System.canWrite(context)
@@ -66,6 +68,7 @@ class SoundApplier @Inject constructor(
                 else -> throw IllegalArgumentException("Invalid sound type: $type")
             }
             RingtoneManager.setActualDefaultRingtoneUri(context, ringtoneType, uri)
+            persistAppliedUri(type, uri)
 
             uri
         }.onFailure { it.rethrowIfCancelled() }
@@ -104,9 +107,19 @@ class SoundApplier @Inject constructor(
                 else -> throw IllegalArgumentException("Invalid sound type: $type")
             }
             RingtoneManager.setActualDefaultRingtoneUri(context, ringtoneType, uri)
+            persistAppliedUri(type, uri)
 
             uri
         }.onFailure { it.rethrowIfCancelled() }
+    }
+
+    private suspend fun persistAppliedUri(type: ContentType, uri: Uri) {
+        when (type) {
+            ContentType.RINGTONE -> prefs.setLastAppliedRingtoneUri(uri.toString())
+            ContentType.NOTIFICATION -> prefs.setLastAppliedNotificationUri(uri.toString())
+            ContentType.ALARM -> prefs.setLastAppliedAlarmUri(uri.toString())
+            else -> {}
+        }
     }
 
     private fun saveToMediaStore(
