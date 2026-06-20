@@ -161,6 +161,7 @@ fun SoundsScreen(
     var showFiltersSheet by remember { mutableStateOf(false) }
     var showRecordPermissionPrompt by remember { mutableStateOf(false) }
     var showRecordPermissionRecovery by remember { mutableStateOf(false) }
+    var pendingPersonalRecording by remember { mutableStateOf(false) }
     val context = LocalContext.current
     val focusManager = LocalFocusManager.current
     val snackbarHostState = remember { SnackbarHostState() }
@@ -215,8 +216,14 @@ fun SoundsScreen(
         ActivityResultContracts.RequestPermission()
     ) { granted ->
         if (granted) {
-            viewModel.startCommunityRecording()
+            if (pendingPersonalRecording) {
+                pendingPersonalRecording = false
+                viewModel.startPersonalRecording()
+            } else {
+                viewModel.startCommunityRecording()
+            }
         } else {
+            pendingPersonalRecording = false
             viewModel.reportRecordingPermissionDenied()
             showRecordPermissionRecovery = true
         }
@@ -279,6 +286,13 @@ fun SoundsScreen(
                 viewModel.consumeRecordedUpload()
                 showCommunityGuidelines = true
             }
+        }
+    }
+
+    LaunchedEffect(state.personalRecordingUri) {
+        state.personalRecordingUri?.let { uri ->
+            viewModel.consumePersonalRecording()
+            onCreateRingtone(uri)
         }
     }
 
@@ -405,6 +419,27 @@ fun SoundsScreen(
                     containerColor = MaterialTheme.colorScheme.primaryContainer,
                 ) {
                     Icon(Icons.Default.ContentCut, "Create from music", modifier = Modifier.size(20.dp))
+                }
+                SmallFloatingActionButton(
+                    onClick = {
+                        if (state.isRecordingPersonal) {
+                            viewModel.stopPersonalRecording()
+                        } else if (ContextCompat.checkSelfPermission(context, Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED) {
+                            viewModel.startPersonalRecording()
+                        } else {
+                            pendingPersonalRecording = true
+                            showRecordPermissionPrompt = true
+                        }
+                    },
+                    modifier = Modifier.size(48.dp),
+                    containerColor = if (state.isRecordingPersonal) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.secondaryContainer,
+                ) {
+                    Icon(
+                        if (state.isRecordingPersonal) Icons.Default.Stop else Icons.Default.Mic,
+                        if (state.isRecordingPersonal) "Stop recording" else "Record ringtone",
+                        modifier = Modifier.size(20.dp),
+                        tint = if (state.isRecordingPersonal) MaterialTheme.colorScheme.onError else MaterialTheme.colorScheme.onSecondaryContainer,
+                    )
                 }
             }
         },

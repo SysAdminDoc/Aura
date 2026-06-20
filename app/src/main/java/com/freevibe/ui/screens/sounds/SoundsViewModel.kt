@@ -78,6 +78,8 @@ data class SoundsUiState(
     val isRecordingUpload: Boolean = false,
     val recordingStartedAtMs: Long = 0L,
     val recordedUploadUri: Uri? = null,
+    val isRecordingPersonal: Boolean = false,
+    val personalRecordingUri: Uri? = null,
     val degradedSources: Set<String> = emptySet(),
 )
 
@@ -887,6 +889,34 @@ class SoundsViewModel @Inject constructor(
     fun discardCommunityRecording() = community.discardRecording()
     fun consumeRecordedUpload() = community.consumeRecordedUpload()
     fun reportRecordingPermissionDenied() = community.reportRecordingPermissionDenied()
+
+    fun startPersonalRecording() {
+        if (_state.value.isRecordingPersonal) return
+        communityAudioRecorder.start()
+            .onSuccess {
+                _state.update { it.copy(isRecordingPersonal = true, personalRecordingUri = null) }
+            }
+    }
+
+    fun stopPersonalRecording() {
+        if (!_state.value.isRecordingPersonal) return
+        communityAudioRecorder.stop()
+            .onSuccess { uri ->
+                _state.update { it.copy(isRecordingPersonal = false, personalRecordingUri = uri) }
+            }
+            .onFailure {
+                _state.update { it.copy(isRecordingPersonal = false) }
+            }
+    }
+
+    fun cancelPersonalRecording() {
+        communityAudioRecorder.cancel()
+        _state.update { it.copy(isRecordingPersonal = false, personalRecordingUri = null) }
+    }
+
+    fun consumePersonalRecording() {
+        _state.update { it.copy(personalRecordingUri = null) }
+    }
 
     override fun onCleared() {
         loadJob?.cancel()
