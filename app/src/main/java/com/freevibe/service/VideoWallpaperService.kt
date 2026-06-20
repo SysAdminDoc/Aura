@@ -6,6 +6,7 @@ import android.content.Intent
 import android.content.IntentFilter
 import android.graphics.Color
 import android.graphics.Movie
+import android.media.AudioAttributes
 import android.media.MediaMetadataRetriever
 import android.media.MediaPlayer
 import android.os.BatteryManager
@@ -223,6 +224,17 @@ class VideoWallpaperService : WallpaperService() {
                     setDisplay(safeHolder)
                     isLooping = true
                     setVolume(0f, 0f)
+                    // Android 17 background audio hardening: WallpaperService is not a
+                    // foreground service, so MediaPlayer.start() can fail silently if
+                    // the platform detects an active audio session. Set non-media
+                    // attributes and deselect audio tracks after prepare to avoid
+                    // creating an AudioTrack entirely.
+                    setAudioAttributes(
+                        AudioAttributes.Builder()
+                            .setUsage(AudioAttributes.USAGE_UNKNOWN)
+                            .setContentType(AudioAttributes.CONTENT_TYPE_UNKNOWN)
+                            .build()
+                    )
                     try {
                         setVideoScalingMode(
                             if (scaleMode == VIDEO_WALLPAPER_SCALE_MODE_FIT) {
@@ -239,6 +251,13 @@ class VideoWallpaperService : WallpaperService() {
                             videoH = mp.videoHeight
                         }
                         mp.isLooping = true
+                        try {
+                            for (i in mp.trackInfo.indices) {
+                                if (mp.trackInfo[i].trackType == MediaPlayer.TrackInfo.MEDIA_TRACK_TYPE_AUDIO) {
+                                    mp.deselectTrack(i)
+                                }
+                            }
+                        } catch (_: Exception) {}
                         try { mp.playbackParams = mp.playbackParams.setSpeed(speed) } catch (_: Exception) {}
                         mp.start()
                     }

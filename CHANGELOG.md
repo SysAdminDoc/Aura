@@ -2,6 +2,16 @@
 
 All notable changes to Aura will be documented in this file.
 
+## v6.33.0 (2026-06-19)
+- **Android 17 audio hardening compliance**: video wallpaper MediaPlayer now
+  sets non-media AudioAttributes and deselects audio tracks after prepare so
+  muted video playback does not create an AudioTrack that Android 17's
+  background audio enforcement could silently reject.
+- **Test fixture repair**: contract tests updated to follow Settings UI
+  primitives (SettingsSection, SettingsToggle, SettingsRadioOptionRow,
+  SettingsMetric) to their new home in SettingsComponents.kt after the
+  recent extraction refactor.
+
 ## v6.32.9 (2026-06-19)
 - **Backup reliability hardening**: scheduled favorites backup now clamps
   persisted retention values at runtime before pruning, preventing corrupt

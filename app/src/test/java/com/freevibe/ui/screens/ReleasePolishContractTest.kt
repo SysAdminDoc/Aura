@@ -27,8 +27,8 @@ class ReleasePolishContractTest {
 
     @Test
     fun `settings toggle exposes one labeled accessibility target`() {
-        val source = File("src/main/java/com/freevibe/ui/screens/settings/SettingsScreen.kt").readText()
-        val toggle = source.substringAfter("private fun SettingsToggle(").substringBefore("private fun PermissionTransparencyRow(")
+        val source = File("src/main/java/com/freevibe/ui/screens/settings/SettingsComponents.kt").readText()
+        val toggle = source.substringAfter("internal fun SettingsToggle(").substringBefore("internal fun SettingsValueSlider(")
 
         assertTrue(toggle.contains("semantics(mergeDescendants = true)"))
         assertTrue(toggle.contains("contentDescription = toggleDescription"))
@@ -91,8 +91,9 @@ class ReleasePolishContractTest {
 
     @Test
     fun `settings radio dialogs expose full row touch targets`() {
+        val components = File("src/main/java/com/freevibe/ui/screens/settings/SettingsComponents.kt").readText()
+        val radioRow = components.substringAfter("internal fun SettingsRadioOptionRow(").substringBefore("internal fun SettingsMetric(")
         val source = File("src/main/java/com/freevibe/ui/screens/settings/SettingsScreen.kt").readText()
-        val radioRow = source.substringAfter("private fun SettingsRadioOptionRow(").substringBefore("@Composable\nprivate fun IntervalPickerDialog(")
         val intervalDialog = source.substringAfter("private fun IntervalPickerDialog(").substringBefore("private data class SettingsBatterySnapshot(")
         val sourceDialog = source.substringAfter("private fun SourcePickerDialog(")
 
@@ -105,13 +106,14 @@ class ReleasePolishContractTest {
 
     @Test
     fun `settings feedback uses aura snackbar chrome instead of raw toasts`() {
-        val source = File("src/main/java/com/freevibe/ui/screens/settings/SettingsScreen.kt").readText()
+        val screen = File("src/main/java/com/freevibe/ui/screens/settings/SettingsScreen.kt").readText()
+        val diagnostics = File("src/main/java/com/freevibe/ui/screens/settings/DiagnosticsComponents.kt").readText()
 
-        assertTrue(source.contains("snackbarHost = { AuraSnackbarHost(snackbarHostState) }"))
-        assertTrue(source.contains("fun showSettingsFeedback(message: String)"))
-        assertTrue(source.contains("copyCrashDiagnosticsBundle("))
-        assertTrue(source.contains("onFeedback: (String) -> Unit"))
-        assertTrue(!source.contains("Toast.makeText"))
+        assertTrue(screen.contains("snackbarHost = { AuraSnackbarHost(snackbarHostState) }"))
+        assertTrue(screen.contains("fun showSettingsFeedback(message: String)"))
+        assertTrue(screen.contains("copyCrashDiagnosticsBundle("))
+        assertTrue(diagnostics.contains("onFeedback: (String) -> Unit"))
+        assertTrue(!screen.contains("Toast.makeText"))
     }
 
     @Test
