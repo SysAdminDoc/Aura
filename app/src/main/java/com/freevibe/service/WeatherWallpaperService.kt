@@ -55,7 +55,7 @@ class WeatherWallpaperService : WallpaperService() {
 
         private var lastDrawReceiptMs = 0L
         private val drawRunner = Runnable { draw() }
-        private fun weatherPrefs() = createDeviceProtectedStorageContext().getSharedPreferences("freevibe_weather_wp", MODE_PRIVATE)
+        private fun weatherPrefs() = getSharedPreferences("freevibe_weather_wp", MODE_PRIVATE)
 
         override fun onSurfaceCreated(holder: SurfaceHolder) {
             super.onSurfaceCreated(holder)
