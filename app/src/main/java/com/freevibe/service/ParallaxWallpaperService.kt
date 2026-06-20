@@ -76,7 +76,7 @@ class ParallaxWallpaperService : WallpaperService() {
         private var lastDrawReceiptMs = 0L
         private val drawRunner = Runnable { draw() }
 
-        private fun getPrefs() = getSharedPreferences("freevibe_parallax", MODE_PRIVATE)
+        private fun getPrefs() = createDeviceProtectedStorageContext().getSharedPreferences("freevibe_parallax", MODE_PRIVATE)
         private fun getImagePath(): String? = getPrefs().getString("image_path", null)
 
         override fun onCreate(surfaceHolder: SurfaceHolder) {

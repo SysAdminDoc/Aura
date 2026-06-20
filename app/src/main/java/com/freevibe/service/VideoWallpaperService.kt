@@ -77,8 +77,9 @@ class VideoWallpaperService : WallpaperService() {
         private var gifFramesInSample = 0
         private var gifSampledFps = 0
 
-        private fun getPrefs() = getSharedPreferences("freevibe_live_wp", MODE_PRIVATE)
-        private fun getRuntimePrefs() = getSharedPreferences(VIDEO_PREFS_NAME, MODE_PRIVATE)
+        private fun directBootContext() = createDeviceProtectedStorageContext()
+        private fun getPrefs() = directBootContext().getSharedPreferences("freevibe_live_wp", MODE_PRIVATE)
+        private fun getRuntimePrefs() = directBootContext().getSharedPreferences(VIDEO_PREFS_NAME, MODE_PRIVATE)
         private fun getVideoPath(): String? = getPrefs().getString("video_path", null)
         private fun getScaleMode(): String =
             normalizeVideoWallpaperScaleMode(getPrefs().getString("scale_mode", VIDEO_WALLPAPER_SCALE_MODE_ZOOM))
@@ -432,7 +433,7 @@ class VideoWallpaperService : WallpaperService() {
         }
 
         private fun publishVideoTelemetry(profile: VideoPlaybackProfile = activeProfile) {
-            getSharedPreferences(VIDEO_STATS_PREFS_NAME, MODE_PRIVATE)
+            directBootContext().getSharedPreferences(VIDEO_STATS_PREFS_NAME, MODE_PRIVATE)
                 .edit()
                 .putLong("last_seen_ms", System.currentTimeMillis())
                 .putBoolean("visible", visible)

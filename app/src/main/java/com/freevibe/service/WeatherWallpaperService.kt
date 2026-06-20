@@ -55,11 +55,12 @@ class WeatherWallpaperService : WallpaperService() {
 
         private var lastDrawReceiptMs = 0L
         private val drawRunner = Runnable { draw() }
+        private fun weatherPrefs() = createDeviceProtectedStorageContext().getSharedPreferences("freevibe_weather_wp", MODE_PRIVATE)
 
         override fun onSurfaceCreated(holder: SurfaceHolder) {
             super.onSurfaceCreated(holder)
             setTouchEventsEnabled(true)
-            receiptStore.recordSurfaceCreated(LiveWallpaperReceiptStore.ENGINE_WEATHER, getSharedPreferences("freevibe_weather_wp", MODE_PRIVATE).getString("wallpaper_path", null))
+            receiptStore.recordSurfaceCreated(LiveWallpaperReceiptStore.ENGINE_WEATHER, weatherPrefs().getString("wallpaper_path", null))
             loadWallpaperBitmap()
         }
 
@@ -129,7 +130,7 @@ class WeatherWallpaperService : WallpaperService() {
         }
 
         private fun loadWallpaperBitmap() {
-            val prefs = getSharedPreferences("freevibe_weather_wp", MODE_PRIVATE)
+            val prefs = weatherPrefs()
             val path = prefs.getString("wallpaper_path", null) ?: return
             Thread {
                 try {
@@ -173,7 +174,7 @@ class WeatherWallpaperService : WallpaperService() {
         }
 
         private fun loadReducedMotionFromPrefs() {
-            val prefs = getSharedPreferences("freevibe_weather_wp", MODE_PRIVATE)
+            val prefs = weatherPrefs()
             val manualReduce = prefs.getBoolean("reduce_animations", false)
             val systemDisabled = Settings.Global.getFloat(
                 contentResolver,
@@ -184,7 +185,7 @@ class WeatherWallpaperService : WallpaperService() {
         }
 
         private fun loadVfxFromPrefs() {
-            val prefs = getSharedPreferences("freevibe_weather_wp", MODE_PRIVATE)
+            val prefs = weatherPrefs()
             val effectName = prefs.getString("vfx_effect", "NONE") ?: "NONE"
             try {
                 vfxRenderer?.setEffect(VfxParticleRenderer.VfxEffect.valueOf(effectName))
@@ -194,12 +195,12 @@ class WeatherWallpaperService : WallpaperService() {
         }
 
         private fun loadTouchEffectsFromPrefs() {
-            val prefs = getSharedPreferences("freevibe_weather_wp", MODE_PRIVATE)
+            val prefs = weatherPrefs()
             touchRenderer?.setStrength(parseTouchEffectStrength(prefs.getString("touch_effect_strength", "OFF")))
         }
 
         private fun loadWeatherFromPrefs() {
-            val prefs = getSharedPreferences("freevibe_weather_wp", MODE_PRIVATE)
+            val prefs = weatherPrefs()
             val effectName = prefs.getString("weather_effect", "CLEAR_DAY") ?: "CLEAR_DAY"
             val wind = prefs.getFloat("wind_speed", 0f).toDouble()
             try {
@@ -210,7 +211,7 @@ class WeatherWallpaperService : WallpaperService() {
         }
 
         private fun loadAdaptiveTintFromPrefs() {
-            val prefs = getSharedPreferences("freevibe_weather_wp", MODE_PRIVATE)
+            val prefs = weatherPrefs()
             tintEnabled = prefs.getBoolean("adaptive_tint_enabled", false)
             tintIntensity = prefs.getFloat("adaptive_tint_intensity", 0.3f)
             // Prefer the Float-precision keys (current schema). Fall back to the legacy

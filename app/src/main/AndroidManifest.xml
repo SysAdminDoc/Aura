@@ -102,6 +102,7 @@
         <!-- Video Live Wallpaper Service -->
         <service
             android:name=".service.VideoWallpaperService"
+            android:directBootAware="true"
             android:exported="true"
             android:label="@string/video_wallpaper_label"
             android:permission="android.permission.BIND_WALLPAPER">
@@ -116,6 +117,7 @@
         <!-- Weather Live Wallpaper Service -->
         <service
             android:name=".service.WeatherWallpaperService"
+            android:directBootAware="true"
             android:exported="true"
             android:label="Aura Weather"
             android:permission="android.permission.BIND_WALLPAPER">
@@ -130,6 +132,7 @@
         <!-- Parallax Depth Live Wallpaper Service -->
         <service
             android:name=".service.ParallaxWallpaperService"
+            android:directBootAware="true"
             android:exported="true"
             android:label="Aura Parallax"
             android:permission="android.permission.BIND_WALLPAPER">
