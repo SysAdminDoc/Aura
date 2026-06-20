@@ -7,6 +7,11 @@ All notable changes to Aura will be documented in this file.
   sets non-media AudioAttributes and deselects audio tracks after prepare so
   muted video playback does not create an AudioTrack that Android 17's
   background audio enforcement could silently reject.
+- **OEM battery optimization guidance**: when any wallpaper rotation trigger
+  is active, Settings shows a manufacturer-detected guidance item (Samsung,
+  Xiaomi, OnePlus, Huawei, vivo, ASUS) that deep-links to the relevant OEM
+  battery settings page. Addresses the #1 reliability complaint across all
+  FOSS wallpaper changers.
 - **Test fixture repair**: contract tests updated to follow Settings UI
   primitives (SettingsSection, SettingsToggle, SettingsRadioOptionRow,
   SettingsMetric) to their new home in SettingsComponents.kt after the

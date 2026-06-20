@@ -63,6 +63,7 @@ import com.freevibe.service.CommunityIdentitySummary
 import com.freevibe.service.CrashDiagnosticsSummary
 import com.freevibe.service.DailyWallpaperWorker
 import com.freevibe.service.ExternalAutomationDiagnostics
+import com.freevibe.service.OemBatteryGuidance
 import com.freevibe.service.SourceMetrics
 import com.freevibe.service.VIDEO_STATS_PREFS_NAME
 import com.freevibe.service.VideoWallpaperSelectionResult
@@ -712,6 +713,29 @@ fun SettingsScreen(
                 steps = 9,
                 onValueChange = { viewModel.setAutoWallpaperDarkenPercent(it.roundToInt()) },
             )
+            val rotationActive = autoWpEnabled || schedulerEnabled || rotateOnUnlock || rotateOnScreenOff
+            if (rotationActive) {
+                val oemGuide = remember { OemBatteryGuidance.detect(context) }
+                if (oemGuide != null) {
+                    SettingsItem(
+                        icon = Icons.Default.BatteryAlert,
+                        title = "${oemGuide.manufacturer} battery optimization",
+                        subtitle = oemGuide.summary,
+                        onClick = {
+                            val intent = oemGuide.settingsIntent
+                            if (intent != null) {
+                                try {
+                                    context.startActivity(intent)
+                                } catch (_: Exception) {
+                                    showSettingsFeedback("Could not open ${oemGuide.manufacturer} battery settings on this device.")
+                                }
+                            } else {
+                                showSettingsFeedback("Could not find ${oemGuide.manufacturer} battery settings on this device.")
+                            }
+                        },
+                    )
+                }
+            }
             SettingsItem(
                 icon = Icons.Default.FolderOpen,
                 title = "Local rotation folder",
