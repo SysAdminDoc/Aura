@@ -1269,6 +1269,14 @@ private fun SoundCard(
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
+                        val codecBadge = remember(sound) { formatSoundCodecBadge(sound) }
+                        if (codecBadge != null) {
+                            Text(
+                                codecBadge,
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
+                            )
+                        }
                         if (isPreviewReady) {
                             Surface(
                                 color = MaterialTheme.colorScheme.primary.copy(alpha = 0.10f),

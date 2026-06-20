@@ -393,6 +393,10 @@ fun SoundDetailScreen(
                 if (showUploader) {
                     Text("by ${s.uploaderName}", modifier = Modifier.weight(1f, fill = false), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis)
                 }
+                val detailCodecBadge = remember(s) { formatSoundCodecBadge(s) }
+                if (detailCodecBadge != null) {
+                    Text(detailCodecBadge, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
                 if (s.license.isNotEmpty()) {
                     Surface(color = MaterialTheme.colorScheme.secondaryContainer, shape = RoundedCornerShape(4.dp)) {
                         Text(s.license, Modifier.padding(horizontal = 6.dp, vertical = 2.dp), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.secondary)

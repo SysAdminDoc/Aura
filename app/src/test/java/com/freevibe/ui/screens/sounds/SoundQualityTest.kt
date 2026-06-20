@@ -3,6 +3,8 @@ package com.freevibe.ui.screens.sounds
 import com.freevibe.data.model.ContentSource
 import com.freevibe.data.model.Sound
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
@@ -219,4 +221,54 @@ class SoundQualityTest {
         license = license,
         uploaderName = "Tester",
     )
+}
+
+class FormatSoundCodecBadgeTest {
+
+    private fun stubSound(
+        duration: Double = 0.0,
+        fileType: String = "",
+        fileSize: Long = 0L,
+    ) = Sound(
+        id = "codec_test",
+        source = ContentSource.YOUTUBE,
+        name = "Test",
+        previewUrl = "",
+        downloadUrl = "",
+        duration = duration,
+        fileType = fileType,
+        fileSize = fileSize,
+    )
+
+    @Test
+    fun `returns null when fileType is blank`() {
+        assertNull(formatSoundCodecBadge(stubSound(duration = 10.0)))
+    }
+
+    @Test
+    fun `returns format only when no duration or fileSize`() {
+        assertEquals("MP3", formatSoundCodecBadge(stubSound(fileType = "audio/mpeg")))
+    }
+
+    @Test
+    fun `returns format with bitrate when both fileSize and duration available`() {
+        assertEquals(
+            "MP3 128k",
+            formatSoundCodecBadge(stubSound(duration = 10.0, fileType = "audio/mpeg", fileSize = 160_000L)),
+        )
+    }
+
+    @Test
+    fun `strips audio prefix from fileType`() {
+        val badge = formatSoundCodecBadge(stubSound(duration = 5.0, fileType = "audio/ogg", fileSize = 40_000L))
+        assertNotNull(badge)
+        assertTrue(badge!!.startsWith("OGG"))
+    }
+
+    @Test
+    fun `normalizes mp4a-latm to AAC`() {
+        val badge = formatSoundCodecBadge(stubSound(duration = 10.0, fileType = "mp4a-latm", fileSize = 160_000L))
+        assertNotNull(badge)
+        assertTrue(badge!!.startsWith("AAC"))
+    }
 }

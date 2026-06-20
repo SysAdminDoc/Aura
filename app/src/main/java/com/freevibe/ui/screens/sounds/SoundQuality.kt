@@ -217,3 +217,28 @@ private val CALM_SOUND_TERMS = setOf(
 private val PUNCHY_SOUND_TERMS = setOf(
     "alert", "alarm", "beep", "ping", "ringtone", "bass", "bright", "electro", "siren", "buzzer",
 )
+
+internal fun formatSoundCodecBadge(sound: Sound): String? {
+    val format = sound.fileType
+        .lowercase(java.util.Locale.ROOT)
+        .removePrefix("audio/")
+        .removePrefix("video/")
+        .replace("mpeg", "mp3")
+        .replace("mp4a-latm", "aac")
+        .replace("mp4", "aac")
+        .replace("ogg", "ogg")
+        .replace("webm", "webm")
+        .trim()
+        .uppercase(java.util.Locale.ROOT)
+        .ifBlank { null } ?: return null
+
+    val bitrate = when {
+        sound.fileSize > 0 && sound.duration > 0 -> {
+            val kbps = (sound.fileSize * 8 / sound.duration / 1000).roundToInt()
+            if (kbps in 16..512) "${kbps}k" else null
+        }
+        else -> null
+    }
+
+    return if (bitrate != null) "$format $bitrate" else format
+}
