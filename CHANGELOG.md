@@ -12,6 +12,10 @@ All notable changes to Aura will be documented in this file.
   Xiaomi, OnePlus, Huawei, vivo, ASUS) that deep-links to the relevant OEM
   battery settings page. Addresses the #1 reliability complaint across all
   FOSS wallpaper changers.
+- **Compose @Preview fixtures**: added preview composables for AuraStateCard
+  (empty/error/light variants), SettingsSection (dark/light), SettingsToggle,
+  SettingsItem, SettingsMetric, and OEM battery guidance. Previews render in
+  Android Studio without Hilt injection for faster UI iteration.
 - **AV1 codec support detection**: new `Av1CodecSupport` singleton queries
   `MediaCodecList` for hardware AV1 decode capability at startup. Exposes
   `hasHardwareAv1Decode` and `preferredVideoMimeTypes()` for codec-aware
