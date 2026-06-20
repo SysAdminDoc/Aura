@@ -3,6 +3,7 @@ package com.freevibe.data.remote
 import com.freevibe.data.model.*
 import com.freevibe.data.remote.bing.BingDailyApi
 import com.freevibe.data.remote.bing.BingImage
+import com.freevibe.data.remote.nasa.NasaApodResponse
 import com.freevibe.data.remote.pixabay.PixabayPhoto
 import com.freevibe.data.remote.reddit.RedditPost
 import com.freevibe.data.remote.wallhaven.WallhavenWallpaper
@@ -43,6 +44,26 @@ fun BingImage.toWallpaper(bingBaseUrl: String = BingDailyApi.BASE_URL) = Wallpap
     uploaderName = BING_COPYRIGHT_REGEX.find(copyright)?.groupValues?.get(1)
         ?: copyright.take(80),
 )
+
+// -- NASA APOD -> Wallpaper --
+
+fun NasaApodResponse.toWallpaper(): Wallpaper? {
+    if (mediaType != "image") return null
+    val imageUrl = hdUrl ?: url
+    if (imageUrl.isBlank()) return null
+    return Wallpaper(
+        id = "nasa_apod_$date",
+        source = ContentSource.NASA,
+        thumbnailUrl = thumbnailUrl ?: url,
+        fullUrl = imageUrl,
+        width = 0,
+        height = 0,
+        category = "astronomy",
+        tags = listOf("nasa", "apod", "astronomy", "space"),
+        sourcePageUrl = "https://apod.nasa.gov/apod/ap${date.replace("-", "").drop(2)}.html",
+        uploaderName = copyright?.trim() ?: "NASA",
+    )
+}
 
 // -- Pixabay -> Wallpaper --
 

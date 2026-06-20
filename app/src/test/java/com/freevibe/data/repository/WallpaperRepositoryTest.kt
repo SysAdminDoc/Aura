@@ -6,6 +6,7 @@ import com.freevibe.data.model.ContentSource
 import com.freevibe.data.model.SearchResult
 import com.freevibe.data.model.Wallpaper
 import com.freevibe.data.remote.bing.BingDailyApi
+import com.freevibe.data.remote.nasa.NasaApodApi
 import com.freevibe.data.remote.bing.BingImage
 import com.freevibe.data.remote.bing.BingImageResponse
 import com.freevibe.data.remote.pexels.PexelsApi
@@ -351,6 +352,7 @@ class WallpaperRepositoryTest {
     private fun wallpaperRepository(
         wallhavenApi: WallhavenApi = mockk(),
         bingApi: BingDailyApi = mockk(),
+        nasaApodApi: NasaApodApi = mockk(relaxed = true),
         pixabayApi: PixabayApi = mockk(),
         pexelsApi: PexelsApi = mockk(),
         cacheManager: WallpaperCacheManager = mockk(relaxed = true),
@@ -376,6 +378,7 @@ class WallpaperRepositoryTest {
         return WallpaperRepository(
             wallhavenApi = wallhavenApi,
             bingApi = bingApi,
+            nasaApodApi = nasaApodApi,
             pixabayApi = pixabayApi,
             pexelsApi = pexelsApi,
             cacheManager = cacheManager,

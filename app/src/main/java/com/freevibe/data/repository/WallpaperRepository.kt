@@ -7,6 +7,7 @@ import com.freevibe.data.model.ContentSource
 import com.freevibe.data.model.SearchResult
 import com.freevibe.data.model.Wallpaper
 import com.freevibe.data.remote.bing.BingDailyApi
+import com.freevibe.data.remote.nasa.NasaApodApi
 import com.freevibe.data.remote.pexels.PexelsApi
 import com.freevibe.data.remote.pixabay.PixabayApi
 import com.freevibe.data.remote.toWallpaper
@@ -98,6 +99,7 @@ private const val DISCOVER_PER_SOURCE_TIMEOUT_MS = 4_500L
 private const val DISCOVER_SECONDARY_SOURCE_BUDGET_MS = 1_200L
 private const val DISCOVER_PAGE_SIZE = 60
 private const val PIXABAY_MAX_BACKOFF_SECONDS = 24 * 60 * 60L
+private const val SOURCE_APOD = "nasa_apod"
 private const val SOURCE_BING = "bing"
 private const val SOURCE_DISCOVER = "discover"
 private const val SOURCE_PEXELS = "pexels"
@@ -142,6 +144,7 @@ internal fun pixabayRateLimitBackoffMillis(error: Throwable): Long? {
 class WallpaperRepository @Inject constructor(
     private val wallhavenApi: WallhavenApi,
     private val bingApi: BingDailyApi,
+    private val nasaApodApi: NasaApodApi,
     private val pixabayApi: PixabayApi,
     private val pexelsApi: PexelsApi,
     private val cacheManager: WallpaperCacheManager,
@@ -342,6 +345,42 @@ class WallpaperRepository @Inject constructor(
         }
     }
 
+    suspend fun getNasaApod(): Wallpaper? {
+        return try {
+            sourceMetrics.measure(SOURCE_APOD) {
+                val cached = cacheManager.getCached("nasa_apod_today", ContentSource.NASA)
+                if (!cached.isNullOrEmpty()) return@measure cached.first()
+                val response = withTimeoutOrNull(8_000L) { nasaApodApi.getApod() }
+                    ?: return@measure null
+                val wallpaper = response.toWallpaper() ?: return@measure null
+                cacheManager.cache("nasa_apod_today", listOf(wallpaper))
+                wallpaper
+            }
+        } catch (e: Exception) {
+            if (e is CancellationException) throw e
+            null
+        }
+    }
+
+    suspend fun getNasaApodRandom(count: Int = 10): SearchResult<Wallpaper> {
+        return try {
+            sourceMetrics.measure(SOURCE_APOD) {
+                val responses = withTimeoutOrNull(8_000L) { nasaApodApi.getApodList(count = count) }
+                    ?: return@measure emptySourceResult(1)
+                val wallpapers = responses.mapNotNull { it.toWallpaper() }
+                SearchResult(
+                    items = wallpapers,
+                    totalCount = wallpapers.size,
+                    currentPage = 1,
+                    hasMore = false,
+                )
+            }
+        } catch (e: Exception) {
+            if (e is CancellationException) throw e
+            emptySourceResult(1)
+        }
+    }
+
     suspend fun getWallpaperOfTheDay(): Wallpaper? {
         val bingDegraded = sourceMetrics.isDegraded(SOURCE_BING)
         val wallhavenDegraded = sourceMetrics.isDegraded(SOURCE_WALLHAVEN)
@@ -515,6 +554,15 @@ class WallpaperRepository @Inject constructor(
                 }
                 val secondarySources = listOf(
                     async { loadSourceSafely { getBingDaily(page = page) } },
+                    async {
+                        if (page == 1) {
+                            getNasaApod()?.let {
+                                SearchResult(listOf(it), 1, 1, false)
+                            }
+                        } else {
+                            loadSourceSafely { getNasaApodRandom(count = 5) }
+                        }
+                    },
                 )
 
                 val primaryResults = primarySources.awaitAll()

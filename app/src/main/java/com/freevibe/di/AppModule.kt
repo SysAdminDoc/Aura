@@ -15,6 +15,7 @@ import com.freevibe.data.remote.RateLimitInterceptor
 import com.freevibe.data.remote.audius.AudiusApi
 import com.freevibe.data.remote.bing.BingDailyApi
 import com.freevibe.data.remote.ccmixter.CcMixterApi
+import com.freevibe.data.remote.nasa.NasaApodApi
 import com.freevibe.data.remote.stability.StabilityAiApi
 import com.freevibe.data.remote.freesound.FreesoundV2Api
 import com.freevibe.data.remote.weather.OpenMeteoApi
@@ -114,6 +115,16 @@ object AppModule {
             .addConverterFactory(MoshiConverterFactory.create(moshi))
             .build()
             .create(RedditApi::class.java)
+
+    @Provides
+    @Singleton
+    fun provideNasaApodApi(client: OkHttpClient, moshi: Moshi): NasaApodApi =
+        Retrofit.Builder()
+            .baseUrl(NasaApodApi.BASE_URL)
+            .client(client)
+            .addConverterFactory(MoshiConverterFactory.create(moshi))
+            .build()
+            .create(NasaApodApi::class.java)
 
     @Provides
     @Singleton

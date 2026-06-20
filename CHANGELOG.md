@@ -12,6 +12,10 @@ All notable changes to Aura will be documented in this file.
   Xiaomi, OnePlus, Huawei, vivo, ASUS) that deep-links to the relevant OEM
   battery settings page. Addresses the #1 reliability complaint across all
   FOSS wallpaper changers.
+- **NASA APOD wallpaper source**: Astronomy Picture of the Day appears in the
+  Discover feed as a daily hero card on page 1 and random historical images on
+  subsequent pages. Zero-auth NASA API, image-only filtering, cached per
+  session, source badge shows NASA attribution and photographer credit.
 - **Test fixture repair**: contract tests updated to follow Settings UI
   primitives (SettingsSection, SettingsToggle, SettingsRadioOptionRow,
   SettingsMetric) to their new home in SettingsComponents.kt after the
