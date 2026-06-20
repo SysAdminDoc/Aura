@@ -474,6 +474,8 @@ class SettingsViewModelTest {
             every { prefs.lightModeWallpaperId } returns flowOf("") // Phase 6.2 light slot
             every { prefs.stabilityAiKey } returns flowOf("")       // Phase 3.1 AI
             every { prefs.reduceAnimations } returns flowOf(false) // Reduced-motion a11y
+            every { prefs.ringtoneShuffleEnabled } returns flowOf(false)
+            every { prefs.ringtoneShuffleIntervalHours } returns flowOf(24L)
         }
 
     private class FakeBackgroundWorkDiagnosticsReader(

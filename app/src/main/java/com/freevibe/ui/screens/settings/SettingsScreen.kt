@@ -204,6 +204,8 @@ fun SettingsScreen(
     val ytBlockedWords by viewModel.ytBlockedWords.collectAsStateWithLifecycle()
     val youtubeProviderEnabled by viewModel.youtubeProviderEnabled.collectAsStateWithLifecycle()
     val previewVolume by viewModel.previewVolume.collectAsStateWithLifecycle()
+    val ringtoneShuffleEnabled by viewModel.ringtoneShuffleEnabled.collectAsStateWithLifecycle()
+    val ringtoneShuffleIntervalHours by viewModel.ringtoneShuffleIntervalHours.collectAsStateWithLifecycle()
     val preferredRes by viewModel.preferredRes.collectAsStateWithLifecycle()
     val userStyles by viewModel.userStyles.collectAsStateWithLifecycle()
     val schedulerEnabled by viewModel.schedulerEnabled.collectAsStateWithLifecycle()
@@ -1519,6 +1521,48 @@ fun SettingsScreen(
                 subtitle = "YouTube powers the sound feed; community uploads and legacy attributions remain documented",
                 onClick = onLicensesClick,
             )
+            SettingsToggle(
+                icon = Icons.Default.Shuffle,
+                title = "Shuffle ringtone",
+                subtitle = if (ringtoneShuffleEnabled) {
+                    "Changes your ringtone from downloaded sounds every ${formatInterval(ringtoneShuffleIntervalHours * 60)}"
+                } else {
+                    "Periodically set a random downloaded sound as your ringtone"
+                },
+                checked = ringtoneShuffleEnabled,
+                onCheckedChange = { viewModel.setRingtoneShuffleEnabled(it) },
+            )
+            if (ringtoneShuffleEnabled) {
+                var showShuffleIntervalPicker by remember { mutableStateOf(false) }
+                SettingsItem(
+                    icon = Icons.Default.Timer,
+                    title = "Shuffle interval",
+                    subtitle = formatInterval(ringtoneShuffleIntervalHours * 60),
+                    onClick = { showShuffleIntervalPicker = true },
+                )
+                if (showShuffleIntervalPicker) {
+                    val intervals = listOf(1L to "Every hour", 6L to "Every 6 hours", 12L to "Every 12 hours", 24L to "Every day", 72L to "Every 3 days")
+                    AlertDialog(
+                        onDismissRequest = { showShuffleIntervalPicker = false },
+                        title = { Text("Shuffle interval") },
+                        text = {
+                            Column {
+                                intervals.forEach { (hours, label) ->
+                                    SettingsRadioOptionRow(
+                                        label = label,
+                                        selected = ringtoneShuffleIntervalHours == hours,
+                                        onClick = {
+                                            viewModel.setRingtoneShuffleIntervalHours(hours)
+                                            showShuffleIntervalPicker = false
+                                        },
+                                    )
+                                }
+                            }
+                        },
+                        confirmButton = { TextButton(onClick = { showShuffleIntervalPicker = false }) { Text("Cancel") } },
+                    )
+                }
+            }
         }
 
         // Video Wallpapers

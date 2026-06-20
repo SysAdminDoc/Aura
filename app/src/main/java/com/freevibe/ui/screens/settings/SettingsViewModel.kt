@@ -13,6 +13,7 @@ import com.freevibe.data.repository.VoteRepository
 import com.freevibe.di.IoDispatcher
 import com.freevibe.service.AutoWallpaperWorker
 import com.freevibe.service.AutoBackupWorker
+import com.freevibe.service.RingtoneShuffleWorker
 import com.freevibe.service.BackgroundWorkDiagnostics
 import com.freevibe.service.BackgroundWorkDiagnosticsReader
 import com.freevibe.service.CommunityIdentityProvider
@@ -153,6 +154,8 @@ class SettingsViewModel @Inject constructor(
     val autoPreview = prefs.autoPreviewSounds.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), true)
     val gridColumns = prefs.wallpaperGridColumns.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 2)
     val previewVolume = prefs.soundPreviewVolume.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0.7f)
+    val ringtoneShuffleEnabled = prefs.ringtoneShuffleEnabled.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
+    val ringtoneShuffleIntervalHours = prefs.ringtoneShuffleIntervalHours.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 24L)
     val redditSubs = prefs.redditSubreddits.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), "wallpapers,MobileWallpaper,MinimalWallpaper")
     val redditProviderEnabled = prefs.redditProviderEnabled.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
     val preferredRes = prefs.preferredResolution.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), "")
@@ -459,6 +462,23 @@ class SettingsViewModel @Inject constructor(
 
     fun setPreviewVolume(volume: Float) = viewModelScope.launch {
         prefs.setPreviewVolume(volume)
+    }
+
+    fun setRingtoneShuffleEnabled(enabled: Boolean) = viewModelScope.launch {
+        prefs.setRingtoneShuffleEnabled(enabled)
+        if (enabled) {
+            val interval = prefs.ringtoneShuffleIntervalHours.first()
+            RingtoneShuffleWorker.schedule(context, interval)
+        } else {
+            RingtoneShuffleWorker.cancel(context)
+        }
+    }
+
+    fun setRingtoneShuffleIntervalHours(hours: Long) = viewModelScope.launch {
+        prefs.setRingtoneShuffleIntervalHours(hours)
+        if (prefs.ringtoneShuffleEnabled.first()) {
+            RingtoneShuffleWorker.schedule(context, hours)
+        }
     }
 
     fun setRedditSubs(subs: String) = viewModelScope.launch {

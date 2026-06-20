@@ -12,6 +12,11 @@ All notable changes to Aura will be documented in this file.
   Xiaomi, OnePlus, Huawei, vivo, ASUS) that deep-links to the relevant OEM
   battery settings page. Addresses the #1 reliability complaint across all
   FOSS wallpaper changers.
+- **Ringtone shuffle from downloads**: new Settings toggle under Sounds
+  periodically sets a random downloaded sound as the system ringtone via
+  WorkManager. Configurable interval (hourly to every 3 days), avoids
+  repeating the last-applied sound. No new permissions required — uses
+  already-downloaded sounds in MediaStore.
 - **SoundsViewModel decomposition**: community operations (voting, recording,
   uploading, reporting, blocking, deletion) extracted to focused
   `SoundCommunityActions` class. SoundsViewModel delegates to it via thin

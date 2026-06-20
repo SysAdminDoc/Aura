@@ -15,6 +15,7 @@ import com.freevibe.service.sanitizeVideoFpsLimit
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -137,6 +138,14 @@ class PreferencesManager @Inject constructor(
     suspend fun setAutoBackupFolderUri(uri: String) = set(Keys.AUTO_BACKUP_FOLDER_URI, uri.trim())
     suspend fun setAutoBackupIntervalHours(hours: Long) = set(Keys.AUTO_BACKUP_INTERVAL_HOURS, hours)
     suspend fun setAutoBackupKeepCount(count: Int) = set(Keys.AUTO_BACKUP_KEEP_COUNT, count)
+
+    // Ringtone shuffle
+    val ringtoneShuffleEnabled: Flow<Boolean> = get(Keys.RINGTONE_SHUFFLE_ENABLED, false)
+    val ringtoneShuffleIntervalHours: Flow<Long> = get(Keys.RINGTONE_SHUFFLE_INTERVAL_HOURS, 24L)
+    suspend fun setRingtoneShuffleEnabled(v: Boolean) = set(Keys.RINGTONE_SHUFFLE_ENABLED, v)
+    suspend fun setRingtoneShuffleIntervalHours(hours: Long) = set(Keys.RINGTONE_SHUFFLE_INTERVAL_HOURS, hours)
+    suspend fun ringtoneShuffleLastAppliedId(): String = get(Keys.RINGTONE_SHUFFLE_LAST_APPLIED_ID, "").first()
+    suspend fun setRingtoneShuffleLastAppliedId(id: String) = set(Keys.RINGTONE_SHUFFLE_LAST_APPLIED_ID, id)
 
     // ── Sound settings ────────────────────────────────────────────
 
@@ -343,5 +352,9 @@ class PreferencesManager @Inject constructor(
         val DARK_WALLPAPER_ID = stringPreferencesKey("dark_mode_wallpaper_id")
         val LIGHT_WALLPAPER_ID = stringPreferencesKey("light_mode_wallpaper_id")
         val USER_STYLES = stringPreferencesKey("user_styles")
+        // Ringtone shuffle
+        val RINGTONE_SHUFFLE_ENABLED = booleanPreferencesKey("ringtone_shuffle_enabled")
+        val RINGTONE_SHUFFLE_INTERVAL_HOURS = longPreferencesKey("ringtone_shuffle_interval_hours")
+        val RINGTONE_SHUFFLE_LAST_APPLIED_ID = stringPreferencesKey("ringtone_shuffle_last_applied_id")
     }
 }
