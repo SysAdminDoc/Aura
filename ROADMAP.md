@@ -512,57 +512,91 @@ P2 items shipped (removed). P3 missing integration tests moved to [Roadmap_Block
 
 ---
 
-## Research-Driven Additions (2026-06-19)
+## Research-Driven Additions (2026-06-20)
 
-Findings from exhaustive competitor analysis (23 wallpaper apps, 13 ringtone apps, 15 video wallpaper apps), Android 17 platform API review, community signal mining (Reddit, XDA, GitHub issues across WallYou/Paperize/Muzei/Zedge), and dependency changelog review. Full evidence in RESEARCH.md.
+Findings from exhaustive competitor analysis (25+ wallpaper apps, 15+ ringtone/sound apps, 10+ video/live wallpaper apps), Android 17 platform API review, community signal mining (Reddit, XDA, GitHub issues across WallYou/Paperize/Muzei/Zedge/Peristyle, PissedConsumer, Trustpilot, AlternativeTo), dependency changelog review (Kotlin 2.3, Compose 1.11, AGP 9, Coil 3, Room 3, Media3 1.10, Hilt 2.59), and FOSS ringtone ecosystem survey (Ringdroid, Chrono, Noice, RandTune). Full evidence in RESEARCH.md.
 
-- [ ] P1 — Android 17 background audio hardening compliance
-  Why: API 37 silently fails audio playback without visible activity or foreground service — sound preview and ringtone apply paths must be verified against the new silent-failure semantics
-  Evidence: developer.android.com/about/versions/17/changes/bg-audio; all apps on Android 17 affected
-  Touches: AudioPlaybackService.kt, AudioPlaybackManager.kt, SoundApplier.kt, SoundsViewModel.kt
-  Acceptance: Sound preview, ringtone apply, and alarm set all work on an API 37 device/emulator without silent failure; foreground service lifecycle verified under WIU constraints
-  Complexity: S
+### P1
 
-- [ ] P2 — SoundsViewModel decomposition
-  Why: SoundsViewModel is the largest monolith — handles YouTube search, community tab, playback state, upload flow, and tab management in one file; same class of problem WallpapersViewModel had before its decomposition
-  Evidence: codebase scan — SoundsViewModel.kt responsibility count and line count vs decomposed WallpapersViewModel/SettingsScreen patterns
-  Touches: SoundsViewModel.kt, SoundsScreen.kt, SoundDetailScreen.kt, SoundCollections.kt
-  Acceptance: Three focused ViewModels (browse/playback/upload) with clear boundaries; all existing unit tests pass unchanged
+- [ ] P1 — SettingsScreen decomposition into section-level composables
+  Why: at 3,407 lines SettingsScreen.kt is the largest file in the codebase and the hardest to test or preview; SettingsComponents.kt (514 lines) and DiagnosticsComponents.kt (604 lines) were already extracted but the main file remains a monolith
+  Evidence: `wc -l SettingsScreen.kt` = 3407; only 5 contentDescription annotations in the file; 10 `remember()` calls; no @Preview composables reference SettingsScreen sections
+  Touches: SettingsScreen.kt → new WallpaperSettingsSection.kt, SoundSettingsSection.kt, RotationSettingsSection.kt, CommunitySettingsSection.kt, AboutSettingsSection.kt; SettingsViewModel.kt (no changes, just passed to sections)
+  Acceptance: SettingsScreen.kt reduced below 500 lines; each section has its own file; all existing SettingsViewModel tests pass without modification; at least one @Preview per section
   Complexity: M
 
-- [ ] P2 — OEM battery optimization guidance in Settings
-  Why: Auto-wallpaper stopping is the number one reliability complaint across all FOSS wallpaper changers — Samsung, Xiaomi, and OnePlus aggressively kill background workers; users don't know the fix is in their device settings
-  Evidence: WallYou GitHub #230, #239, #259; Paperize issue reports; DontKillMyApp.com per-OEM documentation; XDA threads on wallpaper changer reliability
-  Touches: SettingsScreen.kt, SettingsViewModel.kt, new OemBatteryGuidance.kt
-  Acceptance: Settings > Wallpaper rotation shows manufacturer-auto-detected guidance with deep-link to the relevant OEM battery settings page; covers Samsung, Xiaomi, OnePlus, Huawei at minimum
-  Complexity: S
-
-- [ ] P2 — Ringtone shuffle from favorites
-  Why: RandTune proves per-call ringtone randomization from a playlist is a compelling feature users want; no FOSS app offers this; Aura already has per-contact ringtone infrastructure via ContactRingtoneService
-  Evidence: RandTune (Google Play com.ezgood.randtunereborn); community requests for variety without manual switching; Zedge does not offer this either
-  Touches: SoundApplier.kt, ContactRingtoneService.kt, PreferencesManager.kt, SettingsScreen.kt, FavoritesRepository.kt
-  Acceptance: Settings toggle enables random ringtone from favorited sounds on each incoming call; rotation excludes recently-played to avoid repeats; per-contact overrides still take precedence
+- [ ] P1 — Extract hardcoded strings to string resources for localization readiness
+  Why: values/strings.xml has 362 entries but SettingsScreen alone has ~340 hardcoded English strings not in resources; stringResource() is used only 37 times across all UI files; this blocks U-11 (localization), F-Droid community translations, and RTL audit
+  Evidence: `grep -c 'stringResource(' app/src/main/java/com/freevibe/ui/` = 37; `grep -c '"[A-Z].*"' SettingsScreen.kt` = 340; zero values-xx/ locale directories
+  Touches: all files in ui/screens/ (primarily SettingsScreen.kt, SoundsScreen.kt, WallpapersScreen.kt, VideoWallpapersScreen.kt, FavoritesScreen.kt); values/strings.xml
+  Acceptance: all user-visible strings use stringResource(); strings.xml grows to 700+ entries; no hardcoded English strings remain in Compose UI files; app renders identically
   Complexity: M
 
-- [ ] P2 — NASA APOD wallpaper source
-  Why: NASA Astronomy Picture of the Day is a top-5 community-requested wallpaper source across WallYou, Muzei, and Reddit; zero-auth REST API delivers one curated high-quality image per day
-  Evidence: WallYou multi-source model; Muzei NASA APOD plugin is the most popular Muzei plugin; r/androidapps recurring request threads
-  Touches: new NasaApodApi.kt, new NasaApodRepository.kt, WallpaperRepository.kt, WallpapersViewModel.kt, ContentSource.kt (new enum value)
-  Acceptance: NASA APOD appears in Discover feed as a daily card; image loads without auth; source badge shows NASA attribution; tapping opens detail with astronomy description text
+### P2
+
+- [ ] P2 — Microphone recording for personal ringtone creation
+  Why: CommunityAudioRecorder already has proper recording infrastructure (AAC, 128kbps, 44.1kHz, max duration cap, lifecycle management) but is only wired for community uploads; Ringdroid (3.0.1, F-Droid) is the FOSS standard for record-your-own-ringtone; Aura's gap is just the UX entry point
+  Evidence: CommunityAudioRecorder.kt exists at app/src/main/java/com/freevibe/service/; Ringdroid is the only FOSS app offering microphone → ringtone flow (github.com/althafvly/ringdroid)
+  Touches: SoundsScreen.kt (add Record entry point), new PersonalRecordingFlow.kt or extend SoundEditorScreen.kt, CommunityAudioRecorder.kt (reuse), PreferencesManager.kt (RECORD_AUDIO permission state)
+  Acceptance: user can tap Record in Sounds, grant microphone permission, record audio, and route the recording to SoundEditorScreen for trim/fade/set-as-ringtone; no new dependencies
   Complexity: S
 
-- [ ] P2 — AV1 video wallpaper codec preference
-  Why: AV1 hardware decode now available on majority of active Android devices (Android 13+ mandates it for new device certification); 30-50% smaller files than H.265 at equivalent quality; saves storage and bandwidth for cached video wallpapers
-  Evidence: ScientiaMobile AV1 adoption report 2026; Meta engineering report (50%+ video watch via AV1); Android 13 CDD hardware decode mandate; existing risk register row underestimates current install base
-  Touches: VideoWallpaperService.kt, VideoWallpaperStorage.kt, VideoCropScreen.kt
-  Acceptance: Video download path prefers AV1 when MediaCodecList reports hardware decode capability; falls back to H.264/H.265 otherwise; no software-decode AV1 path (battery drain); risk register AV1 row updated
+- [ ] P2 — Wikipedia Picture of the Day wallpaper source
+  Why: WallYou v15.1 ships Wikipedia POTD; zero-auth Wikimedia API; follows the exact pattern of the NASA APOD source shipped in v6.33.0 (NasaApodApi.kt)
+  Evidence: WallYou issues and releases (github.com/you-apps/WallYou); Wikimedia REST API docs (api.wikimedia.org/wiki/Feed_API/Reference/Featured_content)
+  Touches: new data/remote/wikimedia/WikimediaPotdApi.kt, WallpaperRepository.kt (add to Discover aggregation), Models.kt (ContentSource enum — WIKIMEDIA already exists as legacy value)
+  Acceptance: Wikipedia POTD appears in Discover feed as a daily card; image-only filtering (skip non-image POTD); source badge shows Wikipedia attribution; cached per session
   Complexity: S
 
-- [ ] P3 — Compose @Preview fixtures for key screens
-  Why: Zero @Preview composables across 178 source files; previews are the standard Compose development-time visual feedback mechanism that all active competitors ship (Paperize, WallYou, Peristyle); Roborazzi tests exist but require full test execution and don't support interactive iteration
-  Evidence: grep for @Preview returns 0 results in app/src/main; competitor repos all ship previews
-  Touches: WallpaperDetailScreen.kt, SoundDetailScreen.kt, SettingsScreen.kt, OnboardingScreen.kt, FavoritesScreen.kt
-  Acceptance: At least 5 key screens have @Preview composables with light and dark theme variants; previews render in Android Studio without errors
+- [ ] P2 — Sequential wallpaper selection with no-repeat guarantee
+  Why: auto-rotation users report seeing the same wallpaper repeatedly before the full pool is exhausted; WallFlow and Paperize both track applied history to prevent repeats; the #1 UX complaint about random selection across all FOSS wallpaper changers
+  Evidence: Paperize folder-based sequential selection; WallFlow sequential mode; WallYou #239 (auto-changer unreliability includes repeat complaints)
+  Touches: AutoWallpaperWorker.kt (track last-N applied IDs), PreferencesManager.kt (sequential mode toggle + history ring buffer), SettingsViewModel.kt (new toggle), SettingsScreen rotation section
+  Acceptance: when sequential mode is enabled, AutoWallpaperWorker excludes the last N applied wallpaper IDs from the next selection; N = min(pool_size / 2, 50); user can toggle between random and sequential in Settings; existing tests pass
+  Complexity: S
+
+- [ ] P2 — Time-of-day sound profiles (quiet/work/fun presets)
+  Why: RandTune offers time-period scheduling (4h/8h/12h/24h); Ringtone Scheduler offers day-of-week profiles; Aura already has time-of-day wallpaper tint (SolarCalculator), WorkManager scheduling, and RingtoneShuffleWorker — extending to sound profiles is a natural next step that no FOSS app offers
+  Evidence: RandTune (play.google.com/store/apps/details?id=com.ezgood.randtunereborn); Ringtone Scheduler (ringtone-scheduler.en.uptodown.com/android); community signal: Samsung users complain about manual ringtone switching between work and personal hours
+  Touches: new SoundProfileManager.kt, PreferencesManager.kt (profile definitions + schedule), SettingsScreen sound section (profile editor), RingtoneShuffleWorker.kt (respect active profile)
+  Acceptance: user can define 2-3 sound profiles (each maps a ringtone + notification + alarm sound); profiles activate by time-of-day schedule or manual toggle; WorkManager applies the profile's sounds via RingtoneManager; WRITE_SETTINGS permission already requested by ringtone shuffle
+  Complexity: M
+
+- [ ] P2 — Sound quality metadata display in browse view
+  Why: Aura has internal SoundQuality scoring (SoundQuality.kt) but doesn't expose format, bitrate, or duration to users in the browse/card view; users want to see what they're downloading before committing; trust signal for quality-conscious users
+  Evidence: Freesound API returns full metadata; YouTube resolved streams carry codec/bitrate info; community signal: Zedge users complain about downloading low-quality sounds without warning
+  Touches: SoundsScreen.kt (add metadata chips to sound cards), SoundQuality.kt (expose display-friendly format string), YouTubeRepository.kt (carry codec info through to Sound model)
+  Acceptance: sound cards in browse view show duration and format badge (e.g., "MP3 128k" or "AAC"); detail screen shows full metadata (bitrate, sample rate, codec); no new API calls — metadata comes from existing resolved stream info
+  Complexity: S
+
+### P3
+
+- [ ] P3 — Direct boot wallpaper persistence
+  Why: Doodle (patzly/doodle-android, GPL-3.0) supports direct boot — wallpaper is active immediately after reboot before user unlock; improves perceived reliability of auto-rotation and live wallpapers
+  Evidence: github.com/patzly/doodle-android (DirectBootAware manifest flag, device-protected storage); Android direct boot docs (developer.android.com/training/articles/direct-boot)
+  Touches: AndroidManifest.xml (android:directBootAware on WallpaperService subclasses), VideoWallpaperService.kt, ParallaxWallpaperService.kt, WeatherWallpaperService.kt (use device-protected storage for last-applied state)
+  Acceptance: after a reboot, Aura's live wallpaper appears immediately before the user unlocks the device; last-applied wallpaper state survives direct boot boundary; no regression on normal (credential-encrypted) storage paths
+  Complexity: M
+
+- [ ] P3 — Muzei-style blur/dim behind launcher icons for live wallpapers
+  Why: Muzei's signature UX: wallpaper is dimmed/blurred by default to keep launcher icons readable, with double-tap to reveal the full image; Aura's live wallpaper services (Video, Parallax, Weather) could offer this as an opt-in setting
+  Evidence: Muzei (github.com/muzei/muzei) blur/dim pattern; Muzei issue #797 (dimming affecting system theme colors); existing WeatherWallpaperService.kt already has a tint ColorMatrix pipeline that could be extended
+  Touches: VideoWallpaperService.kt, ParallaxWallpaperService.kt, WeatherWallpaperService.kt (add dim/blur state + double-tap gesture), PreferencesManager.kt (opt-in toggle), SettingsScreen live wallpaper section
+  Acceptance: when enabled, live wallpapers render at reduced brightness/with blur overlay; double-tap on the wallpaper surface reveals the full-brightness image for 3 seconds then re-dims; togglable in Settings; battery impact negligible (single ColorMatrix multiply)
+  Complexity: M
+
+- [ ] P3 — OS update ringtone/alarm restoration
+  Why: Samsung One UI 7.1 (April 2025) wiped custom notification sounds after system update; no competitor handles this well; Aura can detect boot events and verify/re-apply managed sounds
+  Evidence: Samsung Community threads (eu.community.samsung.com/t5/galaxy-s25-series/notification-sounds/); DontKillMyApp.com OEM kill documentation; Aura already has TaskerActionReceiver for boot-triggered actions
+  Touches: new RingtoneRestorationReceiver.kt (BOOT_COMPLETED), PreferencesManager.kt (persist last-applied ringtone/notification/alarm URIs), RingtoneShuffleWorker.kt (verify-on-boot path)
+  Acceptance: after an OS update or reboot, Aura checks if the system ringtone/notification/alarm URI still points to Aura-managed content; if the URI is stale or reset, Aura re-applies the last-known sound; user sees a notification confirming restoration
+  Complexity: S
+
+- [ ] P3 — Alarm sound shuffle from favorites
+  Why: Chrono (F-Droid) offers alarm shuffle from a directory with random-position start; Aura already has RingtoneShuffleWorker for ringtones — extending to alarm sounds is a direct copy of the pattern
+  Evidence: Chrono (f-droid.org/packages/com.vicolo.chrono/); existing RingtoneShuffleWorker.kt pattern
+  Touches: RingtoneShuffleWorker.kt (add alarm shuffle mode), PreferencesManager.kt (alarm shuffle toggle + interval), SettingsScreen sound section (alarm shuffle controls)
+  Acceptance: user can enable alarm shuffle in Settings; WorkManager periodically sets a random downloaded alarm sound as the system alarm tone; avoids repeating the last-applied alarm; uses existing WRITE_SETTINGS permission
   Complexity: S
 
 - [ ] P3 — On-device wallpaper style learning
@@ -630,7 +664,7 @@ Live operational risks ranked by likelihood × blast radius. Update at every rel
 | ML Kit `segmentation-selfie:16.0.0-beta6` still in beta two years on | Medium | Medium (parallax breaks if pulled) | **N-3** migrates to Subject Segmentation GA |
 | Stability AI free tier / pricing changes; per-user API key is the only path | Low | Medium (AI tab degrades to "bring your own key") | Document; consider Imagen via Firebase AI Logic in U-2 follow-up |
 | AGP 9 / Kotlin 2.3 / KSP1 breaks Hilt/Compose generation | Medium | High | **N-1** coordinated upgrade with feature freeze |
-| AV1 hardware decode <10 % install base; SW fallback burns battery | Medium | Medium | **NX-1** gates AV1 on Performance Class ≥ 33 |
+| AV1 hardware decode: Android 13+ mandates it; majority of active devices support it (2026) | Low | Low | `Av1CodecSupport` gates on `MediaCodecList` hardware decoder; no software-decode path |
 | CISA-KEV Android framework CVE-2025-48572/-48633 on unpatched OEMs | Low | Low (device-level, not Aura's bug) | Folded into the platform-CVE row above; same mitigation. |
 | F-Droid inclusion blocked by Firebase Storage / yt-dlp Python | Medium | Medium (F-Droid track only) | **NX-8** targets IzzyOnDroid first |
 | Wallhaven / Pexels / Pixabay ToS changes break aggregation | Low | High | NX-5 plugin ABI distributes sourcing risk to community plugins |
