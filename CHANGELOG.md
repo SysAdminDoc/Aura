@@ -12,6 +12,11 @@ All notable changes to Aura will be documented in this file.
   Xiaomi, OnePlus, Huawei, vivo, ASUS) that deep-links to the relevant OEM
   battery settings page. Addresses the #1 reliability complaint across all
   FOSS wallpaper changers.
+- **AV1 codec support detection**: new `Av1CodecSupport` singleton queries
+  `MediaCodecList` for hardware AV1 decode capability at startup. Exposes
+  `hasHardwareAv1Decode` and `preferredVideoMimeTypes()` for codec-aware
+  video format selection. Risk register updated to reflect current AV1
+  install base (Android 13+ mandates hardware decode).
 - **NASA APOD wallpaper source**: Astronomy Picture of the Day appears in the
   Discover feed as a daily hero card on page 1 and random historical images on
   subsequent pages. Zero-auth NASA API, image-only filtering, cached per
