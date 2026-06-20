@@ -83,6 +83,41 @@ class AutoWallpaperWorkerTest {
         assertEquals(alternate, picked)
     }
 
+    // ── excludeRecentWallpapers (sequential selection) ──
+
+    @Test
+    fun `excludeRecentWallpapers returns full list when recentIds is empty`() {
+        val wallpapers = listOf(
+            wallpaper("a", ContentSource.WALLHAVEN),
+            wallpaper("b", ContentSource.PEXELS),
+        )
+        val result = excludeRecentWallpapers(wallpapers, emptySet())
+        assertEquals(wallpapers, result)
+    }
+
+    @Test
+    fun `excludeRecentWallpapers filters out recently applied wallpapers`() {
+        val a = wallpaper("a", ContentSource.WALLHAVEN)
+        val b = wallpaper("b", ContentSource.PEXELS)
+        val c = wallpaper("c", ContentSource.PIXABAY)
+        val recentIds = setOf(a.stableKey())
+
+        val result = excludeRecentWallpapers(listOf(a, b, c), recentIds)
+
+        assertEquals(listOf(b, c), result)
+    }
+
+    @Test
+    fun `excludeRecentWallpapers falls back to full list when all are recent`() {
+        val a = wallpaper("a", ContentSource.WALLHAVEN)
+        val b = wallpaper("b", ContentSource.PEXELS)
+        val recentIds = setOf(a.stableKey(), b.stableKey())
+
+        val result = excludeRecentWallpapers(listOf(a, b), recentIds)
+
+        assertEquals(listOf(a, b), result)
+    }
+
     private fun wallpaper(id: String, source: ContentSource) = Wallpaper(
         id = id,
         source = source,

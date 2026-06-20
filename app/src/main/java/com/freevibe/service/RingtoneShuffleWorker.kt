@@ -70,19 +70,27 @@ class RingtoneShuffleWorker @AssistedInject constructor(
 
             if (prefs.alarmShuffleEnabled.first()) {
                 val lastApplied = prefs.alarmShuffleLastAppliedId()
-                val candidates = if (soundDownloads.size > 1) {
-                    soundDownloads.filter { it.id != lastApplied }
+                val alarmCandidates = filterAlarmDuration(applicationContext, soundDownloads)
+                    .let { pool ->
+                        if (pool.size > 1) pool.filter { it.id != lastApplied }
+                        else pool
+                    }
+                if (alarmCandidates.isNotEmpty()) {
+                    val chosen = alarmCandidates.random()
+                    val uri = Uri.parse(chosen.localPath)
+                    RingtoneManager.setActualDefaultRingtoneUri(
+                        applicationContext,
+                        RingtoneManager.TYPE_ALARM,
+                        uri,
+                    )
+                    prefs.setAlarmShuffleLastAppliedId(chosen.id)
                 } else {
-                    soundDownloads
+                    receiptStore.recordFailure(
+                        uniqueWorkName = WORK_NAME,
+                        errorClass = "NoAlarmSounds",
+                        deferralReason = "no downloaded sounds with alarm-appropriate duration (5-60s)",
+                    )
                 }
-                val chosen = candidates.random()
-                val uri = Uri.parse(chosen.localPath)
-                RingtoneManager.setActualDefaultRingtoneUri(
-                    applicationContext,
-                    RingtoneManager.TYPE_ALARM,
-                    uri,
-                )
-                prefs.setAlarmShuffleLastAppliedId(chosen.id)
             }
 
             receiptStore.recordSuccess(WORK_NAME)
@@ -119,5 +127,37 @@ class RingtoneShuffleWorker @AssistedInject constructor(
         fun cancel(context: Context) {
             WorkManager.getInstance(context).cancelUniqueWork(WORK_NAME)
         }
+
+        private const val ALARM_MIN_DURATION_MS = 5_000L
+        private const val ALARM_MAX_DURATION_MS = 60_000L
+    }
+}
+
+internal fun filterAlarmDuration(
+    context: Context,
+    downloads: List<com.freevibe.data.model.DownloadEntity>,
+): List<com.freevibe.data.model.DownloadEntity> {
+    return downloads.filter { entry ->
+        val durationMs = getMediaDurationMs(context, entry.localPath)
+        durationMs in 5_000L..60_000L
+    }
+}
+
+private fun getMediaDurationMs(context: Context, path: String): Long {
+    if (path.isBlank()) return 0L
+    val retriever = android.media.MediaMetadataRetriever()
+    return try {
+        val uri = Uri.parse(path)
+        if (uri.scheme == "content") {
+            retriever.setDataSource(context, uri)
+        } else {
+            retriever.setDataSource(path)
+        }
+        retriever.extractMetadata(android.media.MediaMetadataRetriever.METADATA_KEY_DURATION)
+            ?.toLongOrNull() ?: 0L
+    } catch (_: Exception) {
+        0L
+    } finally {
+        runCatching { retriever.release() }
     }
 }

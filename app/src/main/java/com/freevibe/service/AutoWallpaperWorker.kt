@@ -134,9 +134,7 @@ class AutoWallpaperWorker @AssistedInject constructor(
     private suspend fun filterRecentRepeats(wallpapers: List<Wallpaper>): List<Wallpaper> {
         if (!prefs.avoidRecentRepeats.first()) return wallpapers
         val recentIds = prefs.getRecentRotationIds().toSet()
-        if (recentIds.isEmpty()) return wallpapers
-        val filtered = wallpapers.filter { it.stableKey() !in recentIds }
-        return filtered.ifEmpty { wallpapers }
+        return excludeRecentWallpapers(wallpapers, recentIds)
     }
 
     private suspend fun fetchWallpapers(source: String): List<Wallpaper> {
@@ -332,6 +330,15 @@ internal fun pickAlternateWallpaper(
     .filter { it.stableKey() != current.stableKey() }
     .randomOrNull()
     ?: current
+
+internal fun excludeRecentWallpapers(
+    wallpapers: List<Wallpaper>,
+    recentIds: Set<String>,
+): List<Wallpaper> {
+    if (recentIds.isEmpty()) return wallpapers
+    val filtered = wallpapers.filter { it.stableKey() !in recentIds }
+    return filtered.ifEmpty { wallpapers }
+}
 
 internal fun queryLocalFolderWallpapers(
     context: Context,
