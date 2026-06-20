@@ -8,8 +8,6 @@ import com.freevibe.data.model.CommunityReportInput
 import com.freevibe.util.rethrowIfCancelled
 import com.freevibe.data.model.CommunityReportReason
 import com.freevibe.data.model.CommunityUploadRights
-import com.freevibe.data.model.CommunityBlockReason
-import com.freevibe.data.model.COMMUNITY_GUIDELINES_REQUIRED_MESSAGE
 import com.freevibe.data.model.ContentSource
 import com.freevibe.data.model.ContentType
 import com.freevibe.data.model.FavoriteIdentity
@@ -21,7 +19,6 @@ import com.freevibe.data.model.favoriteIdentity
 import com.freevibe.data.model.sourceUnavailableReasonForFailure
 import com.freevibe.data.model.soundLicenseCapabilities
 import com.freevibe.data.model.stableKey
-import com.freevibe.data.model.sanitizeCommunityOwnerKey
 import com.freevibe.data.repository.CommunityBlockRepository
 import com.freevibe.data.repository.CommunityReportRepository
 import com.freevibe.data.repository.FavoritesRepository
@@ -156,13 +153,29 @@ class SoundsViewModel @Inject constructor(
 
     private val _communityUploads = MutableStateFlow<List<Sound>>(emptyList())
     val communityUploads = _communityUploads.asStateFlow()
-    val hiddenIds = voteRepo.hiddenIds
+
+    internal val community = SoundCommunityActions(
+        voteRepo = voteRepo,
+        reportRepo = reportRepo,
+        communityBlockRepo = communityBlockRepo,
+        uploadRepo = uploadRepo,
+        communityAudioRecorder = communityAudioRecorder,
+        communityProviderEnabled = communityProviderEnabled,
+        communityGuidelinesAccepted = communityGuidelinesAccepted,
+        state = _state,
+        topHits = _topHits,
+        communityUploads = _communityUploads,
+        scope = viewModelScope,
+        onStopIfPlaying = ::stopIfPlaying,
+    )
+
+    val hiddenIds = community.hiddenIds
 
     private val _playbackProgress = MutableStateFlow(0f)
     val playbackProgress = _playbackProgress.asStateFlow()
 
     init {
-        communityAudioRecorder.pruneStaleRecordings()
+        community.init()
         loadSounds()
         fetchTopHits()
         viewModelScope.launch {
@@ -328,33 +341,12 @@ class SoundsViewModel @Inject constructor(
         loadSounds()
     }
 
-    private fun showCommunityDisabledError() {
-        sourceMetrics.recordDisabled(SOURCE_COMMUNITY)
-        _state.update { it.copy(error = communityDisabledMessage()) }
-    }
-
     private fun showCommunityDisabledContent() {
         sourceMetrics.recordDisabled(SOURCE_COMMUNITY)
-        _state.update {
-            it.copy(
-                sounds = emptyList(),
-                isLoading = false,
-                isLoadingMore = false,
-                isRefreshing = false,
-                hasMore = false,
-                error = communityDisabledMessage(),
-            )
-        }
+        community.showCommunityDisabledContent()
     }
 
-    private fun communityActionBlocked(): Boolean {
-        if (communityProviderEnabled.value && communityGuidelinesAccepted.value) return false
-        showCommunityDisabledError()
-        return true
-    }
-
-    private fun isCommunityVoteId(id: String): Boolean =
-        id.contains("::COMMUNITY::") || id.startsWith("cu_")
+    private fun communityActionBlocked(): Boolean = community.communityActionBlocked()
 
     fun search(query: String) {
         if (query.isBlank()) return
@@ -887,97 +879,20 @@ class SoundsViewModel @Inject constructor(
     fun clearError() = _state.update { it.copy(error = null) }
     fun clearSuccess() = _state.update { it.copy(applySuccess = null) }
 
-    fun upvote(id: String) {
-        if (isCommunityVoteId(id) && communityActionBlocked()) return
-        viewModelScope.launch {
-            try { voteRepo.upvote(id) }
-            catch (e: Exception) {
-                e.rethrowIfCancelled()
-                _state.update { it.copy(error = e.message ?: "Failed to upvote") }
-            }
-        }
-    }
-    fun downvote(id: String) {
-        if (isCommunityVoteId(id) && communityActionBlocked()) return
-        viewModelScope.launch {
-            try { voteRepo.downvote(id) }
-            catch (e: Exception) {
-                e.rethrowIfCancelled()
-                _state.update { it.copy(error = e.message ?: "Failed to downvote") }
-            }
-        }
-    }
+    fun upvote(id: String) = community.upvote(id)
+    fun downvote(id: String) = community.downvote(id)
 
-    fun startCommunityRecording() {
-        if (_state.value.isRecordingUpload) return
-        if (communityActionBlocked()) return
-        communityAudioRecorder.start()
-            .onSuccess {
-                _state.update {
-                    it.copy(
-                        isRecordingUpload = true,
-                        recordingStartedAtMs = System.currentTimeMillis(),
-                        recordedUploadUri = null,
-                        error = null,
-                    )
-                }
-            }
-            .onFailure { e ->
-                _state.update {
-                    it.copy(error = "Recording failed: ${e.message ?: "microphone unavailable"}")
-                }
-            }
-    }
-
-    fun stopCommunityRecording() {
-        if (!_state.value.isRecordingUpload) return
-        communityAudioRecorder.stop()
-            .onSuccess { uri ->
-                _state.update {
-                    it.copy(
-                        isRecordingUpload = false,
-                        recordingStartedAtMs = 0L,
-                        recordedUploadUri = uri,
-                        applySuccess = "Recording ready to upload",
-                    )
-                }
-            }
-            .onFailure { e ->
-                _state.update {
-                    it.copy(
-                        isRecordingUpload = false,
-                        recordingStartedAtMs = 0L,
-                        error = e.message ?: "Recording could not be saved",
-                    )
-                }
-            }
-    }
-
-    fun discardCommunityRecording() {
-        communityAudioRecorder.cancel()
-        _state.update {
-            it.copy(
-                isRecordingUpload = false,
-                recordingStartedAtMs = 0L,
-                recordedUploadUri = null,
-            )
-        }
-    }
-
-    fun consumeRecordedUpload() {
-        _state.update { it.copy(recordedUploadUri = null) }
-    }
-
-    fun reportRecordingPermissionDenied() {
-        if (communityActionBlocked()) return
-        _state.update { it.copy(error = "Microphone permission is required to record a community sound") }
-    }
+    fun startCommunityRecording() = community.startRecording()
+    fun stopCommunityRecording() = community.stopRecording()
+    fun discardCommunityRecording() = community.discardRecording()
+    fun consumeRecordedUpload() = community.consumeRecordedUpload()
+    fun reportRecordingPermissionDenied() = community.reportRecordingPermissionDenied()
 
     override fun onCleared() {
         loadJob?.cancel()
         progressJob?.cancel()
         communityJob?.cancel()
-        communityAudioRecorder.cancel()
+        community.cancelOnCleared()
         audioPlaybackManager.stop()
         super.onCleared()
     }
@@ -1451,12 +1366,7 @@ class SoundsViewModel @Inject constructor(
 
     private fun youtubeDisabledMessage(): String = "YouTube features are disabled in Settings"
 
-    private fun communityDisabledMessage(): String =
-        if (!communityProviderEnabled.value) {
-            "Community source is disabled in Settings"
-        } else {
-            COMMUNITY_GUIDELINES_REQUIRED_MESSAGE
-        }
+    private fun communityDisabledMessage(): String = community.communityDisabledMessage()
 
     fun acceptCommunityGuidelines() =
         viewModelScope.launch { prefs.acceptCommunityGuidelines() }
@@ -1467,113 +1377,19 @@ class SoundsViewModel @Inject constructor(
         category: String,
         tags: List<String> = emptyList(),
         rights: CommunityUploadRights,
-    ) {
-        if (_state.value.isUploading) return
-        if (communityActionBlocked()) return
-        viewModelScope.launch {
-            _state.update { it.copy(isUploading = true, uploadProgress = 0f) }
-            uploadRepo.uploadSound(
-                localUri = localUri,
-                name = name,
-                category = category,
-                tags = tags,
-                rights = rights,
-                onProgress = { progress ->
-                    _state.update { it.copy(uploadProgress = progress) }
-                },
-            ).onSuccess {
-                _state.update { it.copy(isUploading = false, uploadProgress = 0f, applySuccess = "Upload complete") }
-            }.onFailure { e ->
-                _state.update { it.copy(isUploading = false, uploadProgress = 0f, error = "Upload failed: ${e.message}") }
-            }
-        }
-    }
+    ) = community.uploadSound(localUri, name, category, tags, rights)
 
-    suspend fun canDeleteCommunitySound(sound: Sound): Boolean {
-        if (
-            sound.source != ContentSource.COMMUNITY ||
-            !communityProviderEnabled.value ||
-            !communityGuidelinesAccepted.value
-        ) return false
-        return uploadRepo.canDeleteSoundUpload(sound.id)
-    }
+    suspend fun canDeleteCommunitySound(sound: Sound): Boolean = community.canDeleteSound(sound)
 
-    fun deleteCommunitySound(sound: Sound) {
-        if (communityActionBlocked()) return
-        viewModelScope.launch {
-            uploadRepo.deleteSoundUpload(sound.id)
-                .onSuccess {
-                    val key = sound.stableKey()
-                    stopIfPlaying(sound)
-                    _topHits.update { hits -> hits.filterNot { it.stableKey() == key } }
-                    _state.update { state ->
-                        state.copy(
-                            sounds = state.sounds.filterNot { it.stableKey() == key },
-                            applySuccess = "Upload deleted",
-                        )
-                    }
-                }
-                .onFailure { error ->
-                    _state.update { it.copy(error = "Delete failed: ${error.message ?: "try again"}") }
-                }
-        }
-    }
+    fun deleteCommunitySound(sound: Sound) = community.deleteSound(sound)
 
-    fun reportSound(sound: Sound, reason: CommunityReportReason, note: String = "") {
-        if (communityActionBlocked()) return
-        viewModelScope.launch {
-            reportRepo.submitReport(
-                CommunityReportInput(
-                    contentId = sound.stableKey(),
-                    contentType = "SOUND",
-                    contentSource = sound.source,
-                    reason = reason,
-                    note = note,
-                    sourceUrl = reportSourceUrl(sound.sourcePageUrl, sound.downloadUrl),
-                    license = sound.license,
-                    uploaderName = sound.uploaderName,
-                    uploaderUid = sound.communityUploaderId,
-                ),
-            ).onSuccess {
-                _state.update { it.copy(applySuccess = "Report submitted") }
-            }.onFailure { error ->
-                _state.update { it.copy(error = "Report failed: ${error.message ?: "try again"}") }
-            }
-        }
-    }
+    fun reportSound(sound: Sound, reason: CommunityReportReason, note: String = "") =
+        community.reportSound(sound, reason, note)
 
-    fun canBlockCommunitySound(sound: Sound): Boolean =
-        sound.source == ContentSource.COMMUNITY &&
-            communityProviderEnabled.value &&
-            communityGuidelinesAccepted.value &&
-            sound.communityUploaderId.isNotBlank()
+    fun canBlockCommunitySound(sound: Sound): Boolean = community.canBlockSound(sound)
 
-    fun blockCommunitySound(sound: Sound, onBlocked: () -> Unit = {}) {
-        if (communityActionBlocked()) return
-        val blockedUploaderId = sound.communityUploaderId
-        if (sound.source != ContentSource.COMMUNITY || blockedUploaderId.isBlank()) {
-            _state.update { it.copy(error = "This sound does not expose a blockable community uploader") }
-            return
-        }
-        viewModelScope.launch {
-            communityBlockRepo.blockUser(blockedUploaderId, CommunityBlockReason.OTHER)
-                .onSuccess {
-                    if (_state.value.playingId == sound.stableKey()) stopIfPlaying(sound)
-                    _topHits.update { hits -> hits.filterNot { it.matchesCommunityUploader(blockedUploaderId) } }
-                    _communityUploads.update { uploads -> uploads.filterNot { it.matchesCommunityUploader(blockedUploaderId) } }
-                    _state.update { state ->
-                        state.copy(
-                            sounds = state.sounds.filterNot { it.matchesCommunityUploader(blockedUploaderId) },
-                            applySuccess = "Creator blocked",
-                        )
-                    }
-                    onBlocked()
-                }
-                .onFailure { error ->
-                    _state.update { it.copy(error = "Block failed: ${error.message ?: "try again"}") }
-                }
-        }
-    }
+    fun blockCommunitySound(sound: Sound, onBlocked: () -> Unit = {}) =
+        community.blockSound(sound, onBlocked)
 
     private companion object {
         const val FIRST_VISIBLE_PREVIEW_COUNT = 5
@@ -1585,14 +1401,6 @@ class SoundsViewModel @Inject constructor(
         )
     }
 }
-
-private fun reportSourceUrl(primary: String, fallback: String): String =
-    listOf(primary, fallback)
-        .firstOrNull { it.startsWith("https://", ignoreCase = true) }
-        .orEmpty()
-
-private fun Sound.matchesCommunityUploader(uploaderId: String): Boolean =
-    sanitizeCommunityOwnerKey(communityUploaderId).let { it.isNotBlank() && it == sanitizeCommunityOwnerKey(uploaderId) }
 
 private fun Sound.youtubeVideoId(): String? =
     takeIf { source == ContentSource.YOUTUBE }
