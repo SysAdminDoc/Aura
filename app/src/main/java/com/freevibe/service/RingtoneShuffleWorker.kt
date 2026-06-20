@@ -51,22 +51,40 @@ class RingtoneShuffleWorker @AssistedInject constructor(
                 return Result.failure()
             }
 
-            val lastApplied = prefs.ringtoneShuffleLastAppliedId()
-            val candidates = if (soundDownloads.size > 1) {
-                soundDownloads.filter { it.id != lastApplied }
-            } else {
-                soundDownloads
+            if (prefs.ringtoneShuffleEnabled.first()) {
+                val lastApplied = prefs.ringtoneShuffleLastAppliedId()
+                val candidates = if (soundDownloads.size > 1) {
+                    soundDownloads.filter { it.id != lastApplied }
+                } else {
+                    soundDownloads
+                }
+                val chosen = candidates.random()
+                val uri = Uri.parse(chosen.localPath)
+                RingtoneManager.setActualDefaultRingtoneUri(
+                    applicationContext,
+                    RingtoneManager.TYPE_RINGTONE,
+                    uri,
+                )
+                prefs.setRingtoneShuffleLastAppliedId(chosen.id)
             }
-            val chosen = candidates.random()
 
-            val uri = Uri.parse(chosen.localPath)
-            RingtoneManager.setActualDefaultRingtoneUri(
-                applicationContext,
-                RingtoneManager.TYPE_RINGTONE,
-                uri,
-            )
+            if (prefs.alarmShuffleEnabled.first()) {
+                val lastApplied = prefs.alarmShuffleLastAppliedId()
+                val candidates = if (soundDownloads.size > 1) {
+                    soundDownloads.filter { it.id != lastApplied }
+                } else {
+                    soundDownloads
+                }
+                val chosen = candidates.random()
+                val uri = Uri.parse(chosen.localPath)
+                RingtoneManager.setActualDefaultRingtoneUri(
+                    applicationContext,
+                    RingtoneManager.TYPE_ALARM,
+                    uri,
+                )
+                prefs.setAlarmShuffleLastAppliedId(chosen.id)
+            }
 
-            prefs.setRingtoneShuffleLastAppliedId(chosen.id)
             receiptStore.recordSuccess(WORK_NAME)
             Result.success()
         } catch (e: Exception) {

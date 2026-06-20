@@ -157,6 +157,7 @@ class SettingsViewModel @Inject constructor(
     val previewVolume = prefs.soundPreviewVolume.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0.7f)
     val ringtoneShuffleEnabled = prefs.ringtoneShuffleEnabled.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
     val ringtoneShuffleIntervalHours = prefs.ringtoneShuffleIntervalHours.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 24L)
+    val alarmShuffleEnabled = prefs.alarmShuffleEnabled.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
     val redditSubs = prefs.redditSubreddits.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), "wallpapers,MobileWallpaper,MinimalWallpaper")
     val redditProviderEnabled = prefs.redditProviderEnabled.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
     val preferredRes = prefs.preferredResolution.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), "")
@@ -484,6 +485,14 @@ class SettingsViewModel @Inject constructor(
         prefs.setRingtoneShuffleIntervalHours(hours)
         if (prefs.ringtoneShuffleEnabled.first()) {
             RingtoneShuffleWorker.schedule(context, hours)
+        }
+    }
+
+    fun setAlarmShuffleEnabled(enabled: Boolean) = viewModelScope.launch {
+        prefs.setAlarmShuffleEnabled(enabled)
+        if (enabled && !prefs.ringtoneShuffleEnabled.first()) {
+            val interval = prefs.ringtoneShuffleIntervalHours.first()
+            RingtoneShuffleWorker.schedule(context, interval)
         }
     }
 

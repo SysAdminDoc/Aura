@@ -207,6 +207,7 @@ fun SettingsScreen(
     val previewVolume by viewModel.previewVolume.collectAsStateWithLifecycle()
     val ringtoneShuffleEnabled by viewModel.ringtoneShuffleEnabled.collectAsStateWithLifecycle()
     val ringtoneShuffleIntervalHours by viewModel.ringtoneShuffleIntervalHours.collectAsStateWithLifecycle()
+    val alarmShuffleEnabled by viewModel.alarmShuffleEnabled.collectAsStateWithLifecycle()
     val preferredRes by viewModel.preferredRes.collectAsStateWithLifecycle()
     val userStyles by viewModel.userStyles.collectAsStateWithLifecycle()
     val schedulerEnabled by viewModel.schedulerEnabled.collectAsStateWithLifecycle()
@@ -1571,6 +1572,17 @@ fun SettingsScreen(
                     )
                 }
             }
+            SettingsToggle(
+                icon = Icons.Default.Alarm,
+                title = "Alarm sound shuffle",
+                subtitle = if (alarmShuffleEnabled) {
+                    "Changes your alarm sound from downloaded sounds on the same schedule"
+                } else {
+                    "Periodically set a random downloaded sound as your alarm"
+                },
+                checked = alarmShuffleEnabled,
+                onCheckedChange = { viewModel.setAlarmShuffleEnabled(it) },
+            )
         }
 
         // Video Wallpapers
