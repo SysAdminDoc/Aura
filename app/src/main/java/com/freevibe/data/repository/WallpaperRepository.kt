@@ -12,6 +12,7 @@ import com.freevibe.data.remote.pexels.PexelsApi
 import com.freevibe.data.remote.pixabay.PixabayApi
 import com.freevibe.data.remote.toWallpaper
 import com.freevibe.data.remote.wallhaven.WallhavenApi
+import com.freevibe.data.remote.wikimedia.WikimediaPotdApi
 import com.freevibe.service.SourceMetrics
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.async
@@ -24,6 +25,8 @@ import java.net.ConnectException
 import java.net.SocketTimeoutException
 import java.net.UnknownHostException
 import javax.net.ssl.SSLException
+import java.util.Calendar
+import java.util.Locale
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -100,6 +103,7 @@ private const val DISCOVER_SECONDARY_SOURCE_BUDGET_MS = 1_200L
 private const val DISCOVER_PAGE_SIZE = 60
 private const val PIXABAY_MAX_BACKOFF_SECONDS = 24 * 60 * 60L
 private const val SOURCE_APOD = "nasa_apod"
+private const val SOURCE_WIKI_POTD = "wiki_potd"
 private const val SOURCE_BING = "bing"
 private const val SOURCE_DISCOVER = "discover"
 private const val SOURCE_PEXELS = "pexels"
@@ -145,6 +149,7 @@ class WallpaperRepository @Inject constructor(
     private val wallhavenApi: WallhavenApi,
     private val bingApi: BingDailyApi,
     private val nasaApodApi: NasaApodApi,
+    private val wikimediaPotdApi: WikimediaPotdApi,
     private val pixabayApi: PixabayApi,
     private val pexelsApi: PexelsApi,
     private val cacheManager: WallpaperCacheManager,
@@ -381,6 +386,29 @@ class WallpaperRepository @Inject constructor(
         }
     }
 
+    suspend fun getWikipediaPotd(): Wallpaper? {
+        return try {
+            sourceMetrics.measure(SOURCE_WIKI_POTD) {
+                val cached = cacheManager.getCached("wiki_potd_today", ContentSource.WIKIMEDIA)
+                if (!cached.isNullOrEmpty()) return@measure cached.first()
+                val cal = Calendar.getInstance()
+                val year = String.format(Locale.ROOT, "%04d", cal.get(Calendar.YEAR))
+                val month = String.format(Locale.ROOT, "%02d", cal.get(Calendar.MONTH) + 1)
+                val day = String.format(Locale.ROOT, "%02d", cal.get(Calendar.DAY_OF_MONTH))
+                val response = withTimeoutOrNull(8_000L) {
+                    wikimediaPotdApi.getFeatured(year, month, day)
+                } ?: return@measure null
+                val wallpaper = response.image?.toWallpaper("$year-$month-$day")
+                    ?: return@measure null
+                cacheManager.cache("wiki_potd_today", listOf(wallpaper))
+                wallpaper
+            }
+        } catch (e: Exception) {
+            if (e is CancellationException) throw e
+            null
+        }
+    }
+
     suspend fun getWallpaperOfTheDay(): Wallpaper? {
         val bingDegraded = sourceMetrics.isDegraded(SOURCE_BING)
         val wallhavenDegraded = sourceMetrics.isDegraded(SOURCE_WALLHAVEN)
@@ -561,6 +589,15 @@ class WallpaperRepository @Inject constructor(
                             }
                         } else {
                             loadSourceSafely { getNasaApodRandom(count = 5) }
+                        }
+                    },
+                    async {
+                        if (page == 1) {
+                            getWikipediaPotd()?.let {
+                                SearchResult(listOf(it), 1, 1, false)
+                            }
+                        } else {
+                            null
                         }
                     },
                 )

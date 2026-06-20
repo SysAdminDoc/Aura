@@ -2,6 +2,9 @@ package com.freevibe.data.remote
 
 import com.freevibe.data.model.*
 import com.freevibe.data.remote.reddit.RedditPost
+import com.freevibe.data.remote.wikimedia.WikimediaPotdImage
+import com.freevibe.data.remote.wikimedia.WikimediaText
+import com.freevibe.data.remote.wikimedia.WikimediaThumbnail
 import org.junit.Assert.*
 import org.junit.Test
 
@@ -224,5 +227,67 @@ class MappersTest {
             thumbnailUrl = "", fullUrl = "url",
         )
         assertEquals(ContentSource.FREESOUND, entity.toSound().source)
+    }
+
+    // ── WikimediaPotdImage.toWallpaper ──
+
+    @Test
+    fun `WikimediaPotdImage toWallpaper maps all fields`() {
+        val potd = WikimediaPotdImage(
+            title = "File:Sunset.jpg",
+            description = WikimediaText("A beautiful sunset"),
+            artist = WikimediaText("<a href=\"//commons\">John Doe</a>"),
+            thumbnail = WikimediaThumbnail("https://upload.wikimedia.org/thumb.jpg", 320, 240),
+            image = WikimediaThumbnail("https://upload.wikimedia.org/full.jpg", 3840, 2160),
+            filePage = "https://commons.wikimedia.org/wiki/File:Sunset.jpg",
+        )
+        val wp = potd.toWallpaper("2026-06-20")!!
+        assertEquals("wiki_potd_2026-06-20", wp.id)
+        assertEquals(ContentSource.WIKIMEDIA, wp.source)
+        assertEquals("https://upload.wikimedia.org/thumb.jpg", wp.thumbnailUrl)
+        assertEquals("https://upload.wikimedia.org/full.jpg", wp.fullUrl)
+        assertEquals(3840, wp.width)
+        assertEquals(2160, wp.height)
+        assertEquals("John Doe", wp.uploaderName)
+        assertEquals("https://commons.wikimedia.org/wiki/File:Sunset.jpg", wp.sourcePageUrl)
+        assertTrue(wp.tags.contains("wikipedia"))
+        assertTrue(wp.tags.contains("potd"))
+    }
+
+    @Test
+    fun `WikimediaPotdImage toWallpaper returns null when image source is blank`() {
+        val potd = WikimediaPotdImage(
+            title = "File:Missing.jpg",
+            image = WikimediaThumbnail("", 0, 0),
+        )
+        assertNull(potd.toWallpaper("2026-06-20"))
+    }
+
+    @Test
+    fun `WikimediaPotdImage toWallpaper returns null when image is null`() {
+        val potd = WikimediaPotdImage(title = "File:NoImage.jpg")
+        assertNull(potd.toWallpaper("2026-06-20"))
+    }
+
+    @Test
+    fun `WikimediaPotdImage toWallpaper strips HTML from artist`() {
+        val potd = WikimediaPotdImage(
+            title = "File:Art.jpg",
+            artist = WikimediaText("<span class=\"fn\"><a href=\"//u\">Artist <b>Name</b></a></span>"),
+            image = WikimediaThumbnail("https://img.jpg", 100, 100),
+        )
+        val wp = potd.toWallpaper("2026-01-01")!!
+        assertFalse(wp.uploaderName.contains("<"))
+        assertEquals("Artist Name", wp.uploaderName)
+    }
+
+    @Test
+    fun `WikimediaPotdImage toWallpaper defaults uploaderName when artist is null`() {
+        val potd = WikimediaPotdImage(
+            title = "File:NoArtist.jpg",
+            image = WikimediaThumbnail("https://img.jpg", 100, 100),
+        )
+        val wp = potd.toWallpaper("2026-01-01")!!
+        assertEquals("Wikimedia Commons", wp.uploaderName)
     }
 }

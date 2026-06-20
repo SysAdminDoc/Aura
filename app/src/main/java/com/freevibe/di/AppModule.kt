@@ -17,6 +17,7 @@ import com.freevibe.data.remote.bing.BingDailyApi
 import com.freevibe.data.remote.ccmixter.CcMixterApi
 import com.freevibe.data.remote.nasa.NasaApodApi
 import com.freevibe.data.remote.stability.StabilityAiApi
+import com.freevibe.data.remote.wikimedia.WikimediaPotdApi
 import com.freevibe.data.remote.freesound.FreesoundV2Api
 import com.freevibe.data.remote.weather.OpenMeteoApi
 import com.freevibe.data.remote.pexels.PexelsApi
@@ -125,6 +126,16 @@ object AppModule {
             .addConverterFactory(MoshiConverterFactory.create(moshi))
             .build()
             .create(NasaApodApi::class.java)
+
+    @Provides
+    @Singleton
+    fun provideWikimediaPotdApi(client: OkHttpClient, moshi: Moshi): WikimediaPotdApi =
+        Retrofit.Builder()
+            .baseUrl(WikimediaPotdApi.BASE_URL)
+            .client(client)
+            .addConverterFactory(MoshiConverterFactory.create(moshi))
+            .build()
+            .create(WikimediaPotdApi::class.java)
 
     @Provides
     @Singleton

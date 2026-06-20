@@ -7,6 +7,7 @@ import com.freevibe.data.remote.nasa.NasaApodResponse
 import com.freevibe.data.remote.pixabay.PixabayPhoto
 import com.freevibe.data.remote.reddit.RedditPost
 import com.freevibe.data.remote.wallhaven.WallhavenWallpaper
+import com.freevibe.data.remote.wikimedia.WikimediaPotdImage
 
 // -- Wallhaven -> Wallpaper --
 
@@ -62,6 +63,33 @@ fun NasaApodResponse.toWallpaper(): Wallpaper? {
         tags = listOf("nasa", "apod", "astronomy", "space"),
         sourcePageUrl = "https://apod.nasa.gov/apod/ap${date.replace("-", "").drop(2)}.html",
         uploaderName = copyright?.trim() ?: "NASA",
+    )
+}
+
+// -- Wikipedia POTD -> Wallpaper --
+
+private val HTML_TAG_REGEX = Regex("<[^>]+>")
+
+fun WikimediaPotdImage.toWallpaper(date: String): Wallpaper? {
+    val fullSource = image?.source ?: return null
+    if (fullSource.isBlank()) return null
+    val thumbSource = thumbnail?.source ?: fullSource
+    val artistName = artist?.text
+        ?.replace(HTML_TAG_REGEX, "")
+        ?.trim()
+        ?.take(80)
+        ?: "Wikimedia Commons"
+    return Wallpaper(
+        id = "wiki_potd_$date",
+        source = ContentSource.WIKIMEDIA,
+        thumbnailUrl = thumbSource,
+        fullUrl = fullSource,
+        width = image.width,
+        height = image.height,
+        category = "photography",
+        tags = listOf("wikipedia", "potd", "featured", "commons"),
+        sourcePageUrl = filePage ?: "",
+        uploaderName = artistName,
     )
 }
 
