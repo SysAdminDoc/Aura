@@ -137,6 +137,7 @@ class SettingsViewModel @Inject constructor(
     // NX-6: per-unlock / screen-off trigger opt-ins. Drive RotationTriggerService lifecycle.
     val rotateOnUnlock = prefs.rotateOnUnlock.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
     val rotateOnScreenOff = prefs.rotateOnScreenOff.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
+    val avoidRecentRepeats = prefs.avoidRecentRepeats.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
     // Enhanced scheduler
     val schedulerEnabled = prefs.schedulerEnabled.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
     val schedulerInterval = prefs.schedulerIntervalMinutes.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 360L)
@@ -317,6 +318,11 @@ class SettingsViewModel @Inject constructor(
             unlock = rotateOnUnlock.value,
             screenOff = v,
         )
+    }
+
+    fun setAvoidRecentRepeats(v: Boolean) = viewModelScope.launch {
+        prefs.setAvoidRecentRepeats(v)
+        if (!v) prefs.clearRecentRotationIds()
     }
 
     fun setAutoWallpaperRequiresIdle(v: Boolean) = viewModelScope.launch {

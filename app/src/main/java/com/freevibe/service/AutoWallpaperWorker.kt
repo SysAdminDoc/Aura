@@ -95,9 +95,10 @@ class AutoWallpaperWorker @AssistedInject constructor(
         if (source == "pixabay" && !prefs.pixabayProviderEnabled.first()) return Result.success()
         if (source == "bing" && !prefs.bingProviderEnabled.first()) return Result.success()
 
-        val wallpapers = fetchWallpapers(source)
-        if (wallpapers.isEmpty()) return Result.retry()
+        val rawWallpapers = fetchWallpapers(source)
+        if (rawWallpapers.isEmpty()) return Result.retry()
 
+        val wallpapers = filterRecentRepeats(rawWallpapers)
         val pick = pickScheduledWallpaper(wallpapers, shuffle) ?: return Result.retry()
 
         if (homeEnabled && lockEnabled) {
@@ -124,10 +125,18 @@ class AutoWallpaperWorker @AssistedInject constructor(
         if (source == "pixabay" && !prefs.pixabayProviderEnabled.first()) return Result.success()
         if (source == "bing" && !prefs.bingProviderEnabled.first()) return Result.success()
 
-        val wallpapers = fetchWallpapers(source)
+        val wallpapers = filterRecentRepeats(fetchWallpapers(source))
         val wallpaper = wallpapers.randomOrNull() ?: return Result.retry()
 
         return applyAndRecord(wallpaper, target)
+    }
+
+    private suspend fun filterRecentRepeats(wallpapers: List<Wallpaper>): List<Wallpaper> {
+        if (!prefs.avoidRecentRepeats.first()) return wallpapers
+        val recentIds = prefs.getRecentRotationIds().toSet()
+        if (recentIds.isEmpty()) return wallpapers
+        val filtered = wallpapers.filter { it.stableKey() !in recentIds }
+        return filtered.ifEmpty { wallpapers }
     }
 
     private suspend fun fetchWallpapers(source: String): List<Wallpaper> {
@@ -170,6 +179,9 @@ class AutoWallpaperWorker @AssistedInject constructor(
         return wallpaperApplier.applyByLocator(wallpaper.fullUrl, target, darkenPercent = darkenPercent).fold(
             onSuccess = {
                 historyManager.record(wallpaper, target)
+                if (prefs.avoidRecentRepeats.first()) {
+                    prefs.addRecentRotationId(wallpaper.stableKey())
+                }
                 Result.success()
             },
             onFailure = { Result.retry() },

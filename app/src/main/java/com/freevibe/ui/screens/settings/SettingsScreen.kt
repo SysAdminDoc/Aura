@@ -195,6 +195,7 @@ fun SettingsScreen(
     val autoBackupKeepCount by viewModel.autoBackupKeepCount.collectAsStateWithLifecycle()
     val rotateOnUnlock by viewModel.rotateOnUnlock.collectAsStateWithLifecycle()
     val rotateOnScreenOff by viewModel.rotateOnScreenOff.collectAsStateWithLifecycle()
+    val avoidRecentRepeats by viewModel.avoidRecentRepeats.collectAsStateWithLifecycle()
     val autoPreview by viewModel.autoPreview.collectAsStateWithLifecycle()
     val wallpaperHistory by viewModel.wallpaperHistory.collectAsStateWithLifecycle()
     val gridColumns by viewModel.gridColumns.collectAsStateWithLifecycle()
@@ -771,6 +772,13 @@ fun SettingsScreen(
                 subtitle = "Pick the next wallpaper while the screen is off so unlock shows the new one",
                 checked = rotateOnScreenOff,
                 onCheckedChange = { viewModel.setRotateOnScreenOff(it) },
+            )
+            SettingsToggle(
+                icon = Icons.Default.Shuffle,
+                title = "Avoid recent repeats",
+                subtitle = "Track applied wallpapers and skip recently shown ones until the full pool has cycled",
+                checked = avoidRecentRepeats,
+                onCheckedChange = { viewModel.setAvoidRecentRepeats(it) },
             )
             SettingsToggle(
                 icon = Icons.Default.Schedule,

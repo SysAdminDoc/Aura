@@ -109,6 +109,21 @@ class PreferencesManager @Inject constructor(
     val autoWallpaperRequiresWiFiOnly: Flow<Boolean> = get(Keys.AUTO_WP_REQUIRES_WIFI, false)
     /** Hold rotation until the device is idle (no active foreground use). */
     val autoWallpaperRequiresIdle: Flow<Boolean> = get(Keys.AUTO_WP_REQUIRES_IDLE, false)
+    val avoidRecentRepeats: Flow<Boolean> = get(Keys.AVOID_RECENT_REPEATS, false)
+    suspend fun setAvoidRecentRepeats(v: Boolean) = set(Keys.AVOID_RECENT_REPEATS, v)
+    suspend fun getRecentRotationIds(): List<String> =
+        get(Keys.RECENT_ROTATION_IDS, "").first()
+            .split(",")
+            .filter { it.isNotBlank() }
+    suspend fun addRecentRotationId(id: String) {
+        val recent = getRecentRotationIds().toMutableList()
+        recent.add(id)
+        val maxSize = 50
+        while (recent.size > maxSize) recent.removeAt(0)
+        set(Keys.RECENT_ROTATION_IDS, recent.joinToString(","))
+    }
+    suspend fun clearRecentRotationIds() = set(Keys.RECENT_ROTATION_IDS, "")
+
     /** NX-6: rotate once on every device unlock (USER_PRESENT). Opt-in, foreground-service-backed. */
     val rotateOnUnlock: Flow<Boolean> = get(Keys.ROTATE_ON_UNLOCK, false)
     /** NX-6: pre-stage a new wallpaper on screen-off so unlock shows the new one. */
@@ -338,6 +353,8 @@ class PreferencesManager @Inject constructor(
         val SCHEDULER_COLLECTION = longPreferencesKey("scheduler_collection_id")
         val SCHEDULER_DAY_SOURCE = stringPreferencesKey("scheduler_day_source")
         val SCHEDULER_NIGHT_SOURCE = stringPreferencesKey("scheduler_night_source")
+        val AVOID_RECENT_REPEATS = booleanPreferencesKey("avoid_recent_repeats")
+        val RECENT_ROTATION_IDS = stringPreferencesKey("recent_rotation_ids")
         // Video wallpaper
         val VIDEO_FPS_LIMIT = intPreferencesKey("video_fps_limit")
         val VIDEO_PLAYBACK_SPEED = floatPreferencesKey("video_playback_speed")
