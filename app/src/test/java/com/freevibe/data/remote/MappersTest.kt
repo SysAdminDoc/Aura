@@ -1,6 +1,10 @@
 package com.freevibe.data.remote
 
 import com.freevibe.data.model.*
+import com.freevibe.data.remote.lemmy.LemmyPerson
+import com.freevibe.data.remote.lemmy.LemmyPost
+import com.freevibe.data.remote.lemmy.LemmyPostCounts
+import com.freevibe.data.remote.lemmy.LemmyPostView
 import com.freevibe.data.remote.reddit.RedditPost
 import com.freevibe.data.remote.wikimedia.WikimediaPotdImage
 import com.freevibe.data.remote.wikimedia.WikimediaText
@@ -289,5 +293,74 @@ class MappersTest {
         )
         val wp = potd.toWallpaper("2026-01-01")!!
         assertEquals("Wikimedia Commons", wp.uploaderName)
+    }
+
+    // ── LemmyPostView.toWallpaper ──
+
+    @Test
+    fun `LemmyPostView toWallpaper maps image post correctly`() {
+        val post = LemmyPostView(
+            post = LemmyPost(
+                id = 12345,
+                name = "Mountain sunset",
+                url = "https://i.example.com/sunset.jpg",
+                thumbnailUrl = "https://i.example.com/sunset_thumb.jpg",
+                apId = "https://lemmy.world/post/12345",
+            ),
+            counts = LemmyPostCounts(score = 42, upvotes = 50, downvotes = 8),
+            creator = LemmyPerson(name = "photographer", displayName = "John Doe"),
+        )
+        val wp = post.toWallpaper()!!
+        assertEquals("lemmy_12345", wp.id)
+        assertEquals(ContentSource.LEMMY, wp.source)
+        assertEquals("https://i.example.com/sunset_thumb.jpg", wp.thumbnailUrl)
+        assertEquals("https://i.example.com/sunset.jpg", wp.fullUrl)
+        assertEquals("https://lemmy.world/post/12345", wp.sourcePageUrl)
+        assertEquals("John Doe", wp.uploaderName)
+        assertEquals(42, wp.views)
+        assertEquals(50, wp.favorites)
+    }
+
+    @Test
+    fun `LemmyPostView toWallpaper returns null for non-image URL`() {
+        val post = LemmyPostView(
+            post = LemmyPost(id = 1, name = "Text post", url = "https://example.com/article"),
+        )
+        assertNull(post.toWallpaper())
+    }
+
+    @Test
+    fun `LemmyPostView toWallpaper returns null for null URL`() {
+        val post = LemmyPostView(
+            post = LemmyPost(id = 2, name = "No link"),
+        )
+        assertNull(post.toWallpaper())
+    }
+
+    @Test
+    fun `LemmyPostView toWallpaper returns null for NSFW post`() {
+        val post = LemmyPostView(
+            post = LemmyPost(id = 3, name = "NSFW", url = "https://i.example.com/nsfw.jpg", nsfw = true),
+        )
+        assertNull(post.toWallpaper())
+    }
+
+    @Test
+    fun `LemmyPostView toWallpaper falls back to creator name when displayName is null`() {
+        val post = LemmyPostView(
+            post = LemmyPost(id = 4, name = "Test", url = "https://i.example.com/test.png"),
+            creator = LemmyPerson(name = "username123", displayName = null),
+        )
+        val wp = post.toWallpaper()!!
+        assertEquals("username123", wp.uploaderName)
+    }
+
+    @Test
+    fun `LemmyPostView toWallpaper uses post URL as thumbnail fallback`() {
+        val post = LemmyPostView(
+            post = LemmyPost(id = 5, name = "No thumb", url = "https://i.example.com/nothumb.webp", thumbnailUrl = null),
+        )
+        val wp = post.toWallpaper()!!
+        assertEquals("https://i.example.com/nothumb.webp", wp.thumbnailUrl)
     }
 }
