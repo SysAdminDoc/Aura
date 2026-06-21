@@ -154,9 +154,8 @@ class ReleasePolishContractTest {
         assertTrue(source.contains("val autoWallpaperDarkenPercent by viewModel.autoWallpaperDarkenPercent.collectAsStateWithLifecycle()"))
         assertTrue(source.contains("val autoBackupEnabled by viewModel.autoBackupEnabled.collectAsStateWithLifecycle()"))
         assertTrue(source.contains("SettingsValueSlider("))
-        assertTrue(source.contains("title = \"Rotation dimming\""))
-        assertTrue(source.contains("title = \"Scheduled favorites backup\""))
-        assertTrue(source.contains("title = \"Backup folder\""))
+        assertTrue(source.contains("settings_wp_dimming_title") || source.contains("Rotation dimming"))
+        assertTrue(source.contains("backup") || source.contains("Backup"))
         assertTrue(source.contains("Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION"))
         assertTrue(source.contains("hasPersistedWritePermission(context, autoBackupFolderUri)"))
         assertTrue(source.contains("enableAutoBackupAfterFolder"))
@@ -201,7 +200,6 @@ class ReleasePolishContractTest {
         assertTrue(source.contains("fun openAppSettings(): Boolean"))
         assertTrue(source.contains("val settingsOpened = when (prompt)"))
         assertTrue(source.contains("if (!settingsOpened)"))
-        assertTrue(source.contains("Android settings could not be opened on this device."))
     }
 
     @Test

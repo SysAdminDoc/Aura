@@ -401,7 +401,7 @@ fun SoundsScreen(
                         modifier = Modifier.size(48.dp),
                         containerColor = MaterialTheme.colorScheme.secondaryContainer,
                     ) {
-                        Icon(Icons.Default.Mic, "Record community sound", modifier = Modifier.size(20.dp))
+                        Icon(Icons.Default.Mic, stringResource(R.string.sounds_fab_record_community), modifier = Modifier.size(20.dp))
                     }
                 }
                 if (communityProviderEnabled) {
@@ -410,7 +410,7 @@ fun SoundsScreen(
                         modifier = Modifier.size(48.dp),
                         containerColor = MaterialTheme.colorScheme.tertiaryContainer,
                     ) {
-                        Icon(Icons.Default.Upload, "Upload community sound", modifier = Modifier.size(20.dp))
+                        Icon(Icons.Default.Upload, stringResource(R.string.sounds_fab_upload_community), modifier = Modifier.size(20.dp))
                     }
                 }
                 SmallFloatingActionButton(
@@ -418,7 +418,7 @@ fun SoundsScreen(
                     modifier = Modifier.size(48.dp),
                     containerColor = MaterialTheme.colorScheme.primaryContainer,
                 ) {
-                    Icon(Icons.Default.ContentCut, "Create from music", modifier = Modifier.size(20.dp))
+                    Icon(Icons.Default.ContentCut, stringResource(R.string.sounds_fab_create_from_music), modifier = Modifier.size(20.dp))
                 }
                 SmallFloatingActionButton(
                     onClick = {
@@ -436,7 +436,7 @@ fun SoundsScreen(
                 ) {
                     Icon(
                         if (state.isRecordingPersonal) Icons.Default.Stop else Icons.Default.Mic,
-                        if (state.isRecordingPersonal) "Stop recording" else "Record ringtone",
+                        stringResource(if (state.isRecordingPersonal) R.string.sounds_fab_stop_recording else R.string.sounds_fab_record_ringtone),
                         modifier = Modifier.size(20.dp),
                         tint = if (state.isRecordingPersonal) MaterialTheme.colorScheme.onError else MaterialTheme.colorScheme.onSecondaryContainer,
                     )
@@ -469,11 +469,11 @@ fun SoundsScreen(
                         CompactSearchField(
                             value = searchQuery,
                             onValueChange = { searchQuery = it; showSearchHistory = it.isEmpty() },
-                            placeholder = when {
-                                isYouTubeTab -> "Search YouTube or paste URL..."
-                                youtubeProviderEnabled -> "Search YouTube sounds"
-                                else -> "Search sounds"
-                            },
+                            placeholder = stringResource(when {
+                                isYouTubeTab -> R.string.sounds_search_youtube_or_paste
+                                youtubeProviderEnabled -> R.string.sounds_search_youtube
+                                else -> R.string.sounds_search_generic
+                            }),
                             leadingIcon = if (isYouTubeTab) Icons.Default.SmartDisplay else Icons.Default.Search,
                             leadingTint = if (isYouTubeTab) Color(0xFFFF6A5B) else MaterialTheme.colorScheme.onSurfaceVariant,
                             modifier = Modifier.weight(1f),
@@ -542,16 +542,16 @@ fun SoundsScreen(
             nonBlockingWarning?.let { warning ->
                 AuraStatusBanner(
                     icon = Icons.Default.GraphicEq,
-                    title = "Showing last good sound results",
-                    message = "$warning. Playback and saved results remain available while Aura refreshes.",
+                    title = stringResource(R.string.sounds_banner_stale_title),
+                    message = stringResource(R.string.sounds_banner_stale_message, warning),
                     tone = MaterialTheme.colorScheme.tertiary,
                     primaryAction = AuraStatusAction(
-                        label = "Refresh",
+                        label = stringResource(R.string.common_refresh),
                         icon = Icons.Default.Refresh,
                         onClick = { viewModel.refresh() },
                     ),
                     secondaryAction = AuraStatusAction(
-                        label = "Dismiss",
+                        label = stringResource(R.string.sounds_banner_dismiss),
                         icon = Icons.Default.Close,
                         onClick = { nonBlockingWarning = null },
                     ),
@@ -562,11 +562,11 @@ fun SoundsScreen(
             if (state.degradedSources.isNotEmpty() && nonBlockingWarning == null) {
                 AuraStatusBanner(
                     icon = Icons.Default.GraphicEq,
-                    title = "Some sound sources are temporarily unavailable",
+                    title = stringResource(R.string.sounds_banner_degraded_title),
                     message = soundSourceHealthSummary(state.degradedSources),
                     tone = MaterialTheme.colorScheme.tertiary,
                     primaryAction = AuraStatusAction(
-                        label = "Refresh",
+                        label = stringResource(R.string.common_refresh),
                         icon = Icons.Default.Refresh,
                         onClick = { viewModel.refresh() },
                     ),
@@ -579,11 +579,11 @@ fun SoundsScreen(
                 if (state.error != null && displaySounds.isEmpty() && displayTopHits.isEmpty() && !state.isLoading && !state.isRefreshing) {
                     AuraStateCard(
                         icon = Icons.Default.CloudOff,
-                        title = "Sounds could not refresh",
-                        description = state.error ?: "Aura could not refresh sound sources. Retry, or switch tabs to keep browsing saved picks.",
+                        title = stringResource(R.string.sounds_error_title),
+                        description = state.error ?: stringResource(R.string.sounds_error_description),
                         tone = MaterialTheme.colorScheme.error,
                         primaryAction = AuraStateAction(
-                            label = "Retry",
+                            label = stringResource(R.string.sounds_error_retry),
                             icon = Icons.Default.Refresh,
                             onClick = { viewModel.refresh() },
                         ),
@@ -765,7 +765,7 @@ private fun SoundFilterButton(
         shape = RoundedCornerShape(8.dp),
     ) {
         Box {
-            Icon(Icons.Default.Tune, contentDescription = "Refine sounds", modifier = Modifier.size(18.dp))
+            Icon(Icons.Default.Tune, contentDescription = stringResource(R.string.sounds_filter_cd), modifier = Modifier.size(18.dp))
             CountBadge(
                 count = filterCount,
                 modifier = Modifier
@@ -816,7 +816,7 @@ private fun SoundModeBar(
                     onClick = { showMoreMenu = true },
                     label = {
                         Text(
-                            if (secondarySelected) soundTabLabel(selectedTab) else "More",
+                            if (secondarySelected) soundTabLabel(selectedTab) else stringResource(R.string.sounds_mode_more),
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis,
                         )
@@ -920,12 +920,12 @@ private fun SoundsList(
                 ) {
                     Icon(
                         if (selectedTab == SoundTab.COMMUNITY) Icons.Default.Groups else Icons.AutoMirrored.Filled.TrendingUp,
-                        contentDescription = if (selectedTab == SoundTab.COMMUNITY) "Community picks" else "Trending",
+                        contentDescription = stringResource(if (selectedTab == SoundTab.COMMUNITY) R.string.sounds_tophits_community_cd else R.string.sounds_tophits_trending_cd),
                         Modifier.size(20.dp),
                         tint = if (selectedTab == SoundTab.COMMUNITY) MaterialTheme.colorScheme.primary else Color(0xFFFF4444),
                     )
                     Text(
-                        if (selectedTab == SoundTab.COMMUNITY) "Community Picks" else "Top 5 This Week",
+                        stringResource(if (selectedTab == SoundTab.COMMUNITY) R.string.sounds_tophits_community_title else R.string.sounds_tophits_trending_title),
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
                     )
@@ -982,8 +982,8 @@ private fun SoundsList(
                 ) {
                     AuraStateCard(
                         icon = Icons.Default.GraphicEq,
-                        title = "Tuning the sound feed",
-                        description = "Aura is checking YouTube clip length and preview availability before showing ringtone-ready results.",
+                        title = stringResource(R.string.sounds_loading_title),
+                        description = stringResource(R.string.sounds_loading_description),
                     )
                     ShimmerSoundList(Modifier.fillMaxWidth())
                 }
@@ -997,17 +997,17 @@ private fun SoundsList(
                 AuraStateCard(
                     icon = icon,
                     title = title,
-                    description = supportingText ?: "Try another source or adjust the quality filter.",
+                    description = supportingText ?: stringResource(R.string.sounds_empty_fallback),
                     primaryAction = if (selectedTab == SoundTab.COMMUNITY && onUploadClick != null) {
                         AuraStateAction(
-                            label = "Upload sound",
+                            label = stringResource(R.string.sounds_empty_upload),
                             icon = Icons.Default.Upload,
                             onClick = onUploadClick,
                         )
                     } else null,
                     secondaryAction = if (selectedTab == SoundTab.COMMUNITY && onRecordClick != null) {
                         AuraStateAction(
-                            label = "Record",
+                            label = stringResource(R.string.sounds_empty_record),
                             icon = Icons.Default.Mic,
                             onClick = onRecordClick,
                         )
@@ -1073,11 +1073,11 @@ private fun SoundCollectionCarousel(
         ) {
             Icon(
                 Icons.Default.AutoAwesome,
-                contentDescription = "Collections",
+                contentDescription = stringResource(R.string.sounds_collections_title),
                 modifier = Modifier.size(20.dp),
                 tint = MaterialTheme.colorScheme.primary,
             )
-            Text("Collections", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+            Text(stringResource(R.string.sounds_collections_title), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
         }
         LazyRow(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
             items(collections, key = { it.title }) { collection ->
@@ -1318,7 +1318,7 @@ private fun SoundCard(
                                 shape = RoundedCornerShape(8.dp),
                             ) {
                                 Text(
-                                    "Ready",
+                                    stringResource(R.string.sounds_card_ready),
                                     Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
                                     style = MaterialTheme.typography.labelSmall,
                                     color = MaterialTheme.colorScheme.primary,
@@ -1358,14 +1358,14 @@ private fun SoundCard(
                 }
 
                 // Chevron
-                Icon(Icons.Default.ChevronRight, contentDescription = "Details", tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f), modifier = Modifier.size(18.dp))
+                Icon(Icons.Default.ChevronRight, contentDescription = stringResource(R.string.sounds_card_details_cd), tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f), modifier = Modifier.size(18.dp))
             }
 
             // Resolving indicator
             if (isResolving) {
                 Spacer(Modifier.height(4.dp))
                 Text(
-                    if (sound.source == ContentSource.YOUTUBE) "Loading YouTube audio..." else "Preparing audio...",
+                    stringResource(if (sound.source == ContentSource.YOUTUBE) R.string.sounds_card_loading_youtube else R.string.sounds_card_preparing_audio),
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.primary.copy(alpha = 0.7f),
                     modifier = Modifier.padding(start = 56.dp),
@@ -1402,7 +1402,7 @@ private fun SoundCard(
                             Icon(Icons.Default.ThumbUp, contentDescription = null, modifier = Modifier.size(15.dp))
                             Spacer(Modifier.width(5.dp))
                             Text(
-                                if ((voteCount ?: 0) > 0) "+${voteCount ?: 0}" else "Upvote",
+                                if ((voteCount ?: 0) > 0) stringResource(R.string.sounds_card_upvote_count, voteCount ?: 0) else stringResource(R.string.sounds_card_upvote),
                                 style = MaterialTheme.typography.labelSmall,
                             )
                         }
@@ -1418,7 +1418,7 @@ private fun SoundCard(
                         ) {
                             Icon(Icons.Default.VisibilityOff, contentDescription = null, modifier = Modifier.size(15.dp))
                             Spacer(Modifier.width(5.dp))
-                            Text("Hide", style = MaterialTheme.typography.labelSmall)
+                            Text(stringResource(R.string.sounds_card_hide), style = MaterialTheme.typography.labelSmall)
                         }
                     }
                 }
@@ -1495,9 +1495,9 @@ private fun SoundFiltersSheet(
             .padding(bottom = 24.dp),
         verticalArrangement = Arrangement.spacedBy(14.dp),
     ) {
-        Text("Refine sounds", style = MaterialTheme.typography.titleMedium)
+        Text(stringResource(R.string.sounds_filter_title), style = MaterialTheme.typography.titleMedium)
         Text(
-            "Quality bias",
+            stringResource(R.string.sounds_filter_quality_bias),
             style = MaterialTheme.typography.labelLarge,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
@@ -1522,7 +1522,7 @@ private fun SoundFiltersSheet(
             TextButton(onClick = it) {
                 Icon(Icons.Default.RestartAlt, contentDescription = null, modifier = Modifier.size(16.dp))
                 Spacer(Modifier.width(6.dp))
-                Text("Reset filters")
+                Text(stringResource(R.string.sounds_filter_reset))
             }
         }
     }
@@ -1575,12 +1575,12 @@ private fun QuickApplySheet(
                         pending.onConfirm()
                     },
                 ) {
-                    Text("Continue")
+                    Text(stringResource(R.string.sounds_quick_apply_continue))
                 }
             },
             dismissButton = {
                 TextButton(onClick = { pendingAction = null }) {
-                    Text("Cancel")
+                    Text(stringResource(R.string.common_cancel))
                 }
             },
         )
@@ -1659,18 +1659,25 @@ private fun QuickApplySheet(
                 Spacer(Modifier.height(8.dp))
             }
 
-            QuickApplyRow("Set as Ringtone", Icons.Default.Call, canUseApply && !isApplying) {
-                runSoundAction(SoundAction.APPLY, "Apply sound") { onApply(sound, ContentType.RINGTONE) }
+            val setRingtoneLabel = stringResource(R.string.sounds_quick_apply_set_ringtone)
+            val setNotificationLabel = stringResource(R.string.sounds_quick_apply_set_notification)
+            val setAlarmLabel = stringResource(R.string.sounds_quick_apply_set_alarm)
+            val applySoundTitle = stringResource(R.string.sounds_quick_apply_title)
+            val downloadLabel = stringResource(R.string.sounds_quick_apply_download)
+            val saveSoundTitle = stringResource(R.string.sounds_quick_apply_save_title)
+
+            QuickApplyRow(setRingtoneLabel, Icons.Default.Call, canUseApply && !isApplying) {
+                runSoundAction(SoundAction.APPLY, applySoundTitle) { onApply(sound, ContentType.RINGTONE) }
             }
-            QuickApplyRow("Set as Notification", Icons.Default.Notifications, canUseApply && !isApplying) {
-                runSoundAction(SoundAction.APPLY, "Apply sound") { onApply(sound, ContentType.NOTIFICATION) }
+            QuickApplyRow(setNotificationLabel, Icons.Default.Notifications, canUseApply && !isApplying) {
+                runSoundAction(SoundAction.APPLY, applySoundTitle) { onApply(sound, ContentType.NOTIFICATION) }
             }
-            QuickApplyRow("Set as Alarm", Icons.Default.Alarm, canUseApply && !isApplying) {
-                runSoundAction(SoundAction.APPLY, "Apply sound") { onApply(sound, ContentType.ALARM) }
+            QuickApplyRow(setAlarmLabel, Icons.Default.Alarm, canUseApply && !isApplying) {
+                runSoundAction(SoundAction.APPLY, applySoundTitle) { onApply(sound, ContentType.ALARM) }
             }
             HorizontalDivider(Modifier.padding(vertical = 4.dp))
-            QuickApplyRow("Download", Icons.Default.Download, canUseDownload && !isApplying) {
-                runSoundAction(SoundAction.DOWNLOAD, "Save sound") { onDownload(sound) }
+            QuickApplyRow(downloadLabel, Icons.Default.Download, canUseDownload && !isApplying) {
+                runSoundAction(SoundAction.DOWNLOAD, saveSoundTitle) { onDownload(sound) }
             }
 
             if (isApplying) {
@@ -1788,7 +1795,10 @@ private fun UploadDialog(
     var rightsAttested by remember { mutableStateOf(false) }
     var tagsText by remember { mutableStateOf("") }
     val policyCopy = remember { communityUploadPolicyCopy(CommunityUploadPolicyKind.SOUND) }
-    val categories = listOf("ringtone" to "Ringtone", "notification" to "Notification", "alarm" to "Alarm")
+    val ringtoneLabel = stringResource(R.string.sounds_upload_category_ringtone)
+    val notificationLabel = stringResource(R.string.sounds_upload_category_notification)
+    val alarmLabel = stringResource(R.string.sounds_upload_category_alarm)
+    val categories = listOf("ringtone" to ringtoneLabel, "notification" to notificationLabel, "alarm" to alarmLabel)
     val parsedTags = remember(tagsText) {
         tagsText.split(',', '#')
             .map { it.trim() }
@@ -1798,7 +1808,7 @@ private fun UploadDialog(
 
     AlertDialog(
         onDismissRequest = { if (!isUploading) onDismiss() },
-        title = { Text("Upload sound") },
+        title = { Text(stringResource(R.string.sounds_upload_title)) },
         text = {
             Column(
                 modifier = Modifier
@@ -1810,11 +1820,11 @@ private fun UploadDialog(
                 OutlinedTextField(
                     value = name,
                     onValueChange = { name = it },
-                    label = { Text("Sound name") },
+                    label = { Text(stringResource(R.string.sounds_upload_name_label)) },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth(),
                 )
-                Text("Category", style = MaterialTheme.typography.labelMedium)
+                Text(stringResource(R.string.sounds_upload_category_label), style = MaterialTheme.typography.labelMedium)
                 FlowRow(
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                     verticalArrangement = Arrangement.spacedBy(8.dp),
@@ -1831,13 +1841,13 @@ private fun UploadDialog(
                 OutlinedTextField(
                     value = tagsText,
                     onValueChange = { tagsText = it },
-                    label = { Text("Tags") },
-                    placeholder = { Text("calm, chime, short") },
-                    supportingText = { Text("Comma-separated tags help people find it.") },
+                    label = { Text(stringResource(R.string.sounds_upload_tags_label)) },
+                    placeholder = { Text(stringResource(R.string.sounds_upload_tags_placeholder)) },
+                    supportingText = { Text(stringResource(R.string.sounds_upload_tags_hint)) },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth(),
                 )
-                Text("License", style = MaterialTheme.typography.labelMedium)
+                Text(stringResource(R.string.sounds_upload_license_label), style = MaterialTheme.typography.labelMedium)
                 FlowRow(
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                     verticalArrangement = Arrangement.spacedBy(8.dp),
@@ -1854,9 +1864,9 @@ private fun UploadDialog(
                 OutlinedTextField(
                     value = sourceUrl,
                     onValueChange = { sourceUrl = it },
-                    label = { Text("Source URL") },
-                    placeholder = { Text("https://example.com/source") },
-                    supportingText = { Text("Optional HTTPS link for credited source material.") },
+                    label = { Text(stringResource(R.string.sounds_upload_source_label)) },
+                    placeholder = { Text(stringResource(R.string.sounds_upload_source_placeholder)) },
+                    supportingText = { Text(stringResource(R.string.sounds_upload_source_hint)) },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth(),
                 )
@@ -1886,7 +1896,7 @@ private fun UploadDialog(
                         modifier = Modifier.fillMaxWidth(),
                     )
                     Text(
-                        "${(uploadProgress * 100).toInt()}%",
+                        stringResource(R.string.sounds_upload_progress, (uploadProgress * 100).toInt()),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
@@ -1910,7 +1920,7 @@ private fun UploadDialog(
                 enabled = !isUploading && name.isNotBlank() && rightsAttested,
                 shape = RoundedCornerShape(8.dp),
                 modifier = Modifier.heightIn(min = 48.dp),
-            ) { Text("Upload") }
+            ) { Text(stringResource(R.string.sounds_upload_button)) }
         },
         dismissButton = {
             TextButton(
@@ -1918,7 +1928,7 @@ private fun UploadDialog(
                 enabled = !isUploading,
                 shape = RoundedCornerShape(8.dp),
                 modifier = Modifier.heightIn(min = 48.dp),
-            ) { Text("Cancel") }
+            ) { Text(stringResource(R.string.common_cancel)) }
         },
     )
 }

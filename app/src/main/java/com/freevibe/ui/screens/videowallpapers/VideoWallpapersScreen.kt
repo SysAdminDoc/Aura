@@ -274,13 +274,13 @@ fun VideoWallpapersScreen(
                     )
                 ) {
                     LiveWallpaperLaunchMode.DIRECT -> {
-                        Toast.makeText(context, "Aura Video Wallpaper opened. Set wallpaper to finish.", Toast.LENGTH_LONG).show()
+                        Toast.makeText(context, context.getString(R.string.video_wp_toast_direct), Toast.LENGTH_LONG).show()
                     }
                     LiveWallpaperLaunchMode.CHOOSER -> {
-                        Toast.makeText(context, "Choose 'Aura Video Wallpaper' in the picker, then tap Set wallpaper.", Toast.LENGTH_LONG).show()
+                        Toast.makeText(context, context.getString(R.string.video_wp_toast_chooser), Toast.LENGTH_LONG).show()
                     }
                     null -> {
-                        Toast.makeText(context, "Motion wallpaper selected. Open Settings > Wallpaper > Live Wallpapers to finish setup.", Toast.LENGTH_LONG).show()
+                        Toast.makeText(context, context.getString(R.string.video_wp_toast_fallback), Toast.LENGTH_LONG).show()
                     }
                 }
                 viewModel.clearGallerySelectionResult()
@@ -302,7 +302,7 @@ fun VideoWallpapersScreen(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 10.dp, vertical = 6.dp),
-            label = "Motion wallpapers",
+            label = stringResource(R.string.video_wp_header_label),
             icon = Icons.Default.SlowMotionVideo,
             title = videoHeaderTitle(state.searchQuery, state.orientation),
             subtitle = videoHeaderSubtitle(
@@ -315,7 +315,7 @@ fun VideoWallpapersScreen(
             CompactSearchField(
                 value = searchQuery,
                 onValueChange = { searchQuery = it },
-                placeholder = "Search live wallpapers",
+                placeholder = stringResource(R.string.video_wp_search_placeholder),
                 modifier = Modifier.fillMaxWidth(),
                 onClear = {
                     searchQuery = ""
@@ -386,7 +386,7 @@ fun VideoWallpapersScreen(
                         )
                     }
                     Spacer(Modifier.width(8.dp))
-                    Text(if (videoFilterCount > 0) videoFocusLabel(state.focusFilter) else "Filters")
+                    Text(if (videoFilterCount > 0) videoFocusLabel(state.focusFilter) else stringResource(R.string.video_wp_filters_label))
                 }
 
                 FilledTonalIconButton(
@@ -394,7 +394,7 @@ fun VideoWallpapersScreen(
                     modifier = Modifier.size(48.dp),
                     shape = RoundedCornerShape(8.dp),
                 ) {
-                    Icon(Icons.Default.FolderOpen, "Video or GIF from gallery", modifier = Modifier.size(16.dp))
+                    Icon(Icons.Default.FolderOpen, stringResource(R.string.video_wp_gallery_cd), modifier = Modifier.size(16.dp))
                 }
             }
         }
@@ -402,16 +402,16 @@ fun VideoWallpapersScreen(
         if (state.degradedSources.isNotEmpty()) {
             AuraStatusBanner(
                 icon = Icons.Default.CloudOff,
-                title = "Limited video source availability",
+                title = stringResource(R.string.video_wp_degraded_title),
                 message = videoSourceHealthSummary(state.degradedSources),
                 tone = MaterialTheme.colorScheme.tertiary,
                 primaryAction = AuraStatusAction(
-                    label = "Refresh",
+                    label = stringResource(R.string.video_wp_degraded_refresh),
                     icon = Icons.Default.Refresh,
                     onClick = { viewModel.refresh() },
                 ),
                 secondaryAction = AuraStatusAction(
-                    label = "Use gallery",
+                    label = stringResource(R.string.video_wp_degraded_gallery),
                     icon = Icons.Default.FolderOpen,
                     onClick = { galleryLauncher.launch(videoWallpaperMimeTypes()) },
                 ),
@@ -425,8 +425,8 @@ fun VideoWallpapersScreen(
                     Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                         AuraStateCard(
                             icon = Icons.Default.SlowMotionVideo,
-                            title = "Finding motion wallpapers",
-                            description = "Aura is checking sources for portrait-friendly clips and battery-aware playback hints.",
+                            title = stringResource(R.string.video_wp_loading_title),
+                            description = stringResource(R.string.video_wp_loading_description),
                             modifier = Modifier.padding(24.dp),
                         )
                     }
@@ -435,11 +435,11 @@ fun VideoWallpapersScreen(
                     Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                         AuraStateCard(
                             icon = Icons.Default.ErrorOutline,
-                            title = "Video sources did not respond",
-                            description = state.error ?: "Aura could not load live wallpaper candidates. Retry or choose a clip from your gallery.",
+                            title = stringResource(R.string.video_wp_error_title),
+                            description = state.error ?: stringResource(R.string.video_wp_error_description),
                             tone = MaterialTheme.colorScheme.error,
-                            primaryAction = AuraStateAction("Retry", Icons.Default.Refresh) { viewModel.refresh() },
-                            secondaryAction = AuraStateAction("From gallery", Icons.Default.FolderOpen) { galleryLauncher.launch(videoWallpaperMimeTypes()) },
+                            primaryAction = AuraStateAction(stringResource(R.string.video_wp_error_retry), Icons.Default.Refresh) { viewModel.refresh() },
+                            secondaryAction = AuraStateAction(stringResource(R.string.video_wp_error_gallery), Icons.Default.FolderOpen) { galleryLauncher.launch(videoWallpaperMimeTypes()) },
                             modifier = Modifier.padding(24.dp),
                         )
                     }
@@ -455,7 +455,7 @@ fun VideoWallpapersScreen(
                             icon = icon,
                             title = title,
                             description = detail,
-                            primaryAction = AuraStateAction("Retry", Icons.Default.Refresh) { viewModel.refresh() },
+                            primaryAction = AuraStateAction(stringResource(R.string.video_wp_empty_retry), Icons.Default.Refresh) { viewModel.refresh() },
                             modifier = Modifier.padding(24.dp),
                         )
                     }
@@ -505,7 +505,7 @@ fun VideoWallpapersScreen(
                                     icon = icon,
                                     title = title,
                                     description = detail,
-                                    primaryAction = AuraStateAction("Refresh", Icons.Default.Refresh) { viewModel.refresh() },
+                                    primaryAction = AuraStateAction(stringResource(R.string.video_wp_empty_refresh), Icons.Default.Refresh) { viewModel.refresh() },
                                     modifier = Modifier.padding(24.dp),
                                 )
                             }
@@ -600,7 +600,7 @@ fun VideoWallpapersScreen(
                     }
                     Spacer(Modifier.height(12.dp))
                     Text(
-                        "Presentation",
+                        stringResource(R.string.video_wp_confirm_presentation),
                         style = MaterialTheme.typography.labelLarge,
                         color = MaterialTheme.colorScheme.onSurface,
                     )
@@ -613,9 +613,9 @@ fun VideoWallpapersScreen(
                     if (needsCrop) {
                         Text(
                             if (selectedScaleMode == VIDEO_WALLPAPER_SCALE_MODE_FIT) {
-                                "Fit preserves the full landscape frame with letterboxing. Crop creates a portrait version."
+                                stringResource(R.string.video_wp_confirm_fit_landscape_letterbox)
                             } else {
-                                "Fill crops landscape edges to avoid stretching. Use Crop for more control."
+                                stringResource(R.string.video_wp_confirm_fill_landscape_crop)
                             },
                             style = MaterialTheme.typography.bodySmall,
                             color = if (selectedScaleMode == VIDEO_WALLPAPER_SCALE_MODE_FIT) {
@@ -626,7 +626,7 @@ fun VideoWallpapersScreen(
                         )
                     } else {
                         Text(
-                            "Fill uses the whole screen; Fit keeps the full frame visible.",
+                            stringResource(R.string.video_wp_confirm_fit_portrait),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
@@ -724,7 +724,8 @@ private fun VideoCard(
     val readyLabel = stringResource(R.string.a11y_ready)
     val voteStateDescription = stringResource(R.string.a11y_vote_count, voteCount)
     val canApplyVideo = remember(item) { item.canUseVideoAction(VideoWallpaperAction.APPLY) }
-    val applyBlockedMessage = remember(item) { item.videoActionMessage(VideoWallpaperAction.APPLY).ifBlank { "Unavailable" } }
+    val unavailableLabel = stringResource(R.string.video_wp_unavailable)
+    val applyBlockedMessage = remember(item, unavailableLabel) { item.videoActionMessage(VideoWallpaperAction.APPLY).ifBlank { unavailableLabel } }
 
     Card(
         modifier = Modifier.semantics {
@@ -820,7 +821,7 @@ private fun VideoCard(
                         shape = RoundedCornerShape(4.dp),
                     ) {
                         Text(
-                            if (item.isPortrait) "Portrait" else "Landscape",
+                            if (item.isPortrait) stringResource(R.string.video_wp_badge_portrait) else stringResource(R.string.video_wp_badge_landscape),
                             Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
                             style = MaterialTheme.typography.labelSmall, color = Color.White,
                         )
@@ -831,7 +832,7 @@ private fun VideoCard(
                         color = Color.Black.copy(alpha = 0.7f),
                         shape = RoundedCornerShape(4.dp),
                     ) {
-                        Text("${item.duration}s", Modifier.padding(horizontal = 6.dp, vertical = 2.dp), style = MaterialTheme.typography.labelSmall, color = Color.White)
+                        Text(stringResource(R.string.video_wp_duration_seconds, item.duration), Modifier.padding(horizontal = 6.dp, vertical = 2.dp), style = MaterialTheme.typography.labelSmall, color = Color.White)
                     }
                 }
             }
@@ -965,7 +966,7 @@ private fun VideoProvenanceBlock(
     onOpenUrl: (String) -> Unit,
 ) {
     Text(
-        "Source and rights",
+        stringResource(R.string.video_wp_provenance_title),
         style = MaterialTheme.typography.labelLarge,
         color = MaterialTheme.colorScheme.onSurface,
     )
@@ -991,10 +992,10 @@ private fun VideoProvenanceBlock(
         horizontalArrangement = Arrangement.spacedBy(8.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
-        VideoPolicyLinkButton("Source", Icons.Default.Link, item.sourcePageUrl, onOpenUrl)
-        VideoPolicyLinkButton("Terms", Icons.Default.Policy, policyLinks.termsUrl, onOpenUrl)
-        VideoPolicyLinkButton("Report", Icons.Default.Report, policyLinks.reportUrl, onOpenUrl)
-        VideoPolicyLinkButton("Rights", Icons.Default.Info, policyLinks.takedownUrl, onOpenUrl)
+        VideoPolicyLinkButton(stringResource(R.string.video_wp_provenance_source), Icons.Default.Link, item.sourcePageUrl, onOpenUrl)
+        VideoPolicyLinkButton(stringResource(R.string.video_wp_provenance_terms), Icons.Default.Policy, policyLinks.termsUrl, onOpenUrl)
+        VideoPolicyLinkButton(stringResource(R.string.video_wp_provenance_report), Icons.Default.Report, policyLinks.reportUrl, onOpenUrl)
+        VideoPolicyLinkButton(stringResource(R.string.video_wp_provenance_rights), Icons.Default.Info, policyLinks.takedownUrl, onOpenUrl)
     }
 }
 
@@ -1093,14 +1094,14 @@ private fun VideoPresentationSelector(
             selected = selectedScaleMode == VIDEO_WALLPAPER_SCALE_MODE_ZOOM,
             onClick = { onSelectScaleMode(VIDEO_WALLPAPER_SCALE_MODE_ZOOM) },
             icon = Icons.Default.CropFree,
-            label = "Fill",
+            label = stringResource(R.string.video_wp_presentation_fill),
             modifier = Modifier.weight(1f),
         )
         PresentationModeButton(
             selected = selectedScaleMode == VIDEO_WALLPAPER_SCALE_MODE_FIT,
             onClick = { onSelectScaleMode(VIDEO_WALLPAPER_SCALE_MODE_FIT) },
             icon = Icons.Default.FitScreen,
-            label = "Fit",
+            label = stringResource(R.string.video_wp_presentation_fit),
             modifier = Modifier.weight(1f),
         )
     }
@@ -1157,16 +1158,16 @@ private fun VideoFiltersSheet(
     onReset: (() -> Unit)?,
 ) {
     val categories = listOf(
-        "Nature" to "nature calm loop",
-        "Abstract" to "abstract particles loop",
-        "Space" to "space galaxy stars loop",
-        "Neon" to "neon lights glow loop",
-        "Ocean" to "ocean waves water loop",
-        "Fire" to "fire flames embers loop",
-        "Cinemagraph" to "cinemagraph subtle motion",
-        "Sci-Fi" to "sci-fi futuristic loop",
-        "Rain" to "rain drops window loop",
-        "Clouds" to "clouds sky timelapse loop",
+        stringResource(R.string.video_wp_category_nature) to "nature calm loop",
+        stringResource(R.string.video_wp_category_abstract) to "abstract particles loop",
+        stringResource(R.string.video_wp_category_space) to "space galaxy stars loop",
+        stringResource(R.string.video_wp_category_neon) to "neon lights glow loop",
+        stringResource(R.string.video_wp_category_ocean) to "ocean waves water loop",
+        stringResource(R.string.video_wp_category_fire) to "fire flames embers loop",
+        stringResource(R.string.video_wp_category_cinemagraph) to "cinemagraph subtle motion",
+        stringResource(R.string.video_wp_category_scifi) to "sci-fi futuristic loop",
+        stringResource(R.string.video_wp_category_rain) to "rain drops window loop",
+        stringResource(R.string.video_wp_category_clouds) to "clouds sky timelapse loop",
     )
     Column(
         modifier = Modifier
@@ -1177,7 +1178,7 @@ private fun VideoFiltersSheet(
     ) {
         Text(stringResource(R.string.video_refine_title), style = MaterialTheme.typography.titleMedium)
         Text(
-            "Focus",
+            stringResource(R.string.video_wp_filter_focus),
             style = MaterialTheme.typography.labelLarge,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
@@ -1201,7 +1202,7 @@ private fun VideoFiltersSheet(
         }
 
         Text(
-            "Quick searches",
+            stringResource(R.string.video_wp_filter_quick_searches),
             style = MaterialTheme.typography.labelLarge,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
