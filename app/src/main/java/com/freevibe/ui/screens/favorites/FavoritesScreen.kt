@@ -23,6 +23,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.CustomAccessibilityAction
 import androidx.compose.ui.semantics.ProgressBarRangeInfo
@@ -62,7 +63,11 @@ fun FavoritesScreen(
     var sortBy by rememberSaveable { mutableStateOf("recent") } // recent, name, oldest
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
-    val tabs = listOf("Wallpapers (${wallpapers.size})", "Sounds (${sounds.size})")
+    val context = LocalContext.current
+    val tabs = listOf(
+        stringResource(R.string.favorites_tab_wallpapers, wallpapers.size),
+        stringResource(R.string.favorites_tab_sounds, sounds.size),
+    )
 
     // -- Bulk selection state (wallpaper tab only in v1) --
     var selectionMode by remember { mutableStateOf(false) }
@@ -110,10 +115,10 @@ fun FavoritesScreen(
         Column(modifier = Modifier.fillMaxSize().padding(scaffoldPadding)) {
             if (selectionMode) {
                 TopAppBar(
-                    title = { Text("${selectedKeys.size} selected", style = MaterialTheme.typography.titleMedium) },
+                    title = { Text(stringResource(R.string.favorites_selection_count, selectedKeys.size), style = MaterialTheme.typography.titleMedium) },
                     navigationIcon = {
                         IconButton(onClick = { exitSelection() }) {
-                            Icon(Icons.Default.Close, contentDescription = "Exit selection")
+                            Icon(Icons.Default.Close, contentDescription = stringResource(R.string.favorites_exit_selection))
                         }
                     },
                     actions = {
@@ -125,7 +130,7 @@ fun FavoritesScreen(
                         }) {
                             Icon(
                                 if (allSelected) Icons.Default.Deselect else Icons.Default.SelectAll,
-                                contentDescription = if (allSelected) "Deselect all" else "Select all",
+                                contentDescription = stringResource(if (allSelected) R.string.favorites_deselect_all else R.string.favorites_select_all),
                             )
                         }
                         IconButton(
@@ -137,7 +142,11 @@ fun FavoritesScreen(
                         ) {
                             Icon(
                                 Icons.Default.CloudDownload,
-                                contentDescription = "Download ${selectedKeys.size} selected wallpaper${if (selectedKeys.size == 1) "" else "s"}",
+                                contentDescription = stringResource(
+                                    if (selectedKeys.size == 1) R.string.favorites_download_selected_one
+                                    else R.string.favorites_download_selected_many,
+                                    selectedKeys.size,
+                                ),
                             )
                         }
                         IconButton(
@@ -148,9 +157,15 @@ fun FavoritesScreen(
                                 viewModel.bulkDelete(snapshot)
                                 exitSelection()
                                 scope.launch {
+                                    val removedMsg = if (snapshot.size == 1) {
+                                        context.getString(R.string.favorites_removed_one, snapshot.size)
+                                    } else {
+                                        context.getString(R.string.favorites_removed_many, snapshot.size)
+                                    }
+                                    val undoLabel = context.getString(R.string.favorites_undo)
                                     val result = snackbarHostState.showSnackbar(
-                                        message = "Removed ${snapshot.size} favorite${if (snapshot.size == 1) "" else "s"}",
-                                        actionLabel = "Undo",
+                                        message = removedMsg,
+                                        actionLabel = undoLabel,
                                         duration = SnackbarDuration.Short,
                                     )
                                     if (result == SnackbarResult.ActionPerformed) {
@@ -163,7 +178,11 @@ fun FavoritesScreen(
                         ) {
                             Icon(
                                 Icons.Default.Delete,
-                                contentDescription = "Remove ${selectedKeys.size} selected favorite${if (selectedKeys.size == 1) "" else "s"}",
+                                contentDescription = stringResource(
+                                    if (selectedKeys.size == 1) R.string.favorites_remove_selected_one
+                                    else R.string.favorites_remove_selected_many,
+                                    selectedKeys.size,
+                                ),
                             )
                         }
                     },
@@ -349,11 +368,11 @@ fun FavoritesScreen(
                 0 -> {
                     if (sortedWallpapers.isEmpty()) {
                         EmptyState(
-                            title = "No favorite wallpapers yet",
-                            description = "Save wallpapers from detail, or restore a previous Aura backup to rebuild your personal library.",
+                            title = stringResource(R.string.favorites_empty_wallpapers_title),
+                            description = stringResource(R.string.favorites_empty_wallpapers_description),
                             icon = Icons.Default.Wallpaper,
                             primaryAction = AuraStateAction(
-                                label = "Import backup",
+                                label = stringResource(R.string.favorites_import_backup),
                                 icon = Icons.Default.Download,
                                 onClick = { importLauncher.launch(arrayOf("application/json")) },
                             ),
@@ -372,12 +391,12 @@ fun FavoritesScreen(
                                 val selectedDescription = stringResource(
                                     if (isSelected) R.string.a11y_selected else R.string.a11y_not_selected,
                                 )
-                                val openLabel = "Open ${favoriteDisplayName(fav)}"
-                                val selectionLabel = if (isSelected) {
-                                    "Deselect ${favoriteDisplayName(fav)}"
-                                } else {
-                                    "Select ${favoriteDisplayName(fav)}"
-                                }
+                                val displayName = favoriteDisplayName(fav)
+                                val openLabel = stringResource(R.string.favorites_open_item, displayName)
+                                val selectionLabel = stringResource(
+                                    if (isSelected) R.string.favorites_deselect_item else R.string.favorites_select_item,
+                                    displayName,
+                                )
                                 Card(
                                     modifier = Modifier
                                         .fillMaxWidth()
@@ -485,11 +504,11 @@ fun FavoritesScreen(
                 1 -> {
                     if (sortedSounds.isEmpty()) {
                         EmptyState(
-                            title = "No favorite sounds yet",
-                            description = "Save ringtones, notifications, and alarms here, or restore an Aura backup when moving devices.",
+                            title = stringResource(R.string.favorites_empty_sounds_title),
+                            description = stringResource(R.string.favorites_empty_sounds_description),
                             icon = Icons.Default.MusicNote,
                             primaryAction = AuraStateAction(
-                                label = "Import backup",
+                                label = stringResource(R.string.favorites_import_backup),
                                 icon = Icons.Default.Download,
                                 onClick = { importLauncher.launch(arrayOf("application/json")) },
                             ),
@@ -502,16 +521,19 @@ fun FavoritesScreen(
                             items(sortedSounds, key = { it.stableKey() }, contentType = { "favorite_card" }) { fav ->
                                 val sourceUnavailable = fav.isSourceUnavailable()
                                 val soundSummary = favoriteSoundSummary(fav, sourceUnavailable)
-                                val openLabel = "Open ${favoriteDisplayName(fav)}"
-                                val removeLabel = "Remove ${favoriteDisplayName(fav)}"
+                                val soundDisplayName = favoriteDisplayName(fav)
+                                val openLabel = stringResource(R.string.favorites_open_item, soundDisplayName)
+                                val removeLabel = stringResource(R.string.favorites_remove_item, soundDisplayName)
+                                val removedMsg = stringResource(R.string.favorites_removed_item, fav.name)
+                                val undoLabel = stringResource(R.string.favorites_undo)
                                 val dismissState = rememberSwipeToDismissBoxState(
                                     confirmValueChange = { value ->
                                         if (value != SwipeToDismissBoxValue.Settled) {
                                             viewModel.removeFavorite(fav)
                                             scope.launch {
                                                 val result = snackbarHostState.showSnackbar(
-                                                    message = "Removed ${fav.name}",
-                                                    actionLabel = "Undo",
+                                                    message = removedMsg,
+                                                    actionLabel = undoLabel,
                                                     duration = SnackbarDuration.Short,
                                                 )
                                                 if (result == SnackbarResult.ActionPerformed) {
@@ -549,7 +571,11 @@ fun FavoritesScreen(
                                         },
                                         modifier = Modifier.semantics(mergeDescendants = true) {
                                             contentDescription = soundSummary
-                                            stateDescription = if (sourceUnavailable) "Source unavailable" else "Saved sound"
+                                            stateDescription = if (sourceUnavailable) {
+                                                context.getString(R.string.favorites_state_source_unavailable)
+                                            } else {
+                                                context.getString(R.string.favorites_state_saved_sound)
+                                            }
                                             onClick(label = openLabel, action = null)
                                         },
                                         shape = RoundedCornerShape(8.dp),
@@ -568,14 +594,14 @@ fun FavoritesScreen(
                                                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                                                         if (fav.duration > 0) {
                                                             Text(
-                                                                "${fav.duration.toInt()}s",
+                                                                stringResource(R.string.favorites_duration_seconds, fav.duration.toInt()),
                                                                 style = MaterialTheme.typography.labelSmall,
                                                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                                                             )
                                                         }
                                                         if (sourceUnavailable) {
                                                             Text(
-                                                                "Source unavailable",
+                                                                stringResource(R.string.favorites_source_unavailable),
                                                                 style = MaterialTheme.typography.labelSmall,
                                                                 color = MaterialTheme.colorScheme.error,
                                                             )
