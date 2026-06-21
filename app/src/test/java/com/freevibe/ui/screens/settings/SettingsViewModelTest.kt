@@ -472,6 +472,9 @@ class SettingsViewModelTest {
             every { prefs.liveWallpaperDimEnabled } returns flowOf(false)
             every { prefs.soundProfilesJson } returns flowOf("")
             every { prefs.soundProfileLastAppliedId } returns flowOf("")
+            every { prefs.wallpaperPackEnabled } returns flowOf(false)
+            every { prefs.wallpaperPackJson } returns flowOf("")
+            every { prefs.wallpaperPackLastAppliedDaypart } returns flowOf("")
             // Added in v6.13/v6.14 — these StateFlow-backed VM fields fail-fast on
             // first collection if not stubbed. Pre-existing test fixture gap caught
             // during a deeper audit pass.

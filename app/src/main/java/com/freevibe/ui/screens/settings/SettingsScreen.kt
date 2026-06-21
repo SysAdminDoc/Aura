@@ -211,6 +211,8 @@ fun SettingsScreen(
     val soundProfilesEnabled by viewModel.soundProfilesEnabled.collectAsStateWithLifecycle()
     val liveWallpaperDimEnabled by viewModel.liveWallpaperDimEnabled.collectAsStateWithLifecycle()
     val soundProfilesJson by viewModel.soundProfilesJson.collectAsStateWithLifecycle()
+    val wallpaperPackEnabled by viewModel.wallpaperPackEnabled.collectAsStateWithLifecycle()
+    val wallpaperPackJson by viewModel.wallpaperPackJson.collectAsStateWithLifecycle()
     val preferredRes by viewModel.preferredRes.collectAsStateWithLifecycle()
     val userStyles by viewModel.userStyles.collectAsStateWithLifecycle()
     val schedulerEnabled by viewModel.schedulerEnabled.collectAsStateWithLifecycle()
@@ -783,6 +785,20 @@ fun SettingsScreen(
                 subtitle = stringResource(R.string.settings_wp_avoid_repeats_subtitle),
                 checked = avoidRecentRepeats,
                 onCheckedChange = { viewModel.setAvoidRecentRepeats(it) },
+            )
+            val packSlotCount = remember(wallpaperPackJson) {
+                com.freevibe.service.parsePack(wallpaperPackJson)?.slots?.size ?: 0
+            }
+            SettingsToggle(
+                icon = Icons.Default.WbTwilight,
+                title = stringResource(R.string.settings_wp_pack_title),
+                subtitle = if (wallpaperPackEnabled) {
+                    stringResource(R.string.settings_wp_pack_on_subtitle, packSlotCount)
+                } else {
+                    stringResource(R.string.settings_wp_pack_off_subtitle)
+                },
+                checked = wallpaperPackEnabled,
+                onCheckedChange = { viewModel.setWallpaperPackEnabled(it) },
             )
             SettingsToggle(
                 icon = Icons.Default.Schedule,

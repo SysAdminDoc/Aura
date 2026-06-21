@@ -161,6 +161,8 @@ class SettingsViewModel @Inject constructor(
     val soundProfilesEnabled = prefs.soundProfilesEnabled.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
     val liveWallpaperDimEnabled = prefs.liveWallpaperDimEnabled.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
     val soundProfilesJson = prefs.soundProfilesJson.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), "")
+    val wallpaperPackEnabled = prefs.wallpaperPackEnabled.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
+    val wallpaperPackJson = prefs.wallpaperPackJson.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), "")
     val redditSubs = prefs.redditSubreddits.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), "wallpapers,MobileWallpaper,MinimalWallpaper")
     val redditProviderEnabled = prefs.redditProviderEnabled.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
     val preferredRes = prefs.preferredResolution.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), "")
@@ -511,6 +513,20 @@ class SettingsViewModel @Inject constructor(
     fun setSoundProfilesJson(json: String) = viewModelScope.launch {
         prefs.setSoundProfilesJson(json)
         prefs.setSoundProfileLastAppliedId("")
+    }
+
+    fun setWallpaperPackEnabled(enabled: Boolean) = viewModelScope.launch {
+        prefs.setWallpaperPackEnabled(enabled)
+        if (enabled) {
+            com.freevibe.service.WallpaperPackWorker.schedule(context)
+        } else {
+            com.freevibe.service.WallpaperPackWorker.cancel(context)
+        }
+    }
+
+    fun setWallpaperPackJson(json: String) = viewModelScope.launch {
+        prefs.setWallpaperPackJson(json)
+        prefs.setWallpaperPackLastAppliedDaypart("")
     }
 
     fun setRedditSubs(subs: String) = viewModelScope.launch {

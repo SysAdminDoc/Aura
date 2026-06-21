@@ -174,6 +174,14 @@ class PreferencesManager @Inject constructor(
     val soundProfileLastAppliedId: Flow<String> = get(Keys.SOUND_PROFILE_LAST_APPLIED_ID, "")
     suspend fun setSoundProfileLastAppliedId(id: String) = set(Keys.SOUND_PROFILE_LAST_APPLIED_ID, id)
 
+    // Wallpaper packs (24H)
+    val wallpaperPackEnabled: Flow<Boolean> = get(Keys.WALLPAPER_PACK_ENABLED, false)
+    suspend fun setWallpaperPackEnabled(v: Boolean) = set(Keys.WALLPAPER_PACK_ENABLED, v)
+    val wallpaperPackJson: Flow<String> = get(Keys.WALLPAPER_PACK_JSON, "")
+    suspend fun setWallpaperPackJson(json: String) = set(Keys.WALLPAPER_PACK_JSON, json)
+    val wallpaperPackLastAppliedDaypart: Flow<String> = get(Keys.WALLPAPER_PACK_LAST_DAYPART, "")
+    suspend fun setWallpaperPackLastAppliedDaypart(daypart: String) = set(Keys.WALLPAPER_PACK_LAST_DAYPART, daypart)
+
     // Live wallpaper dimming
     val liveWallpaperDimEnabled: Flow<Boolean> = get(Keys.LIVE_WALLPAPER_DIM_ENABLED, false)
     suspend fun setLiveWallpaperDimEnabled(v: Boolean) = set(Keys.LIVE_WALLPAPER_DIM_ENABLED, v)
@@ -398,6 +406,9 @@ class PreferencesManager @Inject constructor(
         val RINGTONE_SHUFFLE_LAST_APPLIED_ID = stringPreferencesKey("ringtone_shuffle_last_applied_id")
         val ALARM_SHUFFLE_ENABLED = booleanPreferencesKey("alarm_shuffle_enabled")
         val ALARM_SHUFFLE_LAST_APPLIED_ID = stringPreferencesKey("alarm_shuffle_last_applied_id")
+        val WALLPAPER_PACK_ENABLED = booleanPreferencesKey("wallpaper_pack_enabled")
+        val WALLPAPER_PACK_JSON = stringPreferencesKey("wallpaper_pack_json")
+        val WALLPAPER_PACK_LAST_DAYPART = stringPreferencesKey("wallpaper_pack_last_daypart")
         val LIVE_WALLPAPER_DIM_ENABLED = booleanPreferencesKey("live_wallpaper_dim_enabled")
         val SOUND_PROFILES_ENABLED = booleanPreferencesKey("sound_profiles_enabled")
         val SOUND_PROFILES_JSON = stringPreferencesKey("sound_profiles_json")

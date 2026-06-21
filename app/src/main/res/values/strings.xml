@@ -1076,4 +1076,9 @@
     <string name="settings_sounds_profiles_title">Time-of-day sound profiles</string>
     <string name="settings_sounds_profiles_on_subtitle">%1$d profile(s) active — sounds change by schedule</string>
     <string name="settings_sounds_profiles_off_subtitle">Assign different ringtone, notification, and alarm sounds to time slots</string>
+
+    <!-- Wallpaper packs (24H) -->
+    <string name="settings_wp_pack_title">24H wallpaper pack</string>
+    <string name="settings_wp_pack_on_subtitle">%1$d daypart slot(s) — wallpaper changes by time of day</string>
+    <string name="settings_wp_pack_off_subtitle">Map different wallpapers to morning, day, evening, and night</string>
 </resources>
