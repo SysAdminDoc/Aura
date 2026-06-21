@@ -121,8 +121,6 @@ class WallpapersViewModel @Inject constructor(
     val sharedWallpaperList = selectedContent.wallpaperList
     val sharedWallpaperListAnchorKey = selectedContent.wallpaperListAnchorKey
 
-    val activeDownloads = downloadManager.activeDownloads
-
     // #9: Grid columns preference
     val gridColumns = prefs.wallpaperGridColumns.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 2)
     val wallhavenProviderEnabled = prefs.wallhavenProviderEnabled.stateIn(viewModelScope, SharingStarted.Eagerly, true)
@@ -156,6 +154,19 @@ class WallpapersViewModel @Inject constructor(
     /** Top community-upvoted wallpapers (resolved from cache) */
     private val _topVoted = MutableStateFlow<List<Pair<Wallpaper, Int>>>(emptyList())
     val topVoted = _topVoted.asStateFlow()
+
+    internal val applyActions = WallpaperApplyActions(
+        wallpaperApplier = wallpaperApplier,
+        downloadManager = downloadManager,
+        dualWallpaperService = dualWallpaperService,
+        historyManager = historyManager,
+        favoritesRepo = favoritesRepo,
+        offlineFavorites = offlineFavorites,
+        aiWallpaperRepository = aiWallpaperRepository,
+        applyFeedbackBus = applyFeedbackBus,
+        state = _state,
+        scope = viewModelScope,
+    )
 
     internal val community = WallpaperCommunityActions(
         voteRepo = voteRepo,
@@ -477,153 +488,18 @@ class WallpapersViewModel @Inject constructor(
         selectedContent.updateSelectedWallpaper(wallpaper)
     }
 
-    fun applyWallpaper(wallpaper: Wallpaper, target: WallpaperTarget) {
-        viewModelScope.launch {
-            _state.update { it.copy(isApplying = true, applySuccess = null) }
-            wallpaperApplier.applyFromUrl(wallpaper.fullUrl, target)
-                .onSuccess {
-                    historyManager.record(wallpaper, target)
-                    // Capture the previous entry AFTER recording so index 1 is the wallpaper
-                    // that was active before this apply — that's what Undo should restore to.
-                    // Capturing before record() would give index 2 (two hops back), not one.
-                    val undoTarget = historyManager.previousSnapshot()
-                    val label = when (target) {
-                        WallpaperTarget.HOME -> "home screen"
-                        WallpaperTarget.LOCK -> "lock screen"
-                        WallpaperTarget.BOTH -> "home & lock screen"
-                    }
-                    _state.update { it.copy(isApplying = false, applySuccess = "Set as $label wallpaper") }
-                    applyFeedbackBus.post(
-                        ApplyFeedbackEvent(
-                            message = "Applied to $label",
-                            undoTarget = undoTarget,
-                        )
-                    )
-                }
-                .onFailure { e ->
-                    markWallpaperSourceUnavailableIfRemoved(wallpaper, e)
-                    _state.update { it.copy(isApplying = false, error = e.message) }
-                }
-        }
-    }
+    // -- Apply/Download/Favorite operations delegated to WallpaperApplyActions --
 
-    /**
-     * Restore a previously-applied wallpaper (used by the global "Undo" snackbar).
-     * Does not emit a new Undo event — we don't want undo-of-undo recursion.
-     */
-    fun undoApply(entry: com.freevibe.data.model.WallpaperHistoryEntity) {
-        viewModelScope.launch {
-            _state.update { it.copy(isApplying = true) }
-            val target = runCatching { WallpaperTarget.valueOf(entry.target) }
-                .getOrDefault(WallpaperTarget.BOTH)
-            wallpaperApplier.applyFromUrl(entry.fullUrl, target)
-                .onSuccess {
-                    _state.update { it.copy(isApplying = false, applySuccess = "Reverted") }
-                    applyFeedbackBus.post(ApplyFeedbackEvent(message = "Reverted to previous wallpaper", undoTarget = null))
-                }
-                .onFailure { e ->
-                    _state.update { it.copy(isApplying = false, error = "Undo failed: ${e.message}") }
-                }
-        }
-    }
-
-    fun applySplitCrop(wallpaper: Wallpaper) {
-        viewModelScope.launch {
-            _state.update { it.copy(isApplying = true, applySuccess = null) }
-            dualWallpaperService.applySplitCrop(wallpaper)
-                .onSuccess {
-                    historyManager.record(wallpaper, WallpaperTarget.BOTH)
-                    _state.update { it.copy(isApplying = false, applySuccess = "Split crop applied to home & lock") }
-                }
-                .onFailure { e ->
-                    _state.update { it.copy(isApplying = false, error = e.message) }
-                }
-        }
-    }
-
-    fun applyParallax(wallpaper: Wallpaper) {
-        viewModelScope.launch {
-            _state.update { it.copy(isApplying = true, applySuccess = null) }
-            val ext = guessImageExtension(wallpaper.fileType, wallpaper.fullUrl)
-            wallpaperApplier.prepareParallaxWallpaper(wallpaper.fullUrl, "parallax_wp.$ext")
-                .onSuccess {
-                    _state.update { it.copy(isApplying = false, pendingLiveWallpaperLaunch = true) }
-                }
-                .onFailure { e ->
-                    _state.update { it.copy(isApplying = false, error = e.message) }
-                }
-        }
-    }
-
-    fun clearPendingLaunch() = _state.update { it.copy(pendingLiveWallpaperLaunch = false) }
-
-    fun downloadWallpaper(wallpaper: Wallpaper) {
-        viewModelScope.launch {
-            val ext = guessImageExtension(wallpaper.fileType, wallpaper.fullUrl)
-            downloadManager.downloadWallpaper(
-                id = wallpaper.stableKey(),
-                url = wallpaper.fullUrl,
-                fileName = buildWallpaperDownloadFileName(wallpaper, ext),
-                source = wallpaper.source.name,
-            ).onFailure { error ->
-                markWallpaperSourceUnavailableIfRemoved(wallpaper, error)
-                _state.update { it.copy(error = error.message) }
-            }
-        }
-    }
-
-    private fun guessImageExtension(fileType: String, url: String): String {
-        // Check MIME type first
-        if (fileType.isNotBlank()) {
-            return when {
-                fileType.contains("png", true) -> "png"
-                fileType.contains("webp", true) -> "webp"
-                fileType.contains("gif", true) -> "gif"
-                else -> "jpg"
-            }
-        }
-        // Fallback to URL extension
-        val path = url.substringBefore("?").substringBefore("#").lowercase(java.util.Locale.ROOT)
-        return when {
-            path.endsWith(".png") -> "png"
-            path.endsWith(".webp") -> "webp"
-            path.endsWith(".gif") -> "gif"
-            else -> "jpg"
-        }
-    }
-
-    fun dismissDownload(id: String) {
-        downloadManager.clearCompleted(id)
-    }
-
-    fun toggleFavorite(wallpaper: Wallpaper) {
-        viewModelScope.launch {
-            val entity = wallpaper.toFavoriteEntity()
-            val isFav = favoritesRepo.isFavorite(wallpaper.favoriteIdentity()).first()
-            favoritesRepo.toggle(entity, isFav)
-            // #3: Cache offline when favoriting
-            if (!isFav) {
-                offlineFavorites.cacheOffline(entity, wallpaper.fullUrl)
-            } else {
-                offlineFavorites.removeOffline(entity)
-                if (wallpaper.source == ContentSource.AI_GENERATED) {
-                    aiWallpaperRepository.deleteGeneratedWallpaper(wallpaper.fullUrl)
-                    if (wallpaper.thumbnailUrl != wallpaper.fullUrl) {
-                        aiWallpaperRepository.deleteGeneratedWallpaper(wallpaper.thumbnailUrl)
-                    }
-                }
-            }
-            _state.update { it.copy(applySuccess = if (isFav) "Removed from favorites" else "Added to favorites") }
-        }
-    }
-
-    fun isFavorite(wallpaper: Wallpaper): Flow<Boolean> = favoritesRepo.isFavorite(wallpaper.favoriteIdentity())
-
-    private suspend fun markWallpaperSourceUnavailableIfRemoved(wallpaper: Wallpaper, failure: Throwable) {
-        sourceUnavailableReasonForFailure(wallpaper.source, failure)?.let { reason ->
-            favoritesRepo.markSourceUnavailable(wallpaper.favoriteIdentity(), reason)
-        }
-    }
+    val activeDownloads = applyActions.activeDownloads
+    fun applyWallpaper(wallpaper: Wallpaper, target: WallpaperTarget) = applyActions.applyWallpaper(wallpaper, target)
+    fun undoApply(entry: com.freevibe.data.model.WallpaperHistoryEntity) = applyActions.undoApply(entry)
+    fun applySplitCrop(wallpaper: Wallpaper) = applyActions.applySplitCrop(wallpaper)
+    fun applyParallax(wallpaper: Wallpaper) = applyActions.applyParallax(wallpaper)
+    fun clearPendingLaunch() = applyActions.clearPendingLaunch()
+    fun downloadWallpaper(wallpaper: Wallpaper) = applyActions.downloadWallpaper(wallpaper)
+    fun dismissDownload(id: String) = applyActions.dismissDownload(id)
+    fun toggleFavorite(wallpaper: Wallpaper) = applyActions.toggleFavorite(wallpaper)
+    fun isFavorite(wallpaper: Wallpaper): Flow<Boolean> = applyActions.isFavorite(wallpaper)
 
     fun clearError() = _state.update { it.copy(error = null, errorSource = null) }
     fun clearSuccess() = _state.update { it.copy(applySuccess = null) }
