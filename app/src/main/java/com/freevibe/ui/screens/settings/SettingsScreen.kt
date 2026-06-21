@@ -209,6 +209,7 @@ fun SettingsScreen(
     val ringtoneShuffleIntervalHours by viewModel.ringtoneShuffleIntervalHours.collectAsStateWithLifecycle()
     val alarmShuffleEnabled by viewModel.alarmShuffleEnabled.collectAsStateWithLifecycle()
     val soundProfilesEnabled by viewModel.soundProfilesEnabled.collectAsStateWithLifecycle()
+    val liveWallpaperDimEnabled by viewModel.liveWallpaperDimEnabled.collectAsStateWithLifecycle()
     val soundProfilesJson by viewModel.soundProfilesJson.collectAsStateWithLifecycle()
     val preferredRes by viewModel.preferredRes.collectAsStateWithLifecycle()
     val userStyles by viewModel.userStyles.collectAsStateWithLifecycle()
@@ -1394,6 +1395,13 @@ fun SettingsScreen(
                 subtitle = stringResource(R.string.settings_smart_reduce_subtitle),
                 checked = reduceAnimations,
                 onCheckedChange = { viewModel.setReduceAnimations(it) },
+            )
+            SettingsToggle(
+                icon = Icons.Default.Brightness6,
+                title = stringResource(R.string.settings_smart_dim_title),
+                subtitle = stringResource(R.string.settings_smart_dim_subtitle),
+                checked = liveWallpaperDimEnabled,
+                onCheckedChange = { viewModel.setLiveWallpaperDimEnabled(it) },
             )
             // Dark/light mode wallpaper pickers.
             // Earlier revision bailed silently when wallpaperHistory was empty, leaving the

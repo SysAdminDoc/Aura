@@ -159,6 +159,7 @@ class SettingsViewModel @Inject constructor(
     val ringtoneShuffleIntervalHours = prefs.ringtoneShuffleIntervalHours.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 24L)
     val alarmShuffleEnabled = prefs.alarmShuffleEnabled.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
     val soundProfilesEnabled = prefs.soundProfilesEnabled.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
+    val liveWallpaperDimEnabled = prefs.liveWallpaperDimEnabled.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
     val soundProfilesJson = prefs.soundProfilesJson.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), "")
     val redditSubs = prefs.redditSubreddits.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), "wallpapers,MobileWallpaper,MinimalWallpaper")
     val redditProviderEnabled = prefs.redditProviderEnabled.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
@@ -675,6 +676,11 @@ class SettingsViewModel @Inject constructor(
         prefs.setAdaptiveTintIntensity(intensity)
         context.getSharedPreferences("freevibe_weather_wp", android.content.Context.MODE_PRIVATE)
             .edit().putFloat("adaptive_tint_intensity", intensity).apply()
+    }
+    fun setLiveWallpaperDimEnabled(enabled: Boolean) = viewModelScope.launch {
+        prefs.setLiveWallpaperDimEnabled(enabled)
+        context.getSharedPreferences("freevibe_weather_wp", android.content.Context.MODE_PRIVATE)
+            .edit().putBoolean("live_wallpaper_dim_enabled", enabled).apply()
     }
     fun setStabilityKey(key: String) = viewModelScope.launch { prefs.setStabilityKey(key) }
     fun setGeneratedContentProviderEnabled(enabled: Boolean) =

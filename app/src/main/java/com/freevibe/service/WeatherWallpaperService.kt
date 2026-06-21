@@ -40,6 +40,7 @@ class WeatherWallpaperService : WallpaperService() {
         private var reducedMotion = false
 
         // Adaptive tint state
+        private var dimEnabled = false
         private var tintEnabled = false
         private var tintIntensity = 0.3f
         private var tintLat = 0.0
@@ -56,6 +57,9 @@ class WeatherWallpaperService : WallpaperService() {
         private var lastDrawReceiptMs = 0L
         private val drawRunner = Runnable { draw() }
         private fun weatherPrefs() = getSharedPreferences("freevibe_weather_wp", MODE_PRIVATE)
+        private val dimming = LiveWallpaperDimming(
+            onRevealChanged = { if (visible) handler.post(drawRunner) },
+        )
 
         override fun onSurfaceCreated(holder: SurfaceHolder) {
             super.onSurfaceCreated(holder)
@@ -79,6 +83,7 @@ class WeatherWallpaperService : WallpaperService() {
             loadVfxFromPrefs()
             loadTouchEffectsFromPrefs()
             loadAdaptiveTintFromPrefs()
+            loadDimmingFromPrefs()
             if (visible) scheduleDraw()
         }
 
@@ -92,6 +97,7 @@ class WeatherWallpaperService : WallpaperService() {
                 loadVfxFromPrefs()
                 loadTouchEffectsFromPrefs()
                 loadAdaptiveTintFromPrefs()
+                loadDimmingFromPrefs()
                 scheduleDraw()
             } else {
                 handler.removeCallbacks(drawRunner)
@@ -100,6 +106,7 @@ class WeatherWallpaperService : WallpaperService() {
 
         override fun onTouchEvent(event: MotionEvent) {
             super.onTouchEvent(event)
+            if (dimEnabled) dimming.onTouchEvent(event)
             when (event.actionMasked) {
                 MotionEvent.ACTION_DOWN,
                 MotionEvent.ACTION_POINTER_DOWN -> {
@@ -210,6 +217,10 @@ class WeatherWallpaperService : WallpaperService() {
             }
         }
 
+        private fun loadDimmingFromPrefs() {
+            dimEnabled = weatherPrefs().getBoolean("live_wallpaper_dim_enabled", false)
+        }
+
         private fun loadAdaptiveTintFromPrefs() {
             val prefs = weatherPrefs()
             tintEnabled = prefs.getBoolean("adaptive_tint_enabled", false)
@@ -304,6 +315,11 @@ class WeatherWallpaperService : WallpaperService() {
 
                         touchRenderer?.update()
                         touchRenderer?.draw(canvas)
+                    }
+
+                    if (dimEnabled) {
+                        dimming.tick()
+                        dimming.drawDimOverlay(canvas, canvas.width, canvas.height)
                     }
                 }
             } catch (_: Exception) {

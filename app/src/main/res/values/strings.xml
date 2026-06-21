@@ -1068,6 +1068,10 @@
     <string name="wallpapers_card_badge_amoled">AMOLED</string>
     <string name="wallpapers_card_badge_icon_safe">Icon-safe</string>
 
+    <!-- Live wallpaper dimming -->
+    <string name="settings_smart_dim_title">Dim behind icons</string>
+    <string name="settings_smart_dim_subtitle">Reduce live wallpaper brightness for icon readability; double-tap to reveal full image</string>
+
     <!-- Sound profiles -->
     <string name="settings_sounds_profiles_title">Time-of-day sound profiles</string>
     <string name="settings_sounds_profiles_on_subtitle">%1$d profile(s) active — sounds change by schedule</string>

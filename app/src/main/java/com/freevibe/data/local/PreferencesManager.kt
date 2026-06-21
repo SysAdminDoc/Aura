@@ -174,6 +174,10 @@ class PreferencesManager @Inject constructor(
     val soundProfileLastAppliedId: Flow<String> = get(Keys.SOUND_PROFILE_LAST_APPLIED_ID, "")
     suspend fun setSoundProfileLastAppliedId(id: String) = set(Keys.SOUND_PROFILE_LAST_APPLIED_ID, id)
 
+    // Live wallpaper dimming
+    val liveWallpaperDimEnabled: Flow<Boolean> = get(Keys.LIVE_WALLPAPER_DIM_ENABLED, false)
+    suspend fun setLiveWallpaperDimEnabled(v: Boolean) = set(Keys.LIVE_WALLPAPER_DIM_ENABLED, v)
+
     val lastAppliedRingtoneUri: kotlinx.coroutines.flow.Flow<String> = get(Keys.LAST_APPLIED_RINGTONE_URI, "")
     suspend fun setLastAppliedRingtoneUri(uri: String) = set(Keys.LAST_APPLIED_RINGTONE_URI, uri)
     val lastAppliedNotificationUri: kotlinx.coroutines.flow.Flow<String> = get(Keys.LAST_APPLIED_NOTIFICATION_URI, "")
@@ -394,6 +398,7 @@ class PreferencesManager @Inject constructor(
         val RINGTONE_SHUFFLE_LAST_APPLIED_ID = stringPreferencesKey("ringtone_shuffle_last_applied_id")
         val ALARM_SHUFFLE_ENABLED = booleanPreferencesKey("alarm_shuffle_enabled")
         val ALARM_SHUFFLE_LAST_APPLIED_ID = stringPreferencesKey("alarm_shuffle_last_applied_id")
+        val LIVE_WALLPAPER_DIM_ENABLED = booleanPreferencesKey("live_wallpaper_dim_enabled")
         val SOUND_PROFILES_ENABLED = booleanPreferencesKey("sound_profiles_enabled")
         val SOUND_PROFILES_JSON = stringPreferencesKey("sound_profiles_json")
         val SOUND_PROFILE_LAST_APPLIED_ID = stringPreferencesKey("sound_profile_last_applied_id")
