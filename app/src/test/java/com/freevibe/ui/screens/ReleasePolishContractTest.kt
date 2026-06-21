@@ -18,8 +18,8 @@ class ReleasePolishContractTest {
 
     @Test
     fun `settings overview active setup is a complete sentence`() {
-        val source = File("src/main/java/com/freevibe/ui/screens/settings/SettingsScreen.kt").readText()
-        val overview = source.substringAfter("private fun SettingsOverviewCard(").substringBefore("private fun SettingsMetric(")
+        val source = File("src/main/java/com/freevibe/ui/screens/settings/SettingsDialogs.kt").readText()
+        val overview = source.substringAfter("internal fun SettingsOverviewCard(")
 
         assertTrue(overview.contains("\"Active setup: ${'$'}{enabled.joinToString("))
         assertTrue(overview.contains("if (enabled.isEmpty())"))
