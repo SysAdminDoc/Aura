@@ -21,8 +21,11 @@ class ReleasePolishContractTest {
         val source = File("src/main/java/com/freevibe/ui/screens/settings/SettingsDialogs.kt").readText()
         val overview = source.substringAfter("internal fun SettingsOverviewCard(")
 
-        assertTrue(overview.contains("\"Active setup: ${'$'}{enabled.joinToString("))
-        assertTrue(overview.contains("if (enabled.isEmpty())"))
+        assertTrue(
+            "SettingsOverviewCard must reference both the active summary and the empty-state string resource",
+            overview.contains("settings_dialogs_overview_active_summary") &&
+                overview.contains(".isEmpty()"),
+        )
     }
 
     @Test

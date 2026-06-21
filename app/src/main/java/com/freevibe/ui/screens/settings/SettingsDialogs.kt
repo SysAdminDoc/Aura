@@ -42,8 +42,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import com.freevibe.R
 import com.freevibe.data.model.WALLPAPER_SOURCE_LOCAL_FOLDER
 import com.freevibe.data.repository.CommunityBlockedUser
 import com.freevibe.service.CommunityIdentitySummary
@@ -73,7 +75,7 @@ internal fun CommunityIdentityDialog(
 ) {
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Community identity") },
+        title = { Text(stringResource(R.string.settings_dialogs_identity_title)) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 Text(
@@ -81,43 +83,43 @@ internal fun CommunityIdentityDialog(
                     style = MaterialTheme.typography.titleSmall,
                 )
                 Text(
-                    "Identity suffix: ${communityIdentitySuffixLabel(summary)}",
+                    stringResource(R.string.settings_dialogs_identity_suffix, communityIdentitySuffixLabel(summary)),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
                 if (summary.deletionRequestCode.isNotBlank()) {
                     Text(
-                        "Deletion request code: ${summary.deletionRequestCode}",
+                        stringResource(R.string.settings_dialogs_identity_deletion_code, summary.deletionRequestCode),
                         style = MaterialTheme.typography.bodyMedium,
                     )
                 } else {
                     Text(
-                        "No backend deletion request code is available until a Firebase identity exists.",
+                        stringResource(R.string.settings_dialogs_identity_no_deletion_code),
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
                 Text(
-                    "Deletion planning covers vote markers, follows, block rows, shares, and local community caches. Public uploads, moderation records, and Firebase Auth deletion use the retained-data review path.",
+                    stringResource(R.string.settings_dialogs_identity_deletion_planning),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
                 Text(
-                    "Clear local only removes this device's fallback community identity. It does not delete backend, Auth, or public upload records.",
+                    stringResource(R.string.settings_dialogs_identity_clear_local_info),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
         },
         confirmButton = {
-            TextButton(onClick = onDismiss) { Text("Close") }
+            TextButton(onClick = onDismiss) { Text(stringResource(R.string.common_close)) }
         },
         dismissButton = {
             FlowRow(
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                 verticalArrangement = Arrangement.spacedBy(4.dp),
             ) {
-                TextButton(onClick = onRefresh) { Text("Refresh") }
+                TextButton(onClick = onRefresh) { Text(stringResource(R.string.common_refresh)) }
                 TextButton(
                     onClick = onClearLocal,
                     enabled = !cleanupBusy,
@@ -128,15 +130,15 @@ internal fun CommunityIdentityDialog(
                             strokeWidth = 2.dp,
                         )
                     } else {
-                        Text("Clear local")
+                        Text(stringResource(R.string.settings_dialogs_identity_clear_local))
                     }
                 }
                 if (summary.deletionRequestCode.isNotBlank()) {
                     TextButton(onClick = { onCopyCode(summary.deletionRequestCode) }) {
-                        Text("Copy code")
+                        Text(stringResource(R.string.settings_dialogs_identity_copy_code))
                     }
                     TextButton(onClick = { onShareRequest(summary) }) {
-                        Text("Share")
+                        Text(stringResource(R.string.settings_dialogs_identity_share))
                     }
                 }
             }
@@ -155,11 +157,11 @@ internal fun BlockedCreatorsDialog(
 ) {
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Blocked creators") },
+        title = { Text(stringResource(R.string.settings_dialogs_blocked_title)) },
         text = {
             if (blockedCreators.isEmpty()) {
                 Text(
-                    "No community creators are hidden for your account.",
+                    stringResource(R.string.settings_dialogs_blocked_empty),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
@@ -211,7 +213,7 @@ internal fun BlockedCreatorsDialog(
                                             strokeWidth = 2.dp,
                                         )
                                     } else {
-                                        Text("Unblock")
+                                        Text(stringResource(R.string.settings_dialogs_blocked_unblock))
                                     }
                                 }
                             }
@@ -221,7 +223,7 @@ internal fun BlockedCreatorsDialog(
             }
         },
         confirmButton = {
-            TextButton(onClick = onDismiss) { Text("Close") }
+            TextButton(onClick = onDismiss) { Text(stringResource(R.string.common_close)) }
         },
     )
 }
@@ -234,12 +236,18 @@ internal fun IntervalPickerDialog(
     onDismiss: () -> Unit,
     onSelect: (Long) -> Unit,
 ) {
-    val intervals = listOf(1L to "1 hour", 3L to "3 hours", 6L to "6 hours",
-        12L to "12 hours", 24L to "24 hours", 48L to "2 days")
+    val intervals = listOf(
+        1L to stringResource(R.string.settings_dialogs_interval_1h),
+        3L to stringResource(R.string.settings_dialogs_interval_3h),
+        6L to stringResource(R.string.settings_dialogs_interval_6h),
+        12L to stringResource(R.string.settings_dialogs_interval_12h),
+        24L to stringResource(R.string.settings_dialogs_interval_24h),
+        48L to stringResource(R.string.settings_dialogs_interval_2d),
+    )
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Wallpaper change interval") },
+        title = { Text(stringResource(R.string.settings_dialogs_interval_title)) },
         text = {
             Column {
                 intervals.forEach { (hours, label) ->
@@ -252,7 +260,7 @@ internal fun IntervalPickerDialog(
             }
         },
         confirmButton = {
-            TextButton(onClick = onDismiss) { Text("Cancel") }
+            TextButton(onClick = onDismiss) { Text(stringResource(R.string.common_cancel)) }
         },
     )
 }
@@ -273,12 +281,12 @@ internal fun WallpaperSlotPickerDialog(
             if (history.isEmpty()) {
                 Column(modifier = Modifier.padding(vertical = 8.dp)) {
                     Text(
-                        "No wallpapers applied yet",
+                        stringResource(R.string.settings_dialogs_slot_empty_title),
                         style = MaterialTheme.typography.titleSmall,
                     )
                     Spacer(Modifier.height(6.dp))
                     Text(
-                        "Apply at least one wallpaper from the Wallpapers tab and it will show up here as a slot option.",
+                        stringResource(R.string.settings_dialogs_slot_empty_body),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
@@ -311,7 +319,7 @@ internal fun WallpaperSlotPickerDialog(
             }
         },
         confirmButton = {
-            TextButton(onClick = onDismiss) { Text("Close") }
+            TextButton(onClick = onDismiss) { Text(stringResource(R.string.common_close)) }
         },
     )
 }
@@ -332,12 +340,12 @@ internal fun SourcePickerDialog(
 ) {
     val localFolderReady = isLocalWallpaperFolderReady(localFolderUri, localFolderPermissionActive)
     val sources = listOf(
-        "discover" to "Discover (mixed)",
-        "favorites" to "My Favorites",
-        WALLPAPER_SOURCE_LOCAL_FOLDER to if (localFolderReady) "Local folder" else "Local folder (choose folder)",
-        "wallhaven" to "Wallhaven",
-        "pixabay" to "Pixabay",
-        "bing" to "Bing Daily",
+        "discover" to stringResource(R.string.settings_dialogs_source_discover),
+        "favorites" to stringResource(R.string.settings_dialogs_source_favorites),
+        WALLPAPER_SOURCE_LOCAL_FOLDER to if (localFolderReady) stringResource(R.string.settings_dialogs_source_local_folder) else stringResource(R.string.settings_dialogs_source_local_folder_choose),
+        "wallhaven" to stringResource(R.string.settings_dialogs_source_wallhaven),
+        "pixabay" to stringResource(R.string.settings_dialogs_source_pixabay),
+        "bing" to stringResource(R.string.settings_dialogs_source_bing),
     ).filter { (key, _) ->
         when (key) {
             "wallhaven" -> wallhavenProviderEnabled || currentSource == "wallhaven"
@@ -349,7 +357,7 @@ internal fun SourcePickerDialog(
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Auto-wallpaper source") },
+        title = { Text(stringResource(R.string.settings_dialogs_source_title)) },
         text = {
             Column {
                 sources.forEach { (key, label) ->
@@ -370,7 +378,7 @@ internal fun SourcePickerDialog(
             }
         },
         confirmButton = {
-            TextButton(onClick = onDismiss) { Text("Cancel") }
+            TextButton(onClick = onDismiss) { Text(stringResource(R.string.common_cancel)) }
         },
     )
 }
@@ -501,16 +509,16 @@ internal fun VideoBatteryDashboardCard(
     state: VideoBatteryDashboardState,
     modifier: Modifier = Modifier,
 ) {
-    val batteryLabel = state.batteryPercent?.let { "$it%" } ?: "Unknown"
+    val batteryLabel = state.batteryPercent?.let { "$it%" } ?: stringResource(R.string.settings_dialogs_battery_unknown)
     val serviceLabel = when {
-        state.serviceVisible -> "Active"
-        state.serviceFresh -> "Paused"
-        else -> "No heartbeat"
+        state.serviceVisible -> stringResource(R.string.settings_dialogs_battery_active)
+        state.serviceFresh -> stringResource(R.string.settings_dialogs_battery_paused)
+        else -> stringResource(R.string.settings_dialogs_battery_no_heartbeat)
     }
     val mediaLabel = when (state.mediaType) {
-        "gif" -> "GIF"
-        "video" -> "Video"
-        else -> "Idle"
+        "gif" -> stringResource(R.string.settings_dialogs_battery_gif)
+        "video" -> stringResource(R.string.settings_dialogs_battery_video)
+        else -> stringResource(R.string.settings_dialogs_battery_idle)
     }
     Surface(
         modifier = modifier,
@@ -543,7 +551,7 @@ internal fun VideoBatteryDashboardCard(
                     )
                 }
                 Column(modifier = Modifier.weight(1f)) {
-                    Text("Battery dashboard", style = MaterialTheme.typography.titleMedium)
+                    Text(stringResource(R.string.settings_dialogs_battery_title), style = MaterialTheme.typography.titleMedium)
                     Text(
                         videoBatteryImpactSummary(
                             requestedFps = state.requestedFps,
@@ -576,24 +584,24 @@ internal fun VideoBatteryDashboardCard(
                 verticalArrangement = Arrangement.spacedBy(8.dp),
             ) {
                 VideoDashboardMetric(
-                    label = "Battery",
+                    label = stringResource(R.string.settings_dialogs_battery_label),
                     value = batteryLabel,
-                    detail = if (state.isCharging) "Charging" else "Unplugged",
+                    detail = if (state.isCharging) stringResource(R.string.settings_dialogs_battery_charging) else stringResource(R.string.settings_dialogs_battery_unplugged),
                 )
                 VideoDashboardMetric(
-                    label = "Service",
+                    label = stringResource(R.string.settings_dialogs_battery_service),
                     value = serviceLabel,
                     detail = mediaLabel,
                 )
                 VideoDashboardMetric(
-                    label = "Target",
-                    value = "${state.effectiveFps} FPS",
-                    detail = if (state.lowBatterySaverActive) "Auto-capped" else "Selected",
+                    label = stringResource(R.string.settings_dialogs_battery_target),
+                    value = stringResource(R.string.settings_dialogs_battery_fps, state.effectiveFps),
+                    detail = if (state.lowBatterySaverActive) stringResource(R.string.settings_dialogs_battery_auto_capped) else stringResource(R.string.settings_dialogs_battery_selected),
                 )
                 VideoDashboardMetric(
-                    label = "Presentation",
-                    value = if (state.scaleMode == "fit") "Fit" else "Fill",
-                    detail = if (state.fpsOverlayEnabled) "Overlay on" else "Overlay off",
+                    label = stringResource(R.string.settings_dialogs_battery_presentation),
+                    value = if (state.scaleMode == "fit") stringResource(R.string.settings_dialogs_battery_fit) else stringResource(R.string.settings_dialogs_battery_fill),
+                    detail = if (state.fpsOverlayEnabled) stringResource(R.string.settings_dialogs_battery_overlay_on) else stringResource(R.string.settings_dialogs_battery_overlay_off),
                 )
             }
         }
@@ -643,38 +651,47 @@ internal fun SettingsOverviewCard(
     cacheUsage: CacheUsageState,
     configuredApiKeys: Int,
 ) {
-    val setupSummary = remember(
+    val strStyleCount = stringResource(R.string.settings_dialogs_overview_style_count, selectedStyleCount)
+    val strRotationEvery = stringResource(R.string.settings_dialogs_overview_rotation_every, formatInterval(schedulerInterval))
+    val strWeatherOverlays = stringResource(R.string.settings_dialogs_overview_weather_overlays)
+    val strTimeTint = stringResource(R.string.settings_dialogs_overview_time_tint)
+    val strSoundPreviews = stringResource(R.string.settings_dialogs_overview_sound_previews)
+    val strDefaultSummary = stringResource(R.string.settings_dialogs_overview_default_summary)
+    val enabledFeatures = remember(
+        strStyleCount,
+        strRotationEvery,
+        strWeatherOverlays,
+        strTimeTint,
+        strSoundPreviews,
         selectedStyleCount,
         schedulerEnabled,
-        schedulerInterval,
         weatherEffects,
         adaptiveTint,
         autoPreview,
     ) {
         buildList {
-            if (selectedStyleCount > 0) add("$selectedStyleCount style preferences")
-            if (schedulerEnabled) add("rotation every ${formatInterval(schedulerInterval)}")
-            if (weatherEffects) add("weather overlays")
-            if (adaptiveTint) add("time-of-day tint")
-            if (autoPreview) add("sound previews")
-        }.let { enabled ->
-            if (enabled.isEmpty()) {
-                "Aura is set up with calm defaults. Adjust discovery, automation, and playback here whenever you want."
-            } else {
-                "Active setup: ${enabled.joinToString(" • ")}."
-            }
+            if (selectedStyleCount > 0) add(strStyleCount)
+            if (schedulerEnabled) add(strRotationEvery)
+            if (weatherEffects) add(strWeatherOverlays)
+            if (adaptiveTint) add(strTimeTint)
+            if (autoPreview) add(strSoundPreviews)
         }
+    }
+    val setupSummary = if (enabledFeatures.isEmpty()) {
+        strDefaultSummary
+    } else {
+        stringResource(R.string.settings_dialogs_overview_active_summary, enabledFeatures.joinToString(" • "))
     }
 
     GlassCard(modifier = modifier) {
         HighlightPill(
-            label = "Personalization overview",
+            label = stringResource(R.string.settings_dialogs_overview_pill),
             icon = Icons.Default.Tune,
             tint = MaterialTheme.colorScheme.secondary,
         )
         Spacer(Modifier.height(14.dp))
         Text(
-            text = "Make Aura feel intentional",
+            text = stringResource(R.string.settings_dialogs_overview_title),
             style = MaterialTheme.typography.headlineSmall,
         )
         Spacer(Modifier.height(8.dp))
@@ -689,22 +706,22 @@ internal fun SettingsOverviewCard(
             verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             HighlightPill(
-                label = if (selectedStyleCount == 0) "No style bias yet" else "$selectedStyleCount styles selected",
+                label = if (selectedStyleCount == 0) stringResource(R.string.settings_dialogs_overview_no_style) else stringResource(R.string.settings_dialogs_overview_styles_selected, selectedStyleCount),
                 icon = Icons.Default.Wallpaper,
                 tint = MaterialTheme.colorScheme.primary,
             )
             HighlightPill(
-                label = if (schedulerEnabled) "Rotation on" else "Rotation off",
+                label = if (schedulerEnabled) stringResource(R.string.settings_dialogs_overview_rotation_on) else stringResource(R.string.settings_dialogs_overview_rotation_off),
                 icon = Icons.Default.Schedule,
                 tint = MaterialTheme.colorScheme.secondary,
             )
             HighlightPill(
-                label = "$videoFpsLimit FPS video",
+                label = stringResource(R.string.settings_dialogs_overview_fps_video, videoFpsLimit),
                 icon = Icons.Default.VideoLibrary,
                 tint = MaterialTheme.colorScheme.tertiary,
             )
             HighlightPill(
-                label = "$configuredApiKeys provider keys",
+                label = stringResource(R.string.settings_dialogs_overview_provider_keys, configuredApiKeys),
                 icon = Icons.Default.Key,
                 tint = MaterialTheme.colorScheme.primary,
             )
@@ -716,14 +733,14 @@ internal fun SettingsOverviewCard(
         ) {
             SettingsMetric(
                 modifier = Modifier.weight(1f),
-                label = "Automation",
-                value = if (schedulerEnabled) formatInterval(schedulerInterval) else "Manual",
+                label = stringResource(R.string.settings_dialogs_overview_automation),
+                value = if (schedulerEnabled) formatInterval(schedulerInterval) else stringResource(R.string.settings_dialogs_overview_manual),
                 icon = Icons.Default.Schedule,
                 tint = MaterialTheme.colorScheme.primary,
             )
             SettingsMetric(
                 modifier = Modifier.weight(1f),
-                label = "Storage",
+                label = stringResource(R.string.settings_dialogs_overview_storage),
                 value = cacheUsage.fileUsageLabel,
                 icon = Icons.Default.Folder,
                 tint = MaterialTheme.colorScheme.secondary,
