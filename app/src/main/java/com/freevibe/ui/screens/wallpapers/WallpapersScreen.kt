@@ -369,7 +369,7 @@ fun WallpapersScreen(
                         CompactSearchField(
                             value = searchQuery,
                             onValueChange = { searchQuery = it; showSearchHistory = it.isEmpty() },
-                            placeholder = "Search wallpapers or colors",
+                            placeholder = stringResource(R.string.wallpapers_search_placeholder),
                             modifier = Modifier
                                 .fillMaxWidth(),
                             onClear = {
@@ -430,7 +430,7 @@ fun WallpapersScreen(
                         ),
                     ) {
                         Box {
-                            Icon(Icons.Default.Tune, contentDescription = "Wallpaper filters", modifier = Modifier.size(18.dp))
+                            Icon(Icons.Default.Tune, contentDescription = stringResource(R.string.wallpapers_filter_cd), modifier = Modifier.size(18.dp))
                             CountBadge(
                                 count = wallpaperFilterCount,
                                 modifier = Modifier
@@ -514,7 +514,7 @@ fun WallpapersScreen(
                     state.selectedColor?.let { selectedColor ->
                         AssistChip(
                             onClick = { viewModel.clearActiveFilter() },
-                            label = { Text("Tone", style = MaterialTheme.typography.labelSmall) },
+                            label = { Text(stringResource(R.string.wallpapers_filter_tone_chip), style = MaterialTheme.typography.labelSmall) },
                             leadingIcon = {
                                 Box(
                                     modifier = Modifier
@@ -549,17 +549,17 @@ fun WallpapersScreen(
                 AuraStatusBanner(
                     icon = Icons.Default.CloudOff,
                     title = nonBlockingWarningSource?.let { source ->
-                        "Showing last good ${source.lowercase(java.util.Locale.ROOT)} results"
-                    } ?: "Showing last good wallpaper results",
-                    message = "$warning. Your current feed stays visible while Aura retries in the background.",
+                        stringResource(R.string.wallpapers_banner_stale_source_title, source.lowercase(java.util.Locale.ROOT))
+                    } ?: stringResource(R.string.wallpapers_banner_stale_title),
+                    message = stringResource(R.string.wallpapers_banner_stale_message, warning),
                     tone = MaterialTheme.colorScheme.tertiary,
                     primaryAction = AuraStatusAction(
-                        label = "Refresh",
+                        label = stringResource(R.string.common_refresh),
                         icon = Icons.Default.Refresh,
                         onClick = { viewModel.refresh() },
                     ),
                     secondaryAction = AuraStatusAction(
-                        label = "Dismiss",
+                        label = stringResource(R.string.wallpapers_banner_dismiss),
                         icon = Icons.Default.Close,
                         onClick = {
                             nonBlockingWarning = null
@@ -573,11 +573,11 @@ fun WallpapersScreen(
             if (state.degradedSources.isNotEmpty() && nonBlockingWarning == null) {
                 AuraStatusBanner(
                     icon = Icons.Default.CloudOff,
-                    title = "Some content sources are temporarily unavailable",
-                    message = wallpaperSourceHealthSummary(state.degradedSources),
+                    title = stringResource(R.string.wallpapers_banner_degraded_title),
+                    message = stringResource(R.string.wallpapers_source_health_summary, state.degradedSources.sorted().joinToString(", ")),
                     tone = MaterialTheme.colorScheme.tertiary,
                     primaryAction = AuraStatusAction(
-                        label = "Refresh",
+                        label = stringResource(R.string.common_refresh),
                         icon = Icons.Default.Refresh,
                         onClick = { viewModel.refresh() },
                     ),
@@ -597,8 +597,8 @@ fun WallpapersScreen(
                         ) {
                             WallpaperStateCard(
                                 icon = Icons.Default.AutoAwesome,
-                                title = "Curating your wallpaper feed",
-                                description = "Aura is gathering higher-quality picks from your active sources so the first load feels worth browsing.",
+                                title = stringResource(R.string.wallpapers_loading_title),
+                                description = stringResource(R.string.wallpapers_loading_description),
                             )
                             ShimmerWallpaperGrid(Modifier.fillMaxWidth().weight(1f))
                         }
@@ -613,17 +613,17 @@ fun WallpapersScreen(
                             WallpaperStateCard(
                                 icon = Icons.Default.CloudOff,
                                 title = state.errorSource?.let {
-                                    "Couldn't refresh ${it.lowercase(java.util.Locale.ROOT)} right now"
-                                } ?: "Wallpaper loading hit a snag",
-                                description = state.error ?: "Try again in a moment or switch sources.",
+                                    stringResource(R.string.wallpapers_error_source_title, it.lowercase(java.util.Locale.ROOT))
+                                } ?: stringResource(R.string.wallpapers_error_title),
+                                description = state.error ?: stringResource(R.string.wallpapers_error_description_fallback),
                                 primaryAction = WallpaperStateAction(
-                                    label = "Retry",
+                                    label = stringResource(R.string.wallpapers_error_retry),
                                     icon = Icons.Default.Refresh,
                                     onClick = { viewModel.refresh() },
                                 ),
                                 secondaryAction = if (state.selectedTab != WallpaperTab.DISCOVER) {
                                     WallpaperStateAction(
-                                        label = "Back to Discover",
+                                        label = stringResource(R.string.wallpapers_error_back_to_discover),
                                         icon = Icons.Default.Explore,
                                         onClick = { viewModel.selectTab(WallpaperTab.DISCOVER) },
                                     )
@@ -637,33 +637,33 @@ fun WallpapersScreen(
                                 modifier = Modifier.padding(24.dp),
                                 icon = Icons.Default.ImageNotSupported,
                                 title = when {
-                                    state.selectedTab == WallpaperTab.SEARCH -> "No results for \"${state.query}\""
-                                    state.selectedTab == WallpaperTab.COLOR -> "No wallpapers matched this tone"
-                                    state.selectedTab == WallpaperTab.COMMUNITY -> "No community wallpapers yet"
-                                    state.selectedTab == WallpaperTab.PIXABAY -> "Pixabay needs a key before it can load"
-                                    else -> "Nothing is ready to show here yet"
+                                    state.selectedTab == WallpaperTab.SEARCH -> stringResource(R.string.wallpapers_empty_search_title, state.query)
+                                    state.selectedTab == WallpaperTab.COLOR -> stringResource(R.string.wallpapers_empty_color_title)
+                                    state.selectedTab == WallpaperTab.COMMUNITY -> stringResource(R.string.wallpapers_empty_community_title)
+                                    state.selectedTab == WallpaperTab.PIXABAY -> stringResource(R.string.wallpapers_empty_pixabay_title)
+                                    else -> stringResource(R.string.wallpapers_empty_default_title)
                                 },
                                 description = when {
                                     state.selectedTab == WallpaperTab.SEARCH ->
-                                        "Try a broader term, fewer keywords, or jump back into Discover for curated results."
+                                        stringResource(R.string.wallpapers_empty_search_description)
                                     state.selectedTab == WallpaperTab.COLOR ->
-                                        "Try another tone or return to Discover for a wider mix."
+                                        stringResource(R.string.wallpapers_empty_color_description)
                                     state.selectedTab == WallpaperTab.COMMUNITY ->
-                                        "Upload a gallery image to seed the community feed."
+                                        stringResource(R.string.wallpapers_empty_community_description)
                                     state.selectedTab == WallpaperTab.PIXABAY ->
-                                        "Add your Pixabay API key in Settings to unlock this source."
+                                        stringResource(R.string.wallpapers_empty_pixabay_description)
                                     else ->
-                                        "Refresh the feed or switch sources to keep browsing."
+                                        stringResource(R.string.wallpapers_empty_default_description)
                                 },
                                 primaryAction = if (state.selectedTab == WallpaperTab.COMMUNITY && !communityProviderEnabled) {
                                     null
                                 } else WallpaperStateAction(
                                     label = if (state.selectedTab == WallpaperTab.COMMUNITY) {
-                                        "Upload wallpaper"
+                                        stringResource(R.string.wallpapers_empty_upload_action)
                                     } else if (state.selectedColor != null || state.selectedTab != WallpaperTab.DISCOVER) {
-                                        "Back to Discover"
+                                        stringResource(R.string.wallpapers_empty_back_to_discover_action)
                                     } else {
-                                        "Refresh"
+                                        stringResource(R.string.common_refresh)
                                     },
                                     icon = if (state.selectedTab == WallpaperTab.COMMUNITY) {
                                         Icons.Default.Upload
@@ -849,6 +849,7 @@ private fun ColorPickerRow(
             }
         }
         WALLHAVEN_COLORS.forEach { (hex, color) ->
+            val colorLabel = wallpaperColorFilterActionLabel(hex)
             Box(
                 modifier = Modifier
                     .size(48.dp)
@@ -858,9 +859,9 @@ private fun ColorPickerRow(
                         if (selectedColor == hex) Modifier.border(2.dp, MaterialTheme.colorScheme.primary, RoundedCornerShape(8.dp))
                         else Modifier
                     )
-                    .clickable(onClickLabel = wallpaperColorFilterActionLabel(hex)) { onColorSelected(hex) }
+                    .clickable(onClickLabel = colorLabel) { onColorSelected(hex) }
                     .semantics {
-                        contentDescription = wallpaperColorFilterActionLabel(hex)
+                        contentDescription = colorLabel
                         stateDescription = if (selectedColor == hex) selectedDescription else notSelectedDescription
                     },
             )
@@ -868,10 +869,12 @@ private fun ColorPickerRow(
     }
 }
 
-internal fun clearWallpaperColorFilterLabel(): String = "Clear color filter"
+@Composable
+internal fun clearWallpaperColorFilterLabel(): String = stringResource(R.string.wallpapers_clear_color_filter)
 
+@Composable
 internal fun wallpaperColorFilterActionLabel(hex: String): String =
-    "Set wallpaper color filter #$hex"
+    stringResource(R.string.wallpapers_color_filter_action, hex)
 
 @Composable
 private fun WallpaperFiltersSheet(
@@ -895,7 +898,7 @@ private fun WallpaperFiltersSheet(
         Text(stringResource(R.string.feed_refine_title), style = MaterialTheme.typography.titleMedium)
         if (selectedTab == WallpaperTab.DISCOVER) {
             Text(
-                "Discover mix",
+                stringResource(R.string.wallpapers_filter_discover_mix),
                 style = MaterialTheme.typography.labelLarge,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
@@ -920,7 +923,7 @@ private fun WallpaperFiltersSheet(
         }
 
         Text(
-            "Color tone",
+            stringResource(R.string.wallpapers_filter_color_tone),
             style = MaterialTheme.typography.labelLarge,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
@@ -932,7 +935,7 @@ private fun WallpaperFiltersSheet(
 
         if (selectedTab == WallpaperTab.WALLHAVEN) {
             Text(
-                "Wallhaven time range",
+                stringResource(R.string.wallpapers_filter_wallhaven_time_range),
                 style = MaterialTheme.typography.labelLarge,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
@@ -942,7 +945,13 @@ private fun WallpaperFiltersSheet(
                     .horizontalScroll(rememberScrollState()),
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
             ) {
-                listOf("1d" to "Today", "1w" to "Week", "1M" to "Month", "6M" to "6 Months", "1y" to "Year").forEach { (range, label) ->
+                listOf(
+                    "1d" to stringResource(R.string.wallpapers_filter_range_today),
+                    "1w" to stringResource(R.string.wallpapers_filter_range_week),
+                    "1M" to stringResource(R.string.wallpapers_filter_range_month),
+                    "6M" to stringResource(R.string.wallpapers_filter_range_6months),
+                    "1y" to stringResource(R.string.wallpapers_filter_range_year),
+                ).forEach { (range, label) ->
                     FilterChip(
                         selected = topRange == range,
                         onClick = { onSelectTopRange(range) },
@@ -1043,7 +1052,7 @@ private fun WallpaperGrid(
                     ) {
                         SubcomposeAsyncImage(
                             model = pick.fullUrl.ifEmpty { pick.thumbnailUrl },
-                            contentDescription = "Wallpaper of the Day",
+                            contentDescription = stringResource(R.string.wallpapers_daily_pick_cd),
                             contentScale = ContentScale.Crop,
                             modifier = Modifier.fillMaxSize(),
                         ) {
@@ -1073,18 +1082,18 @@ private fun WallpaperGrid(
                                 verticalAlignment = Alignment.CenterVertically,
                                 horizontalArrangement = Arrangement.spacedBy(4.dp),
                             ) {
-                                Icon(Icons.Default.AutoAwesome, contentDescription = "Featured", Modifier.size(14.dp), tint = Color(0xFFFFD700))
+                                Icon(Icons.Default.AutoAwesome, contentDescription = stringResource(R.string.wallpapers_daily_pick_featured_cd), Modifier.size(14.dp), tint = Color(0xFFFFD700))
                                 Text(stringResource(R.string.feed_wotd), style = MaterialTheme.typography.labelLarge, color = Color.White)
                             }
                             Text(
-                                pick.category.ifEmpty { "Daily pick" },
+                                pick.category.ifEmpty { stringResource(R.string.wallpapers_daily_pick_category_fallback) },
                                 style = MaterialTheme.typography.labelSmall,
                                 color = Color.White.copy(alpha = 0.7f),
                             )
                         }
                         // Arrow
                         Icon(
-                            Icons.AutoMirrored.Filled.ArrowForward, contentDescription = "View wallpaper",
+                            Icons.AutoMirrored.Filled.ArrowForward, contentDescription = stringResource(R.string.wallpapers_daily_pick_view_cd),
                             tint = Color.White.copy(alpha = 0.8f),
                             modifier = Modifier.align(Alignment.BottomEnd).padding(12.dp).size(18.dp),
                         )
@@ -1177,15 +1186,17 @@ private fun WallpaperCard(
         wallpaper.width.toFloat() / wallpaper.height.toFloat()
     } else 0.67f
     val hints = wallpaper.qualityHints()
+    val amoledBadge = stringResource(R.string.wallpapers_card_badge_amoled)
+    val iconSafeBadge = stringResource(R.string.wallpapers_card_badge_icon_safe)
     val badges = buildList {
         add(hints.resolutionLabel)
         add(hints.orientationLabel)
-        if (hints.isAmoled) add("AMOLED")
-        if (hints.isIconSafe) add("Icon-safe")
+        if (hints.isAmoled) add(amoledBadge)
+        if (hints.isIconSafe) add(iconSafeBadge)
     }
-    val openWallpaperLabel = "Open wallpaper details"
-    val applyWallpaperLabel = "Show wallpaper apply actions"
-    val favoriteWallpaperLabel = if (isFavorite) "Remove wallpaper from favorites" else "Add wallpaper to favorites"
+    val openWallpaperLabel = stringResource(R.string.wallpapers_card_open_details)
+    val applyWallpaperLabel = stringResource(R.string.wallpapers_card_show_actions)
+    val favoriteWallpaperLabel = if (isFavorite) stringResource(R.string.wallpapers_card_remove_favorite) else stringResource(R.string.wallpapers_card_add_favorite)
     val cardActions = buildList {
         add(CustomAccessibilityAction(openWallpaperLabel) { onClick(); true })
         onLongPress?.let { showActions ->
@@ -1195,10 +1206,10 @@ private fun WallpaperCard(
             add(CustomAccessibilityAction(favoriteWallpaperLabel) { toggleFavorite(); true })
         }
         onUpvote?.let { upvote ->
-            add(CustomAccessibilityAction("Upvote wallpaper") { upvote(); true })
+            add(CustomAccessibilityAction(stringResource(R.string.wallpapers_card_upvote)) { upvote(); true })
         }
         onDownvote?.let { downvote ->
-            add(CustomAccessibilityAction("Hide wallpaper") { downvote(); true })
+            add(CustomAccessibilityAction(stringResource(R.string.wallpapers_card_hide)) { downvote(); true })
         }
     }
 
@@ -1246,7 +1257,7 @@ private fun WallpaperCard(
                             Modifier.fillMaxSize().background(MaterialTheme.colorScheme.surfaceContainerHigh),
                             contentAlignment = Alignment.Center,
                         ) {
-                            Icon(Icons.Default.BrokenImage, contentDescription = "Failed to load", Modifier.size(24.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant)
+                            Icon(Icons.Default.BrokenImage, contentDescription = stringResource(R.string.wallpapers_card_failed_to_load_cd), Modifier.size(24.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant)
                         }
                     }
                     else -> SubcomposeAsyncImageContent()
@@ -1301,7 +1312,7 @@ private fun WallpaperCard(
                                         verticalAlignment = Alignment.CenterVertically,
                                         horizontalArrangement = Arrangement.spacedBy(2.dp),
                                     ) {
-                                        Icon(Icons.Default.ThumbUp, contentDescription = "Upvotes", Modifier.size(11.dp), tint = Color.White.copy(alpha = 0.9f))
+                                        Icon(Icons.Default.ThumbUp, contentDescription = stringResource(R.string.wallpapers_card_upvotes_cd), Modifier.size(11.dp), tint = Color.White.copy(alpha = 0.9f))
                                         Text("$voteCount", style = MaterialTheme.typography.labelSmall, color = Color.White.copy(alpha = 0.9f))
                                     }
                                 }
@@ -1356,7 +1367,7 @@ private fun WallpaperCard(
                 ) {
                     Icon(
                         if (isFavorite) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
-                        contentDescription = if (isFavorite) "Remove favorite" else "Add favorite",
+                        contentDescription = if (isFavorite) stringResource(R.string.wallpapers_card_remove_favorite_short) else stringResource(R.string.wallpapers_card_add_favorite_short),
                         tint = if (isFavorite) MaterialTheme.colorScheme.tertiary else Color.White.copy(alpha = 0.7f),
                         modifier = Modifier
                             .size(20.dp)
@@ -1501,7 +1512,7 @@ private fun SeasonalBannerCard(
                 color = accentColor.copy(alpha = 0.14f),
             ) {
                 Text(
-                    "Explore",
+                    stringResource(R.string.wallpapers_seasonal_explore),
                     modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
                     style = MaterialTheme.typography.labelMedium,
                     color = accentColor,
@@ -1515,29 +1526,27 @@ private fun SeasonalBannerCard(
 private fun DiscoverCollectionsRow(
     onSearch: ((String) -> Unit)?,
 ) {
-    val collections = remember {
-        listOf(
-            DiscoverCollectionShortcut("AMOLED Black", "Deep blacks and low-glow contrast", "amoled black dark", Icons.Default.DarkMode, Color(0xFF7F5AF0)),
-            DiscoverCollectionShortcut("Minimal", "Clean lines with quiet composition", "minimal clean simple", Icons.Default.CropSquare, Color(0xFF3A86FF)),
-            DiscoverCollectionShortcut("Nature 4K", "Landscapes, forests, and natural depth", "nature landscape 4k", Icons.Default.Landscape, Color(0xFF43AA8B)),
-            DiscoverCollectionShortcut("Cyberpunk", "Electric nightlife and neon geometry", "cyberpunk neon city", Icons.Default.Bolt, Color(0xFFFF5D8F)),
-            DiscoverCollectionShortcut("Space", "Nebulae, stars, and cinematic skies", "space galaxy nebula", Icons.Default.Public, Color(0xFF8E9AAF)),
-            DiscoverCollectionShortcut("Abstract", "Gradients, form studies, and color fields", "abstract colorful gradient", Icons.Default.AutoAwesome, Color(0xFFF4A261)),
-            DiscoverCollectionShortcut("Anime", "Illustrated scenes and stylized worlds", "anime art illustration", Icons.Default.Movie, Color(0xFFE76F51)),
-            DiscoverCollectionShortcut("Ocean", "Waves, shoreline light, and cool tones", "ocean sea waves beach", Icons.Default.Water, Color(0xFF219EBC)),
-            DiscoverCollectionShortcut("Mountains", "Peaks, fog, and wide scenic balance", "mountain peak scenic", Icons.Default.Terrain, Color(0xFF6A994E)),
-            DiscoverCollectionShortcut("Urban", "Skylines, streets, and city atmosphere", "city skyline urban night", Icons.Default.LocationCity, Color(0xFF6D6875)),
+    val collections = listOf(
+            DiscoverCollectionShortcut(stringResource(R.string.wallpapers_collection_amoled_title), stringResource(R.string.wallpapers_collection_amoled_desc), "amoled black dark", Icons.Default.DarkMode, Color(0xFF7F5AF0)),
+            DiscoverCollectionShortcut(stringResource(R.string.wallpapers_collection_minimal_title), stringResource(R.string.wallpapers_collection_minimal_desc), "minimal clean simple", Icons.Default.CropSquare, Color(0xFF3A86FF)),
+            DiscoverCollectionShortcut(stringResource(R.string.wallpapers_collection_nature_title), stringResource(R.string.wallpapers_collection_nature_desc), "nature landscape 4k", Icons.Default.Landscape, Color(0xFF43AA8B)),
+            DiscoverCollectionShortcut(stringResource(R.string.wallpapers_collection_cyberpunk_title), stringResource(R.string.wallpapers_collection_cyberpunk_desc), "cyberpunk neon city", Icons.Default.Bolt, Color(0xFFFF5D8F)),
+            DiscoverCollectionShortcut(stringResource(R.string.wallpapers_collection_space_title), stringResource(R.string.wallpapers_collection_space_desc), "space galaxy nebula", Icons.Default.Public, Color(0xFF8E9AAF)),
+            DiscoverCollectionShortcut(stringResource(R.string.wallpapers_collection_abstract_title), stringResource(R.string.wallpapers_collection_abstract_desc), "abstract colorful gradient", Icons.Default.AutoAwesome, Color(0xFFF4A261)),
+            DiscoverCollectionShortcut(stringResource(R.string.wallpapers_collection_anime_title), stringResource(R.string.wallpapers_collection_anime_desc), "anime art illustration", Icons.Default.Movie, Color(0xFFE76F51)),
+            DiscoverCollectionShortcut(stringResource(R.string.wallpapers_collection_ocean_title), stringResource(R.string.wallpapers_collection_ocean_desc), "ocean sea waves beach", Icons.Default.Water, Color(0xFF219EBC)),
+            DiscoverCollectionShortcut(stringResource(R.string.wallpapers_collection_mountains_title), stringResource(R.string.wallpapers_collection_mountains_desc), "mountain peak scenic", Icons.Default.Terrain, Color(0xFF6A994E)),
+            DiscoverCollectionShortcut(stringResource(R.string.wallpapers_collection_urban_title), stringResource(R.string.wallpapers_collection_urban_desc), "city skyline urban night", Icons.Default.LocationCity, Color(0xFF6D6875)),
         )
-    }
 
     Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
         Text(
-            "Explore Collections",
+            stringResource(R.string.wallpapers_collections_title),
             style = MaterialTheme.typography.titleMedium,
             modifier = Modifier.padding(horizontal = 4.dp),
         )
         Text(
-            "Quick routes into polished looks when you want a more directed browse.",
+            stringResource(R.string.wallpapers_collections_subtitle),
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.padding(horizontal = 4.dp),
@@ -1615,13 +1624,13 @@ private fun WallpaperUploadDialog(
     var tagsText by remember { mutableStateOf("") }
     val policyCopy = remember { communityUploadPolicyCopy(CommunityUploadPolicyKind.WALLPAPER) }
     val categories = listOf(
-        "other" to "General",
-        "amoled" to "AMOLED",
-        "minimal" to "Minimal",
-        "nature" to "Nature",
-        "abstract" to "Abstract",
-        "city" to "City",
-        "space" to "Space",
+        "other" to stringResource(R.string.wallpapers_upload_category_general),
+        "amoled" to stringResource(R.string.wallpapers_upload_category_amoled),
+        "minimal" to stringResource(R.string.wallpapers_upload_category_minimal),
+        "nature" to stringResource(R.string.wallpapers_upload_category_nature),
+        "abstract" to stringResource(R.string.wallpapers_upload_category_abstract),
+        "city" to stringResource(R.string.wallpapers_upload_category_city),
+        "space" to stringResource(R.string.wallpapers_upload_category_space),
     )
     val parsedTags = remember(tagsText) {
         tagsText.split(',', '#')
@@ -1666,7 +1675,7 @@ private fun WallpaperUploadDialog(
                     value = tagsText,
                     onValueChange = { tagsText = it },
                     label = { Text(stringResource(R.string.feed_upload_tags_label)) },
-                    placeholder = { Text("dark, gradient, lock screen") },
+                    placeholder = { Text(stringResource(R.string.wallpapers_upload_tags_placeholder)) },
                     supportingText = { Text(stringResource(R.string.feed_upload_tags_hint)) },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth(),
@@ -1689,7 +1698,7 @@ private fun WallpaperUploadDialog(
                     value = sourceUrl,
                     onValueChange = { sourceUrl = it },
                     label = { Text(stringResource(R.string.feed_upload_source_label)) },
-                    placeholder = { Text("https://example.com/source") },
+                    placeholder = { Text(stringResource(R.string.wallpapers_upload_source_placeholder)) },
                     supportingText = { Text(stringResource(R.string.feed_upload_source_hint)) },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth(),
@@ -1777,7 +1786,7 @@ private fun FloatingActionTray(
         if (showUpload) {
             FloatingActionRow(
                 icon = Icons.Default.Upload,
-                label = "Upload",
+                label = stringResource(R.string.wallpapers_fab_upload),
                 tint = MaterialTheme.colorScheme.secondary,
                 onClick = onUpload,
             )
@@ -1785,7 +1794,7 @@ private fun FloatingActionTray(
         if (showThemeMatch) {
             FloatingActionRow(
                 icon = Icons.Default.Palette,
-                label = "Theme match",
+                label = stringResource(R.string.wallpapers_fab_theme_match),
                 tint = MaterialTheme.colorScheme.tertiary,
                 onClick = onThemeMatch,
             )
@@ -1794,7 +1803,7 @@ private fun FloatingActionTray(
             // NX-10: Android 17+ EyeDropper API entry point.
             FloatingActionRow(
                 icon = Icons.Default.Colorize,
-                label = "Pick colour",
+                label = stringResource(R.string.wallpapers_fab_pick_colour),
                 tint = MaterialTheme.colorScheme.tertiary,
                 onClick = onEyeDropper,
             )
@@ -1802,7 +1811,7 @@ private fun FloatingActionTray(
         if (showSurprise) {
             FloatingActionRow(
                 icon = Icons.Default.Shuffle,
-                label = "Surprise me",
+                label = stringResource(R.string.wallpapers_fab_surprise_me),
                 tint = MaterialTheme.colorScheme.primary,
                 onClick = onSurpriseMe,
             )
@@ -1835,31 +1844,34 @@ private fun FloatingActionRow(
     }
 }
 
+@Composable
 private fun wallpaperHeaderEyebrow(
     tab: WallpaperTab,
     discoverFilter: WallpaperDiscoverFilter,
 ): String = when (tab) {
     WallpaperTab.DISCOVER -> when (discoverFilter) {
-        WallpaperDiscoverFilter.FOR_YOU -> "Curated for your device"
-        else -> "${wallpaperFilterLabel(discoverFilter)} discover mix"
+        WallpaperDiscoverFilter.FOR_YOU -> stringResource(R.string.wallpapers_header_curated)
+        else -> stringResource(R.string.wallpapers_header_discover_mix, wallpaperFilterLabel(discoverFilter))
     }
-    WallpaperTab.SEARCH -> "Cross-source search"
-    WallpaperTab.COLOR -> "Color-focused browsing"
-    WallpaperTab.COMMUNITY -> "Community uploads"
-    else -> "${wallpaperTabLabel(tab)} source"
+    WallpaperTab.SEARCH -> stringResource(R.string.wallpapers_header_cross_source)
+    WallpaperTab.COLOR -> stringResource(R.string.wallpapers_header_color_browsing)
+    WallpaperTab.COMMUNITY -> stringResource(R.string.wallpapers_header_community_uploads)
+    else -> stringResource(R.string.wallpapers_header_source, wallpaperTabLabel(tab))
 }
 
+@Composable
 private fun wallpaperHeaderTitle(
     tab: WallpaperTab,
     query: String,
 ): String = when (tab) {
-    WallpaperTab.DISCOVER -> "Discover wallpapers"
-    WallpaperTab.SEARCH -> if (query.isNotBlank()) "Results for \"$query\"" else "Search results"
-    WallpaperTab.COLOR -> "Browse by tone"
-    WallpaperTab.COMMUNITY -> "Community wallpapers"
+    WallpaperTab.DISCOVER -> stringResource(R.string.wallpapers_header_discover_title)
+    WallpaperTab.SEARCH -> if (query.isNotBlank()) stringResource(R.string.wallpapers_header_search_results_query, query) else stringResource(R.string.wallpapers_header_search_results)
+    WallpaperTab.COLOR -> stringResource(R.string.wallpapers_header_browse_by_tone)
+    WallpaperTab.COMMUNITY -> stringResource(R.string.wallpapers_header_community_title)
     else -> wallpaperTabLabel(tab)
 }
 
+@Composable
 private fun wallpaperHeaderSubtitle(
     tab: WallpaperTab,
     discoverFilter: WallpaperDiscoverFilter,
@@ -1869,27 +1881,27 @@ private fun wallpaperHeaderSubtitle(
 ): String = when (tab) {
     WallpaperTab.DISCOVER -> when {
         wallpaperCount > 0 && discoverFilter == WallpaperDiscoverFilter.FOR_YOU ->
-            "$wallpaperCount polished picks are ready across trusted sources, tuned for phone-friendly browsing."
+            stringResource(R.string.wallpapers_subtitle_discover_count, wallpaperCount)
         discoverFilter != WallpaperDiscoverFilter.FOR_YOU ->
-            "Showing a ${wallpaperFilterLabel(discoverFilter).lowercase(java.util.Locale.ROOT)} mix while keeping quality and composition in focus."
+            stringResource(R.string.wallpapers_subtitle_discover_filter, wallpaperFilterLabel(discoverFilter).lowercase(java.util.Locale.ROOT))
         else ->
-            "Curated wallpaper picks optimized for phone-friendly composition and cleaner home screens."
+            stringResource(R.string.wallpapers_subtitle_discover_default)
     }
     WallpaperTab.SEARCH -> if (query.isNotBlank()) {
-        "Searching across multiple wallpaper sources for broader, more useful matches."
+        stringResource(R.string.wallpapers_subtitle_search_active)
     } else {
-        "Use keywords, themes, or moods to pull in wallpapers from multiple providers."
+        stringResource(R.string.wallpapers_subtitle_search_default)
     }
     WallpaperTab.COLOR -> if (selectedColor != null) {
-        "Explore wallpapers built around this tone, then jump back to Discover whenever you want a wider mix."
+        stringResource(R.string.wallpapers_subtitle_color_active)
     } else {
-        "Pick a tone to bias results toward a specific visual mood."
+        stringResource(R.string.wallpapers_subtitle_color_default)
     }
-    WallpaperTab.WALLHAVEN -> "High-signal artwork and photography with stronger filtering controls."
-    WallpaperTab.PEXELS -> "Clean photography and motion-friendly imagery from Pexels."
-    WallpaperTab.PIXABAY -> "Free-use imagery with a broad catalog once your source is configured."
-    WallpaperTab.REDDIT -> "Saved legacy Reddit items keep attribution, but public feeds are discontinued."
-    WallpaperTab.COMMUNITY -> "User-uploaded phone-ready wallpapers with tags, colors, and community voting."
+    WallpaperTab.WALLHAVEN -> stringResource(R.string.wallpapers_subtitle_wallhaven)
+    WallpaperTab.PEXELS -> stringResource(R.string.wallpapers_subtitle_pexels)
+    WallpaperTab.PIXABAY -> stringResource(R.string.wallpapers_subtitle_pixabay)
+    WallpaperTab.REDDIT -> stringResource(R.string.wallpapers_subtitle_reddit)
+    WallpaperTab.COMMUNITY -> stringResource(R.string.wallpapers_subtitle_community)
 }
 
 private fun wallpaperTabIcon(tab: WallpaperTab): androidx.compose.ui.graphics.vector.ImageVector = when (tab) {
@@ -1903,32 +1915,35 @@ private fun wallpaperTabIcon(tab: WallpaperTab): androidx.compose.ui.graphics.ve
     WallpaperTab.SEARCH -> Icons.Default.Search
 }
 
+@Composable
 private fun wallpaperTabLabel(tab: WallpaperTab): String =
     when (tab) {
-        WallpaperTab.DISCOVER -> "Discover"
-        WallpaperTab.PEXELS -> "Pexels"
-        WallpaperTab.PIXABAY -> "Pixabay"
-        WallpaperTab.REDDIT -> "Reddit"
-        WallpaperTab.WALLHAVEN -> "Wallhaven"
-        WallpaperTab.COMMUNITY -> "Community"
-        WallpaperTab.COLOR -> "Color"
-        WallpaperTab.SEARCH -> "Search"
+        WallpaperTab.DISCOVER -> stringResource(R.string.wallpapers_tab_discover)
+        WallpaperTab.PEXELS -> stringResource(R.string.wallpapers_tab_pexels)
+        WallpaperTab.PIXABAY -> stringResource(R.string.wallpapers_tab_pixabay)
+        WallpaperTab.REDDIT -> stringResource(R.string.wallpapers_tab_reddit)
+        WallpaperTab.WALLHAVEN -> stringResource(R.string.wallpapers_tab_wallhaven)
+        WallpaperTab.COMMUNITY -> stringResource(R.string.wallpapers_tab_community)
+        WallpaperTab.COLOR -> stringResource(R.string.wallpapers_tab_color)
+        WallpaperTab.SEARCH -> stringResource(R.string.wallpapers_tab_search)
     }
 
+@Composable
 private fun wallpaperFilterLabel(filter: WallpaperDiscoverFilter): String = when (filter) {
-    WallpaperDiscoverFilter.FOR_YOU -> "For You"
-    WallpaperDiscoverFilter.AMOLED -> "AMOLED"
-    WallpaperDiscoverFilter.HIGH_RES -> "4K+"
-    WallpaperDiscoverFilter.PORTRAIT -> "Portrait"
-    WallpaperDiscoverFilter.ICON_SAFE -> "Icon Safe"
+    WallpaperDiscoverFilter.FOR_YOU -> stringResource(R.string.wallpapers_discover_for_you)
+    WallpaperDiscoverFilter.AMOLED -> stringResource(R.string.wallpapers_discover_amoled)
+    WallpaperDiscoverFilter.HIGH_RES -> stringResource(R.string.wallpapers_discover_high_res)
+    WallpaperDiscoverFilter.PORTRAIT -> stringResource(R.string.wallpapers_discover_portrait)
+    WallpaperDiscoverFilter.ICON_SAFE -> stringResource(R.string.wallpapers_discover_icon_safe)
 }
 
+@Composable
 private fun wallpaperTopRangeLabel(range: String): String = when (range) {
-    "1d" -> "Today"
-    "1w" -> "Week"
-    "1M" -> "Month"
-    "6M" -> "6 Months"
-    "1y" -> "Year"
+    "1d" -> stringResource(R.string.wallpapers_filter_range_today)
+    "1w" -> stringResource(R.string.wallpapers_filter_range_week)
+    "1M" -> stringResource(R.string.wallpapers_filter_range_month)
+    "6M" -> stringResource(R.string.wallpapers_filter_range_6months)
+    "1y" -> stringResource(R.string.wallpapers_filter_range_year)
     else -> range
 }
 
@@ -2016,7 +2031,3 @@ internal fun isWallpaperHidden(
     hiddenIds: Set<String>,
 ): Boolean = matchesHiddenIds(hiddenIds, wallpaper.stableKey(), wallpaper.id)
 
-private fun wallpaperSourceHealthSummary(degradedSources: Set<String>): String {
-    val labels = degradedSources.sorted().joinToString(", ")
-    return "Limited source health right now: $labels"
-}

@@ -1399,7 +1399,7 @@ fun SettingsScreen(
             // and shows an explanatory empty state so the affordance isn't a dead click.
             if (showDarkModeWallpaperPicker) {
                 WallpaperSlotPickerDialog(
-                    title = "Choose dark mode wallpaper",
+                    title = stringResource(R.string.settings_smart_dark_wp_picker),
                     history = wallpaperHistory,
                     onPick = { entry ->
                         val wallpaperId = "${entry.source}|${entry.wallpaperId}|${entry.fullUrl}"
@@ -1411,7 +1411,7 @@ fun SettingsScreen(
             }
             if (showLightModeWallpaperPicker) {
                 WallpaperSlotPickerDialog(
-                    title = "Choose light mode wallpaper",
+                    title = stringResource(R.string.settings_smart_light_wp_picker),
                     history = wallpaperHistory,
                     onPick = { entry ->
                         val wallpaperId = "${entry.source}|${entry.wallpaperId}|${entry.fullUrl}"
@@ -1425,13 +1425,13 @@ fun SettingsScreen(
 
         // Sound settings
         SettingsSection(
-            title = "Sounds",
-            description = "Control previews, search quality, and how results are filtered before playback.",
+            title = stringResource(R.string.settings_sounds_section_title),
+            description = stringResource(R.string.settings_sounds_section_description),
         ) {
             SettingsToggle(
                 icon = Icons.Default.PlayCircle,
-                title = "Auto-preview sounds",
-                subtitle = if (autoPreview) "Starts playback when you open sound details" else "Open sound details without autoplay",
+                title = stringResource(R.string.settings_sounds_auto_preview_title),
+                subtitle = if (autoPreview) stringResource(R.string.settings_sounds_auto_preview_on_subtitle) else stringResource(R.string.settings_sounds_auto_preview_off_subtitle),
                 checked = autoPreview,
                 onCheckedChange = { viewModel.setAutoPreview(it) },
             )
@@ -1467,10 +1467,10 @@ fun SettingsScreen(
                         )
                     }
                     Column(modifier = Modifier.weight(1f)) {
-                        Text("Preview volume", style = MaterialTheme.typography.titleMedium)
+                        Text(stringResource(R.string.settings_sounds_volume_title), style = MaterialTheme.typography.titleMedium)
                         Spacer(Modifier.height(2.dp))
                         Text(
-                            "Choose how assertive previews should feel while browsing sounds.",
+                            stringResource(R.string.settings_sounds_volume_subtitle),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
@@ -1485,22 +1485,22 @@ fun SettingsScreen(
                             ),
                         )
                     }
-                    Text("${(previewVolume * 100).toInt()}%", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text(stringResource(R.string.settings_sounds_volume_percent, (previewVolume * 100).toInt()), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             }
             SettingsItem(
                 icon = Icons.Default.SmartDisplay,
-                title = "YouTube search queries",
-                subtitle = "Refine ringtone, notification, and alarm searches for each tab",
+                title = stringResource(R.string.settings_sounds_yt_queries_title),
+                subtitle = stringResource(R.string.settings_sounds_yt_queries_subtitle),
                 onClick = { showYtSoundEditor = true },
             )
             SettingsToggle(
                 icon = Icons.Default.SmartDisplay,
-                title = "Enable YouTube features",
+                title = stringResource(R.string.settings_sounds_yt_enable_title),
                 subtitle = if (youtubeProviderEnabled) {
-                    "Shows YouTube sound search, imports, top hits, and video wallpaper results"
+                    stringResource(R.string.settings_sounds_yt_on_subtitle)
                 } else {
-                    "Hides YouTube browsing and blocks stream resolution"
+                    stringResource(R.string.settings_sounds_yt_off_subtitle)
                 },
                 checked = youtubeProviderEnabled,
                 onCheckedChange = { viewModel.setYoutubeProviderEnabled(it) },
@@ -1520,23 +1520,23 @@ fun SettingsScreen(
             )
             SettingsItem(
                 icon = Icons.Default.Block,
-                title = "Blocked words",
-                subtitle = "${ytBlockedWords.split(",").count { it.isNotBlank() }} words filtered from YouTube results",
+                title = stringResource(R.string.settings_sounds_blocked_words_title),
+                subtitle = stringResource(R.string.settings_sounds_blocked_words_subtitle, ytBlockedWords.split(",").count { it.isNotBlank() }),
                 onClick = { showYtBlockedEditor = true },
             )
             SettingsItem(
                 icon = Icons.Default.LibraryMusic,
-                title = "Sound sources",
-                subtitle = "YouTube powers the sound feed; community uploads and legacy attributions remain documented",
+                title = stringResource(R.string.settings_sounds_sources_title),
+                subtitle = stringResource(R.string.settings_sounds_sources_subtitle),
                 onClick = onLicensesClick,
             )
             SettingsToggle(
                 icon = Icons.Default.Shuffle,
-                title = "Shuffle ringtone",
+                title = stringResource(R.string.settings_sounds_ringtone_shuffle_title),
                 subtitle = if (ringtoneShuffleEnabled) {
-                    "Changes your ringtone from downloaded sounds every ${formatInterval(ringtoneShuffleIntervalHours * 60)}"
+                    stringResource(R.string.settings_sounds_ringtone_shuffle_on_subtitle, formatInterval(ringtoneShuffleIntervalHours * 60))
                 } else {
-                    "Periodically set a random downloaded sound as your ringtone"
+                    stringResource(R.string.settings_sounds_ringtone_shuffle_off_subtitle)
                 },
                 checked = ringtoneShuffleEnabled,
                 onCheckedChange = { viewModel.setRingtoneShuffleEnabled(it) },
@@ -1545,15 +1545,15 @@ fun SettingsScreen(
                 var showShuffleIntervalPicker by remember { mutableStateOf(false) }
                 SettingsItem(
                     icon = Icons.Default.Timer,
-                    title = "Shuffle interval",
+                    title = stringResource(R.string.settings_sounds_shuffle_interval_title),
                     subtitle = formatInterval(ringtoneShuffleIntervalHours * 60),
                     onClick = { showShuffleIntervalPicker = true },
                 )
                 if (showShuffleIntervalPicker) {
-                    val intervals = listOf(1L to "Every hour", 6L to "Every 6 hours", 12L to "Every 12 hours", 24L to "Every day", 72L to "Every 3 days")
+                    val intervals = listOf(1L to stringResource(R.string.settings_sounds_shuffle_every_hour), 6L to stringResource(R.string.settings_sounds_shuffle_every_6h), 12L to stringResource(R.string.settings_sounds_shuffle_every_12h), 24L to stringResource(R.string.settings_sounds_shuffle_every_day), 72L to stringResource(R.string.settings_sounds_shuffle_every_3d))
                     AlertDialog(
                         onDismissRequest = { showShuffleIntervalPicker = false },
-                        title = { Text("Shuffle interval") },
+                        title = { Text(stringResource(R.string.settings_sounds_shuffle_interval_title)) },
                         text = {
                             Column {
                                 intervals.forEach { (hours, label) ->
@@ -1568,17 +1568,17 @@ fun SettingsScreen(
                                 }
                             }
                         },
-                        confirmButton = { TextButton(onClick = { showShuffleIntervalPicker = false }) { Text("Cancel") } },
+                        confirmButton = { TextButton(onClick = { showShuffleIntervalPicker = false }) { Text(stringResource(R.string.common_cancel)) } },
                     )
                 }
             }
             SettingsToggle(
                 icon = Icons.Default.Alarm,
-                title = "Alarm sound shuffle",
+                title = stringResource(R.string.settings_sounds_alarm_shuffle_title),
                 subtitle = if (alarmShuffleEnabled) {
-                    "Changes your alarm sound from downloaded sounds on the same schedule"
+                    stringResource(R.string.settings_sounds_alarm_shuffle_on_subtitle)
                 } else {
-                    "Periodically set a random downloaded sound as your alarm"
+                    stringResource(R.string.settings_sounds_alarm_shuffle_off_subtitle)
                 },
                 checked = alarmShuffleEnabled,
                 onCheckedChange = { viewModel.setAlarmShuffleEnabled(it) },
@@ -1587,8 +1587,8 @@ fun SettingsScreen(
 
         // Video Wallpapers
         SettingsSection(
-            title = "Video Wallpapers",
-            description = "Monitor live-wallpaper cost and keep motion responsive without wasting battery.",
+            title = stringResource(R.string.settings_video_section_title),
+            description = stringResource(R.string.settings_video_section_description),
         ) {
             var showFpsPicker by remember { mutableStateOf(false) }
             VideoBatteryDashboardCard(
@@ -1597,27 +1597,27 @@ fun SettingsScreen(
             )
             SettingsToggle(
                 icon = Icons.Default.BatteryChargingFull,
-                title = "Auto battery saver",
+                title = stringResource(R.string.settings_video_battery_saver_title),
                 subtitle = if (videoAutoBatterySaver)
-                    "Caps video and GIF wallpapers at 15 FPS below 15% battery"
+                    stringResource(R.string.settings_video_battery_saver_on_subtitle)
                 else
-                    "Keep the selected FPS limit even when battery is low",
+                    stringResource(R.string.settings_video_battery_saver_off_subtitle),
                 checked = videoAutoBatterySaver,
                 onCheckedChange = { viewModel.setVideoAutoBatterySaver(it) },
             )
             SettingsToggle(
                 icon = Icons.Default.Speed,
-                title = "FPS overlay",
+                title = stringResource(R.string.settings_video_fps_overlay_title),
                 subtitle = if (videoFpsOverlayEnabled)
-                    "Show a small debug FPS readout on Canvas-rendered motion wallpapers"
+                    stringResource(R.string.settings_video_fps_overlay_on_subtitle)
                 else
-                    "Hidden unless you need to inspect frame pacing",
+                    stringResource(R.string.settings_video_fps_overlay_off_subtitle),
                 checked = videoFpsOverlayEnabled,
                 onCheckedChange = { viewModel.setVideoFpsOverlayEnabled(it) },
             )
             SettingsItem(
                 icon = Icons.Default.Speed,
-                title = "FPS limit",
+                title = stringResource(R.string.settings_video_fps_limit_title),
                 subtitle = videoBatteryImpactSummary(
                     requestedFps = videoBatteryDashboard.requestedFps,
                     effectiveFps = videoBatteryDashboard.effectiveFps,
@@ -1629,10 +1629,10 @@ fun SettingsScreen(
             if (showFpsPicker) {
                 AlertDialog(
                     onDismissRequest = { showFpsPicker = false },
-                    title = { Text("Video FPS limit") },
+                    title = { Text(stringResource(R.string.settings_video_fps_dialog_title)) },
                     text = {
                         Column {
-                            listOf(15 to "15 FPS (battery saver)", 30 to "30 FPS (balanced)", 60 to "60 FPS (smooth)").forEach { (fps, label) ->
+                            listOf(15 to stringResource(R.string.settings_video_fps_15), 30 to stringResource(R.string.settings_video_fps_30), 60 to stringResource(R.string.settings_video_fps_60)).forEach { (fps, label) ->
                                 SettingsRadioOptionRow(
                                     label = label,
                                     selected = videoFpsLimit == fps,
@@ -1644,23 +1644,23 @@ fun SettingsScreen(
                             }
                         }
                     },
-                    confirmButton = { TextButton(onClick = { showFpsPicker = false }) { Text("Cancel") } },
+                    confirmButton = { TextButton(onClick = { showFpsPicker = false }) { Text(stringResource(R.string.common_cancel)) } },
                 )
             }
         }
 
         // API Keys
         SettingsSection(
-            title = "Advanced external services",
-            description = "Provider keys and opt-in cloud features. Generated wallpapers and community actions stay off until you enable them here.",
+            title = stringResource(R.string.settings_services_section_title),
+            description = stringResource(R.string.settings_services_section_description),
         ) {
             SettingsToggle(
                 icon = Icons.Default.Groups,
-                title = "Enable external Community source",
+                title = stringResource(R.string.settings_services_community_title),
                 subtitle = if (communityProviderEnabled) {
-                    "Shows Firebase-backed feeds, uploads, votes, and creator surfaces"
+                    stringResource(R.string.settings_services_community_on_subtitle)
                 } else {
-                    "Off by default. Hides community tabs and blocks Firebase-backed actions"
+                    stringResource(R.string.settings_services_community_off_subtitle)
                 },
                 checked = communityProviderEnabled,
                 onCheckedChange = { viewModel.setCommunityProviderEnabled(it) },
@@ -1668,11 +1668,11 @@ fun SettingsScreen(
             if (communityProviderEnabled) {
                 SettingsItem(
                     icon = Icons.Default.VerifiedUser,
-                    title = "Community guidelines",
+                    title = stringResource(R.string.settings_services_guidelines_title),
                     subtitle = if (communityGuidelinesAccepted) {
-                        "Accepted v$communityGuidelinesAcceptedVersion"
+                        stringResource(R.string.settings_services_guidelines_accepted_subtitle, communityGuidelinesAcceptedVersion)
                     } else {
-                        "Required before uploads, votes, reports, blocks, follows, and profiles"
+                        stringResource(R.string.settings_services_guidelines_required_subtitle)
                     },
                     onClick = { showCommunityGuidelines = true },
                 )
@@ -1680,7 +1680,7 @@ fun SettingsScreen(
             if (communityProviderEnabled && communityGuidelinesAccepted) {
                 SettingsItem(
                     icon = Icons.Default.Person,
-                    title = "Community identity",
+                    title = stringResource(R.string.settings_services_identity_title),
                     subtitle = communityIdentitySubtitle(communityIdentitySummary),
                     onClick = {
                         viewModel.refreshCommunityIdentitySummary()
@@ -1689,25 +1689,25 @@ fun SettingsScreen(
                 )
                 SettingsItem(
                     icon = Icons.Default.Person,
-                    title = "Creator profile",
-                    subtitle = "Uploads, votes, follows, and leaderboard",
+                    title = stringResource(R.string.settings_services_creator_title),
+                    subtitle = stringResource(R.string.settings_services_creator_subtitle),
                     onClick = onCreatorProfileClick,
                 )
                 SettingsItem(
                     icon = Icons.Default.Block,
-                    title = "Blocked creators",
+                    title = stringResource(R.string.settings_services_blocked_title),
                     subtitle = if (blockedCommunityCreators.isEmpty()) {
-                        "No community creators hidden"
+                        stringResource(R.string.settings_services_blocked_none_subtitle)
                     } else {
-                        "${blockedCommunityCreators.size} community creators hidden"
+                        stringResource(R.string.settings_services_blocked_count_subtitle, blockedCommunityCreators.size)
                     },
                     onClick = { showBlockedCreators = true },
                 )
                 if (viewModel.isAdmin) {
                     SettingsItem(
                         icon = Icons.Default.Report,
-                        title = "Community reports",
-                        subtitle = "Review open rights, source, and safety reports",
+                        title = stringResource(R.string.settings_services_reports_title),
+                        subtitle = stringResource(R.string.settings_services_reports_subtitle),
                         onClick = onCommunityReportsClick,
                     )
                 }
@@ -1715,27 +1715,27 @@ fun SettingsScreen(
             var showWallhavenKey by remember { mutableStateOf(false) }
             SettingsItem(
                 icon = Icons.Default.Key,
-                title = "Wallhaven API Key",
-                subtitle = "Optional: higher limits + NSFW (wallhaven.cc/settings)",
+                title = stringResource(R.string.settings_services_wallhaven_key_title),
+                subtitle = stringResource(R.string.settings_services_wallhaven_key_subtitle),
                 onClick = { showWallhavenKey = true },
             )
             SettingsToggle(
                 icon = Icons.Default.ImageSearch,
-                title = "Enable Wallhaven source",
+                title = stringResource(R.string.settings_services_wallhaven_enable_title),
                 subtitle = if (wallhavenProviderEnabled) {
-                    "Shows Wallhaven featured, color, similar, random, and Discover results"
+                    stringResource(R.string.settings_services_wallhaven_on_subtitle)
                 } else {
-                    "Hides Wallhaven browsing and skips Wallhaven API calls"
+                    stringResource(R.string.settings_services_wallhaven_off_subtitle)
                 },
                 checked = wallhavenProviderEnabled,
                 onCheckedChange = { viewModel.setWallhavenProviderEnabled(it) },
             )
             if (showWallhavenKey) {
                 ProviderApiKeyDialog(
-                    title = "Wallhaven API Key",
-                    description = "Get your key at wallhaven.cc/settings",
+                    title = stringResource(R.string.settings_services_wallhaven_dialog_title),
+                    description = stringResource(R.string.settings_services_wallhaven_dialog_desc),
                     value = wallhavenApiKey,
-                    placeholder = "Paste API key",
+                    placeholder = stringResource(R.string.settings_services_wallhaven_dialog_placeholder),
                     onSave = viewModel::setWallhavenKey,
                     onDismiss = { showWallhavenKey = false },
                 )
@@ -1746,48 +1746,48 @@ fun SettingsScreen(
             // results instead of an empty grid.
             SettingsToggle(
                 icon = Icons.Default.Visibility,
-                title = "Show sketchy wallpapers",
+                title = stringResource(R.string.settings_services_sketchy_title),
                 subtitle = if (wallhavenApiKey.isBlank())
-                    "Requires a Wallhaven API key to take effect"
+                    stringResource(R.string.settings_services_sketchy_no_key_subtitle)
                 else
-                    "Suggestive imagery short of explicit nudity",
+                    stringResource(R.string.settings_services_sketchy_subtitle),
                 checked = showSketchyContent,
                 onCheckedChange = { viewModel.setShowSketchy(it) },
             )
             SettingsToggle(
                 icon = Icons.Default.Warning,
-                title = "Show NSFW wallpapers",
+                title = stringResource(R.string.settings_services_nsfw_title),
                 subtitle = if (wallhavenApiKey.isBlank())
-                    "Requires a Wallhaven API key to take effect"
+                    stringResource(R.string.settings_services_nsfw_no_key_subtitle)
                 else
-                    "Explicit content from authenticated Wallhaven account",
+                    stringResource(R.string.settings_services_nsfw_subtitle),
                 checked = showNsfwContent,
                 onCheckedChange = { viewModel.setShowNsfw(it) },
             )
             var showPexelsKey by remember { mutableStateOf(false) }
             SettingsToggle(
                 icon = Icons.Default.PhotoLibrary,
-                title = "Enable Pexels source",
+                title = stringResource(R.string.settings_services_pexels_enable_title),
                 subtitle = if (pexelsProviderEnabled) {
-                    "Shows Pexels photos and video wallpapers when a key is available"
+                    stringResource(R.string.settings_services_pexels_on_subtitle)
                 } else {
-                    "Hides Pexels browsing and skips Pexels API calls"
+                    stringResource(R.string.settings_services_pexels_off_subtitle)
                 },
                 checked = pexelsProviderEnabled,
                 onCheckedChange = { viewModel.setPexelsProviderEnabled(it) },
             )
             SettingsItem(
                 icon = Icons.Default.Key,
-                title = "Pexels API Key",
-                subtitle = "Free key for video wallpapers (pexels.com/api)",
+                title = stringResource(R.string.settings_services_pexels_key_title),
+                subtitle = stringResource(R.string.settings_services_pexels_key_subtitle),
                 onClick = { showPexelsKey = true },
             )
             if (showPexelsKey) {
                 ProviderApiKeyDialog(
-                    title = "Pexels API Key",
-                    description = "Get a free key at pexels.com/api/new",
+                    title = stringResource(R.string.settings_services_pexels_dialog_title),
+                    description = stringResource(R.string.settings_services_pexels_dialog_desc),
                     value = pexelsApiKey,
-                    placeholder = "Paste API key here",
+                    placeholder = stringResource(R.string.settings_services_pexels_dialog_placeholder),
                     onSave = viewModel::setPexelsKey,
                     onDismiss = { showPexelsKey = false },
                 )
@@ -1795,27 +1795,27 @@ fun SettingsScreen(
             var showPixabayKey by remember { mutableStateOf(false) }
             SettingsToggle(
                 icon = Icons.Default.Collections,
-                title = "Enable Pixabay source",
+                title = stringResource(R.string.settings_services_pixabay_enable_title),
                 subtitle = if (pixabayProviderEnabled) {
-                    "Shows Pixabay photos, widget shuffles, rotations, and video loops"
+                    stringResource(R.string.settings_services_pixabay_on_subtitle)
                 } else {
-                    "Hides Pixabay browsing and skips Pixabay API calls"
+                    stringResource(R.string.settings_services_pixabay_off_subtitle)
                 },
                 checked = pixabayProviderEnabled,
                 onCheckedChange = { viewModel.setPixabayProviderEnabled(it) },
             )
             SettingsItem(
                 icon = Icons.Default.Key,
-                title = "Pixabay API Key",
-                subtitle = "Free key for photos + videos (pixabay.com/api/docs)",
+                title = stringResource(R.string.settings_services_pixabay_key_title),
+                subtitle = stringResource(R.string.settings_services_pixabay_key_subtitle),
                 onClick = { showPixabayKey = true },
             )
             if (showPixabayKey) {
                 ProviderApiKeyDialog(
-                    title = "Pixabay API Key",
-                    description = "Get a free key at pixabay.com/api/docs",
+                    title = stringResource(R.string.settings_services_pixabay_dialog_title),
+                    description = stringResource(R.string.settings_services_pixabay_dialog_desc),
                     value = pixabayApiKey,
-                    placeholder = "Paste API key here",
+                    placeholder = stringResource(R.string.settings_services_pixabay_dialog_placeholder),
                     onSave = viewModel::setPixabayKey,
                     onDismiss = { showPixabayKey = false },
                 )
@@ -1823,16 +1823,16 @@ fun SettingsScreen(
             var showFreesoundKey by remember { mutableStateOf(false) }
             SettingsItem(
                 icon = Icons.Default.MusicNote,
-                title = "Freesound API Key",
-                subtitle = "Optional token for Freesound sound search",
+                title = stringResource(R.string.settings_services_freesound_key_title),
+                subtitle = stringResource(R.string.settings_services_freesound_key_subtitle),
                 onClick = { showFreesoundKey = true },
             )
             if (showFreesoundKey) {
                 ProviderApiKeyDialog(
-                    title = "Freesound API Key",
-                    description = "Paste a Freesound API token for sound search.",
+                    title = stringResource(R.string.settings_services_freesound_dialog_title),
+                    description = stringResource(R.string.settings_services_freesound_dialog_desc),
                     value = freesoundApiKey,
-                    placeholder = "Paste API token here",
+                    placeholder = stringResource(R.string.settings_services_freesound_dialog_placeholder),
                     onSave = viewModel::setFreesoundKey,
                     onDismiss = { showFreesoundKey = false },
                 )
@@ -1844,22 +1844,22 @@ fun SettingsScreen(
             }
             SettingsToggle(
                 icon = Icons.Default.AutoAwesome,
-                title = "Enable external generated wallpapers",
+                title = stringResource(R.string.settings_services_generated_enable_title),
                 subtitle = if (generatedContentProviderEnabled) {
-                    "Shows generation entry points and allows Stability requests"
+                    stringResource(R.string.settings_services_generated_on_subtitle)
                 } else {
-                    "Off by default. Hides generation entry points and blocks Stability requests"
+                    stringResource(R.string.settings_services_generated_off_subtitle)
                 },
                 checked = generatedContentProviderEnabled,
                 onCheckedChange = { viewModel.setGeneratedContentProviderEnabled(it) },
             )
             SettingsItem(
                 icon = Icons.Default.Info,
-                title = "Generated wallpaper disclosure",
+                title = stringResource(R.string.settings_services_generated_disclosure_title),
                 subtitle = if (generatedContentDisclosureAccepted) {
-                    "Accepted; review prompt sharing, key use, and local storage"
+                    stringResource(R.string.settings_services_generated_disclosure_accepted_subtitle)
                 } else {
-                    "Review prompt sharing, provider credits, and local storage"
+                    stringResource(R.string.settings_services_generated_disclosure_subtitle)
                 },
                 onClick = { showGeneratedDisclosure = true },
             )
@@ -1874,23 +1874,23 @@ fun SettingsScreen(
             if (generatedContentProviderEnabled) {
                 SettingsItem(
                     icon = Icons.Default.AutoAwesome,
-                    title = "Open generation studio",
-                    subtitle = "Create wallpapers with Stability after disclosure and key setup",
+                    title = stringResource(R.string.settings_services_generated_studio_title),
+                    subtitle = stringResource(R.string.settings_services_generated_studio_subtitle),
                     onClick = onGeneratedWallpapersClick,
                 )
                 SettingsItem(
                     icon = Icons.Default.Key,
-                    title = "Stability AI API Key",
-                    subtitle = "For advanced image generation (stability.ai)",
+                    title = stringResource(R.string.settings_services_stability_key_title),
+                    subtitle = stringResource(R.string.settings_services_stability_key_subtitle),
                     onClick = { showStabilityKey = true },
                 )
             }
             if (generatedContentProviderEnabled && showStabilityKey) {
                 ProviderApiKeyDialog(
-                    title = "Stability AI API Key",
-                    description = "Get a free key at stability.ai/account/keys",
+                    title = stringResource(R.string.settings_services_stability_dialog_title),
+                    description = stringResource(R.string.settings_services_stability_dialog_desc),
                     value = stabilityAiKey,
-                    placeholder = "Paste API key here",
+                    placeholder = stringResource(R.string.settings_services_stability_dialog_placeholder),
                     onSave = viewModel::setStabilityKey,
                     onDismiss = { showStabilityKey = false },
                 )
@@ -1899,18 +1899,18 @@ fun SettingsScreen(
 
         // Storage
         SettingsSection(
-            title = "Storage",
-            description = "Keep downloads accessible while trimming temporary media and cached feeds when needed.",
+            title = stringResource(R.string.settings_storage_section_title),
+            description = stringResource(R.string.settings_storage_section_description),
         ) {
             SettingsItem(
                 icon = Icons.Default.Download,
-                title = "Downloads",
-                subtitle = "Review wallpapers, sounds, and videos saved by Aura",
+                title = stringResource(R.string.settings_storage_downloads_title),
+                subtitle = stringResource(R.string.settings_storage_downloads_subtitle),
                 onClick = onDownloadsClick,
             )
             SettingsItem(
                 icon = Icons.Default.Folder,
-                title = "Free up storage",
+                title = stringResource(R.string.settings_storage_free_up_title),
                 subtitle = cacheUsageSubtitle(cacheUsage),
                 onClick = { showClearCacheConfirm = true },
             )
@@ -1920,12 +1920,12 @@ fun SettingsScreen(
         // Reads in-memory metrics collected by SourceMetrics; resets on process death.
         var showDiagnostics by remember { mutableStateOf(false) }
         SettingsSection(
-            title = "Diagnostics",
-            description = "Local-only troubleshooting details. Nothing is uploaded automatically.",
+            title = stringResource(R.string.settings_diagnostics_section_title),
+            description = stringResource(R.string.settings_diagnostics_section_description),
         ) {
             SettingsItem(
                 icon = Icons.Default.BugReport,
-                title = "Crash diagnostics bundle",
+                title = stringResource(R.string.settings_diag_crash_title),
                 subtitle = crashDiagnosticsSubtitle(crashDiagnostics),
                 onClick = {
                     viewModel.refreshCrashDiagnostics()
@@ -1934,7 +1934,7 @@ fun SettingsScreen(
             )
             SettingsItem(
                 icon = Icons.Default.Schedule,
-                title = "Background work",
+                title = stringResource(R.string.settings_diag_background_title),
                 subtitle = backgroundWorkDiagnosticsSubtitle(backgroundWorkDiagnostics),
                 onClick = {
                     viewModel.refreshBackgroundWorkDiagnostics()
@@ -1952,11 +1952,11 @@ fun SettingsScreen(
             )
             SettingsItem(
                 icon = Icons.Default.MonitorHeart,
-                title = "Source diagnostics",
+                title = stringResource(R.string.settings_diag_source_title),
                 subtitle = if (diagnostics.isEmpty()) {
-                    "Live provider health appears here after browsing"
+                    stringResource(R.string.settings_diag_source_empty_subtitle)
                 } else {
-                    "${diagnostics.size} active sources tracked this session"
+                    stringResource(R.string.settings_diag_source_count_subtitle, diagnostics.size)
                 },
                 onClick = { showDiagnostics = true },
             )
@@ -2006,7 +2006,7 @@ fun SettingsScreen(
             val snapshot = backgroundWorkDiagnostics
             AlertDialog(
                 onDismissRequest = { showBackgroundWorkDiagnostics = false },
-                title = { Text("Background work") },
+                title = { Text(stringResource(R.string.settings_diag_background_title)) },
                 text = {
                     Column(
                         modifier = Modifier
@@ -2016,14 +2016,14 @@ fun SettingsScreen(
                         verticalArrangement = Arrangement.spacedBy(12.dp),
                     ) {
                         Text(
-                            "Local WorkManager status and Data Saver state for scheduled wallpaper, weather, and bundled-content jobs.",
+                            stringResource(R.string.settings_diag_background_dialog_body),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
                         BackgroundWorkDiagnosticsSummary(snapshot)
                         if (snapshot.rows.isEmpty()) {
                             Text(
-                                "No background-work rows are available.",
+                                stringResource(R.string.settings_diag_background_no_rows),
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                             )
@@ -2035,10 +2035,10 @@ fun SettingsScreen(
                     }
                 },
                 confirmButton = {
-                    TextButton(onClick = { showBackgroundWorkDiagnostics = false }) { Text("Close") }
+                    TextButton(onClick = { showBackgroundWorkDiagnostics = false }) { Text(stringResource(R.string.common_close)) }
                 },
                 dismissButton = {
-                    TextButton(onClick = { viewModel.refreshBackgroundWorkDiagnostics() }) { Text("Refresh") }
+                    TextButton(onClick = { viewModel.refreshBackgroundWorkDiagnostics() }) { Text(stringResource(R.string.common_refresh)) }
                 },
             )
         }
@@ -2046,7 +2046,7 @@ fun SettingsScreen(
             val snapshots = diagnostics
             AlertDialog(
                 onDismissRequest = { showDiagnostics = false },
-                title = { Text("Source diagnostics") },
+                title = { Text(stringResource(R.string.settings_diag_source_dialog_title)) },
                 text = {
                     Column(
                         modifier = Modifier
@@ -2056,7 +2056,7 @@ fun SettingsScreen(
                         verticalArrangement = Arrangement.spacedBy(12.dp),
                     ) {
                         Text(
-                            "Live in-session health for wallpaper, video, and sound providers. Cached results can still keep browsing usable when a source fails.",
+                            stringResource(R.string.settings_diag_source_dialog_body),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
@@ -2070,18 +2070,18 @@ fun SettingsScreen(
                         }
                     }
                 },
-                confirmButton = { TextButton(onClick = { showDiagnostics = false }) { Text("Close") } },
+                confirmButton = { TextButton(onClick = { showDiagnostics = false }) { Text(stringResource(R.string.common_close)) } },
                 dismissButton = {
                     TextButton(onClick = {
                         viewModel.resetDiagnostics()
-                    }) { Text("Reset") }
+                    }) { Text(stringResource(R.string.common_reset)) }
                 },
             )
         }
         if (showCrashDiagnostics) {
             AlertDialog(
                 onDismissRequest = { if (!crashDiagnosticsBusy) showCrashDiagnostics = false },
-                title = { Text("Crash diagnostics") },
+                title = { Text(stringResource(R.string.settings_diag_crash_dialog_title)) },
                 text = {
                     Column(
                         modifier = Modifier.fillMaxWidth(),
@@ -2093,12 +2093,12 @@ fun SettingsScreen(
                             color = MaterialTheme.colorScheme.onSurface,
                         )
                         Text(
-                            "The bundle includes app and Android versions, ABI, active source/provider context, reproduction fields, and a sanitized tail of the local crash log.",
+                            stringResource(R.string.settings_diag_crash_dialog_body),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
                         Text(
-                            "Aura does not send this data unless you copy it or choose a share target.",
+                            stringResource(R.string.settings_diag_crash_dialog_no_send),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
@@ -2122,20 +2122,20 @@ fun SettingsScreen(
                                     )
                                     viewModel.refreshCrashDiagnostics()
                                 } catch (_: Exception) {
-                                    showSettingsFeedback("Could not build diagnostics")
+                                    showSettingsFeedback(context.getString(R.string.settings_feedback_diagnostics_failed))
                                 } finally {
                                     crashDiagnosticsBusy = false
                                 }
                             }
                         },
-                    ) { Text("Copy") }
+                    ) { Text(stringResource(R.string.settings_diag_crash_copy)) }
                 },
                 dismissButton = {
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         TextButton(
                             enabled = !crashDiagnosticsBusy,
                             onClick = { showCrashDiagnostics = false },
-                        ) { Text("Close") }
+                        ) { Text(stringResource(R.string.common_close)) }
                         TextButton(
                             enabled = !crashDiagnosticsBusy,
                             onClick = {
@@ -2150,13 +2150,13 @@ fun SettingsScreen(
                                         )
                                         viewModel.refreshCrashDiagnostics()
                                     } catch (_: Exception) {
-                                        showSettingsFeedback("Could not build diagnostics")
+                                        showSettingsFeedback(context.getString(R.string.settings_feedback_diagnostics_failed))
                                     } finally {
                                         crashDiagnosticsBusy = false
                                     }
                                 }
                             },
-                        ) { Text("Share") }
+                        ) { Text(stringResource(R.string.settings_diag_crash_share)) }
                     }
                 },
             )
@@ -2164,92 +2164,92 @@ fun SettingsScreen(
 
         // Permissions and sources
         SettingsSection(
-            title = "Permissions and sources",
-            description = "Every permission Aura requests and how it uses data.",
+            title = stringResource(R.string.settings_permissions_section_title),
+            description = stringResource(R.string.settings_permissions_section_description),
         ) {
             PermissionTransparencyRow(
                 icon = Icons.Default.Wallpaper,
-                permission = "Set wallpaper",
-                scope = "Local",
-                description = "Apply images as home or lock screen wallpaper. No data leaves the device.",
+                permission = stringResource(R.string.settings_perm_wallpaper),
+                scope = stringResource(R.string.settings_perm_wallpaper_scope),
+                description = stringResource(R.string.settings_perm_wallpaper_desc),
             )
             PermissionTransparencyRow(
                 icon = Icons.Default.Language,
-                permission = "Internet",
-                scope = "Remote",
-                description = "Fetch wallpapers, videos, and sounds from Wallhaven, Pexels, Pixabay, YouTube (NewPipe/yt-dlp), and Freesound. Community features use Firebase.",
+                permission = stringResource(R.string.settings_perm_internet),
+                scope = stringResource(R.string.settings_perm_internet_scope),
+                description = stringResource(R.string.settings_perm_internet_desc),
             )
             PermissionTransparencyRow(
                 icon = Icons.Default.Notifications,
-                permission = "Notifications",
-                scope = "Local",
-                description = "Daily wallpaper reminders and download completion alerts. Only active when you enable daily wallpaper or download content.",
+                permission = stringResource(R.string.settings_perm_notifications),
+                scope = stringResource(R.string.settings_perm_notifications_scope),
+                description = stringResource(R.string.settings_perm_notifications_desc),
                 granted = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                     ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED
                 } else true,
             )
             PermissionTransparencyRow(
                 icon = Icons.Default.LocationOn,
-                permission = "Approximate location",
-                scope = "Remote",
-                description = "Weather wallpaper effects fetch local conditions from Open-Meteo. Coordinates are rounded and cleared when weather effects are disabled.",
+                permission = stringResource(R.string.settings_perm_location),
+                scope = stringResource(R.string.settings_perm_location_scope),
+                description = stringResource(R.string.settings_perm_location_desc),
                 granted = ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED,
             )
             PermissionTransparencyRow(
                 icon = Icons.Default.Contacts,
-                permission = "Contacts",
-                scope = "Local",
-                description = "Assign per-contact ringtones. Contact data stays on-device and is never uploaded.",
+                permission = stringResource(R.string.settings_perm_contacts),
+                scope = stringResource(R.string.settings_perm_contacts_scope),
+                description = stringResource(R.string.settings_perm_contacts_desc),
                 granted = ContextCompat.checkSelfPermission(context, Manifest.permission.WRITE_CONTACTS) == PackageManager.PERMISSION_GRANTED,
             )
             PermissionTransparencyRow(
                 icon = Icons.Default.Mic,
-                permission = "Microphone",
-                scope = "Local",
-                description = "Record audio for custom sounds. Recording starts only on tap and stays local until you choose to upload.",
+                permission = stringResource(R.string.settings_perm_microphone),
+                scope = stringResource(R.string.settings_perm_microphone_scope),
+                description = stringResource(R.string.settings_perm_microphone_desc),
                 granted = ContextCompat.checkSelfPermission(context, Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED,
             )
             PermissionTransparencyRow(
                 icon = Icons.Default.Settings,
-                permission = "Modify settings",
-                scope = "Local",
-                description = "Set default ringtone, notification, or alarm sound via system RingtoneManager.",
+                permission = stringResource(R.string.settings_perm_modify_settings),
+                scope = stringResource(R.string.settings_perm_modify_settings_scope),
+                description = stringResource(R.string.settings_perm_modify_settings_desc),
             )
             PermissionTransparencyRow(
                 icon = Icons.Default.PlayCircle,
-                permission = "Foreground service",
-                scope = "Local",
-                description = "Live wallpaper playback and wallpaper rotation triggers. Runs only when live wallpaper or rotation is active.",
+                permission = stringResource(R.string.settings_perm_foreground),
+                scope = stringResource(R.string.settings_perm_foreground_scope),
+                description = stringResource(R.string.settings_perm_foreground_desc),
             )
         }
 
         // About
         SettingsSection(
-            title = "About",
-            description = "Project details, source code, and the open-source building blocks behind Aura.",
+            title = stringResource(R.string.settings_about_section_title),
+            description = stringResource(R.string.settings_about_section_description),
         ) {
             SettingsItem(
                 icon = Icons.Default.Info,
-                title = "Aura",
-                subtitle = "Version ${com.freevibe.BuildConfig.VERSION_NAME} • Open-source device personalization studio",
+                title = stringResource(R.string.settings_about_app_title),
+                subtitle = stringResource(R.string.settings_about_app_subtitle, com.freevibe.BuildConfig.VERSION_NAME),
                 onClick = {},
             )
             SettingsItem(
                 icon = Icons.Default.Code,
-                title = "Source code",
-                subtitle = "Browse the project on GitHub",
+                title = stringResource(R.string.settings_about_source_title),
+                subtitle = stringResource(R.string.settings_about_source_subtitle),
                 onClick = { openExternalUrl(context, AURA_SOURCE_URL) },
             )
             SettingsItem(
                 icon = Icons.Default.Security,
-                title = "Privacy policy",
-                subtitle = "Review data use, diagnostics, community deletion, and generated wallpaper handling",
+                title = stringResource(R.string.settings_about_privacy_title),
+                subtitle = stringResource(R.string.settings_about_privacy_subtitle),
                 onClick = { openExternalUrl(context, AURA_PRIVACY_POLICY_URL) },
             )
             SettingsItem(
                 icon = Icons.Default.Description,
-                title = "Open source licenses",
-                subtitle = "See generated notices, library licenses, and content-source attributions",
+                title = stringResource(R.string.settings_about_licenses_title),
+                subtitle = stringResource(R.string.settings_about_licenses_subtitle),
                 onClick = onLicensesClick,
             )
         }
@@ -2293,14 +2293,14 @@ fun SettingsScreen(
 
     if (showAutoBackupIntervalPicker) {
         val intervals = listOf(
-            12L to "Every 12 hours",
-            24L to "Daily",
-            168L to "Weekly",
-            720L to "Monthly",
+            12L to stringResource(R.string.settings_picker_backup_interval_12h),
+            24L to stringResource(R.string.settings_picker_backup_interval_daily),
+            168L to stringResource(R.string.settings_picker_backup_interval_weekly),
+            720L to stringResource(R.string.settings_picker_backup_interval_monthly),
         )
         AlertDialog(
             onDismissRequest = { showAutoBackupIntervalPicker = false },
-            title = { Text("Backup interval") },
+            title = { Text(stringResource(R.string.settings_picker_backup_interval_title)) },
             text = {
                 Column {
                     intervals.forEach { (hours, label) ->
@@ -2316,7 +2316,7 @@ fun SettingsScreen(
                 }
             },
             confirmButton = {
-                TextButton(onClick = { showAutoBackupIntervalPicker = false }) { Text("Cancel") }
+                TextButton(onClick = { showAutoBackupIntervalPicker = false }) { Text(stringResource(R.string.common_cancel)) }
             },
         )
     }
@@ -2325,7 +2325,7 @@ fun SettingsScreen(
         val keepCounts = listOf(3, 5, 10, 20)
         AlertDialog(
             onDismissRequest = { showAutoBackupKeepPicker = false },
-            title = { Text("Backups to keep") },
+            title = { Text(stringResource(R.string.settings_picker_backup_keep_title)) },
             text = {
                 Column {
                     keepCounts.forEach { count ->
@@ -2341,7 +2341,7 @@ fun SettingsScreen(
                 }
             },
             confirmButton = {
-                TextButton(onClick = { showAutoBackupKeepPicker = false }) { Text("Cancel") }
+                TextButton(onClick = { showAutoBackupKeepPicker = false }) { Text(stringResource(R.string.common_cancel)) }
             },
         )
     }
@@ -2350,10 +2350,10 @@ fun SettingsScreen(
     if (showColumnsPicker) {
         AlertDialog(
             onDismissRequest = { showColumnsPicker = false },
-            title = { Text("Grid columns") },
+            title = { Text(stringResource(R.string.settings_picker_grid_columns_title)) },
             text = {
                 Column {
-                    listOf(1 to "1 column", 2 to "2 columns", 3 to "3 columns", 4 to "4 columns").forEach { (count, label) ->
+                    listOf(1 to stringResource(R.string.settings_picker_grid_1), 2 to stringResource(R.string.settings_picker_grid_2), 3 to stringResource(R.string.settings_picker_grid_3), 4 to stringResource(R.string.settings_picker_grid_4)).forEach { (count, label) ->
                         SettingsRadioOptionRow(
                             label = label,
                             selected = gridColumns == count,
@@ -2366,7 +2366,7 @@ fun SettingsScreen(
                 }
             },
             confirmButton = {
-                TextButton(onClick = { showColumnsPicker = false }) { Text("Cancel") }
+                TextButton(onClick = { showColumnsPicker = false }) { Text(stringResource(R.string.common_cancel)) }
             },
         )
     }
@@ -2375,10 +2375,10 @@ fun SettingsScreen(
     if (showResPicker) {
         AlertDialog(
             onDismissRequest = { showResPicker = false },
-            title = { Text("Preferred resolution") },
+            title = { Text(stringResource(R.string.settings_picker_resolution_title)) },
             text = {
                 Column {
-                    listOf("" to "Any resolution", "1920x1080" to "1920x1080 (FHD)", "2560x1440" to "2560x1440 (QHD)", "3840x2160" to "3840x2160 (4K)").forEach { (res, label) ->
+                    listOf("" to stringResource(R.string.settings_picker_resolution_any), "1920x1080" to stringResource(R.string.settings_picker_resolution_fhd), "2560x1440" to stringResource(R.string.settings_picker_resolution_qhd), "3840x2160" to stringResource(R.string.settings_picker_resolution_4k)).forEach { (res, label) ->
                         SettingsRadioOptionRow(
                             label = label,
                             selected = preferredRes == res,
@@ -2391,7 +2391,7 @@ fun SettingsScreen(
                 }
             },
             confirmButton = {
-                TextButton(onClick = { showResPicker = false }) { Text("Cancel") }
+                TextButton(onClick = { showResPicker = false }) { Text(stringResource(R.string.common_cancel)) }
             },
         )
     }
@@ -2421,11 +2421,11 @@ fun SettingsScreen(
         }
         AlertDialog(
             onDismissRequest = { showStylePicker = false },
-            title = { Text("Style preferences") },
+            title = { Text(stringResource(R.string.settings_picker_styles_title)) },
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                     Text(
-                        "These styles are prioritized across wallpaper discovery and ranking.",
+                        stringResource(R.string.settings_picker_styles_hint),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
@@ -2456,10 +2456,10 @@ fun SettingsScreen(
                 TextButton(onClick = {
                     viewModel.setUserStyles(selectedStyles.sorted().joinToString(","))
                     showStylePicker = false
-                }) { Text("Save") }
+                }) { Text(stringResource(R.string.common_save)) }
             },
             dismissButton = {
-                TextButton(onClick = { showStylePicker = false }) { Text("Cancel") }
+                TextButton(onClick = { showStylePicker = false }) { Text(stringResource(R.string.common_cancel)) }
             },
         )
     }
@@ -2471,7 +2471,7 @@ fun SettingsScreen(
         var alarmQ by remember { mutableStateOf(ytAlarmsQuery) }
         AlertDialog(
             onDismissRequest = { showYtSoundEditor = false },
-            title = { Text("YouTube Search Queries") },
+            title = { Text(stringResource(R.string.settings_picker_yt_queries_title)) },
             text = {
                 Column(
                     modifier = Modifier
@@ -2480,14 +2480,14 @@ fun SettingsScreen(
                     verticalArrangement = Arrangement.spacedBy(12.dp),
                 ) {
                     Text(
-                        "Customize what YouTube searches for in each sound tab.",
+                        stringResource(R.string.settings_picker_yt_queries_hint),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                     OutlinedTextField(
                         value = ringQ,
                         onValueChange = { ringQ = it },
-                        label = { Text("Ringtones") },
+                        label = { Text(stringResource(R.string.settings_picker_yt_ringtones_label)) },
                         modifier = Modifier.fillMaxWidth(),
                         singleLine = false,
                         maxLines = 2,
@@ -2496,7 +2496,7 @@ fun SettingsScreen(
                     OutlinedTextField(
                         value = notifQ,
                         onValueChange = { notifQ = it },
-                        label = { Text("Notifications") },
+                        label = { Text(stringResource(R.string.settings_picker_yt_notifications_label)) },
                         modifier = Modifier.fillMaxWidth(),
                         singleLine = false,
                         maxLines = 2,
@@ -2505,7 +2505,7 @@ fun SettingsScreen(
                     OutlinedTextField(
                         value = alarmQ,
                         onValueChange = { alarmQ = it },
-                        label = { Text("Alarms") },
+                        label = { Text(stringResource(R.string.settings_picker_yt_alarms_label)) },
                         modifier = Modifier.fillMaxWidth(),
                         singleLine = false,
                         maxLines = 2,
@@ -2519,9 +2519,9 @@ fun SettingsScreen(
                     viewModel.setYtNotificationsQuery(notifQ.trim())
                     viewModel.setYtAlarmsQuery(alarmQ.trim())
                     showYtSoundEditor = false
-                }) { Text("Save") }
+                }) { Text(stringResource(R.string.common_save)) }
             },
-            dismissButton = { TextButton(onClick = { showYtSoundEditor = false }) { Text("Cancel") } },
+            dismissButton = { TextButton(onClick = { showYtSoundEditor = false }) { Text(stringResource(R.string.common_cancel)) } },
         )
     }
 
@@ -2530,7 +2530,7 @@ fun SettingsScreen(
         var blockedText by remember { mutableStateOf(ytBlockedWords) }
         AlertDialog(
             onDismissRequest = { showYtBlockedEditor = false },
-            title = { Text("Blocked Words") },
+            title = { Text(stringResource(R.string.settings_picker_blocked_words_title)) },
             text = {
                 Column(
                     modifier = Modifier
@@ -2539,7 +2539,7 @@ fun SettingsScreen(
                     verticalArrangement = Arrangement.spacedBy(8.dp),
                 ) {
                     Text(
-                        "Comma-separated words. YouTube results containing any of these are hidden.",
+                        stringResource(R.string.settings_picker_blocked_words_hint),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
@@ -2549,19 +2549,19 @@ fun SettingsScreen(
                         modifier = Modifier.fillMaxWidth(),
                         singleLine = false,
                         maxLines = 5,
-                        placeholder = { Text("compilation,mix,playlist...") },
+                        placeholder = { Text(stringResource(R.string.settings_picker_blocked_words_placeholder)) },
                         keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
                     )
-                    Text("${blockedText.split(",").filter { it.isNotBlank() }.size} words", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text(stringResource(R.string.settings_picker_blocked_words_count, blockedText.split(",").filter { it.isNotBlank() }.size), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             },
             confirmButton = {
                 TextButton(onClick = {
                     viewModel.setYtBlockedWords(blockedText.trim())
                     showYtBlockedEditor = false
-                }) { Text("Save") }
+                }) { Text(stringResource(R.string.common_save)) }
             },
-            dismissButton = { TextButton(onClick = { showYtBlockedEditor = false }) { Text("Cancel") } },
+            dismissButton = { TextButton(onClick = { showYtBlockedEditor = false }) { Text(stringResource(R.string.common_cancel)) } },
         )
     }
 
@@ -2569,16 +2569,16 @@ fun SettingsScreen(
     if (showClearCacheConfirm) {
         AlertDialog(
             onDismissRequest = { showClearCacheConfirm = false },
-            title = { Text("Clear cache and offline saves?") },
+            title = { Text(stringResource(R.string.settings_picker_clear_cache_title)) },
             text = { Text(clearCacheConfirmation(cacheUsage)) },
             confirmButton = {
                 TextButton(onClick = {
                     viewModel.clearCache()
                     showClearCacheConfirm = false
-                }) { Text("Clear", color = MaterialTheme.colorScheme.error) }
+                }) { Text(stringResource(R.string.settings_picker_clear_action), color = MaterialTheme.colorScheme.error) }
             },
             dismissButton = {
-                TextButton(onClick = { showClearCacheConfirm = false }) { Text("Cancel") }
+                TextButton(onClick = { showClearCacheConfirm = false }) { Text(stringResource(R.string.common_cancel)) }
             },
         )
     }

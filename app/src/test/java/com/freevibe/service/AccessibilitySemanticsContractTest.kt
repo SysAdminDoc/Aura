@@ -62,7 +62,7 @@ class AccessibilitySemanticsContractTest {
                 tokens = listOf(
                     "customActions = cardActions",
                     "stateDescription = if (selectedColor == hex)",
-                    "clickable(onClickLabel = wallpaperColorFilterActionLabel(hex))",
+                    "clickable(onClickLabel = colorLabel)",
                 ),
             ),
             SemanticsRequirement(

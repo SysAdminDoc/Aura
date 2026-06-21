@@ -140,10 +140,10 @@ class ReleasePolishContractTest {
     fun `favorites empty states expose restore action instead of a dead end`() {
         val source = File("src/main/java/com/freevibe/ui/screens/favorites/FavoritesScreen.kt").readText()
 
-        assertTrue(source.contains("No favorite wallpapers yet"))
-        assertTrue(source.contains("No favorite sounds yet"))
+        assertTrue(source.contains("favorites_empty_wallpapers_title") || source.contains("No favorite wallpapers yet"))
+        assertTrue(source.contains("favorites_empty_sounds_title") || source.contains("No favorite sounds yet"))
         assertTrue(source.contains("primaryAction = AuraStateAction("))
-        assertTrue(source.contains("label = \"Import backup\""))
+        assertTrue(source.contains("favorites_import_backup") || source.contains("Import backup"))
         assertTrue(source.contains("importLauncher.launch(arrayOf(\"application/json\"))"))
     }
 

@@ -1065,4 +1065,6 @@
     <string name="wallpapers_upload_tags_placeholder">dark, gradient, lock screen</string>
     <string name="wallpapers_upload_source_placeholder">https://example.com/source</string>
     <string name="wallpapers_source_health_summary">Limited source health right now: %1$s</string>
+    <string name="wallpapers_card_badge_amoled">AMOLED</string>
+    <string name="wallpapers_card_badge_icon_safe">Icon-safe</string>
 </resources>

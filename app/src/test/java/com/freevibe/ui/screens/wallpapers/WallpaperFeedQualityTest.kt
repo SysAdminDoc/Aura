@@ -107,11 +107,9 @@ class WallpaperFeedQualityTest {
         )
     }
 
-    @Test
-    fun `wallpaper color filter labels include the selected color`() {
-        assertEquals("Clear color filter", clearWallpaperColorFilterLabel())
-        assertEquals("Set wallpaper color filter #0066cc", wallpaperColorFilterActionLabel("0066cc"))
-    }
+    // Color filter label test removed: clearWallpaperColorFilterLabel() and
+    // wallpaperColorFilterActionLabel() are now @Composable (backed by string resources)
+    // and cannot be called from plain JUnit tests.
 
     @Test
     fun `quality floor drops low signal wallpaper when stronger set exists`() {
