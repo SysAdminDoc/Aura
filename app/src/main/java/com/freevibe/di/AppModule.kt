@@ -15,6 +15,7 @@ import com.freevibe.data.remote.RateLimitInterceptor
 import com.freevibe.data.remote.audius.AudiusApi
 import com.freevibe.data.remote.bing.BingDailyApi
 import com.freevibe.data.remote.ccmixter.CcMixterApi
+import com.freevibe.data.remote.lemmy.LemmyApi
 import com.freevibe.data.remote.nasa.NasaApodApi
 import com.freevibe.data.remote.stability.StabilityAiApi
 import com.freevibe.data.remote.wikimedia.WikimediaPotdApi
@@ -136,6 +137,16 @@ object AppModule {
             .addConverterFactory(MoshiConverterFactory.create(moshi))
             .build()
             .create(WikimediaPotdApi::class.java)
+
+    @Provides
+    @Singleton
+    fun provideLemmyApi(client: OkHttpClient, moshi: Moshi): LemmyApi =
+        Retrofit.Builder()
+            .baseUrl(LemmyApi.BASE_URL)
+            .client(client)
+            .addConverterFactory(MoshiConverterFactory.create(moshi))
+            .build()
+            .create(LemmyApi::class.java)
 
     @Provides
     @Singleton

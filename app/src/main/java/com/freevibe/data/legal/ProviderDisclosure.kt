@@ -292,6 +292,18 @@ val providerDisclosures = listOf(
         userActions = "Enable weather effects, grant approximate location, disable weather effects, and clear app data.",
         storeDisclosure = "Third-party weather source receiving approximate coordinates only for optional weather effects.",
     ),
+    ProviderDisclosure(
+        source = ContentSource.LEMMY,
+        displayName = "Lemmy",
+        content = "Community-voted wallpapers from Lemmy's federated wallpaper communities",
+        status = ProviderStatus.ACTIVE,
+        termsUrl = "https://join-lemmy.org/docs/en/about/guide.html",
+        licenseSummary = "Public API; individual post licenses vary by uploader.",
+        attribution = "Show post author, community, and source link on wallpaper detail.",
+        cachePolicy = "Cache page results for Discover feed freshness; no persistent storage of Lemmy account data.",
+        userActions = "Browse community wallpapers, view source pages, favorite or apply under user control.",
+        storeDisclosure = "Third-party federated content aggregator providing crowd-voted wallpaper images.",
+    ),
 )
 
 val providerDisclosuresBySource: Map<ContentSource, ProviderDisclosure> =
@@ -465,6 +477,14 @@ val providerRuntimeControls = listOf(
         currentControl = "Settings exposes weather effects as an explicit opt-in before scheduling Open-Meteo refreshes.",
         disabledBehavior = "Disabled mode cancels weather refresh work and stops Open-Meteo requests while non-weather wallpaper overlays remain available.",
         followUp = "Keep the separate stored-coordinate wipe and precision-minimization work tracked in ROADMAP.md.",
+    ),
+    ProviderRuntimeControl(
+        source = ContentSource.LEMMY,
+        surfaces = "Discover feed secondary source.",
+        status = ProviderRuntimeControlStatus.COVERED,
+        currentControl = "Lemmy wallpapers appear in the Discover feed as a secondary source alongside NASA APOD, Wikipedia POTD, and Bing Daily.",
+        disabledBehavior = "Not fetched when the Discover feed excludes secondary sources or when the Lemmy API is unreachable.",
+        followUp = "None.",
     ),
 )
 

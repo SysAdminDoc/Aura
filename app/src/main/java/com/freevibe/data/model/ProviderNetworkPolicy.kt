@@ -197,6 +197,16 @@ val providerNetworkPolicies = listOf(
         maxBatchDownloadPerUserAction = 0,
         quotaSummary = "Weather refresh is scheduled, single-request, and not downloadable media.",
     ),
+    ProviderNetworkPolicy(
+        source = ContentSource.LEMMY,
+        sourceKey = "lemmy",
+        sourceAliases = setOf("lemmy.world"),
+        requestCacheTtlMs = TimeUnit.MINUTES.toMillis(15),
+        hostSuffixes = setOf("lemmy.world"),
+        maxAutomaticPrefetch = 20,
+        maxBatchDownloadPerUserAction = 5,
+        quotaSummary = "Public API with rate limiting at ~1 req/s. Fetches community wallpaper posts with vote counts.",
+    ),
 )
 
 val providerNetworkPoliciesBySource: Map<ContentSource, ProviderNetworkPolicy> =

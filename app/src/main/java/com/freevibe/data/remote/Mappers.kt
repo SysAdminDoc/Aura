@@ -3,6 +3,7 @@ package com.freevibe.data.remote
 import com.freevibe.data.model.*
 import com.freevibe.data.remote.bing.BingDailyApi
 import com.freevibe.data.remote.bing.BingImage
+import com.freevibe.data.remote.lemmy.LemmyPostView
 import com.freevibe.data.remote.nasa.NasaApodResponse
 import com.freevibe.data.remote.pixabay.PixabayPhoto
 import com.freevibe.data.remote.reddit.RedditPost
@@ -228,6 +229,30 @@ fun RedditPost.toWallpaper(): Wallpaper {
         tags = listOf(subreddit),
         sourcePageUrl = "https://www.reddit.com$permalink",
         uploaderName = author,
+    )
+}
+
+// -- Lemmy -> Wallpaper --
+
+private val IMAGE_URL_REGEX = Regex("""(?i)\.(jpe?g|png|webp|gif|avif|heic)(\?.*)?$""")
+
+fun LemmyPostView.toWallpaper(): Wallpaper? {
+    val imageUrl = post.url ?: return null
+    if (!IMAGE_URL_REGEX.containsMatchIn(imageUrl)) return null
+    if (post.nsfw) return null
+    return Wallpaper(
+        id = "lemmy_${post.id}",
+        source = ContentSource.LEMMY,
+        thumbnailUrl = post.thumbnailUrl ?: imageUrl,
+        fullUrl = imageUrl,
+        width = 0,
+        height = 0,
+        category = "community",
+        tags = listOf("lemmy", "community"),
+        sourcePageUrl = post.apId.ifBlank { "https://lemmy.world/post/${post.id}" },
+        uploaderName = creator.displayName ?: creator.name,
+        views = counts.score,
+        favorites = counts.upvotes,
     )
 }
 

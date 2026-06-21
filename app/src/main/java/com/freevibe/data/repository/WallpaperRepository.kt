@@ -7,6 +7,7 @@ import com.freevibe.data.model.ContentSource
 import com.freevibe.data.model.SearchResult
 import com.freevibe.data.model.Wallpaper
 import com.freevibe.data.remote.bing.BingDailyApi
+import com.freevibe.data.remote.lemmy.LemmyApi
 import com.freevibe.data.remote.nasa.NasaApodApi
 import com.freevibe.data.remote.pexels.PexelsApi
 import com.freevibe.data.remote.pixabay.PixabayApi
@@ -104,6 +105,7 @@ private const val DISCOVER_PAGE_SIZE = 60
 private const val PIXABAY_MAX_BACKOFF_SECONDS = 24 * 60 * 60L
 private const val SOURCE_APOD = "nasa_apod"
 private const val SOURCE_WIKI_POTD = "wiki_potd"
+private const val SOURCE_LEMMY = "lemmy"
 private const val SOURCE_BING = "bing"
 private const val SOURCE_DISCOVER = "discover"
 private const val SOURCE_PEXELS = "pexels"
@@ -150,6 +152,7 @@ class WallpaperRepository @Inject constructor(
     private val bingApi: BingDailyApi,
     private val nasaApodApi: NasaApodApi,
     private val wikimediaPotdApi: WikimediaPotdApi,
+    private val lemmyApi: LemmyApi,
     private val pixabayApi: PixabayApi,
     private val pexelsApi: PexelsApi,
     private val cacheManager: WallpaperCacheManager,
@@ -409,6 +412,26 @@ class WallpaperRepository @Inject constructor(
         }
     }
 
+    suspend fun getLemmyWallpapers(page: Int = 1): SearchResult<Wallpaper> {
+        return try {
+            sourceMetrics.measure(SOURCE_LEMMY) {
+                val response = withTimeoutOrNull(8_000L) {
+                    lemmyApi.getPosts(page = page)
+                } ?: return@measure emptySourceResult(page)
+                val wallpapers = response.posts.mapNotNull { it.toWallpaper() }
+                SearchResult(
+                    items = wallpapers,
+                    totalCount = wallpapers.size,
+                    currentPage = page,
+                    hasMore = wallpapers.size >= 15,
+                )
+            }
+        } catch (e: Exception) {
+            if (e is CancellationException) throw e
+            emptySourceResult(page)
+        }
+    }
+
     suspend fun getWallpaperOfTheDay(): Wallpaper? {
         val bingDegraded = sourceMetrics.isDegraded(SOURCE_BING)
         val wallhavenDegraded = sourceMetrics.isDegraded(SOURCE_WALLHAVEN)
@@ -600,6 +623,7 @@ class WallpaperRepository @Inject constructor(
                             null
                         }
                     },
+                    async { loadSourceSafely { getLemmyWallpapers(page = page) } },
                 )
 
                 val primaryResults = primarySources.awaitAll()
