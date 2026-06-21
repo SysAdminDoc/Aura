@@ -87,9 +87,25 @@ internal fun sniffMediaType(header: ByteArray): SniffedMediaType? {
         return SniffedMediaType(MediaFamily.AUDIO, "audio/flac", "flac")
     }
     if (header.asciiAt(4, "ftyp")) {
-        return SniffedMediaType(MediaFamily.AUDIO, "audio/mp4", "m4a")
+        return sniffFtypBrand(header)
     }
     return null
+}
+
+private fun sniffFtypBrand(header: ByteArray): SniffedMediaType {
+    val brand = if (header.size >= 12) {
+        String(header, 8, 4, Charsets.US_ASCII).trim().lowercase(Locale.ROOT)
+    } else {
+        ""
+    }
+    return when {
+        brand.startsWith("heic") || brand.startsWith("heix") || brand == "mif1" ->
+            SniffedMediaType(MediaFamily.IMAGE, "image/heif", "heic")
+        brand.startsWith("avif") || brand.startsWith("avis") ->
+            SniffedMediaType(MediaFamily.IMAGE, "image/avif", "avif")
+        else ->
+            SniffedMediaType(MediaFamily.AUDIO, "audio/mp4", "m4a")
+    }
 }
 
 internal fun sniffMediaFile(file: File): SniffedMediaType? {

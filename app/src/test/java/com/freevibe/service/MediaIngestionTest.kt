@@ -53,6 +53,12 @@ class MediaIngestionTest {
         assertEquals("image/png", sniffMediaType(byteArrayOf(0x89.toByte(), 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A))?.mimeType)
         assertEquals("image/gif", sniffMediaType("GIF89a".toByteArray())?.mimeType)
         assertEquals("image/webp", sniffMediaType("RIFF....WEBP".toByteArray())?.mimeType)
+        assertEquals("image/heif", sniffMediaType("....ftypheic".toByteArray())?.mimeType)
+        assertEquals("image/heif", sniffMediaType("....ftypmif1".toByteArray())?.mimeType)
+        assertEquals("image/avif", sniffMediaType("....ftypavif".toByteArray())?.mimeType)
+        assertEquals("image/avif", sniffMediaType("....ftypavis".toByteArray())?.mimeType)
+        assertEquals("heic", sniffMediaType("....ftypheic".toByteArray())?.extension)
+        assertEquals("avif", sniffMediaType("....ftypavif".toByteArray())?.extension)
     }
 
     @Test
