@@ -145,7 +145,7 @@ private fun ProviderApiKeyDialog(
             TextButton(onClick = {
                 onSave(keyText.trim())
                 onDismiss()
-            }) { Text("Save") }
+            }) { Text(stringResource(R.string.settings_apikey_save)) }
         },
         dismissButton = {
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -155,8 +155,8 @@ private fun ProviderApiKeyDialog(
                         onSave("")
                         onDismiss()
                     },
-                ) { Text("Clear") }
-                TextButton(onClick = onDismiss) { Text("Cancel") }
+                ) { Text(stringResource(R.string.settings_apikey_clear)) }
+                TextButton(onClick = onDismiss) { Text(stringResource(R.string.common_cancel)) }
             }
         },
     )
@@ -341,9 +341,9 @@ fun SettingsScreen(
             }
             showSettingsFeedback(
                 if (persisted) {
-                    "Local wallpaper folder saved"
+                    context.getString(R.string.settings_feedback_local_folder_saved)
                 } else {
-                    "Folder selected. If rotation cannot read it, choose the folder again."
+                    context.getString(R.string.settings_feedback_local_folder_no_persist)
                 },
             )
         }
@@ -370,11 +370,11 @@ fun SettingsScreen(
             viewModel.setAutoBackupFolderUri(uri.toString())
             if (persisted && shouldEnableAfterFolder) {
                 viewModel.setAutoBackupEnabled(true)
-                showSettingsFeedback("Backup folder saved. Scheduled backup is on.")
+                showSettingsFeedback(context.getString(R.string.settings_feedback_backup_folder_on))
             } else if (persisted) {
-                showSettingsFeedback("Backup folder saved")
+                showSettingsFeedback(context.getString(R.string.settings_feedback_backup_folder_saved))
             } else {
-                showSettingsFeedback("Folder selected. If backups cannot write there, choose the folder again.")
+                showSettingsFeedback(context.getString(R.string.settings_feedback_backup_folder_no_persist))
             }
         }
     }
@@ -408,14 +408,14 @@ fun SettingsScreen(
                         tag = "SettingsParallaxGallery",
                     )
                 ) {
-                    LiveWallpaperLaunchMode.DIRECT -> showSettingsFeedback("Aura Parallax opened. Set wallpaper to finish.")
-                    LiveWallpaperLaunchMode.CHOOSER -> showSettingsFeedback("Choose 'Aura Parallax' in the picker, then tap Set wallpaper.")
-                    null -> showSettingsFeedback("Photo ready. Open Settings > Wallpaper > Live Wallpapers to finish.")
+                    LiveWallpaperLaunchMode.DIRECT -> showSettingsFeedback(context.getString(R.string.settings_feedback_parallax_direct))
+                    LiveWallpaperLaunchMode.CHOOSER -> showSettingsFeedback(context.getString(R.string.settings_feedback_parallax_chooser))
+                    null -> showSettingsFeedback(context.getString(R.string.settings_feedback_parallax_manual))
                 }
                 viewModel.clearParallaxGalleryResult()
             }
             is com.freevibe.ui.screens.settings.ParallaxGalleryResult.Failure -> {
-                showSettingsFeedback("Couldn't use that photo: ${result.message}")
+                showSettingsFeedback(context.getString(R.string.settings_feedback_parallax_failed, result.message))
                 viewModel.clearParallaxGalleryResult()
             }
             else -> Unit
@@ -432,13 +432,13 @@ fun SettingsScreen(
                     )
                 ) {
                     LiveWallpaperLaunchMode.DIRECT -> {
-                        showSettingsFeedback("Aura Video Wallpaper opened. Set wallpaper to finish.")
+                        showSettingsFeedback(context.getString(R.string.settings_feedback_video_direct))
                     }
                     LiveWallpaperLaunchMode.CHOOSER -> {
-                        showSettingsFeedback("Choose 'Aura Video Wallpaper' in the picker, then tap Set wallpaper.")
+                        showSettingsFeedback(context.getString(R.string.settings_feedback_video_chooser))
                     }
                     null -> {
-                        showSettingsFeedback("Motion wallpaper selected. Open Settings > Wallpaper > Live Wallpapers to finish setup.")
+                        showSettingsFeedback(context.getString(R.string.settings_feedback_video_manual))
                     }
                 }
                 viewModel.clearVideoWallpaperSelectionResult()
@@ -588,7 +588,7 @@ fun SettingsScreen(
                             SettingsPermissionPrompt.WEATHER_LOCATION_RECOVERY -> openAppSettings()
                         }
                         if (!settingsOpened) {
-                            showSettingsFeedback("Android settings could not be opened on this device.")
+                            showSettingsFeedback(context.getString(R.string.settings_feedback_settings_unavailable))
                         }
                     },
                 ) {
@@ -629,7 +629,7 @@ fun SettingsScreen(
         ) {
         TopAppBar(
             modifier = Modifier.fillMaxWidth(),
-            title = { Text("Settings", style = MaterialTheme.typography.headlineSmall) },
+            title = { Text(stringResource(R.string.settings_title), style = MaterialTheme.typography.headlineSmall) },
             colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent),
         )
 
@@ -651,27 +651,27 @@ fun SettingsScreen(
 
         // Wallpapers
         SettingsSection(
-            title = "Wallpapers",
-            description = "Tune discovery quality, density, and the overall look of your feed.",
+            title = stringResource(R.string.settings_wallpapers_section_title),
+            description = stringResource(R.string.settings_wallpapers_section_description),
         ) {
             SettingsToggle(
                 icon = Icons.Default.AutoAwesome,
-                title = "Auto-change wallpaper",
-                subtitle = "Periodically rotate wallpapers",
+                title = stringResource(R.string.settings_wp_auto_change_title),
+                subtitle = stringResource(R.string.settings_wp_auto_change_subtitle),
                 checked = autoWpEnabled,
                 onCheckedChange = { viewModel.setAutoWallpaper(it) },
             )
             if (autoWpEnabled) {
                 SettingsItem(
                     icon = Icons.Default.Timer,
-                    title = "Change interval",
-                    subtitle = "Every $autoWpInterval hours",
+                    title = stringResource(R.string.settings_wp_change_interval_title),
+                    subtitle = stringResource(R.string.settings_wp_change_interval_subtitle, autoWpInterval),
                     onClick = { showIntervalPicker = true },
                 )
                 // #10: Source picker
                 SettingsItem(
                     icon = Icons.Default.Source,
-                    title = "Wallpaper source",
+                    title = stringResource(R.string.settings_wp_source_title),
                     subtitle = wallpaperRotationSourceLabel(
                         source = autoWpSource,
                         localFolderUri = localWallpaperFolderUri,
@@ -684,29 +684,29 @@ fun SettingsScreen(
                 // Off-by-default so existing users keep current behavior on upgrade.
                 SettingsToggle(
                     icon = Icons.Default.BatteryChargingFull,
-                    title = "Charging only",
-                    subtitle = "Hold rotation until the device is plugged in",
+                    title = stringResource(R.string.settings_wp_charging_only_title),
+                    subtitle = stringResource(R.string.settings_wp_charging_only_subtitle),
                     checked = autoWpRequiresCharging,
                     onCheckedChange = { viewModel.setAutoWallpaperRequiresCharging(it) },
                 )
                 SettingsToggle(
                     icon = Icons.Default.Wifi,
-                    title = "Wi-Fi only",
-                    subtitle = "Skip cellular fetches; honors data-saver",
+                    title = stringResource(R.string.settings_wp_wifi_only_title),
+                    subtitle = stringResource(R.string.settings_wp_wifi_only_subtitle),
                     checked = autoWpRequiresWiFi,
                     onCheckedChange = { viewModel.setAutoWallpaperRequiresWiFiOnly(it) },
                 )
                 SettingsToggle(
                     icon = Icons.Default.Bedtime,
-                    title = "Device idle only",
-                    subtitle = "Defer rotation until you're not actively using the phone",
+                    title = stringResource(R.string.settings_wp_idle_only_title),
+                    subtitle = stringResource(R.string.settings_wp_idle_only_subtitle),
                     checked = autoWpRequiresIdle,
                     onCheckedChange = { viewModel.setAutoWallpaperRequiresIdle(it) },
                 )
             }
             SettingsValueSlider(
                 icon = Icons.Default.Brightness4,
-                title = "Rotation dimming",
+                title = stringResource(R.string.settings_wp_dimming_title),
                 subtitle = rotationDarkenSubtitle(
                     percent = autoWallpaperDarkenPercent,
                     rotationActive = autoWpEnabled || schedulerEnabled || rotateOnUnlock || rotateOnScreenOff,
@@ -723,7 +723,7 @@ fun SettingsScreen(
                 if (oemGuide != null) {
                     SettingsItem(
                         icon = Icons.Default.BatteryAlert,
-                        title = "${oemGuide.manufacturer} battery optimization",
+                        title = stringResource(R.string.settings_wp_oem_battery_title, oemGuide.manufacturer),
                         subtitle = oemGuide.summary,
                         onClick = {
                             val intent = oemGuide.settingsIntent
@@ -731,10 +731,10 @@ fun SettingsScreen(
                                 try {
                                     context.startActivity(intent)
                                 } catch (_: Exception) {
-                                    showSettingsFeedback("Could not open ${oemGuide.manufacturer} battery settings on this device.")
+                                    showSettingsFeedback(context.getString(R.string.settings_feedback_oem_battery_open_failed, oemGuide.manufacturer))
                                 }
                             } else {
-                                showSettingsFeedback("Could not find ${oemGuide.manufacturer} battery settings on this device.")
+                                showSettingsFeedback(context.getString(R.string.settings_feedback_oem_battery_not_found, oemGuide.manufacturer))
                             }
                         },
                     )
@@ -742,7 +742,7 @@ fun SettingsScreen(
             }
             SettingsItem(
                 icon = Icons.Default.FolderOpen,
-                title = "Local rotation folder",
+                title = stringResource(R.string.settings_wp_local_folder_title),
                 subtitle = localWallpaperFolderSubtitle(
                     localWallpaperFolderUri,
                     localFolderPermissionActive,
@@ -752,8 +752,8 @@ fun SettingsScreen(
             if (localWallpaperFolderUri.isNotBlank()) {
                 SettingsItem(
                     icon = Icons.Default.DeleteOutline,
-                    title = "Clear local rotation folder",
-                    subtitle = "Remove the saved folder grant from Aura",
+                    title = stringResource(R.string.settings_wp_clear_local_folder_title),
+                    subtitle = stringResource(R.string.settings_wp_clear_local_folder_subtitle),
                     onClick = { viewModel.clearLocalWallpaperFolderUri() },
                 )
             }
@@ -762,22 +762,22 @@ fun SettingsScreen(
             // disable timer-based rotation can still get unlock-driven changes.
             SettingsToggle(
                 icon = Icons.Default.LockOpen,
-                title = "Change on every unlock",
-                subtitle = "Rotate when you wake the phone (runs a low-priority notification while active)",
+                title = stringResource(R.string.settings_wp_unlock_title),
+                subtitle = stringResource(R.string.settings_wp_unlock_subtitle),
                 checked = rotateOnUnlock,
                 onCheckedChange = { viewModel.setRotateOnUnlock(it) },
             )
             SettingsToggle(
                 icon = Icons.Default.PowerSettingsNew,
-                title = "Pre-stage on screen off",
-                subtitle = "Pick the next wallpaper while the screen is off so unlock shows the new one",
+                title = stringResource(R.string.settings_wp_screen_off_title),
+                subtitle = stringResource(R.string.settings_wp_screen_off_subtitle),
                 checked = rotateOnScreenOff,
                 onCheckedChange = { viewModel.setRotateOnScreenOff(it) },
             )
             SettingsToggle(
                 icon = Icons.Default.Shuffle,
-                title = "Avoid recent repeats",
-                subtitle = "Track applied wallpapers and skip recently shown ones until the full pool has cycled",
+                title = stringResource(R.string.settings_wp_avoid_repeats_title),
+                subtitle = stringResource(R.string.settings_wp_avoid_repeats_subtitle),
                 checked = avoidRecentRepeats,
                 onCheckedChange = { viewModel.setAvoidRecentRepeats(it) },
             )
@@ -791,21 +791,21 @@ fun SettingsScreen(
             // #9: Grid columns
             SettingsItem(
                 icon = Icons.Default.GridView,
-                title = "Grid columns",
-                subtitle = "$gridColumns columns",
+                title = stringResource(R.string.settings_wp_grid_columns_title),
+                subtitle = stringResource(R.string.settings_wp_grid_columns_subtitle, gridColumns),
                 onClick = { showColumnsPicker = true },
             )
             SettingsItem(
                 icon = Icons.Default.VideoFile,
-                title = "Video or GIF wallpaper",
-                subtitle = "Import a local clip or animated GIF as live wallpaper",
+                title = stringResource(R.string.settings_wp_video_gif_title),
+                subtitle = stringResource(R.string.settings_wp_video_gif_subtitle),
                 onClick = { videoPickerLauncher.launch(videoWallpaperMimeTypes()) },
             )
             // v6.1.0 — parallax from user photo
             SettingsItem(
                 icon = Icons.Default.PhotoLibrary,
-                title = "Parallax from my photo",
-                subtitle = "Turn one of your photos into a depth-tilt live wallpaper",
+                title = stringResource(R.string.settings_wp_parallax_title),
+                subtitle = stringResource(R.string.settings_wp_parallax_subtitle),
                 onClick = {
                     parallaxGalleryLauncher.launch(
                         androidx.activity.result.PickVisualMediaRequest(
@@ -816,43 +816,43 @@ fun SettingsScreen(
             )
             SettingsItem(
                 icon = Icons.Default.PhotoSizeSelectLarge,
-                title = "Preferred resolution",
-                subtitle = if (preferredRes.isEmpty()) "Any resolution" else preferredRes,
+                title = stringResource(R.string.settings_wp_resolution_title),
+                subtitle = if (preferredRes.isEmpty()) stringResource(R.string.settings_wp_resolution_any) else preferredRes,
                 onClick = { showResPicker = true },
             )
             SettingsItem(
                 icon = Icons.Default.Palette,
-                title = "Style preferences",
+                title = stringResource(R.string.settings_wp_style_title),
                 subtitle = userStylesSummary(userStyles),
                 onClick = { showStylePicker = true },
             )
             SettingsItem(
                 icon = Icons.Default.Forum,
-                title = "Reddit source discontinued",
-                subtitle = "Public feeds are retired; saved Reddit wallpapers keep attribution and unavailable-source states",
-                onClick = { showSettingsFeedback("Reddit public feeds are no longer available in Aura.") },
+                title = stringResource(R.string.settings_wp_reddit_title),
+                subtitle = stringResource(R.string.settings_wp_reddit_subtitle),
+                onClick = { showSettingsFeedback(context.getString(R.string.settings_feedback_reddit_discontinued)) },
             )
             SettingsToggle(
                 icon = Icons.Default.ImageSearch,
-                title = "Enable Bing Daily source",
+                title = stringResource(R.string.settings_wp_bing_title),
                 subtitle = if (bingProviderEnabled) {
-                    "Adds Bing Image of the Day to Discover and rotations"
+                    stringResource(R.string.settings_wp_bing_on_subtitle)
                 } else {
-                    "Skips Bing daily-image calls and hides it from rotation pickers"
+                    stringResource(R.string.settings_wp_bing_off_subtitle)
                 },
                 checked = bingProviderEnabled,
                 onCheckedChange = { viewModel.setBingProviderEnabled(it) },
             )
             SettingsItem(
                 icon = Icons.Default.Category,
-                title = "Browse categories",
-                subtitle = "Nature, Space, Anime, Dark, Neon + 12 more",
+                title = stringResource(R.string.settings_wp_categories_title),
+                subtitle = stringResource(R.string.settings_wp_categories_subtitle),
                 onClick = onCategoriesClick,
             )
             SettingsItem(
                 icon = Icons.Default.Folder,
-                title = "Collections",
-                subtitle = "Organize wallpapers into folders",
+                title = stringResource(R.string.settings_wp_collections_title),
+                subtitle = stringResource(R.string.settings_wp_collections_subtitle),
                 onClick = onCollectionsClick,
             )
             if (showCommunityIdentity) {
@@ -897,8 +897,8 @@ fun SettingsScreen(
             if (wallpaperHistory.isNotEmpty()) {
                 SettingsItem(
                     icon = Icons.Default.History,
-                    title = "Wallpaper history",
-                    subtitle = "${wallpaperHistory.size} recently applied",
+                    title = stringResource(R.string.settings_wp_history_title),
+                    subtitle = stringResource(R.string.settings_wp_history_subtitle, wallpaperHistory.size),
                     onClick = onHistoryClick,
                 )
             }
@@ -906,23 +906,23 @@ fun SettingsScreen(
 
         // Wallpaper Scheduler
         SettingsSection(
-            title = "Wallpaper Scheduler",
-            description = "Automate rotation across sources, collections, and screen targets.",
+            title = stringResource(R.string.settings_scheduler_section_title),
+            description = stringResource(R.string.settings_scheduler_section_description),
         ) {
             var showSchedulerInterval by remember { mutableStateOf(false) }
             var showSchedulerSource by remember { mutableStateOf(false) }
 
             SettingsToggle(
                 icon = Icons.Default.Schedule,
-                title = "Auto-rotate wallpapers",
-                subtitle = if (schedulerEnabled) "Every ${formatInterval(schedulerInterval)}" else "Disabled",
+                title = stringResource(R.string.settings_sched_auto_rotate_title),
+                subtitle = if (schedulerEnabled) stringResource(R.string.settings_sched_auto_rotate_on_subtitle, formatInterval(schedulerInterval)) else stringResource(R.string.settings_sched_auto_rotate_off_subtitle),
                 checked = schedulerEnabled,
                 onCheckedChange = { viewModel.setSchedulerEnabled(it) },
             )
             if (schedulerEnabled) {
                 SettingsItem(
                     icon = Icons.Default.Timer,
-                    title = "Rotation interval",
+                    title = stringResource(R.string.settings_sched_interval_title),
                     subtitle = formatInterval(schedulerInterval),
                     onClick = { showSchedulerInterval = true },
                 )
@@ -933,9 +933,9 @@ fun SettingsScreen(
                 }
                 val sourceSubtitle = when {
                     schedulerSource == "collection" && activeCollectionName != null ->
-                        "Collection: $activeCollectionName"
+                        context.getString(R.string.settings_sched_collection_prefix, activeCollectionName)
                     schedulerSource == "collection" ->
-                        "Collection (none selected)"
+                        context.getString(R.string.settings_sched_collection_none)
                     else ->
                         wallpaperRotationSourceLabel(
                             source = schedulerSource,
@@ -945,28 +945,28 @@ fun SettingsScreen(
                 }
                 SettingsItem(
                     icon = Icons.Default.Source,
-                    title = "Source",
+                    title = stringResource(R.string.settings_sched_source_title),
                     subtitle = sourceSubtitle,
                     onClick = { showSchedulerSource = true },
                 )
                 SettingsToggle(
                     icon = Icons.Default.Home,
-                    title = "Home screen",
-                    subtitle = "Change home screen wallpaper",
+                    title = stringResource(R.string.settings_sched_home_title),
+                    subtitle = stringResource(R.string.settings_sched_home_subtitle),
                     checked = schedulerHome,
                     onCheckedChange = { viewModel.setSchedulerHome(it) },
                 )
                 SettingsToggle(
                     icon = Icons.Default.Lock,
-                    title = "Lock screen",
-                    subtitle = "Change lock screen wallpaper",
+                    title = stringResource(R.string.settings_sched_lock_title),
+                    subtitle = stringResource(R.string.settings_sched_lock_subtitle),
                     checked = schedulerLock,
                     onCheckedChange = { viewModel.setSchedulerLock(it) },
                 )
                 SettingsToggle(
                     icon = Icons.Default.Shuffle,
-                    title = "Shuffle",
-                    subtitle = if (schedulerShuffle) "Random order" else "Sequential order",
+                    title = stringResource(R.string.settings_sched_shuffle_title),
+                    subtitle = if (schedulerShuffle) stringResource(R.string.settings_sched_shuffle_on_subtitle) else stringResource(R.string.settings_sched_shuffle_off_subtitle),
                     checked = schedulerShuffle,
                     onCheckedChange = { viewModel.setSchedulerShuffle(it) },
                 )
@@ -974,13 +974,13 @@ fun SettingsScreen(
 
             if (showSchedulerInterval) {
                 val intervals = listOf(
-                    15L to "15 minutes", 30L to "30 minutes", 60L to "1 hour",
-                    120L to "2 hours", 360L to "6 hours", 720L to "12 hours",
-                    1440L to "24 hours", 2880L to "2 days",
+                    15L to stringResource(R.string.settings_sched_interval_15m), 30L to stringResource(R.string.settings_sched_interval_30m), 60L to stringResource(R.string.settings_sched_interval_1h),
+                    120L to stringResource(R.string.settings_sched_interval_2h), 360L to stringResource(R.string.settings_sched_interval_6h), 720L to stringResource(R.string.settings_sched_interval_12h),
+                    1440L to stringResource(R.string.settings_sched_interval_24h), 2880L to stringResource(R.string.settings_sched_interval_2d),
                 )
                 AlertDialog(
                     onDismissRequest = { showSchedulerInterval = false },
-                    title = { Text("Rotation interval") },
+                    title = { Text(stringResource(R.string.settings_sched_interval_title)) },
                     text = {
                         Column {
                             intervals.forEach { (min, label) ->
@@ -995,17 +995,17 @@ fun SettingsScreen(
                             }
                         }
                     },
-                    confirmButton = { TextButton(onClick = { showSchedulerInterval = false }) { Text("Cancel") } },
+                    confirmButton = { TextButton(onClick = { showSchedulerInterval = false }) { Text(stringResource(R.string.common_cancel)) } },
                 )
             }
 
             var showCollectionPicker by remember { mutableStateOf(false) }
             if (showSchedulerSource) {
                 val sources = listOf(
-                    "discover" to "Discover (mixed)", "favorites" to "My Favorites",
-                    WALLPAPER_SOURCE_LOCAL_FOLDER to "Local folder",
-                    "wallhaven" to "Wallhaven", "pixabay" to "Pixabay",
-                    "bing" to "Bing Daily", "collection" to "A collection…",
+                    "discover" to stringResource(R.string.settings_sched_source_discover), "favorites" to stringResource(R.string.settings_sched_source_favorites),
+                    WALLPAPER_SOURCE_LOCAL_FOLDER to stringResource(R.string.settings_sched_source_local),
+                    "wallhaven" to stringResource(R.string.settings_sched_source_wallhaven), "pixabay" to stringResource(R.string.settings_sched_source_pixabay),
+                    "bing" to stringResource(R.string.settings_sched_source_bing), "collection" to stringResource(R.string.settings_sched_source_collection),
                 ).filter { (key, _) ->
                     when (key) {
                         "wallhaven" -> wallhavenProviderEnabled || schedulerSource == "wallhaven"
@@ -1016,7 +1016,7 @@ fun SettingsScreen(
                 }
                 AlertDialog(
                     onDismissRequest = { showSchedulerSource = false },
-                    title = { Text("Wallpaper source") },
+                    title = { Text(stringResource(R.string.settings_sched_wp_source_title)) },
                     text = {
                         Column {
                             sources.forEach { (key, label) ->
@@ -1045,7 +1045,7 @@ fun SettingsScreen(
                             }
                         }
                     },
-                    confirmButton = { TextButton(onClick = { showSchedulerSource = false }) { Text("Cancel") } },
+                    confirmButton = { TextButton(onClick = { showSchedulerSource = false }) { Text(stringResource(R.string.common_cancel)) } },
                 )
             }
 
@@ -1054,19 +1054,19 @@ fun SettingsScreen(
                 val activeId by viewModel.schedulerCollectionId.collectAsStateWithLifecycle()
                 AlertDialog(
                     onDismissRequest = { showCollectionPicker = false },
-                    title = { Text("Rotate from which collection?") },
+                    title = { Text(stringResource(R.string.settings_sched_collection_picker_title)) },
                     text = {
                         if (collections.isEmpty()) {
                             // Empty-state guidance: we can't rotate through something that
                             // doesn't exist yet.
                             Column {
                                 Text(
-                                    "You haven't created any collections yet.",
+                                    stringResource(R.string.settings_sched_collection_empty),
                                     style = MaterialTheme.typography.bodyMedium,
                                 )
                                 Spacer(Modifier.height(8.dp))
                                 Text(
-                                    "Save wallpapers to a collection from the wallpaper detail screen, then come back here.",
+                                    stringResource(R.string.settings_sched_collection_empty_hint),
                                     style = MaterialTheme.typography.bodySmall,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 )
@@ -1086,19 +1086,19 @@ fun SettingsScreen(
                             }
                         }
                     },
-                    confirmButton = { TextButton(onClick = { showCollectionPicker = false }) { Text("Cancel") } },
+                    confirmButton = { TextButton(onClick = { showCollectionPicker = false }) { Text(stringResource(R.string.common_cancel)) } },
                 )
             }
         }
 
         // Library backup
         SettingsSection(
-            title = "Library Backup",
-            description = "Keep favorites recoverable without creating an account or uploading your library.",
+            title = stringResource(R.string.settings_backup_section_title),
+            description = stringResource(R.string.settings_backup_section_description),
         ) {
             SettingsToggle(
                 icon = Icons.Default.FolderOpen,
-                title = "Scheduled favorites backup",
+                title = stringResource(R.string.settings_backup_scheduled_title),
                 subtitle = autoBackupStatusSubtitle(
                     enabled = autoBackupEnabled,
                     folderUri = autoBackupFolderUri,
@@ -1112,7 +1112,7 @@ fun SettingsScreen(
                         viewModel.setAutoBackupEnabled(false)
                     } else if (!autoBackupFolderPermissionActive) {
                         chooseAutoBackupFolder(enableAfterSelection = true)
-                        showSettingsFeedback("Choose a writable folder before enabling scheduled backups.")
+                        showSettingsFeedback(context.getString(R.string.settings_feedback_backup_choose_folder))
                     } else {
                         viewModel.setAutoBackupEnabled(true)
                     }
@@ -1120,7 +1120,7 @@ fun SettingsScreen(
             )
             SettingsItem(
                 icon = Icons.Default.FolderOpen,
-                title = "Backup folder",
+                title = stringResource(R.string.settings_backup_folder_title),
                 subtitle = autoBackupFolderSubtitle(
                     folderUri = autoBackupFolderUri,
                     folderPermissionActive = autoBackupFolderPermissionActive,
@@ -1130,20 +1130,20 @@ fun SettingsScreen(
             if (autoBackupFolderUri.isNotBlank()) {
                 SettingsItem(
                     icon = Icons.Default.DeleteOutline,
-                    title = "Clear backup folder",
-                    subtitle = "Disable scheduled backup and remove Aura's saved folder grant",
+                    title = stringResource(R.string.settings_backup_clear_title),
+                    subtitle = stringResource(R.string.settings_backup_clear_subtitle),
                     onClick = { viewModel.clearAutoBackupFolderUri() },
                 )
             }
             SettingsItem(
                 icon = Icons.Default.Timer,
-                title = "Backup interval",
+                title = stringResource(R.string.settings_backup_interval_title),
                 subtitle = formatAutoBackupInterval(autoBackupIntervalHours),
                 onClick = { showAutoBackupIntervalPicker = true },
             )
             SettingsItem(
                 icon = Icons.Default.History,
-                title = "Backups to keep",
+                title = stringResource(R.string.settings_backup_keep_title),
                 subtitle = autoBackupRetentionLabel(autoBackupKeepCount),
                 onClick = { showAutoBackupKeepPicker = true },
             )
@@ -1151,13 +1151,13 @@ fun SettingsScreen(
 
         // Smart Features
         SettingsSection(
-            title = "Smart Features",
-            description = "Ambient enhancements that make Aura feel more adaptive and alive.",
+            title = stringResource(R.string.settings_smart_section_title),
+            description = stringResource(R.string.settings_smart_section_description),
         ) {
             SettingsToggle(
                 icon = Icons.Default.Today,
-                title = "Daily wallpaper",
-                subtitle = "Get a daily wallpaper recommendation notification",
+                title = stringResource(R.string.settings_smart_daily_wp_title),
+                subtitle = stringResource(R.string.settings_smart_daily_wp_subtitle),
                 checked = dailyWp,
                 onCheckedChange = {
                     if (!it) {
@@ -1176,14 +1176,14 @@ fun SettingsScreen(
             )
             SettingsToggle(
                 icon = Icons.Default.WbSunny,
-                title = "Time-of-day tint",
-                subtitle = "Warm tones at sunrise/sunset, cool at night",
+                title = stringResource(R.string.settings_smart_tint_title),
+                subtitle = stringResource(R.string.settings_smart_tint_subtitle),
                 checked = adaptiveTint,
                 onCheckedChange = { viewModel.setAdaptiveTint(it) },
             )
             if (adaptiveTint) {
                 Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp)) {
-                    Text("Intensity", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text(stringResource(R.string.settings_smart_tint_intensity), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     Slider(
                         value = adaptiveTintIntensity,
                         onValueChange = { viewModel.setAdaptiveTintIntensity(it) },
@@ -1192,7 +1192,7 @@ fun SettingsScreen(
                         modifier = Modifier.fillMaxWidth(),
                     )
                     Text(
-                        "Subtle ← → Intense",
+                        stringResource(R.string.settings_smart_tint_range),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
@@ -1237,11 +1237,11 @@ fun SettingsScreen(
                         )
                         Column(Modifier.weight(1f)) {
                             Text(
-                                "Weather data by Open-Meteo.com",
+                                stringResource(R.string.settings_smart_weather_data),
                                 style = MaterialTheme.typography.labelLarge,
                             )
                             Text(
-                                "Licensed under CC BY 4.0",
+                                stringResource(R.string.settings_smart_weather_license),
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                             )
@@ -1251,14 +1251,14 @@ fun SettingsScreen(
             }
             SettingsToggle(
                 icon = Icons.Default.Brightness4,
-                title = "Auto-switch wallpaper for dark mode",
-                subtitle = "Apply different wallpapers when system theme changes",
+                title = stringResource(R.string.settings_smart_dark_switch_title),
+                subtitle = stringResource(R.string.settings_smart_dark_switch_subtitle),
                 checked = darkModeSwitch,
                 onCheckedChange = { viewModel.setDarkModeSwitch(it) },
             )
             if (darkModeSwitch) {
                 Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp)) {
-                    Text("Wallpaper slots", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text(stringResource(R.string.settings_smart_wallpaper_slots), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -1274,9 +1274,9 @@ fun SettingsScreen(
                                 .clickable { showLightModeWallpaperPicker = true }
                                 .padding(12.dp),
                         ) {
-                            Text("Light mode", style = MaterialTheme.typography.labelSmall)
+                            Text(stringResource(R.string.settings_smart_light_mode), style = MaterialTheme.typography.labelSmall)
                             Text(
-                                if (lightModeWallpaperId.isEmpty()) "Not set" else "Set",
+                                if (lightModeWallpaperId.isEmpty()) stringResource(R.string.settings_smart_slot_not_set) else stringResource(R.string.settings_smart_slot_set),
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                             )
@@ -1290,16 +1290,16 @@ fun SettingsScreen(
                                 .clickable { showDarkModeWallpaperPicker = true }
                                 .padding(12.dp),
                         ) {
-                            Text("Dark mode", style = MaterialTheme.typography.labelSmall)
+                            Text(stringResource(R.string.settings_smart_dark_mode), style = MaterialTheme.typography.labelSmall)
                             Text(
-                                if (darkModeWallpaperId.isEmpty()) "Not set" else "Set",
+                                if (darkModeWallpaperId.isEmpty()) stringResource(R.string.settings_smart_slot_not_set) else stringResource(R.string.settings_smart_slot_set),
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                             )
                         }
                     }
                     Text(
-                        "Tap either slot to choose which wallpaper to apply when the system switches to that theme",
+                        stringResource(R.string.settings_smart_slot_hint),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
@@ -1309,16 +1309,16 @@ fun SettingsScreen(
             var showVfxPicker by remember { mutableStateOf(false) }
             SettingsItem(
                 icon = Icons.Default.AutoFixHigh,
-                title = "Decorative effects",
-                subtitle = "Fireflies, sakura, embers, bubbles, leaves, sparkles",
+                title = stringResource(R.string.settings_smart_vfx_title),
+                subtitle = stringResource(R.string.settings_smart_vfx_subtitle),
                 onClick = { showVfxPicker = true },
             )
             if (showVfxPicker) {
                 val effects = listOf(
-                    "NONE" to "None", "FIREFLIES" to "Fireflies",
-                    "SAKURA" to "Sakura petals", "EMBERS" to "Fire embers",
-                    "BUBBLES" to "Bubbles", "LEAVES" to "Autumn leaves",
-                    "SPARKLES" to "Sparkles",
+                    "NONE" to stringResource(R.string.settings_smart_vfx_none), "FIREFLIES" to stringResource(R.string.settings_smart_vfx_fireflies),
+                    "SAKURA" to stringResource(R.string.settings_smart_vfx_sakura), "EMBERS" to stringResource(R.string.settings_smart_vfx_embers),
+                    "BUBBLES" to stringResource(R.string.settings_smart_vfx_bubbles), "LEAVES" to stringResource(R.string.settings_smart_vfx_leaves),
+                    "SPARKLES" to stringResource(R.string.settings_smart_vfx_sparkles),
                 )
                 var currentVfx by remember {
                     mutableStateOf(
@@ -1328,7 +1328,7 @@ fun SettingsScreen(
                 }
                 AlertDialog(
                     onDismissRequest = { showVfxPicker = false },
-                    title = { Text("Decorative overlay") },
+                    title = { Text(stringResource(R.string.settings_smart_vfx_dialog_title)) },
                     text = {
                         Column {
                             effects.forEach { (key, label) ->
@@ -1348,25 +1348,25 @@ fun SettingsScreen(
                     // "Close" not "Cancel" — each radio click already commits the selection
                     // synchronously, so there is nothing to cancel by the time this button
                     // is reachable.
-                    confirmButton = { TextButton(onClick = { showVfxPicker = false }) { Text("Close") } },
+                    confirmButton = { TextButton(onClick = { showVfxPicker = false }) { Text(stringResource(R.string.common_close)) } },
                 )
             }
             var showTouchEffectsPicker by remember { mutableStateOf(false) }
             SettingsItem(
                 icon = Icons.Default.TouchApp,
-                title = "Touch effects",
+                title = stringResource(R.string.settings_smart_touch_title),
                 subtitle = touchEffectSummary(touchEffectStrength),
                 onClick = { showTouchEffectsPicker = true },
             )
             if (showTouchEffectsPicker) {
                 val modes = listOf(
-                    "OFF" to "Off",
-                    "SUBTLE" to "Subtle ripples",
-                    "STRONG" to "Ripples + sparkles",
+                    "OFF" to stringResource(R.string.settings_smart_touch_off),
+                    "SUBTLE" to stringResource(R.string.settings_smart_touch_subtle),
+                    "STRONG" to stringResource(R.string.settings_smart_touch_strong),
                 )
                 AlertDialog(
                     onDismissRequest = { showTouchEffectsPicker = false },
-                    title = { Text("Touch effects") },
+                    title = { Text(stringResource(R.string.settings_smart_touch_dialog_title)) },
                     text = {
                         Column {
                             modes.forEach { (key, label) ->
@@ -1383,13 +1383,13 @@ fun SettingsScreen(
                             }
                         }
                     },
-                    confirmButton = { TextButton(onClick = { showTouchEffectsPicker = false }) { Text("Close") } },
+                    confirmButton = { TextButton(onClick = { showTouchEffectsPicker = false }) { Text(stringResource(R.string.common_close)) } },
                 )
             }
             SettingsToggle(
                 icon = Icons.Default.Accessibility,
-                title = "Reduce animations",
-                subtitle = "Disable particle, weather, and touch effects on live wallpapers",
+                title = stringResource(R.string.settings_smart_reduce_title),
+                subtitle = stringResource(R.string.settings_smart_reduce_subtitle),
                 checked = reduceAnimations,
                 onCheckedChange = { viewModel.setReduceAnimations(it) },
             )
