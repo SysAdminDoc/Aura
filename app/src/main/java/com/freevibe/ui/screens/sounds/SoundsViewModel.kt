@@ -138,10 +138,8 @@ class SoundsViewModel @Inject constructor(
     val topHits = _topHits.asStateFlow()
 
     private var loadJob: Job? = null
-    private var progressJob: Job? = null
     private var communityJob: Job? = null
     private val ytResolveSemaphore = Semaphore(6)
-    private val previewPrebufferInFlight = ConcurrentHashMap.newKeySet<String>()
 
     private val titleBlocklist = Regex(
         "hindi|telugu|pack|trending|popular|\\bnew\\b|\\btop\\b|\\bbest\\b|timer|countdown|quiz|comparison|tutorial|how to|turn on|turn off|notification spam",
@@ -175,6 +173,27 @@ class SoundsViewModel @Inject constructor(
 
     private val _playbackProgress = MutableStateFlow(0f)
     val playbackProgress = _playbackProgress.asStateFlow()
+
+    internal val playback = SoundPlaybackActions(
+        audioPlaybackManager = audioPlaybackManager,
+        audioPreviewCache = audioPreviewCache,
+        selectedContent = selectedContent,
+        youtubeProviderEnabled = youtubeProviderEnabled,
+        autoPreview = autoPreview,
+        previewVolume = previewVolume,
+        state = _state,
+        topHits = _topHits,
+        communityUploads = _communityUploads,
+        previewReadyIds = _previewReadyIds,
+        playbackProgress = _playbackProgress,
+        scope = viewModelScope,
+        resolveYouTubePreview = { sound ->
+            val videoId = sound.youtubeVideoId() ?: return@SoundPlaybackActions null
+            youtubeRepo.getAudioPreviewUrl(videoId)
+        },
+        shouldRefreshYouTubePreview = ::shouldRefreshYouTubePreview,
+        youtubeDisabledMessage = ::youtubeDisabledMessage,
+    )
 
     init {
         community.init()
@@ -580,153 +599,14 @@ class SoundsViewModel @Inject constructor(
         return true
     }
 
-    fun togglePlayback(sound: Sound) {
-        val soundKey = sound.stableKey()
-        if (sound.source == ContentSource.YOUTUBE && !youtubeProviderEnabled.value) {
-            _state.update { it.copy(error = youtubeDisabledMessage()) }
-            return
-        }
-        if (_state.value.playingId == soundKey) {
-            stopPlayback()
-        } else if (soundKey == _state.value.resolvingId) {
-            _state.update { it.copy(resolvingId = null) }
-        } else if (shouldRefreshYouTubePreview(sound)) {
-            viewModelScope.launch {
-                _state.update { it.copy(resolvingId = soundKey) }
-                val videoId = sound.youtubeVideoId()
-                    ?: run {
-                        _state.update { it.copy(resolvingId = null, error = "Could not load audio") }
-                        return@launch
-                    }
-                val url = youtubeRepo.getAudioPreviewUrl(videoId)
-                if (_state.value.resolvingId != soundKey) return@launch // user cancelled
-                if (url != null) {
-                    val updatedSound = cacheResolvedPreview(sound, url)
-                    _state.update { it.copy(resolvingId = null) }
-                    startPlayback(updatedSound)
-                } else {
-                    _state.update { it.copy(resolvingId = null, error = "Could not load audio") }
-                }
-            }
-        } else {
-            startPlayback(sound)
-        }
-    }
+    // -- Playback operations delegated to SoundPlaybackActions --
 
-    private fun cacheResolvedPreview(sound: Sound, previewUrl: String): Sound {
-        if (previewUrl.isBlank()) return sound
-        val updatedSound = sound.copy(previewUrl = previewUrl)
-        val targetKey = updatedSound.stableKey()
-
-        _state.update { st ->
-            val refreshed = st.sounds.map { existing ->
-                if (existing.stableKey() == targetKey && existing.previewUrl != previewUrl) {
-                    existing.copy(previewUrl = previewUrl)
-                } else {
-                    existing
-                }
-            }
-            if (refreshed == st.sounds) st else st.copy(sounds = refreshed)
-        }
-        _topHits.update { hits ->
-            hits.map { existing ->
-                if (existing.stableKey() == targetKey && existing.previewUrl != previewUrl) {
-                    existing.copy(previewUrl = previewUrl)
-                } else {
-                    existing
-                }
-            }
-        }
-        _communityUploads.update { uploads ->
-            uploads.map { existing ->
-                if (existing.stableKey() == targetKey && existing.previewUrl != previewUrl) {
-                    existing.copy(previewUrl = previewUrl)
-                } else {
-                    existing
-                }
-            }
-        }
-
-        val currentSelected = selectedContent.selectedSound.value
-        if (currentSelected?.stableKey() == targetKey && currentSelected.previewUrl != previewUrl) {
-            selectedContent.selectSound(currentSelected.copy(previewUrl = previewUrl))
-        }
-
-        val refreshedSound = selectedContent.selectedSound.value?.takeIf { it.stableKey() == targetKey } ?: updatedSound
-        if (isInPreviewPrebufferWindow(targetKey)) {
-            schedulePreviewPrebuffer(listOf(refreshedSound))
-        }
-        return refreshedSound
-    }
-
-    private fun schedulePreviewPrebuffer(sounds: List<Sound>) {
-        if (!autoPreview.value) return
-        sounds
-            .asSequence()
-            .filter { it.previewUrl.isNotBlank() }
-            .filter { it.source != ContentSource.YOUTUBE || youtubeProviderEnabled.value }
-            .take(FIRST_VISIBLE_PREVIEW_COUNT)
-            .forEach { sound ->
-                val key = sound.stableKey()
-                if (key in _previewReadyIds.value || !previewPrebufferInFlight.add(key)) return@forEach
-                viewModelScope.launch {
-                    try {
-                        if (audioPreviewCache.prebuffer(sound)) {
-                            _previewReadyIds.update { it + key }
-                        }
-                    } catch (e: Exception) {
-                        e.rethrowIfCancelled()
-                    } finally {
-                        previewPrebufferInFlight.remove(key)
-                    }
-                }
-            }
-    }
-
-    private fun isInPreviewPrebufferWindow(soundKey: String): Boolean {
-        val visibleFeed = _state.value.sounds.take(FIRST_VISIBLE_PREVIEW_COUNT)
-        val visibleTopHits = _topHits.value.take(FIRST_VISIBLE_PREVIEW_COUNT)
-        return (visibleFeed + visibleTopHits).any { it.stableKey() == soundKey }
-    }
-
-    private fun startPlayback(sound: Sound) {
-        if (sound.source == ContentSource.YOUTUBE && !youtubeProviderEnabled.value) {
-            _state.update { it.copy(error = youtubeDisabledMessage()) }
-            return
-        }
-        stopPlayback()
-        val soundKey = sound.stableKey()
-        if (sound.source == ContentSource.YOUTUBE) {
-            _state.update { it.copy(resolvingId = soundKey) }
-        }
-        audioPlaybackManager.play(sound, sound.previewUrl, previewVolume.value)
-        progressJob?.cancel()
-        progressJob = viewModelScope.launch {
-            while (audioPlaybackManager.currentSoundId.value == soundKey) {
-                audioPlaybackManager.pollProgress()
-                val dur = audioPlaybackManager.duration.value
-                val pos = audioPlaybackManager.currentPosition.value
-                _playbackProgress.value = if (dur > 0) pos.toFloat() / dur else 0f
-                delay(50)
-            }
-        }
-    }
-
-    fun seekTo(fraction: Float) {
-        val dur = audioPlaybackManager.duration.value
-        if (dur > 0) audioPlaybackManager.seekTo((fraction * dur).toLong())
-    }
-
-    fun stopIfPlaying(sound: Sound) {
-        if (_state.value.playingId == sound.stableKey()) stopPlayback()
-    }
-
-    private fun stopPlayback() {
-        progressJob?.cancel()
-        _playbackProgress.value = 0f
-        _state.update { it.copy(resolvingId = null) }
-        audioPlaybackManager.stop()
-    }
+    fun togglePlayback(sound: Sound) = playback.togglePlayback(sound)
+    fun seekTo(fraction: Float) = playback.seekTo(fraction)
+    fun stopIfPlaying(sound: Sound) = playback.stopIfPlaying(sound)
+    private fun stopPlayback() = playback.stopPlayback()
+    private fun schedulePreviewPrebuffer(sounds: List<Sound>) = playback.schedulePreviewPrebuffer(sounds)
+    private fun cacheResolvedPreview(sound: Sound, previewUrl: String) = playback.cacheResolvedPreview(sound, previewUrl)
 
     // -- Apply & Download --
 
@@ -920,7 +800,7 @@ class SoundsViewModel @Inject constructor(
 
     override fun onCleared() {
         loadJob?.cancel()
-        progressJob?.cancel()
+        playback.cancelProgress()
         communityJob?.cancel()
         community.cancelOnCleared()
         audioPlaybackManager.stop()
