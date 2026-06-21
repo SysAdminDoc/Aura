@@ -195,6 +195,18 @@ class SoundsViewModel @Inject constructor(
         youtubeDisabledMessage = ::youtubeDisabledMessage,
     )
 
+    internal val applyActions = SoundApplyActions(
+        soundApplier = soundApplier,
+        downloadManager = downloadManager,
+        favoritesRepo = favoritesRepo,
+        youtubeRepo = youtubeRepo,
+        soundUrlResolver = soundUrlResolver,
+        youtubeProviderEnabled = youtubeProviderEnabled,
+        state = _state,
+        scope = viewModelScope,
+        currentDownloadType = ::currentDownloadType,
+    )
+
     init {
         community.init()
         loadSounds()
@@ -608,104 +620,15 @@ class SoundsViewModel @Inject constructor(
     private fun schedulePreviewPrebuffer(sounds: List<Sound>) = playback.schedulePreviewPrebuffer(sounds)
     private fun cacheResolvedPreview(sound: Sound, previewUrl: String) = playback.cacheResolvedPreview(sound, previewUrl)
 
-    // -- Apply & Download --
+    // -- Apply/Download/Favorite operations delegated to SoundApplyActions --
 
-    fun applySound(sound: Sound, type: ContentType, confirmed: Boolean = false) {
-        viewModelScope.launch {
-            soundActionGateMessage(sound, SoundAction.APPLY, confirmed)?.let { message ->
-                _state.update { it.copy(isApplying = false, error = message) }
-                return@launch
-            }
-            if (!soundApplier.canWriteSettings()) {
-                _state.update {
-                    it.copy(
-                        isApplying = false,
-                        error = "System settings access is required before applying sounds.",
-                    )
-                }
-                return@launch
-            }
-            _state.update { it.copy(isApplying = true, applySuccess = null) }
-            val url = resolveDownloadUrl(sound)
-                ?: run {
-                    _state.update { it.copy(isApplying = false, error = "Could not resolve audio") }
-                    return@launch
-                }
-            soundApplier.downloadAndApply(url, sound.name, type)
-                .onSuccess {
-                    val label = when (type) {
-                        ContentType.RINGTONE -> "ringtone"
-                        ContentType.NOTIFICATION -> "notification sound"
-                        ContentType.ALARM -> "alarm sound"
-                        else -> "sound"
-                    }
-                    _state.update { it.copy(isApplying = false, applySuccess = "Set as $label") }
-                }
-                .onFailure { e ->
-                    markSoundSourceUnavailableIfRemoved(sound, e)
-                    _state.update { it.copy(isApplying = false, error = e.message) }
-                }
-        }
-    }
-
-    fun downloadSound(sound: Sound, confirmed: Boolean = false) {
-        viewModelScope.launch {
-            soundActionGateMessage(sound, SoundAction.DOWNLOAD, confirmed)?.let { message ->
-                _state.update { it.copy(error = message) }
-                return@launch
-            }
-            val dlUrl = resolveDownloadUrl(sound) ?: run {
-                _state.update { it.copy(error = "Could not resolve audio stream URL") }
-                return@launch
-            }
-            val ext = sound.fileType.substringAfterLast("/", "mp3").substringAfterLast(".", "mp3").lowercase(java.util.Locale.ROOT)
-            downloadManager.downloadSound(
-                id = sound.stableKey(), url = dlUrl,
-                fileName = buildSoundDownloadFileName(sound, ext),
-                type = currentDownloadType(),
-                source = sound.source.name,
-            ).fold(
-                onSuccess = { _state.update { it.copy(applySuccess = "Download started") } },
-                onFailure = { error ->
-                    markSoundSourceUnavailableIfRemoved(sound, error)
-                    _state.update { it.copy(error = error.message) }
-                },
-            )
-        }
-    }
-
-    fun canWriteSettings(): Boolean = soundApplier.canWriteSettings()
-    fun canOpenWriteSettings(): Boolean = soundApplier.canOpenWriteSettings()
-    fun requestWriteSettings() = soundApplier.requestWriteSettings()
-
-    fun toggleFavorite(sound: Sound) {
-        viewModelScope.launch {
-            val entity = sound.toFavoriteEntity()
-            val isFav = favoritesRepo.isFavorite(sound.favoriteIdentity()).first()
-            favoritesRepo.toggle(entity, isFav)
-            _state.update { it.copy(applySuccess = if (isFav) "Removed from favorites" else "Added to favorites") }
-        }
-    }
-
-    private fun buildSoundDownloadFileName(sound: Sound, extension: String): String =
-        "Aura_${sound.source.name.lowercase(java.util.Locale.ROOT)}_${sound.id}_${sound.name.take(24)}.$extension"
-
-    fun isFavorite(sound: Sound): Flow<Boolean> = favoritesRepo.isFavorite(sound.favoriteIdentity())
-
-    private fun soundActionGateMessage(sound: Sound, action: SoundAction, confirmed: Boolean): String? {
-        val capability = sound.soundLicenseCapabilities().capability(action)
-        return when (capability.decision) {
-            SoundActionDecision.ALLOWED -> null
-            SoundActionDecision.CONFIRMATION_REQUIRED -> capability.reason.takeUnless { confirmed }
-            SoundActionDecision.DISABLED -> capability.reason
-        }
-    }
-
-    private suspend fun markSoundSourceUnavailableIfRemoved(sound: Sound, failure: Throwable) {
-        sourceUnavailableReasonForFailure(sound.source, failure)?.let { reason ->
-            favoritesRepo.markSourceUnavailable(sound.favoriteIdentity(), reason)
-        }
-    }
+    fun applySound(sound: Sound, type: ContentType, confirmed: Boolean = false) = applyActions.applySound(sound, type, confirmed)
+    fun downloadSound(sound: Sound, confirmed: Boolean = false) = applyActions.downloadSound(sound, confirmed)
+    fun canWriteSettings(): Boolean = applyActions.canWriteSettings()
+    fun canOpenWriteSettings(): Boolean = applyActions.canOpenWriteSettings()
+    fun requestWriteSettings() = applyActions.requestWriteSettings()
+    fun toggleFavorite(sound: Sound) = applyActions.toggleFavorite(sound)
+    fun isFavorite(sound: Sound): Flow<Boolean> = applyActions.isFavorite(sound)
 
     private fun shouldRefreshYouTubePreview(sound: Sound): Boolean {
         if (!youtubeProviderEnabled.value) return false
@@ -713,15 +636,6 @@ class SoundsViewModel @Inject constructor(
         return sound.previewUrl.isBlank() || !youtubeRepo.isCached(videoId)
     }
 
-    private suspend fun resolveDownloadUrl(sound: Sound): String? {
-        val videoId = sound.youtubeVideoId()
-        return if (videoId != null) {
-            if (!isYouTubeProviderEnabled()) return null
-            youtubeRepo.getAudioStreamUrl(videoId)
-        } else {
-            soundUrlResolver.resolve(sound)
-        }
-    }
 
     suspend fun loadSimilar(sound: Sound): List<Sound> {
         if (!isYouTubeProviderEnabled()) return emptyList()
@@ -1312,7 +1226,7 @@ class SoundsViewModel @Inject constructor(
     }
 }
 
-private fun Sound.youtubeVideoId(): String? =
+internal fun Sound.youtubeVideoId(): String? =
     takeIf { source == ContentSource.YOUTUBE }
         ?.id
         ?.removePrefix("yt_")
