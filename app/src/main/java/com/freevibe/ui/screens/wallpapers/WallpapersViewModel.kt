@@ -168,6 +168,20 @@ class WallpapersViewModel @Inject constructor(
         scope = viewModelScope,
     )
 
+    internal val searchActions = WallpaperSearchActions(
+        context = context,
+        wallpaperRepo = wallpaperRepo,
+        favoritesRepo = favoritesRepo,
+        selectedContent = selectedContent,
+        cacheManager = cacheManager,
+        sourceMetrics = sourceMetrics,
+        wallhavenProviderEnabled = wallhavenProviderEnabled,
+        state = _state,
+        topVoted = _topVoted,
+        dailyPick = _dailyPick,
+        scope = viewModelScope,
+    )
+
     internal val community = WallpaperCommunityActions(
         voteRepo = voteRepo,
         reportRepo = reportRepo,
@@ -396,31 +410,7 @@ class WallpapersViewModel @Inject constructor(
             clearActiveFilter()
             return
         }
-        if (!wallhavenProviderEnabled.value) {
-            sourceMetrics.recordDisabled(SOURCE_WALLHAVEN)
-            _state.update {
-                it.copy(
-                    error = wallhavenDisabledMessage(),
-                    errorSource = WallpaperTab.COLOR.name,
-                )
-            }
-            return
-        }
-        val returnTab = _state.value.selectedTab
-            .takeIf { it != WallpaperTab.SEARCH && it != WallpaperTab.COLOR }
-            ?: _state.value.browseTab
-        _state.update {
-            it.copy(
-                query = "",
-                selectedTab = WallpaperTab.COLOR,
-                browseTab = returnTab,
-                selectedColor = color,
-                wallpapers = emptyList(),
-                currentPage = 1,
-                hasMore = true,
-            )
-        }
-        loadWallpapers()
+        searchActions.searchByColor(color)
     }
 
     fun clearActiveFilter() {
@@ -696,202 +686,21 @@ class WallpapersViewModel @Inject constructor(
         }
     }
 
-    /** Find similar wallpapers via Wallhaven like: query + color search */
-    fun findSimilar(wallpaper: Wallpaper) {
-        if (!wallhavenProviderEnabled.value) {
-            sourceMetrics.recordDisabled(SOURCE_WALLHAVEN)
-            _state.update {
-                it.copy(
-                    error = wallhavenDisabledMessage(),
-                    errorSource = WallpaperTab.SEARCH.name,
-                    isLoading = false,
-                )
-            }
-            return
-        }
-        val returnTab = _state.value.selectedTab
-            .takeIf { it != WallpaperTab.SEARCH && it != WallpaperTab.COLOR }
-            ?: _state.value.browseTab
-        viewModelScope.launch {
-            _state.update {
-                it.copy(
-                    selectedTab = WallpaperTab.SEARCH,
-                    browseTab = returnTab,
-                    query = "Similar",
-                    selectedColor = null,
-                    wallpapers = emptyList(),
-                    isLoading = true,
-                    currentPage = 1,
-                )
-            }
-            try {
-                val results = mutableListOf<Wallpaper>()
-                // Tag-similar via Wallhaven like: syntax (only for Wallhaven wallpapers)
-                if (wallpaper.source == com.freevibe.data.model.ContentSource.WALLHAVEN) {
-                    val whId = wallpaper.id.removePrefix("wh_")
-                    val similar = wallpaperRepo.findSimilar(whId)
-                    results.addAll(similar.items)
-                }
-                // Color-similar via dominant color
-                if (wallpaper.colors.isNotEmpty()) {
-                    val existingIds = results.map { it.stableKey() }.toSet()
-                    val colorResult = wallpaperRepo.searchByColor(wallpaper.colors.first().removePrefix("#"))
-                    results.addAll(colorResult.items.filter { it.stableKey() !in existingIds })
-                }
-                _state.update { it.copy(wallpapers = results, isLoading = false, hasMore = false) }
-            } catch (e: Exception) {
-                if (e is kotlinx.coroutines.CancellationException) throw e
-                _state.update { it.copy(isLoading = false, error = e.message) }
-            }
-        }
-    }
+    // -- Search/find-similar operations delegated to WallpaperSearchActions --
 
-    fun findSimilarById(
-        wallpaperId: String,
-        source: ContentSource? = null,
-        fullUrl: String? = null,
-    ) {
-        viewModelScope.launch {
-            val wallpaper = resolveWallpaperSelection(wallpaperId, source, fullUrl)?.first
-            if (wallpaper != null) {
-                findSimilar(wallpaper)
-            } else {
-                _state.update {
-                    it.copy(
-                        error = "Wallpaper unavailable",
-                        errorSource = WallpaperTab.SEARCH.name,
-                        isLoading = false,
-                        isLoadingMore = false,
-                        isRefreshing = false,
-                    )
-                }
-            }
-        }
-    }
+    fun findSimilar(wallpaper: Wallpaper) = searchActions.findSimilar(wallpaper)
+    fun findSimilarById(wallpaperId: String, source: ContentSource? = null, fullUrl: String? = null) =
+        searchActions.findSimilarById(wallpaperId, source, fullUrl)
+    fun loadRandom() = searchActions.loadRandom()
+    fun searchByTag(tagName: String) { search(tagName) }
+    fun searchByPickedColor(colorInt: Int) = searchActions.searchByPickedColor(colorInt)
+    fun matchMyTheme() = searchActions.matchMyTheme()
 
-    /** Load random wallpapers from Wallhaven */
-    fun loadRandom() {
-        if (!wallhavenProviderEnabled.value) {
-            sourceMetrics.recordDisabled(SOURCE_WALLHAVEN)
-            _state.update {
-                it.copy(
-                    error = wallhavenDisabledMessage(),
-                    errorSource = WallpaperTab.SEARCH.name,
-                    isLoading = false,
-                )
-            }
-            return
-        }
-        viewModelScope.launch {
-            _state.update { it.copy(selectedTab = WallpaperTab.SEARCH, query = "Random", wallpapers = emptyList(), isLoading = true, currentPage = 1) }
-            try {
-                val result = wallpaperRepo.getRandomWallhaven()
-                _state.update { it.copy(wallpapers = result.items, isLoading = false, hasMore = false) }
-            } catch (e: Exception) {
-                if (e is kotlinx.coroutines.CancellationException) throw e
-                _state.update { it.copy(isLoading = false, error = e.message) }
-            }
-        }
-    }
-
-    /** Search by Wallhaven tag */
-    fun searchByTag(tagName: String) {
-        search(tagName)
-    }
-
-    /**
-     * NX-10: seed the wallpaper search with a colour picked via Android 17's
-     * EyeDropper API. The picked colour arrives as an ARGB Int; we strip the
-     * alpha channel and convert the lower 24 bits to the 6-char hex Wallhaven's
-     * `colors=` query expects.
-     */
-    fun searchByPickedColor(colorInt: Int) {
-        val hex = String.format(java.util.Locale.ROOT, "%06x", colorInt and 0xFFFFFF)
-        searchByColor(hex)
-    }
-
-    /** Match wallpapers to system Material You colors */
-    fun matchMyTheme() {
-        viewModelScope.launch {
-            try {
-                val color = android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S
-                val hex = if (color) {
-                    val accent = context.getColor(android.R.color.system_accent1_500)
-                    String.format(java.util.Locale.ROOT, "%06x", accent and 0xFFFFFF)
-                } else {
-                    "424153" // Fallback: Catppuccin lavender-ish
-                }
-                searchByColor(hex)
-            } catch (e: Exception) {
-                if (e is kotlinx.coroutines.CancellationException) throw e
-                searchByColor("424153")
-            }
-        }
-    }
-
-    private suspend fun resolveWallpaperSelection(
+    internal suspend fun resolveWallpaperSelection(
         id: String,
         source: ContentSource? = null,
         fullUrl: String? = null,
-    ): Pair<Wallpaper, List<Wallpaper>>? {
-        val shared = selectedContent.wallpaperList.value
-        val sharedAnchorKey = selectedContent.wallpaperListAnchorKey.value
-        selectedContent.selectedWallpaper.value
-            ?.takeIf { matchesWallpaperIdentity(it, id, source, fullUrl) }
-            ?.let {
-                return it to if (shared.isNotEmpty() && sharedAnchorKey == it.stableKey()) {
-                    shared
-                } else {
-                    listOf(it)
-                }
-            }
-
-        shared.firstOrNull { matchesWallpaperIdentity(it, id, source, fullUrl) }?.let {
-            return it to if (shared.isNotEmpty() && sharedAnchorKey == it.stableKey()) {
-                shared
-            } else {
-                listOf(it)
-            }
-        }
-
-        val current = _state.value.wallpapers
-        current.firstOrNull { matchesWallpaperIdentity(it, id, source, fullUrl) }?.let {
-            return it to current
-        }
-
-        val topVotedWallpapers = _topVoted.value.map { pair -> pair.first }
-        topVotedWallpapers.firstOrNull { matchesWallpaperIdentity(it, id, source, fullUrl) }?.let {
-            return it to topVotedWallpapers
-        }
-
-        _dailyPick.value?.takeIf { matchesWallpaperIdentity(it, id, source, fullUrl) }?.let {
-            return it to listOf(it)
-        }
-
-        (source?.let {
-            favoritesRepo.getByIdentity(
-                FavoriteIdentity(
-                    id = id,
-                    source = it.name,
-                    type = "WALLPAPER",
-                )
-            )
-        } ?: favoritesRepo.getLatestByIdAndType(id, "WALLPAPER"))
-            ?.takeIf { it.type == "WALLPAPER" }
-            ?.toWallpaper()
-            ?.takeIf { matchesWallpaperIdentity(it, id, source, fullUrl) }
-            ?.let {
-                return it to listOf(it)
-            }
-
-        cacheManager.getByIds(listOf(id)).firstOrNull {
-            matchesWallpaperIdentity(it, id, source, fullUrl)
-        }?.let {
-            return it to listOf(it)
-        }
-
-        return null
-    }
+    ) = searchActions.resolveWallpaperSelection(id, source, fullUrl)
 
     private fun categorizeError(e: Exception): String = when (e) {
         is java.net.UnknownHostException -> "No internet connection"
