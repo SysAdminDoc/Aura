@@ -158,6 +158,8 @@ class SettingsViewModel @Inject constructor(
     val ringtoneShuffleEnabled = prefs.ringtoneShuffleEnabled.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
     val ringtoneShuffleIntervalHours = prefs.ringtoneShuffleIntervalHours.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 24L)
     val alarmShuffleEnabled = prefs.alarmShuffleEnabled.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
+    val soundProfilesEnabled = prefs.soundProfilesEnabled.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
+    val soundProfilesJson = prefs.soundProfilesJson.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), "")
     val redditSubs = prefs.redditSubreddits.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), "wallpapers,MobileWallpaper,MinimalWallpaper")
     val redditProviderEnabled = prefs.redditProviderEnabled.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
     val preferredRes = prefs.preferredResolution.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), "")
@@ -494,6 +496,20 @@ class SettingsViewModel @Inject constructor(
             val interval = prefs.ringtoneShuffleIntervalHours.first()
             RingtoneShuffleWorker.schedule(context, interval)
         }
+    }
+
+    fun setSoundProfilesEnabled(enabled: Boolean) = viewModelScope.launch {
+        prefs.setSoundProfilesEnabled(enabled)
+        if (enabled) {
+            com.freevibe.service.SoundProfileWorker.schedule(context)
+        } else {
+            com.freevibe.service.SoundProfileWorker.cancel(context)
+        }
+    }
+
+    fun setSoundProfilesJson(json: String) = viewModelScope.launch {
+        prefs.setSoundProfilesJson(json)
+        prefs.setSoundProfileLastAppliedId("")
     }
 
     fun setRedditSubs(subs: String) = viewModelScope.launch {

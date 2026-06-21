@@ -208,6 +208,8 @@ fun SettingsScreen(
     val ringtoneShuffleEnabled by viewModel.ringtoneShuffleEnabled.collectAsStateWithLifecycle()
     val ringtoneShuffleIntervalHours by viewModel.ringtoneShuffleIntervalHours.collectAsStateWithLifecycle()
     val alarmShuffleEnabled by viewModel.alarmShuffleEnabled.collectAsStateWithLifecycle()
+    val soundProfilesEnabled by viewModel.soundProfilesEnabled.collectAsStateWithLifecycle()
+    val soundProfilesJson by viewModel.soundProfilesJson.collectAsStateWithLifecycle()
     val preferredRes by viewModel.preferredRes.collectAsStateWithLifecycle()
     val userStyles by viewModel.userStyles.collectAsStateWithLifecycle()
     val schedulerEnabled by viewModel.schedulerEnabled.collectAsStateWithLifecycle()
@@ -1582,6 +1584,20 @@ fun SettingsScreen(
                 },
                 checked = alarmShuffleEnabled,
                 onCheckedChange = { viewModel.setAlarmShuffleEnabled(it) },
+            )
+            val profileCount = remember(soundProfilesJson) {
+                com.freevibe.service.parseProfiles(soundProfilesJson).size
+            }
+            SettingsToggle(
+                icon = Icons.Default.Schedule,
+                title = stringResource(R.string.settings_sounds_profiles_title),
+                subtitle = if (soundProfilesEnabled) {
+                    stringResource(R.string.settings_sounds_profiles_on_subtitle, profileCount)
+                } else {
+                    stringResource(R.string.settings_sounds_profiles_off_subtitle)
+                },
+                checked = soundProfilesEnabled,
+                onCheckedChange = { viewModel.setSoundProfilesEnabled(it) },
             )
         }
 

@@ -1067,4 +1067,9 @@
     <string name="wallpapers_source_health_summary">Limited source health right now: %1$s</string>
     <string name="wallpapers_card_badge_amoled">AMOLED</string>
     <string name="wallpapers_card_badge_icon_safe">Icon-safe</string>
+
+    <!-- Sound profiles -->
+    <string name="settings_sounds_profiles_title">Time-of-day sound profiles</string>
+    <string name="settings_sounds_profiles_on_subtitle">%1$d profile(s) active — sounds change by schedule</string>
+    <string name="settings_sounds_profiles_off_subtitle">Assign different ringtone, notification, and alarm sounds to time slots</string>
 </resources>

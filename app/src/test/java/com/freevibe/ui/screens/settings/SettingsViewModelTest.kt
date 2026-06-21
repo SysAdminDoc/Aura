@@ -468,6 +468,9 @@ class SettingsViewModelTest {
             every { prefs.rotateOnScreenOff } returns flowOf(false)
             every { prefs.avoidRecentRepeats } returns flowOf(false)
             every { prefs.alarmShuffleEnabled } returns flowOf(false)
+            every { prefs.soundProfilesEnabled } returns flowOf(false)
+            every { prefs.soundProfilesJson } returns flowOf("")
+            every { prefs.soundProfileLastAppliedId } returns flowOf("")
             // Added in v6.13/v6.14 — these StateFlow-backed VM fields fail-fast on
             // first collection if not stubbed. Pre-existing test fixture gap caught
             // during a deeper audit pass.
