@@ -151,6 +151,9 @@ jobs:
       - name: Build signed release APK
         run: ./gradlew :app:assembleRelease --stacktrace --no-daemon
 
+      - name: Build signed release AAB (Play dry-run)
+        run: ./gradlew :app:bundleRelease --stacktrace --no-daemon
+
       - name: Package release APK
         id: package
         run: |
@@ -177,9 +180,21 @@ jobs:
           APK_DEST="$RELEASE_DIR/$APK_NAME"
           cp "$APK_SOURCE" "$APK_DEST"
 
+          # Package AAB alongside APK for Play Store dry-run
+          AAB_SOURCE="$(find app/build/outputs/bundle/release -name '*.aab' | sort | head -1)"
+          AAB_NAME=""
+          AAB_DEST=""
+          if [ -n "$AAB_SOURCE" ]; then
+            AAB_NAME="Aura-${RELEASE_LABEL}-versionCode-${VERSION_CODE}-release.aab"
+            AAB_DEST="$RELEASE_DIR/$AAB_NAME"
+            cp "$AAB_SOURCE" "$AAB_DEST"
+          fi
+
           {
             echo "apk_path=$APK_DEST"
             echo "apk_name=$APK_NAME"
+            echo "aab_path=$AAB_DEST"
+            echo "aab_name=$AAB_NAME"
             echo "version_name=$VERSION_NAME"
             echo "version_code=$VERSION_CODE"
             echo "release_label=$RELEASE_LABEL"
@@ -244,7 +259,12 @@ jobs:
         run: |
           (
             cd "$RELEASE_DIR"
-            sha256sum "${{ steps.package.outputs.apk_name }}" THIRD-PARTY-NOTICES.md GOOGLE-OSS-RAW-INPUTS.zip NATIVE-COMPLIANCE.md NATIVE-ALIGNMENT.json > SHA256SUMS.txt
+            FILES="${{ steps.package.outputs.apk_name }} THIRD-PARTY-NOTICES.md GOOGLE-OSS-RAW-INPUTS.zip NATIVE-COMPLIANCE.md NATIVE-ALIGNMENT.json"
+            AAB="${{ steps.package.outputs.aab_name }}"
+            if [ -n "$AAB" ] && [ -f "$AAB" ]; then
+              FILES="$FILES $AAB"
+            fi
+            sha256sum $FILES > SHA256SUMS.txt
           )
 
       - name: Attest release artifacts
@@ -292,6 +312,7 @@ jobs:
           name: aura-release-${{ steps.package.outputs.version_name }}-${{ github.run_number }}
           path: |
             release/*.apk
+            release/*.aab
             release/THIRD-PARTY-NOTICES.md
             release/GOOGLE-OSS-RAW-INPUTS.zip
             release/NATIVE-COMPLIANCE.md
