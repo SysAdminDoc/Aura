@@ -397,6 +397,15 @@ fun SoundDetailScreen(
                 if (detailCodecBadge != null) {
                     Text(detailCodecBadge, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
+                val fileSizeLabel = remember(s.fileSize) {
+                    com.freevibe.ui.screens.wallpapers.formatFileSizeLabel(s.fileSize)
+                }
+                if (fileSizeLabel != null) {
+                    Text(fileSizeLabel, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
+                if (s.sampleRate > 0) {
+                    Text("${s.sampleRate / 1000}kHz", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
                 if (s.license.isNotEmpty()) {
                     Surface(color = MaterialTheme.colorScheme.secondaryContainer, shape = RoundedCornerShape(4.dp)) {
                         Text(s.license, Modifier.padding(horizontal = 6.dp, vertical = 2.dp), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.secondary)

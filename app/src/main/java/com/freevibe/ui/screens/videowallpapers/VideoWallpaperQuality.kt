@@ -62,12 +62,19 @@ internal fun VideoWallpaperItem.videoTechnicalSummary(): String {
     } else {
         "Unknown video dimensions"
     }
+    val aspectRatio = if (hasDimensions && videoHeight > 0) {
+        val ratio = videoWidth.toFloat() / videoHeight.toFloat()
+        String.format(java.util.Locale.ROOT, "%.2f:1", ratio)
+    } else {
+        null
+    }
+    val durationLabel = duration.takeIf { it > 0 }?.let { "${it}s" }
     val rotation = videoRotationDegrees
         .takeIf { it != 0 }
         ?.let { "rotated ${it}deg" }
     val codec = videoCodec.takeIf { it.isNotBlank() }
     val mime = videoMimeType.takeIf { it.isNotBlank() }
-    return listOfNotNull(dimensions, rotation, codec, mime).joinToString(" · ")
+    return listOfNotNull(dimensions, aspectRatio, durationLabel, rotation, codec, mime).joinToString(" · ")
 }
 
 internal fun VideoWallpaperItem.previewAspectRatio(): Float = when {
