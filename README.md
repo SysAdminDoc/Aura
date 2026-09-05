@@ -237,6 +237,16 @@ Requires JDK 21 and Android SDK 36. Android Studio Ladybug (2024.2.1) or later r
 
 > Always use the included Gradle wrapper. It pins Gradle 8.12, which is what AGP 8.9.3 needs.
 
+The legacy Android test lane runs against release-minified Full and FOSS APKs. It
+opens Sounds and exercises NewPipe search on API 26, 27, and 29 without requiring
+network access. Build its target and test APKs with:
+
+```powershell
+.\gradlew.bat -PauraInstrumentationBuildType=release `
+    :app:assembleFullRelease :app:assembleFossRelease `
+    :app:assembleFullReleaseAndroidTest :app:assembleFossReleaseAndroidTest
+```
+
 Run debug build, unit tests, lint, signed APK/AAB dry runs, checksum checks, and release metadata guards locally before publishing.
 Debug builds include Android pseudolocales; the route screenshot gate covers compact English XA and Arabic XB RTL fixtures. Simplified Chinese ships as a real translation pack since v6.45.1.
 

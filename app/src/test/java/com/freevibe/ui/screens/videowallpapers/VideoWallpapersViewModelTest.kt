@@ -10,6 +10,7 @@ import com.freevibe.data.remote.pixabay.PixabayVideoFile
 import com.freevibe.data.remote.pixabay.PixabayVideoFiles
 import com.freevibe.data.remote.pixabay.PixabayVideoResponse
 import com.freevibe.data.repository.VoteRepository
+import com.freevibe.data.repository.createLegacyCompatibleYouTubeSearchHandler
 import com.freevibe.data.repository.parseRedditRssPage
 import com.freevibe.data.repository.YouTubeRepository
 import com.freevibe.data.repository.YouTubeVideoMetadata
@@ -735,6 +736,36 @@ class VideoWallpapersViewModelTest {
         )
         assertEquals(emptyList<Long>(), timelineFrameTimes(durationMs = 0L, frameCount = 4))
         assertEquals(6, timelineFrameTimes(durationMs = 60_000L, frameCount = 20).size)
+    }
+
+    @Test
+    fun `video feed queries survive the legacy search handler`() {
+        // The video feed appends an orientation suffix to the user's search
+        // text before handing it to NewPipe. Those queries carry spaces, and
+        // the curated fallbacks carry punctuation, so the handler has to encode
+        // them with the API 1 URLEncoder overload rather than NewPipe's own
+        // API 33 one (issue #2). searchString must stay verbatim, because the
+        // downstream junk-pattern and title filters match against it.
+        val userQuery = "northern lights vertical wallpaper"
+        val userHandler = createLegacyCompatibleYouTubeSearchHandler(userQuery)
+
+        assertEquals(userQuery, userHandler.searchString)
+        assertEquals(
+            "https://www.youtube.com/results" +
+                "?search_query=northern+lights+vertical+wallpaper&sp=8AEB",
+            userHandler.url,
+        )
+
+        val curatedQuery = "4k live wallpaper loop (amoled) & dark"
+        val curatedHandler = createLegacyCompatibleYouTubeSearchHandler(curatedQuery)
+
+        assertEquals(curatedQuery, curatedHandler.searchString)
+        assertEquals(
+            "https://www.youtube.com/results" +
+                "?search_query=4k+live+wallpaper+loop+%28amoled%29+%26+dark&sp=8AEB",
+            curatedHandler.url,
+        )
+        assertEquals(emptyList<String>(), curatedHandler.contentFilters)
     }
 
     private fun pixabayVideo(

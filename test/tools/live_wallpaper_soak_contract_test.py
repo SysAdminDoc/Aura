@@ -14,7 +14,7 @@ ROOT = Path(__file__).resolve().parents[2]
 SERVICE_DIR = ROOT / "app/src/main/java/com/freevibe/service"
 HARNESS = "app/src/debug/java/com/freevibe/service/soak/LiveWallpaperSoak.kt"
 JVM_SOAK = "app/src/test/java/com/freevibe/service/LiveWallpaperSoakTest.kt"
-DEVICE_SOAK = "app/src/androidTest/java/com/freevibe/service/LiveWallpaperSoakInstrumentedTest.kt"
+DEVICE_SOAK = "app/src/androidTestDebug/java/com/freevibe/service/LiveWallpaperSoakInstrumentedTest.kt"
 
 
 def read(path: str) -> str:

@@ -37,7 +37,7 @@ import org.junit.runner.RunWith
  * com.freevibe.service.LiveWallpaperSoakInstrumentedTest
  * ```
  *
- * This does not replace the physical-device captures tracked in
+ * This debug-only soak does not replace the physical-device captures tracked in
  * `Roadmap_Blocked.md`: OEM power management and OEM decoder death are exactly
  * what an emulator does not reproduce.
  */

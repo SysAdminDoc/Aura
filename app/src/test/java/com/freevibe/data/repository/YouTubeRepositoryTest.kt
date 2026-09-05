@@ -2,9 +2,22 @@ package com.freevibe.data.repository
 
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class YouTubeRepositoryTest {
+
+    @Test
+    fun `legacy compatible NewPipe search handler uses the Android 1 encoder path`() {
+        val handler = createLegacyCompatibleYouTubeSearchHandler("alarm & rain")
+
+        assertEquals("alarm & rain", handler.searchString)
+        assertEquals(
+            "https://www.youtube.com/results?search_query=alarm+%26+rain&sp=8AEB",
+            handler.url,
+        )
+        assertTrue(handler.contentFilters.isEmpty())
+    }
 
     @Test
     fun `display dimensions are swapped for rotated portrait video`() {

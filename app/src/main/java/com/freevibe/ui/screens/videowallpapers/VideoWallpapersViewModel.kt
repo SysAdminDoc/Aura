@@ -13,6 +13,7 @@ import com.freevibe.data.remote.pixabay.PixabayVideo
 import com.freevibe.data.repository.YouTubeRepository
 import com.freevibe.data.repository.YouTubeVideoMetadata
 import com.freevibe.data.repository.VoteRepository
+import com.freevibe.data.repository.createLegacyCompatibleYouTubeSearchHandler
 import com.freevibe.data.repository.parseRedditRssPage
 import com.freevibe.data.repository.pixabayRateLimitBackoffMillis
 import com.freevibe.service.MAX_VIDEO_WALLPAPER_BYTES
@@ -955,7 +956,9 @@ class VideoWallpapersViewModel @Inject constructor(
                             OrientationFilter.ALL -> " wallpaper"
                         }
                         val query = searchQ?.let { "$it$orientSuffix" } ?: ytQueries[s.ytQueryIndex % ytQueries.size]
-                        val extractor = service.getSearchExtractor(query)
+                        val extractor = service.getSearchExtractor(
+                            createLegacyCompatibleYouTubeSearchHandler(query),
+                        )
                         extractor.fetchPage()
                         val youtubeCandidates = extractor.initialPage.items
                             .filterIsInstance<StreamInfoItem>()

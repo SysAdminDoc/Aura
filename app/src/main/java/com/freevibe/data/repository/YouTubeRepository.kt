@@ -20,9 +20,11 @@ import kotlinx.coroutines.withContext
 import org.schabi.newpipe.extractor.MediaFormat
 import org.schabi.newpipe.extractor.NewPipe
 import org.schabi.newpipe.extractor.ServiceList
+import org.schabi.newpipe.extractor.linkhandler.SearchQueryHandler
 import org.schabi.newpipe.extractor.stream.DeliveryMethod
 import org.schabi.newpipe.extractor.stream.StreamInfo
 import org.schabi.newpipe.extractor.stream.StreamInfoItem
+import java.net.URLEncoder
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -128,6 +130,23 @@ internal fun parseYtDlpSearchOutput(raw: String): List<Sound> = raw.lineSequence
     .toList()
 
 /**
+ * Builds the default YouTube search handler without NewPipe's API 33-only
+ * URLEncoder.encode(String, Charset) call. The String overload is available
+ * across Aura's full supported Android range.
+ */
+internal fun createLegacyCompatibleYouTubeSearchHandler(query: String): SearchQueryHandler {
+    val encodedQuery = URLEncoder.encode(query, Charsets.UTF_8.name())
+    val url = "https://www.youtube.com/results?search_query=$encodedQuery&sp=8AEB"
+    return SearchQueryHandler(
+        url,
+        url,
+        query,
+        emptyList(),
+        "",
+    )
+}
+
+/**
  * YouTube search + stream extraction via NewPipe Extractor.
  * Scrapes YouTube directly — no API key, no Piped instances, no quotas.
  */
@@ -211,7 +230,9 @@ class YouTubeRepository @Inject constructor(
                     fallbackEngine = YouTubeExtractionEngine.YT_DLP,
                     primary = {
                         val service = NewPipe.getService(ServiceList.YouTube.serviceId)
-                        val extractor = service.getSearchExtractor(query)
+                        val extractor = service.getSearchExtractor(
+                            createLegacyCompatibleYouTubeSearchHandler(query),
+                        )
                         extractor.fetchPage()
                         val sounds = filterSearchSounds(
                             sounds = extractor.initialPage.items
