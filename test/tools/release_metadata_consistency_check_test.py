@@ -14,6 +14,14 @@ from tools.release_metadata_consistency_check import (
 )
 
 
+class FixtureNotClean(AssertionError):
+    """The fixture failed before its test seeded anything.
+
+    Raised as an AssertionError so it reads as a test-setup failure rather than
+    as the gate rejecting a seeded defect.
+    """
+
+
 REPO_ROOT = Path(__file__).resolve().parents[2]
 SCREEN_NAV = "app/src/main/java/com/freevibe/ui/navigation/Screen.kt"
 SCHEMA_DIR = "app/schemas/com.freevibe.data.local.FreeVibeDatabase"
@@ -61,6 +69,15 @@ def consistent_fixture(destination: Path) -> dict[str, object]:
 
     Pinning the fixture's policy to the fixture's own build file makes every
     seeded defect the only thing left that can fail.
+
+    Version drift was the observed failure, but it is not the only live state a
+    fixture inherits: `copy_required_tree` copies README.md, the Fastlane
+    metadata and every other evidence file verbatim, so a stale value in any of
+    them breaks every fixture test at once. The fixture is therefore validated
+    before the caller seeds anything, and a failure there is raised as
+    `FixtureNotClean` naming the live file at fault. That does not decouple the
+    tests from live data, but it stops an unrelated live defect from wearing the
+    costume of a seeded one.
     """
     copy_required_tree(destination)
     policy = copy.deepcopy(live_policy())
@@ -69,6 +86,13 @@ def consistent_fixture(destination: Path) -> dict[str, object]:
     gradle = parse_gradle(destination)
     policy["versionName"] = gradle["versionName"]
     policy["versionCode"] = gradle["versionCode"]
+    try:
+        validate_policy(destination, policy)
+    except ReleaseMetadataConsistencyError as exc:
+        raise FixtureNotClean(
+            "the fixture copied from the live repository does not pass before any "
+            f"defect was seeded, so no seeded-defect assertion below is meaningful: {exc}"
+        ) from exc
     return policy
 
 
