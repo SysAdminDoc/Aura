@@ -8,7 +8,7 @@ Living architecture overview for contributors. Internal working notes live in `C
 ┌────────────────────────────────────────────────────────────────────┐
 │  Compose UI                                                        │
 │   16+ screens, 5 bottom-nav tabs (Wallpapers / Videos / Sounds /   │
-│   Favorites / Settings) + Editors / Collections / Downloads /      │
+│   Library / Settings) + Editors / Collections / Downloads /        │
 │   Onboarding. Material 3 + custom rectangular 4-12dp shape system. │
 ├────────────────────────────────────────────────────────────────────┤
 │  ViewModels (Hilt @HiltViewModel)                                  │
@@ -32,7 +32,7 @@ Living architecture overview for contributors. Internal working notes live in `C
 │   latency + success-ratio rolling counters (Settings → Diagnostics)│
 ├────────────────────────────────────────────────────────────────────┤
 │  Local (data/local/)                                               │
-│   Room DB v14 (favorites, downloads, search_history, wallpaper_    │
+│   Room DB v17 (favorites, downloads, search_history, wallpaper_    │
 │   cache, wallpaper_history, wallpaper_collections,                 │
 │   wallpaper_collection_items). DataStore: Settings + Onboarding +  │
 │   User Styles + Rotation triggers. PreferencesManager is the only  │

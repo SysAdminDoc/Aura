@@ -4,6 +4,15 @@ All notable changes to Aura will be documented in this file.
 
 ## Unreleased
 
+- **The contributor docs now match the build, and a check keeps them there**:
+  `ARCHITECTURE.md` described a "Favorites" bottom tab and Room database v14
+  against a shipped "Library" tab and v17, and `CONTRIBUTING.md` asked for
+  "JDK 17+ and Android SDK 35" when the build compiles against SDK 36 and Gradle
+  refuses any JDK newer than 21. Neither file was covered by any check. Both are
+  corrected, both are now read by the release gate, and it understands the boxed
+  diagram format `ARCHITECTURE.md` uses so a stale tab name there fails the build
+  rather than sitting unnoticed.
+
 - **The distribution runbook stopped contradicting its own tooling**: it told the
   reader that F-Droid mainline was blocked and that the preflight command would
   report `blocked`, when that command had been reporting `ready-for-review` ever

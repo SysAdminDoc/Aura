@@ -30,7 +30,9 @@
     "docs/distribution/store-assets.json",
     "docs/distribution/release-dry-run.md",
     "docs/distribution/release-signing.md",
-    "docs/distribution/supply-chain.md"
+    "docs/distribution/supply-chain.md",
+    "ARCHITECTURE.md",
+    "CONTRIBUTING.md"
   ],
   "requiredPreflightCommands": [
     "tools/release_manifest.py",

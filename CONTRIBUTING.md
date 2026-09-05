@@ -17,7 +17,10 @@ If your PR contradicts the charter and you think the charter is wrong, open an i
 
 ## Build
 
-Requires JDK 17+ and Android SDK 35. Android Studio Ladybug (2024.2.1) or later.
+Requires JDK 21 and Android SDK 36. Android Studio Ladybug (2024.2.1) or later.
+Use Adoptium JDK 21 specifically, not "17 or newer": the app compiles to Java 17
+bytecode, but Gradle 8.12.1 refuses newer JDKs, and the JBR bundled with current
+Android Studio is JDK 25.
 
 ```bash
 ./gradlew assembleFullDebug          # use gradlew.bat on Windows
@@ -34,7 +37,7 @@ flavor.
 
 Run build, unit-test, lint, signing, checksum, and release-artifact checks locally before pushing or publishing. Public install artifacts are signed APK/AAB outputs produced on this machine and attached to GitHub Releases with local receipts.
 
-Gradle wrapper is pinned to 8.12. AGP 8.9.3. Kotlin 2.1.0. JDK 17. The app compiles against SDK 36 but still targets 35, so none of the Android 16 behavior changes apply. See [`gradle/wrapper/gradle-wrapper.properties`](gradle/wrapper/gradle-wrapper.properties) and [`app/build.gradle.kts`](app/build.gradle.kts).
+Gradle wrapper is pinned to 8.12. AGP 8.9.3. Kotlin 2.1.0. JDK 21 to run the build, Java 17 as the compile target. The app compiles against SDK 36 but still targets 35, so none of the Android 16 behavior changes apply. See [`gradle/wrapper/gradle-wrapper.properties`](gradle/wrapper/gradle-wrapper.properties) and [`app/build.gradle.kts`](app/build.gradle.kts).
 
 `local.properties` example:
 

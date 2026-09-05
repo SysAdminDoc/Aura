@@ -45,19 +45,38 @@ ROOM_SCHEMA_CLAIM = re.compile(r"Room\s*(?:DB\s*)?\(?v(\d+)\)?", re.IGNORECASE)
 # Version strings quoted in prose, e.g. a README badge or a "Current: v6.41.0" line.
 VERSION_NAME_CLAIM = re.compile(r"version-(\d+\.\d+\.\d+)-blue|\*\*Current:\*\*\s*v(\d+\.\d+\.\d+)")
 VERSION_CODE_CLAIM = re.compile(r"versionCode\s*(\d+)")
+COMPILE_SDK_RE = re.compile(r"compileSdk\s*=\s*(\d+)")
+JVM_TARGET_RE = re.compile(r'jvmTarget\s*=\s*"([^"]+)"')
+# CONTRIBUTING.md told contributors to install "Android SDK 35" while the build
+# compiled against 36, and asked for "JDK 17+" when Gradle 8.12.1 rejects
+# anything newer than 21. Both are things a reader acts on, so both are checked.
+ANDROID_SDK_CLAIM = re.compile(r"Android SDK\s+(\d+)")
+JAVA_TARGET_CLAIM = re.compile(r"Java\s+(\d+)\s+as the compile target", re.IGNORECASE)
 
 # Prose surfaces that state release facts. CLAUDE.md is untracked working notes,
 # so it is checked when present and skipped when it is not.
-FACT_SURFACES = ("README.md", "CLAUDE.md")
+# ARCHITECTURE.md and CONTRIBUTING.md joined this list after both were found
+# stating facts no gate read: ARCHITECTURE.md claimed Room v14 and a "Favorites"
+# bottom-nav destination against a shipped v17 and "Library", and CONTRIBUTING.md
+# asked for "JDK 17+ and Android SDK 35" against compileSdk 36.
+FACT_SURFACES = ("README.md", "CLAUDE.md", "ARCHITECTURE.md", "CONTRIBUTING.md")
 
 SCREEN_NAV = "app/src/main/java/com/freevibe/ui/navigation/Screen.kt"
 BOTTOM_NAV_ITEMS = re.compile(r"bottomNavItems[^=]*=\s*listOf\(([^)]*)\)", re.DOTALL)
 # "5 bottom nav tabs: A, B, C" / "**5 bottom nav tabs** — A, B, C" / bare count.
 # The trailing \** absorbs a closing bold marker before the separator.
+# Two shapes in the wild. README and CLAUDE.md write "5 bottom nav tabs: A, B,
+# C"; ARCHITECTURE.md writes "5 bottom-nav tabs (A / B / C)" inside an ASCII box
+# whose list wraps across a line. Both have to be read, or a stale destination
+# name survives in whichever shape is not covered, which is how ARCHITECTURE.md
+# kept claiming "Favorites" after the tab became Library.
 NAV_TAB_CLAIM = re.compile(
-    r"(\d+)\s+bottom nav tabs\**(?:\s*[:—–-]\s*([^.\n)]+))?",
+    r"(\d+)\s+bottom[-\s]nav tabs\**"
+    r"(?:\s*[:—–-]\s*(?P<listed>[^.\n)]+)|\s*\((?P<parenthesised>[^)]+)\))?",
     re.IGNORECASE,
 )
+# Box-drawing borders sit between a wrapped list and its continuation.
+BOX_BORDER = re.compile(r"[│┃|]")
 # Prose names the video destination "Videos"; the destination itself is VideoWallpapers.
 NAV_PROSE_ALIASES = {"videos": "videowallpapers"}
 
@@ -120,10 +139,18 @@ def parse_gradle(repo_root: Path) -> dict[str, object]:
     version_code = VERSION_CODE_RE.search(text)
     if not package or not version_name or not version_code:
         raise ReleaseMetadataConsistencyError("app/build.gradle.kts is missing package or version metadata")
+    compile_sdk = COMPILE_SDK_RE.search(text)
+    jvm_target = JVM_TARGET_RE.search(text)
+    if not compile_sdk or not jvm_target:
+        raise ReleaseMetadataConsistencyError(
+            "app/build.gradle.kts is missing compileSdk or jvmTarget"
+        )
     return {
         "packageName": package.group(1),
         "versionName": version_name.group(1),
         "versionCode": int(version_code.group(1)),
+        "compileSdk": int(compile_sdk.group(1)),
+        "jvmTarget": jvm_target.group(1),
     }
 
 
@@ -170,17 +197,17 @@ def check_nav_claims(
     """Compare 'N bottom nav tabs: ...' prose against the real destinations."""
     errors: list[str] = []
     known = {name.lower() for name in destinations}
-    for match in NAV_TAB_CLAIM.finditer(text):
+    for match in NAV_TAB_CLAIM.finditer(BOX_BORDER.sub(" ", text)):
         claimed_count = int(match.group(1))
         if claimed_count != len(destinations):
             errors.append(
                 f"{relative_path} claims {claimed_count} bottom nav tabs but the app "
                 f"builds {len(destinations)}"
             )
-        listed = match.group(2)
+        listed = match.group("listed") or match.group("parenthesised")
         if not listed:
             continue
-        for raw in listed.split(","):
+        for raw in re.split(r"[,/]", listed):
             name = raw.strip().strip("*_`").lower()
             if not name:
                 continue
@@ -233,6 +260,22 @@ def validate_fact_surfaces(repo_root: Path, gradle: dict[str, object]) -> dict[s
                 errors.append(
                     f"{relative_path} claims versionCode {claimed} but the build declares "
                     f"{gradle['versionCode']}"
+                )
+
+        for match in ANDROID_SDK_CLAIM.finditer(text):
+            claimed = int(match.group(1))
+            if claimed != gradle["compileSdk"]:
+                errors.append(
+                    f"{relative_path} tells the reader to install Android SDK {claimed} "
+                    f"but the build compiles against {gradle['compileSdk']}"
+                )
+
+        for match in JAVA_TARGET_CLAIM.finditer(text):
+            claimed = match.group(1)
+            if claimed != gradle["jvmTarget"]:
+                errors.append(
+                    f"{relative_path} claims Java {claimed} as the compile target "
+                    f"but jvmTarget is {gradle['jvmTarget']}"
                 )
 
         errors.extend(check_nav_claims(relative_path, text, destinations))

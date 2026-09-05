@@ -191,12 +191,12 @@ class ReleaseMetadataConsistencyCheckTest(unittest.TestCase):
 
             self.assertIn("privacy", str(ctx.exception).lower())
 
-    def _drifted(self, mutate) -> str:
+    def _drifted(self, mutate, surface: str = "README.md") -> str:
         with tempfile.TemporaryDirectory() as tmpdir:
             repo = Path(tmpdir)
             policy = consistent_fixture(repo)
-            readme = repo / "README.md"
-            readme.write_text(mutate(readme.read_text(encoding="utf-8")), encoding="utf-8")
+            target = repo / surface
+            target.write_text(mutate(target.read_text(encoding="utf-8")), encoding="utf-8")
 
             with self.assertRaises(ReleaseMetadataConsistencyError) as ctx:
                 validate_policy(repo, policy)
@@ -246,6 +246,55 @@ class ReleaseMetadataConsistencyCheckTest(unittest.TestCase):
         )
 
         self.assertIn("Favorites", message)
+
+    def test_rejects_a_stale_nav_name_in_the_architecture_diagram(self) -> None:
+        # ARCHITECTURE.md writes its tab list as "(A / B / C)" inside an ASCII
+        # box that wraps mid-list, which no gate read, so it claimed a
+        # "Favorites" tab long after the destination became Library.
+        message = self._drifted(
+            lambda text: text.replace("Library / Settings)", "Favorites / Settings)"),
+            surface="ARCHITECTURE.md",
+        )
+
+        self.assertIn("ARCHITECTURE.md names a 'Favorites' bottom nav tab", message)
+        self.assertIn("Library", message)
+
+    def test_rejects_a_stale_tab_count_in_the_architecture_diagram(self) -> None:
+        message = self._drifted(
+            lambda text: text.replace("5 bottom-nav tabs", "4 bottom-nav tabs"),
+            surface="ARCHITECTURE.md",
+        )
+
+        self.assertIn("ARCHITECTURE.md claims 4 bottom nav tabs but the app builds 5", message)
+
+    def test_rejects_a_stale_room_version_in_architecture(self) -> None:
+        message = self._drifted(
+            lambda text: text.replace("Room DB v17", "Room DB v14"),
+            surface="ARCHITECTURE.md",
+        )
+
+        self.assertIn("ARCHITECTURE.md claims Room v14", message)
+        self.assertIn("v17", message)
+
+    def test_rejects_a_contributing_sdk_claim_the_build_contradicts(self) -> None:
+        message = self._drifted(
+            lambda text: text.replace("Android SDK 36", "Android SDK 35"),
+            surface="CONTRIBUTING.md",
+        )
+
+        self.assertIn("install Android SDK 35", message)
+        self.assertIn("compiles against 36", message)
+
+    def test_rejects_a_contributing_java_target_the_build_contradicts(self) -> None:
+        message = self._drifted(
+            lambda text: text.replace(
+                "Java 17 as the compile target", "Java 21 as the compile target"
+            ),
+            surface="CONTRIBUTING.md",
+        )
+
+        self.assertIn("claims Java 21 as the compile target", message)
+        self.assertIn("jvmTarget is 17", message)
 
     def test_accepts_the_videos_alias_for_the_video_destination(self) -> None:
         """Prose says "Videos"; the destination is VideoWallpapers. Both are correct."""
