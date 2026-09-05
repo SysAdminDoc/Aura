@@ -12,8 +12,9 @@ runbook current before broader non-Play distribution.
 | Release artifact | Locally built and signed universal APK |
 | Release provenance | `SHA256SUMS.txt`, `apksigner.txt`, and the signing certificate SHA-256 in release notes |
 | Android developer verification | Decision recorded; owner identity verification and package registration remain |
-| F-Droid mainline | Blocked until a real FOSS flavor removes or isolates Firebase, Google Services, and Play Services ML Kit |
+| F-Droid mainline | `ready-for-review` since the FOSS flavor isolated Firebase, Play Services, and ML Kit; confirm with `tools/fdroid_preflight.py` |
 | IzzyOnDroid | Ready for owner submission after a signed `v*` GitHub Release is visible |
+| Accrescent | Not submitted. Enforces the Play target-SDK bar by removing apps and caps an APK set at 128 MiB; Aura is on targetSdk 35 |
 
 ## Decision record: register the existing release identity
 
@@ -34,6 +35,39 @@ unregistered package can fail where verification is enforced. That adds a
 24-hour setup delay, warning-heavy onboarding, and recurring support burden.
 Rotating to a newly registered key is not a substitute: Android would reject it
 as an update over releases signed with the existing key.
+
+**Review by 2026-12-31.** `tools/distribution_decision_check.py` fails once that
+date passes, so the decision cannot sit unexamined while the enforcement
+timetable moves.
+
+### What the decision means per channel
+
+The register-or-abstain question is settled above. What changed since it was
+recorded is that the two alternative stores Aura targets took opposite public
+positions, so the consequences are worth stating plainly rather than leaving
+them to be re-derived.
+
+- **GitHub Releases and Obtainium:** unaffected either way. Sideloading a
+  signed APK does not consult the verification registry, and ADB installs are
+  exempt from enforcement entirely.
+- **IzzyOnDroid:** unaffected by the decision. It distributes the upstream APK
+  under Aura's own signing key, which registration preserves rather than
+  changes.
+- **F-Droid mainline:** F-Droid published an open letter on 2026-02-24 opposing
+  developer verification and advising developers not to register "now or ever".
+  That is a position on the program, not an inclusion criterion, and F-Droid
+  builds and signs with its own key, so registering does not disqualify Aura.
+  Worth knowing before any public statement, because a submission and a
+  registration read as contradictory to that audience.
+  Source: https://f-droid.org/2026/02/24/open-letter-opposing-developer-verification.html
+- **Accrescent:** took the opposite line, registering itself and obtaining early
+  access to the program. Registration is therefore aligned with an Accrescent
+  submission, but that channel is gated on other things first: it enforces the
+  Play target-SDK bar by removing non-compliant apps rather than hiding them,
+  and caps an APK set at 128 MiB. Aura is on targetSdk 35, so it does not
+  qualify yet.
+  Source: https://blog.accrescent.app/posts/android-developer-verification/
+
 
 ## Rollout and install paths
 
@@ -129,7 +163,7 @@ Run the no-build preflight before any F-Droid work:
 py -3 tools/fdroid_preflight.py --expect-blocked
 ```
 
-Expected result today: `F-Droid mainline status: blocked`.
+Expected result: `F-Droid mainline status: ready-for-review`.
 
 Do not open an F-Droid mainline metadata PR until the criteria in
 `docs/distribution/channel-strategy.md` are met.

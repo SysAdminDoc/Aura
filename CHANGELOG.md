@@ -4,6 +4,15 @@ All notable changes to Aura will be documented in this file.
 
 ## Unreleased
 
+- **The distribution runbook stopped contradicting its own tooling**: it told the
+  reader that F-Droid mainline was blocked and that the preflight command would
+  report `blocked`, when that command had been reporting `ready-for-review` ever
+  since the FOSS flavor isolated Firebase and Play Services. Nothing was checking
+  the document, so it drifted twice unnoticed. It now records what each
+  distribution channel actually means for the verification decision, including
+  Accrescent, and a new check fails the build if the document disagrees with the
+  preflight command again or if its review date passes.
+
 - **The 16 KB page-size check now reads inside the packed native payloads**: FFmpeg
   and Python ship as archives renamed to `.so`, and the release gate had been
   recording each one as "skipped". That left roughly 250 native libraries per
