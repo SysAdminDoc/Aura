@@ -67,8 +67,32 @@ class ReleaseMetadataConsistencyCheckTest(unittest.TestCase):
             policy = copy.deepcopy(live_policy())
             policy["versionCode"] = 999
 
-            with self.assertRaises(ReleaseMetadataConsistencyError):
+            with self.assertRaises(ReleaseMetadataConsistencyError) as ctx:
                 validate_policy(repo, policy)
+
+            # The message has to say which file is stale and what to put in it.
+            # 6.45.1 and 6.45.2 both shipped with this file behind the build,
+            # so "does not match" on its own was not enough to act on.
+            message = str(ctx.exception)
+            self.assertIn("docs/distribution/release-metadata-consistency.json", message)
+            self.assertIn("999", message)
+            self.assertIn(str(read_manifest(REPO_ROOT)["versionCode"]), message)
+            self.assertIn("versionName and versionCode", message)
+
+    def test_rejects_version_name_mismatch(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            repo = Path(tmpdir)
+            copy_required_tree(repo)
+            policy = copy.deepcopy(live_policy())
+            policy["versionName"] = "0.0.1-stale"
+
+            with self.assertRaises(ReleaseMetadataConsistencyError) as ctx:
+                validate_policy(repo, policy)
+
+            message = str(ctx.exception)
+            self.assertIn("docs/distribution/release-metadata-consistency.json", message)
+            self.assertIn("0.0.1-stale", message)
+            self.assertIn(str(read_manifest(REPO_ROOT)["versionName"]), message)
 
     def test_rejects_missing_readme_link(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:

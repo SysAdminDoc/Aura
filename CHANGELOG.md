@@ -2,6 +2,19 @@
 
 All notable changes to Aura will be documented in this file.
 
+## Unreleased
+
+- **Store release notes for 6.45.1 and 6.45.2 are complete again**: both Fastlane
+  changelogs were written without the "Recent highlights" opening the release gate
+  requires, so neither would have passed a publish check. Both now carry it.
+
+- **The release metadata policy tracks the build again**: it had been left at
+  6.45.0 / versionCode 146 across two version bumps. That single stale pair was
+  failing nine of the repository's release gates, which masked anything else they
+  would have caught. The version drift check now names the file to edit and both
+  values instead of only reporting a mismatch, and the bump checklist in
+  `CONTRIBUTING.md` lists every file a version change has to touch.
+
 ## v6.45.2
 
 - **App bundle builds work again**: `bundleFullRelease` had failed with a
@@ -21,6 +34,11 @@ All notable changes to Aura will be documented in this file.
   builds carry no orphaned translations.
 
 ## v6.45.0
+
+- **YouTube sound search now works across Android 8.0 and newer**: Aura builds
+  NewPipe's search URL with the encoder overload available since API 1, avoiding
+  the API 33-only overload that crashed older devices. Release-minified Full and
+  FOSS tests now launch Sounds and exercise offline search on API 26, 27, and 29.
 
 - **Sound Editor transforms now use Android's media stack**: Media3 owns clipping,
   fades, pitch-preserving speed from 0.5x to 2x, M4A, WAV, and available OGG or

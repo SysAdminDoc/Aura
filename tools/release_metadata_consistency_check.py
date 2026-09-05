@@ -11,6 +11,7 @@ from pathlib import Path
 from typing import Any
 
 
+POLICY_PATH = "docs/distribution/release-metadata-consistency.json"
 TITLE_MAX_CHARS = 30
 SHORT_DESCRIPTION_MAX_CHARS = 80
 FULL_DESCRIPTION_MAX_CHARS = 4000
@@ -67,7 +68,7 @@ class ReleaseMetadataConsistencyError(ValueError):
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Validate Aura release metadata consistency.")
-    parser.add_argument("--policy", default="docs/distribution/release-metadata-consistency.json")
+    parser.add_argument("--policy", default=POLICY_PATH)
     parser.add_argument("--repo-root", default=".")
     return parser.parse_args()
 
@@ -351,10 +352,22 @@ def validate_policy(repo_root: Path, policy: dict[str, Any]) -> dict[str, object
     version_code = require_int(policy.get("versionCode"), "versionCode")
     if gradle["packageName"] != package_name:
         raise ReleaseMetadataConsistencyError("packageName does not match app/build.gradle.kts")
+    # Name the stale file and both values. A version bump touches
+    # app/build.gradle.kts and the Fastlane changelog but is easy to forget
+    # here, and "does not match" alone left the reader guessing which of the
+    # two files to edit (6.45.1 and 6.45.2 both shipped with this file stale).
     if gradle["versionName"] != version_name:
-        raise ReleaseMetadataConsistencyError("versionName does not match app/build.gradle.kts")
+        raise ReleaseMetadataConsistencyError(
+            f"{POLICY_PATH} records versionName {version_name!r} but "
+            f"app/build.gradle.kts declares {gradle['versionName']!r}; "
+            f"update versionName and versionCode in {POLICY_PATH}"
+        )
     if gradle["versionCode"] != version_code:
-        raise ReleaseMetadataConsistencyError("versionCode does not match app/build.gradle.kts")
+        raise ReleaseMetadataConsistencyError(
+            f"{POLICY_PATH} records versionCode {version_code} but "
+            f"app/build.gradle.kts declares {gradle['versionCode']}; "
+            f"update versionName and versionCode in {POLICY_PATH}"
+        )
     validate_docs(repo_root, policy)
     validate_required_paths(repo_root, policy)
     source_url_count = validate_source_urls(policy)

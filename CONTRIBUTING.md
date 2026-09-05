@@ -82,6 +82,7 @@ See [`ARCHITECTURE.md`](ARCHITECTURE.md) for the layered overview, package map, 
 - Instrumented tests live in `app/src/androidTest/java/com/freevibe/` and run via `connectedFullDebugAndroidTest`. Required for any flow that touches MediaStore, Room migrations, or FFmpeg subprocess wiring.
 - Screenshot tests use Roborazzi and run on the JVM: `verifyRoborazziFullDebug` checks the committed goldens in `app/src/test/screenshots/`, and `recordRoborazziFullDebug` rewrites them. Re-record only after looking at the generated PNGs — an unreviewed re-record turns a regression into the new baseline.
 - Release policy is enforced by Python gates in `tools/`, each mirrored by a test in `test/tools/`. Run `python -m pytest test/tools` before pushing; a gate that changes behavior needs its mirror test updated in the same commit.
+- Bumping the version touches more than `app/build.gradle.kts`. `docs/distribution/release-metadata-consistency.json` carries its own `versionName`/`versionCode` pair, and `fastlane/metadata/android/en-US/changelogs/<versionCode>.txt` has to exist, name the versionName, and contain the literal `Recent highlights:`. Run the gate suite after any bump; several gates pin the literal version and fail by design until every file agrees.
 
 ## Commits
 
