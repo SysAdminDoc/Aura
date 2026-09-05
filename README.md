@@ -68,6 +68,18 @@ update keeps app data only when the installed app and new APK use the same
 signing certificate. If Android reports a signature mismatch, obtain the
 official matching Aura build; uninstalling would erase local app data.
 
+Official Aura builds are signed with this certificate:
+
+```text
+SHA-256: F2:8E:44:BE:A3:2F:5B:28:90:C8:26:8B:7F:BE:D4:3C:44:A4:D6:71:A5:12:FB:07:EB:F1:8F:DD:41:C6:6E:5A
+```
+
+Every release since v6.38.1 carries it. Check it with
+`apksigner verify --print-certs <apk>` or with
+[AppVerifier](https://github.com/soupslurpr/AppVerifier) before installing a
+build you did not download from Aura's own releases page. A different digest
+means a re-signed APK, whatever the version number says.
+
 Android's developer-verification rollout begins on September 30, 2026 for
 participating stores in Brazil, Indonesia, Singapore, and Thailand, then expands
 globally in 2027. Unregistered APKs remain installable through ADB. Android is

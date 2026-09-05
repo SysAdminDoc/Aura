@@ -6,6 +6,32 @@ GitHub. It defines how private branch-protection, Dependabot, code-scanning,
 secret-scanning, and release-attestation evidence is validated before a safe
 receipt is shared in support or release artifacts.
 
+## Current reality (2026-09-05)
+
+Three of the fields below describe a repository this one deliberately is not,
+so read them as the receipt *format* rather than as a checklist Aura can pass:
+
+- **`releaseAttestations.releaseWorkflowAttestation`** cannot be configured.
+  There is no `.github/workflows` directory at all, by policy, so no workflow
+  exists to attest anything. Release provenance here is local instead:
+  `SHA256SUMS.txt`, `apksigner.txt`, the signed APK/AAB, and the certificate
+  digest published under "Published certificate" in
+  [`release-signing.md`](release-signing.md) and asserted by
+  `tools/signing_certificate_check.py`.
+- **`dependabot.versionUpdatesConfigured`** cannot be true. Dependency updates
+  are manual, `.github/dependabot.yml` is forbidden, and repository
+  vulnerability alerts were disabled deliberately.
+  `tools/dependabot_config_check.py` reports `mode: absent` and treats that as
+  correct.
+- **The branch-protection status-check list** cannot include a verify job or a
+  Firebase rules job, because neither runs anywhere. Gate enforcement is local:
+  `python -m pytest test/tools` plus the `tools/hooks/pre-push` hook.
+
+`tools/github_security_settings_receipt.py` still validates the format, and its
+fixtures still exercise every field, so the receipt remains usable if the owner
+ever supplies private evidence from a repository that does have those settings.
+Nothing in this document is read by a gate against the live repository.
+
 ## Private Evidence
 
 The private evidence file must use:

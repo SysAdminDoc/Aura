@@ -5,6 +5,26 @@ Releases for GitHub/Obtainium users, with a Play-ready AAB retained for the
 same version. Debug APKs are development-only and must not be attached to public
 releases.
 
+## Published certificate
+
+Official Aura builds are signed with:
+
+```text
+SHA-256: F2:8E:44:BE:A3:2F:5B:28:90:C8:26:8B:7F:BE:D4:3C:44:A4:D6:71:A5:12:FB:07:EB:F1:8F:DD:41:C6:6E:5A
+```
+
+Published in `README.md`, the Fastlane `full_description.txt`, and
+`docs/distribution/signing-certificate.json`. `tools/signing_certificate_check.py`
+fails when any of those three loses the digest, and when the digest stops
+matching the release keystore on a machine that holds it. That check is the
+reason the value cannot quietly drift: before it existed, the digest lived only
+in release-note prose, where neither a gate nor a store could read it.
+
+The digest is what AppVerifier and IzzyOnDroid's `AllowedAPKSigningKeys` key
+off, and it is the only way a sideloading user can tell an official build from a
+re-signed one. It must not change: an APK signed with a different key cannot
+update an existing install, so rotating it would strand every current user.
+
 ## Local signing inputs
 
 Release signing reads the ignored local files already used by Gradle:

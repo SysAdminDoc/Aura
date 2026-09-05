@@ -31,4 +31,6 @@ Aura uses free APIs from Wallhaven, Pexels, Pixabay, and Freesound, plus NewPipe
 
 Built with Kotlin, Jetpack Compose, Material 3, Hilt, Room, Retrofit, Coil, ExoPlayer, and ML Kit.
 
+Official builds are signed with certificate SHA-256 F28E44BEA32F5B2890C8268B7FBED43C44A4D671A512FB07EBF18FDD41C66E5A. Verify it before installing a build from anywhere but Aura's own releases page.
+
 Privacy policy: https://github.com/SysAdminDoc/Aura/blob/main/docs/privacy/privacy-policy.md

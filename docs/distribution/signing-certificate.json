@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "policyKind": "releaseSigningCertificate",
+  "packageName": "com.freevibe",
+  "keyAlias": "freevibe",
+  "keystoreProperty": "signing.keystore.path",
+  "certificateSha256": "F28E44BEA32F5B2890C8268B7FBED43C44A4D671A512FB07EBF18FDD41C66E5A",
+  "publishedOn": [
+    "README.md",
+    "fastlane/metadata/android/en-US/full_description.txt",
+    "docs/distribution/release-signing.md"
+  ],
+  "why": "AppVerifier and IzzyOnDroid's AllowedAPKSigningKeys both key off this digest, and a sideloading user has no other way to tell an official Aura build from a re-signed one. It had only ever appeared in release notes, which are not a place a gate or a store can read.",
+  "verify": "keytool -list -v -keystore <signing.keystore.path> -alias freevibe",
+  "rbtlog": {
+    "status": "not-registered",
+    "note": "Registration is owner-gated and follows the IzzyOnDroid submission decision, which is itself gated on the 30 MB per-APK ceiling. tools/foss_reproducibility_check.py is the recipe that would back it."
+  }
+}

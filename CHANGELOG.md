@@ -4,6 +4,15 @@ All notable changes to Aura will be documented in this file.
 
 ## Unreleased
 
+- **You can now check that an Aura APK is really Aura's**: the signing
+  certificate fingerprint was only ever written into release notes, so there was
+  no reliable place to look it up and nothing stopping it going stale. It is now
+  in the README next to the install instructions, in the store description, and
+  in a machine-readable file, with a check that fails the build if any of those
+  loses it or if it stops matching the actual release key. Verify a download with
+  `apksigner verify --print-certs` or AppVerifier before installing a build from
+  anywhere but Aura's own releases page.
+
 - **The contributor docs now match the build, and a check keeps them there**:
   `ARCHITECTURE.md` described a "Favorites" bottom tab and Room database v14
   against a shipped "Library" tab and v17, and `CONTRIBUTING.md` asked for
