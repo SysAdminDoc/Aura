@@ -34,6 +34,10 @@ REQUIRED_EXECUTED_SURFACES = {
 }
 
 PRODUCTION_ROUTE_SOURCE = "app/src/main/java/com/freevibe/ui/qa/ProductionRouteState.kt"
+SCREEN_SOURCE = "app/src/main/java/com/freevibe/ui/navigation/Screen.kt"
+SCREEN_OBJECT = re.compile(r"data object (\w+)\s*:\s*Screen\b")
+APP_GRADLE = "app/build.gradle.kts"
+VERSION_NAME_RE = re.compile(r'versionName\s*=\s*"([^"]+)"')
 
 FORBIDDEN_DIRECT_PRIMITIVES = {
     "SettingsSection(",
@@ -43,6 +47,147 @@ FORBIDDEN_DIRECT_PRIMITIVES = {
     "SettingsValueSlider(",
     "AuraStateCard(",
 }
+
+
+def screen_destinations(repo_root: Path) -> list[str]:
+    """Every navigable destination, read from Screen.kt rather than restated.
+
+    The gate used to describe itself as the accessibility release gate while
+    checking six surfaces, so the twenty destinations outside them were not
+    merely unchecked, they were invisible. Enumerating the real list is what
+    makes an omission an error instead of an absence.
+    """
+    names = SCREEN_OBJECT.findall(read_text(repo_root / SCREEN_SOURCE))
+    if not names:
+        raise AccessibilityReleaseGateError(
+            f"{SCREEN_SOURCE} yielded no Screen destinations; the scanner is reading nothing"
+        )
+    return sorted(set(names))
+
+
+def declared_version_name(repo_root: Path) -> str:
+    match = VERSION_NAME_RE.search(read_text(repo_root / APP_GRADLE))
+    if not match:
+        raise AccessibilityReleaseGateError(f"{APP_GRADLE} declares no versionName")
+    return match.group(1)
+
+
+def validate_destination_coverage(
+    repo_root: Path,
+    policy: dict[str, Any],
+    executed_ids: set[str],
+) -> dict[str, int]:
+    """Every destination is either exercised or carries a written reason."""
+    coverage = policy.get("destinationCoverage")
+    if not isinstance(coverage, dict):
+        raise AccessibilityReleaseGateError(
+            "destinationCoverage must be an object mapping every Screen destination "
+            "to either an executed surface id or a reason it cannot be exercised"
+        )
+
+    destinations = screen_destinations(repo_root)
+    missing = [name for name in destinations if name not in coverage]
+    if missing:
+        raise AccessibilityReleaseGateError(
+            "destinationCoverage is missing Screen destinations, so they would be "
+            "silently unchecked: " + ", ".join(missing)
+        )
+    stale = [name for name in coverage if name not in destinations]
+    if stale:
+        raise AccessibilityReleaseGateError(
+            "destinationCoverage names destinations Screen.kt no longer declares: "
+            + ", ".join(sorted(stale))
+        )
+
+    executed = 0
+    excused = 0
+    for name in destinations:
+        entry = require_object(coverage[name], f"destinationCoverage.{name}")
+        surface = entry.get("executedSurface")
+        reason = entry.get("reason")
+        if surface is not None and reason is not None:
+            raise AccessibilityReleaseGateError(
+                f"destinationCoverage.{name} sets both executedSurface and reason; "
+                "a destination is either exercised or excused, not both"
+            )
+        if surface is not None:
+            surface_id = require_string(surface, f"destinationCoverage.{name}.executedSurface")
+            if surface_id not in executed_ids:
+                raise AccessibilityReleaseGateError(
+                    f"destinationCoverage.{name} names executed surface '{surface_id}', "
+                    "which is not in automatedGate.executedSurfaces"
+                )
+            executed += 1
+            continue
+        if reason is None:
+            raise AccessibilityReleaseGateError(
+                f"destinationCoverage.{name} has neither executedSurface nor reason"
+            )
+        text = require_string(reason, f"destinationCoverage.{name}.reason")
+        if len(text.split()) < 4:
+            raise AccessibilityReleaseGateError(
+                f"destinationCoverage.{name}.reason is too short to be a reason: {text!r}"
+            )
+        excused += 1
+
+    return {"destinationCount": len(destinations), "executed": executed, "excused": excused}
+
+
+def validate_scenario_currency(
+    policy: dict[str, Any],
+    scenario_rows: list[dict[str, Any]],
+    version_name: str,
+) -> dict[str, int]:
+    """A manual scenario must be current for the version being released.
+
+    Manual evidence with no version attached is indistinguishable from manual
+    evidence nobody ever gathered, which is the state this gate shipped in. Each
+    scenario now records either an execution or an explicit waiver, and both are
+    stamped with the version they apply to, so a version bump invalidates them
+    and forces a decision rather than carrying the claim forward silently.
+    """
+    executed = 0
+    waived = 0
+    for row in scenario_rows:
+        scenario_id = require_string(row.get("id"), "manualScenarios[].id")
+        evidence = row.get("lastExecuted")
+        waiver = row.get("waiver")
+        if evidence is not None and waiver is not None:
+            raise AccessibilityReleaseGateError(
+                f"manual scenario '{scenario_id}' records both an execution and a waiver"
+            )
+        if evidence is not None:
+            entry = require_object(evidence, f"manualScenarios[{scenario_id}].lastExecuted")
+            stamped = require_string(entry.get("version"), "lastExecuted.version")
+            require_string(entry.get("date"), "lastExecuted.date")
+            if stamped != version_name:
+                raise AccessibilityReleaseGateError(
+                    f"manual scenario '{scenario_id}' was last executed against "
+                    f"{stamped} but the build declares {version_name}; re-run it or "
+                    "record a waiver for this version"
+                )
+            executed += 1
+            continue
+        if waiver is None:
+            raise AccessibilityReleaseGateError(
+                f"manual scenario '{scenario_id}' carries neither lastExecuted nor waiver"
+            )
+        entry = require_object(waiver, f"manualScenarios[{scenario_id}].waiver")
+        stamped = require_string(entry.get("version"), "waiver.version")
+        require_string(entry.get("owner"), "waiver.owner")
+        reason = require_string(entry.get("reason"), "waiver.reason")
+        if len(reason.split()) < 4:
+            raise AccessibilityReleaseGateError(
+                f"manual scenario '{scenario_id}' waiver reason is too short: {reason!r}"
+            )
+        if stamped != version_name:
+            raise AccessibilityReleaseGateError(
+                f"manual scenario '{scenario_id}' is waived for {stamped} but the build "
+                f"declares {version_name}; a waiver does not carry across a release"
+            )
+        waived += 1
+
+    return {"scenariosExecuted": executed, "scenariosWaived": waived}
 
 
 def read_text(path: Path) -> str:
@@ -191,12 +336,22 @@ def validate_accessibility_release_gate(repo_root: Path, policy_path: str) -> di
     if "connectedDebugAndroidTest" not in verify_command:
         raise AccessibilityReleaseGateError("verifyCommand must name connectedDebugAndroidTest")
 
+    executed_ids = {
+        require_string(row.get("id"), "executedSurfaces[].id") for row in executed_rows
+    }
+    version_name = declared_version_name(repo_root)
+    coverage = validate_destination_coverage(repo_root, policy, executed_ids)
+    currency = validate_scenario_currency(policy, scenario_rows, version_name)
+
     return {
         "status": "ok",
         "policyKind": "accessibilityReleaseGate",
         "scenarioCount": len(scenario_rows),
         "executedSurfaceCount": len(executed_rows),
         "sourceUrlCount": len(source_urls),
+        "versionName": version_name,
+        **coverage,
+        **currency,
     }
 
 

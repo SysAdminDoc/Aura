@@ -114,6 +114,165 @@ class AccessibilityReleaseGateCheckTest(unittest.TestCase):
             with self.assertRaises(AccessibilityReleaseGateError):
                 validate_accessibility_release_gate(repo, "docs/qa/accessibility-release-gate.json")
 
+    def _policy(self, repo: Path) -> dict:
+        return json.loads(
+            (repo / "docs/qa/accessibility-release-gate.json").read_text(encoding="utf-8")
+        )
+
+    def _write_policy(self, repo: Path, policy: dict) -> None:
+        (repo / "docs/qa/accessibility-release-gate.json").write_text(
+            json.dumps(policy, indent=2) + "\n", encoding="utf-8"
+        )
+
+    def test_every_screen_destination_is_covered_or_excused(self) -> None:
+        result = validate_accessibility_release_gate(
+            REPO_ROOT, "docs/qa/accessibility-release-gate.json"
+        )
+
+        # Derived, not restated: the point is that the count tracks Screen.kt.
+        screen_source = (
+            REPO_ROOT / "app/src/main/java/com/freevibe/ui/navigation/Screen.kt"
+        ).read_text(encoding="utf-8")
+        declared = len(set(re.findall(r"data object (\w+)\s*:\s*Screen\b", screen_source)))
+        self.assertEqual(declared, result["destinationCount"])
+        self.assertEqual(declared, result["executed"] + result["excused"])
+        self.assertGreater(result["excused"], 0)
+
+    def test_rejects_a_new_destination_with_no_coverage_entry(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            repo = copy_required_tree(Path(tmpdir))
+            screen = repo / "app/src/main/java/com/freevibe/ui/navigation/Screen.kt"
+            screen.write_text(
+                screen.read_text(encoding="utf-8")
+                + '\n    data object BrandNewThing : Screen(route = "brand_new")\n',
+                encoding="utf-8",
+            )
+
+            with self.assertRaises(AccessibilityReleaseGateError) as ctx:
+                validate_accessibility_release_gate(
+                    repo, "docs/qa/accessibility-release-gate.json"
+                )
+
+            self.assertIn("BrandNewThing", str(ctx.exception))
+
+    def test_rejects_coverage_for_a_destination_that_no_longer_exists(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            repo = copy_required_tree(Path(tmpdir))
+            policy = self._policy(repo)
+            policy["destinationCoverage"]["DeletedScreen"] = {
+                "reason": "left behind after the destination was removed"
+            }
+            self._write_policy(repo, policy)
+
+            with self.assertRaises(AccessibilityReleaseGateError) as ctx:
+                validate_accessibility_release_gate(
+                    repo, "docs/qa/accessibility-release-gate.json"
+                )
+
+            self.assertIn("DeletedScreen", str(ctx.exception))
+
+    def test_rejects_coverage_naming_a_surface_that_is_not_executed(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            repo = copy_required_tree(Path(tmpdir))
+            policy = self._policy(repo)
+            policy["destinationCoverage"]["Wallpapers"] = {
+                "executedSurface": "not-a-real-surface"
+            }
+            self._write_policy(repo, policy)
+
+            with self.assertRaises(AccessibilityReleaseGateError) as ctx:
+                validate_accessibility_release_gate(
+                    repo, "docs/qa/accessibility-release-gate.json"
+                )
+
+            self.assertIn("not-a-real-surface", str(ctx.exception))
+
+    def test_rejects_a_hand_wave_instead_of_a_reason(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            repo = copy_required_tree(Path(tmpdir))
+            policy = self._policy(repo)
+            policy["destinationCoverage"]["Licenses"] = {"reason": "later"}
+            self._write_policy(repo, policy)
+
+            with self.assertRaises(AccessibilityReleaseGateError) as ctx:
+                validate_accessibility_release_gate(
+                    repo, "docs/qa/accessibility-release-gate.json"
+                )
+
+            self.assertIn("too short to be a reason", str(ctx.exception))
+
+    def test_rejects_a_destination_claiming_both_execution_and_a_reason(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            repo = copy_required_tree(Path(tmpdir))
+            policy = self._policy(repo)
+            policy["destinationCoverage"]["Wallpapers"] = {
+                "executedSurface": "wallpapers-grid",
+                "reason": "also excused for some reason",
+            }
+            self._write_policy(repo, policy)
+
+            with self.assertRaises(AccessibilityReleaseGateError) as ctx:
+                validate_accessibility_release_gate(
+                    repo, "docs/qa/accessibility-release-gate.json"
+                )
+
+            self.assertIn("not both", str(ctx.exception))
+
+    def test_rejects_a_waiver_from_an_earlier_release(self) -> None:
+        # Manual evidence that does not name the version it applies to is
+        # indistinguishable from evidence nobody gathered, so a waiver expires
+        # at the next bump instead of carrying forward.
+        with tempfile.TemporaryDirectory() as tmpdir:
+            repo = copy_required_tree(Path(tmpdir))
+            policy = self._policy(repo)
+            policy["manualScenarios"][0]["waiver"]["version"] = "0.0.1"
+            self._write_policy(repo, policy)
+
+            with self.assertRaises(AccessibilityReleaseGateError) as ctx:
+                validate_accessibility_release_gate(
+                    repo, "docs/qa/accessibility-release-gate.json"
+                )
+
+            message = str(ctx.exception)
+            self.assertIn("waived for 0.0.1", message)
+            self.assertIn("does not carry across a release", message)
+
+    def test_rejects_a_scenario_with_neither_execution_nor_waiver(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            repo = copy_required_tree(Path(tmpdir))
+            policy = self._policy(repo)
+            policy["manualScenarios"][0].pop("waiver")
+            self._write_policy(repo, policy)
+
+            with self.assertRaises(AccessibilityReleaseGateError) as ctx:
+                validate_accessibility_release_gate(
+                    repo, "docs/qa/accessibility-release-gate.json"
+                )
+
+            self.assertIn("neither lastExecuted nor waiver", str(ctx.exception))
+
+    def test_accepts_a_scenario_executed_against_the_current_version(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            repo = copy_required_tree(Path(tmpdir))
+            policy = self._policy(repo)
+            version = re.search(
+                r'versionName\s*=\s*"([^"]+)"',
+                (repo / "app/build.gradle.kts").read_text(encoding="utf-8"),
+            ).group(1)
+            policy["manualScenarios"][0].pop("waiver")
+            policy["manualScenarios"][0]["lastExecuted"] = {
+                "version": version,
+                "date": "2026-09-05",
+            }
+            self._write_policy(repo, policy)
+
+            result = validate_accessibility_release_gate(
+                repo, "docs/qa/accessibility-release-gate.json"
+            )
+
+            self.assertEqual(1, result["scenariosExecuted"])
+            self.assertEqual(5, result["scenariosWaived"])
+
     def test_rejects_direct_primitive_only_test(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
             repo = copy_required_tree(Path(tmpdir))
@@ -134,6 +293,9 @@ def copy_required_tree(destination: Path) -> Path:
         "docs/qa/accessibility-release-gate.json",
         "app/src/main/java/com/freevibe/ui/qa/ProductionRouteState.kt",
         "app/src/androidTest/java/com/freevibe/ui/accessibility/AccessibilityReleaseGateTest.kt",
+        # The destination list is derived from Screen.kt, so a fixture without
+        # it cannot check coverage and would pass for the wrong reason.
+        "app/src/main/java/com/freevibe/ui/navigation/Screen.kt",
     ]
     for relative_path in paths:
         source = REPO_ROOT / relative_path

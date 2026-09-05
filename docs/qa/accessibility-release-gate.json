@@ -53,32 +53,91 @@
     {
       "id": "wallpapers-feed-detail",
       "surface": "Wallpapers feed, filters, Wallpaper Detail, apply sheet",
-      "checks": ["TalkBack traversal order", "action labels", "favorite/vote state", "dark and light themes"]
+      "checks": [
+        "TalkBack traversal order",
+        "action labels",
+        "favorite/vote state",
+        "dark and light themes"
+      ],
+      "waiver": {
+        "version": "6.45.2",
+        "owner": "SysAdminDoc",
+        "reason": "Never executed. Aura has no device lane on this workstation: the manual scenarios need TalkBack on a physical phone at 200 percent font, and the only attached image has been an API 35 emulator. Waived rather than left unstamped so the claim expires at the next version bump."
+      }
     },
     {
       "id": "video-wallpapers",
       "surface": "Video wallpapers feed, preview, crop, live-wallpaper picker",
-      "checks": ["preview state", "apply state", "crop controls", "live-wallpaper picker labels"]
+      "checks": [
+        "preview state",
+        "apply state",
+        "crop controls",
+        "live-wallpaper picker labels"
+      ],
+      "waiver": {
+        "version": "6.45.2",
+        "owner": "SysAdminDoc",
+        "reason": "Never executed. Aura has no device lane on this workstation: the manual scenarios need TalkBack on a physical phone at 200 percent font, and the only attached image has been an API 35 emulator. Waived rather than left unstamped so the claim expires at the next version bump."
+      }
     },
     {
       "id": "sounds-editor",
       "surface": "Sounds feed, Sound Detail, Sound Editor",
-      "checks": ["playback progress", "waveform range", "apply buttons", "record/upload disclosure"]
+      "checks": [
+        "playback progress",
+        "waveform range",
+        "apply buttons",
+        "record/upload disclosure"
+      ],
+      "waiver": {
+        "version": "6.45.2",
+        "owner": "SysAdminDoc",
+        "reason": "Never executed. Aura has no device lane on this workstation: the manual scenarios need TalkBack on a physical phone at 200 percent font, and the only attached image has been an API 35 emulator. Waived rather than left unstamped so the claim expires at the next version bump."
+      }
     },
     {
       "id": "settings-diagnostics",
       "surface": "Settings, privacy, diagnostics, background work, provider controls",
-      "checks": ["switch labels", "dialog headings", "error states", "support bundle actions"]
+      "checks": [
+        "switch labels",
+        "dialog headings",
+        "error states",
+        "support bundle actions"
+      ],
+      "waiver": {
+        "version": "6.45.2",
+        "owner": "SysAdminDoc",
+        "reason": "Never executed. Aura has no device lane on this workstation: the manual scenarios need TalkBack on a physical phone at 200 percent font, and the only attached image has been an API 35 emulator. Waived rather than left unstamped so the claim expires at the next version bump."
+      }
     },
     {
       "id": "adaptive-access",
       "surface": "Primary app flows at 200 percent font, high contrast, dark/light themes",
-      "checks": ["no clipped text", "48dp touch targets", "contrast", "scroll reachability"]
+      "checks": [
+        "no clipped text",
+        "48dp touch targets",
+        "contrast",
+        "scroll reachability"
+      ],
+      "waiver": {
+        "version": "6.45.2",
+        "owner": "SysAdminDoc",
+        "reason": "Never executed. Aura has no device lane on this workstation: the manual scenarios need TalkBack on a physical phone at 200 percent font, and the only attached image has been an API 35 emulator. Waived rather than left unstamped so the claim expires at the next version bump."
+      }
     },
     {
       "id": "widget-entrypoints",
       "surface": "Home widget and live-wallpaper picker metadata",
-      "checks": ["spoken labels", "disabled/error state", "large display size"]
+      "checks": [
+        "spoken labels",
+        "disabled/error state",
+        "large display size"
+      ],
+      "waiver": {
+        "version": "6.45.2",
+        "owner": "SysAdminDoc",
+        "reason": "Never executed. Aura has no device lane on this workstation: the manual scenarios need TalkBack on a physical phone at 200 percent font, and the only attached image has been an API 35 emulator. Waived rather than left unstamped so the claim expires at the next version bump."
+      }
     }
   ],
   "releaseRequirement": "Run the automated accessibility test and complete every manual scenario, or record an explicit release waiver with reason and owner.",
@@ -86,5 +145,82 @@
     "https://developer.android.com/develop/ui/compose/accessibility/testing",
     "https://developer.android.com/guide/topics/ui/accessibility/testing",
     "https://developer.android.com/guide/topics/ui/accessibility/apps"
-  ]
+  ],
+  "destinationCoverage": {
+    "AiWallpaper": {
+      "reason": "Full-flavor only and off by default, and it needs a user-supplied provider key, so it does not exist in the FOSS build at all."
+    },
+    "Categories": {
+      "reason": "Static chip grid with no async state; the same chip components are already asserted on the wallpapers-grid surface."
+    },
+    "Collections": {
+      "reason": "Needs populated collections in Room with cover previews, so the surface depends on database fixtures."
+    },
+    "CommunityReports": {
+      "reason": "Admin-only moderation queue gated on a Firebase custom claim no test identity holds."
+    },
+    "ContactPicker": {
+      "reason": "Requires the system contact picker and a granted contacts permission, so it cannot run without device interaction."
+    },
+    "CreatorProfile": {
+      "reason": "Needs a live Firebase community identity and upload history, which the FOSS flavor does not build at all."
+    },
+    "Downloads": {
+      "reason": "Lists real download history from Room and the file system, so a seeded scenario needs staged files on disk."
+    },
+    "Favorites": {
+      "reason": "Superseded by Library as the bottom-nav destination; retained only so older saved state keeps resolving. Covered by the Library entry instead."
+    },
+    "Library": {
+      "reason": "Renders the union of favorites, downloads and collections from Room, so a seeded scenario needs a populated database rather than a state object. Reachable and worth adding after Sounds."
+    },
+    "Licenses": {
+      "reason": "Generated dependency-notice text with no interactive state beyond scrolling."
+    },
+    "Onboarding": {
+      "reason": "Shows once on first launch and writes to DataStore, so exercising it needs a cleared install rather than a seeded route."
+    },
+    "RotationHealth": {
+      "reason": "Reads live WorkManager state and battery-optimisation status, neither of which a JVM or seeded scenario can supply."
+    },
+    "Settings": {
+      "executedSurface": "settings-diagnostics"
+    },
+    "SoundDetail": {
+      "executedSurface": "sounds-detail"
+    },
+    "SoundEditor": {
+      "reason": "The waveform and trim controls only render after a real decode, so the surface cannot be seeded from a state object."
+    },
+    "Sounds": {
+      "reason": "The feed needs a live YouTube search result to render anything, and ProductionRouteState has no seeded Sounds feed scenario yet. This is the largest untested screen in the app at 1,847 lines and is the first destination worth adding."
+    },
+    "UniversalSearch": {
+      "reason": "Search results come from every provider at once, so a deterministic scenario needs all provider fakes wired together at once."
+    },
+    "VideoWallpaperPreview": {
+      "reason": "Registered as a destination that nothing navigates to, so there is no user path to exercise. Tracked separately as a dead route to reach or remove."
+    },
+    "VideoWallpapers": {
+      "executedSurface": "video-wallpapers"
+    },
+    "WallpaperCrop": {
+      "reason": "Gesture-driven crop surface whose state is a pinch-zoom matrix; assertions here need touch injection rather than a seeded state."
+    },
+    "WallpaperDetail": {
+      "reason": "Covered end to end by the wallpapers-feed-detail manual scenario; a seeded scenario needs a full wallpaper plus vote and favourite state."
+    },
+    "WallpaperEditor": {
+      "executedSurface": "wallpaper-editor"
+    },
+    "WallpaperHistory": {
+      "reason": "Reads applied-wallpaper history from Room, so it needs database fixtures rather than a state object."
+    },
+    "WallpaperPreview": {
+      "reason": "Full-screen preview of an already-loaded bitmap with no controls of its own beyond a dismiss action."
+    },
+    "Wallpapers": {
+      "executedSurface": "wallpapers-grid"
+    }
+  }
 }

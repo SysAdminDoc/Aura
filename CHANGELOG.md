@@ -4,6 +4,15 @@ All notable changes to Aura will be documented in this file.
 
 ## Unreleased
 
+- **The accessibility check now accounts for every screen, not six of them**: it
+  described itself as the accessibility release gate while only ever exercising
+  six surfaces, so the other twenty screens were not just unchecked, they were
+  invisible. Each of the app's 25 destinations now either runs in the automated
+  check or carries a written reason it cannot, and adding a new screen without
+  either fails the build. The manual TalkBack scenarios are stamped with the
+  version they were run or waived for, and those stamps expire at the next
+  release so nobody inherits someone else's sign-off.
+
 - **You can now check that an Aura APK is really Aura's**: the signing
   certificate fingerprint was only ever written into release notes, so there was
   no reliable place to look it up and nothing stopping it going stale. It is now
