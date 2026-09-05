@@ -9,6 +9,7 @@ from pathlib import Path
 from tools.release_manifest import read_manifest
 from tools.release_metadata_consistency_check import (
     ReleaseMetadataConsistencyError,
+    parse_gradle,
     validate_policy,
 )
 
@@ -48,6 +49,29 @@ def copy_required_tree(destination: Path) -> None:
         target.write_text(source.read_text(encoding="utf-8"), encoding="utf-8")
 
 
+def consistent_fixture(destination: Path) -> dict[str, object]:
+    """Copy the evidence tree and return a policy that agrees with it.
+
+    `validate_policy` checks the policy's versionName/versionCode against
+    app/build.gradle.kts before it reaches any other check. A seeded-defect
+    test that passes `live_policy()` therefore stops testing what it claims
+    the moment the live policy and the live build drift apart: it still
+    raises, so it still passes, but for the wrong reason. That is exactly
+    what happened while the policy sat at 6.45.0 through two version bumps.
+
+    Pinning the fixture's policy to the fixture's own build file makes every
+    seeded defect the only thing left that can fail.
+    """
+    copy_required_tree(destination)
+    policy = copy.deepcopy(live_policy())
+    # parse_gradle is the gate's own reader, so the fixture cannot disagree
+    # with the check it is about to run.
+    gradle = parse_gradle(destination)
+    policy["versionName"] = gradle["versionName"]
+    policy["versionCode"] = gradle["versionCode"]
+    return policy
+
+
 class ReleaseMetadataConsistencyCheckTest(unittest.TestCase):
     def test_live_release_metadata_consistency_passes(self) -> None:
         result = validate_policy(REPO_ROOT, live_policy())
@@ -63,8 +87,8 @@ class ReleaseMetadataConsistencyCheckTest(unittest.TestCase):
     def test_rejects_version_mismatch(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
             repo = Path(tmpdir)
-            copy_required_tree(repo)
-            policy = copy.deepcopy(live_policy())
+            policy = consistent_fixture(repo)
+            actual_code = parse_gradle(repo)["versionCode"]
             policy["versionCode"] = 999
 
             with self.assertRaises(ReleaseMetadataConsistencyError) as ctx:
@@ -76,14 +100,14 @@ class ReleaseMetadataConsistencyCheckTest(unittest.TestCase):
             message = str(ctx.exception)
             self.assertIn("docs/distribution/release-metadata-consistency.json", message)
             self.assertIn("999", message)
-            self.assertIn(str(read_manifest(REPO_ROOT)["versionCode"]), message)
+            self.assertIn(str(actual_code), message)
             self.assertIn("versionName and versionCode", message)
 
     def test_rejects_version_name_mismatch(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
             repo = Path(tmpdir)
-            copy_required_tree(repo)
-            policy = copy.deepcopy(live_policy())
+            policy = consistent_fixture(repo)
+            actual_name = parse_gradle(repo)["versionName"]
             policy["versionName"] = "0.0.1-stale"
 
             with self.assertRaises(ReleaseMetadataConsistencyError) as ctx:
@@ -92,25 +116,27 @@ class ReleaseMetadataConsistencyCheckTest(unittest.TestCase):
             message = str(ctx.exception)
             self.assertIn("docs/distribution/release-metadata-consistency.json", message)
             self.assertIn("0.0.1-stale", message)
-            self.assertIn(str(read_manifest(REPO_ROOT)["versionName"]), message)
+            self.assertIn(str(actual_name), message)
 
     def test_rejects_missing_readme_link(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
             repo = Path(tmpdir)
-            copy_required_tree(repo)
+            policy = consistent_fixture(repo)
             readme = repo / "README.md"
             readme.write_text(
                 readme.read_text(encoding="utf-8").replace("docs/distribution/alt-store-metadata.md", ""),
                 encoding="utf-8",
             )
 
-            with self.assertRaises(ReleaseMetadataConsistencyError):
-                validate_policy(repo, live_policy())
+            with self.assertRaises(ReleaseMetadataConsistencyError) as ctx:
+                validate_policy(repo, policy)
+
+            self.assertIn("alt-store-metadata.md", str(ctx.exception))
 
     def test_rejects_missing_release_preflight_command(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
             repo = Path(tmpdir)
-            copy_required_tree(repo)
+            policy = consistent_fixture(repo)
             for relative_path in (
                 "docs/distribution/release-dry-run.md",
                 "docs/distribution/release-signing.md",
@@ -122,38 +148,48 @@ class ReleaseMetadataConsistencyCheckTest(unittest.TestCase):
                     encoding="utf-8",
                 )
 
-            with self.assertRaises(ReleaseMetadataConsistencyError):
-                validate_policy(repo, live_policy())
+            with self.assertRaises(ReleaseMetadataConsistencyError) as ctx:
+                validate_policy(repo, policy)
+
+            self.assertIn("alt_store_metadata_check.py", str(ctx.exception))
 
     def test_rejects_privacy_url_mismatch(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
             repo = Path(tmpdir)
-            copy_required_tree(repo)
+            policy = consistent_fixture(repo)
             privacy_link = repo / "docs/privacy/privacy-policy-link.json"
             data = json.loads(privacy_link.read_text(encoding="utf-8"))
             data["publicUrl"] = "https://example.invalid/privacy"
             privacy_link.write_text(json.dumps(data), encoding="utf-8")
 
-            with self.assertRaises(ReleaseMetadataConsistencyError):
-                validate_policy(repo, live_policy())
+            with self.assertRaises(ReleaseMetadataConsistencyError) as ctx:
+                validate_policy(repo, policy)
+
+            self.assertIn("privacy", str(ctx.exception).lower())
 
     def _drifted(self, mutate) -> str:
         with tempfile.TemporaryDirectory() as tmpdir:
             repo = Path(tmpdir)
-            copy_required_tree(repo)
+            policy = consistent_fixture(repo)
             readme = repo / "README.md"
             readme.write_text(mutate(readme.read_text(encoding="utf-8")), encoding="utf-8")
 
             with self.assertRaises(ReleaseMetadataConsistencyError) as ctx:
-                validate_policy(repo, live_policy())
+                validate_policy(repo, policy)
             return str(ctx.exception)
 
-    def test_live_fact_surfaces_are_actually_read(self) -> None:
-        result = validate_policy(REPO_ROOT, live_policy())
+    def _clean_fixture_result(self) -> dict[str, object]:
+        """Run the gate on an unmutated fixture, so a live drift cannot mask it."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            repo = Path(tmpdir)
+            policy = consistent_fixture(repo)
+            return validate_policy(repo, policy)
+
+    def test_fact_surfaces_are_actually_read(self) -> None:
+        result = self._clean_fixture_result()
 
         self.assertIn("README.md", result["factSurfaces"])
-        manifest = read_manifest(REPO_ROOT)
-        self.assertEqual(manifest["roomSchemaVersion"], result["roomSchemaVersion"])
+        self.assertEqual(read_manifest(REPO_ROOT)["roomSchemaVersion"], result["roomSchemaVersion"])
 
     def test_rejects_a_stale_room_schema_claim(self) -> None:
         message = self._drifted(lambda text: text.replace("Room DB v17", "Room DB v14"))
@@ -189,7 +225,7 @@ class ReleaseMetadataConsistencyCheckTest(unittest.TestCase):
 
     def test_accepts_the_videos_alias_for_the_video_destination(self) -> None:
         """Prose says "Videos"; the destination is VideoWallpapers. Both are correct."""
-        result = validate_policy(REPO_ROOT, live_policy())
+        result = self._clean_fixture_result()
 
         self.assertIn("VideoWallpapers", result["bottomNavDestinations"])
         self.assertEqual("ok", result["status"])
