@@ -1,0 +1,89 @@
+#!/bin/sh
+# Block a push that would leave the declared release unavailable to users.
+#
+# Aura's whole distribution channel is the GitHub Releases page, and
+# obtainium.json sets fallbackToOlderReleases: true, so a version that is
+# declared but never tagged and released is invisible rather than loud: users
+# stay on the last release that had an asset and are told nothing. That has now
+# happened twice, to 6.39.0/6.40.0/6.41.0 and again to 6.45.1/6.45.2, both times
+# while every local gate reported ok because nothing ran them before the push.
+#
+# The repository forbids GitHub Actions, so this is the only place the check can
+# be made unskippable. Install it with:
+#
+#     git config core.hooksPath tools/hooks
+#
+# Nothing here reaches the network beyond the `gh` lookup inside
+# release_publication_check.py, which treats an unreachable GitHub as unknown
+# and skips rather than failing, so an offline push still works.
+set -e
+
+if [ -n "$AURA_SKIP_PREPUSH" ]; then
+    echo "pre-push: skipped via AURA_SKIP_PREPUSH" >&2
+    exit 0
+fi
+
+repo_root=$(git rev-parse --show-toplevel)
+cd "$repo_root"
+
+# The wrapper name differs per machine, and on Windows the hook runs under
+# Git's bundled sh, whose PATH frequently has no Python on it even when the
+# calling shell does. So probe the names first, then the usual install roots,
+# rather than assuming `python` resolves.
+python_cmd=""
+for candidate in \
+    "py -3.13" \
+    "python3" \
+    "python" \
+    "$LOCALAPPDATA/Programs/Python/Python313/python.exe" \
+    "$LOCALAPPDATA/Programs/Python/Python312/python.exe" \
+    "$LOCALAPPDATA/Programs/Python/Python311/python.exe" \
+    "$HOME/AppData/Local/Programs/Python/Python313/python.exe" \
+    "$HOME/AppData/Local/Programs/Python/Python312/python.exe" \
+    "$HOME/AppData/Local/Programs/Python/Python311/python.exe"
+do
+    [ -n "$candidate" ] || continue
+    if $candidate -c "import sys" >/dev/null 2>&1; then
+        python_cmd="$candidate"
+        break
+    fi
+done
+
+if [ -z "$python_cmd" ]; then
+    echo "pre-push: no usable Python found; cannot run the release gates" >&2
+    exit 1
+fi
+
+# Release truth only. The full suite belongs in a deliberate run, not in every
+# push, but these four are the ones whose failure ships a lie to users.
+gates="
+tools/release_publication_check.py
+tools/release_metadata_consistency_check.py
+tools/manifest_consistency_check.py
+tools/source_byte_hygiene_check.py
+"
+
+failed=""
+for gate in $gates; do
+    if [ ! -f "$gate" ]; then
+        echo "pre-push: $gate is missing" >&2
+        exit 1
+    fi
+    if ! $python_cmd "$gate" >/dev/null 2>&1; then
+        failed="$failed $gate"
+    fi
+done
+
+if [ -n "$failed" ]; then
+    echo "pre-push: release gates failed:" >&2
+    for gate in $failed; do
+        echo "  $gate" >&2
+        $python_cmd "$gate" >&2 2>&1 || true
+    done
+    echo "" >&2
+    echo "Fix these before pushing. If the declared version has no tag, tag and" >&2
+    echo "publish it: a declared-but-unreleased version is silent on the client." >&2
+    exit 1
+fi
+
+exit 0
