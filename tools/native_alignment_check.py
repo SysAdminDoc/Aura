@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import argparse
 import hashlib
+import io
 import json
 import re
 import struct
@@ -33,6 +34,35 @@ class NativeAlignmentError(ValueError):
 
 
 @dataclass(frozen=True)
+class AlignmentException:
+    """One acknowledged 64-bit ELF inside a nested archive that is under-aligned.
+
+    These are prebuilt objects inside a published third-party AAR, so they
+    cannot be rebuilt here. Recording them is the honest alternative to the old
+    behaviour, which was to skip the entire archive and report nothing.
+
+    An exception is only tolerated while it is still observed. A listed entry
+    that the APK no longer contains fails the gate, so the list cannot decay
+    into a blanket suppression that hides the next regression.
+    """
+
+    archive_entry: str
+    inner_path: str
+    abis: frozenset[str]
+    observed_alignment: int
+    reason: str
+    upstream: str
+
+    def matches(self, library: NativeLibrary) -> bool:
+        return (
+            library.archive_entry is not None
+            and library.inner_path == self.inner_path
+            and library.archive_entry.endswith(self.archive_entry)
+            and library.abi in self.abis
+        )
+
+
+@dataclass(frozen=True)
 class LoadSegment:
     offset: int
     virtual_address: int
@@ -45,6 +75,8 @@ class NativeLibrary:
     abi: str
     elf_class: int
     load_segments: tuple[LoadSegment, ...]
+    archive_entry: str | None = None
+    inner_path: str | None = None
 
     @property
     def is_64_bit(self) -> bool:
@@ -288,7 +320,48 @@ def parse_elf(entry_name: str, data: bytes) -> NativeLibrary:
     )
 
 
-def inspect_apk(apk_path: Path, skipped_archive_entries: list[str] | None = None) -> list[NativeLibrary]:
+def inspect_nested_archive(outer_entry: str, payload: bytes) -> tuple[list[NativeLibrary], int]:
+    """Read the ELFs inside a `lib/<abi>/*.zip.so` payload.
+
+    youtubedl-android ships FFmpeg and CPython as ZIP archives renamed to `.so`
+    so the APK packager will carry them, then extracts them at runtime. The
+    loader never maps them from the APK, so nothing about the outer entry says
+    anything about the ELFs inside, and this gate used to record the whole
+    archive as "skipped". That left roughly 250 shipped 64-bit ELFs per ABI
+    unmeasured, including five libwebp objects that are only 4 KB aligned.
+
+    Entries that are not ELFs are counted, not skipped silently: the archives
+    are full of Python sources and of tiny text files standing in for symlinks.
+    """
+    libraries: list[NativeLibrary] = []
+    non_elf_entries = 0
+    with zipfile.ZipFile(io.BytesIO(payload)) as inner:
+        for info in sorted(inner.infolist(), key=lambda item: item.filename):
+            if info.is_dir():
+                continue
+            blob = inner.read(info)
+            if not blob.startswith(ELF_MAGIC):
+                non_elf_entries += 1
+                continue
+            library = parse_elf(f"{outer_entry}!{info.filename}", blob)
+            libraries.append(
+                NativeLibrary(
+                    apk_entry=library.apk_entry,
+                    abi=library.abi,
+                    elf_class=library.elf_class,
+                    load_segments=library.load_segments,
+                    archive_entry=outer_entry,
+                    inner_path=info.filename,
+                )
+            )
+    return libraries, non_elf_entries
+
+
+def inspect_apk(
+    apk_path: Path,
+    skipped_archive_entries: list[str] | None = None,
+    nested_archive_report: dict[str, dict[str, int]] | None = None,
+) -> list[NativeLibrary]:
     if not apk_path.is_file():
         raise NativeAlignmentError(f"APK not found: {apk_path}")
     libraries: list[NativeLibrary] = []
@@ -297,9 +370,25 @@ def inspect_apk(apk_path: Path, skipped_archive_entries: list[str] | None = None
             if not name.startswith("lib/") or not name.endswith(".so"):
                 continue
             data = archive.read(name)
-            if data.startswith(b"PK\x03\x04") and name.endswith(".zip.so"):
-                if skipped_archive_entries is not None:
-                    skipped_archive_entries.append(name)
+            if data.startswith(b"PK\x03\x04"):
+                try:
+                    nested, non_elf_entries = inspect_nested_archive(name, data)
+                except zipfile.BadZipFile as exc:
+                    raise NativeAlignmentError(
+                        f"{name} starts with a ZIP signature but could not be read: {exc}"
+                    ) from exc
+                if not nested:
+                    # An archive payload carrying no ELF at all is either not
+                    # what we think it is or has changed shape upstream. Either
+                    # way, reporting it as inspected would be a false negative.
+                    if skipped_archive_entries is not None:
+                        skipped_archive_entries.append(name)
+                if nested_archive_report is not None:
+                    nested_archive_report[name] = {
+                        "elfCount": len(nested),
+                        "nonElfEntryCount": non_elf_entries,
+                    }
+                libraries.extend(nested)
                 continue
             libraries.append(parse_elf(name, data))
     if not libraries:
@@ -351,6 +440,11 @@ def validate_policy(repo_root: Path, policy: dict[str, Any]) -> dict[str, Any]:
         repo_root,
         policy.get("mediaStackMigrationEvidence"),
     )
+    alignment_exceptions = parse_alignment_exceptions(
+        policy.get("nestedArchiveAlignmentExceptions"),
+        required_alignment,
+        declared_abis,
+    )
     return {
         "packageName": package_name,
         "requiredAlignment": required_alignment,
@@ -360,6 +454,7 @@ def validate_policy(repo_root: Path, policy: dict[str, Any]) -> dict[str, Any]:
         "status": status,
         "enforcedBy": enforced_by,
         "mediaStackMigrationEvidence": media_stack_migration,
+        "alignmentExceptions": alignment_exceptions,
     }
 
 
@@ -378,6 +473,53 @@ def validate_enforcement(repo_root: Path, status: str, enforced_by: Any) -> list
     except PublishedStateError as exc:
         raise NativeAlignmentError(str(exc)) from exc
     return paths
+
+
+def parse_alignment_exceptions(
+    value: Any,
+    required_alignment: int,
+    declared_abis: set[str],
+) -> tuple[AlignmentException, ...]:
+    if value is None:
+        return ()
+    exceptions: list[AlignmentException] = []
+    for entry in require_object_list(value, "nestedArchiveAlignmentExceptions"):
+        abis = set(require_string_list(entry.get("abis"), "nestedArchiveAlignmentExceptions[].abis"))
+        unknown = sorted(abis - declared_abis)
+        if unknown:
+            raise NativeAlignmentError(
+                "nestedArchiveAlignmentExceptions names ABIs the app does not declare: "
+                + ", ".join(unknown)
+            )
+        observed = require_int(
+            entry.get("observedAlignmentBytes"),
+            "nestedArchiveAlignmentExceptions[].observedAlignmentBytes",
+        )
+        if observed >= required_alignment:
+            raise NativeAlignmentError(
+                "nestedArchiveAlignmentExceptions entry records "
+                f"observedAlignmentBytes {observed}, which already meets the required "
+                f"{required_alignment}; it is not an exception and must be removed"
+            )
+        exceptions.append(
+            AlignmentException(
+                archive_entry=require_string(
+                    entry.get("archiveEntry"), "nestedArchiveAlignmentExceptions[].archiveEntry"
+                ),
+                inner_path=require_string(
+                    entry.get("innerPath"), "nestedArchiveAlignmentExceptions[].innerPath"
+                ),
+                abis=frozenset(abis),
+                observed_alignment=observed,
+                reason=require_string(
+                    entry.get("reason"), "nestedArchiveAlignmentExceptions[].reason"
+                ),
+                upstream=require_string(
+                    entry.get("upstream"), "nestedArchiveAlignmentExceptions[].upstream"
+                ),
+            )
+        )
+    return tuple(exceptions)
 
 
 def expected_abis_for_apk(apk_name: str, declared_abis: set[str]) -> tuple[str, set[str]]:
@@ -402,6 +544,7 @@ def validate_libraries(
     expected_abis: set[str],
     require_64_bit_only: bool,
     variant: str = "universal",
+    alignment_exceptions: tuple[AlignmentException, ...] = (),
 ) -> dict[str, object]:
     errors: list[str] = []
     seen_abis = {library.abi for library in libraries}
@@ -434,23 +577,51 @@ def validate_libraries(
             errors.append("APK missing required 64-bit ABIs: " + ", ".join(missing_abis))
 
     checked_segments = 0
+    nested_libraries = 0
+    excused: list[str] = []
+    matched_exceptions: set[AlignmentException] = set()
     for library in libraries:
+        if library.archive_entry is not None:
+            nested_libraries += 1
         # 16 KB page alignment is a 64-bit requirement; 32-bit libraries have no
         # such contract, so they are counted above but not measured here.
         if not library.is_64_bit:
             continue
+        exception = next((item for item in alignment_exceptions if item.matches(library)), None)
         for segment in library.load_segments:
             checked_segments += 1
-            if segment.alignment < required_alignment or segment.alignment % required_alignment != 0:
-                errors.append(
-                    f"{library.apk_entry} PT_LOAD offset 0x{segment.offset:x} "
-                    f"has p_align {segment.alignment}, expected a multiple of {required_alignment}"
-                )
+            if segment.alignment >= required_alignment and segment.alignment % required_alignment == 0:
+                continue
+            if exception is not None and segment.alignment == exception.observed_alignment:
+                matched_exceptions.add(exception)
+                excused.append(f"{library.apk_entry} p_align {segment.alignment}")
+                continue
+            errors.append(
+                f"{library.apk_entry} PT_LOAD offset 0x{segment.offset:x} "
+                f"has p_align {segment.alignment}, expected a multiple of {required_alignment}"
+            )
+
+    # A recorded exception the artifact no longer contains is a stale suppression.
+    # Failing on it is what stops the list growing into a permanent blind spot.
+    if variant == "universal" or nested_libraries:
+        for item in alignment_exceptions:
+            if item in matched_exceptions:
+                continue
+            if not item.abis & expected_abis:
+                continue
+            errors.append(
+                f"nestedArchiveAlignmentExceptions lists {item.archive_entry}!{item.inner_path} "
+                f"for {', '.join(sorted(item.abis & expected_abis))}, but this APK has no such "
+                "under-aligned entry; remove the exception"
+            )
+
     if errors:
         raise NativeAlignmentError("; ".join(errors))
     return {
         "checked64BitLoadSegments": checked_segments,
         "nativeLibraryCount": len(libraries),
+        "nestedArchiveLibraryCount": nested_libraries,
+        "acknowledgedUnderAlignedSegments": sorted(excused),
         "seen64BitAbis": sorted(seen_64_bit_abis),
         "seenAbis": sorted(seen_abis),
         "expectedAbis": sorted(expected_abis),
@@ -461,7 +632,12 @@ def validate_libraries(
 def validate_release_apk(repo_root: Path, policy: dict[str, Any], apk_path: Path) -> dict[str, object]:
     policy_info = validate_policy(repo_root, policy)
     skipped_archive_entries: list[str] = []
-    libraries = inspect_apk(apk_path, skipped_archive_entries=skipped_archive_entries)
+    nested_archive_report: dict[str, dict[str, int]] = {}
+    libraries = inspect_apk(
+        apk_path,
+        skipped_archive_entries=skipped_archive_entries,
+        nested_archive_report=nested_archive_report,
+    )
     variant, expected_abis = expected_abis_for_apk(apk_path.name, policy_info["declaredAbis"])
     library_result = validate_libraries(
         libraries,
@@ -470,6 +646,7 @@ def validate_release_apk(repo_root: Path, policy: dict[str, Any], apk_path: Path
         expected_abis=expected_abis,
         require_64_bit_only=policy_info["require64BitOnly"],
         variant=variant,
+        alignment_exceptions=policy_info["alignmentExceptions"],
     )
     return {
         "status": "ok",
@@ -481,6 +658,7 @@ def validate_release_apk(repo_root: Path, policy: dict[str, Any], apk_path: Path
         "apkSha256": sha256_file(apk_path),
         "requiredLoadSegmentAlignmentBytes": policy_info["requiredAlignment"],
         "skippedArchivePayloads": skipped_archive_entries,
+        "nestedArchives": nested_archive_report,
         **library_result,
     }
 

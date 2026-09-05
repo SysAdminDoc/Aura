@@ -4,6 +4,16 @@ All notable changes to Aura will be documented in this file.
 
 ## Unreleased
 
+- **The 16 KB page-size check now reads inside the packed native payloads**: FFmpeg
+  and Python ship as archives renamed to `.so`, and the release gate had been
+  recording each one as "skipped". That left roughly 250 native libraries per
+  architecture completely unmeasured. The gate now opens them, and on 64-bit builds
+  it went from checking a handful of segments to checking over 900. It found five
+  WebP libraries inside the FFmpeg payload that are built for 4 KB pages rather than
+  16 KB. They come prebuilt from an upstream project, so they are recorded with the
+  reason and the upstream report rather than quietly ignored, and the check fails if
+  a sixth appears or if one of the five is silently dropped.
+
 - **Store release notes for 6.45.1 and 6.45.2 are complete again**: both Fastlane
   changelogs were written without the "Recent highlights" opening the release gate
   requires, so neither would have passed a publish check. Both now carry it.

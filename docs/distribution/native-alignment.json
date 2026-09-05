@@ -150,5 +150,87 @@
       "lib/x86_64/libffmpeg.zip.so",
       "lib/x86_64/libpython.zip.so"
     ]
+  },
+  "nestedArchiveAlignmentExceptions": [
+    {
+      "archiveEntry": "libffmpeg.zip.so",
+      "innerPath": "usr/lib/libsharpyuv.so",
+      "abis": [
+        "arm64-v8a",
+        "x86_64"
+      ],
+      "observedAlignmentBytes": 4096,
+      "reason": "Prebuilt libwebp object inside the published io.github.junkfood02.youtubedl-android:ffmpeg:0.18.1 AAR. yt-dlp extracts the archive at runtime and the FFmpeg binary dlopens what it needs, so the system loader never maps this ELF from the APK. It cannot be rebuilt here: the bytes ship inside a third-party artifact. Recorded rather than skipped so a new under-aligned payload still fails the gate.",
+      "upstream": "https://github.com/yausername/youtubedl-android/issues/334"
+    },
+    {
+      "archiveEntry": "libffmpeg.zip.so",
+      "innerPath": "usr/lib/libwebp.so",
+      "abis": [
+        "arm64-v8a",
+        "x86_64"
+      ],
+      "observedAlignmentBytes": 4096,
+      "reason": "Prebuilt libwebp object inside the published io.github.junkfood02.youtubedl-android:ffmpeg:0.18.1 AAR. yt-dlp extracts the archive at runtime and the FFmpeg binary dlopens what it needs, so the system loader never maps this ELF from the APK. It cannot be rebuilt here: the bytes ship inside a third-party artifact. Recorded rather than skipped so a new under-aligned payload still fails the gate.",
+      "upstream": "https://github.com/yausername/youtubedl-android/issues/334"
+    },
+    {
+      "archiveEntry": "libffmpeg.zip.so",
+      "innerPath": "usr/lib/libwebpdecoder.so",
+      "abis": [
+        "arm64-v8a",
+        "x86_64"
+      ],
+      "observedAlignmentBytes": 4096,
+      "reason": "Prebuilt libwebp object inside the published io.github.junkfood02.youtubedl-android:ffmpeg:0.18.1 AAR. yt-dlp extracts the archive at runtime and the FFmpeg binary dlopens what it needs, so the system loader never maps this ELF from the APK. It cannot be rebuilt here: the bytes ship inside a third-party artifact. Recorded rather than skipped so a new under-aligned payload still fails the gate.",
+      "upstream": "https://github.com/yausername/youtubedl-android/issues/334"
+    },
+    {
+      "archiveEntry": "libffmpeg.zip.so",
+      "innerPath": "usr/lib/libwebpdemux.so",
+      "abis": [
+        "arm64-v8a",
+        "x86_64"
+      ],
+      "observedAlignmentBytes": 4096,
+      "reason": "Prebuilt libwebp object inside the published io.github.junkfood02.youtubedl-android:ffmpeg:0.18.1 AAR. yt-dlp extracts the archive at runtime and the FFmpeg binary dlopens what it needs, so the system loader never maps this ELF from the APK. It cannot be rebuilt here: the bytes ship inside a third-party artifact. Recorded rather than skipped so a new under-aligned payload still fails the gate.",
+      "upstream": "https://github.com/yausername/youtubedl-android/issues/334"
+    },
+    {
+      "archiveEntry": "libffmpeg.zip.so",
+      "innerPath": "usr/lib/libwebpmux.so",
+      "abis": [
+        "arm64-v8a",
+        "x86_64"
+      ],
+      "observedAlignmentBytes": 4096,
+      "reason": "Prebuilt libwebp object inside the published io.github.junkfood02.youtubedl-android:ffmpeg:0.18.1 AAR. yt-dlp extracts the archive at runtime and the FFmpeg binary dlopens what it needs, so the system loader never maps this ELF from the APK. It cannot be rebuilt here: the bytes ship inside a third-party artifact. Recorded rather than skipped so a new under-aligned payload still fails the gate.",
+      "upstream": "https://github.com/yausername/youtubedl-android/issues/334"
+    }
+  ],
+  "nestedArchiveEvidence": {
+    "date": "2026-09-05",
+    "status": "verified",
+    "note": "The gate used to record lib/<abi>/*.zip.so as skipped, so roughly 250 shipped 64-bit ELFs per ABI were never measured. It now reads inside those archives. Measured against APKs assembled from the exact io.github.junkfood02.youtubedl-android 0.18.1 ffmpeg and library AAR payloads, because no release APK could be built on this host.",
+    "measured": {
+      "arm64-v8a": {
+        "nestedElfCount": 252,
+        "checked64BitLoadSegments": 910
+      },
+      "x86_64": {
+        "nestedElfCount": 254,
+        "checked64BitLoadSegments": 914
+      },
+      "armeabi-v7a": {
+        "nestedElfCount": 252,
+        "checked64BitLoadSegments": 0
+      },
+      "x86": {
+        "nestedElfCount": 254,
+        "checked64BitLoadSegments": 0
+      }
+    },
+    "skippedArchivePayloads": 0,
+    "finding": "Five libwebp objects inside libffmpeg.zip.so carry p_align 4096 on arm64-v8a and x86_64; every other 64-bit LOAD segment in both nested payloads is 16384. libpython.zip.so is fully compliant on both 64-bit ABIs. 32-bit ABIs are 4096 throughout, which carries no 16 KB obligation. The five are recorded in nestedArchiveAlignmentExceptions and the gate fails if a sixth appears or if a listed one stops being observed."
   }
 }
