@@ -27,6 +27,12 @@ PACKAGE_RE = re.compile(r'applicationId\s*=\s*"([^"]+)"')
 PT_LOAD = 1
 ELF_MAGIC = b"\x7fELF"
 ABI_64_BIT = {"arm64-v8a", "x86_64", "riscv64"}
+# The shipped payloads are one level deep. Allowing a little more room keeps a
+# legitimate repack working while refusing to follow a pathological chain.
+MAX_ARCHIVE_DEPTH = 3
+# Comfortably above the largest real entry (libavcodec is ~13 MB) and far below
+# anything that would exhaust memory in the gate.
+MAX_ARCHIVE_ENTRY_BYTES = 256 * 1024 * 1024
 
 
 class NativeAlignmentError(ValueError):
@@ -54,12 +60,15 @@ class AlignmentException:
     upstream: str
 
     def matches(self, library: NativeLibrary) -> bool:
-        return (
-            library.archive_entry is not None
-            and library.inner_path == self.inner_path
-            and library.archive_entry.endswith(self.archive_entry)
-            and library.abi in self.abis
-        )
+        if library.archive_entry is None or library.abi not in self.abis:
+            return False
+        if library.inner_path != self.inner_path:
+            return False
+        # Compare the archive's file name, not a suffix of its path. A bare
+        # endswith let an unrelated payload named corplibffmpeg.zip.so inherit
+        # libffmpeg.zip.so's exception and ship a brand new under-aligned
+        # object unreviewed.
+        return library.archive_entry.rsplit("/", 1)[-1] == self.archive_entry
 
 
 @dataclass(frozen=True)
@@ -320,7 +329,11 @@ def parse_elf(entry_name: str, data: bytes) -> NativeLibrary:
     )
 
 
-def inspect_nested_archive(outer_entry: str, payload: bytes) -> tuple[list[NativeLibrary], int]:
+def inspect_nested_archive(
+    outer_entry: str,
+    payload: bytes,
+    depth: int = 0,
+) -> tuple[list[NativeLibrary], int]:
     """Read the ELFs inside a `lib/<abi>/*.zip.so` payload.
 
     youtubedl-android ships FFmpeg and CPython as ZIP archives renamed to `.so`
@@ -333,13 +346,35 @@ def inspect_nested_archive(outer_entry: str, payload: bytes) -> tuple[list[Nativ
     Entries that are not ELFs are counted, not skipped silently: the archives
     are full of Python sources and of tiny text files standing in for symlinks.
     """
+    if depth > MAX_ARCHIVE_DEPTH:
+        raise NativeAlignmentError(
+            f"{outer_entry} nests archives more than {MAX_ARCHIVE_DEPTH} deep; "
+            "refusing to keep unpacking"
+        )
     libraries: list[NativeLibrary] = []
     non_elf_entries = 0
     with zipfile.ZipFile(io.BytesIO(payload)) as inner:
         for info in sorted(inner.infolist(), key=lambda item: item.filename):
             if info.is_dir():
                 continue
+            # Trust the declared size before decompressing. Without this the
+            # gate will happily expand an arbitrarily large entry into memory.
+            if info.file_size > MAX_ARCHIVE_ENTRY_BYTES:
+                raise NativeAlignmentError(
+                    f"{outer_entry}!{info.filename} declares {info.file_size} bytes, "
+                    f"above the {MAX_ARCHIVE_ENTRY_BYTES} byte ceiling for a packed entry"
+                )
             blob = inner.read(info)
+            if blob.startswith(b"PK\x03\x04"):
+                # An archive inside an archive. The shipped payloads do not do
+                # this today, but claiming to inspect every nested ELF while
+                # stopping at the first level would be a false negative.
+                deeper, deeper_non_elf = inspect_nested_archive(
+                    f"{outer_entry}!{info.filename}", blob, depth + 1
+                )
+                libraries.extend(deeper)
+                non_elf_entries += deeper_non_elf
+                continue
             if not blob.startswith(ELF_MAGIC):
                 non_elf_entries += 1
                 continue
@@ -603,17 +638,23 @@ def validate_libraries(
 
     # A recorded exception the artifact no longer contains is a stale suppression.
     # Failing on it is what stops the list growing into a permanent blind spot.
-    if variant == "universal" or nested_libraries:
-        for item in alignment_exceptions:
-            if item in matched_exceptions:
-                continue
-            if not item.abis & expected_abis:
-                continue
-            errors.append(
-                f"nestedArchiveAlignmentExceptions lists {item.archive_entry}!{item.inner_path} "
-                f"for {', '.join(sorted(item.abis & expected_abis))}, but this APK has no such "
-                "under-aligned entry; remove the exception"
-            )
+    #
+    # The only condition that belongs here is the ABI overlap. An earlier version
+    # also required `variant == "universal" or nested_libraries`, which meant a
+    # split carrying no nested archive at all skipped the check entirely and let
+    # a stale exception survive. If an artifact is expected to carry the ABI, it
+    # is expected to carry that payload too, and a payload that has vanished is
+    # itself worth failing on.
+    for item in alignment_exceptions:
+        if item in matched_exceptions:
+            continue
+        if not item.abis & expected_abis:
+            continue
+        errors.append(
+            f"nestedArchiveAlignmentExceptions lists {item.archive_entry}!{item.inner_path} "
+            f"for {', '.join(sorted(item.abis & expected_abis))}, but this APK has no such "
+            "under-aligned entry; remove the exception"
+        )
 
     if errors:
         raise NativeAlignmentError("; ".join(errors))
