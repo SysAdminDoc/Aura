@@ -342,6 +342,7 @@ Evidence for every item below is in RESEARCH.md (2026-09-04 pass).
 - [ ] P2 — Pool and preload the video-feed player
   Why: every scroll stop in the video feed constructs, prepares, and releases an ExoPlayer, so the user sees "Preparing preview" on each card instead of a preview that is already warm. Media3 1.11.0 is already pinned and ships the pieces for this exact pattern.
   Evidence: `VideoWallpapersScreen.kt:952` builds `ExoPlayer.Builder(context)…prepare(); play()` inside `remember(item.id, streamUrl)` and releases it in `onDispose`; only one card previews at a time (`VideoWallpapersScreen.kt:569`, `activePreviewId`); Media3 1.11.0 added `PlayerPool` and `rememberPooledPlayer` in `media3-ui-compose` for preloading in a sliding-window UI, plus `DefaultPreloadManager` and `ExoPlayer.Builder.enablePerStreamMediaProgression()` (https://developer.android.com/jetpack/androidx/releases/media3).
+  Note 2026-09-25: pin Media3 1.11.1 before implementing the pool. Its 2026-09-10 fixes cover secondary-renderer prewarming stalls, `Surface` ownership after seek reset, stale seek frames, and fully consumed HLS chunks retrying after `EOFException`, all of which intersect this feed.
   Touches: `app/src/main/java/com/freevibe/ui/screens/videowallpapers/VideoWallpapersScreen.kt`, `app/src/main/java/com/freevibe/ui/screens/videowallpapers/VideoWallpapersViewModel.kt`, `gradle/libs.versions.toml` (add `media3-ui-compose`), `gradle/verification-metadata.xml`, `baselineprofile/`.
   Acceptance: a pooled player is reused across cards instead of being rebuilt per item, and the next item in scroll order is preloaded through `DefaultPreloadManager`; the pool is bounded and every player is released when the feed leaves composition, verified with the same retention assertion style the live-wallpaper soak already uses; time from scroll-stop to first frame is measured before and after and recorded; the existing preview-unavailable and playback-error states still render.
   Complexity: M
@@ -834,3 +835,23 @@ Evidence for every item below is in RESEARCH.md (2026-09-04 pass).
   Acceptance: Rename works from a visible menu; blank/duplicate names show inline errors; contents/order survive restart.
   Confidence: Verified
   Effort: S
+
+## Research-Driven Additions — 2026-09-25
+
+### P1
+
+- [ ] P1 — Render each live wallpaper engine with its display context
+  Why: Android can run concurrent wallpaper engines on displays with different densities, but Aura sizes clock overlays and fallback surfaces from service resources, so secondary-display rendering can be scaled incorrectly.
+  Evidence: **Verified.** Android's `WallpaperService.Engine.getDisplayContext()` contract says to avoid the service context in a multiple-display environment; `WallpaperClockOverlay.kt:88` reads `context.resources.displayMetrics.density`; `VideoWallpaperService.kt:689`, `WeatherWallpaperService.kt:480`, and `ParallaxWallpaperService.kt:550` pass their service context; the weather and parallax fallbacks also read service metrics at `WeatherWallpaperService.kt:259-260` and `ParallaxWallpaperService.kt:293-294`; https://developer.android.com/reference/android/service/wallpaper/WallpaperService.Engine#getDisplayContext
+  Touches: `VideoWallpaperService.kt`, `WeatherWallpaperService.kt`, `ParallaxWallpaperService.kt`, `WallpaperClockOverlay.kt`, live-wallpaper engine and rendering tests.
+  Acceptance: on API 29 and later, every engine obtains its context only after `onCreate(SurfaceHolder)` and uses that context for density, fallback dimensions, overlays, and display resources; API 26 through 28 keep an explicit service-context fallback; a test creates two concurrent engines with distinct densities and surfaces and proves each produces independently scaled output; preview and applied-engine lifecycle tests pass without service-global display state.
+  Complexity: M
+
+### P2
+
+- [ ] P2 — Upgrade Firebase CLI to 15.31.0 and gate the root audit
+  Why: Aura's deployment CLI is pinned to 15.19.1 and brings nine moderate advisories into the repository toolchain even though the production Functions dependency tree is clean.
+  Evidence: **Verified on 2026-09-25.** `package.json:15` and `package-lock.json:4446-4448` pin 15.19.1; root `npm audit` reports nine moderate vulnerabilities through Firebase CLI dependencies and names 15.31.0 as the non-major fix; 15.31.0 pins `stream-json` 3.6.0 or later and `csv-parse` 7.0.2 or later; `npm audit --omit=dev` in `functions/` reports zero; https://github.com/firebase/firebase-tools/releases/tag/v15.31.0.
+  Touches: `package.json`, `package-lock.json`, Firebase emulator and backend-manifest checks under `tools/`, release documentation that names the CLI version.
+  Acceptance: the root lockfile resolves Firebase CLI 15.31.0 or a newer reviewed 15.x patch; root and `functions/` audits report zero moderate, high, or critical findings without `--force`, blanket overrides, or ignored advisories; existing Firebase emulator, rules, Functions, and community-backend manifest checks pass; the gate labels root findings as deployment-tool findings so they are not reported as APK runtime vulnerabilities.
+  Complexity: S
