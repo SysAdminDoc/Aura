@@ -855,3 +855,12 @@ Evidence for every item below is in RESEARCH.md (2026-09-04 pass).
   Touches: `package.json`, `package-lock.json`, Firebase emulator and backend-manifest checks under `tools/`, release documentation that names the CLI version.
   Acceptance: the root lockfile resolves Firebase CLI 15.31.0 or a newer reviewed 15.x patch; root and `functions/` audits report zero moderate, high, or critical findings without `--force`, blanket overrides, or ignored advisories; existing Firebase emulator, rules, Functions, and community-backend manifest checks pass; the gate labels root findings as deployment-tool findings so they are not reported as APK runtime vulnerabilities.
   Complexity: S
+
+## Issue Intake (2026-09-26)
+
+Open GitHub issues checked against this list on 2026-09-26. The only open issue is #47 (translation call, help wanted). It is covered by the P2 item above that cites it ("Reported: #47"): Simplified Chinese landed through PR #48 on 2026-08-12, and the issue stays open as the umbrella for further languages. No new items.
+
+- [ ] P3: Keep #47 current (issue #47)
+  Why: the issue body still says "zero translations" although zh ships; a stale umbrella issue puts off the next contributor.
+  Next: edit the body to list the languages that exist, the coverage percentage and the review path from docs, then leave it open.
+  Evidence: https://github.com/SysAdminDoc/Aura/issues/47
