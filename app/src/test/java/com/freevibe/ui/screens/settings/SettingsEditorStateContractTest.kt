@@ -31,4 +31,16 @@ class SettingsEditorStateContractTest {
             editor.contains("rememberCoroutineScope"),
         )
     }
+
+    @Test
+    fun `the pack editor sends its changes and never a whole pack of its own`() {
+        val editor = settingsDir.resolve("WallpaperPackEditor.kt").readText()
+
+        assertTrue(editor.contains("viewModel.editWallpaperPack { it.withoutSlot(daypart) }"))
+        assertTrue(editor.contains("viewModel.deleteWallpaperPack()"))
+        assertFalse(
+            "the editor's copy can be a save behind, and writing it back undoes that save",
+            editor.contains("toEditorJson()"),
+        )
+    }
 }

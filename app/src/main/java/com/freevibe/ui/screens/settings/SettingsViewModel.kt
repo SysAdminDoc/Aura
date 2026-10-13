@@ -72,6 +72,7 @@ class SettingsViewModel @Inject constructor(
     wallpaperApplier: WallpaperApplier,
     private val localWallpaperCatalog: LocalWallpaperCatalog,
     private val localMediaRelinkManager: LocalMediaRelinkManager,
+    pickedFileGrants: PickedFileGrants,
     videoWallpaperStorage: VideoWallpaperStorage,
     sourceMetrics: SourceMetrics,
     crashDiagnosticsCollector: CrashDiagnosticsCollector,
@@ -97,7 +98,7 @@ class SettingsViewModel @Inject constructor(
         rotationPrefetch = rotationPrefetch,
         scope = viewModelScope,
     )
-    private val media = SettingsMediaDelegate(context, prefs, viewModelScope)
+    private val media = SettingsMediaDelegate(context, prefs, viewModelScope, pickedFileGrants)
     private val community = SettingsCommunityDelegate(
         context = context,
         prefs = prefs,
@@ -356,7 +357,8 @@ class SettingsViewModel @Inject constructor(
     fun undoSoundShuffle(historyId: String, onResult: (Result<Unit>) -> Unit = {}) =
         soundShuffle.undo(historyId, onResult)
     fun setWallpaperPackEnabled(enabled: Boolean) = media.setWallpaperPackEnabled(enabled)
-    fun setWallpaperPackJson(json: String) = media.setWallpaperPackJson(json)
+    fun editWallpaperPack(edit: (WallpaperPack) -> WallpaperPack) = media.editWallpaperPack(edit)
+    fun deleteWallpaperPack() = media.deleteWallpaperPack()
     fun setWallpaperPackSlot(daypart: Daypart, uri: Uri, unnamedLabel: String) =
         media.setWallpaperPackSlot(daypart, uri, unnamedLabel)
     fun setRedditProviderEnabled(enabled: Boolean) = media.setRedditProviderEnabled(enabled)

@@ -259,7 +259,7 @@ class SoundProfileHandBackTest {
         val scope = CoroutineScope(SupervisorJob() + Dispatchers.Unconfined)
 
         try {
-            SettingsMediaDelegate(context, prefs, scope).setSoundProfilesEnabled(false).join()
+            SettingsMediaDelegate(context, prefs, scope, mockk(relaxed = true)).setSoundProfilesEnabled(false).join()
 
             assertEquals(WorkInfo.State.CANCELLED, periodicState())
             assertTrue(uniqueWork(RUN_NOW_WORK_NAME).isNotEmpty())

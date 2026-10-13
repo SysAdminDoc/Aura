@@ -529,6 +529,7 @@ class SettingsViewModelTest {
             wallpaperApplier = wallpaperApplier,
             localWallpaperCatalog = localWallpaperCatalog,
             localMediaRelinkManager = mockk(relaxed = true),
+            pickedFileGrants = mockk(relaxed = true),
             videoWallpaperStorage = videoWallpaperStorage,
             sourceMetrics = com.freevibe.service.SourceMetrics(),
             crashDiagnosticsCollector = CrashDiagnosticsCollector(

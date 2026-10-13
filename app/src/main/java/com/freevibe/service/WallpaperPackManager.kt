@@ -191,7 +191,14 @@ class WallpaperPackWorker @AssistedInject constructor(
                     receiptStore.recordSuccess(WORK_NAME)
                 }
                 .onFailure { e ->
-                    if (isLostAccess(e)) {
+                    val lostAccess = isLostAccess(e)
+                    if (lostAccess && !stillInPack(slot)) {
+                        // The picture was replaced or removed while this run was opening it, and its
+                        // grant went with it. That save cleared the marker, so the next run applies
+                        // what the pack holds now and there is nothing to report.
+                        return@onFailure
+                    }
+                    if (lostAccess) {
                         // A restored pack, or access the user took away. The grant won't come back by
                         // itself, so this time of day is left alone until the picture is picked again.
                         prefs.setWallpaperPackLastAppliedDaypart(needsRepickMarker(slot.daypart))
@@ -221,6 +228,11 @@ class WallpaperPackWorker @AssistedInject constructor(
             Result.retry()
         }
     }
+
+    /** True while the stored pack still names this picture for this time of day. */
+    private suspend fun stillInPack(slot: DaypartSlot): Boolean =
+        parsePack(prefs.wallpaperPackJson.first())?.slots.orEmpty()
+            .any { it.daypart == slot.daypart && it.wallpaperUri == slot.wallpaperUri }
 
     /**
      * Cancels this schedule, then looks at the pack once more. A pack saved after the look that

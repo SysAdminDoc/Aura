@@ -39,7 +39,7 @@ class SettingsViewModelDelegateContractTest {
         val rotationDelegate = source.substringAfter("SettingsRotationDelegate(").substringBefore("\n    )")
         assertTrue(rotationDelegate.contains("rotationPrefetch = rotationPrefetch,"))
         assertTrue(rotationDelegate.contains("scope = viewModelScope,"))
-        assertTrue(source.contains("SettingsMediaDelegate(context, prefs, viewModelScope)"))
+        assertTrue(source.contains("SettingsMediaDelegate(context, prefs, viewModelScope, pickedFileGrants)"))
         assertTrue(source.contains("scope = viewModelScope"))
         assertFalse("the facade must not create independent jobs", source.contains("viewModelScope.launch"))
         assertFalse("the facade must not own preference stateIn calls", source.contains("stateIn(viewModelScope"))

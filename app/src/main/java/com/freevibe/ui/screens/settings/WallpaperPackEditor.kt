@@ -49,7 +49,11 @@ private fun daypartLabelRes(daypart: Daypart): Int = when (daypart) {
 /**
  * Edits the single 24H pack: one wallpaper per time of day, each with its own target.
  * Wallpapers come from the document picker with a persisted read grant, so the worker can
- * still open them after a reboot.
+ * still open them after a reboot. The grant is given back when a save leaves no time of day
+ * using the picture.
+ *
+ * Every change goes to the view model as a change to the stored pack. The copy shown here can be
+ * a save behind, so it is never written back.
  */
 @Composable
 internal fun WallpaperPackEditorDialog(
@@ -89,7 +93,7 @@ internal fun WallpaperPackEditorDialog(
     fun dismiss() {
         val trimmed = name.trim()
         if (trimmed.isNotEmpty() && trimmed != pack.name) {
-            viewModel.setWallpaperPackJson(pack.copy(name = trimmed).toEditorJson())
+            viewModel.editWallpaperPack { it.copy(name = trimmed) }
         }
         onDismiss()
     }
@@ -118,7 +122,7 @@ internal fun WallpaperPackEditorDialog(
                     Text(activeLabel, style = MaterialTheme.typography.bodyMedium)
                     Switch(
                         checked = pack.enabled,
-                        onCheckedChange = { viewModel.setWallpaperPackJson(pack.copy(enabled = it).toEditorJson()) },
+                        onCheckedChange = { active -> viewModel.editWallpaperPack { it.copy(enabled = active) } },
                         modifier = Modifier.semantics { contentDescription = activeLabel },
                     )
                 }
@@ -158,7 +162,7 @@ internal fun WallpaperPackEditorDialog(
                             }
                             if (slot != null) {
                                 IconButton(onClick = {
-                                    viewModel.setWallpaperPackJson(pack.withoutSlot(daypart).toEditorJson())
+                                    viewModel.editWallpaperPack { it.withoutSlot(daypart) }
                                     status = removedMessage
                                 }) {
                                     Icon(
@@ -179,7 +183,7 @@ internal fun WallpaperPackEditorDialog(
                                     FilterChip(
                                         selected = current == value,
                                         onClick = {
-                                            viewModel.setWallpaperPackJson(pack.withSlotTarget(daypart, value).toEditorJson())
+                                            viewModel.editWallpaperPack { it.withSlotTarget(daypart, value) }
                                         },
                                         label = { Text(stringResource(labelRes)) },
                                     )
@@ -200,7 +204,7 @@ internal fun WallpaperPackEditorDialog(
         },
         dismissButton = {
             TextButton(onClick = {
-                viewModel.setWallpaperPackJson("")
+                viewModel.deleteWallpaperPack()
                 name = ""
                 status = deletedMessage
             }) { Text(stringResource(R.string.settings_wp_pack_delete)) }

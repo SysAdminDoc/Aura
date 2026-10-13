@@ -112,6 +112,23 @@ class WallpaperPackWorkerTest {
     }
 
     @Test
+    fun `a picture swapped out while the run was opening it isn't reported as lost`() = runBlocking {
+        // The editor replaced every picture after this run had read the pack, and the old pictures
+        // gave their grants back. The save had already cleared the marker.
+        val swapped = pack.copy(slots = pack.slots.map { it.copy(wallpaperUri = it.wallpaperUri + "-new") })
+        coEvery { exclusions.isExcluded(any()) } coAnswers {
+            prefs.setWallpaperPackJson(serializePack(swapped))
+            false
+        }
+        applyFailsWith(SecurityException("Permission Denial: opening provider"))
+
+        runWorker()
+
+        assertEquals("the next run should apply the new picture", "", prefs.wallpaperPackLastAppliedDaypart.first())
+        verify(exactly = 0) { receipts.recordFailure(any(), any(), any()) }
+    }
+
+    @Test
     fun `a failure that may pass is tried again on the next run`() = runBlocking {
         applyFailsWith(IOException("Download failed: 503"))
 

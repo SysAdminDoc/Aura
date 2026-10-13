@@ -13,7 +13,9 @@ import androidx.work.testing.SynchronousExecutor
 import androidx.work.testing.WorkManagerTestInitHelper
 import com.freevibe.data.local.PreferencesManager
 import com.freevibe.service.Daypart
+import com.freevibe.service.PickedFileGrants
 import com.freevibe.service.parsePack
+import io.mockk.mockk
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -102,7 +104,8 @@ class WallpaperPackSlotSaveTest {
         assertEquals("beach.jpg", parsePack(prefs.wallpaperPackJson.first())!!.slotFor(Daypart.DAY)?.label)
     }
 
-    private fun delegate() = SettingsMediaDelegate(context, prefs, settingsScope)
+    private fun delegate() =
+        SettingsMediaDelegate(context, prefs, settingsScope, mockk<PickedFileGrants>(relaxed = true))
 
     /** A document provider that answers the one question the editor asks: what is this file called. */
     class NamedFiles : ContentProvider() {

@@ -8,9 +8,11 @@ import com.freevibe.data.legal.isProviderAvailableInCurrentArtifact
 import com.freevibe.data.local.PreferencesManager
 import com.freevibe.data.model.ContentSource
 import com.freevibe.service.Daypart
+import com.freevibe.service.PickedFileGrants
 import com.freevibe.service.SoundProfileWorker
 import com.freevibe.service.parseProfiles
 import com.freevibe.service.soundProfilesNeedWorker
+import com.freevibe.service.WallpaperPack
 import com.freevibe.service.WallpaperPackWorker
 import com.freevibe.service.shouldSchedulePack
 import com.freevibe.service.WallpaperStyleLearningProfile
@@ -23,6 +25,8 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 
 /** The name the document picker shows for a file, or null when its provider doesn't give one. */
@@ -37,6 +41,7 @@ internal class SettingsMediaDelegate(
     private val context: Context,
     private val prefs: PreferencesManager,
     private val scope: CoroutineScope,
+    private val pickedFileGrants: PickedFileGrants,
 ) {
     private val sharing = SharingStarted.WhileSubscribed(5000)
 
@@ -165,24 +170,41 @@ internal class SettingsMediaDelegate(
         applyPackSchedule(enabled, prefs.wallpaperPackJson.first())
     }
 
-    fun setWallpaperPackJson(json: String) = scope.launch { savePack(json) }
+    /** One pack change at a time, each made on the pack as it is stored. */
+    private val packChanges = Mutex()
+
+    /**
+     * Changes the stored pack. The editor passes the change and not a changed copy. Its copy can be
+     * a save behind, and writing that back would return a replaced picture to the pack after the
+     * read access kept for it was given up.
+     */
+    fun editWallpaperPack(edit: (WallpaperPack) -> WallpaperPack) = scope.launch { changePack(edit) }
+
+    fun deleteWallpaperPack() = scope.launch { packChanges.withLock { savePack("") } }
 
     /**
      * Puts a picked wallpaper in the pack. This runs here and not in the editor, so closing the
-     * editor right after a pick can't drop the wallpaper while its name is still being read. The
-     * pack is read after the name for the same reason: the editor's copy may be an edit behind.
+     * editor right after a pick can't drop the wallpaper while its name is still being read.
      */
     fun setWallpaperPackSlot(daypart: Daypart, uri: Uri, unnamedLabel: String) = scope.launch {
         val label = withContext(Dispatchers.IO) { displayNameOf(context, uri) } ?: unnamedLabel
-        val pack = editablePack(prefs.wallpaperPackJson.first())
-        savePack(pack.withSlot(daypart, uri.toString(), label).toEditorJson())
+        changePack { it.withSlot(daypart, uri.toString(), label) }
     }
 
-    /** Saves the pack, forgets what was last applied so the change shows now, and fits the schedule to it. */
+    private suspend fun changePack(edit: (WallpaperPack) -> WallpaperPack) = packChanges.withLock {
+        savePack(edit(editablePack(prefs.wallpaperPackJson.first())).toEditorJson())
+    }
+
+    /**
+     * Saves the pack, forgets what was last applied so the change shows now, and fits the schedule
+     * to it. A picture the pack stopped using then gives up the read access that was kept for it.
+     */
     private suspend fun savePack(json: String) {
+        val before = prefs.wallpaperPackJson.first()
         prefs.setWallpaperPackJson(json)
         prefs.setWallpaperPackLastAppliedDaypart("")
         applyPackSchedule(prefs.wallpaperPackEnabled.first(), json)
+        pickedFileGrants.releaseDroppedFromPack(before, json)
     }
 
     fun setRedditProviderEnabled(enabled: Boolean) = scope.launch { prefs.setRedditProviderEnabled(enabled) }
