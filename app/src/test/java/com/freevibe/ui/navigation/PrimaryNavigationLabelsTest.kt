@@ -33,6 +33,34 @@ class PrimaryNavigationLabelsTest {
     }
 
     @Test
+    fun `a bar label gets the whole slot between the gaps and no more`() {
+        // 385 dp across five items with four 8 dp gaps leaves each one 70.6 dp.
+        assertTrue(bottomBarLabelsFit(barWidth = 385.dp, barHeight = 64.dp, itemCount = 5, label = DpSize(70.dp, 16.dp)))
+        assertFalse(bottomBarLabelsFit(barWidth = 385.dp, barHeight = 64.dp, itemCount = 5, label = DpSize(71.dp, 16.dp)))
+    }
+
+    @Test
+    fun `a bar label fits up to the height the bar leaves under the icon`() {
+        // 27 dp of icon, 8 dp down to the label and 4 dp above and below leave it 21 dp of the 64.
+        assertTrue(bottomBarLabelsFit(barWidth = 800.dp, barHeight = 64.dp, itemCount = 5, label = DpSize(60.dp, 21.dp)))
+        assertFalse(bottomBarLabelsFit(barWidth = 800.dp, barHeight = 64.dp, itemCount = 5, label = DpSize(60.dp, 22.dp)))
+    }
+
+    @Test
+    fun `fewer destinations leave each label more of the same bar`() {
+        val wide = DpSize(90.dp, 16.dp)
+
+        assertFalse(bottomBarLabelsFit(barWidth = 385.dp, barHeight = 64.dp, itemCount = 5, label = wide))
+        assertTrue(bottomBarLabelsFit(barWidth = 385.dp, barHeight = 64.dp, itemCount = 4, label = wide))
+    }
+
+    @Test
+    fun `a rail label may be as wide as the rail and no wider`() {
+        assertTrue(railLabelsFit(railWidth = 86.dp, railHeight = 760.dp, itemCount = 5, label = DpSize(86.dp, 16.dp)))
+        assertFalse(railLabelsFit(railWidth = 86.dp, railHeight = 760.dp, itemCount = 5, label = DpSize(87.dp, 16.dp)))
+    }
+
+    @Test
     fun `a tall rail shows labels at normal text`() {
         assertTrue(railLabelsFit(railWidth = 86.dp, railHeight = 760.dp, itemCount = 5, label = normalLabel))
     }

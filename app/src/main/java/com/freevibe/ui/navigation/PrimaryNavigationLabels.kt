@@ -23,6 +23,9 @@ internal val PrimaryNavigationIconHeight = 27.dp
 // What Material 3 puts around an item's icon and label. The bar item and the rail item share
 // these numbers: 8 dp between icon and label, at least 4 dp above and below the pair, 8 dp
 // between bar items, 4 dp between rail items and at the rail's ends, and a 56 dp rail item.
+// A label is measured against the whole item. Material 3 1.4.0 puts no padding of its own around
+// it, so nothing more comes off the bar slot or the rail width below. PrimaryNavigationLargeTextTest
+// draws a label that only just fits its slot, and fails if a later version starts taking some.
 private val IconToLabel = 8.dp
 private val ItemVerticalPadding = 4.dp
 private val BarItemSpacing = 8.dp
