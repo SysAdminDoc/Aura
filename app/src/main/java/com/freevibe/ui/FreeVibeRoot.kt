@@ -20,6 +20,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.layout
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.res.stringResource
@@ -1340,9 +1341,14 @@ private fun BottomNavIcon(
             if (screen == Screen.Library && favoritesCount > 0) {
                 CountBadge(
                     count = favoritesCount,
-                    modifier = Modifier
-                        .align(Alignment.TopEnd)
-                        .offset(x = 10.dp, y = (-7).dp),
+                    // Pinned by its top-start corner and left out of the icon's size, so a badge
+                    // made bigger by large text grows away from the icon instead of covering it.
+                    modifier = Modifier.layout { measurable, constraints ->
+                        val badge = measurable.measure(constraints.copy(minWidth = 0, minHeight = 0))
+                        layout(0, 0) {
+                            badge.placeRelative(x = 16.dp.roundToPx(), y = (-7).dp.roundToPx())
+                        }
+                    },
                 )
             }
         }
