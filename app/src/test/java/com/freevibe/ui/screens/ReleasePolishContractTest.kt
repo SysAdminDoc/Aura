@@ -539,7 +539,9 @@ class ReleasePolishContractTest {
         assertTrue(videoModel.contains("Warm feed ready:"))
         assertTrue(videoModel.contains("VideoPreviewCache"))
         assertTrue(wallpaperDetail.contains("VerticalPager("))
-        assertTrue(wallpaperDetail.contains("context.imageLoader.enqueue("))
+        // The detail pager's one-page lookahead is its warm cache; extra original-size prefetches doubled downloads.
+        assertTrue(wallpaperDetail.contains("beyondViewportPageCount = 1"))
+        assertTrue(!wallpaperDetail.contains("imageLoader.enqueue("))
         assertTrue(playback.contains("setCustomCacheKey(sound.stableKey())"))
         assertTrue(soundBrowse.contains("hydrateCachedFeed("))
     }
