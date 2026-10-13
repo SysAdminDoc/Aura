@@ -52,3 +52,81 @@ internal fun normalizeImportedContentSource(
         .uppercase(Locale.ROOT)
     return normalized.takeIf { it in IMPORT_CONTENT_SOURCES }
 }
+
+private const val IMPORT_MAX_FILE_NAME_LENGTH = 255
+
+/**
+ * Sources whose stored address either expires within hours or names something on one phone. Their
+ * sounds are fetched again from the source id, so the address is left out of a backup.
+ */
+private val CONTACT_RINGTONE_SOURCES_WITHOUT_URL = setOf(
+    ContentSource.LOCAL.name,
+    ContentSource.BUNDLED.name,
+    ContentSource.YOUTUBE.name,
+    ContentSource.TIKTOK.name,
+)
+
+/** A bare file name, or blank when the value carries a folder, a scheme, or a control character. */
+internal fun normalizeImportedFileName(value: String?): String {
+    val trimmed = value.orEmpty().trim()
+    if (trimmed.isEmpty() || trimmed.length > IMPORT_MAX_FILE_NAME_LENGTH) return ""
+    if (trimmed == "." || trimmed == "..") return ""
+    if (trimmed.any { it == '/' || it == '\\' || it == ':' || it.isISOControl() }) return ""
+    return trimmed
+}
+
+/**
+ * The id a sound has at its source, or blank when the value is really an address on one phone.
+ *
+ * A sound picked from the phone's own storage is known to Aura only by a media row, which another
+ * phone can't use, so it never gets an id. It is matched by title and file name instead.
+ */
+internal fun portableContactRingtoneSoundId(source: String, id: String?): String {
+    val trimmed = id.orEmpty().trim()
+    if (source.isBlank() || source == ContentSource.LOCAL.name) return ""
+    if (trimmed.isEmpty() || trimmed.length > IMPORT_MAX_TEXT_LENGTH) return ""
+    if (trimmed.any { it.isWhitespace() || it.isISOControl() }) return ""
+    if (trimmed.startsWith('/') || trimmed.startsWith('\\')) return ""
+    val hasScheme = trimmed.contains("://") || trimmed.startsWith("content:", ignoreCase = true) ||
+        trimmed.startsWith("file:", ignoreCase = true)
+    if (hasScheme && !isAllowedImportedHttpsUrl(trimmed)) return ""
+    if (trimmed.length > 2 && trimmed[0].isLetter() && trimmed[1] == ':' && (trimmed[2] == '/' || trimmed[2] == '\\')) {
+        return ""
+    }
+    return trimmed
+}
+
+/**
+ * One contact ringtone row with every field checked, or null when it names no contact or no sound.
+ *
+ * The same check runs when Aura writes a row and when it reads one back, so a backup can't carry a
+ * content address or a row id in, and can't carry one out.
+ */
+internal fun normalizeImportedContactRingtone(entry: ContactRingtoneExportEntry): ContactRingtoneExportEntry? {
+    val lookupKey = entry.contactLookupKey.trim()
+        .takeIf { it.length <= LibraryTransferContract.MAX_URL_CHARS && it.none(Char::isISOControl) }
+        .orEmpty()
+    val displayName = normalizeImportedText(entry.contactDisplayName)
+    if (lookupKey.isBlank() && displayName.isBlank()) return null
+
+    val source = normalizeImportedContentSource(entry.soundSource).orEmpty()
+    val soundId = portableContactRingtoneSoundId(source, entry.soundId)
+    val title = normalizeImportedText(entry.soundTitle)
+    val fileName = normalizeImportedFileName(entry.soundFileName)
+    if (soundId.isBlank() && title.isBlank() && fileName.isBlank()) return null
+
+    val keepsUrl = soundId.isNotBlank() && source !in CONTACT_RINGTONE_SOURCES_WITHOUT_URL
+    return ContactRingtoneExportEntry(
+        contactLookupKey = lookupKey,
+        contactDisplayName = displayName,
+        soundSource = source,
+        soundId = soundId,
+        soundTitle = title,
+        soundFileName = fileName,
+        soundUrl = if (keepsUrl) normalizeImportedHttpsUrl(entry.soundUrl, allowBlank = true).orEmpty() else "",
+        soundPageUrl = normalizeImportedHttpsUrl(entry.soundPageUrl, allowBlank = true).orEmpty(),
+        soundLicense = normalizeImportedText(entry.soundLicense, 128),
+        soundUploader = normalizeImportedText(entry.soundUploader, 256),
+        assignedAt = entry.assignedAt.coerceAtLeast(0),
+    )
+}

@@ -227,8 +227,8 @@
     },
     {
       "name": "android.permission.WRITE_CONTACTS",
-      "purpose": "Assign a selected ringtone to the contact chosen through Android's picker.",
-      "disclosure": "Used only after explicit contact ringtone action; contact selection stays local to the device."
+      "purpose": "Assign a selected ringtone to the contact chosen through Android's picker, or set contact ringtones again from a library backup.",
+      "disclosure": "Used only after an explicit contact ringtone action or a library import the user starts. Contact selection stays local to the device, and the names of contacts Aura set a ringtone for leave it only inside a backup file the user saves."
     },
     {
       "name": "android.permission.ACCESS_NOTIFICATION_POLICY",

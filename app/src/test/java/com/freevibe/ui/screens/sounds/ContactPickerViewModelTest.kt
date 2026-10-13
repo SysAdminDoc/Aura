@@ -8,6 +8,7 @@ import com.freevibe.data.model.Sound
 import com.freevibe.data.remote.toFavoriteEntity
 import com.freevibe.data.repository.FavoritesRepository
 import com.freevibe.service.BundledContentProvider
+import com.freevibe.service.ContactRingtoneBackupManager
 import com.freevibe.service.ContactRingtoneService
 import com.freevibe.service.SoundUrlResolver
 import com.freevibe.service.SoundApplier
@@ -79,6 +80,7 @@ class ContactPickerViewModelTest {
             favoritesRepo = favoritesRepo,
             bundledContent = bundledContent,
             soundUrlResolver = mockk<SoundUrlResolver>(relaxed = true),
+            contactRingtoneBackup = mockk<ContactRingtoneBackupManager>(relaxed = true),
         )
 
         val resolved = viewModel.ensureSelectedSound("dup_sound", fallbackSound)
@@ -111,6 +113,7 @@ class ContactPickerViewModelTest {
             favoritesRepo = favoritesRepo,
             bundledContent = bundledContent,
             soundUrlResolver = mockk<SoundUrlResolver>(relaxed = true),
+            contactRingtoneBackup = mockk<ContactRingtoneBackupManager>(relaxed = true),
         )
 
         val resolved = viewModel.ensureSelectedSound("shared_raw", null)
@@ -150,6 +153,7 @@ class ContactPickerViewModelTest {
             Result.success(mockk<Uri>())
         coEvery { contactService.setContactRingtone(42L, any(), any()) } returns Result.success(Unit)
         coEvery { soundApplier.setDefaultRingtoneSilent() } returns Result.success(Unit)
+        val contactRingtoneBackup = mockk<ContactRingtoneBackupManager>(relaxed = true)
 
         val viewModel = ContactPickerViewModel(
             context = mockk<Context>(relaxed = true),
@@ -158,6 +162,7 @@ class ContactPickerViewModelTest {
             favoritesRepo = favoritesRepo,
             bundledContent = bundledContent,
             soundUrlResolver = soundUrlResolver,
+            contactRingtoneBackup = contactRingtoneBackup,
         )
 
         assertEquals(true, viewModel.ensureSelectedSound(sound.id, sound))
@@ -168,6 +173,7 @@ class ContactPickerViewModelTest {
 
         coVerify(exactly = 1) { contactService.setContactRingtone(42L, any(), any()) }
         coVerify(exactly = 1) { soundApplier.setDefaultRingtoneSilent() }
+        coVerify(exactly = 1) { contactRingtoneBackup.record(contact, sound, any()) }
         assertNotNull(viewModel.state.value.success)
     }
 }

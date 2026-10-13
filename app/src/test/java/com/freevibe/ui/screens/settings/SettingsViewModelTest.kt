@@ -559,6 +559,7 @@ class SettingsViewModelTest {
                         skipped = emptyList(),
                     ),
                 )
+                coEvery { it.contactRingtonesAwaitingPermission(any()) } returns 0
             },
             soundShufflePoolManager = soundShufflePoolManager,
             aiWallpaperRepository = mockk<com.freevibe.data.repository.AiWallpaperRepository>().also {

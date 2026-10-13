@@ -12,6 +12,24 @@ from typing import Any
 
 CONSTANT_PATTERN = re.compile(r"const\s+val\s+(\w+)\s*=\s*([0-9][0-9_]*)L?")
 
+CONTACT_RINGTONE_SECTION = "contactRingtones"
+CONTACT_RINGTONE_LIMIT_KEY = "MAX_CONTACT_RINGTONES"
+# A restore has to find the contact and the sound on a different phone from these alone.
+CONTACT_RINGTONE_IDENTITY_FIELDS = (
+    "contactLookupKey",
+    "contactDisplayName",
+    "soundSource",
+    "soundId",
+    "soundTitle",
+)
+# Field names that would carry a contact row, a media library row, or a place on one phone.
+# They are compared in lower case with underscores removed, so `_id` and `contact_id` are caught.
+DEVICE_ONLY_FIELD_NAMES = frozenset(
+    {"id", "contactid", "rawcontactid", "rowid", "mediaid", "mediastoreid", "audioid", "ringtoneid"}
+)
+DEVICE_ONLY_FIELD_FRAGMENTS = ("contactid", "rowid", "mediastore", "phonenumber")
+DEVICE_ONLY_FIELD_ENDINGS = ("uri", "path")
+
 
 class ExportFormatError(ValueError):
     """Raised when the public transfer format and runtime contract disagree."""
@@ -72,6 +90,93 @@ def check_format(
     if not spec.get("privacyExclusions"):
         errors.append(f"[{label}] privacyExclusions is missing or empty")
     return errors
+
+
+def is_device_only_field(name: str) -> bool:
+    """True when a field name says it holds a row id, a content address, or a file path."""
+    normalized = name.replace("_", "").lower()
+    return (
+        normalized in DEVICE_ONLY_FIELD_NAMES
+        or any(fragment in normalized for fragment in DEVICE_ONLY_FIELD_FRAGMENTS)
+        or normalized.endswith(DEVICE_ONLY_FIELD_ENDINGS)
+    )
+
+
+def check_contact_ringtones(
+    repo_root: Path, library_spec: dict[str, Any], library_source: str
+) -> tuple[list[str], int]:
+    """Check the contact ringtone section of the library format against its Kotlin class."""
+    label = f"library.{CONTACT_RINGTONE_SECTION}"
+    section = library_spec.get(CONTACT_RINGTONE_SECTION)
+    if not isinstance(section, dict):
+        return [f"[{label}] section is missing"], 0
+
+    errors: list[str] = []
+    item_class = section.get("itemClass")
+    source_relative = section.get("sourceFile")
+    spec_fields = section.get("itemFields")
+    if not isinstance(spec_fields, dict) or not spec_fields:
+        return [f"[{label}] itemFields must be a non-empty object"], 0
+    if not isinstance(item_class, str) or not item_class.strip():
+        return [f"[{label}] itemClass is missing"], 0
+    if not isinstance(source_relative, str) or not (repo_root / source_relative).is_file():
+        return [f"[{label}] sourceFile is missing: {source_relative}"], 0
+
+    source_fields = extract_data_class_fields(repo_root / source_relative, item_class)
+    if not source_fields:
+        errors.append(f"[{label}] Could not extract fields from {item_class} in {source_relative}")
+    else:
+        for field in sorted(source_fields - spec_fields.keys()):
+            errors.append(f"[{label}] Field '{field}' exists in {item_class} but is missing from the spec")
+        for field in sorted(spec_fields.keys() - source_fields):
+            errors.append(f"[{label}] Field '{field}' is in the spec but not in {item_class}")
+
+    for field in sorted(source_fields | spec_fields.keys()):
+        if is_device_only_field(field):
+            errors.append(
+                f"[{label}] Field '{field}' looks like a contact row id, a media row id, "
+                "a content address, or a file path, and none of those may be exported"
+            )
+
+    for field in CONTACT_RINGTONE_IDENTITY_FIELDS:
+        if field not in spec_fields:
+            errors.append(f"[{label}] required field '{field}' is missing from the spec")
+        if source_fields and field not in source_fields:
+            errors.append(f"[{label}] required field '{field}' is missing from {item_class}")
+    try:
+        identity = require_string_list(section.get("identityFields"), f"{label}.identityFields")
+    except ExportFormatError as exc:
+        errors.append(str(exc))
+    else:
+        for field in CONTACT_RINGTONE_IDENTITY_FIELDS:
+            if field not in identity:
+                errors.append(f"[{label}] identityFields must list '{field}'")
+        for field in identity:
+            if field not in spec_fields:
+                errors.append(f"[{label}] identityFields names an unknown field '{field}'")
+
+    for key in ("importMatching", "privacyNotes"):
+        try:
+            require_string_list(section.get(key), f"{label}.{key}")
+        except ExportFormatError as exc:
+            errors.append(str(exc))
+    if not isinstance(section.get("source"), str) or not section["source"].strip():
+        errors.append(f"[{label}] source must say where the rows come from")
+
+    if section.get("limitKey") != CONTACT_RINGTONE_LIMIT_KEY:
+        errors.append(f"[{label}] limitKey must be {CONTACT_RINGTONE_LIMIT_KEY}")
+    if CONTACT_RINGTONE_LIMIT_KEY not in (library_spec.get("limitKeys") or []):
+        errors.append(f"[library] limitKeys must list {CONTACT_RINGTONE_LIMIT_KEY}")
+    data_sections = library_spec.get("portableDataSections")
+    if not isinstance(data_sections, dict) or CONTACT_RINGTONE_SECTION not in data_sections:
+        errors.append(f"[library] portableDataSections must describe {CONTACT_RINGTONE_SECTION}")
+    if not re.search(
+        rf"val\s+{CONTACT_RINGTONE_SECTION}\s*:\s*List<{re.escape(item_class)}>", library_source
+    ):
+        errors.append(
+            f"[{label}] LibraryExportFile does not carry {CONTACT_RINGTONE_SECTION} as a list of {item_class}"
+        )
+    return errors, len(spec_fields)
 
 
 def validate_export_format(repo_root: Path, spec_relative: str) -> dict[str, Any]:
@@ -189,6 +294,14 @@ def validate_export_format(repo_root: Path, spec_relative: str) -> dict[str, Any
     if "publishAtomicLocalFile" not in collection_source:
         errors.append("CollectionExporter does not atomically publish its share file")
 
+    contact_ringtone_field_count = 0
+    library_spec = formats.get("library")
+    if isinstance(library_spec, dict):
+        contact_errors, contact_ringtone_field_count = check_contact_ringtones(
+            repo_root, library_spec, library_source
+        )
+        errors.extend(contact_errors)
+
     if errors:
         raise ExportFormatError("; ".join(errors))
     return {
@@ -197,6 +310,7 @@ def validate_export_format(repo_root: Path, spec_relative: str) -> dict[str, Any
         "limitCount": len(constants),
         "favoriteFieldCount": len(favorite_spec.get("itemFields", {})),
         "collectionFieldCount": len(collection_spec.get("itemFields", {})),
+        "contactRingtoneFieldCount": contact_ringtone_field_count,
     }
 
 

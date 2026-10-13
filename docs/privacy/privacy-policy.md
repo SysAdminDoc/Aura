@@ -31,6 +31,10 @@ blocks, or manages creator/community data.
   repair a moved or unavailable file without deleting its metadata.
 - A local fallback community identity only when a local community identifier is
   needed.
+- A short record of each contact ringtone set through Aura: the contact's name
+  and lookup key as Android's contact picker gave them, and which sound was
+  used. Aura doesn't have permission to read the contact list, so it keeps
+  nothing about any other contact.
 
 Fit Canvas media and the app preference store are excluded from Android cloud
 backup and device transfer. A portable library backup includes the non-secret
@@ -42,6 +46,23 @@ Local favorites, collections, wallpaper catalog entries, and recent wallpaper
 history can also be included as locator-free metadata. The media bytes remain
 on the original device. Restored entries stay visible and ask the user to
 relink the original file, a replacement, or a matching folder.
+
+A portable library backup also carries the contact ringtone record described
+above, so the same people can get their ringtones back after a reset or on a
+new phone. Each row holds a contact's name and lookup key and the sound's
+source, title, and file name. It holds no phone number, no email address, no
+photo, and no row id from the contacts or media databases. The backup is a
+file you save where you choose. Aura doesn't upload it. Anyone you give the
+file to can read those names, so treat it like any other file with personal
+details in it.
+
+Restoring that part of a backup needs Android's permission to update
+contacts. Aura asks for it at that moment and explains why. Aura then asks
+Android to set the ringtone on the one contact with that lookup key, or
+failing that the one contact with exactly that name. It never receives the
+contact list. If two contacts share the name, neither is changed and the
+import report says so. Declining the permission restores everything else and
+lists the contacts that were left out.
 
 User-entered provider API keys are encrypted with AES-GCM using a
 non-exportable Android Keystore key. The encrypted SharedPreferences file and

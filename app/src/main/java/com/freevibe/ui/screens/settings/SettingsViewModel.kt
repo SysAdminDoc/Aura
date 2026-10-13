@@ -44,6 +44,14 @@ data class ThemePackTransferState(
     val message: String? = null,
     val error: String? = null,
     val instructions: List<String> = emptyList(),
+    /** Set while a library import waits for the contacts prompt to be answered. */
+    val contactsPermissionRequest: ContactsPermissionRequest? = null,
+)
+
+/** A picked library backup that names [contactCount] contact ringtones Aura can't put back yet. */
+data class ContactsPermissionRequest(
+    val backupUri: Uri,
+    val contactCount: Int,
 )
 
 sealed interface ParallaxGalleryResult {
@@ -393,6 +401,7 @@ class SettingsViewModel @Inject constructor(
     fun clearThemePackTransferNotice() = diagnosticsDelegate.clearThemePackTransferNotice()
     fun exportLibrary(uri: Uri) = diagnosticsDelegate.exportLibrary(uri)
     fun importLibrary(uri: Uri) = diagnosticsDelegate.importLibrary(uri)
+    fun importLibraryAfterContactsPrompt(uri: Uri) = diagnosticsDelegate.importLibraryAfterContactsPrompt(uri)
     fun clearWallpaperHistory() = diagnosticsDelegate.clearWallpaperHistory()
     fun clearCache() = diagnosticsDelegate.clearCache()
 }

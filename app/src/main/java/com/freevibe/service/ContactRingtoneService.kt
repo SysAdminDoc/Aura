@@ -1,17 +1,25 @@
 package com.freevibe.service
 
+import android.Manifest
+import android.content.ContentProviderOperation
 import android.content.ContentValues
 import android.content.Context
+import android.content.OperationApplicationException
+import android.content.pm.PackageManager
 import android.app.NotificationManager
 import android.net.Uri
 import android.provider.ContactsContract
 import android.util.Log
+import androidx.core.content.ContextCompat
 import com.freevibe.util.rethrowIfCancelled
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
 import javax.inject.Singleton
+
+/** Shown for a contact that has no name. It is a stand-in, so a backup never records it as a name. */
+internal const val UNNAMED_CONTACT = "Unknown"
 
 data class ContactInfo(
     val id: Long,
@@ -151,7 +159,7 @@ class ContactRingtoneService @Inject constructor(
                 ContactInfo(
                     id = cursor.getLong(idIdx),
                     lookupKey = if (lookupIdx >= 0) cursor.getString(lookupIdx) ?: "" else "",
-                    name = cursor.getString(nameIdx) ?: "Unknown",
+                    name = cursor.getString(nameIdx) ?: UNNAMED_CONTACT,
                     photoUri = if (photoIdx >= 0) cursor.getString(photoIdx) else null,
                     currentRingtoneUri = if (ringtoneIdx >= 0) cursor.getString(ringtoneIdx) else null,
                     isStarred = starredIdx >= 0 && cursor.getInt(starredIdx) != 0,
@@ -214,6 +222,88 @@ class ContactRingtoneService @Inject constructor(
                 Unit
             }.onFailure { it.rethrowIfCancelled() }
         }
+
+    private companion object {
+        const val TAG = "ContactRingtone"
+    }
+}
+
+/**
+ * Sets a ringtone on the single contact that a lookup key or an exact name points at, holding
+ * WRITE_CONTACTS and nothing else.
+ *
+ * Aura can't query contacts, so it can't look before it writes. Each update instead says how many
+ * contacts it expects to change. The contacts provider runs a batch as one transaction and undoes
+ * it when that count is off, so an update that would reach two contacts reaches none.
+ */
+@Singleton
+class AndroidContactRingtoneWriter @Inject constructor(
+    @ApplicationContext private val context: Context,
+) : ContactRingtoneWriter {
+
+    override fun canWrite(): Boolean =
+        ContextCompat.checkSelfPermission(context, Manifest.permission.WRITE_CONTACTS) ==
+            PackageManager.PERMISSION_GRANTED
+
+    override suspend fun setByLookupKey(lookupKey: String, ringtoneUri: String): ContactRingtoneWrite =
+        setOnTheOnlyMatch(ContactsContract.Contacts.LOOKUP_KEY, lookupKey, ringtoneUri)
+
+    override suspend fun setByDisplayName(displayName: String, ringtoneUri: String): ContactRingtoneWrite =
+        setOnTheOnlyMatch(ContactsContract.Contacts.DISPLAY_NAME_PRIMARY, displayName, ringtoneUri)
+
+    private suspend fun setOnTheOnlyMatch(
+        column: String,
+        value: String,
+        ringtoneUri: String,
+    ): ContactRingtoneWrite = withContext(Dispatchers.IO) {
+        if (value.isBlank() || ringtoneUri.isBlank()) return@withContext ContactRingtoneWrite.NO_MATCH
+        when (updateExpecting(column, value, ringtoneUri, expectedCount = 1)) {
+            BatchOutcome.APPLIED -> ContactRingtoneWrite.APPLIED
+            BatchOutcome.NOT_ALLOWED -> ContactRingtoneWrite.NOT_ALLOWED
+            BatchOutcome.FAILED -> ContactRingtoneWrite.FAILED
+            // Not exactly one. An update that expects none tells "nobody" apart from "several",
+            // and it is undone as well when there are several.
+            BatchOutcome.COUNT_MISMATCH -> when (updateExpecting(column, value, ringtoneUri, expectedCount = 0)) {
+                BatchOutcome.APPLIED -> ContactRingtoneWrite.NO_MATCH
+                BatchOutcome.COUNT_MISMATCH -> ContactRingtoneWrite.AMBIGUOUS
+                BatchOutcome.NOT_ALLOWED -> ContactRingtoneWrite.NOT_ALLOWED
+                BatchOutcome.FAILED -> ContactRingtoneWrite.FAILED
+            }
+        }
+    }
+
+    private fun updateExpecting(
+        column: String,
+        value: String,
+        ringtoneUri: String,
+        expectedCount: Int,
+    ): BatchOutcome {
+        val operation = ContentProviderOperation.newUpdate(ContactsContract.Contacts.CONTENT_URI)
+            .withSelection("$column = ?", arrayOf(value))
+            .withValue(ContactsContract.Contacts.CUSTOM_RINGTONE, ringtoneUri)
+            .withExpectedCount(expectedCount)
+            .build()
+        return try {
+            val results = context.contentResolver.applyBatch(ContactsContract.AUTHORITY, arrayListOf(operation))
+            // No result means no contacts provider answered, which isn't the same as no match.
+            if (results.size == 1 && results[0].count == expectedCount) BatchOutcome.APPLIED else BatchOutcome.FAILED
+        } catch (e: OperationApplicationException) {
+            // The same exception reports a write the system's per-app switch turned down.
+            if (e.message.orEmpty().contains("App op", ignoreCase = true)) {
+                BatchOutcome.NOT_ALLOWED
+            } else {
+                BatchOutcome.COUNT_MISMATCH
+            }
+        } catch (e: SecurityException) {
+            BatchOutcome.NOT_ALLOWED
+        } catch (e: Exception) {
+            e.rethrowIfCancelled()
+            Log.w(TAG, "Couldn't update the contact ringtone: ${e.javaClass.simpleName}")
+            BatchOutcome.FAILED
+        }
+    }
+
+    private enum class BatchOutcome { APPLIED, COUNT_MISMATCH, NOT_ALLOWED, FAILED }
 
     private companion object {
         const val TAG = "ContactRingtone"

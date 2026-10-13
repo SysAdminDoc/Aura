@@ -99,7 +99,7 @@
       },
       {
         "formArea": "Contacts",
-        "answer": "Contacts are selected through Android's contact picker and updated locally only for per-contact ringtone assignment.",
+        "answer": "Contacts are selected through Android's contact picker and updated locally only for per-contact ringtone assignment. Aura keeps the name and lookup key of the contacts it set a ringtone for, and a library backup the user saves can list them so the ringtones can be restored. Aura does not read the contact list or upload contact data.",
         "evidenceRefs": [
           "app/src/main/AndroidManifest.xml",
           "docs/privacy/data-safety.md"
@@ -196,7 +196,7 @@
       },
       {
         "name": "android.permission.WRITE_CONTACTS",
-        "declaration": "Used locally after contact picker selection to assign the selected ringtone URI to the chosen contact.",
+        "declaration": "Used locally after contact picker selection to assign the selected ringtone URI to the chosen contact, and when the user restores a library backup that names contacts whose ringtone Aura set before.",
         "evidenceRefs": ["docs/privacy/data-safety.md"]
       },
       {

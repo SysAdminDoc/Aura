@@ -104,7 +104,7 @@ Use the live Play questionnaire, but these notes are the current answer packet.
 | User-generated content | Yes. Community sounds, wallpapers, creator profiles, reports, votes, follows, blocks, and collection shares exist. |
 | Online content | Yes. Aura displays remote provider content and public community catalog content from configured sources. |
 | Location | Approximate location is requested only for optional weather wallpaper effects and shared with Open-Meteo when enabled. |
-| Contacts | Contacts are accessed locally only for per-contact ringtone assignment. |
+| Contacts | Contacts are accessed locally only for per-contact ringtone assignment. Aura keeps the name and lookup key of the contacts it set a ringtone for, and a library backup the user saves can list them. |
 | Microphone | Microphone recording is used only when the user explicitly records a community sound. |
 | Generated content | Generated wallpapers are text-to-image requests sent to Stability only after disclosure acceptance and user action. |
 | Ads and purchases | No ads, subscriptions, or in-app purchases. |
@@ -220,7 +220,7 @@ Evidence:
 | `android.permission.FOREGROUND_SERVICE_SPECIAL_USE` | Opt-in wallpaper rotation triggers for screen-off and unlock, with Play foreground-service declaration evidence required before Play production. |
 | `android.permission.POST_NOTIFICATIONS` | Foreground service and worker notifications when Android requires visible status. |
 | `android.permission.ACCESS_COARSE_LOCATION` | Optional weather wallpaper effects. |
-| `android.permission.WRITE_CONTACTS` | Local write of selected ringtone URI to a chosen contact. |
+| `android.permission.WRITE_CONTACTS` | Local write of selected ringtone URI to a chosen contact, or to a contact named in a library backup the user restores. |
 | `android.permission.ACCESS_NOTIFICATION_POLICY` | Local inspection of Do Not Disturb priority-caller rules so Aura can explain per-contact ringtone behavior. |
 | `android.permission.WRITE_EXTERNAL_STORAGE` | Legacy API 28-and-below user-directed downloads and exports. |
 

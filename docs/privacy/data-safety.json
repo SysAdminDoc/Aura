@@ -174,14 +174,14 @@
     {
       "name": "android.permission.WRITE_CONTACTS",
       "category": "contacts",
-      "purpose": "Write the selected ringtone URI to the chosen contact.",
-      "userAction": "User confirms assignment for a selected contact.",
+      "purpose": "Write the selected ringtone URI to the chosen contact, or to the contact a library backup names when the user restores it.",
+      "userAction": "User confirms assignment for a selected contact, or imports a library backup that lists contact ringtones.",
       "dataTypes": ["Contacts", "Audio files"],
       "collectionStatus": "localOnly",
       "sharingStatus": "notShared",
-      "retention": "The contact ringtone URI remains in Android Contacts until the user changes it.",
-      "deletionPath": "Change the contact ringtone through Aura or Android Contacts/settings.",
-      "denialBehavior": "Aura cannot assign the selected ringtone to the contact.",
+      "retention": "The contact ringtone URI remains in Android Contacts until the user changes it. Aura keeps the contact's name, lookup key, and the sound's identity in its preferences so a library backup can list them.",
+      "deletionPath": "Change the contact ringtone through Aura or Android Contacts/settings. Clear Aura app data to remove its record of the ringtones it set.",
+      "denialBehavior": "Aura cannot assign the selected ringtone to the contact. A library import restores everything else and reports the contact ringtones it left out.",
       "playDeclaration": "Sensitive permission; targeted per-contact ringtone feature."
     },
     {
@@ -361,13 +361,14 @@
         "app/src/main/java/com/freevibe/data/local/PreferencesManager.kt",
         "app/src/main/java/com/freevibe/data/model/FitCanvas.kt",
         "app/src/main/java/com/freevibe/service/LibraryExporter.kt",
+        "app/src/main/java/com/freevibe/service/ContactRingtoneBackup.kt",
         "app/src/main/res/xml/backup_rules.xml",
         "app/src/main/res/xml/data_extraction_rules.xml"
       ],
-      "dataTypes": ["App settings", "Wallpaper presentation choices", "Generated content disclosure", "Provider source switches", "Scheduler preferences", "Legacy provider-key migration inputs"],
+      "dataTypes": ["App settings", "Wallpaper presentation choices", "Generated content disclosure", "Provider source switches", "Scheduler preferences", "Legacy provider-key migration inputs", "Contact names and lookup keys for ringtones set through Aura"],
       "collectionStatus": "localOnly",
       "sharingStatus": "notShared",
-      "userControl": "Settings feature switches, wallpaper preview controls, explicit library export/import, generated-content disclosure reset, or Android clear-app-data.",
+      "userControl": "Settings feature switches, wallpaper preview controls, explicit library export/import, generated-content disclosure reset, or Android clear-app-data. The contact ringtone record leaves the device only inside a library backup file the user saves.",
       "retention": "Retained until the user changes the setting, clears the key/disclosure where available, or clears app data.",
       "deletionPath": "Use Settings controls for keys and toggles, or clear Aura app data.",
       "backupExclusions": [

@@ -127,4 +127,64 @@ class LibraryExporterFormatTest {
         assertEquals("ab".repeat(32), restored.contentHash)
         assertEquals("cd".repeat(32), restored.locatorDigest)
     }
+
+    @Test
+    fun `contact ringtones round trip by lookup key, name and sound identity`() {
+        val original = LibraryExportFile(contactRingtones = listOf(contactRingtone()))
+
+        val json = adapter.toJson(original)
+        val restored = adapter.fromJson(json)!!.contactRingtones.single()
+
+        assertEquals(contactRingtone(), restored)
+        assertEquals(
+            "a contact ringtone row carries these fields and no others",
+            setOf(
+                "contactLookupKey",
+                "contactDisplayName",
+                "soundSource",
+                "soundId",
+                "soundTitle",
+                "soundFileName",
+                "soundUrl",
+                "soundPageUrl",
+                "soundLicense",
+                "soundUploader",
+                "assignedAt",
+            ),
+            Regex("\"(\\w+)\":").findAll(json.substringAfter("\"contactRingtones\":"))
+                .map { it.groupValues[1] }
+                .toSet(),
+        )
+        assertFalse(json.contains("content://"))
+    }
+
+    @Test
+    fun `a backup written before contact ringtones existed reads as having none`() {
+        val parsed = adapter.fromJson("""{"version": 4, "favorites": []}""")!!
+
+        assertTrue(parsed.contactRingtones.isEmpty())
+    }
+
+    @Test
+    fun `a contact ringtone row with fields this build does not know still reads`() {
+        val parsed = adapter.fromJson(
+            """
+                {
+                  "version": 4,
+                  "contactRingtones": [{
+                    "contactLookupKey": "key-ada",
+                    "contactDisplayName": "Ada Lovelace",
+                    "soundTitle": "Bell",
+                    "_id": 42,
+                    "aFieldFromALaterVersion": true
+                  }]
+                }
+            """.trimIndent(),
+        )!!
+
+        val row = parsed.contactRingtones.single()
+        assertEquals("key-ada", row.contactLookupKey)
+        assertEquals("Bell", row.soundTitle)
+        assertEquals("", row.soundId)
+    }
 }

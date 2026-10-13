@@ -2241,7 +2241,7 @@
 
     <!-- Whole-library backup (Settings > Backup) -->
     <string name="settings_library_export_title">Export whole library</string>
-    <string name="settings_library_export_subtitle">Favorites, collections, packs, and profiles to one JSON file for device transfer</string>
+    <string name="settings_library_export_subtitle">Favorites, collections, packs, profiles, and contact ringtones in one JSON file</string>
     <string name="settings_library_import_title">Import whole library</string>
     <string name="settings_library_import_subtitle">Restore a library backup. Items merge with what\'s already here.</string>
     <string name="settings_library_default_filename">aura-library-backup.json</string>
@@ -2262,6 +2262,44 @@
     <string name="settings_library_import_skipped_non_portable">%1$d items point at files that only exist on the device that made this backup, so they were not restored (%2$s).</string>
     <string name="settings_library_import_skipped_duplicate">Skipped %1$d items already in your library (%2$s).</string>
     <string name="settings_library_import_skipped_migration">%1$d downloads from an older backup format were not restored; downloads stay on the device that made them (%2$s).</string>
+
+    <!-- Whole-library backup: contact ringtones set in Aura -->
+    <string name="settings_library_export_summary_with_note">%1$s %2$s</string>
+    <plurals name="settings_library_export_contact_ringtones">
+        <item quantity="one">It names the ringtone Aura set for %1$d contact.</item>
+        <item quantity="other">It names the ringtones Aura set for %1$d contacts.</item>
+    </plurals>
+    <string name="settings_library_contacts_permission_title">Put contact ringtones back?</string>
+    <plurals name="settings_library_contacts_permission_body">
+        <item quantity="one">This backup has a ringtone for %1$d contact. To set it again, Aura needs permission to update contacts. Aura finds the contact by the name saved in the backup and never reads your contact list. You can skip this and still restore everything else.</item>
+        <item quantity="other">This backup has ringtones for %1$d contacts. To set them again, Aura needs permission to update contacts. Aura finds each contact by the name saved in the backup and never reads your contact list. You can skip this and still restore everything else.</item>
+    </plurals>
+    <string name="settings_library_contact_ringtone_row">%1$s (%2$s)</string>
+    <string name="settings_library_contact_ringtone_separator">", "</string>
+    <plurals name="settings_library_contact_ringtones_restored">
+        <item quantity="one">Set the ringtone again for %1$d contact: %2$s.</item>
+        <item quantity="other">Set the ringtone again for %1$d contacts: %2$s.</item>
+    </plurals>
+    <plurals name="settings_library_contact_ringtones_missing_contact">
+        <item quantity="one">%1$d contact isn\'t on this phone, so its ringtone wasn\'t set: %2$s.</item>
+        <item quantity="other">%1$d contacts aren\'t on this phone, so their ringtones weren\'t set: %2$s.</item>
+    </plurals>
+    <plurals name="settings_library_contact_ringtones_ambiguous">
+        <item quantity="one">%1$d name belongs to more than one contact, so Aura didn\'t guess which: %2$s. Set this ringtone from the sound\'s page.</item>
+        <item quantity="other">%1$d names each belong to more than one contact, so Aura didn\'t guess which: %2$s. Set these ringtones from each sound\'s page.</item>
+    </plurals>
+    <plurals name="settings_library_contact_ringtones_missing_sound">
+        <item quantity="one">The sound for %1$d contact isn\'t on this phone and couldn\'t be downloaded again: %2$s.</item>
+        <item quantity="other">The sounds for %1$d contacts aren\'t on this phone and couldn\'t be downloaded again: %2$s.</item>
+    </plurals>
+    <plurals name="settings_library_contact_ringtones_no_permission">
+        <item quantity="one">%1$d contact ringtone wasn\'t set because Aura isn\'t allowed to update contacts: %2$s. Allow Contacts for Aura in Android settings, then import the backup again.</item>
+        <item quantity="other">%1$d contact ringtones weren\'t set because Aura isn\'t allowed to update contacts: %2$s. Allow Contacts for Aura in Android settings, then import the backup again.</item>
+    </plurals>
+    <plurals name="settings_library_contact_ringtones_write_failed">
+        <item quantity="one">Android didn\'t accept the ringtone for %1$d contact: %2$s.</item>
+        <item quantity="other">Android didn\'t accept the ringtone for %1$d contacts: %2$s.</item>
+    </plurals>
 
     <!-- Global apply/undo feedback (FreeVibeRoot snackbar) -->
     <string name="apply_feedback_undo">Undo</string>

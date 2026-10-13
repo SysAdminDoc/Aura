@@ -2061,7 +2061,7 @@
 
     <!-- Whole-library backup (Settings > Backup) -->
     <string name="settings_library_export_title">导出整个图库</string>
-    <string name="settings_library_export_subtitle">将收藏、收藏集、壁纸包和配置文件导出为一个 JSON 文件，用于设备迁移</string>
+    <string name="settings_library_export_subtitle">将收藏、收藏集、壁纸包、配置文件和联系人铃声导出为一个 JSON 文件</string>
     <string name="settings_library_import_title">导入整个图库</string>
     <string name="settings_library_import_subtitle">恢复图库备份。项目将与现有内容合并。</string>
     <string name="settings_library_default_filename">aura-library-backup.json</string>
@@ -2082,6 +2082,44 @@
     <string name="settings_library_import_skipped_non_portable">%1$d 个项目指向仅存在于创建此备份的设备上的文件，因此未恢复（%2$s）。</string>
     <string name="settings_library_import_skipped_duplicate">跳过了 %1$d 个已在图库中的项目（%2$s）。</string>
     <string name="settings_library_import_skipped_migration">来自旧版备份格式的 %1$d 个下载未恢复；下载内容保留在创建它们的设备上（%2$s）。</string>
+
+    <!-- Whole-library backup: contact ringtones set in Aura -->
+    <string name="settings_library_export_summary_with_note">%1$s%2$s</string>
+    <plurals name="settings_library_export_contact_ringtones">
+        <item quantity="one">备份中记录了 Aura 为 %1$d 位联系人设置的铃声。</item>
+        <item quantity="other">备份中记录了 Aura 为 %1$d 位联系人设置的铃声。</item>
+    </plurals>
+    <string name="settings_library_contacts_permission_title">要恢复联系人铃声吗？</string>
+    <plurals name="settings_library_contacts_permission_body">
+        <item quantity="one">此备份包含 %1$d 位联系人的铃声。要重新设置，Aura 需要修改联系人的权限。Aura 会按备份中保存的姓名查找联系人，不会读取你的联系人列表。你也可以跳过这一步，其他内容仍会恢复。</item>
+        <item quantity="other">此备份包含 %1$d 位联系人的铃声。要重新设置，Aura 需要修改联系人的权限。Aura 会按备份中保存的姓名查找每位联系人，不会读取你的联系人列表。你也可以跳过这一步，其他内容仍会恢复。</item>
+    </plurals>
+    <string name="settings_library_contact_ringtone_row">%1$s（%2$s）</string>
+    <string name="settings_library_contact_ringtone_separator">、</string>
+    <plurals name="settings_library_contact_ringtones_restored">
+        <item quantity="one">已为 %1$d 位联系人重新设置铃声：%2$s。</item>
+        <item quantity="other">已为 %1$d 位联系人重新设置铃声：%2$s。</item>
+    </plurals>
+    <plurals name="settings_library_contact_ringtones_missing_contact">
+        <item quantity="one">这部手机上没有这 %1$d 位联系人，因此未设置铃声：%2$s。</item>
+        <item quantity="other">这部手机上没有这 %1$d 位联系人，因此未设置铃声：%2$s。</item>
+    </plurals>
+    <plurals name="settings_library_contact_ringtones_ambiguous">
+        <item quantity="one">有 %1$d 个姓名对应多位联系人，Aura 没有猜测是哪一位：%2$s。请在声音页面中手动设置。</item>
+        <item quantity="other">有 %1$d 个姓名对应多位联系人，Aura 没有猜测是哪一位：%2$s。请在各个声音页面中手动设置。</item>
+    </plurals>
+    <plurals name="settings_library_contact_ringtones_missing_sound">
+        <item quantity="one">%1$d 位联系人的铃声不在这部手机上，也无法重新下载：%2$s。</item>
+        <item quantity="other">%1$d 位联系人的铃声不在这部手机上，也无法重新下载：%2$s。</item>
+    </plurals>
+    <plurals name="settings_library_contact_ringtones_no_permission">
+        <item quantity="one">Aura 没有修改联系人的权限，%1$d 个联系人铃声未设置：%2$s。请在 Android 设置中允许 Aura 使用“通讯录”权限，然后重新导入备份。</item>
+        <item quantity="other">Aura 没有修改联系人的权限，%1$d 个联系人铃声未设置：%2$s。请在 Android 设置中允许 Aura 使用“通讯录”权限，然后重新导入备份。</item>
+    </plurals>
+    <plurals name="settings_library_contact_ringtones_write_failed">
+        <item quantity="one">Android 未接受 %1$d 位联系人的铃声：%2$s。</item>
+        <item quantity="other">Android 未接受 %1$d 位联系人的铃声：%2$s。</item>
+    </plurals>
 
     <!-- Global apply/undo feedback (FreeVibeRoot snackbar) -->
     <string name="apply_feedback_undo">撤销</string>

@@ -1,5 +1,6 @@
 package com.freevibe.ui.screens.settings
 
+import android.Manifest
 import android.content.Context
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -22,6 +23,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import com.freevibe.R
 
@@ -59,6 +61,13 @@ internal fun BackupSettingsSection(
         ActivityResultContracts.OpenDocument(),
     ) { uri: Uri? ->
         uri?.let(viewModel::importLibrary)
+    }
+    val contactsPermissionRequest = themePackTransfer.contactsPermissionRequest
+    val contactsPermissionLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestPermission(),
+    ) { _: Boolean ->
+        // Allowed or not, the import goes ahead. Without access the report names the contacts left out.
+        contactsPermissionRequest?.let { viewModel.importLibraryAfterContactsPrompt(it.backupUri) }
     }
     var themePackInstructions by remember { mutableStateOf<List<String>>(emptyList()) }
 
@@ -211,6 +220,35 @@ internal fun BackupSettingsSection(
             confirmButton = {
                 TextButton(onClick = { themePackInstructions = emptyList() }) {
                     Text(stringResource(R.string.common_done))
+                }
+            },
+        )
+    }
+
+    if (contactsPermissionRequest != null) {
+        // Leaving the dialog any other way than "Continue" restores the rest of the backup and
+        // reports the contact ringtones as waiting on this permission.
+        val importWithoutContacts = { viewModel.importLibraryAfterContactsPrompt(contactsPermissionRequest.backupUri) }
+        AlertDialog(
+            onDismissRequest = importWithoutContacts,
+            title = { Text(stringResource(R.string.settings_library_contacts_permission_title)) },
+            text = {
+                Text(
+                    pluralStringResource(
+                        R.plurals.settings_library_contacts_permission_body,
+                        contactsPermissionRequest.contactCount,
+                        contactsPermissionRequest.contactCount,
+                    ),
+                )
+            },
+            confirmButton = {
+                TextButton(onClick = { contactsPermissionLauncher.launch(Manifest.permission.WRITE_CONTACTS) }) {
+                    Text(stringResource(R.string.permission_continue))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = importWithoutContacts) {
+                    Text(stringResource(R.string.permission_not_now))
                 }
             },
         )

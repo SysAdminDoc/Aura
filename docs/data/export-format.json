@@ -1,5 +1,5 @@
 {
-  "lastReviewed": "2026-09-14",
+  "lastReviewed": "2026-10-13",
   "limitsContract": "app/src/main/java/com/freevibe/service/LibraryTransferContract.kt",
   "documentedLimitKeys": [
     "MAX_FAVORITES",
@@ -9,6 +9,7 @@
     "MAX_ROTATION_EXCLUSIONS",
     "MAX_LOCAL_WALLPAPERS",
     "MAX_WALLPAPER_HISTORY_ITEMS",
+    "MAX_CONTACT_RINGTONES",
     "MAX_FAVORITES_DOCUMENT_CHARS",
     "MAX_COLLECTION_DOCUMENT_BYTES",
     "MAX_LIBRARY_DOCUMENT_CHARS",
@@ -159,6 +160,7 @@
         "MAX_ROTATION_EXCLUSIONS",
         "MAX_LOCAL_WALLPAPERS",
         "MAX_WALLPAPER_HISTORY_ITEMS",
+        "MAX_CONTACT_RINGTONES",
         "MAX_LIBRARY_DOCUMENT_CHARS",
         "MAX_SOUND_SHUFFLE_DOCUMENT_CHARS",
         "MAX_TEXT_CHARS",
@@ -175,12 +177,54 @@
         "rotationExclusions": "Optional persistent wallpaper and video rotation exclusions. Provider IDs, local content hashes, and one-way locator fingerprints preserve choices without exporting device paths.",
         "favoritesAndCollections": "Local entries use one portable identity across favorites and collection membership. Their original locators are blank after restore until Relink succeeds.",
         "localWallpapers": "Locator-free identity, dimensions, content hash, tags, and target for local wallpapers. Restored entries remain visible and ask the user to relink a file or folder.",
-        "wallpaperHistory": "Recent wallpaper history. Device-local entries keep portable identity and metadata while their private locators are omitted."
+        "wallpaperHistory": "Recent wallpaper history. Device-local entries keep portable identity and metadata while their private locators are omitted.",
+        "contactRingtones": "Optional. One row for each contact ringtone set through Aura, described under contactRingtones below."
+      },
+      "contactRingtones": {
+        "itemClass": "ContactRingtoneExportEntry",
+        "sourceFile": "app/src/main/java/com/freevibe/service/ContactRingtoneBackup.kt",
+        "limitKey": "MAX_CONTACT_RINGTONES",
+        "source": "Aura's own record of the contact ringtones it set. Aura holds no permission to read contacts, so the contact list is never queried to build a backup. A ringtone set in the Contacts app or by another app is not in the record and is not exported.",
+        "identityFields": [
+          "contactLookupKey",
+          "contactDisplayName",
+          "soundSource",
+          "soundId",
+          "soundTitle"
+        ],
+        "itemFields": {
+          "contactLookupKey": { "type": "String", "default": "", "since": 4, "description": "The contact's lookup key at the time the ringtone was set. Tried first on import." },
+          "contactDisplayName": { "type": "String", "default": "", "since": 4, "description": "The contact's display name at the time the ringtone was set. Used when the lookup key finds nobody." },
+          "soundSource": { "type": "String", "default": "", "since": 4, "description": "ContentSource enum name of the sound. Blank when unknown." },
+          "soundId": { "type": "String", "default": "", "since": 4, "description": "The id the sound has at its source. Blank for a sound picked from the phone's own storage." },
+          "soundTitle": { "type": "String", "default": "", "since": 4, "description": "The sound's title, shown in the import report." },
+          "soundFileName": { "type": "String", "default": "", "since": 4, "description": "Bare name of the ringtone file Aura saved, with no folder. Lets a restore on the same phone reuse the file." },
+          "soundUrl": { "type": "String", "default": "", "since": 4, "description": "HTTPS address the sound was fetched from. Blank for YouTube, TikTok, bundled and local sounds, which are fetched again from the id." },
+          "soundPageUrl": { "type": "String", "default": "", "since": 4, "description": "HTTPS link to the sound's source page." },
+          "soundLicense": { "type": "String", "default": "", "since": 4, "description": "License label, kept so the same license rules apply on restore." },
+          "soundUploader": { "type": "String", "default": "", "since": 4, "description": "Uploader name, kept for attribution." },
+          "assignedAt": { "type": "Long", "default": 0, "since": 4, "description": "Unix epoch millis when Aura set the ringtone." }
+        },
+        "importMatching": [
+          "The contact whose lookup key equals contactLookupKey is tried first",
+          "When that key finds nobody, the one contact whose display name equals contactDisplayName exactly is used",
+          "A display name shared by two or more contacts is reported as ambiguous and no contact is changed",
+          "A sound that is not on the phone and cannot be fetched again from its source is reported as a missing sound",
+          "Every row that was not restored is named in the import report, and the rest of the import is unaffected",
+          "A row with no contact or no sound is counted as failed, and a second row for the same contact is counted as skipped",
+          "Without permission to update contacts, every row is reported as waiting on that permission and nothing else in the import is held back"
+        ],
+        "privacyNotes": [
+          "Rows carry the lookup key and display name of contacts the user gave a ringtone through Aura, and nothing else about them",
+          "No contact row id, raw contact id, phone number, email address, or photo is exported",
+          "No media library row id, content URI, or file path is exported",
+          "The backup is a local file the user saves. Aura does not upload it"
+        ]
       },
       "resultCounts": {
-        "exportedOrImported": "Rows and non-empty preference sections actually written",
+        "exportedOrImported": "Rows and non-empty preference sections actually written, including contact ringtones that were set again",
         "skipped": "Duplicate or migrated rows intentionally not written",
-        "failed": "Invalid or device-only rows that could not be restored"
+        "failed": "Invalid or device-only rows that could not be restored, and contact ringtones that could not be set again"
       },
       "privacyExclusions": [
         "Library backups do not include provider API keys or user credentials",
@@ -188,12 +232,13 @@
         "Local media locators are replaced with portable IDs before export",
         "Library backups do not include raw paths or URLs from rotation exclusions",
         "Sound pool assignments never include content URIs, file paths, applied system URIs, or activity history",
+        "Contact ringtone rows never include a contact row id, a phone number, a media row id, a content URI, or a file path",
         "Legacy device-local download rows are reported but not restored"
       ],
       "versionPolicy": {
-        "current": "Version 4 adds locator-free named sound shuffle pools and their target schedules.",
-        "backwardCompat": "Versions 1, 2, and 3 remain importable. Version 1 download rows are reported as device-only instead of being silently discarded.",
-        "forwardCompat": "A version newer than 4 is rejected before any database or preference write."
+        "current": "Version 4 adds locator-free named sound shuffle pools and their target schedules. The optional contactRingtones section was added to version 4 without a version bump.",
+        "backwardCompat": "Versions 1, 2, and 3 remain importable. Version 1 download rows are reported as device-only instead of being silently discarded. A backup without contactRingtones imports as before.",
+        "forwardCompat": "A version newer than 4 is rejected before any database or preference write. An older Aura build ignores the contactRingtones section and restores the rest."
       }
     }
   }

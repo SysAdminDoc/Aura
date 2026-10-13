@@ -43,6 +43,7 @@ import com.freevibe.ui.components.AuraStateCard
 import com.freevibe.service.BundledContentProvider
 import com.freevibe.service.ContactDndGuidance
 import com.freevibe.service.ContactInfo
+import com.freevibe.service.ContactRingtoneBackupManager
 import com.freevibe.service.ContactRingtoneNotKeptException
 import com.freevibe.service.ContactRingtoneService
 import com.freevibe.service.contactEditorUri
@@ -95,6 +96,7 @@ class ContactPickerViewModel @Inject constructor(
     private val favoritesRepo: FavoritesRepository,
     private val bundledContent: BundledContentProvider,
     private val soundUrlResolver: SoundUrlResolver,
+    private val contactRingtoneBackup: ContactRingtoneBackupManager,
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(ContactPickerState())
@@ -204,6 +206,10 @@ class ContactPickerViewModel @Inject constructor(
                     val readBackUri = _state.value.selectedContactUri.takeIf { contact?.id == contactId }
                     contactService.setContactRingtone(contactId, uri, readBackUri)
                         .onSuccess {
+                            // Noted so a library backup can name this contact and sound later.
+                            if (contact != null && contact.id == contactId) {
+                                contactRingtoneBackup.record(contact, sound, uri.toString())
+                            }
                             if (!vipOnly) {
                                 _state.update {
                                     it.copy(

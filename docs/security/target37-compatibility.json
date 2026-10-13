@@ -26,7 +26,7 @@
     "stringLiteralHostPattern": "\\.local"
   },
   "contacts": {
-    "decision": "Aura uses Android's contact picker selection plus just-in-time WRITE_CONTACTS for ringtone updates; broad READ_CONTACTS remains forbidden.",
+    "decision": "Aura uses Android's contact picker selection plus just-in-time WRITE_CONTACTS for ringtone updates; broad READ_CONTACTS remains forbidden. A library restore sets contact ringtones again through write-only updates that match one saved lookup key or one exact display name, so it needs no read access either.",
     "forbiddenManifestPermissions": [
       "android.permission.READ_CONTACTS"
     ],

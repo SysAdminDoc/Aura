@@ -32,6 +32,7 @@ import com.freevibe.data.model.toRotationExclusion
 import com.freevibe.data.model.upsert
 import com.freevibe.data.repository.CollectionRepository
 import com.squareup.moshi.Moshi
+import com.squareup.moshi.Types
 import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
@@ -42,6 +43,7 @@ import java.io.File
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
@@ -69,6 +71,10 @@ class LibraryImportPlanTest {
     private val profilesJson = MutableStateFlow("")
     private val soundShufflePoolsJson = MutableStateFlow("")
     private val redditPresetsJson = MutableStateFlow("")
+    private val contactLedgerJson = MutableStateFlow("")
+    private val contactWriter = FakeContactRingtoneWriter()
+    private val contactSounds = FakeContactRingtoneSounds()
+    private val savedRingtone = "content://media/external/audio/media/41"
     private var fitCanvasPreferences = FitCanvasPreferences()
     private val presetAdapter = Moshi.Builder().build().adapter(RedditFeedPresetStore::class.java)
     private val presetDefaults = defaultRedditFeedPresetStore(name = { "name-$it" })
@@ -95,6 +101,10 @@ class LibraryImportPlanTest {
             val current = decodeRedditFeedPresetStore(presetAdapter, redditPresetsJson.value, presetDefaults)
             transform(current).normalized(presetDefaults).also { redditPresetsJson.value = presetAdapter.toJson(it) }
         }
+        every { prefs.contactRingtoneLedgerJson } returns contactLedgerJson
+        coEvery { prefs.updateContactRingtoneLedgerJson(any()) } answers {
+            contactLedgerJson.value = firstArg<(String) -> String>().invoke(contactLedgerJson.value)
+        }
         exporter = LibraryExporter(
             context = context,
             database = db,
@@ -105,11 +115,27 @@ class LibraryImportPlanTest {
             prefs = prefs,
             moshi = Moshi.Builder().build(),
             soundShufflePoolManager = mockk(relaxed = true),
+            contactRingtoneBackup = ContactRingtoneBackupManager(
+                prefs = prefs,
+                moshi = Moshi.Builder().build(),
+                writer = contactWriter,
+                sounds = contactSounds,
+            ),
         )
     }
 
     @After
     fun tearDown() = db.close()
+
+    private fun contactRingtoneJson(vararg entries: ContactRingtoneExportEntry): String =
+        Moshi.Builder().build()
+            .adapter<List<ContactRingtoneExportEntry>>(
+                Types.newParameterizedType(List::class.java, ContactRingtoneExportEntry::class.java),
+            )
+            .toJson(entries.toList())
+
+    private fun backupFile(json: String): File =
+        File(context.cacheDir, "library-contacts-${System.nanoTime()}.json").apply { writeText(json) }
 
     private fun payload(
         version: String = "2",
@@ -820,5 +846,201 @@ class LibraryImportPlanTest {
             1,
             db.collectionDao().getCollectionItems(collections.single().collectionId).first().size,
         )
+    }
+
+    // -- contact ringtones --
+
+    @Test
+    fun `an older backup without contact ringtones restores as before`() = runTest {
+        val plan = exporter.buildPlan(payload(version = "4", favorites = "[$portableFavorite]"))
+
+        assertTrue(plan.contactRingtones.isEmpty())
+        assertTrue(plan.skipped.isEmpty())
+        assertEquals(1, plan.writeCount)
+    }
+
+    @Test
+    fun `contact ringtones are exported by lookup key and name and never by a place on the phone`() = runTest {
+        // The second row is a ledger someone tampered with. The export cleans it on the way out.
+        contactLedgerJson.value = encodeContactRingtoneLedger(
+            Moshi.Builder().build(),
+            ContactRingtoneLedger(
+                assignments = listOf(
+                    contactRingtone(),
+                    contactRingtone(lookupKey = "key-bob", name = "Bob", soundTitle = "Memo", soundFileName = "Memo.m4a").copy(
+                        soundSource = "LOCAL",
+                        soundId = savedRingtone,
+                        soundUrl = savedRingtone,
+                        soundPageUrl = "",
+                    ),
+                ),
+            ),
+        )
+        val destination = File(context.cacheDir, "library-contact-ringtones-${System.nanoTime()}.json")
+
+        try {
+            val outcome = exporter.exportLibrary(Uri.fromFile(destination)).getOrThrow()
+
+            val json = destination.readText()
+            val parsed = Moshi.Builder().build().adapter(LibraryExportFile::class.java).fromJson(json)!!
+            assertEquals(4, parsed.version)
+            assertEquals(listOf("key-ada", "key-bob"), parsed.contactRingtones.map { it.contactLookupKey })
+            assertEquals(listOf("Ada Lovelace", "Bob"), parsed.contactRingtones.map { it.contactDisplayName })
+            assertEquals(listOf("fs_100", ""), parsed.contactRingtones.map { it.soundId })
+            assertEquals(listOf("Bell.mp3", "Memo.m4a"), parsed.contactRingtones.map { it.soundFileName })
+            assertEquals(2, outcome.contactRingtones)
+            assertFalse(json.contains("content://"))
+            val section = json.substringAfter("\"contactRingtones\"")
+            assertFalse(section.contains("\"id\""))
+            assertFalse(section.contains("\"_id\""))
+            assertFalse(section.contains("contactId", ignoreCase = true))
+        } finally {
+            destination.delete()
+        }
+    }
+
+    @Test
+    fun `a backup restores contact ringtones and names every one it could not`() = runTest {
+        val ada = contactWriter.add("key-ada", "Ada Lovelace")
+        val grace = contactWriter.add("key-from-the-new-phone", "Grace Hopper")
+        val firstSam = contactWriter.add("key-sam-one", "Sam Lee")
+        val secondSam = contactWriter.add("key-sam-two", "Sam Lee")
+        contactSounds.onPhone["fs_100"] = savedRingtone
+        val file = backupFile(
+            payload(
+                version = "4",
+                favorites = "[$portableFavorite]",
+                extra = ""","contactRingtones":""" + contactRingtoneJson(
+                    contactRingtone(),
+                    contactRingtone(lookupKey = "key-grace", name = "Grace Hopper"),
+                    contactRingtone(lookupKey = "key-sam", name = "Sam Lee"),
+                    contactRingtone(lookupKey = "key-gone", name = "Nobody Here"),
+                    contactRingtone(lookupKey = "key-bob", name = "Bob", soundId = "fs_gone"),
+                ),
+            ),
+        )
+
+        try {
+            val outcome = exporter.importLibrary(Uri.fromFile(file)).getOrThrow()
+
+            assertEquals(
+                mapOf(
+                    "Ada Lovelace" to ContactRingtoneRestoreStatus.RESTORED,
+                    "Grace Hopper" to ContactRingtoneRestoreStatus.RESTORED,
+                    "Sam Lee" to ContactRingtoneRestoreStatus.AMBIGUOUS_CONTACT,
+                    "Nobody Here" to ContactRingtoneRestoreStatus.MISSING_CONTACT,
+                    "Bob" to ContactRingtoneRestoreStatus.MISSING_SOUND,
+                ),
+                outcome.contactRingtones.associate { it.contactLabel to it.status },
+            )
+            assertEquals(savedRingtone, ada.ringtone)
+            assertEquals("the changed lookup key fell back to the name", savedRingtone, grace.ringtone)
+            assertNull(firstSam.ringtone)
+            assertNull(secondSam.ringtone)
+            assertEquals("the rest of the backup is restored", 1, db.favoriteDao().count().first())
+            // favorite(1) + the two contact ringtones that were set
+            assertEquals(3, outcome.written)
+            assertEquals(3, outcome.failed)
+            assertEquals(
+                "the next backup from this phone carries what was restored",
+                listOf("Ada Lovelace", "Grace Hopper"),
+                parseContactRingtoneLedger(Moshi.Builder().build(), contactLedgerJson.value)
+                    .assignments.map { it.contactDisplayName },
+            )
+        } finally {
+            file.delete()
+        }
+    }
+
+    @Test
+    fun `an unreadable contact ringtone row is reported and a repeated contact is tried once`() = runTest {
+        val plan = exporter.buildPlan(
+            payload(
+                version = "4",
+                extra = ""","contactRingtones":""" + contactRingtoneJson(
+                    contactRingtone(soundId = "fs_old", assignedAt = 1),
+                    contactRingtone(soundId = "fs_new", assignedAt = 2),
+                    ContactRingtoneExportEntry(soundTitle = "A sound with no contact"),
+                ),
+            ),
+        )
+
+        assertEquals(listOf("fs_new"), plan.contactRingtones.map { it.soundId })
+        assertEquals(
+            setOf(
+                Triple("contactRingtone", "Ada Lovelace", LibraryImportSkipReason.DUPLICATE),
+                Triple("contactRingtone", "(unnamed)", LibraryImportSkipReason.INVALID),
+            ),
+            plan.skipped.map { Triple(it.section, it.label, it.reason) }.toSet(),
+        )
+        assertEquals("contact ringtones are counted once they are set, not when planned", 0, plan.writeCount)
+    }
+
+    @Test
+    fun `an over-limit contact ringtone section refuses the whole backup`() = runTest {
+        val entries = Array(LibraryTransferContract.MAX_CONTACT_RINGTONES + 1) { index ->
+            contactRingtone(lookupKey = "key-$index", name = "Contact $index")
+        }
+
+        val failure = runCatching {
+            exporter.buildPlan(
+                payload(version = "4", extra = ""","contactRingtones":""" + contactRingtoneJson(*entries)),
+            )
+        }.exceptionOrNull()
+
+        assertTrue(failure is LibraryTransferLimitExceededException)
+    }
+
+    @Test
+    fun `without contacts access the rest restores and the contacts left out are listed`() = runTest {
+        contactWriter.allowed = false
+        val ada = contactWriter.add("key-ada", "Ada Lovelace")
+        contactSounds.onPhone["fs_100"] = savedRingtone
+        val file = backupFile(
+            payload(
+                version = "4",
+                favorites = "[$portableFavorite]",
+                extra = ""","contactRingtones":""" + contactRingtoneJson(contactRingtone()),
+            ),
+        )
+
+        try {
+            assertEquals(1, exporter.contactRingtonesAwaitingPermission(Uri.fromFile(file)))
+
+            val outcome = exporter.importLibrary(Uri.fromFile(file)).getOrThrow()
+
+            val result = outcome.contactRingtones.single()
+            assertEquals(ContactRingtoneRestoreStatus.PERMISSION_MISSING, result.status)
+            assertEquals("Ada Lovelace", result.contactLabel)
+            assertNull(ada.ringtone)
+            assertEquals(1, db.favoriteDao().count().first())
+            assertEquals(1, outcome.written)
+            assertEquals(1, outcome.failed)
+
+            contactWriter.allowed = true
+            assertEquals(0, exporter.contactRingtonesAwaitingPermission(Uri.fromFile(file)))
+        } finally {
+            file.delete()
+        }
+    }
+
+    @Test
+    fun `nothing waits on contacts access when there is nothing to restore`() = runTest {
+        contactWriter.allowed = false
+        val withoutSection = backupFile(payload(version = "4", favorites = "[$portableFavorite]"))
+        val broken = backupFile("not json at all")
+        val fromTheFuture = backupFile(
+            payload(version = "99", extra = ""","contactRingtones":""" + contactRingtoneJson(contactRingtone())),
+        )
+
+        try {
+            assertEquals(0, exporter.contactRingtonesAwaitingPermission(Uri.fromFile(withoutSection)))
+            assertEquals(0, exporter.contactRingtonesAwaitingPermission(Uri.fromFile(broken)))
+            assertEquals(0, exporter.contactRingtonesAwaitingPermission(Uri.fromFile(fromTheFuture)))
+        } finally {
+            withoutSection.delete()
+            broken.delete()
+            fromTheFuture.delete()
+        }
     }
 }

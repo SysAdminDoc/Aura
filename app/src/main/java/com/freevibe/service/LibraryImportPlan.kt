@@ -72,6 +72,11 @@ data class LibraryImportPlan(
     val fitCanvasPreferences: FitCanvasPreferences? = null,
     /** Reddit feed presets, already checked and re-encoded. Blank when the backup has none. */
     val redditFeedPresetsJson: String = "",
+    /**
+     * Contact ringtones to try, one per contact. They aren't counted in [writeCount]: whether each
+     * contact and sound exists on this phone is only known once the restore tries it.
+     */
+    val contactRingtones: List<ContactRingtoneExportEntry> = emptyList(),
     val skipped: List<LibraryImportSkip> = emptyList(),
 ) {
     /** Rows that will actually be written. */
@@ -103,18 +108,22 @@ data class LibraryImportOutcome(
     val sourceVersion: Int,
     val written: Int,
     val skipped: List<LibraryImportSkip>,
+    /** What happened to every contact ringtone in the backup, restored or not. */
+    val contactRingtones: List<ContactRingtoneRestoreResult> = emptyList(),
 ) {
     val skippedCount: Int
         get() = skipped.count { !it.reason.isFailure }
 
     val failed: Int
-        get() = skipped.count { it.reason.isFailure }
+        get() = skipped.count { it.reason.isFailure } + contactRingtones.count { !it.restored }
 }
 
 data class LibraryExportOutcome(
     val exported: Int,
     val skipped: Int,
     val failed: Int,
+    /** Contacts whose ringtone the backup names. Already part of [exported]. */
+    val contactRingtones: Int = 0,
 )
 
 /** Raised when a payload cannot be restored at all. Message is user-facing. */

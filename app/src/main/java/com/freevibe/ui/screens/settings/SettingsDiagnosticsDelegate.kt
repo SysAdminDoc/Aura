@@ -9,6 +9,8 @@ import com.freevibe.data.repository.AiWallpaperRepository
 import com.freevibe.data.repository.GeneratedAssetAudit
 import com.freevibe.service.BackgroundWorkDiagnostics
 import com.freevibe.service.BackgroundWorkDiagnosticsReader
+import com.freevibe.service.ContactRingtoneRestoreResult
+import com.freevibe.service.ContactRingtoneRestoreStatus
 import com.freevibe.service.CrashDiagnosticsCollector
 import com.freevibe.service.CrashDiagnosticsSummary
 import com.freevibe.service.ExternalAutomationDiagnostics
@@ -296,13 +298,26 @@ internal class SettingsDiagnosticsDelegate(
             val result = libraryExporter.exportLibrary(uri)
             _themePackTransfer.value = result.fold(
                 onSuccess = { outcome ->
+                    val summary = context.getString(
+                        R.string.settings_library_export_summary,
+                        outcome.exported,
+                        outcome.skipped,
+                        outcome.failed,
+                    )
                     ThemePackTransferState(
-                        message = context.getString(
-                            R.string.settings_library_export_summary,
-                            outcome.exported,
-                            outcome.skipped,
-                            outcome.failed,
-                        ),
+                        message = if (outcome.contactRingtones > 0) {
+                            context.getString(
+                                R.string.settings_library_export_summary_with_note,
+                                summary,
+                                context.resources.getQuantityString(
+                                    R.plurals.settings_library_export_contact_ringtones,
+                                    outcome.contactRingtones,
+                                    outcome.contactRingtones,
+                                ),
+                            )
+                        } else {
+                            summary
+                        },
                     )
                 },
                 onFailure = { error ->
@@ -321,29 +336,51 @@ internal class SettingsDiagnosticsDelegate(
         if (_themePackTransfer.value.inProgress) return
         scope.launch {
             _themePackTransfer.value = ThemePackTransferState(inProgress = true)
-            val result = libraryExporter.importLibrary(uri)
-            _themePackTransfer.value = result.fold(
-                onSuccess = { outcome ->
-                    ThemePackTransferState(
-                        message = context.getString(
-                            R.string.settings_library_import_summary,
-                            outcome.written,
-                            outcome.skippedCount,
-                            outcome.failed,
-                        ),
-                        instructions = libraryImportReport(outcome),
-                    )
-                },
-                onFailure = { error ->
-                    ThemePackTransferState(
-                        error = context.getString(
-                            R.string.settings_library_import_failed,
-                            error.message ?: context.getString(R.string.common_retry_later),
-                        ),
-                    )
-                },
-            )
+            // Contact ringtones need contacts access, so the screen explains and asks before the
+            // restore starts instead of reporting every one of them as left out.
+            val waiting = libraryExporter.contactRingtonesAwaitingPermission(uri)
+            if (waiting > 0) {
+                _themePackTransfer.value = ThemePackTransferState(
+                    contactsPermissionRequest = ContactsPermissionRequest(uri, waiting),
+                )
+                return@launch
+            }
+            runLibraryImport(uri)
         }
+    }
+
+    /** Runs the import once the contacts prompt was answered. A refusal still restores everything else. */
+    fun importLibraryAfterContactsPrompt(uri: Uri) {
+        if (_themePackTransfer.value.inProgress) return
+        scope.launch {
+            _themePackTransfer.value = ThemePackTransferState(inProgress = true)
+            runLibraryImport(uri)
+        }
+    }
+
+    private suspend fun runLibraryImport(uri: Uri) {
+        val result = libraryExporter.importLibrary(uri)
+        _themePackTransfer.value = result.fold(
+            onSuccess = { outcome ->
+                ThemePackTransferState(
+                    message = context.getString(
+                        R.string.settings_library_import_summary,
+                        outcome.written,
+                        outcome.skippedCount,
+                        outcome.failed,
+                    ),
+                    instructions = libraryImportReport(outcome),
+                )
+            },
+            onFailure = { error ->
+                ThemePackTransferState(
+                    error = context.getString(
+                        R.string.settings_library_import_failed,
+                        error.message ?: context.getString(R.string.common_retry_later),
+                    ),
+                )
+            },
+        )
     }
 
     fun clearWallpaperHistory() = scope.launch { historyManager.clearAll() }
@@ -374,7 +411,53 @@ internal class SettingsDiagnosticsDelegate(
         }
     }
 
-    private fun libraryImportReport(outcome: LibraryImportOutcome): List<String> {
+    private fun libraryImportReport(outcome: LibraryImportOutcome): List<String> =
+        librarySkipReport(outcome) + contactRingtoneReport(outcome.contactRingtones)
+
+    /**
+     * One line per outcome, with every contact named. A ringtone that wasn't put back is something
+     * the user has to fix by hand, so none of them hides behind "and more".
+     */
+    private fun contactRingtoneReport(results: List<ContactRingtoneRestoreResult>): List<String> {
+        val separator = context.getString(R.string.settings_library_contact_ringtone_separator)
+        return results
+            .groupBy { it.status }
+            .toSortedMap(compareBy { it.ordinal })
+            .map { (status, rows) ->
+                val names = rows.map { row ->
+                    if (row.soundLabel.isBlank()) {
+                        row.contactLabel
+                    } else {
+                        context.getString(
+                            R.string.settings_library_contact_ringtone_row,
+                            row.contactLabel,
+                            row.soundLabel,
+                        )
+                    }
+                }.sorted().joinToString(separator)
+                context.resources.getQuantityString(
+                    when (status) {
+                        ContactRingtoneRestoreStatus.RESTORED ->
+                            R.plurals.settings_library_contact_ringtones_restored
+                        ContactRingtoneRestoreStatus.MISSING_CONTACT ->
+                            R.plurals.settings_library_contact_ringtones_missing_contact
+                        ContactRingtoneRestoreStatus.AMBIGUOUS_CONTACT ->
+                            R.plurals.settings_library_contact_ringtones_ambiguous
+                        ContactRingtoneRestoreStatus.MISSING_SOUND ->
+                            R.plurals.settings_library_contact_ringtones_missing_sound
+                        ContactRingtoneRestoreStatus.PERMISSION_MISSING ->
+                            R.plurals.settings_library_contact_ringtones_no_permission
+                        ContactRingtoneRestoreStatus.WRITE_FAILED ->
+                            R.plurals.settings_library_contact_ringtones_write_failed
+                    },
+                    rows.size,
+                    rows.size,
+                    names,
+                )
+            }
+    }
+
+    private fun librarySkipReport(outcome: LibraryImportOutcome): List<String> {
         if (outcome.skipped.isEmpty()) return emptyList()
         return outcome.skipped
             .groupBy { it.reason }

@@ -26,7 +26,7 @@ Android 12+ cloud, and device-transfer rules and in one local storage row.
 | `android.permission.FOREGROUND_SERVICE_SPECIAL_USE` | Run opt-in screen-off/unlock rotation triggers. | App interactions; local only. | Not shared. | Special-use foreground service subtype is documented in the manifest. |
 | `android.permission.POST_NOTIFICATIONS` | Show required foreground-service and worker notifications. | App interactions; local only. | Not shared. | Runtime notification permission. |
 | `android.permission.ACCESS_COARSE_LOCATION` | Fetch approximate weather for optional weather wallpaper effects. | Approximate location. | Shared with Open-Meteo when weather is enabled. | Location disclosure required. |
-| `android.permission.WRITE_CONTACTS` | Write the selected ringtone URI to the contact selected through Android's contact picker. | Contacts and audio files; local only. | Not shared. | Sensitive permission requested only when applying a per-contact ringtone. |
+| `android.permission.WRITE_CONTACTS` | Write the selected ringtone URI to the contact selected through Android's contact picker, or to the contact a library backup names when the user restores it. | Contacts and audio files; local only. | Not shared. | Sensitive permission requested only when applying a per-contact ringtone or restoring contact ringtones from a library backup. |
 | `android.permission.ACCESS_NOTIFICATION_POLICY` | Inspect Do Not Disturb priority-caller rules for per-contact ringtone guidance. | App interactions and notification policy state; local only. | Not shared. | Special access used only to explain DND behavior; Aura does not change the policy silently. |
 
 ## Data Safety Answer Notes
@@ -36,6 +36,12 @@ Android 12+ cloud, and device-transfer rules and in one local storage row.
 - Contacts are selected through Android's contact picker for per-contact
   ringtone assignment and are not uploaded by Aura. DND policy state is read
   locally only when Aura needs to explain whether that ringtone can ring.
+- Aura keeps the name and lookup key of each contact whose ringtone it set,
+  with the sound's identity, in its preferences on the device. An explicit
+  library backup writes that record to a file the user saves. Aura does not
+  upload the file. It has no `READ_CONTACTS` permission, so a restore asks
+  Android to update the one contact that matches a saved lookup key or exact
+  name and never reads the contact list.
 - Microphone recordings are local until the user uploads a community sound.
 - Community uploads, votes, follows, reports, creator profiles, and collection
   shares use Firebase when the user uses those community features.
@@ -81,7 +87,7 @@ transient cache.
 
 | Surface | Local data | User control | Backup posture |
 | --- | --- | --- | --- |
-| `preferences-datastore` | App settings, Fit Canvas defaults, generated-content disclosure, provider switches, scheduler preferences, and legacy provider-key migration inputs. | Feature switches, wallpaper preview controls, generated disclosure reset, explicit library export/import, or clear app data. | Excluded from cloud backup and device transfer. Non-secret Fit Canvas defaults can be copied through an explicit portable library backup. |
+| `preferences-datastore` | App settings, Fit Canvas defaults, generated-content disclosure, provider switches, scheduler preferences, legacy provider-key migration inputs, and the name, lookup key, and sound identity for each contact ringtone set through Aura. | Feature switches, wallpaper preview controls, generated disclosure reset, explicit library export/import, or clear app data. | Excluded from cloud backup and device transfer. Non-secret Fit Canvas defaults and the contact ringtone record can be copied through an explicit portable library backup. |
 | `provider-credential-store` | User-entered provider API keys in Android Keystore-backed encrypted SharedPreferences. Unreadable restored ciphertext is cleared and replaced by a non-secret re-entry marker. | Settings API key Clear actions, saving blank, re-entry after key loss, or clear app data. | Excluded from cloud backup and device transfer. |
 | `room-database` | Favorites, downloads, search history, wallpaper cache metadata, wallpaper history, collections, local wallpaper identity and health metadata, and rotation exclusions. | Remove rows through app surfaces, relink unavailable local media, restore rotation items, clear caches/history, export/import replacements, or clear app data. | Database and sidecars are excluded from cloud backup and device transfer. Portable library backup can copy locator-free local metadata and rotation exclusions without media bytes or raw local paths. |
 | `community-identity-and-vote-prefs` | Local fallback identity and local vote-hide state. | Settings Community identity Clear local action for fallback identity; app data clear for vote-hide state. | Excluded from cloud backup and device transfer. |

@@ -58,6 +58,8 @@ data class LibraryExportFile(
     val fitCanvasPreferences: FitCanvasPreferencesExport? = null,
     /** Named Reddit feeds. Blank when the device never changed the defaults. */
     val redditFeedPresetsJson: String = "",
+    /** Contact ringtones Aura set, named by lookup key and display name. Empty in older backups. */
+    val contactRingtones: List<ContactRingtoneExportEntry> = emptyList(),
 )
 
 @JsonClass(generateAdapter = true)
@@ -103,6 +105,8 @@ data class FitCanvasPreferencesExport(
 internal data class LibraryImportEnvelope(
     val version: Int? = null,
     val downloads: List<LegacyDownloadExportEntry> = emptyList(),
+    /** Read here too so the app can ask for contacts access before the restore starts. */
+    val contactRingtones: List<ContactRingtoneExportEntry> = emptyList(),
 )
 
 /** v1-only section. Download rows point at files on the exporting device. */
@@ -215,6 +219,7 @@ class LibraryExporter @Inject constructor(
     private val prefs: PreferencesManager,
     private val moshi: Moshi,
     private val soundShufflePoolManager: SoundShufflePoolManager,
+    private val contactRingtoneBackup: ContactRingtoneBackupManager,
 ) {
     private val adapter = moshi.adapter(LibraryExportFile::class.java)
     private val envelopeAdapter = moshi.adapter(LibraryImportEnvelope::class.java)
@@ -255,6 +260,8 @@ class LibraryExporter @Inject constructor(
             )
             val fitCanvasPreferences = prefs.fitCanvasPreferencesSnapshot()
             val redditFeedPresets = portableRedditFeedPresetsJson(prefs.redditFeedPresetsJson.first())
+            // Aura's own record of the ringtones it set. Nothing here is read from the contact list.
+            val contactRingtones = contactRingtoneBackup.exportEntries()
 
             requireWithinTransferLimit(
                 "Library favorites",
@@ -286,6 +293,11 @@ class LibraryExporter @Inject constructor(
                 wallpaperHistory.size,
                 LibraryTransferContract.MAX_WALLPAPER_HISTORY_ITEMS,
             )
+            requireWithinTransferLimit(
+                "Library contact ringtones",
+                contactRingtones.size,
+                LibraryTransferContract.MAX_CONTACT_RINGTONES,
+            )
 
             val exportFile = LibraryExportFile(
                 version = LIBRARY_EXPORT_VERSION,
@@ -301,6 +313,7 @@ class LibraryExporter @Inject constructor(
                 soundShufflePoolsJson = soundShufflePools,
                 fitCanvasPreferences = FitCanvasPreferencesExport.from(fitCanvasPreferences),
                 redditFeedPresetsJson = redditFeedPresets,
+                contactRingtones = contactRingtones,
             )
 
             val json = adapter.indent("  ").toJson(exportFile)
@@ -320,9 +333,11 @@ class LibraryExporter @Inject constructor(
                     (if (soundProfiles.isNotBlank()) 1 else 0) +
                     (if (soundShufflePools.isNotBlank()) 1 else 0) +
                     (if (redditFeedPresets.isNotBlank()) 1 else 0) +
+                    contactRingtones.size +
                     1,
                 skipped = 0,
                 failed = 0,
+                contactRingtones = contactRingtones.size,
             )
         }.onFailure { it.rethrowIfCancelled() }
     }
@@ -350,13 +365,51 @@ class LibraryExporter @Inject constructor(
             runCatching {
                 val plan = buildPlan(readPayload(inputUri))
                 applyPlan(plan)
+                val contactRingtones = restorePlannedContactRingtones(plan)
                 LibraryImportOutcome(
                     sourceVersion = plan.sourceVersion,
-                    written = plan.writeCount,
+                    written = plan.writeCount + contactRingtones.count { it.restored },
                     skipped = plan.skipped,
+                    contactRingtones = contactRingtones,
                 )
             }.onFailure { it.rethrowIfCancelled() }
         }
+
+    /**
+     * How many contact ringtones in the backup can't be put back until Aura may update contacts.
+     *
+     * Zero when the backup has none, when the permission is already held, or when the file can't be
+     * restored at all (the import reports that itself).
+     */
+    suspend fun contactRingtonesAwaitingPermission(inputUri: Uri): Int = withContext(Dispatchers.IO) {
+        if (contactRingtoneBackup.canWriteContacts()) return@withContext 0
+        try {
+            val envelope = envelopeAdapter.fromJson(readPayload(inputUri)) ?: return@withContext 0
+            val version = envelope.version ?: return@withContext 0
+            if (version !in LIBRARY_EXPORT_MIN_SUPPORTED_VERSION..LIBRARY_EXPORT_VERSION) return@withContext 0
+            envelope.contactRingtones.count { normalizeImportedContactRingtone(it) != null }
+        } catch (e: Exception) {
+            e.rethrowIfCancelled()
+            0
+        }
+    }
+
+    /**
+     * Contact ringtones go last and outside the library transaction. They change the phone's
+     * contacts and may fetch sounds again, so one that can't be put back is reported and never undoes
+     * the rest of the import.
+     */
+    private suspend fun restorePlannedContactRingtones(plan: LibraryImportPlan): List<ContactRingtoneRestoreResult> {
+        if (plan.contactRingtones.isEmpty()) return emptyList()
+        return try {
+            contactRingtoneBackup.restore(plan.contactRingtones)
+        } catch (e: Exception) {
+            e.rethrowIfCancelled()
+            plan.contactRingtones.map {
+                ContactRingtoneRestoreResult(it, ContactRingtoneRestoreStatus.WRITE_FAILED)
+            }
+        }
+    }
 
     private fun readPayload(inputUri: Uri): String =
         context.contentResolver.openInputStream(inputUri)?.use { input ->
@@ -439,6 +492,11 @@ class LibraryExporter @Inject constructor(
             exportFile.soundShufflePoolsJson.length,
             LibraryTransferContract.MAX_SOUND_SHUFFLE_DOCUMENT_CHARS,
         )
+        requireWithinTransferLimit(
+            "Library contact ringtones",
+            exportFile.contactRingtones.size,
+            LibraryTransferContract.MAX_CONTACT_RINGTONES,
+        )
 
         val skipped = mutableListOf<LibraryImportSkip>()
 
@@ -461,6 +519,7 @@ class LibraryExporter @Inject constructor(
         val rotationExclusions = planRotationExclusions(exportFile, skipped)
         val localWallpaperPlan = planLocalWallpapers(exportFile, skipped)
         val wallpaperHistory = planWallpaperHistory(exportFile, skipped)
+        val contactRingtones = planContactRingtones(exportFile, skipped)
 
         return LibraryImportPlan(
             sourceVersion = version,
@@ -479,8 +538,34 @@ class LibraryExporter @Inject constructor(
             }.orEmpty(),
             fitCanvasPreferences = exportFile.fitCanvasPreferences?.toPreferences(),
             redditFeedPresetsJson = portableRedditFeedPresetsJson(exportFile.redditFeedPresetsJson),
+            contactRingtones = contactRingtones,
             skipped = skipped,
         )
+    }
+
+    /**
+     * Checks each contact ringtone row and keeps one per contact. Whether the contact and the sound
+     * exist on this phone is only known once the restore tries them, so the import reports that part.
+     */
+    private fun planContactRingtones(
+        exportFile: LibraryExportFile,
+        skipped: MutableList<LibraryImportSkip>,
+    ): List<ContactRingtoneExportEntry> {
+        val planned = mutableListOf<ContactRingtoneExportEntry>()
+        // Newest first, so when a contact shows up twice the later choice is the one kept.
+        exportFile.contactRingtones.sortedByDescending { it.assignedAt }.forEach { raw ->
+            val entry = normalizeImportedContactRingtone(raw)
+            if (entry == null) {
+                skipped += LibraryImportSkip("contactRingtone", raw.label(), LibraryImportSkipReason.INVALID)
+                return@forEach
+            }
+            if (planned.any { it.sameContactAs(entry) }) {
+                skipped += LibraryImportSkip("contactRingtone", entry.label(), LibraryImportSkipReason.DUPLICATE)
+                return@forEach
+            }
+            planned += entry
+        }
+        return planned.sortedBy { it.assignedAt }
     }
 
     /** Checks presets strictly and writes them back out clean, or blank when there are none to carry. */
@@ -856,6 +941,9 @@ private fun FavoriteExportEntry.label(): String =
 
 private fun CollectionItemExportEntry.label(): String =
     normalizeImportedText(wallpaperId).ifBlank { "(unnamed)" }
+
+private fun ContactRingtoneExportEntry.label(): String =
+    normalizeImportedText(contactDisplayName).ifBlank { "(unnamed)" }
 
 private data class LocalExportIdentity(val source: String, val id: String)
 
