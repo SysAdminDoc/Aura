@@ -217,7 +217,7 @@
         "permission": "android.permission.FOREGROUND_SERVICE_SPECIAL_USE",
         "manifestSubtype": "wallpaper_rotation_triggers",
         "functionalityDescription": "Opt-in wallpaper rotation triggers listen for device unlock and screen-off broadcasts while the foreground service is enabled by Settings toggles.",
-        "deferredImpact": "Wallpaper rotation may be delayed until network and battery constraints allow AutoWallpaperWorker to run; manual wallpaper apply remains available.",
+        "deferredImpact": "A rotation that needs a new picture waits for a connection, and AutoWallpaperWorker waits while the battery is low. A wallpaper already saved on the device is still applied with no connection, and manual wallpaper apply remains available.",
         "interruptedImpact": "Trigger listening stops until Aura restarts the service from Settings or app cold start; existing wallpapers remain applied and no user data is lost.",
         "demoVideoStatus": "ownerActionRequired",
         "evidenceRefs": [
