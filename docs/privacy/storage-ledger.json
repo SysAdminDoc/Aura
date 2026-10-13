@@ -181,7 +181,7 @@
   ],
   "tempDirectories": [
     {"path": "cacheDir/trimmed", "purpose": "Media3 audio export plus short-lived WAV files for final FFmpeg codec fallback", "sourceFile": "AudioTrimmer.kt"},
-    {"path": "cacheDir/downloads", "purpose": "Download staging (64 MB cap)", "sourceFile": "DownloadManager.kt"},
+    {"path": "cacheDir/downloads", "purpose": "Download staging (64 MB cap per file). An unfinished download keeps its bytes here with a small record of its URL and validators so a retry can resume. At most 6 are kept, for up to 3 days.", "sourceFile": "DownloadManager.kt"},
     {"path": "cacheDir/audio_edit", "purpose": "Sound editor temp (96 MB cap)", "sourceFile": "SoundEditorViewModel.kt"},
     {"path": "cacheDir/audio_apply", "purpose": "Ringtone apply staging", "sourceFile": "SoundApplier.kt"},
     {"path": "cacheDir/share_out", "purpose": "FileProvider share outbox", "sourceFile": "ShareOutbox.kt"},

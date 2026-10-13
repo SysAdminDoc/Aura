@@ -30,6 +30,7 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -37,9 +38,10 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import okhttp3.OkHttpClient
-import okhttp3.Request
 import java.io.File
 import java.io.IOException
 import java.net.ConnectException
@@ -76,16 +78,22 @@ class DownloadManager @Inject constructor(
     private val downloadDao: DownloadDao,
     private val downloadTrash: DownloadTrash,
     private val mediaCopyStore: MediaCopyStore,
+    private val resumeLedger: DownloadResumeLedger,
 ) {
     private val _activeDownloads = MutableStateFlow<Map<String, DownloadProgress>>(emptyMap())
     val activeDownloads: StateFlow<Map<String, DownloadProgress>> = _activeDownloads.asStateFlow()
 
     /**
      * How to run each download again, by history ID, until it succeeds or its card is dismissed.
-     * In memory only, like the cards themselves, which don't outlive the process.
+     * In memory only. A download whose bytes are still staged gets its request and its card back
+     * from [resumeLedger] when a new process starts.
      */
     private val retryRequests = ConcurrentHashMap<String, suspend () -> Result<Uri>>()
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
+    private val downloadTransport = ResumableDownloadTransport(okHttpClient, resumeLedger)
+
+    /** One attempt per download at a time. Two would write the same staging file. */
+    private val transferLocks = ConcurrentHashMap<String, Mutex>()
 
     /** How long a finished download stays under Active before history alone shows it. */
     internal var completedProgressVisibleMs = COMPLETED_PROGRESS_VISIBLE_MS
@@ -100,7 +108,7 @@ class DownloadManager @Inject constructor(
         source: String = "WALLPAPER",
         provenanceUrl: String = url,
     ): Result<Uri> = withContext(Dispatchers.IO) {
-        val contentType = "WALLPAPER"
+        val contentType = DOWNLOAD_KIND_WALLPAPER
         val historyId = downloadHistoryId(contentType, id)
         retryRequests[historyId] = { downloadWallpaper(id, url, fileName, source, provenanceUrl) }
         downloadFile(
@@ -115,6 +123,13 @@ class DownloadManager @Inject constructor(
             provenanceUrl = provenanceUrl,
             maxBytes = MAX_IMAGE_DOWNLOAD_BYTES,
             expectedMediaFamily = MediaFamily.IMAGE,
+            retry = DownloadRetryRequest(
+                kind = contentType,
+                contentId = id,
+                fileName = fileName,
+                source = source,
+                provenanceUrl = provenanceUrl,
+            ),
         )
     }
 
@@ -127,7 +142,7 @@ class DownloadManager @Inject constructor(
         source: String = "SOUND",
         provenanceUrl: String = url,
     ): Result<Uri> = withContext(Dispatchers.IO) {
-        val contentType = "SOUND"
+        val contentType = DOWNLOAD_KIND_SOUND
         val relativePath = when (type) {
             ContentType.RINGTONE -> Environment.DIRECTORY_RINGTONES
             ContentType.NOTIFICATION -> Environment.DIRECTORY_NOTIFICATIONS
@@ -149,6 +164,14 @@ class DownloadManager @Inject constructor(
             provenanceUrl = provenanceUrl,
             maxBytes = MAX_AUDIO_DOWNLOAD_BYTES,
             expectedMediaFamily = MediaFamily.AUDIO,
+            retry = DownloadRetryRequest(
+                kind = contentType,
+                contentId = id,
+                fileName = fileName,
+                source = source,
+                provenanceUrl = provenanceUrl,
+                soundType = type.name,
+            ),
         )
     }
 
@@ -164,6 +187,7 @@ class DownloadManager @Inject constructor(
         provenanceUrl: String,
         maxBytes: Long,
         expectedMediaFamily: MediaFamily,
+        retry: DownloadRetryRequest,
     ): Result<Uri> = try {
         updateProgress(historyId, DownloadProgress(historyId, fileName, 0f, 0, 0))
 
@@ -204,87 +228,22 @@ class DownloadManager @Inject constructor(
                 tempFile.delete()
             }
         } else {
-            // Start HTTP download
-            val request = Request.Builder().url(url).build()
-            val response = okHttpClient.newCall(request).execute()
-            Result.success(response.use { resp ->
-            if (!resp.isSuccessful) {
-                throw IllegalStateException("Download failed: HTTP ${resp.code}")
-            }
-            val body = resp.body
-                ?: throw IllegalStateException("Empty response body")
-            val totalBytes = body.contentLength().let { if (it <= 0) 0L else it }
-            // Reject oversized downloads up front when the server advertises a size, so we
-            // don't allocate a MediaStore entry we're immediately going to delete.
-            if (totalBytes in 1..Long.MAX_VALUE && totalBytes > maxBytes) {
-                throw IllegalStateException(
-                    "Download exceeds size limit (${totalBytes} > ${maxBytes})"
-                )
-            }
-
-            val tempDir = File(context.cacheDir, "downloads").apply { mkdirs() }
-            val tempFile = File.createTempFile("aura_download_", ".tmp", tempDir)
-            var downloadedBytes = 0L
-            try {
-                tempFile.outputStream().use { output ->
-                    body.byteStream().use { input ->
-                        val buffer = ByteArray(8192)
-                        var bytesRead: Int
-                        var lastEmitNanos = System.nanoTime()
-                        while (input.read(buffer).also { bytesRead = it } != -1) {
-                            if (downloadedBytes + bytesRead > maxBytes) {
-                                throw IllegalStateException(
-                                    "Download exceeds size limit ($maxBytes bytes)"
-                                )
-                            }
-                            output.write(buffer, 0, bytesRead)
-                            downloadedBytes += bytesRead
-                            val now = System.nanoTime()
-                            if (now - lastEmitNanos >= 250_000_000L) {
-                                val progress = if (totalBytes > 0) downloadedBytes.toFloat() / totalBytes else 0f
-                                updateProgress(
-                                    historyId,
-                                    DownloadProgress(historyId, fileName, progress, totalBytes, downloadedBytes),
-                                )
-                                lastEmitNanos = now
-                            }
-                        }
-                    }
-                }
-                updateProgress(
-                    historyId,
-                    DownloadProgress(historyId, fileName, 1f, totalBytes, downloadedBytes),
-                )
-                if (downloadedBytes <= 0L) {
-                    throw IllegalStateException("Empty response body")
-                }
-                val sniffed = requireSniffedMediaFile(
-                    tempFile,
-                    expectedMediaFamily,
-                    if (expectedMediaFamily == MediaFamily.IMAGE) "Wallpaper" else "Sound",
-                )
-                val storedFileName = normalizeMediaFileName(fileName, sniffed)
-
-                // Create MediaStore entry only after content has been bounded and verified.
-                writeValidatedDownloadToMediaStore(
-                    tempFile = tempFile,
+            Result.success(
+                downloadRemoteFile(
                     contentId = contentId,
                     historyId = historyId,
-                    fileName = storedFileName,
-                    mimeType = sniffed.mimeType,
+                    url = url,
+                    fileName = fileName,
                     relativePath = relativePath,
                     collection = collection,
                     contentType = contentType,
                     contentSource = contentSource,
                     provenanceUrl = provenanceUrl,
-                    totalBytes = totalBytes,
-                    downloadedBytes = downloadedBytes,
                     maxBytes = maxBytes,
-                )
-            } finally {
-                tempFile.delete()
-            }
-            })
+                    expectedMediaFamily = expectedMediaFamily,
+                    retry = retry,
+                ),
+            )
         }
     } catch (e: Exception) {
         if (e is CancellationException) throw e
@@ -295,6 +254,151 @@ class DownloadManager @Inject constructor(
         updateProgress(historyId, DownloadProgress(historyId, fileName, 0f, 0, 0, error = reason))
         // Callers show the message in a snackbar, so it carries the same safe reason as the card.
         Result.failure(DownloadFailedException(reason, e))
+    }
+
+    /**
+     * Fetches [url] into its staging file, carrying on from an earlier attempt when the server
+     * allows it, then checks and publishes the whole file. The staged bytes are only let go once
+     * they're published or turn out not to be media, so a save that failed is retried without
+     * downloading anything again.
+     */
+    private suspend fun downloadRemoteFile(
+        contentId: String,
+        historyId: String,
+        url: String,
+        fileName: String,
+        relativePath: String,
+        collection: Uri,
+        contentType: String,
+        contentSource: String,
+        provenanceUrl: String,
+        maxBytes: Long,
+        expectedMediaFamily: MediaFamily,
+        retry: DownloadRetryRequest,
+    ): Uri = transferLock(historyId).withLock {
+        try {
+            var lastEmitNanos = System.nanoTime()
+            val tempFile = downloadTransport.fetch(historyId, url, maxBytes, retry) { receivedBytes, totalBytes ->
+                val now = System.nanoTime()
+                if (now - lastEmitNanos >= 250_000_000L) {
+                    val progress = if (totalBytes > 0) receivedBytes.toFloat() / totalBytes else 0f
+                    updateProgress(
+                        historyId,
+                        DownloadProgress(historyId, fileName, progress, totalBytes, receivedBytes),
+                    )
+                    lastEmitNanos = now
+                }
+            }
+            val downloadedBytes = tempFile.length()
+            updateProgress(
+                historyId,
+                DownloadProgress(historyId, fileName, 1f, downloadedBytes, downloadedBytes),
+            )
+            // The staged file holds every byte, resumed or not, so that is what gets sniffed.
+            val sniffed = try {
+                requireSniffedMediaFile(
+                    tempFile,
+                    expectedMediaFamily,
+                    if (expectedMediaFamily == MediaFamily.IMAGE) "Wallpaper" else "Sound",
+                )
+            } catch (e: Exception) {
+                // Bytes that aren't media never will be, so they aren't kept to build on.
+                resumeLedger.discard(historyId)
+                throw e
+            }
+            val storedFileName = normalizeMediaFileName(fileName, sniffed)
+
+            // Create MediaStore entry only after content has been bounded and verified.
+            val uri = writeValidatedDownloadToMediaStore(
+                tempFile = tempFile,
+                contentId = contentId,
+                historyId = historyId,
+                fileName = storedFileName,
+                mimeType = sniffed.mimeType,
+                relativePath = relativePath,
+                collection = collection,
+                contentType = contentType,
+                contentSource = contentSource,
+                provenanceUrl = provenanceUrl,
+                totalBytes = downloadedBytes,
+                downloadedBytes = downloadedBytes,
+                maxBytes = maxBytes,
+            )
+            resumeLedger.discard(historyId)
+            uri
+        } catch (e: CancellationException) {
+            // The attempt is over with its bytes still staged. The card has to say so, or it
+            // would go on looking like a download that's running.
+            updateProgress(
+                historyId,
+                DownloadProgress(
+                    historyId,
+                    fileName,
+                    0f,
+                    0,
+                    0,
+                    error = context.getString(R.string.download_failed_interrupted),
+                ),
+            )
+            throw e
+        }
+    }
+
+    private fun transferLock(id: String): Mutex = transferLocks.getOrPut(id) { Mutex() }
+
+    /**
+     * Puts downloads an earlier process left unfinished back under Active as failures with a
+     * Retry. Their bytes are still staged, so the retry carries on from them where it can.
+     */
+    private suspend fun restoreUnfinishedDownloads(): Unit = withContext(Dispatchers.IO) {
+        downloadTransport.sweep()
+        val reason = context.getString(R.string.download_failed_interrupted)
+        resumeLedger.all().forEach { record ->
+            val retry = record.retry ?: return@forEach
+            val request = retryRequestFor(record.url, retry) ?: return@forEach
+            val lock = transferLock(record.id)
+            // A download that's already running again owns its card.
+            if (!lock.tryLock()) return@forEach
+            try {
+                if (resumeLedger.find(record.id) == null) return@forEach
+                retryRequests.putIfAbsent(record.id, request)
+                val card = DownloadProgress(
+                    id = record.id,
+                    fileName = sanitize(retry.fileName),
+                    progress = if (record.expectedBytes > 0) {
+                        record.bytesReceived.toFloat() / record.expectedBytes
+                    } else {
+                        0f
+                    },
+                    totalBytes = record.expectedBytes,
+                    downloadedBytes = record.bytesReceived,
+                    error = reason,
+                )
+                _activeDownloads.update { current ->
+                    if (record.id in current) current else current + (record.id to card)
+                }
+            } finally {
+                lock.unlock()
+            }
+        }
+    }
+
+    /** Rebuilds the call that started a download from what its record kept. */
+    private fun retryRequestFor(url: String, retry: DownloadRetryRequest): (suspend () -> Result<Uri>)? {
+        if (retry.kind == DOWNLOAD_KIND_WALLPAPER) {
+            val request: suspend () -> Result<Uri> = {
+                downloadWallpaper(retry.contentId, url, retry.fileName, retry.source, retry.provenanceUrl)
+            }
+            return request
+        }
+        val soundType = ContentType.entries.firstOrNull { it.name == retry.soundType }
+        if (retry.kind == DOWNLOAD_KIND_SOUND && soundType != null) {
+            val request: suspend () -> Result<Uri> = {
+                downloadSound(retry.contentId, url, retry.fileName, soundType, retry.source, retry.provenanceUrl)
+            }
+            return request
+        }
+        return null
     }
 
     /**
@@ -468,6 +572,17 @@ class DownloadManager @Inject constructor(
         retryRequests.remove(id)
         synchronized(notificationLock) { notificationSnapshots.remove(id) }
         NotificationManagerCompat.from(context).cancel(downloadNotificationId(id))
+        // A dismissed download gives up its staged bytes too, unless an attempt is using them.
+        scope.launch(Dispatchers.IO) {
+            val lock = transferLock(id)
+            if (lock.tryLock()) {
+                try {
+                    resumeLedger.discard(id)
+                } finally {
+                    lock.unlock()
+                }
+            }
+        }
     }
 
     /**
@@ -797,6 +912,19 @@ class DownloadManager @Inject constructor(
 
     private fun sanitize(name: String) = name.replace(SANITIZE_REGEX, "_")
 
+    /**
+     * The start-up pass that brings unfinished downloads back. Declared last, so everything
+     * above exists before it can run. Tests wait on it.
+     */
+    internal val startupRestore: Job = scope.launch {
+        try {
+            restoreUnfinishedDownloads()
+        } catch (e: Exception) {
+            if (e is CancellationException) throw e
+            // Staged downloads are a convenience. Failing to read them only costs a resume.
+            Log.w("DownloadManager", "Could not restore unfinished downloads: ${e.javaClass.simpleName}")
+        }
+    }
 }
 
 internal fun downloadHistoryId(type: String, id: String): String =
@@ -840,6 +968,9 @@ private val HTTP_STATUS_REGEX = Regex("""\bHTTP (\d{3})\b""")
 private val STORAGE_FAILURE_MARKERS = listOf("MediaStore", "output stream", "saved original")
 
 private const val COMPLETED_PROGRESS_VISIBLE_MS = 4_000L
+
+private const val DOWNLOAD_KIND_WALLPAPER = "WALLPAPER"
+private const val DOWNLOAD_KIND_SOUND = "SOUND"
 
 /** Hard cap on wallpaper downloads — ~64 MB covers any realistic 8K JPG/PNG/WEBP. */
 private const val MAX_IMAGE_DOWNLOAD_BYTES = 64L * 1024 * 1024

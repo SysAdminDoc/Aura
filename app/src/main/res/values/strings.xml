@@ -795,6 +795,7 @@
     <string name="download_failed_not_media">The file isn\'t the kind of media Aura expected.</string>
     <string name="download_failed_storage">Couldn\'t save the file on this phone.</string>
     <string name="download_failed_unknown">Something went wrong. Try again.</string>
+    <string name="download_failed_interrupted">This download was interrupted. Retry it to finish.</string>
     <string name="downloads_active_summary">%1$s. %2$s</string>
     <string name="downloads_delete_file">Delete %1$s</string>
     <string name="downloads_type_wallpaper">Wallpaper</string>

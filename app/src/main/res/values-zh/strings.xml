@@ -742,6 +742,7 @@
     <string name="download_failed_not_media">文件不是 Aura 预期的媒体类型。</string>
     <string name="download_failed_storage">无法将文件保存到此手机。</string>
     <string name="download_failed_unknown">出了点问题。请重试。</string>
+    <string name="download_failed_interrupted">下载中断了。重试即可完成。</string>
     <string name="downloads_active_summary">%1$s. %2$s</string>
     <string name="downloads_delete_file">删除 %1$s</string>
     <string name="downloads_type_wallpaper">壁纸</string>

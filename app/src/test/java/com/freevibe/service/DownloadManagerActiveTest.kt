@@ -10,6 +10,7 @@ import android.os.ParcelFileDescriptor
 import androidx.test.core.app.ApplicationProvider
 import com.freevibe.R
 import com.freevibe.data.local.DownloadDao
+import com.squareup.moshi.Moshi
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
@@ -56,6 +57,7 @@ class DownloadManagerActiveTest {
             downloadDao = downloadDao,
             downloadTrash = mockk(relaxed = true),
             mediaCopyStore = mockk(relaxed = true),
+            resumeLedger = DownloadResumeLedger(context, Moshi.Builder().build()),
         )
         val source = File(context.filesDir, "source_wallpaper.png")
         source.writeBytes(Base64.getDecoder().decode(ONE_PIXEL_PNG))
