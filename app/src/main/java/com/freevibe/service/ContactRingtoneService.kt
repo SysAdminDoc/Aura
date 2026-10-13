@@ -5,6 +5,7 @@ import android.content.Context
 import android.app.NotificationManager
 import android.net.Uri
 import android.provider.ContactsContract
+import android.util.Log
 import com.freevibe.util.rethrowIfCancelled
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
@@ -62,6 +63,17 @@ internal fun classifyContactDndGuidance(
         else -> ContactDndGuidance.NONE
     }
 }
+
+/**
+ * The write reported success but the contact still points somewhere else. The usual causes are a
+ * contact stored on the SIM card or a copy in another account that the update didn't reach.
+ */
+class ContactRingtoneNotKeptException(val storedUri: String?) :
+    IllegalStateException("The contact didn't keep the new ringtone")
+
+/** Null when the stored value matches; otherwise the exception that explains the mismatch. */
+internal fun contactRingtoneReadBackFailure(expected: Uri, stored: String?): ContactRingtoneNotKeptException? =
+    if (stored == expected.toString()) null else ContactRingtoneNotKeptException(stored)
 
 internal fun contactEditorUri(contact: ContactInfo): Uri =
     if (contact.lookupKey.isNotBlank()) {
@@ -137,8 +149,14 @@ class ContactRingtoneService @Inject constructor(
         }
     }
 
-    /** Set a custom ringtone for a specific contact */
-    suspend fun setContactRingtone(contactId: Long, ringtoneUri: Uri): Result<Unit> =
+    /**
+     * Set a custom ringtone for a specific contact, then read it back through [readBackUri]. An
+     * update can report one changed row while the contact keeps its old ringtone.
+     *
+     * Aura holds WRITE_CONTACTS but not READ_CONTACTS, so the read-back has to go through the URI
+     * the system contact picker granted. Without one, the write is reported as it always was.
+     */
+    suspend fun setContactRingtone(contactId: Long, ringtoneUri: Uri, readBackUri: Uri? = null): Result<Unit> =
         withContext(Dispatchers.IO) {
             runCatching {
                 val resolver = context.contentResolver
@@ -151,6 +169,22 @@ class ContactRingtoneService @Inject constructor(
 
                 val updated = resolver.update(contactUri, values, null, null)
                 if (updated == 0) throw IllegalStateException("Failed to update contact ringtone")
+                if (readBackUri != null) {
+                    val stored = try {
+                        resolver.query(
+                            readBackUri,
+                            arrayOf(ContactsContract.Contacts.CUSTOM_RINGTONE),
+                            null,
+                            null,
+                            null,
+                        )?.use { cursor -> if (cursor.moveToFirst()) cursor.getString(0) else null }
+                    } catch (e: SecurityException) {
+                        // The picker's grant can lapse; an unverified write is still the write.
+                        Log.w(TAG, "Couldn't read the contact back: ${e.javaClass.simpleName}")
+                        ringtoneUri.toString()
+                    }
+                    contactRingtoneReadBackFailure(ringtoneUri, stored)?.let { throw it }
+                }
             }.onFailure { it.rethrowIfCancelled() }
         }
 
@@ -169,4 +203,8 @@ class ContactRingtoneService @Inject constructor(
                 Unit
             }.onFailure { it.rethrowIfCancelled() }
         }
+
+    private companion object {
+        const val TAG = "ContactRingtone"
+    }
 }

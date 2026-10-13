@@ -2130,6 +2130,7 @@
     <string name="rotation_all_excluded_short">Every item here is excluded. Restore one in Settings.</string>
     <string name="widget_open_failed">Couldn\'t open Aura. Tap again, or open it from your apps.</string>
     <string name="contact_picker_app_settings_unavailable">Aura\'s app settings couldn\'t be opened. Find Aura under Settings &gt; Apps instead.</string>
+    <string name="contact_picker_ringtone_not_kept">Android took the change, but the contact still has its old ringtone. This usually means the contact is stored on the SIM card or has a copy in another account. Move it to your phone or Google account, or link the copies, then try again.</string>
     <string name="rotation_no_wallpapers_available">No wallpapers available</string>
     <string name="settings_rotation_exclusions_title">Rotation exclusions</string>
     <string name="settings_rotation_exclusions_body">These items stay in your library and can still be applied manually.</string>

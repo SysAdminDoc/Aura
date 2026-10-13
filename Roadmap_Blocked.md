@@ -378,6 +378,11 @@ These items require adb-connected device or Android 17 emulator testing:
     requested opt-in wallpaper use, or when the release owner records an explicit legal decision
     accepting the current terms and endpoint risk.
 
+- **P2 — Warn before a contact ringtone write that a SIM copy, a second account or a shared number will keep it from ringing**
+  - Current state: after writing, Aura reads the contact back through the picker's URI grant and reports a ringtone the contact didn't keep, with the likely causes and fixes. The warning before the write isn't built.
+  - Blocker: telling a SIM copy, a second account or another contact with the same number apart takes `RawContacts`, `Phone` and `PhoneLookup` queries, and every one of them needs `READ_CONTACTS`. Aura asks only for `WRITE_CONTACTS` on purpose, and `ContactPermissionContractTest` asserts `READ_CONTACTS` stays out of the manifest.
+  - Resume when the owner decides whether a runtime `READ_CONTACTS` request, asked only on the contact screen, is worth it. If yes: treat a `sim` segment in the account type as SIM (`vnd.sec.contact.sim`, `com.android.contacts.sim`, MIUI's misspelled `com.anddroid.contacts.sim`), leave messaging overlay accounts (WhatsApp, Signal, Telegram) out of the account count or nearly every contact gets flagged, flag a number whose `PhoneLookup` resolves to a different contact, and update the privacy docs and the contract test in the same change.
+
 ---
 
 ## Blocker: Dependent on Other Blocked Items

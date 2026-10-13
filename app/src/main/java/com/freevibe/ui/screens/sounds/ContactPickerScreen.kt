@@ -44,6 +44,7 @@ import com.freevibe.ui.components.AuraStateCard
 import com.freevibe.service.BundledContentProvider
 import com.freevibe.service.ContactDndGuidance
 import com.freevibe.service.ContactInfo
+import com.freevibe.service.ContactRingtoneNotKeptException
 import com.freevibe.service.ContactRingtoneService
 import com.freevibe.service.contactEditorUri
 import com.freevibe.service.SoundApplier
@@ -62,6 +63,8 @@ import com.freevibe.util.tryStartActivity
 
 data class ContactPickerState(
     val selectedContact: ContactInfo? = null,
+    /** The picker's URI, the only way to read the contact back without READ_CONTACTS. */
+    val selectedContactUri: Uri? = null,
     val dndGuidance: ContactDndGuidance? = null,
     val pendingVipOnly: Boolean = false,
     val isLoading: Boolean = false,
@@ -102,7 +105,7 @@ class ContactPickerViewModel @Inject constructor(
     }
 
     fun loadSelectedContact(contactUri: Uri) {
-        _state.update { it.copy(isLoading = true, error = null, selectedContact = null) }
+        _state.update { it.copy(isLoading = true, error = null, selectedContact = null, selectedContactUri = contactUri) }
         viewModelScope.launch {
             try {
                 val contact = contactService.getContact(contactUri)
@@ -198,7 +201,8 @@ class ContactPickerViewModel @Inject constructor(
             }
             soundApplier.downloadOnly(dlUrl, sound.name, ContentType.RINGTONE)
                 .onSuccess { uri ->
-                    contactService.setContactRingtone(contactId, uri)
+                    val readBackUri = _state.value.selectedContactUri.takeIf { contact?.id == contactId }
+                    contactService.setContactRingtone(contactId, uri, readBackUri)
                         .onSuccess {
                             if (!vipOnly) {
                                 _state.update {
@@ -234,7 +238,12 @@ class ContactPickerViewModel @Inject constructor(
                                 }
                         }
                         .onFailure { e ->
-                            _state.update { it.copy(isApplying = false, applyingContactId = null, error = e.message) }
+                            val message = if (e is ContactRingtoneNotKeptException) {
+                                context.getString(R.string.contact_picker_ringtone_not_kept)
+                            } else {
+                                e.message
+                            }
+                            _state.update { it.copy(isApplying = false, applyingContactId = null, error = message) }
                         }
                 }
                 .onFailure { e ->
