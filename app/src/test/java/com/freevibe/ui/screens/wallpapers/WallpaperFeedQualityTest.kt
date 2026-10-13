@@ -3,6 +3,8 @@ package com.freevibe.ui.screens.wallpapers
 import com.freevibe.data.model.ContentSource
 import com.freevibe.data.model.SearchResult
 import com.freevibe.data.model.Wallpaper
+import com.freevibe.data.model.stableKey
+import com.freevibe.service.WallpaperFingerprint
 import com.freevibe.service.WallpaperStyleLearningProfile
 import com.freevibe.service.WallpaperStyleLearningSignal
 import org.junit.Assert.assertEquals
@@ -10,6 +12,80 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class WallpaperFeedQualityTest {
+
+    @Test
+    fun `Bing images named in the query string stay separate`() {
+        val ranked = rankWallpapers(
+            wallpapers = listOf(
+                wallpaper("bing_1", ContentSource.BING, "https://www.bing.com/th?id=OHR.Lighthouse_EN-US1_UHD.jpg", 3840, 2160),
+                wallpaper("bing_2", ContentSource.BING, "https://www.bing.com/th?id=OHR.Glacier_EN-US2_UHD.jpg", 3840, 2160),
+            ),
+            filter = WallpaperDiscoverFilter.FOR_YOU,
+        )
+
+        assertEquals(setOf("bing_1", "bing_2"), ranked.map { it.id }.toSet())
+    }
+
+    @Test
+    fun `paths that differ only in case stay separate`() {
+        val ranked = rankWallpapers(
+            wallpapers = listOf(
+                wallpaper("cw_1", ContentSource.COMMUNITY, "https://firebasestorage.googleapis.com/v0/b/aura/o/w%2F-NxAbC.jpg?alt=media&token=1", 1440, 3200),
+                wallpaper("cw_2", ContentSource.COMMUNITY, "https://firebasestorage.googleapis.com/v0/b/aura/o/w%2F-Nxabc.jpg?alt=media&token=2", 1440, 3200),
+            ),
+            filter = WallpaperDiscoverFilter.FOR_YOU,
+        )
+
+        assertEquals(2, ranked.size)
+    }
+
+    @Test
+    fun `resized and signed variants of one file count once`() {
+        assertEquals(
+            wallpaperUrlIdentity("https://images.pexels.com/photos/7/a.jpeg?auto=compress&w=640"),
+            wallpaperUrlIdentity("HTTPS://Images.Pexels.com/photos/7/a.jpeg?w=1280#top"),
+        )
+        assertEquals(
+            "https://preview.redd.it/x1.jpeg",
+            wallpaperUrlIdentity("https://preview.redd.it/x1.jpeg?width=1080&format=pjpg&auto=webp&s=abc"),
+        )
+        assertEquals(
+            "https://lemmy.world/pictrs/image/a1.jpeg",
+            wallpaperUrlIdentity("https://lemmy.world/pictrs/image/a1.jpeg?format=webp&thumbnail=256"),
+        )
+        assertEquals("https://example.org/Wall.JPG?id=9", wallpaperUrlIdentity("https://Example.org/Wall.JPG?id=9"))
+        assertEquals("not a url |", wallpaperUrlIdentity(" not a url | "))
+    }
+
+    @Test
+    fun `one image posted under two URLs shows once, on every page`() {
+        val first = wallpaper("rd_1wpu3qi", ContentSource.REDDIT, "https://i.redd.it/aaa.jpeg", 0, 0)
+        val other = wallpaper("rd_other", ContentSource.REDDIT, "https://i.redd.it/bbb.jpeg", 0, 0)
+        val repost = wallpaper("rd_1wpu03j", ContentSource.REDDIT, "https://i.redd.it/ccc.jpeg", 0, 0)
+        val same = WallpaperFingerprint(0x0F0F_3C3C_5A5A_6969L, 0x1234_5678_9ABC_DEF0L, 31, 64)
+        val fingerprints = mapOf(
+            first.stableKey() to same,
+            other.stableKey() to same.copy(horizontal = 0x7777_1111_2222_4444L),
+            repost.stableKey() to same,
+        )
+
+        assertEquals(listOf(first, other), coalesceContentDuplicates(listOf(first, other, repost), fingerprints))
+        val nextPage = listOf(first, other) + listOf(repost, wallpaper("rd_new", ContentSource.REDDIT, "https://i.redd.it/ddd.jpeg", 0, 0))
+        assertEquals(listOf("rd_1wpu3qi", "rd_other", "rd_new"), coalesceContentDuplicates(nextPage, fingerprints).map { it.id })
+    }
+
+    @Test
+    fun `flat or unsampled images are never merged`() {
+        val a = wallpaper("a", ContentSource.REDDIT, "https://i.redd.it/a.jpeg", 0, 0)
+        val b = wallpaper("b", ContentSource.REDDIT, "https://i.redd.it/b.jpeg", 0, 0)
+        val c = wallpaper("c", ContentSource.REDDIT, "https://i.redd.it/c.jpeg", 0, 0)
+        val black = WallpaperFingerprint(0L, 0L, 31, 64)
+
+        assertEquals(
+            listOf(a, b, c),
+            coalesceContentDuplicates(listOf(a, b, c), mapOf(a.stableKey() to black, b.stableKey() to black)),
+        )
+    }
 
     @Test
     fun `rankWallpapers keeps stronger duplicate instead of first duplicate`() {

@@ -442,18 +442,15 @@ Evidence for every item below is in RESEARCH.md (2026-09-04 pass).
   Confidence: Verified
   Effort: M
 
-- [ ] P2 — Replace URL-only wallpaper dedupe with safe media identity
-  Category: correctness
-  Where: `app/src/main/java/com/freevibe/ui/screens/wallpapers/WallpaperFeedQuality.kt:67-85,253-264`; wallpaper feed cache and provider merge tests
-  Problem: Feed dedupe treats a normalized URL as content identity. Exact duplicate files at different URLs remain side by side, while lowercasing the entire URL can collapse distinct resources whose case-sensitive paths differ.
-  Evidence: The current-run Popular feed rendered its first two cards as the same artwork under Reddit IDs `rd_1wpu3qi` and `rd_1wpu03j`. Their distinct `i.redd.it` URLs downloaded to two 519,117-byte, 978 by 2,030 JPEGs with the same SHA-256, `0D1C55A70581FACE052D4CA39B102900B5A29BBF89A492B8B45187FB65F30D1F`. `wallpaperKey()` strips query and fragment, lowercases the full URL, and has no content fingerprint.
-  Fix: Canonicalize only URL components that are case-insensitive, preserve path/query identity where providers use it, and attach a bounded content digest or decoded-thumbnail fingerprint to fetched media. Coalesce exact duplicates while retaining attribution aliases and the highest-quality metadata.
-  Acceptance: Distinct URLs with identical bytes render once; differently cased, case-sensitive paths remain distinct; signed/resized variants of one asset resolve according to a documented provider rule; pagination and cache restoration do not reintroduce a duplicate; unit fixtures cover all four cases.
-  Confidence: Verified
-  Effort: M
-
-
 ### P3
+
+- [ ] P3 — Keep a hidden duplicate's attribution on the wallpaper card that stays
+  Category: ux
+  Where: `app/src/main/java/com/freevibe/ui/screens/wallpapers/WallpaperFeedQuality.kt` (`coalesceContentDuplicates`); `Wallpaper` model; wallpaper detail credits
+  Problem: when two posts carry the same image, the feed now shows it once and drops the second post. The dropped post's author and source page aren't shown anywhere.
+  Fix: carry the hidden posts as attribution aliases on the card that stays, and list them in the detail screen's credits.
+  Acceptance: a coalesced card's detail screen names every post that carried the image, each linking to its own source page.
+  Effort: S
 
 
 ## Drain Leftovers — 2026-09-30

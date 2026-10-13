@@ -33,6 +33,7 @@ import com.freevibe.service.SeasonalContentManager
 import com.freevibe.service.SelectedContentHolder
 import com.freevibe.service.SourceMetrics
 import com.freevibe.service.WallpaperApplier
+import com.freevibe.service.WallpaperContentFingerprints
 import com.freevibe.service.WallpaperHistoryManager
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -67,6 +68,7 @@ class WallpapersViewModel @Inject constructor(
     private val seasonalContentManager: SeasonalContentManager,
     private val wallpaperUploadRepo: WallpaperUploadRepository,
     private val sourceMetrics: SourceMetrics,
+    private val contentFingerprints: WallpaperContentFingerprints,
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(WallpapersUiState())
@@ -190,8 +192,14 @@ class WallpapersViewModel @Inject constructor(
         fetchTopVoted = browse::fetchTopVoted,
     )
 
+    /** Thumbnail fingerprints the screen uses to show an image posted under two URLs once. */
+    val contentFingerprintMap = contentFingerprints.known
+
     init {
         browse.start()
+        viewModelScope.launch {
+            _state.map { it.wallpapers }.distinctUntilChanged().collectLatest { contentFingerprints.fingerprint(it) }
+        }
     }
 
     override fun onCleared() {

@@ -141,12 +141,14 @@ fun WallpapersScreen(
         .collectAsStateWithLifecycle()
     val showGeneratedContentEntry = !BuildConfig.FOSS_BUILD && generatedContentProviderEnabled
     var hideAiGeneratedCommunity by rememberSaveable { mutableStateOf(false) }
-    val feedWallpapers = remember(state.wallpapers, state.selectedTab, hideAiGeneratedCommunity) {
-        if (state.selectedTab == WallpaperTab.COMMUNITY && hideAiGeneratedCommunity) {
+    val contentFingerprints by viewModel.contentFingerprintMap.collectAsStateWithLifecycle()
+    val feedWallpapers = remember(state.wallpapers, state.selectedTab, hideAiGeneratedCommunity, contentFingerprints) {
+        val shown = if (state.selectedTab == WallpaperTab.COMMUNITY && hideAiGeneratedCommunity) {
             state.wallpapers.filter { shouldShowCommunityContent(it.isAiGenerated, hideAiGenerated = true) }
         } else {
             state.wallpapers
         }
+        coalesceContentDuplicates(shown, contentFingerprints)
     }
     val visibleSections = remember(
         feedWallpapers,

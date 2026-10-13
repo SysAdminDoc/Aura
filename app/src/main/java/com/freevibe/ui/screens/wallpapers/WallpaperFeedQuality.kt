@@ -2,6 +2,8 @@ package com.freevibe.ui.screens.wallpapers
 
 import com.freevibe.data.model.ContentSource
 import com.freevibe.data.model.Wallpaper
+import com.freevibe.data.model.stableKey
+import com.freevibe.service.WallpaperFingerprint
 import com.freevibe.service.WallpaperStyleLearningProfile
 import java.util.Locale
 import kotlin.math.max
@@ -245,16 +247,60 @@ private fun Wallpaper.searchableTerms(): List<String> =
     }.filter { it.isNotBlank() }
 
 private fun wallpaperKey(wallpaper: Wallpaper): String {
-    val stableUrl = wallpaper.fullUrl.ifBlank { wallpaper.thumbnailUrl }
-        .substringBefore("?")
-        .substringBefore("#")
-        .lowercase(java.util.Locale.ROOT)
+    val stableUrl = wallpaperUrlIdentity(wallpaper.fullUrl.ifBlank { wallpaper.thumbnailUrl })
     if (stableUrl.isNotBlank()) return stableUrl
     return listOf(
         wallpaper.id.lowercase(java.util.Locale.ROOT),
         wallpaper.width.toString(),
         wallpaper.height.toString(),
     ).joinToString("|")
+}
+
+/**
+ * Feed identity for a media URL. Only the scheme and host are case-insensitive, so only they are
+ * lowercased: Firebase Storage and Reddit paths are case-sensitive. The query stays, because some
+ * providers name the image there (Bing's `th?id=`), except on [TRANSFORM_QUERY_HOSTS] and Lemmy
+ * `pictrs` paths, where it only resizes, reformats or signs the file the path already names.
+ */
+internal fun wallpaperUrlIdentity(url: String): String {
+    val trimmed = url.trim().substringBefore('#')
+    val uri = runCatching { java.net.URI(trimmed) }.getOrNull() ?: return trimmed
+    val scheme = uri.scheme?.lowercase(Locale.ROOT) ?: return trimmed
+    val host = uri.host?.lowercase(Locale.ROOT) ?: return trimmed
+    val port = if (uri.port == -1) "" else ":${uri.port}"
+    val path = uri.rawPath.orEmpty()
+    val query = uri.rawQuery
+        ?.takeIf { it.isNotBlank() }
+        ?.takeUnless { TRANSFORM_QUERY_HOSTS.any { known -> host == known || host.endsWith(".$known") } }
+        ?.takeUnless { "/pictrs/image/" in path }
+    return "$scheme://$host$port$path" + (query?.let { "?$it" } ?: "")
+}
+
+/** Hosts whose query string only resizes, reformats or signs the file named by the path. */
+private val TRANSFORM_QUERY_HOSTS = listOf(
+    "redd.it",
+    "redditmedia.com",
+    "pexels.com",
+    "pixabay.com",
+    "wallhaven.cc",
+    "firebasestorage.googleapis.com",
+    "wikimedia.org",
+)
+
+/**
+ * Hides a card whose thumbnail fingerprint matches an earlier card's, so one image posted under
+ * two URLs shows once. The feed is ranked before this runs, so the card kept is the better one.
+ */
+internal fun coalesceContentDuplicates(
+    wallpapers: List<Wallpaper>,
+    fingerprints: Map<String, WallpaperFingerprint>,
+): List<Wallpaper> {
+    if (fingerprints.isEmpty()) return wallpapers
+    val seen = HashSet<WallpaperFingerprint>()
+    return wallpapers.filter { wallpaper ->
+        val fingerprint = fingerprints[wallpaper.stableKey()]?.takeIf { it.isDistinctive } ?: return@filter true
+        seen.add(fingerprint)
+    }
 }
 
 private val PIXEL_HINT_REGEX = Regex("""(\d{3,5})\s*[xX]\s*(\d{3,5})""")

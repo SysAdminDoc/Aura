@@ -954,6 +954,7 @@ class WallpapersViewModelTest {
             seasonalContentManager = SeasonalContentManager(),
             wallpaperUploadRepo = wallpaperUploadRepoOverride ?: mockk(relaxed = true),
             sourceMetrics = com.freevibe.service.SourceMetrics(),
+            contentFingerprints = com.freevibe.service.WallpaperContentFingerprints { null },
         )
     }
 
