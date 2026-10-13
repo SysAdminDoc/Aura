@@ -63,6 +63,7 @@ import com.freevibe.ui.components.CommunityReportDialog
 import com.freevibe.ui.policy.CommunityUploadPolicyKind
 import com.freevibe.ui.policy.communityBlockConfirmationCopy
 import com.freevibe.ui.policy.communityOwnerDeleteConfirmationCopy
+import com.freevibe.util.tryStartActivity
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
@@ -222,8 +223,9 @@ fun SoundDetailScreen(
             scope.launch { snackbarHostState.showSnackbar(writeSettingsUnavailable) }
             return
         }
-        runCatching { context.startActivity(viewModel.requestWriteSettings()) }
-            .onFailure { scope.launch { snackbarHostState.showSnackbar(writeSettingsUnavailable) } }
+        if (!context.tryStartActivity(viewModel.requestWriteSettings(), "write settings")) {
+            scope.launch { snackbarHostState.showSnackbar(writeSettingsUnavailable) }
+        }
     }
     LaunchedEffect(state.applySuccess) { state.applySuccess?.let { snackbarHostState.showSnackbar(it); viewModel.clearSuccess() } }
     LaunchedEffect(errorMessage) { errorMessage?.let { snackbarHostState.showSnackbar(it); viewModel.clearError() } }
@@ -562,7 +564,9 @@ fun SoundDetailScreen(
                     SecondarySoundAction(stringResource(R.string.common_share), Icons.Default.Share, Modifier.weight(1f).widthIn(min = 136.dp), enabled = canShareSound) {
                         runSoundAction(SoundAction.SHARE, shareSoundTitle) {
                             val intent = Intent(Intent.ACTION_SEND).apply { type = "text/plain"; putExtra(Intent.EXTRA_TEXT, shareBody); putExtra(Intent.EXTRA_SUBJECT, s.name) }
-                            try { context.startActivity(Intent.createChooser(intent, shareSoundChooserTitle)) } catch (_: Exception) { scope.launch { snackbarHostState.showSnackbar(shareFailedMessage) } }
+                            if (!context.tryStartActivity(Intent.createChooser(intent, shareSoundChooserTitle), "sound share")) {
+                                scope.launch { snackbarHostState.showSnackbar(shareFailedMessage) }
+                            }
                         }
                     }
                 }
@@ -580,7 +584,9 @@ fun SoundDetailScreen(
                     SecondarySoundAction(stringResource(R.string.common_share), Icons.Default.Share, Modifier.weight(1f), enabled = canShareSound) {
                         runSoundAction(SoundAction.SHARE, shareSoundTitle) {
                             val intent = Intent(Intent.ACTION_SEND).apply { type = "text/plain"; putExtra(Intent.EXTRA_TEXT, shareBody); putExtra(Intent.EXTRA_SUBJECT, s.name) }
-                            try { context.startActivity(Intent.createChooser(intent, shareSoundChooserTitle)) } catch (_: Exception) { scope.launch { snackbarHostState.showSnackbar(shareFailedMessage) } }
+                            if (!context.tryStartActivity(Intent.createChooser(intent, shareSoundChooserTitle), "sound share")) {
+                                scope.launch { snackbarHostState.showSnackbar(shareFailedMessage) }
+                            }
                         }
                     }
                 }

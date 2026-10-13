@@ -95,6 +95,7 @@ class CommunityIdentityProvider @Inject constructor(
             auth?.signInAnonymously()?.await()?.user?.uid
         } catch (e: Exception) {
             if (e is kotlinx.coroutines.CancellationException) throw e
+            android.util.Log.w("CommunityIdentity", "Anonymous sign-in failed, using the local id: ${e.javaClass.simpleName}")
             null
         }
 

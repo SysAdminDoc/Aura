@@ -9,7 +9,6 @@ import androidx.work.Configuration
 import androidx.work.WorkManager
 import androidx.work.testing.SynchronousExecutor
 import androidx.work.testing.WorkManagerTestInitHelper
-import com.freevibe.MainActivity
 import com.freevibe.data.local.PreferencesManager
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
@@ -85,14 +84,6 @@ class RotationTriggerServiceRestartTest {
         settleMain(millis = 500)
         assertFalse(shadowOf(service).isStoppedBySelf)
         controller.destroy()
-    }
-
-    @Test
-    fun `the notification opens Aura even when the package has no launch intent`() {
-        val intent = rotationTriggerContentIntent(context, launchIntent = null)
-
-        assertEquals(MainActivity::class.java.name, intent.component?.className)
-        assertEquals(Intent.ACTION_MAIN, intent.action)
     }
 
     private fun storeToggles(unlock: Boolean, screenOff: Boolean) = runBlocking {

@@ -2,6 +2,7 @@ package com.freevibe.widget
 
 import android.content.Context
 import android.content.Intent
+import android.content.SharedPreferences
 import android.graphics.Bitmap
 import android.widget.Toast
 import androidx.compose.runtime.Composable
@@ -26,11 +27,14 @@ import coil3.request.ImageRequest
 import coil3.request.SuccessResult
 import coil3.toBitmap
 import kotlinx.coroutines.flow.first
+import com.freevibe.R
 import com.freevibe.data.model.WallpaperTarget
 import com.freevibe.data.repository.WallpaperRepository
 import com.freevibe.data.repository.RotationExclusionRepository
 import com.freevibe.service.WallpaperApplier
 import com.freevibe.service.WallpaperHistoryManager
+import com.freevibe.util.appLaunchIntent
+import com.freevibe.util.tryStartActivity
 import dagger.hilt.EntryPoint
 import dagger.hilt.InstallIn
 import dagger.hilt.android.EntryPointAccessors
@@ -53,6 +57,8 @@ private val Scrim = ColorProvider(Color(0xCC000000))
 private const val WIDGET_PREFS = "freevibe_widget"
 private const val LAST_SHUFFLE_KEY = "last_shuffle_time"
 private const val SHUFFLE_COUNT_KEY = "shuffle_count"
+private const val OPEN_FAILED_AT_KEY = "open_failed_at"
+internal const val WIDGET_OPEN_FAILED_VISIBLE_MS = 10 * 60 * 1000L
 
 // ── Widget ────────────────────────────────────────────────────────
 
@@ -71,6 +77,8 @@ class FreeVibeWidget : GlanceAppWidget() {
         val prefs = context.getSharedPreferences(WIDGET_PREFS, Context.MODE_PRIVATE)
         val lastShuffle = prefs.getLong(LAST_SHUFFLE_KEY, 0)
         val shuffleCount = prefs.getInt(SHUFFLE_COUNT_KEY, 0)
+        val openFailedMessage = context.getString(R.string.widget_open_failed)
+            .takeIf { widgetOpenFailedVisible(prefs.getLong(OPEN_FAILED_AT_KEY, 0L), System.currentTimeMillis()) }
 
         // Load most-recent wallpaper thumbnail as the widget background. Null if the user
         // hasn't applied anything yet (fresh install) — widget falls back to the dark
@@ -99,6 +107,7 @@ class FreeVibeWidget : GlanceAppWidget() {
                 backgroundBitmap = bgBitmap,
                 primaryTint = tintVibrant,
                 accentTint = tintAccent,
+                openFailedMessage = openFailedMessage,
             )
         }
     }
@@ -146,6 +155,7 @@ private fun WidgetContent(
     backgroundBitmap: Bitmap? = null,
     primaryTint: ColorProvider = Primary,
     accentTint: ColorProvider = Secondary,
+    openFailedMessage: String? = null,
 ) {
     Box(
         modifier = GlanceModifier
@@ -203,6 +213,16 @@ private fun WidgetContent(
             }
 
             Spacer(GlanceModifier.height(6.dp))
+
+            // A tap that couldn't open Aura has no other place to say so.
+            if (openFailedMessage != null) {
+                Text(
+                    text = openFailedMessage,
+                    style = TextStyle(color = Tertiary, fontSize = 10.sp),
+                    maxLines = 2,
+                )
+                Spacer(GlanceModifier.height(4.dp))
+            }
 
             // Last shuffle timestamp — honor the device's 12/24-hour setting.
             if (lastShuffleTime > 0 && size.height >= 200.dp) {
@@ -348,11 +368,7 @@ class ApplyLockAction : ActionCallback {
 
 class OpenFavoritesAction : ActionCallback {
     override suspend fun onAction(context: Context, glanceId: GlanceId, parameters: ActionParameters) {
-        context.packageManager.getLaunchIntentForPackage(context.packageName)?.let { intent ->
-            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-            intent.putExtra("navigate_to", "favorites")
-            try { context.startActivity(intent) } catch (_: Exception) {}
-        }
+        openFromWidget(context, appLaunchIntent(context).putExtra("navigate_to", "favorites"), "favorites")
     }
 }
 
@@ -369,9 +385,7 @@ class OpenCurrentWallpaperAction : ActionCallback {
             if (e is kotlinx.coroutines.CancellationException) throw e
             null
         }
-        val intent = context.packageManager.getLaunchIntentForPackage(context.packageName)
-            ?: return
-        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        val intent = appLaunchIntent(context)
         if (entry != null) {
             intent.putExtra("daily_wallpaper_id", entry.wallpaperId)
             intent.putExtra("daily_wallpaper_url", entry.fullUrl)
@@ -380,7 +394,7 @@ class OpenCurrentWallpaperAction : ActionCallback {
             intent.putExtra("daily_wallpaper_width", entry.width)
             intent.putExtra("daily_wallpaper_height", entry.height)
         }
-        try { context.startActivity(intent) } catch (_: Exception) {}
+        openFromWidget(context, intent, "current wallpaper")
     }
 }
 
@@ -404,12 +418,38 @@ class ShuffleBingAction : ActionCallback {
 
 class OpenAppAction : ActionCallback {
     override suspend fun onAction(context: Context, glanceId: GlanceId, parameters: ActionParameters) {
-        context.packageManager.getLaunchIntentForPackage(context.packageName)?.let { intent ->
-            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-            try { context.startActivity(intent) } catch (_: Exception) {}
-        }
+        openFromWidget(context, appLaunchIntent(context), "app")
     }
 }
+
+/** Opens Aura from a widget tap and refreshes the widget when its failure line appears or clears. */
+private suspend fun openFromWidget(context: Context, intent: Intent, tag: String) {
+    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+    val opened = context.tryStartActivity(intent, "widget $tag")
+    val prefs = context.getSharedPreferences(WIDGET_PREFS, Context.MODE_PRIVATE)
+    if (recordWidgetLaunch(prefs, opened, System.currentTimeMillis())) {
+        FreeVibeWidget().updateAll(context)
+    }
+}
+
+/**
+ * A widget has no snackbar and a Toast from a background tap is easy to miss, so a failed open is
+ * recorded for the widget to show, and the next open that works clears it. Returns true when the
+ * widget's visible state changed.
+ */
+internal fun recordWidgetLaunch(prefs: SharedPreferences, opened: Boolean, nowMs: Long): Boolean {
+    val failedAt = prefs.getLong(OPEN_FAILED_AT_KEY, 0L)
+    if (opened) {
+        if (failedAt == 0L) return false
+        prefs.edit().remove(OPEN_FAILED_AT_KEY).apply()
+        return true
+    }
+    prefs.edit().putLong(OPEN_FAILED_AT_KEY, nowMs).apply()
+    return true
+}
+
+internal fun widgetOpenFailedVisible(failedAtMs: Long, nowMs: Long): Boolean =
+    failedAtMs > 0L && nowMs - failedAtMs in 0..WIDGET_OPEN_FAILED_VISIBLE_MS
 
 private suspend fun applyFromSource(context: Context, source: String, target: WallpaperTarget): Boolean {
     // Immediate feedback — a widget tap that kicks off a 3–10 s network call with no visible

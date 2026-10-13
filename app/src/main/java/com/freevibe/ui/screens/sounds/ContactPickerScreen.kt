@@ -58,6 +58,7 @@ import javax.inject.Inject
 import com.freevibe.data.model.SoundAction
 import com.freevibe.data.model.SoundActionDecision
 import com.freevibe.data.model.soundLicenseCapabilities
+import com.freevibe.util.tryStartActivity
 
 data class ContactPickerState(
     val selectedContact: ContactInfo? = null,
@@ -293,6 +294,7 @@ fun ContactPickerScreen(
     val noContactPickerMessage = stringResource(R.string.contact_picker_unavailable_message)
     val dndSettingsUnavailableMessage = stringResource(R.string.contact_picker_dnd_settings_unavailable)
     val dndContactUnavailableMessage = stringResource(R.string.contact_picker_dnd_contact_unavailable)
+    val appSettingsUnavailableMessage = stringResource(R.string.contact_picker_app_settings_unavailable)
     var permissionPermanentlyDenied by remember { mutableStateOf(false) }
     val soundIdentityKey = remember(soundId, fallbackSound?.source, fallbackSound?.previewUrl, fallbackSound?.downloadUrl) {
         listOf(
@@ -400,20 +402,18 @@ fun ContactPickerScreen(
         } else {
             Settings.ACTION_ZEN_MODE_PRIORITY_SETTINGS
         }
-        try {
-            context.startActivity(Intent(action))
+        if (context.tryStartActivity(Intent(action), "DND settings")) {
             viewModel.clearDndGuidance()
-        } catch (_: Exception) {
+        } else {
             scope.launch { snackbarHostState.showSnackbar(dndSettingsUnavailableMessage) }
         }
     }
 
     fun openContactForPriority() {
         val contact = state.selectedContact ?: return
-        try {
-            context.startActivity(Intent(Intent.ACTION_EDIT, contactEditorUri(contact)))
+        if (context.tryStartActivity(Intent(Intent.ACTION_EDIT, contactEditorUri(contact)), "contact editor")) {
             viewModel.clearDndGuidance()
-        } catch (_: Exception) {
+        } else {
             scope.launch { snackbarHostState.showSnackbar(dndContactUnavailableMessage) }
         }
     }
@@ -628,7 +628,9 @@ fun ContactPickerScreen(
                             val intent = Intent(android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
                                 data = Uri.fromParts("package", context.packageName, null)
                             }
-                            try { context.startActivity(intent) } catch (_: Exception) {}
+                            if (!context.tryStartActivity(intent, "app settings")) {
+                                scope.launch { snackbarHostState.showSnackbar(appSettingsUnavailableMessage) }
+                            }
                         },
                         onApply = { assignWithPolicy(contact.id) },
                         onVipOnlyRinging = { assignWithPolicy(contact.id, vipOnly = true) },

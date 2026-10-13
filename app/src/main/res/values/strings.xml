@@ -2116,6 +2116,8 @@
     <string name="rotation_excluded_message">%1$s won’t appear in automatic rotation.</string>
     <string name="rotation_restored_message">%1$s can appear in rotation again.</string>
     <string name="rotation_all_excluded_short">Every item here is excluded. Restore one in Settings.</string>
+    <string name="widget_open_failed">Couldn\'t open Aura. Tap again, or open it from your apps.</string>
+    <string name="contact_picker_app_settings_unavailable">Aura\'s app settings couldn\'t be opened. Find Aura under Settings &gt; Apps instead.</string>
     <string name="rotation_no_wallpapers_available">No wallpapers available</string>
     <string name="settings_rotation_exclusions_title">Rotation exclusions</string>
     <string name="settings_rotation_exclusions_body">These items stay in your library and can still be applied manually.</string>

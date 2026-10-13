@@ -207,7 +207,7 @@ class YouTubeRepository @Inject constructor(
                 NewPipe.init(DownloaderImpl.instance)
                 if (BuildConfig.DEBUG) android.util.Log.d("YouTubeRepo", "NewPipe Extractor initialized")
             } catch (e: Exception) {
-                if (BuildConfig.DEBUG) android.util.Log.e("YouTubeRepo", "Failed to init NewPipe: ${e.message}", e)
+                android.util.Log.e("YouTubeRepo", "Failed to init NewPipe: ${e.javaClass.simpleName}")
             }
         }
     }
@@ -292,7 +292,7 @@ class YouTubeRepository @Inject constructor(
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
-            if (BuildConfig.DEBUG) android.util.Log.e("YouTubeRepo", "Search failed for '$query': ${e.javaClass.simpleName}: ${e.message}")
+            android.util.Log.w("YouTubeRepo", "Search failed: ${e.javaClass.simpleName}")
             throw e
         }
     }
@@ -344,7 +344,7 @@ class YouTubeRepository @Inject constructor(
                     throw e
                 } catch (e: Exception) {
                     ytDlpUpdateManager.recordExtractionFailure(e)
-                    if (BuildConfig.DEBUG) android.util.Log.e("YouTubeRepo", "getAudioPreviewUrl failed for $videoId: ${e.javaClass.simpleName}: ${e.message}")
+                    android.util.Log.w("YouTubeRepo", "getAudioPreviewUrl failed for $videoId: ${e.javaClass.simpleName}")
                     null
                 }
             }
@@ -379,7 +379,7 @@ class YouTubeRepository @Inject constructor(
             throw e
         } catch (e: Exception) {
             ytDlpUpdateManager.recordExtractionFailure(e)
-            if (BuildConfig.DEBUG) android.util.Log.e("YouTubeRepo", "getAudioStreamUrl failed for $videoId: ${e.javaClass.simpleName}: ${e.message}")
+            android.util.Log.w("YouTubeRepo", "getAudioStreamUrl failed for $videoId: ${e.javaClass.simpleName}")
             null
         }
     }
@@ -408,6 +408,7 @@ class YouTubeRepository @Inject constructor(
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
+            android.util.Log.w("YouTubeRepo", "getVideoStreamUrl failed for $videoId: ${e.javaClass.simpleName}")
             ytDlpUpdateManager.recordExtractionFailure(e)
             null
         }
@@ -442,7 +443,7 @@ class YouTubeRepository @Inject constructor(
             throw e
         } catch (e: Exception) {
             ytDlpUpdateManager.recordExtractionFailure(e)
-            if (BuildConfig.DEBUG) android.util.Log.e("YouTubeRepo", "getVideoMetadata failed for $videoId: ${e.javaClass.simpleName}: ${e.message}")
+            android.util.Log.w("YouTubeRepo", "getVideoMetadata failed for $videoId: ${e.javaClass.simpleName}")
             null
         }
     }

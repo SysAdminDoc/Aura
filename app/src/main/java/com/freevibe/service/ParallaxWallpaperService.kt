@@ -168,9 +168,7 @@ class ParallaxWallpaperService : WallpaperService() {
                         try { placeholderClient.close() } catch (_: Exception) {}
                     }
             } catch (e: Exception) {
-                if (BuildConfig.DEBUG) {
-                    android.util.Log.w("ParallaxWP", "Segmenter module install request failed: ${e.message}")
-                }
+                android.util.Log.w("ParallaxWP", "Segmenter module install request failed: ${e.javaClass.simpleName}")
             }
         }
 
@@ -305,7 +303,7 @@ class ParallaxWallpaperService : WallpaperService() {
                         }
                     }
                 } catch (e: Exception) {
-                    if (BuildConfig.DEBUG) android.util.Log.e("ParallaxWP", "Load failed: ${e.message}")
+                    android.util.Log.e("ParallaxWP", "Load failed: ${e.javaClass.simpleName}")
                 }
             }
         }

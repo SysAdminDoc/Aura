@@ -112,7 +112,7 @@ class OfflineFavoritesManager @Inject constructor(
                 } else null
             } catch (e: Exception) {
                 if (e is kotlinx.coroutines.CancellationException) throw e
-                if (com.freevibe.BuildConfig.DEBUG) android.util.Log.w("OfflineFavMgr", "cacheOffline failed for ${favorite.id}: ${e.message}")
+                android.util.Log.w("OfflineFavMgr", "cacheOffline failed for ${favorite.id}: ${e.javaClass.simpleName}")
                 null
             }
         }

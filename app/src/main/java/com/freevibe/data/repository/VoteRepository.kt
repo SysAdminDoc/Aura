@@ -20,6 +20,8 @@ import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -287,6 +289,10 @@ class VoteRepository @Inject constructor(
     // ── Global moderation list (admin-hidden, synced from Firebase) ──
 
     private val _moderatedIds = MutableStateFlow<Set<String>>(emptySet())
+    private val _moderationSyncDegraded = MutableStateFlow(false)
+
+    /** True while the moderation list may be stale because its listener was cancelled. */
+    val moderationSyncDegraded: StateFlow<Boolean> = _moderationSyncDegraded.asStateFlow()
 
     /**
      * Guarded by [moderationLock]. Non-null exactly while a listener is attached, so the
@@ -326,38 +332,54 @@ class VoteRepository @Inject constructor(
             try {
                 val listener = object : ValueEventListener {
                     override fun onDataChange(snapshot: DataSnapshot) {
-                        _moderatedIds.value = snapshot.children.mapNotNull { it.key }.toSet()
+                        onModerationSnapshot(snapshot.children.mapNotNull { it.key }.toSet())
                     }
 
                     override fun onCancelled(error: DatabaseError) {
-                        Log.w("VoteRepo", "Moderation listener cancelled: ${error.message}")
+                        onModerationCancelled(error.message)
                     }
                 }
                 val ref = moderationRef ?: return
                 ref.addValueEventListener(listener)
                 moderationListener = listener
             } catch (e: Exception) {
-                if (com.freevibe.BuildConfig.DEBUG) {
-                    Log.w("VoteRepo", "Firebase init failed: ${e.message}")
-                }
+                Log.w("VoteRepo", "Moderation listener couldn't attach: ${e.javaClass.simpleName}")
             }
         }
     }
 
+    internal fun onModerationSnapshot(ids: Set<String>) {
+        _moderatedIds.value = ids
+        _moderationSyncDegraded.value = false
+    }
+
+    /**
+     * Firebase removes a cancelled listener (rules refused the read or the socket dropped), so the
+     * moderated list stops updating. It's kept rather than cleared, since clearing would unhide
+     * moderated items, and the listener slot is freed so the next consent change attaches again.
+     */
+    internal fun onModerationCancelled(message: String) {
+        Log.w("VoteRepo", "Moderation listener cancelled: $message")
+        synchronized(moderationLock) { moderationListener = null }
+        _moderationSyncDegraded.value = true
+    }
+
     private fun detachModerationListener() {
         synchronized(moderationLock) {
-            val listener = moderationListener ?: return
+            val listener = moderationListener
             moderationListener = null
-            try {
-                moderationRef?.removeEventListener(listener)
-            } catch (e: Exception) {
-                if (com.freevibe.BuildConfig.DEBUG) {
-                    Log.w("VoteRepo", "Moderation listener detach failed: ${e.message}")
+            if (listener != null) {
+                try {
+                    moderationRef?.removeEventListener(listener)
+                } catch (e: Exception) {
+                    Log.w("VoteRepo", "Moderation listener detach failed: ${e.javaClass.simpleName}")
                 }
             }
             // Moderation hides are a community-service signal; drop them with the socket so a
-            // user who opts out does not keep filtering content from a source they left.
+            // user who opts out does not keep filtering content from a source they left. That
+            // includes a list kept after its listener was cancelled.
             _moderatedIds.value = emptySet()
+            _moderationSyncDegraded.value = false
         }
     }
 

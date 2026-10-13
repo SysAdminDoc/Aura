@@ -1907,6 +1907,8 @@
     <string name="rotation_excluded_message">%1$s 不会出现在自动轮换中。</string>
     <string name="rotation_restored_message">%1$s 可以再次出现在轮换中。</string>
     <string name="rotation_all_excluded_short">这里的所有项目均已排除。请在设置中恢复一个。</string>
+    <string name="widget_open_failed">无法打开 Aura。请再点一次，或从应用列表中打开。</string>
+    <string name="contact_picker_app_settings_unavailable">无法打开 Aura 的应用设置。请改为在“设置 &gt; 应用”中找到 Aura。</string>
     <string name="rotation_no_wallpapers_available">没有可用的壁纸</string>
     <string name="settings_rotation_exclusions_title">轮换排除项</string>
     <string name="settings_rotation_exclusions_body">这些项目仍保留在媒体库中，也可以手动应用。</string>

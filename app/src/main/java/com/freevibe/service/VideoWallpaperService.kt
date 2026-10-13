@@ -227,10 +227,9 @@ class VideoWallpaperService : WallpaperService() {
             try {
                 val wm = renderContext.getSystemService(android.content.Context.WINDOW_SERVICE) as? android.view.WindowManager
                 if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.R) {
-                    wm?.currentWindowMetrics?.bounds?.let { bounds ->
-                        screenWidth = bounds.width()
-                        screenHeight = bounds.height()
-                    }
+                    val bounds = wm?.currentWindowMetrics?.bounds
+                    screenWidth = bounds?.width() ?: 0
+                    screenHeight = bounds?.height() ?: 0
                 } else {
                     val metrics = android.util.DisplayMetrics()
                     @Suppress("DEPRECATION")
@@ -240,6 +239,9 @@ class VideoWallpaperService : WallpaperService() {
                 }
             } catch (e: Exception) {
                 android.util.Log.w("VideoWallpaper", "Failed to resolve screen size", e)
+                // Zero, not the last display's size: the scaling math then uses the surface frame.
+                screenWidth = 0
+                screenHeight = 0
             }
         }
 

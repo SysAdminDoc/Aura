@@ -634,17 +634,13 @@ class DownloadManager @Inject constructor(
                 buildLegacyDownloadNotification(progress)
             }
         } catch (e: Exception) {
-            if (BuildConfig.DEBUG) {
-                Log.w("DownloadManager", "Failed to build download notification", e)
-            }
+            Log.w("DownloadManager", "Failed to build download notification: ${e.javaClass.simpleName}")
             return
         }
         try {
             manager.notify(downloadNotificationId(progress.id), notification)
         } catch (e: SecurityException) {
-            if (BuildConfig.DEBUG) {
-                Log.w("DownloadManager", "Download notification permission was revoked", e)
-            }
+            Log.w("DownloadManager", "Download notification permission was revoked")
         }
     }
 

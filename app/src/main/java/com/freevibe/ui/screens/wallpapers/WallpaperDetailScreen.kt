@@ -63,6 +63,7 @@ import com.freevibe.ui.policy.communityBlockConfirmationCopy
 import com.freevibe.ui.policy.communityOwnerDeleteConfirmationCopy
 import com.freevibe.ui.launchLiveWallpaperPicker
 import com.freevibe.ui.util.openExternalUrl
+import com.freevibe.util.tryStartActivity
 import coil3.compose.AsyncImagePainter
 import coil3.compose.SubcomposeAsyncImage
 import coil3.compose.SubcomposeAsyncImageContent
@@ -654,9 +655,7 @@ fun WallpaperDetailScreen(
                                             type = "text/plain"
                                             putExtra(Intent.EXTRA_TEXT, shareUrl)
                                         }
-                                        try {
-                                            context.startActivity(Intent.createChooser(intent, shareWallpaperTitle))
-                                        } catch (_: Exception) {
+                                        if (!context.tryStartActivity(Intent.createChooser(intent, shareWallpaperTitle), "wallpaper share")) {
                                             scope.launch { snackbarHostState.showSnackbar(shareFailedMessage) }
                                         }
                                     },

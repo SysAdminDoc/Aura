@@ -101,12 +101,14 @@ class AudioPlaybackManager @Inject constructor(
                         mc.addListener(playerListener)
                         onReady(mc)
                     } catch (e: Exception) {
+                        Log.w("SoundPlayback", "Media controller connect failed: ${e.javaClass.simpleName}")
                         _currentSoundId.value = null
                         _isPlaying.value = false
                     }
                 }, androidx.core.content.ContextCompat.getMainExecutor(context))
             }
         } catch (e: Exception) {
+            Log.w("SoundPlayback", "Media controller build failed: ${e.javaClass.simpleName}")
             _currentSoundId.value = null
             _isPlaying.value = false
         }

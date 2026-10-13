@@ -134,7 +134,7 @@ class FreeVibeApp : Application(), Configuration.Provider, SingletonImageLoader.
         try {
             AppCheckInstaller.install(this)
         } catch (e: Exception) {
-            if (BuildConfig.DEBUG) Log.w("FreeVibeApp", "App Check init failed: ${e.message}")
+            Log.w("FreeVibeApp", "App Check init failed: ${e.javaClass.simpleName}")
         }
     }
 

@@ -18,7 +18,7 @@ import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.OutOfQuotaPolicy
 import androidx.work.WorkManager
 import androidx.work.workDataOf
-import com.freevibe.MainActivity
+import com.freevibe.util.appLaunchIntent
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -106,7 +106,9 @@ class RotationTriggerService : Service() {
     private fun startInForeground() {
         val pendingIntent = PendingIntent.getActivity(
             this, 0,
-            rotationTriggerContentIntent(this, packageManager.getLaunchIntentForPackage(packageName)),
+            // Never null: handing PendingIntent.getActivity a null intent would crash the service
+            // before it reaches startForeground.
+            appLaunchIntent(this),
             PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT,
         )
         val notif: Notification = NotificationCompat.Builder(this, NotificationChannels.ROTATION_TRIGGERS)
@@ -236,14 +238,3 @@ class RotationTriggerService : Service() {
  */
 internal fun triggeredRotationPolicy(restartCountdown: Boolean): ExistingWorkPolicy =
     if (restartCountdown) ExistingWorkPolicy.REPLACE else ExistingWorkPolicy.KEEP
-
-/**
- * The trigger notification's tap target. The package manager can return no launch intent (a
- * launcher alias disabled, or a query that races an update), and handing null to
- * PendingIntent.getActivity would crash the service before it reaches startForeground.
- */
-internal fun rotationTriggerContentIntent(context: Context, launchIntent: Intent?): Intent =
-    launchIntent ?: Intent(context, MainActivity::class.java)
-        .setAction(Intent.ACTION_MAIN)
-        .addCategory(Intent.CATEGORY_LAUNCHER)
-        .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
