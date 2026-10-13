@@ -194,6 +194,12 @@ Cycle 99 added:
   finalization, active storage-path dedupe, cooldown, daily-limit,
   unauthenticated, missing-App-Check, and invalid ownership/payload cases.
 
+Storage attestation (2026-10-13):
+
+- `functions/src/storageAttestation.ts` binds a finalize request to the object in Storage before anything is published. A missing object fails closed, and so does missing metadata (bucket, content type, size or download tokens). The stored content type has to be on the allowed list and equal the declared one. The stored size has to equal the declared `fileSize` and stay under the limit. The declared download URL has to name the same bucket and object on the Storage host and carry one of the object's own download tokens, and the public row gets a URL the server rebuilt from those values, never the client's spelling.
+- Sound finalize requests now carry a required `fileSize`, which the app counts from the bytes it read. Wallpaper uploads accept only `image/jpeg`, and the finalizer reads width and height from the stored JPEG's frame header (the first 256 KiB, by ranged download), so the published dimensions are the file's own. The app declares the size it actually encoded, which matters when it shrinks a wallpaper to get under 4 MB.
+- Each refusal carries a `details.reason`: `object-missing`, `metadata-unavailable`, `content-type-mismatch`, `size-out-of-range`, `size-mismatch`, `download-url-mismatch`, `download-token-unknown`, `jpeg-unreadable` or `dimensions-mismatch`. `functions/test/storageAttestation.test.cjs` and the two finalizer suites cover each one and check that no public row was written; the emulator suites in `test/firebase/` add the size and dimension refusals against a real Storage emulator.
+
 Cycle 100 added:
 
 - `functions/src/profileHandler.ts` implements `updateCreatorProfile` handler

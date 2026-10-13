@@ -15,6 +15,7 @@ class StorageReference {
     fun child(path: String): StorageReference = this
     fun putBytes(bytes: ByteArray, metadata: StorageMetadata): UploadTask = UploadTask()
     fun putFile(uri: Uri): UploadTask = UploadTask()
+    fun putFile(uri: Uri, metadata: StorageMetadata): UploadTask = UploadTask()
     fun delete(): Task<Void?> = Task.failure()
     val downloadUrl: Task<Uri> get() = Task.failure()
 }

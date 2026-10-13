@@ -25,6 +25,14 @@ import {
   runWithQuotaReservation,
   settleQuotaLedger,
 } from "./quotaReservation";
+import {
+  attestStorageObject,
+  readJpegDimensions,
+  storageObjectMetadataFrom,
+  type AttestedStorageObject,
+  type JpegDimensions,
+  type StorageObjectMetadata,
+} from "./storageAttestation";
 
 const WALLPAPER_UPLOAD_SURFACE = surfaceByFunctionName("finalizeCommunityWallpaperUpload");
 const MAX_OPERATION_ID = 120;
@@ -47,6 +55,9 @@ const CONTROL_REGEX = /[\u0000-\u001F\u007F]/g;
 const VALID_CATEGORIES = new Set(["abstract", "amoled", "nature", "minimal", "city", "space", "other"]);
 const VALID_LICENSES = new Set(["CC0", "CC BY", "CC BY-NC"]);
 const VALID_FILE_TYPE = "image/jpeg";
+const WALLPAPER_CONTENT_TYPES: ReadonlySet<string> = new Set([VALID_FILE_TYPE]);
+// The frame header sits well inside this unless a client packs huge APPn segments ahead of it.
+const WALLPAPER_HEAD_BYTES = 256 * 1024;
 const SERVER_DERIVED_FIELDS = new Set([
   "uid",
   "ownerUid",
@@ -94,20 +105,16 @@ export interface CommunityWallpaperUploadPayload {
   readonly uploaderKey: string;
 }
 
-interface CommitWallpaperUploadInput {
+export interface CommitWallpaperUploadInput {
   readonly uid: string;
   readonly surfaceKey: string;
   readonly dedupeKey: string;
   readonly uploadId: string;
   readonly payload: CommunityWallpaperUploadPayload;
+  readonly storedObject: AttestedStorageObject;
+  readonly dimensions: JpegDimensions;
   readonly uploadedAt: number;
   readonly dedupeMarker: DedupeMarker;
-}
-
-export interface StorageObjectMetadata {
-  readonly exists: boolean;
-  readonly contentType?: string;
-  readonly size?: number;
 }
 
 export interface WallpaperUploadBackend extends QuotaSettlingBackend {
@@ -123,6 +130,8 @@ export interface WallpaperUploadBackend extends QuotaSettlingBackend {
     operationKey?: string,
   ): Promise<QuotaDecision>;
   verifyStorageObject(storagePath: string): Promise<StorageObjectMetadata>;
+  // Resolves null when the object is gone by the time its bytes are read.
+  readStorageObjectHead(storagePath: string, maxBytes: number): Promise<Uint8Array | null>;
   commitWallpaperUpload(input: CommitWallpaperUploadInput): Promise<void>;
 }
 
@@ -178,25 +187,39 @@ export async function finalizeCommunityWallpaperUploadHandler(
   // Anything that stops the upload from landing refunds the reserved unit and cooldown.
   const reserved = { uid, dayKey, surface: WALLPAPER_UPLOAD_SURFACE, reservation: decision.reservation };
   const { uploadId, targetPath, ownerIndexPath } = await runWithQuotaReservation(backend, reserved, async () => {
-    const storageObject = await backend.verifyStorageObject(payload.storagePath);
-    if (!storageObject.exists) {
-      throw new HttpsError("failed-precondition", "Storage object does not exist at the declared path.", {
+    const storedObject = attestStorageObject(
+      payload.storagePath,
+      payload.downloadUrl,
+      await backend.verifyStorageObject(payload.storagePath),
+      {
+        allowedContentTypes: WALLPAPER_CONTENT_TYPES,
+        maxBytes: MAX_WALLPAPER_BYTES,
+        declaredContentType: payload.fileType,
+        declaredBytes: payload.fileSize,
+      },
+      { operationId: envelope.operationId },
+    );
+
+    // Dimensions come from the stored JPEG's frame header, not the client's word.
+    const head = await backend.readStorageObjectHead(
+      storedObject.storagePath,
+      Math.min(storedObject.size, WALLPAPER_HEAD_BYTES),
+    );
+    const dimensions = head ? readJpegDimensions(head) : null;
+    if (!dimensions) {
+      throw new HttpsError("failed-precondition", "Stored wallpaper is not a readable JPEG.", {
         operationId: envelope.operationId,
-        storagePath: payload.storagePath,
+        reason: "jpeg-unreadable",
+        storagePath: storedObject.storagePath,
       });
     }
-    if (storageObject.size !== undefined && storageObject.size !== payload.fileSize) {
-      throw new HttpsError("failed-precondition", "Declared file size does not match the stored object.", {
+    if (dimensions.width !== payload.width || dimensions.height !== payload.height) {
+      throw new HttpsError("failed-precondition", "Declared wallpaper dimensions do not match the stored image.", {
         operationId: envelope.operationId,
-        declared: payload.fileSize,
-        actual: storageObject.size,
-      });
-    }
-    if (storageObject.contentType && !payload.fileType.startsWith(storageObject.contentType.split("/")[0])) {
-      throw new HttpsError("failed-precondition", "Declared file type does not match the stored object.", {
-        operationId: envelope.operationId,
-        declared: payload.fileType,
-        actual: storageObject.contentType,
+        reason: "dimensions-mismatch",
+        storagePath: storedObject.storagePath,
+        declared: { width: payload.width, height: payload.height },
+        actual: dimensions,
       });
     }
 
@@ -212,6 +235,8 @@ export async function finalizeCommunityWallpaperUploadHandler(
       dedupeKey,
       uploadId: allocatedId,
       payload,
+      storedObject,
+      dimensions,
       uploadedAt: nowMillis,
       dedupeMarker: buildDedupeMarker({
         nowMillis,
@@ -532,14 +557,22 @@ class FirebaseWallpaperUploadBackend implements WallpaperUploadBackend {
       const bucket = getStorage().bucket();
       const file = bucket.file(storagePath);
       const [metadata] = await file.getMetadata();
-      return {
-        exists: true,
-        contentType: metadata.contentType ?? undefined,
-        size: metadata.size !== undefined ? Number(metadata.size) : undefined,
-      };
+      return storageObjectMetadataFrom(metadata);
     } catch (e: unknown) {
       const code = (e as { code?: number })?.code;
       if (code === 404) return { exists: false };
+      throw e;
+    }
+  }
+
+  async readStorageObjectHead(storagePath: string, maxBytes: number): Promise<Uint8Array | null> {
+    try {
+      const file = getStorage().bucket().file(storagePath);
+      const [contents] = await file.download({ start: 0, end: maxBytes - 1 });
+      return contents;
+    } catch (e: unknown) {
+      const code = (e as { code?: number })?.code;
+      if (code === 404) return null;
       throw e;
     }
   }
@@ -599,17 +632,13 @@ class FirebaseWallpaperUploadBackend implements WallpaperUploadBackend {
   async commitWallpaperUpload(input: CommitWallpaperUploadInput): Promise<void> {
     const metadataPath = `/community_wallpapers/${input.uploadId}`;
     await this.root.update({
-      [`community_wallpapers/${input.uploadId}`]: buildWallpaperMetadata(
-        input.uid,
-        input.payload,
-        input.uploadedAt,
-      ),
+      [`community_wallpapers/${input.uploadId}`]: buildWallpaperMetadata(input),
       [`owner_uploads/${input.payload.uploaderKey}/wallpapers/${input.uploadId}`]: {
         uploadId: input.uploadId,
         publicId: `cw_${input.uploadId}`,
         contentType: "WALLPAPER",
         metadataPath,
-        storagePath: input.payload.storagePath,
+        storagePath: input.storedObject.storagePath,
         title: input.payload.name,
         createdAt: input.uploadedAt,
       },
@@ -626,24 +655,23 @@ class FirebaseWallpaperUploadBackend implements WallpaperUploadBackend {
   }
 }
 
-function buildWallpaperMetadata(
-  uploaderUid: string,
-  payload: CommunityWallpaperUploadPayload,
-  uploadedAt: number,
-): Record<string, unknown> {
+// Exported so the test fake publishes exactly what the real backend writes.
+export function buildWallpaperMetadata(input: CommitWallpaperUploadInput): Record<string, unknown> {
+  const { uid: uploaderUid, payload, storedObject, dimensions, uploadedAt } = input;
   return {
     name: payload.name,
     category: payload.category,
     tags: payload.tags,
     colors: payload.colors,
-    thumbnailUrl: payload.thumbnailUrl,
-    fullUrl: payload.fullUrl,
-    downloadUrl: payload.downloadUrl,
-    storagePath: payload.storagePath,
-    width: payload.width,
-    height: payload.height,
-    fileSize: payload.fileSize,
-    fileType: payload.fileType,
+    // The app uploads one JPEG and shows it at every size, so all three URLs are the attested one.
+    thumbnailUrl: storedObject.downloadUrl,
+    fullUrl: storedObject.downloadUrl,
+    downloadUrl: storedObject.downloadUrl,
+    storagePath: storedObject.storagePath,
+    width: dimensions.width,
+    height: dimensions.height,
+    fileSize: storedObject.size,
+    fileType: storedObject.contentType,
     uploadedAt,
     uploaderId: uploaderUid,
     uploaderUid,

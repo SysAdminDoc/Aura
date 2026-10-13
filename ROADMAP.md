@@ -386,18 +386,6 @@ Evidence for every item below is in RESEARCH.md (2026-09-04 pass).
 
 ### P2
 
-- [ ] P2 — Finish server-side Storage attestation for community uploads
-  Category: security
-  Where: `functions/src/soundUploadHandler.ts:77-90,171-183,217-257,460-469`; `functions/src/wallpaperUploadHandler.ts:69-88,169-189,513-522`; `app/src/main/java/com/freevibe/data/model/CommunitySoundUpload.kt:24-64`; `app/src/main/java/com/freevibe/data/repository/UploadRepository.kt:121-150,363-378`; `functions/test/finalizeCommunitySoundUpload.test.cjs:15-35`; `functions/test/finalizeCommunityWallpaperUpload.test.cjs:18-38`
-  Problem: The new finalizers only partly bind published metadata to the uploaded object. The sound path references a nonexistent `payload.fileSize`, its Android caller never sends that field, and it never compares the declared MIME type with Storage metadata. Both media types still publish client-selected HTTPS URLs, and wallpaper dimensions are never decoded from the stored JPEG.
-  Evidence: `npm --prefix functions test` and `npm run test:functions-emulator` both stop in TypeScript compilation at `soundUploadHandler.ts:178,181` because `CommunitySoundUploadPayload` has no `fileSize`. `verifyStorageObject()` returns only existence, MIME, and byte size. The wallpaper check accepts any Storage MIME whose top-level type is `image`, then persists the submitted URLs and dimensions. The JavaScript fakes have no `verifyStorageObject` method or missing-object, MIME, URL, size, and dimension mismatch cases, so runtime coverage would still fail after the type error is corrected. Storage creation rules reduce exposure, but they do not prove that later public metadata describes the same object.
-  Fix: Add one shared attestation result whose required fields come from Admin Storage and media inspection. Derive the public locator from the verified bucket/object instead of accepting it from the caller, require exact allowed MIME and byte size, decode JPEG dimensions server-side, and add `fileSize` to the sound client contract. Update the fakes before publication logic is considered complete. Keep quota-failure reconciliation in its existing roadmap item.
-  Acceptance: Both Functions test commands compile and pass; missing objects and unavailable metadata fail closed; wrong owner path, URL, size, exact MIME, and wallpaper dimensions are rejected without a public row; a matching sound and wallpaper publish only server-derived object metadata; Android payload tests prove sound size is bounded and transmitted.
-  Confidence: Verified
-  Effort: M
-
-
-
 - [ ] P2 — Keep every primary destination usable at 200 percent text
   Category: a11y
   Where: `app/src/main/java/com/freevibe/ui/FreeVibeRoot.kt:241-301,1156-1224`

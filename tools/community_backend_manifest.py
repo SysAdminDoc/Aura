@@ -139,7 +139,8 @@ def main() -> int:
 
     if args.mode == "write":
         manifest_path.parent.mkdir(parents=True, exist_ok=True)
-        manifest_path.write_text(manifest_text, encoding="utf-8")
+        # LF on every platform, so a write on Windows matches a write anywhere else byte for byte.
+        manifest_path.write_text(manifest_text, encoding="utf-8", newline="\n")
         print(f"wrote {manifest_path}")
         return 0
 

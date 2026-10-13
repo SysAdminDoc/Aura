@@ -12,6 +12,7 @@ import com.freevibe.data.model.CommunityUploadKind
 import com.freevibe.data.model.CommunityUploadRights
 import com.freevibe.data.model.CommunitySoundUploadMetadataInput
 import com.freevibe.data.model.ContentSource
+import com.freevibe.data.model.MAX_COMMUNITY_SOUND_UPLOAD_BYTES
 import com.freevibe.data.model.Sound
 import com.freevibe.data.model.buildCommunityUploadDeleteUpdates
 import com.freevibe.data.model.isCommunityUserBlocked
@@ -27,6 +28,7 @@ import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ValueEventListener
 import com.google.firebase.storage.FirebaseStorage
+import com.google.firebase.storage.StorageMetadata
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
@@ -57,7 +59,6 @@ private val ALLOWED_UPLOAD_AUDIO_MIMES = setOf(
     "audio/webm",
 )
 private val ALLOWED_UPLOAD_CATEGORIES = setOf("ringtone", "notification", "alarm")
-private const val MAX_AUDIO_UPLOAD_BYTES = 20L * 1024L * 1024L
 private const val MAX_UPLOAD_TAGS = 8
 private const val MAX_UPLOAD_TAG_LENGTH = 24
 private const val SOURCE_COMMUNITY = "community"
@@ -76,6 +77,11 @@ class UploadRepository @Inject constructor(
         val originalFileName: String,
         val extension: String,
         val mimeType: String,
+    )
+
+    private data class ProbedAudioUpload(
+        val sniffed: com.freevibe.service.SniffedMediaType,
+        val byteCount: Long,
     )
 
     private val storage by lazy {
@@ -119,14 +125,16 @@ class UploadRepository @Inject constructor(
         val normalizedCategory = normalizeUploadCategory(category)
         val normalizedTags = sanitizeUploadTags(tags)
         val uploadInfo = resolveUploadFileInfo(localUri, sanitizedName)
-        val sniffedAudio = sniffAudioUpload(localUri)
+        val probedAudio = sniffAudioUpload(localUri)
+        val sniffedAudio = probedAudio.sniffed
         val normalizedMimeType = sniffedAudio.mimeType.lowercase(java.util.Locale.ROOT)
         if (!isSupportedAudioUploadMime(normalizedMimeType)) {
             throw IllegalArgumentException("Unsupported audio format")
         }
 
-        val fileSize = resolveUploadSize(localUri)
-        validateUploadSize(fileSize)
+        // The finalizer refuses the upload unless this equals the stored object's size, so use
+        // the bytes actually read from the stream putFile sends, not provider metadata.
+        val fileSize = validateUploadSize(probedAudio.byteCount)
         ensureReadableUpload(localUri)
 
         val timestamp = System.currentTimeMillis()
@@ -137,8 +145,12 @@ class UploadRepository @Inject constructor(
         var metadataSaved = false
 
         try {
-            // Upload file
-            val uploadTask = storageRef.putFile(localUri)
+            // Upload file. The finalizer requires the stored type to equal the declared one, so
+            // set it rather than letting the SDK take the provider's guess (audio/x-wav for a WAV).
+            val uploadTask = storageRef.putFile(
+                localUri,
+                StorageMetadata.Builder().setContentType(normalizedMimeType).build(),
+            )
             uploadTask.addOnProgressListener { snapshot ->
                 val totalByteCount = snapshot.totalByteCount.takeIf { it > 0 } ?: 0L
                 val progress = if (totalByteCount > 0) {
@@ -160,6 +172,7 @@ class UploadRepository @Inject constructor(
                 downloadUrl = downloadUrl,
                 storagePath = storagePath,
                 fileType = normalizedMimeType,
+                fileSize = fileSize,
                 originalFileName = uploadInfo.originalFileName,
                 uploaderLabel = uploaderLabel,
                 rights = validatedRights,
@@ -351,6 +364,7 @@ class UploadRepository @Inject constructor(
         downloadUrl: String,
         storagePath: String,
         fileType: String,
+        fileSize: Long,
         originalFileName: String,
         uploaderLabel: String,
         rights: CommunityUploadRights,
@@ -368,6 +382,7 @@ class UploadRepository @Inject constructor(
                     downloadUrl = downloadUrl,
                     storagePath = storagePath,
                     fileType = fileType,
+                    fileSize = fileSize,
                     originalFileName = originalFileName,
                     uploaderLabel = uploaderLabel,
                     license = rights.license,
@@ -430,26 +445,14 @@ class UploadRepository @Inject constructor(
         )
     }
 
-    private fun resolveUploadSize(localUri: Uri): Long? {
-        val resolver = context.contentResolver
-        val descriptorSize = resolver.openAssetFileDescriptor(localUri, "r")?.use { descriptor ->
-            descriptor.length.takeIf { it >= 0 } ?: descriptor.parcelFileDescriptor?.statSize?.takeIf { it >= 0 }
-        }
-        if (descriptorSize != null) return descriptorSize
-
-        return resolver.query(localUri, arrayOf(OpenableColumns.SIZE), null, null, null)
-            ?.use { cursor ->
-                if (cursor.moveToFirst() && !cursor.isNull(0)) cursor.getLong(0) else null
-            }
-    }
-
-    private fun validateUploadSize(fileSize: Long?) {
+    private fun validateUploadSize(fileSize: Long): Long {
         when {
-            fileSize == 0L -> throw IllegalArgumentException("Selected audio file is empty")
-            fileSize != null && fileSize > MAX_AUDIO_UPLOAD_BYTES -> {
+            fileSize <= 0L -> throw IllegalArgumentException("Selected audio file is empty")
+            fileSize > MAX_COMMUNITY_SOUND_UPLOAD_BYTES -> {
                 throw IllegalArgumentException("File too large (max 20MB)")
             }
         }
+        return fileSize
     }
 
     private fun ensureReadableUpload(localUri: Uri) {
@@ -461,16 +464,19 @@ class UploadRepository @Inject constructor(
         }
     }
 
-    private fun sniffAudioUpload(localUri: Uri): com.freevibe.service.SniffedMediaType {
+    private fun sniffAudioUpload(localUri: Uri): ProbedAudioUpload {
         val tempDir = File(context.cacheDir, "upload_probe").apply { mkdirs() }
         val probeFile = File.createTempFile("aura_upload_", ".tmp", tempDir)
         return try {
-            context.contentResolver.openInputStream(localUri)?.use { input ->
+            val byteCount = context.contentResolver.openInputStream(localUri)?.use { input ->
                 probeFile.outputStream().use { output ->
-                    copyStreamCapped(input, output, MAX_AUDIO_UPLOAD_BYTES)
+                    copyStreamCapped(input, output, MAX_COMMUNITY_SOUND_UPLOAD_BYTES)
                 }
             } ?: throw IllegalArgumentException("Selected audio file is empty or unreadable")
-            requireSniffedMediaFile(probeFile, MediaFamily.AUDIO, "Selected audio")
+            ProbedAudioUpload(
+                sniffed = requireSniffedMediaFile(probeFile, MediaFamily.AUDIO, "Selected audio"),
+                byteCount = byteCount,
+            )
         } finally {
             probeFile.delete()
         }

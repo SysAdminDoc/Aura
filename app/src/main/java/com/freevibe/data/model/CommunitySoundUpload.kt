@@ -9,6 +9,8 @@ private const val MAX_COMMUNITY_SOUND_UPLOAD_URL = 2048
 private const val MAX_COMMUNITY_SOUND_UPLOAD_STORAGE_PATH = 512
 private const val MAX_COMMUNITY_SOUND_UPLOAD_TAGS = 8
 private const val MAX_COMMUNITY_SOUND_UPLOAD_TAG_LENGTH = 24
+// Same ceiling storage.rules and the finalizer apply to sounds/{uid}/ objects.
+internal const val MAX_COMMUNITY_SOUND_UPLOAD_BYTES = 20L * 1024L * 1024L
 private val COMMUNITY_SOUND_UPLOAD_CONTROL_REGEX = Regex("[\\u0000-\\u001F\\u007F]")
 private val COMMUNITY_SOUND_UPLOAD_WHITESPACE_REGEX = Regex("\\s+")
 private val COMMUNITY_SOUND_UPLOAD_TAG_REGEX = Regex("[^a-z0-9_\\- ]")
@@ -28,6 +30,7 @@ data class CommunitySoundUploadMetadataInput(
     val downloadUrl: String,
     val storagePath: String,
     val fileType: String,
+    val fileSize: Long,
     val originalFileName: String,
     val uploaderLabel: String,
     val license: String,
@@ -48,6 +51,8 @@ fun buildCommunitySoundUploadCallablePayload(input: CommunitySoundUploadMetadata
     val normalizedFileType = normalizeCommunitySoundUploadText(input.fileType, MAX_COMMUNITY_SOUND_UPLOAD_SHORT_TEXT)
         .lowercase(Locale.ROOT)
     require(normalizedFileType.isNotBlank()) { "File type is required" }
+    // The finalizer refuses the upload unless this equals the stored object's size.
+    require(input.fileSize in 1..MAX_COMMUNITY_SOUND_UPLOAD_BYTES) { "Sound file size is out of range" }
     val normalizedLicense = normalizeCommunitySoundUploadLicense(input.license)
     require(input.rightsAttested) { "Sound upload rights must be confirmed" }
 
@@ -58,6 +63,7 @@ fun buildCommunitySoundUploadCallablePayload(input: CommunitySoundUploadMetadata
         "downloadUrl" to normalizedDownloadUrl,
         "storagePath" to normalizedStoragePath,
         "fileType" to normalizedFileType,
+        "fileSize" to input.fileSize,
         "originalFileName" to normalizeCommunitySoundUploadText(
             input.originalFileName,
             MAX_COMMUNITY_SOUND_UPLOAD_FILE_NAME,

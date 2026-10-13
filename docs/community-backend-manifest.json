@@ -17,9 +17,9 @@
       "sha256": "39e9d0e77b270990f33fe9e2810100d0c191c944bc9cca0f4e69ba0eefe3ed54"
     },
     {
-      "bytes": 19076,
+      "bytes": 22950,
       "path": "database.rules.json",
-      "sha256": "741ed9d478f4db3905f1e3b7c884ea181743cabd29323e85a961d5e03ee3ef5f"
+      "sha256": "370e9a227f6641d33ee95c7707787878acdb8e090beaa26ff9e4ce237f6fd0da"
     },
     {
       "bytes": 1413,
@@ -27,24 +27,24 @@
       "sha256": "1456338faf77a98f6c4af7d42b8c365297526a2453351096802312f31cec0a32"
     },
     {
-      "bytes": 935,
+      "bytes": 943,
       "path": "package.json",
-      "sha256": "00c0cc302c4e7dfdb85d84b403830015b47fbd47590347c06fd1b52378785030"
+      "sha256": "02110a5213e3456161a3a90e30bddf1f5ab8fec746d3af40d4ac7b975e8e1654"
     },
     {
-      "bytes": 338694,
+      "bytes": 334632,
       "path": "package-lock.json",
-      "sha256": "1cf68418fa43749bd36968244d927844282c0bbb899d508ccfdfe769ec8aa43e"
+      "sha256": "3c46c3920b59139a93ac340a1a9b37d70e71a23ba4f42cf5f78a888d578b4d62"
     },
     {
-      "bytes": 399,
+      "bytes": 515,
       "path": "functions/package.json",
-      "sha256": "5fc7147f387dd6119a2181912917aaa85de2d466864098173a5981272f816a29"
+      "sha256": "0600abd97ce7a9a727cdb88063b72fcd268c71392faf883208fb6340ea86c5a3"
     },
     {
-      "bytes": 111678,
+      "bytes": 109820,
       "path": "functions/package-lock.json",
-      "sha256": "8f11894b4d01dd1d9bfb5bddbc13b3fdcba93cc5775374caa046866ab2f31a05"
+      "sha256": "3ccfaea9259a8ed39cb318672e40e2f0dcc9e081c8fec2d72d02324600196a2c"
     },
     {
       "bytes": 425,
@@ -52,9 +52,9 @@
       "sha256": "801fc6e8bab4b392ef5f4a9069ad1fc99024f969c93c29ecbf9b2dd0c4669590"
     },
     {
-      "bytes": 11033,
+      "bytes": 11199,
       "path": "functions/src/blockHandler.ts",
-      "sha256": "dbcb74f93ebd91c0e6d2cf771959025ac89bc60bba406733803556cb092497e5"
+      "sha256": "8fd08049036aeb046ada7f6b070eb82e399b5af5632feac0b69ed712d43760a2"
     },
     {
       "bytes": 1249,
@@ -62,54 +62,69 @@
       "sha256": "0e24830e6f9ee6c37845ab7ef0f73826374c9d4ab6cb57bd53cdc8fbdff484f1"
     },
     {
-      "bytes": 6720,
+      "bytes": 12826,
+      "path": "functions/src/collectionShareHandler.ts",
+      "sha256": "79d6687cf15608946c0cf8802d8a3a0b92b0f8a0360b277f2c441b977f99aa72"
+    },
+    {
+      "bytes": 7491,
       "path": "functions/src/communityContract.ts",
-      "sha256": "c9c3e24d80d39d3835be6d97e955ecdfb4de3070faa916de75f65288e6b94f65"
+      "sha256": "90d16baba6206a3755640b70c477c8c30c130bb2ad4ac1cf1dd05cdc53c1cbf0"
     },
     {
-      "bytes": 10006,
+      "bytes": 10177,
       "path": "functions/src/followHandler.ts",
-      "sha256": "e8e40bf507ee7e17d26cea0d5e0a8935f84f649f3f592c401f8f63488208527c"
+      "sha256": "4438204ec710b2191695fe9b1b22f3a7b374e7b0983f33d314b084cf1cbb4408"
     },
     {
-      "bytes": 1186,
+      "bytes": 1580,
       "path": "functions/src/index.ts",
-      "sha256": "47dfde20865c0d5af8b8ff858d46d8432a0af332b36dd45e3463dd69c2b2c087"
+      "sha256": "360e95ad169bd6a2fd0b09ec646fca2f16589e9c5422b96329c1a90a0b6a3320"
     },
     {
-      "bytes": 11065,
+      "bytes": 11240,
       "path": "functions/src/profileHandler.ts",
-      "sha256": "ad08f07b21ed2ddfeb3fdc8f7acd32dbcfb6df33bc743a9ff073c6fdee10cbd4"
+      "sha256": "7dba4db446818c4b46cf5e654956c7a4633d6b128ded5af2a2e8d658d23bfa62"
     },
     {
-      "bytes": 5421,
+      "bytes": 12872,
       "path": "functions/src/quotaEngine.ts",
-      "sha256": "e050ecd2d4dc61c85cb9bb596f386f62b0f291cde1ceb16d5fd2198cf8ea2200"
+      "sha256": "106e9002bc475ab2b1041508cae493243ed641a3f0641628bd90d3d8bf04f387"
     },
     {
-      "bytes": 11286,
+      "bytes": 4766,
+      "path": "functions/src/quotaReservation.ts",
+      "sha256": "205b4ee3fb38f0e603aa348ac4742b70498780706adaa9647e480699dd48a49e"
+    },
+    {
+      "bytes": 11673,
       "path": "functions/src/reportHandler.ts",
-      "sha256": "85d590962f029b4b5053d4f11cb0f712570d63922c96e445f28941a0b5d702b8"
+      "sha256": "f85d8c41503474015b378a7c61706f5ca803d95bb90428ee2a72d481dbddf6d3"
     },
     {
-      "bytes": 16605,
+      "bytes": 19274,
       "path": "functions/src/soundUploadHandler.ts",
-      "sha256": "893bdcba32ef8419154efeafe16778cdfc763c75dc019643600092b7a3b6aac7"
+      "sha256": "e240e940f09de16a7adcf6e8e5cfc0c002b5c9f03ec25d7f3ed64038c4897474"
     },
     {
-      "bytes": 9529,
+      "bytes": 8737,
+      "path": "functions/src/storageAttestation.ts",
+      "sha256": "360eadf16aa5b03b0be9cbe637175412d7489daa824abf10779f011970a8d0d7"
+    },
+    {
+      "bytes": 19117,
       "path": "functions/src/voteHandler.ts",
-      "sha256": "5dd7eaeaf03e878340d66c380fee7bf429ea236b2ac68c295a7c40b027535e1c"
+      "sha256": "7c27851077fbc3419d54126845df3af6bac90bd181759b587d267e8d211720de"
     },
     {
-      "bytes": 19037,
+      "bytes": 22869,
       "path": "functions/src/wallpaperUploadHandler.ts",
-      "sha256": "653cccf82cd6ee76c90c65c52c321eb7ca67190c87ef43b470d4bf19c37b6f0c"
+      "sha256": "76486d43362efa8e937185bf5393f943c6617f2ae23839bdd5a45e7efdb86c57"
     }
   ],
   "firebaseCli": {
     "package": "firebase-tools",
-    "version": "15.19.1"
+    "version": "15.31.0"
   },
   "firebaseConfig": {
     "databaseRules": "database.rules.json",
@@ -146,7 +161,7 @@
     "test:database-rules": "firebase emulators:exec --only database --project aura-rules-test \"node --test test/firebase/database.rules.test.mjs\"",
     "test:firebase-rules": "firebase emulators:exec --only database,storage --project aura-rules-test \"node --test test/firebase/*.rules.test.mjs\"",
     "test:functions": "npm --prefix functions test",
-    "test:functions-emulator": "npm --prefix functions run build && firebase emulators:exec --only database --project aura-rules-test \"node --test --test-concurrency=1 test/firebase/functions.*.test.mjs\"",
+    "test:functions-emulator": "npm --prefix functions run build && firebase emulators:exec --only database,storage --project aura-rules-test \"node --test --test-concurrency=1 test/firebase/functions.*.test.mjs\"",
     "test:storage-rules": "firebase emulators:exec --only storage --project aura-rules-test \"node --test test/firebase/storage.rules.test.mjs\""
   },
   "schemaVersion": 1

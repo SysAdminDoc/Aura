@@ -11,7 +11,14 @@ import {
 const PROJECT_ID = 'aura-rules-test';
 const OWNER_UID = 'wallOwnerEmulator';
 const STORAGE_PATH = `wallpapers/${OWNER_UID}/1700000000000_night_grid.jpg`;
-const WALLPAPER_URL = 'https://firebasestorage.googleapis.com/v0/b/aura/o/wallpapers%2FwallOwnerEmulator%2Fnight_grid.jpg';
+const BUCKET = `${PROJECT_ID}.appspot.com`;
+const WALL_BYTES = 410_000;
+const DOWNLOAD_TOKEN = 'emulator-wallpaper-token';
+const EMULATOR_HOST = process.env.FIREBASE_STORAGE_EMULATOR_HOST;
+const OBJECT_PATH = `/v0/b/${BUCKET}/o/${encodeURIComponent(STORAGE_PATH)}?alt=media&token=${DOWNLOAD_TOKEN}`;
+// The client sends HTTPS; the finalizer republishes the emulator's own http origin.
+const WALLPAPER_URL = `https://${EMULATOR_HOST}${OBJECT_PATH}`;
+const PUBLISHED_URL = `http://${EMULATOR_HOST}${OBJECT_PATH}`;
 const requireFromFunctions = createRequire(new URL('../../functions/package.json', import.meta.url));
 const { getApps, initializeApp, deleteApp } = requireFromFunctions('firebase-admin/app');
 const { getDatabase } = requireFromFunctions('firebase-admin/database');
@@ -31,13 +38,29 @@ before(async () => {
   });
 });
 
-beforeEach(async () => {
-  await getDatabase(app).ref().set(null);
-  // The finalizer matches the uploaded object's size and type against the declared payload.
-  await getStorage(app).bucket().file(STORAGE_PATH).save(Buffer.alloc(410_000, 1), {
+// SOI, a JFIF APP0 segment and a baseline SOF0 frame header, padded out to the requested size.
+function jpegBytes(size, width = 1080, height = 1920) {
+  const header = Buffer.from([
+    0xff, 0xd8,
+    0xff, 0xe0, 0x00, 0x10, 0x4a, 0x46, 0x49, 0x46, 0x00, 0x01, 0x01, 0x00, 0x00, 0x01, 0x00, 0x01, 0x00, 0x00,
+    0xff, 0xc0, 0x00, 0x11, 0x08, height >> 8, height & 0xff, width >> 8, width & 0xff,
+    0x03, 0x01, 0x22, 0x00, 0x02, 0x11, 0x01, 0x03, 0x11, 0x01,
+  ]);
+  return Buffer.concat([header, Buffer.alloc(size - header.length, 0)]);
+}
+
+// The finalizer attests the uploaded object, download token and JPEG frame header included.
+async function saveWallpaper(bytes) {
+  await getStorage(app).bucket().file(STORAGE_PATH).save(bytes, {
     contentType: 'image/jpeg',
+    metadata: { metadata: { firebaseStorageDownloadTokens: DOWNLOAD_TOKEN } },
     resumable: false,
   });
+}
+
+beforeEach(async () => {
+  await getDatabase(app).ref().set(null);
+  await saveWallpaper(jpegBytes(WALL_BYTES));
 });
 
 after(async () => {
@@ -64,7 +87,7 @@ function validRequest(overrides = {}) {
         storagePath: STORAGE_PATH,
         width: 1080,
         height: 1920,
-        fileSize: 410_000,
+        fileSize: WALL_BYTES,
         fileType: 'image/jpeg',
         originalFileName: ' Night Grid.jpg ',
         uploaderLabel: ' Wall Owner ',
@@ -95,13 +118,13 @@ test('wallpaper upload callable handler writes metadata, owner index, quota, and
   assert.equal(wallpaper.category, 'amoled');
   assert.deepEqual(wallpaper.tags, ['dark', 'lock-screen', 'minimal']);
   assert.deepEqual(wallpaper.colors, ['#778899', '#112233']);
-  assert.equal(wallpaper.thumbnailUrl, WALLPAPER_URL);
-  assert.equal(wallpaper.fullUrl, WALLPAPER_URL);
-  assert.equal(wallpaper.downloadUrl, WALLPAPER_URL);
+  assert.equal(wallpaper.thumbnailUrl, PUBLISHED_URL);
+  assert.equal(wallpaper.fullUrl, PUBLISHED_URL);
+  assert.equal(wallpaper.downloadUrl, PUBLISHED_URL);
   assert.equal(wallpaper.storagePath, STORAGE_PATH);
   assert.equal(wallpaper.width, 1080);
   assert.equal(wallpaper.height, 1920);
-  assert.equal(wallpaper.fileSize, 410_000);
+  assert.equal(wallpaper.fileSize, WALL_BYTES);
   assert.equal(wallpaper.fileType, 'image/jpeg');
   assert.equal(Object.hasOwn(wallpaper, 'originalFileName'), false);
   assert.equal(wallpaper.uploaderId, OWNER_UID);
@@ -138,14 +161,29 @@ test('wallpaper upload callable handler writes metadata, owner index, quota, and
 });
 
 test('wallpaper upload is refused when the stored object size differs from the declared size', async () => {
-  await getStorage(app).bucket().file(STORAGE_PATH).save(Buffer.alloc(1_000, 1), {
-    contentType: 'image/jpeg',
-    resumable: false,
-  });
+  await saveWallpaper(jpegBytes(1_000));
 
   await assert.rejects(
     () => finalizeCommunityWallpaperUploadHandler(validRequest()),
-    { code: 'failed-precondition' },
+    (error) => {
+      assert.equal(error.code, 'failed-precondition');
+      assert.equal(error.details.reason, 'size-mismatch');
+      return true;
+    },
+  );
+  assert.equal(await readValue('community_wallpapers'), null);
+});
+
+test('wallpaper upload is refused when the stored JPEG has other dimensions', async () => {
+  await saveWallpaper(jpegBytes(WALL_BYTES, 1080, 1919));
+
+  await assert.rejects(
+    () => finalizeCommunityWallpaperUploadHandler(validRequest()),
+    (error) => {
+      assert.equal(error.code, 'failed-precondition');
+      assert.equal(error.details.reason, 'dimensions-mismatch');
+      return true;
+    },
   );
   assert.equal(await readValue('community_wallpapers'), null);
 });

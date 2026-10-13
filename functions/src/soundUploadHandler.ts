@@ -25,6 +25,12 @@ import {
   runWithQuotaReservation,
   settleQuotaLedger,
 } from "./quotaReservation";
+import {
+  attestStorageObject,
+  storageObjectMetadataFrom,
+  type AttestedStorageObject,
+  type StorageObjectMetadata,
+} from "./storageAttestation";
 
 const SOUND_UPLOAD_SURFACE = surfaceByFunctionName("finalizeCommunitySoundUpload");
 const MAX_OPERATION_ID = 120;
@@ -90,6 +96,7 @@ export interface CommunitySoundUploadPayload {
   readonly downloadUrl: string;
   readonly storagePath: string;
   readonly fileType: string;
+  readonly fileSize: number;
   readonly uploaderLabel: string;
   readonly license: string;
   readonly rightsAttested: true;
@@ -98,20 +105,15 @@ export interface CommunitySoundUploadPayload {
   readonly uploaderKey: string;
 }
 
-interface CommitSoundUploadInput {
+export interface CommitSoundUploadInput {
   readonly uid: string;
   readonly surfaceKey: string;
   readonly dedupeKey: string;
   readonly uploadId: string;
   readonly payload: CommunitySoundUploadPayload;
+  readonly storedObject: AttestedStorageObject;
   readonly uploadedAt: number;
   readonly dedupeMarker: DedupeMarker;
-}
-
-export interface StorageObjectMetadata {
-  readonly exists: boolean;
-  readonly contentType?: string;
-  readonly size?: number;
 }
 
 export interface SoundUploadBackend extends QuotaSettlingBackend {
@@ -182,21 +184,18 @@ export async function finalizeCommunitySoundUploadHandler(
   // Anything that stops the upload from landing refunds the reserved unit and cooldown.
   const reserved = { uid, dayKey, surface: SOUND_UPLOAD_SURFACE, reservation: decision.reservation };
   const { uploadId, targetPath, ownerIndexPath } = await runWithQuotaReservation(backend, reserved, async () => {
-    const storageObject = await backend.verifyStorageObject(payload.storagePath);
-    if (!storageObject.exists) {
-      throw new HttpsError("failed-precondition", "Storage object does not exist at the declared path.", {
-        operationId: envelope.operationId,
-        storagePath: payload.storagePath,
-      });
-    }
-    // Sound uploads declare no byte count, so bound the stored object instead of matching one.
-    if (storageObject.size !== undefined && (storageObject.size <= 0 || storageObject.size > MAX_SOUND_BYTES)) {
-      throw new HttpsError("failed-precondition", "Stored sound object size is outside the allowed range.", {
-        operationId: envelope.operationId,
-        actual: storageObject.size,
-        max: MAX_SOUND_BYTES,
-      });
-    }
+    const storedObject = attestStorageObject(
+      payload.storagePath,
+      payload.downloadUrl,
+      await backend.verifyStorageObject(payload.storagePath),
+      {
+        allowedContentTypes: VALID_AUDIO_MIMES,
+        maxBytes: MAX_SOUND_BYTES,
+        declaredContentType: payload.fileType,
+        declaredBytes: payload.fileSize,
+      },
+      { operationId: envelope.operationId },
+    );
 
     const allocatedId = sanitizeUploadId(await backend.createUploadId());
     if (!allocatedId) {
@@ -210,6 +209,7 @@ export async function finalizeCommunitySoundUploadHandler(
       dedupeKey,
       uploadId: allocatedId,
       payload,
+      storedObject,
       uploadedAt: nowMillis,
       dedupeMarker: buildDedupeMarker({
         nowMillis,
@@ -253,6 +253,7 @@ export function normalizeSoundUploadPayload(
   const tags = normalizeTags(payload.tags);
   const downloadUrl = normalizeHttpsUrl(requiredString(payload, "downloadUrl"), "downloadUrl");
   const fileType = normalizeFileType(requiredString(payload, "fileType"));
+  const fileSize = normalizePositiveInteger(payload, "fileSize", MAX_SOUND_BYTES);
   const uploaderLabel = normalizeShortText(optionalString(payload, "uploaderLabel"), MAX_SHORT_TEXT)
     || uploaderUid.slice(0, 8);
   const license = normalizeLicense(requiredString(payload, "license"));
@@ -270,6 +271,7 @@ export function normalizeSoundUploadPayload(
     downloadUrl,
     storagePath,
     fileType,
+    fileSize,
     uploaderLabel,
     license,
     rightsAttested: true,
@@ -409,6 +411,22 @@ function normalizeOptionalHttpsUrl(value: string, field: string): string {
   return normalizeHttpsUrl(normalized, field);
 }
 
+function normalizePositiveInteger(
+  value: Record<string, unknown>,
+  field: string,
+  maxValue: number,
+): number {
+  const raw = value[field];
+  if (typeof raw !== "number" || !Number.isFinite(raw)) {
+    throwInvalid(field, `${field} must be a finite number.`);
+  }
+  const normalized = Math.trunc(raw);
+  if (normalized !== raw || normalized <= 0 || normalized > maxValue) {
+    throwInvalid(field, `${field} is outside the allowed range.`);
+  }
+  return normalized;
+}
+
 function normalizeShortText(value: string, maxLength: number): string {
   return value
     .replace(CONTROL_REGEX, " ")
@@ -482,11 +500,7 @@ class FirebaseSoundUploadBackend implements SoundUploadBackend {
       const bucket = getStorage().bucket();
       const file = bucket.file(storagePath);
       const [metadata] = await file.getMetadata();
-      return {
-        exists: true,
-        contentType: metadata.contentType ?? undefined,
-        size: metadata.size !== undefined ? Number(metadata.size) : undefined,
-      };
+      return storageObjectMetadataFrom(metadata);
     } catch (e: unknown) {
       const code = (e as { code?: number })?.code;
       if (code === 404) return { exists: false };
@@ -549,13 +563,13 @@ class FirebaseSoundUploadBackend implements SoundUploadBackend {
   async commitSoundUpload(input: CommitSoundUploadInput): Promise<void> {
     const metadataPath = `/community_sounds/${input.uploadId}`;
     await this.root.update({
-      [`community_sounds/${input.uploadId}`]: buildSoundMetadata(input.uid, input.payload, input.uploadedAt),
+      [`community_sounds/${input.uploadId}`]: buildSoundMetadata(input),
       [`owner_uploads/${input.payload.uploaderKey}/sounds/${input.uploadId}`]: {
         uploadId: input.uploadId,
         publicId: `cu_${input.uploadId}`,
         contentType: "SOUND",
         metadataPath,
-        storagePath: input.payload.storagePath,
+        storagePath: input.storedObject.storagePath,
         title: input.payload.name,
         createdAt: input.uploadedAt,
       },
@@ -572,18 +586,18 @@ class FirebaseSoundUploadBackend implements SoundUploadBackend {
   }
 }
 
-function buildSoundMetadata(
-  uploaderUid: string,
-  payload: CommunitySoundUploadPayload,
-  uploadedAt: number,
-): Record<string, unknown> {
+// Exported so the test fake publishes exactly what the real backend writes.
+export function buildSoundMetadata(input: CommitSoundUploadInput): Record<string, unknown> {
+  const { uid: uploaderUid, payload, storedObject, uploadedAt } = input;
   return {
     name: payload.name,
     category: payload.category,
     tags: payload.tags,
-    downloadUrl: payload.downloadUrl,
-    storagePath: payload.storagePath,
-    fileType: payload.fileType,
+    // Object fields come from Storage, never from the client's payload.
+    downloadUrl: storedObject.downloadUrl,
+    storagePath: storedObject.storagePath,
+    fileType: storedObject.contentType,
+    fileSize: storedObject.size,
     uploadedAt,
     uploaderId: uploaderUid,
     uploaderUid,

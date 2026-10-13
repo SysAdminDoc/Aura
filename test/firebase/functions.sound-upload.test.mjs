@@ -11,7 +11,14 @@ import {
 const PROJECT_ID = 'aura-rules-test';
 const OWNER_UID = 'soundOwnerEmulator';
 const STORAGE_PATH = `sounds/${OWNER_UID}/1700000000000_soft_bell.mp3`;
-const DOWNLOAD_URL = 'https://firebasestorage.googleapis.com/v0/b/aura/o/sounds%2FsoundOwnerEmulator%2Fsoft_bell.mp3';
+const BUCKET = `${PROJECT_ID}.appspot.com`;
+const SOUND_BYTES = 48_213;
+const DOWNLOAD_TOKEN = 'emulator-sound-token';
+const EMULATOR_HOST = process.env.FIREBASE_STORAGE_EMULATOR_HOST;
+const OBJECT_PATH = `/v0/b/${BUCKET}/o/${encodeURIComponent(STORAGE_PATH)}?alt=media&token=${DOWNLOAD_TOKEN}`;
+// The client sends HTTPS; the finalizer republishes the emulator's own http origin.
+const DOWNLOAD_URL = `https://${EMULATOR_HOST}${OBJECT_PATH}`;
+const PUBLISHED_URL = `http://${EMULATOR_HOST}${OBJECT_PATH}`;
 const requireFromFunctions = createRequire(new URL('../../functions/package.json', import.meta.url));
 const { getApps, initializeApp, deleteApp } = requireFromFunctions('firebase-admin/app');
 const { getDatabase } = requireFromFunctions('firebase-admin/database');
@@ -31,13 +38,18 @@ before(async () => {
   });
 });
 
-beforeEach(async () => {
-  await getDatabase(app).ref().set(null);
-  // The finalizer checks the uploaded object before publishing metadata.
-  await getStorage(app).bucket().file(STORAGE_PATH).save(Buffer.alloc(48_213, 1), {
+// The finalizer attests the uploaded object, download token included, before publishing metadata.
+async function saveSound() {
+  await getStorage(app).bucket().file(STORAGE_PATH).save(Buffer.alloc(SOUND_BYTES, 1), {
     contentType: 'audio/mpeg',
+    metadata: { metadata: { firebaseStorageDownloadTokens: DOWNLOAD_TOKEN } },
     resumable: false,
   });
+}
+
+beforeEach(async () => {
+  await getDatabase(app).ref().set(null);
+  await saveSound();
 });
 
 after(async () => {
@@ -60,6 +72,7 @@ function validRequest(overrides = {}) {
         downloadUrl: DOWNLOAD_URL,
         storagePath: STORAGE_PATH,
         fileType: 'audio/mpeg',
+        fileSize: SOUND_BYTES,
         originalFileName: ' Soft Bell.mp3 ',
         uploaderLabel: ' Sound Owner ',
         license: 'cc-by',
@@ -88,9 +101,10 @@ test('sound upload callable handler writes metadata, owner index, quota, and ded
   assert.equal(sound.name, 'Soft Bell');
   assert.equal(sound.category, 'notification');
   assert.deepEqual(sound.tags, ['calm', 'bell', 'lo-fi']);
-  assert.equal(sound.downloadUrl, DOWNLOAD_URL);
+  assert.equal(sound.downloadUrl, PUBLISHED_URL);
   assert.equal(sound.storagePath, STORAGE_PATH);
   assert.equal(sound.fileType, 'audio/mpeg');
+  assert.equal(sound.fileSize, SOUND_BYTES);
   assert.equal(Object.hasOwn(sound, 'originalFileName'), false);
   assert.equal(sound.uploaderId, OWNER_UID);
   assert.equal(sound.uploaderUid, OWNER_UID);
@@ -167,15 +181,24 @@ test('a refused sound upload gives back its quota unit so the retry goes straigh
   assert.equal(refunded.releasedCount, 1);
 
   // Sound uploads have a 15-minute cooldown; the refused attempt no longer starts one.
-  await getStorage(app).bucket().file(STORAGE_PATH).save(Buffer.alloc(48_213, 1), {
-    contentType: 'audio/mpeg',
-    resumable: false,
-  });
+  await saveSound();
   const retry = await finalizeCommunitySoundUploadHandler(withOperationId(validRequest(), 'refused-op-2'));
   assert.equal(retry.status, 'accepted');
   const spent = await soundUploadLedger();
   assert.equal(spent.count, 1);
   assert.equal(spent.pending, undefined);
+});
+
+test('sound upload is refused when the stored size differs from the declared size', async () => {
+  await assert.rejects(
+    () => finalizeCommunitySoundUploadHandler(validRequest({ fileSize: SOUND_BYTES - 1 })),
+    (error) => {
+      assert.equal(error.code, 'failed-precondition');
+      assert.equal(error.details.reason, 'size-mismatch');
+      return true;
+    },
+  );
+  assert.equal(await readValue('community_sounds'), null);
 });
 
 test('same storage path sound upload is idempotent through emulator dedupe', async () => {

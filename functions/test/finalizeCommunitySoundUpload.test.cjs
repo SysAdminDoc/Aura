@@ -3,12 +3,28 @@ const test = require("node:test");
 
 const { buildDedupeMarker, evaluateCommunityQuotaAttempt, settledQuotaState } = require("../lib/quotaEngine.js");
 const {
+  buildSoundMetadata,
   finalizeCommunitySoundUploadHandler,
   normalizeSoundUploadPayload,
   soundUploadDedupeKey,
 } = require("../lib/soundUploadHandler.js");
 
+// These cases pin the production download host.
+delete process.env.FIREBASE_STORAGE_EMULATOR_HOST;
+
 const NOW = Date.UTC(2026, 5, 7, 12, 0, 0);
+const MAX_SOUND_BYTES = 20 * 1024 * 1024;
+const BUCKET = "aura-test.appspot.com";
+const STORAGE_PATH = "sounds/soundOwner1/1700000000000_soft_bell.mp3";
+const SOUND_BYTES = 48_213;
+// Same object and token as the published URL, spelled the way a client might: lowercase
+// escapes and the query in another order.
+const CLIENT_URL =
+  `https://firebasestorage.googleapis.com/v0/b/${BUCKET}/o/sounds%2fsoundOwner1%2f1700000000000_soft_bell.mp3` +
+  "?token=tok-sound-1&alt=media";
+const PUBLISHED_URL =
+  `https://firebasestorage.googleapis.com/v0/b/${BUCKET}/o/sounds%2FsoundOwner1%2F1700000000000_soft_bell.mp3` +
+  "?alt=media&token=tok-sound-1";
 
 function validRequest(overrides = {}) {
   return {
@@ -21,9 +37,10 @@ function validRequest(overrides = {}) {
         name: " Soft   Bell ",
         category: " Notification ",
         tags: [" Calm ", "CALM", "bell!!!", "lo-fi"],
-        downloadUrl: "https://firebasestorage.googleapis.com/v0/b/aura/o/sounds%2FsoundOwner1%2Fbell.mp3",
-        storagePath: "sounds/soundOwner1/1700000000000_soft_bell.mp3",
+        downloadUrl: CLIENT_URL,
+        storagePath: STORAGE_PATH,
         fileType: "audio/mpeg",
+        fileSize: SOUND_BYTES,
         originalFileName: " Soft Bell.mp3 ",
         uploaderLabel: " Sound Owner ",
         license: "cc-by",
@@ -32,6 +49,17 @@ function validRequest(overrides = {}) {
         ...overrides,
       },
     },
+  };
+}
+
+function storedSound(overrides = {}) {
+  return {
+    exists: true,
+    bucket: BUCKET,
+    contentType: "audio/mpeg",
+    size: SOUND_BYTES,
+    downloadTokens: ["tok-old", "tok-sound-1"],
+    ...overrides,
   };
 }
 
@@ -45,7 +73,7 @@ class FakeSoundUploadBackend {
     this.commitFailure = null;
     this.sounds = new Map();
     this.ownerUploads = new Map();
-    this.storageObject = { exists: true, size: 48_213, contentType: "audio/mpeg" };
+    this.storageObject = storedSound();
     this.verifiedPaths = [];
   }
 
@@ -91,36 +119,38 @@ class FakeSoundUploadBackend {
   async commitSoundUpload(input) {
     if (this.commitFailure) throw this.commitFailure;
     const metadataPath = `/community_sounds/${input.uploadId}`;
-    const publicRow = {
-      name: input.payload.name,
-      category: input.payload.category,
-      tags: input.payload.tags,
-      downloadUrl: input.payload.downloadUrl,
-      storagePath: input.payload.storagePath,
-      fileType: input.payload.fileType,
-      uploadedAt: input.uploadedAt,
-      uploaderId: input.uid,
-      uploaderUid: input.uid,
-      uploaderLabel: input.payload.uploaderLabel,
-      license: input.payload.license,
-      rightsAttested: true,
-      rightsAttestedAt: input.uploadedAt,
-      sourceUrl: input.payload.sourceUrl,
-      votes: 0,
-    };
     const ownerIndex = {
       uploadId: input.uploadId,
       publicId: `cu_${input.uploadId}`,
       contentType: "SOUND",
       metadataPath,
-      storagePath: input.payload.storagePath,
+      storagePath: input.storedObject.storagePath,
       title: input.payload.name,
       createdAt: input.uploadedAt,
     };
-    this.sounds.set(input.uploadId, publicRow);
+    this.sounds.set(input.uploadId, buildSoundMetadata(input));
     this.ownerUploads.set(`${input.payload.uploaderKey}/sounds/${input.uploadId}`, ownerIndex);
     this.dedupe.set(`${input.uid}/${input.surfaceKey}/${input.dedupeKey}`, input.dedupeMarker);
   }
+}
+
+// Resolves with the refusal and checks nothing was published.
+async function refuse(backend, request = validRequest()) {
+  const error = await finalizeCommunitySoundUploadHandler(request, backend).then(
+    () => assert.fail("expected the sound upload to be refused"),
+    (caught) => caught,
+  );
+  assert.equal(backend.sounds.size, 0);
+  assert.equal(backend.ownerUploads.size, 0);
+  return error;
+}
+
+async function refuseForStorage(backend, reason, request = validRequest()) {
+  const error = await refuse(backend, request);
+  assert.equal(error.code, "failed-precondition");
+  assert.equal(error.details.reason, reason);
+  assert.equal(error.details.operationId, "sound-upload-op-1");
+  return error;
 }
 
 test("accepted sound upload writes public metadata, owner index, quota, and dedupe", async () => {
@@ -140,9 +170,10 @@ test("accepted sound upload writes public metadata, owner index, quota, and dedu
     name: "Soft Bell",
     category: "notification",
     tags: ["calm", "bell", "lo-fi"],
-    downloadUrl: "https://firebasestorage.googleapis.com/v0/b/aura/o/sounds%2FsoundOwner1%2Fbell.mp3",
-    storagePath: "sounds/soundOwner1/1700000000000_soft_bell.mp3",
+    downloadUrl: PUBLISHED_URL,
+    storagePath: STORAGE_PATH,
     fileType: "audio/mpeg",
+    fileSize: SOUND_BYTES,
     uploadedAt: NOW,
     uploaderId: "soundOwner1",
     uploaderUid: "soundOwner1",
@@ -153,16 +184,18 @@ test("accepted sound upload writes public metadata, owner index, quota, and dedu
     sourceUrl: "https://example.com/source",
     votes: 0,
   });
+  assert.notEqual(backend.sounds.get("soundA").downloadUrl, CLIENT_URL);
   assert.equal(Object.hasOwn(backend.sounds.get("soundA"), "originalFileName"), false);
   assert.deepEqual(backend.ownerUploads.get("soundOwner1/sounds/soundA"), {
     uploadId: "soundA",
     publicId: "cu_soundA",
     contentType: "SOUND",
     metadataPath: "/community_sounds/soundA",
-    storagePath: "sounds/soundOwner1/1700000000000_soft_bell.mp3",
+    storagePath: STORAGE_PATH,
     title: "Soft Bell",
     createdAt: NOW,
   });
+  assert.deepEqual(backend.verifiedPaths, [STORAGE_PATH]);
   assert.equal(backend.quotas.get("soundOwner1/20260607/sound_uploads").count, 1);
 
   const payload = normalizeSoundUploadPayload(validRequest().data.payload, "soundOwner1");
@@ -226,30 +259,94 @@ test("cooldown and daily-limit quota rejections do not commit sound metadata", a
   assert.equal(limitBackend.sounds.size, 0);
 });
 
-test("sound finalize verifies the stored object and bounds its size", async () => {
-  const accepted = new FakeSoundUploadBackend();
-  const result = await finalizeCommunitySoundUploadHandler(validRequest(), accepted);
-  assert.equal(result.status, "accepted");
-  assert.deepEqual(accepted.verifiedPaths, ["sounds/soundOwner1/1700000000000_soft_bell.mp3"]);
+test("sound finalize fails closed on a missing object or unavailable metadata", async () => {
+  const missing = new FakeSoundUploadBackend();
+  missing.storageObject = { exists: false };
+  await refuseForStorage(missing, "object-missing");
 
-  for (const storageObject of [
-    { exists: false },
-    { exists: true, size: 0 },
-    { exists: true, size: 20 * 1024 * 1024 + 1 },
-  ]) {
+  for (const field of ["bucket", "contentType", "size", "downloadTokens"]) {
     const backend = new FakeSoundUploadBackend();
-    backend.storageObject = storageObject;
-    await assert.rejects(
-      () => finalizeCommunitySoundUploadHandler(validRequest(), backend),
-      { code: "failed-precondition" },
-    );
-    assert.equal(backend.sounds.size, 0);
-    assert.equal(backend.ownerUploads.size, 0);
+    backend.storageObject = storedSound({ [field]: undefined });
+    const error = await refuseForStorage(backend, "metadata-unavailable");
+    assert.deepEqual(error.details.missing, [field]);
   }
 
-  const unknownSize = new FakeSoundUploadBackend();
-  unknownSize.storageObject = { exists: true };
-  assert.equal((await finalizeCommunitySoundUploadHandler(validRequest(), unknownSize)).status, "accepted");
+  const noTokens = new FakeSoundUploadBackend();
+  noTokens.storageObject = storedSound({ downloadTokens: [] });
+  await refuseForStorage(noTokens, "metadata-unavailable");
+});
+
+test("sound finalize refuses another owner's storage path before reading Storage", async () => {
+  const backend = new FakeSoundUploadBackend();
+  const error = await refuse(backend, validRequest({ storagePath: "sounds/otherOwner/1700000000000_soft_bell.mp3" }));
+  assert.equal(error.code, "invalid-argument");
+  assert.equal(error.details.field, "storagePath");
+  assert.deepEqual(backend.verifiedPaths, []);
+});
+
+test("sound finalize refuses a download URL that doesn't point at the stored object", async () => {
+  for (const downloadUrl of [
+    CLIENT_URL.replace("firebasestorage.googleapis.com", "storage.example.com"),
+    CLIENT_URL.replace(BUCKET, "other-bucket.appspot.com"),
+    CLIENT_URL.replace("1700000000000_soft_bell.mp3", "other.mp3"),
+  ]) {
+    await refuseForStorage(new FakeSoundUploadBackend(), "download-url-mismatch", validRequest({ downloadUrl }));
+  }
+
+  await refuseForStorage(
+    new FakeSoundUploadBackend(),
+    "download-token-unknown",
+    validRequest({ downloadUrl: CLIENT_URL.replace("tok-sound-1", "tok-forged") }),
+  );
+});
+
+test("sound finalize requires the stored size to equal the declared size within the limit", async () => {
+  const mismatch = new FakeSoundUploadBackend();
+  mismatch.storageObject = storedSound({ size: SOUND_BYTES + 1 });
+  const error = await refuseForStorage(mismatch, "size-mismatch");
+  assert.equal(error.details.declared, SOUND_BYTES);
+  assert.equal(error.details.actual, SOUND_BYTES + 1);
+
+  for (const size of [0, MAX_SOUND_BYTES + 1]) {
+    const backend = new FakeSoundUploadBackend();
+    backend.storageObject = storedSound({ size });
+    await refuseForStorage(backend, "size-out-of-range");
+  }
+
+  for (const fileSize of [undefined, 0, -1, 1.5, "48213", MAX_SOUND_BYTES + 1]) {
+    const backend = new FakeSoundUploadBackend();
+    const invalid = await refuse(backend, validRequest({ fileSize }));
+    assert.equal(invalid.code, "invalid-argument");
+    assert.equal(invalid.details.field, "fileSize");
+    assert.deepEqual(backend.verifiedPaths, []);
+  }
+
+  const atLimit = new FakeSoundUploadBackend();
+  atLimit.storageObject = storedSound({ size: MAX_SOUND_BYTES });
+  const accepted = await finalizeCommunitySoundUploadHandler(validRequest({ fileSize: MAX_SOUND_BYTES }), atLimit);
+  assert.equal(accepted.status, "accepted");
+  assert.equal(atLimit.sounds.get("soundA").fileSize, MAX_SOUND_BYTES);
+});
+
+test("sound finalize requires the stored MIME type to be exactly the declared one", async () => {
+  const ogg = new FakeSoundUploadBackend();
+  ogg.storageObject = storedSound({ contentType: "audio/ogg" });
+  const error = await refuseForStorage(ogg, "content-type-mismatch");
+  assert.equal(error.details.declared, "audio/mpeg");
+  assert.equal(error.details.actual, "audio/ogg");
+
+  // An alias of the declared type, or something that isn't audio at all, is still a mismatch.
+  for (const contentType of ["audio/mp3", "application/octet-stream"]) {
+    const backend = new FakeSoundUploadBackend();
+    backend.storageObject = storedSound({ contentType });
+    await refuseForStorage(backend, "content-type-mismatch");
+  }
+
+  // Case and parameters don't change the type, and the row carries the normalized one.
+  const withParams = new FakeSoundUploadBackend();
+  withParams.storageObject = storedSound({ contentType: "Audio/MPEG; charset=binary" });
+  assert.equal((await finalizeCommunitySoundUploadHandler(validRequest(), withParams)).status, "accepted");
+  assert.equal(withParams.sounds.get("soundA").fileType, "audio/mpeg");
 });
 
 test("callable identity requires Firebase Auth and App Check", async () => {
@@ -276,6 +373,7 @@ test("sound upload payload normalizes fields and rejects ownership overrides", (
   assert.equal(payload.category, "notification");
   assert.deepEqual(payload.tags, ["a", "tone"]);
   assert.equal(payload.license, "CC BY");
+  assert.equal(payload.fileSize, SOUND_BYTES);
   assert.equal(payload.uploaderKey, "soundOwner1");
   assert.match(soundUploadDedupeKey(payload), /^sp_[a-f0-9]{64}$/);
 

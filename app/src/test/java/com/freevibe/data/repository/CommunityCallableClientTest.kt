@@ -9,8 +9,10 @@ import com.freevibe.data.model.CommunityUserBlockInput
 import com.freevibe.data.model.CommunityWallpaperUploadMetadataInput
 import com.freevibe.data.model.CreatorProfileUpdateInput
 import com.freevibe.data.model.ContentSource
+import com.freevibe.data.model.MAX_COMMUNITY_SOUND_UPLOAD_BYTES
 import com.freevibe.data.model.MAX_SHARED_COLLECTION_DOCUMENT_BYTES
 import com.freevibe.data.model.SharedCollectionInput
+import com.freevibe.data.model.buildCommunitySoundUploadCallablePayload
 import com.freevibe.data.model.buildSharedCollectionCallablePayload
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
@@ -251,6 +253,7 @@ class CommunityCallableClientTest {
                 downloadUrl = "https://firebasestorage.googleapis.com/v0/b/aura/o/sounds%2FsoundOwner1%2Fbell.mp3",
                 storagePath = "sounds/soundOwner1/1700000000000_soft_bell.mp3",
                 fileType = " AUDIO/MPEG ",
+                fileSize = 48_213L,
                 originalFileName = " Soft Bell.mp3 ",
                 uploaderLabel = " Sound Owner ",
                 license = "cc-by",
@@ -273,6 +276,7 @@ class CommunityCallableClientTest {
         assertEquals("notification", payload["category"])
         assertEquals(listOf("calm", "bell", "lo-fi"), payload["tags"])
         assertEquals("audio/mpeg", payload["fileType"])
+        assertEquals(48_213L, payload["fileSize"])
         assertEquals("Soft Bell.mp3", payload["originalFileName"])
         assertEquals("Sound Owner", payload["uploaderLabel"])
         assertEquals("CC BY", payload["license"])
@@ -283,6 +287,35 @@ class CommunityCallableClientTest {
         assertFalse(payload.containsKey("uploaderUid"))
         assertFalse(payload.containsKey("uploadedAt"))
         assertFalse(payload.containsKey("votes"))
+    }
+
+    @Test
+    fun `sound upload payload carries a file size bounded by the storage limit`() {
+        fun soundInput(fileSize: Long) = CommunitySoundUploadMetadataInput(
+            name = "Soft Bell",
+            category = "notification",
+            tags = emptyList(),
+            downloadUrl = "https://firebasestorage.googleapis.com/v0/b/aura/o/sounds%2FsoundOwner1%2Fbell.mp3",
+            storagePath = "sounds/soundOwner1/1700000000000_soft_bell.mp3",
+            fileType = "audio/mpeg",
+            fileSize = fileSize,
+            originalFileName = "bell.mp3",
+            uploaderLabel = "Sound Owner",
+            license = "CC0",
+            rightsAttested = true,
+        )
+
+        assertEquals(1L, buildCommunitySoundUploadCallablePayload(soundInput(1L))["fileSize"])
+        assertEquals(
+            MAX_COMMUNITY_SOUND_UPLOAD_BYTES,
+            buildCommunitySoundUploadCallablePayload(soundInput(MAX_COMMUNITY_SOUND_UPLOAD_BYTES))["fileSize"],
+        )
+        assertEquals(20L * 1024L * 1024L, MAX_COMMUNITY_SOUND_UPLOAD_BYTES)
+
+        for (outOfRange in listOf(0L, -1L, MAX_COMMUNITY_SOUND_UPLOAD_BYTES + 1L)) {
+            val error = runCatching { buildCommunitySoundUploadCallablePayload(soundInput(outOfRange)) }.exceptionOrNull()
+            assertTrue("fileSize $outOfRange should be refused", error is IllegalArgumentException)
+        }
     }
 
     @Test

@@ -416,11 +416,12 @@ class WallpaperUploadRepository @Inject constructor(
         val cropped = decodeCenterCroppedBitmap(localUri, aspect)
         return try {
             val colors = paletteColorsToHex(colorExtractor.extractFromBitmap(cropped))
-            val bytes = compressWallpaperForUpload(cropped)
+            // The server reads the size back from the JPEG header, so declare what was encoded.
+            val compressed = compressWallpaperForUpload(cropped)
             PreparedWallpaper(
-                bytes = bytes,
-                width = cropped.width,
-                height = cropped.height,
+                bytes = compressed.bytes,
+                width = compressed.width,
+                height = compressed.height,
                 colors = colors,
             )
         } finally {
@@ -593,10 +594,13 @@ internal fun paletteColorsToHex(palette: ColorExtractor.WallpaperPalette): List<
         .distinct()
         .take(6)
 
+/** JPEG bytes and the pixel size they were encoded at, which shrinks when the first tries are too big. */
+internal class CompressedWallpaper(val bytes: ByteArray, val width: Int, val height: Int)
+
 internal fun compressWallpaperForUpload(
     bitmap: Bitmap,
     maxBytes: Long = MAX_WALLPAPER_UPLOAD_BYTES,
-): ByteArray {
+): CompressedWallpaper {
     var working = bitmap
     var ownsWorking = false
     var quality = 92
@@ -607,9 +611,9 @@ internal fun compressWallpaperForUpload(
         output.reset()
         working.compress(Bitmap.CompressFormat.JPEG, quality, output)
         if (output.size().toLong() <= maxBytes) {
-            val bytes = output.toByteArray()
+            val compressed = CompressedWallpaper(output.toByteArray(), working.width, working.height)
             if (ownsWorking) working.recycle()
-            return bytes
+            return compressed
         }
 
         if (quality > 72) {
