@@ -233,6 +233,13 @@ Remainders of items closed in the 2026-09-30 drain whose full acceptance did not
 
 ### P2
 
+- [ ] P2 — Hold theme pack import and the 24H pack worker to the restore address rules
+  Why: a library restore now keeps only pack pictures and profile sounds that are on the phone or on one of Aura's provider hosts, but a theme pack import still takes any web address, and the pack worker fetches whatever it was given on any network.
+  Evidence: `ThemePackImportPlan.kt` accepts any http or https host for pack slots and profile sounds; `WallpaperPackManager.kt` has no Wi-Fi only check before an https slot; a redirect from an allowed provider host isn't constrained; Reddit's `hostSuffixes` in the provider registry lacks `redd.it`, so a legitimate `i.redd.it` slot is reported for a re-pick.
+  Touches: `ThemePackImportPlan.kt`, `ImportPayloadValidation.kt`, `WallpaperPackManager.kt`, the provider registry, `tools/network_endpoint_inventory_check.py`, tests.
+  Acceptance: theme pack import runs pack slots and profile sounds through the same check a library restore uses; the pack worker honors Wi-Fi only and refuses a redirect that leaves the provider's hosts; an `i.redd.it` picture survives a restore; tests cover a hostile theme pack, a metered connection and a redirect.
+  Complexity: S
+
 - [ ] P2 — Prove offline rotation on a phone and finish its follow-ups
   Why: rotation work no longer carries a network constraint and the check moved into the worker (`RotationNetworkGate`), but nothing has run on a device. Favorites and collection sources still wait for a network even when their pictures are already on the phone, and the catch-up one-shot writes its receipts under the caller's work name.
   Evidence: `RotationNetworkGate.kt`, `AutoWallpaperWorker.kt` (`auto_wallpaper_catch_up`, `relaxStoredNetworkConstraint`), `RotationTriggerService.kt`; `readRotationNetworkState` has no JVM test.
@@ -253,6 +260,13 @@ Remainders of items closed in the 2026-09-30 drain whose full acceptance did not
   Complexity: S
 
 ### P3
+
+- [ ] P3 — Tie off the sound profile and 24H pack loose ends
+  Why: the review fixes left a handful of smaller gaps that need either a design choice or a phone to settle.
+  Evidence: restored profile sounds are MediaStore row addresses, which name a different sound or nothing on another phone; someone whose night sound was already stuck has it saved as "previous" until they set the day sound once; `sound_profile_now` has no row in `docs/background-work-scheduling-ledger.json`, and the pack's row doesn't mention lost access or the start-up repair; a pack edit that lands during a successful worker run can be hidden by that run's dedup marker until the next time of day; a restore or a theme pack import replaces the pack without releasing the old pictures' grants, and a grant taken for a pick that's never saved still leaks.
+  Touches: `SoundProfileManager.kt`, `WallpaperPackManager.kt`, `PickedFileGrants.kt`, `LibraryExporter.kt`, `ThemePackImportPlan.kt`, the scheduling ledger, a device session.
+  Acceptance: a restored profile whose sound isn't on this phone is listed for a re-pick instead of playing something else; the ledger lists every profile and pack work name with its lost-access behaviour; an edit made during a worker run is applied at once; restore and theme pack import release grants the new pack doesn't use; on a phone, a profile's hours end and the earlier ringtone comes back, and rotating the screen mid-edit keeps both editors open with the pick intact.
+  Complexity: S
 
 - [ ] P3 — Tie off the rotation loose ends the saved-ahead review found
   Why: fixing the saved-ahead cache turned up five smaller faults next to it. None of them loses a wallpaper, but each one is a wrong answer waiting for the right timing.
