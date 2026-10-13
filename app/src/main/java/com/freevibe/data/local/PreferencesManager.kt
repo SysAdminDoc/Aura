@@ -444,6 +444,9 @@ class PreferencesManager @Inject constructor(
     suspend fun setSoundProfileLastAppliedId(id: String) = set(Keys.SOUND_PROFILE_LAST_APPLIED_ID, id)
     val soundShufflePoolsJson: Flow<String> = get(Keys.SOUND_SHUFFLE_POOLS_JSON, "")
     suspend fun setSoundShufflePoolsJson(json: String) = set(Keys.SOUND_SHUFFLE_POOLS_JSON, json)
+    /** The favorites batch download in progress or last finished; see BatchDownloadStore. */
+    val batchDownloadJson: Flow<String> = get(Keys.BATCH_DOWNLOAD_JSON, "")
+    suspend fun setBatchDownloadJson(json: String) = set(Keys.BATCH_DOWNLOAD_JSON, json)
 
     // Wallpaper packs (24H)
     val wallpaperPackEnabled: Flow<Boolean> = get(Keys.WALLPAPER_PACK_ENABLED, false)
@@ -1108,6 +1111,7 @@ class PreferencesManager @Inject constructor(
         val SOUND_PROFILES_JSON = stringPreferencesKey("sound_profiles_json")
         val SOUND_PROFILE_LAST_APPLIED_ID = stringPreferencesKey("sound_profile_last_applied_id")
         val SOUND_SHUFFLE_POOLS_JSON = stringPreferencesKey("sound_shuffle_pools_json")
+        val BATCH_DOWNLOAD_JSON = stringPreferencesKey("batch_download_json")
         val LAST_APPLIED_RINGTONE_URI = stringPreferencesKey("last_applied_ringtone_uri")
         val LAST_APPLIED_NOTIFICATION_URI = stringPreferencesKey("last_applied_notification_uri")
         val LAST_APPLIED_ALARM_URI = stringPreferencesKey("last_applied_alarm_uri")

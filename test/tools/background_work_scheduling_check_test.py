@@ -41,8 +41,8 @@ class BackgroundWorkSchedulingCheckTest(unittest.TestCase):
         result = validate_policy(REPO_ROOT, live_policy())
 
         self.assertEqual("ok", result["status"])
-        self.assertEqual(11, result["workItemCount"])
-        self.assertEqual(9, result["android16Audit"]["coroutineWorkerCount"])
+        self.assertEqual(12, result["workItemCount"])
+        self.assertEqual(10, result["android16Audit"]["coroutineWorkerCount"])
         self.assertEqual(0, result["android16Audit"]["directJobSchedulerApiCount"])
         self.assertIn("rotation_trigger_oneshot", result["uniqueWorkNames"])
 

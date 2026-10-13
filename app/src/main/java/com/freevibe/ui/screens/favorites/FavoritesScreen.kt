@@ -292,9 +292,8 @@ fun FavoritesScreen(
                 }
             }
 
-            // Batch-download progress banner: previously the "Download all" action started work
-            // but surfaced no progress. Now we render a compact linear indicator + counts whenever
-            // BatchDownloadService is running.
+            // Batch-download progress banner: a compact linear indicator + counts whenever the
+            // batch's WorkManager job is queued or running, including after process death.
             if (batchState.isRunning || (batchState.totalCount > 0 && !batchState.isComplete)) {
                 val batchProgressDescription = favoritesBatchProgressSummary(
                     processed = batchState.processedCount,

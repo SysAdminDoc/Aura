@@ -15,7 +15,8 @@
         "daily_wallpaper",
         "weather_update",
         "aura_originals_download",
-        "rotation_trigger_oneshot"
+        "rotation_trigger_oneshot",
+        "favorites_batch_download"
       ],
       "requiredCommands": [
         "adb shell dumpsys jobscheduler com.freevibe",
@@ -47,7 +48,8 @@
         "wallpaper_pack",
         "weather_update",
         "aura_originals_download",
-        "rotation_trigger_oneshot"
+        "rotation_trigger_oneshot",
+        "favorites_batch_download"
       ],
       "requiredCommands": [
         "adb shell dumpsys connectivity",
@@ -104,7 +106,8 @@
         "wallpaper_pack",
         "weather_update",
         "aura_originals_download",
-        "rotation_trigger_oneshot"
+        "rotation_trigger_oneshot",
+        "favorites_batch_download"
       ],
       "requiredCommands": [
         "adb shell dumpsys deviceidle",

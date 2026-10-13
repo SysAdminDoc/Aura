@@ -26,6 +26,7 @@
       "AuraOriginalsDownloader",
       "AutoBackupWorker",
       "AutoWallpaperWorker",
+      "BatchDownloadWorker",
       "DailyWallpaperWorker",
       "RingtoneRestorationWorker",
       "RingtoneShuffleWorker",
@@ -450,6 +451,40 @@
         "NetworkType.CONNECTED",
         "setRequiresBatteryNotLow(true)",
         "setExpedited(OutOfQuotaPolicy.RUN_AS_NON_EXPEDITED_WORK_REQUEST)"
+      ]
+    },
+    {
+      "id": "favorites-batch-download",
+      "uniqueWorkName": "favorites_batch_download",
+      "workerClass": "BatchDownloadWorker",
+      "sourcePath": "app/src/main/java/com/freevibe/service/BatchDownloadWorker.kt",
+      "settingsSources": [
+        "app/src/main/java/com/freevibe/service/BatchDownloadService.kt"
+      ],
+      "workKind": "oneTime",
+      "enqueueApi": "enqueueUniqueWork",
+      "existingWorkPolicy": "ExistingWorkPolicy.KEEP",
+      "interval": "not periodic",
+      "initialDelay": "none",
+      "constraints": [
+        "NetworkType.CONNECTED"
+      ],
+      "backoff": "WorkManager default, only when the stored batch can't be read or written; a failed download stays failed",
+      "expedited": false,
+      "enabledSurface": "Download all, or Download on selected wallpapers, in Library favorites",
+      "scheduleTrigger": "The person starts a favorites batch download",
+      "cancelTrigger": "BatchDownloadService.cancel or reset; a batch already queued or running is kept",
+      "deferralReasons": [
+        "network unavailable",
+        "Android job quota or Doze/App Standby delay",
+        "the process was stopped mid-batch; the next run resumes the pending items"
+      ],
+      "sourceTerms": [
+        "const val WORK_NAME = \"favorites_batch_download\"",
+        "OneTimeWorkRequestBuilder<BatchDownloadWorker>",
+        "ExistingWorkPolicy.KEEP",
+        "NetworkType.CONNECTED",
+        "CancellationException"
       ]
     }
   ],

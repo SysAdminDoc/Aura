@@ -160,6 +160,7 @@ class AndroidBackgroundWorkDiagnosticsReader @Inject constructor(
             BackgroundWorkItem("Theme wallpaper switching", SystemThemeListener.WORK_NAME),
             BackgroundWorkItem("Weather wallpaper refresh", WeatherUpdateWorker.WORK_NAME),
             BackgroundWorkItem("Aura Originals download", AuraOriginalsDownloader.WORK_NAME),
+            BackgroundWorkItem("Favorites batch download", BatchDownloadWorker.WORK_NAME),
             BackgroundWorkItem("Rotation trigger one-shot", RotationTriggerService.WORK_NAME),
         )
     }

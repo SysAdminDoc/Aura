@@ -235,6 +235,27 @@
       "dataSaverPolicy": "Settings diagnostics and support bundles read ConnectivityManager metered/Data Saver status and show action hints for restricted background data plus OEM battery recovery guidance; direct expedited quota receipt remains future OS evidence.",
       "privacySurface": "Provider fetches inherit the selected wallpaper source's network/Data safety rows.",
       "releaseRisk": "Medium"
+    },
+    {
+      "id": "favorites-batch-download",
+      "uniqueWorkName": "favorites_batch_download",
+      "networkPosture": "connected",
+      "sourcePath": "app/src/main/java/com/freevibe/service/BatchDownloadWorker.kt",
+      "requiredSourceTerms": [
+        "setRequiredNetworkType(NetworkType.CONNECTED)",
+        "downloadManager.downloadWallpaper(",
+        "BATCH_ITEM_PENDING"
+      ],
+      "settingsSourcePath": "app/src/main/java/com/freevibe/service/BatchDownloadService.kt",
+      "requiredSettingsTerms": [
+        "planBatchDownloads",
+        "maxBatchDownloadPerUserAction",
+        "BatchDownloadWorker.enqueue"
+      ],
+      "meteredPolicy": "Allowed: the person started the batch, and each provider caps how many items one action can fetch.",
+      "dataSaverPolicy": "Data Saver doesn't hold back a batch the person started in the foreground; each item goes through DownloadManager's size caps.",
+      "privacySurface": "Fetches the favorites' public image URLs from their providers; nothing about the person is uploaded.",
+      "releaseRisk": "Low"
     }
   ],
   "sourceUrls": [

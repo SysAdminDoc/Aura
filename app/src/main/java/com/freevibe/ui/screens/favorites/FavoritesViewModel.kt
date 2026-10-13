@@ -137,8 +137,10 @@ class FavoritesViewModel @Inject constructor(
     fun downloadAllWallpapers() {
         val wps = wallpapers.value.map { it.toWallpaper() }
         if (wps.isEmpty()) return
-        val result = batchDownloadService.downloadBatch(wps)
-        _message.update { batchDownloadMessage(result, context) }
+        viewModelScope.launch {
+            val result = batchDownloadService.downloadBatch(wps)
+            _message.update { batchDownloadMessage(result, context) }
+        }
     }
 
     // -- Bulk actions (selection mode) ---------------------------------------
@@ -165,8 +167,10 @@ class FavoritesViewModel @Inject constructor(
             _message.update { context.getString(R.string.favorites_select_wallpaper) }
             return
         }
-        val result = batchDownloadService.downloadBatch(wps)
-        _message.update { batchDownloadMessage(result, context) }
+        viewModelScope.launch {
+            val result = batchDownloadService.downloadBatch(wps)
+            _message.update { batchDownloadMessage(result, context) }
+        }
     }
 
     fun clearMessage() { _message.update { _ -> null } }

@@ -31,6 +31,7 @@ bundles.
 | Weather effect refresh | `weather_update` | Connected | Allowed for lightweight Open-Meteo refresh | Settings reads active metered/Data Saver state |
 | Aura Originals download | `aura_originals_download` | Unmetered | Blocked | Current larger-transfer-safe posture; Settings reads active metered/Data Saver state |
 | Rotation trigger one-shot | `rotation_trigger_oneshot` | Connected plus battery-not-low | Allowed for explicit user/automation-triggered attempts | Settings reads active metered/Data Saver state; expedited-quota labeling remains open |
+| Favorites batch download | `favorites_batch_download` | Connected | Allowed for a batch the person started, within each provider's per-action cap | Started from the foreground; DownloadManager size caps apply per item |
 
 ## Data Saver handling
 

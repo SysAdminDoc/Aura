@@ -28,13 +28,6 @@ Actionable work only. Historical and completed roadmap material is archived in C
   Acceptance: `images/icon.png` and at least four `images/phoneScreenshots/` entries exist at the required dimensions, and the preflight fails when the icon or screenshot set is absent.
   Complexity: S
 
-- [ ] P2 — Reconcile BatchDownloadService with its documented design
-  Why: it is documented as a foreground service in both CLAUDE.md and ARCHITECTURE.md but is a plain `@Singleton` with an ad-hoc scope, so a long batch is killed when the process is backgrounded and `isRunning` is left true.
-  Evidence: `BatchDownloadService.kt:41-44,74,113-116,127,140`; CLAUDE.md Key Files; ARCHITECTURE.md.
-  Touches: `BatchDownloadService.kt`, manifest FGS declaration or a WorkManager migration, `docs/distribution/foreground-service-declaration.json`, CLAUDE.md, ARCHITECTURE.md.
-  Acceptance: batch downloads either run as a declared foreground service or as WorkManager work that survives backgrounding, progress is recoverable after process death, and the docs match the implementation.
-  Complexity: M
-
 - [ ] P2 — Remove the bundled FFmpeg module without losing advertised media workflows
   Why: the arm64 FFmpeg archive contributes 35,624,931 bytes to a roughly 63.8 MB APK, and the dependency is a separate module whose removal can bring arm64 below IzzyOnDroid's 30 MB review threshold.
   Evidence: `docs/distribution/native-alignment.json`; `app/build.gradle.kts`; `AudioTrimmer.kt`; `VideoCropScreen.kt`; `VideoWallpapersViewModel.kt`; Android Media3 Transformer documentation; youtubedl-android issue #248; the maintained Ringdroid F-Droid package.

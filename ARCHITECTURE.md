@@ -48,7 +48,6 @@ Living architecture overview for contributors. Internal working notes live in `C
 │     DualWallpaperService (separate home/lock slots)                │
 │   Foreground services:                                             │
 │     AudioPlaybackService (Media3 MediaSession + AudioPreviewCache) │
-│     BatchDownloadService (cancellable batch favorite downloads)    │
 │     RotationTriggerService (NX-6: USER_PRESENT + SCREEN_OFF)       │
 │   Workers (CoroutineWorker + Hilt):                                │
 │     AutoWallpaperWorker (periodic 15-min+ rotation)                │
@@ -56,6 +55,7 @@ Living architecture overview for contributors. Internal working notes live in `C
 │     WeatherUpdateWorker (30-min weather poll)                      │
 │     AuraOriginalsDownloader (N-5: CC0 sound pack download)         │
 │     RingtoneShuffleWorker (one schedule per named sound pool)      │
+│     BatchDownloadWorker (favorites batch, survives process death)  │
 │   One-shot services:                                               │
 │     WallpaperApplier (applyByLocator: http/file/content/path)      │
 │     SoundApplier (RingtoneManager + MediaStore)                    │

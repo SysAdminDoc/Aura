@@ -27,6 +27,7 @@ release docs, and verify/release workflow wiring.
 | Weather effect refresh | `WeatherUpdateWorker` | Periodic | `weather_update` | `ExistingPeriodicWorkPolicy.KEEP` | 30 minutes | Connected network | No |
 | Aura Originals download | `AuraOriginalsDownloader` | One-time | `aura_originals_download` | `ExistingWorkPolicy.KEEP` | Enqueued on app startup, idempotent after hashes match | Unmetered network | Yes, downgraded to non-expedited on quota exhaustion |
 | Rotation trigger one-shot | `AutoWallpaperWorker` through `RotationTriggerService` | One-time | `rotation_trigger_oneshot` | `ExistingWorkPolicy.KEEP` | Unlock, screen-off, Tasker, MacroDroid, adb, or Termux trigger | Connected network; battery-not-low for unlock and screen-off | Tile and automation requests only, downgraded to non-expedited on quota exhaustion |
+| Favorites batch download | `BatchDownloadWorker` | One-time | `favorites_batch_download` | `ExistingWorkPolicy.KEEP` | Download all or Download selected in Library favorites; resumes pending items after process death | Connected network | No |
 
 ## Android 16 quota audit
 
