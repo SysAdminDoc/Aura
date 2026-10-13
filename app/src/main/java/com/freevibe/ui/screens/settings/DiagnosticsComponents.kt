@@ -1,5 +1,6 @@
 package com.freevibe.ui.screens.settings
 
+import androidx.annotation.StringRes
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
@@ -44,6 +45,7 @@ import com.freevibe.service.COMMUNITY_DELETION_REQUEST_SUBJECT
 import com.freevibe.service.CommunityIdentitySummary
 import com.freevibe.service.CrashDiagnosticsSummary
 import com.freevibe.service.ExternalAutomationDiagnostics
+import com.freevibe.service.RotationPrefetchOutcome
 import com.freevibe.service.ExternalAutomationDispatcher
 import com.freevibe.service.SourceMetrics
 import com.freevibe.service.YtDlpUpdateStatus
@@ -335,6 +337,17 @@ internal fun ExternalAutomationDiagnosticsSummary(status: ExternalAutomationDiag
     }
 }
 
+/** The line under the pills that says whether the next rotation's wallpaper is already on the phone. */
+@StringRes
+internal fun rotationPrefetchOutcomeRes(outcome: RotationPrefetchOutcome?): Int? = when (outcome) {
+    RotationPrefetchOutcome.STORED -> R.string.settings_diag_prefetch_stored
+    RotationPrefetchOutcome.DEFERRED_METERED -> R.string.settings_diag_prefetch_metered
+    RotationPrefetchOutcome.DEFERRED_DATA_SAVER -> R.string.settings_diag_prefetch_data_saver
+    RotationPrefetchOutcome.FAILED -> R.string.settings_diag_prefetch_failed
+    RotationPrefetchOutcome.OVER_BUDGET -> R.string.settings_diag_prefetch_over_budget
+    null -> null
+}
+
 @Composable
 @OptIn(ExperimentalLayoutApi::class)
 internal fun BackgroundWorkDiagnosticsSummary(status: BackgroundWorkDiagnostics) {
@@ -362,6 +375,18 @@ internal fun BackgroundWorkDiagnosticsSummary(status: BackgroundWorkDiagnostics)
             } else {
                 MaterialTheme.colorScheme.tertiary
             },
+        )
+        DiagnosticMetricPill(
+            stringResource(R.string.settings_diag_metric_prefetch),
+            stringResource(R.string.settings_diag_prefetch_value, status.prefetch.hits, status.prefetch.misses),
+            MaterialTheme.colorScheme.secondary,
+        )
+    }
+    rotationPrefetchOutcomeRes(status.prefetch.lastOutcome)?.let { outcome ->
+        Text(
+            stringResource(outcome),
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
     }
     network.readError?.let { error ->

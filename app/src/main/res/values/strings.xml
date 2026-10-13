@@ -1779,6 +1779,13 @@
     <string name="settings_diag_metric_receipts">Receipts</string>
     <string name="settings_diag_metric_network">Network</string>
     <string name="settings_diag_metric_data_saver">Data Saver</string>
+    <string name="settings_diag_metric_prefetch">Saved ahead</string>
+    <string name="settings_diag_prefetch_value">%1$d used, %2$d fetched</string>
+    <string name="settings_diag_prefetch_stored">The next rotation\'s wallpaper is already saved on this phone.</string>
+    <string name="settings_diag_prefetch_metered">The next wallpaper wasn\'t saved ahead because this connection is metered.</string>
+    <string name="settings_diag_prefetch_data_saver">The next wallpaper wasn\'t saved ahead because Data Saver is on.</string>
+    <string name="settings_diag_prefetch_failed">The next wallpaper couldn\'t be saved ahead. The next rotation will fetch it as usual.</string>
+    <string name="settings_diag_prefetch_over_budget">The next wallpaper is too large to save ahead.</string>
     <string name="settings_diag_background_check_subtitle">Check WorkManager and Data Saver state</string>
     <string name="settings_diag_background_status_subtitle">%1$s • %2$s • Data Saver %3$s</string>
     <string name="settings_diag_network_metered">metered</string>

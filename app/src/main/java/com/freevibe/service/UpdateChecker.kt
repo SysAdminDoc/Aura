@@ -364,7 +364,7 @@ private class OkHttpReleaseFeed(private val client: OkHttpClient) : ReleaseFeed 
     }
 }
 
-private class AndroidNetworkPosture(private val context: Context) : NetworkPostureReader {
+internal class AndroidNetworkPosture(private val context: Context) : NetworkPostureReader {
     override fun read(): NetworkPosture {
         // No connectivity service means nothing is known about the network, so treat it as metered.
         val connectivity = context.getSystemService(ConnectivityManager::class.java)

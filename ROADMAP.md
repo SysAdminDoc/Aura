@@ -56,13 +56,6 @@ Actionable work only. Historical and completed roadmap material is archived in C
 
 
 
-- [ ] P2 — Prefetch the next rotation wallpaper
-  Why: `AutoWallpaperWorker` fetches from the provider at fire time, so a dead or metered-blocked network at the trigger means a skipped rotation; prefetching the next candidate after each successful rotation makes remote-source rotation as reliable as local, and Wallora demonstrates the pattern.
-  Evidence: `AutoWallpaperWorker.kt` provider fetch in `doWork`; Wallora README (prefetch cache for instant apply); WallFlow's open offline-mode request.
-  Touches: `AutoWallpaperWorker.kt`, `DailyWallpaperWorker.kt`, a bounded prefetch cache (or `OfflineFavoritesManager` reuse), rotation diagnostics, tests.
-  Acceptance: after each successful rotation the next candidate downloads to a bounded cache (count and byte budget) respecting metered/data-saver posture; at fire time a cached candidate applies without network and the cache refills afterward; cache misses fall back to the current fetch path; local-source rotation is unchanged; diagnostics report prefetch hit/miss; tests cover hit, miss, budget eviction, and metered deferral.
-  Complexity: M
-
 ### P3
 
 - [ ] P3 — Put spacing on tokens and give text buttons a rectangular press shape
@@ -302,6 +295,13 @@ Evidence for every item below is in RESEARCH.md (2026-09-04 pass).
 Remainders of items closed in the 2026-09-30 drain whose full acceptance did not land.
 
 ### P2
+
+- [ ] P2 — Let a saved wallpaper rotate with no network at all
+  Why: the prefetch cache applies the next wallpaper without calling the source, but the rotation work still carries a WorkManager network constraint, so the worker never fires while the phone is offline and the saved wallpaper sits unused until the connection returns.
+  Evidence: `RotationPrefetchCache.kt`, `AutoWallpaperWorker.applyPrefetched`; the rotation enqueue sites still set `NetworkType.CONNECTED` or `UNMETERED` for every remote source; `DailyWallpaperWorker.kt` has no saved-ahead path.
+  Touches: rotation enqueue constraints (periodic, one-shot and catch-up), `AutoWallpaperWorker.kt` (Wi-Fi-only choice enforced in the worker once the constraint is relaxed), `DailyWallpaperWorker.kt`, constraint tests, a device check in airplane mode.
+  Acceptance: with a wallpaper saved ahead, a rotation fires and applies it in airplane mode; with nothing saved, an offline run ends quietly and the next connected run fetches; the Wi-Fi-only setting still stops every source fetch and download on mobile data; no extra retries or battery use while offline; Daily Wallpaper either gains the same path or its reason for not having one is written down.
+  Complexity: M
 
 - [ ] P2 — Dim the MP4 path of the video live wallpaper and name the dimmed engines
   Why: dimming now reaches the GIF path of `VideoWallpaperService` and the parallax engine, but MP4 playback renders straight to the surface through ExoPlayer, so the dim overlay never draws over it. The toggle copy doesn't say which live wallpapers honor it.

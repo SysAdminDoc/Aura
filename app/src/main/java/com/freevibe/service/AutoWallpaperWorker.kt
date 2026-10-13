@@ -47,6 +47,7 @@ class AutoWallpaperWorker @AssistedInject constructor(
     private val prefs: PreferencesManager,
     private val localWallpaperCatalog: LocalWallpaperCatalog,
     private val receiptStore: BackgroundWorkReceiptStore,
+    private val prefetch: RotationPrefetchCache,
 ) : CoroutineWorker(appContext, workerParams) {
 
     /** True once this run changed a wallpaper; a disabled provider returns success without one. */
@@ -167,6 +168,17 @@ class AutoWallpaperWorker @AssistedInject constructor(
             }
             return Result.success()
         }
+        val applyTarget = when {
+            homeEnabled && lockEnabled -> WallpaperTarget.BOTH
+            homeEnabled -> WallpaperTarget.HOME
+            lockEnabled -> WallpaperTarget.LOCK
+            else -> null
+        }
+        if (applyTarget != null && applyPrefetched(source, applyTarget)) {
+            prefetchNext(source, applyTarget, fetchTarget = target, candidates = null, shuffle = shuffle)
+            return Result.success()
+        }
+
         val rawWallpapers = fetchWallpapers(source, target)
         if (rawWallpapers.isEmpty()) return Result.retry()
 
@@ -185,6 +197,9 @@ class AutoWallpaperWorker @AssistedInject constructor(
             if (homeEnabled) applyAndRecord(pick, WallpaperTarget.HOME)
             if (lockEnabled) applyAndRecord(pick, WallpaperTarget.LOCK)
         }
+        if (applyTarget != null && appliedWallpaper) {
+            prefetchNext(source, applyTarget, fetchTarget = target, candidates = wallpapers, shuffle = shuffle)
+        }
         return Result.success()
     }
 
@@ -199,6 +214,11 @@ class AutoWallpaperWorker @AssistedInject constructor(
         if (source == "pixabay" && !prefs.pixabayProviderEnabled.first()) return Result.success()
         if (source == "bing" && !prefs.bingProviderEnabled.first()) return Result.success()
 
+        if (applyPrefetched(source, target)) {
+            prefetchNext(source, target, fetchTarget = target, candidates = null, shuffle = true)
+            return Result.success()
+        }
+
         val fetched = fetchWallpapers(source, target)
         val wallpapers = filterRecentRepeats(filterPersistentExclusions(fetched, source))
         val wallpaper = pickScheduledWallpaper(
@@ -207,7 +227,72 @@ class AutoWallpaperWorker @AssistedInject constructor(
             recentKeys = recentShuffleKeys(wallpapers.size),
         ) ?: return Result.retry()
 
-        return applyAndRecord(wallpaper, target)
+        return applyAndRecord(wallpaper, target).also {
+            if (appliedWallpaper) {
+                prefetchNext(source, target, fetchTarget = target, candidates = wallpapers, shuffle = true)
+            }
+        }
+    }
+
+    /**
+     * Applies the wallpaper saved ahead of time for this setup, with no call to the source. False
+     * means nothing usable was saved, and the caller fetches the usual way.
+     */
+    private suspend fun applyPrefetched(source: String, target: WallpaperTarget): Boolean {
+        if (!sourceRequiresNetwork(source)) return false
+        val slot = rotationPrefetchSlot(source, target)
+        val saved = prefetch.peek(slot)
+        if (saved == null || !isStillWanted(saved.wallpaper)) {
+            prefetch.discard(slot)
+            prefetch.recordMiss()
+            return false
+        }
+        val appliedBefore = appliedWallpaper
+        appliedWallpaper = false
+        applyAndRecord(saved.wallpaper, target, locator = saved.file.absolutePath)
+        val applied = appliedWallpaper
+        appliedWallpaper = appliedBefore || applied
+        // Used or unusable, the file is done with. A picture that wouldn't decode falls back to a fetch.
+        prefetch.discard(slot)
+        if (applied) prefetch.recordHit() else prefetch.recordMiss()
+        return applied
+    }
+
+    /** A saved wallpaper is skipped when it has since been excluded or already shown. */
+    private suspend fun isStillWanted(wallpaper: Wallpaper): Boolean {
+        if (rotationExclusions.filter(listOf(wallpaper)).candidates.isEmpty()) return false
+        return !prefs.avoidRecentRepeats.first() || wallpaper.stableKey() !in prefs.getRecentRotationIds()
+    }
+
+    /**
+     * Saves the wallpaper the next rotation would pick. [candidates] is the list this run fetched.
+     * After a cache hit there is none, so the source is asked once. Nothing here can fail the run:
+     * the rotation already happened, and the next one can still fetch for itself.
+     */
+    private suspend fun prefetchNext(
+        source: String,
+        target: WallpaperTarget,
+        fetchTarget: WallpaperTarget?,
+        candidates: List<Wallpaper>?,
+        shuffle: Boolean,
+    ) {
+        if (!sourceRequiresNetwork(source)) return
+        try {
+            if (prefetch.shouldDefer()) return
+            val pool = candidates ?: rotationExclusions.filter(fetchWallpapers(source, fetchTarget)).candidates
+            val recentIds = if (prefs.avoidRecentRepeats.first()) prefs.getRecentRotationIds().toSet() else emptySet()
+            val eligible = excludeRecentWallpapers(pool, recentIds).filter { it.isPrefetchable() }
+            val next = pickScheduledWallpaper(
+                wallpapers = eligible,
+                shuffle = shuffle,
+                recentKeys = recentShuffleKeys(eligible.size),
+            ) ?: return
+            prefetch.store(rotationPrefetchSlot(source, target), next) { file ->
+                wallpaperApplier.downloadToFile(next.fullUrl, file)
+            }
+        } catch (e: Exception) {
+            if (e is kotlinx.coroutines.CancellationException) throw e
+        }
     }
 
     private suspend fun filterRecentRepeats(wallpapers: List<Wallpaper>): List<Wallpaper> {
@@ -298,7 +383,12 @@ class AutoWallpaperWorker @AssistedInject constructor(
      * Runs to the end even when a newer tap replaces this work, so a started apply always lands in
      * history. The newer run waits on [rotationRunLock] and applies after it.
      */
-    private suspend fun applyAndRecord(wallpaper: Wallpaper, target: WallpaperTarget): Result = withContext(NonCancellable) {
+    private suspend fun applyAndRecord(
+        wallpaper: Wallpaper,
+        target: WallpaperTarget,
+        /** Where the picture is read from: its own address, or the file saved ahead of time. */
+        locator: String = wallpaper.fullUrl,
+    ): Result = withContext(NonCancellable) {
         val darkenPercent = prefs.autoWallpaperDarkenPercent.first()
         val nightVariant = shouldUseNightWallpaperVariant(
             enabled = prefs.autoWallpaperNightVariantEnabled.first(),
@@ -311,7 +401,7 @@ class AutoWallpaperWorker @AssistedInject constructor(
                 Configuration.UI_MODE_NIGHT_MASK == Configuration.UI_MODE_NIGHT_YES,
         )
         wallpaperApplier.applyByLocator(
-            wallpaper.fullUrl,
+            locator,
             target,
             darkenPercent = darkenPercent,
             nightVariant = nightVariant,

@@ -15,6 +15,7 @@ data class BackgroundWorkDiagnostics(
     val network: BackgroundNetworkDiagnostics = BackgroundNetworkDiagnostics(),
     val rows: List<BackgroundWorkStatusRow> = emptyList(),
     val batteryGuidance: BackgroundBatteryGuidance = backgroundBatteryGuidanceForManufacturer(""),
+    val prefetch: RotationPrefetchDiagnostics = RotationPrefetchDiagnostics(),
 )
 
 data class BackgroundNetworkDiagnostics(
@@ -52,6 +53,7 @@ interface BackgroundWorkDiagnosticsReader {
 class AndroidBackgroundWorkDiagnosticsReader @Inject constructor(
     @ApplicationContext private val context: Context,
     private val receiptStore: BackgroundWorkReceiptStore,
+    private val prefetch: RotationPrefetchCache,
 ) : BackgroundWorkDiagnosticsReader {
 
     override suspend fun read(): BackgroundWorkDiagnostics {
@@ -83,6 +85,7 @@ class AndroidBackgroundWorkDiagnosticsReader @Inject constructor(
             network = network,
             rows = rows,
             batteryGuidance = batteryGuidance,
+            prefetch = prefetch.diagnostics(),
         )
     }
 

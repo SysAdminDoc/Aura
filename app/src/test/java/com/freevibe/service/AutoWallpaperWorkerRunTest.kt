@@ -191,6 +191,8 @@ class AutoWallpaperWorkerRunTest {
                         prefs = prefs,
                         localWallpaperCatalog = catalog,
                         receiptStore = mockk(relaxed = true),
+                        // Local folders never use the cache, so these runs must not touch it.
+                        prefetch = mockk(),
                     )
                 },
             )

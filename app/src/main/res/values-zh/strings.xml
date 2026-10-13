@@ -1612,6 +1612,13 @@
     <string name="settings_diag_metric_receipts">回执</string>
     <string name="settings_diag_metric_network">网络</string>
     <string name="settings_diag_metric_data_saver">数据节省程序</string>
+    <string name="settings_diag_metric_prefetch">已预存</string>
+    <string name="settings_diag_prefetch_value">已用 %1$d 次，实时获取 %2$d 次</string>
+    <string name="settings_diag_prefetch_stored">下次轮换的壁纸已保存在此手机上。</string>
+    <string name="settings_diag_prefetch_metered">当前网络按流量计费，未预先保存下一张壁纸。</string>
+    <string name="settings_diag_prefetch_data_saver">数据节省程序已开启，未预先保存下一张壁纸。</string>
+    <string name="settings_diag_prefetch_failed">下一张壁纸未能预先保存，下次轮换时会照常获取。</string>
+    <string name="settings_diag_prefetch_over_budget">下一张壁纸太大，无法预先保存。</string>
     <string name="settings_diag_background_check_subtitle">检查 WorkManager 和数据节省程序状态</string>
     <string name="settings_diag_background_status_subtitle">%1$s • %2$s • 数据节省程序 %3$s</string>
     <string name="settings_diag_network_metered">按量计费</string>

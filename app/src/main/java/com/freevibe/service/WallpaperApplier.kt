@@ -337,6 +337,41 @@ class WallpaperApplier @Inject constructor(
     }
 
     /**
+     * Saves the image at [url] to [destination] without applying it, under the same size cap as an
+     * apply. Rotation uses it to fetch the next wallpaper ahead of time. Returns the bytes written.
+     */
+    suspend fun downloadToFile(url: String, destination: java.io.File): Result<Long> = withContext(Dispatchers.IO) {
+        runCatching {
+            val request = Request.Builder().url(url).build()
+            okHttpClient.newCall(request).execute().use { resp ->
+                if (!resp.isSuccessful) throw java.io.IOException("Download failed: ${resp.code}")
+                val body = resp.body ?: throw java.io.IOException("Empty response body")
+                val advertised = body.contentLength()
+                if (advertised > MAX_WALLPAPER_BYTES) {
+                    throw java.io.IOException("Wallpaper too large: $advertised > $MAX_WALLPAPER_BYTES bytes")
+                }
+                val tempFile = java.io.File(destination.parentFile, "${destination.name}.tmp")
+                try {
+                    body.byteStream().use { input ->
+                        tempFile.outputStream().use { output ->
+                            copyCapped(input, output, MAX_WALLPAPER_BYTES)
+                        }
+                    }
+                    if (tempFile.length() == 0L) throw java.io.IOException("Empty response body")
+                    if (!tempFile.renameTo(destination)) {
+                        tempFile.copyTo(destination, overwrite = true)
+                        tempFile.delete()
+                    }
+                } catch (e: Exception) {
+                    try { tempFile.delete() } catch (_: Exception) {}
+                    throw e
+                }
+                destination.length()
+            }
+        }.onFailure { it.rethrowIfCancelled() }
+    }
+
+    /**
      * Parallax variant for a user-supplied local URI (gallery / share intent). Same output
      * path + atomic write as prepareParallaxWallpaper(url), so ParallaxWallpaperService
      * reads from the same SharedPreferences key.
