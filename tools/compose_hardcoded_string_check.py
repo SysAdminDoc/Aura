@@ -67,7 +67,7 @@ EXCEPTION_RE = re.compile(
     re.DOTALL,
 )
 EDITOR_CONTROL_RE = re.compile(
-    r"\b(?P<sink>EditorPreset|FilterControl)\s*\(\s*(?P<literal>"
+    r"\b(?P<sink>EditorPreset|FilterControl|CustomAccessibilityAction)\s*\(\s*(?:label\s*=\s*)?(?P<literal>"
     + STRING_LITERAL_PATTERN
     + r")",
     re.DOTALL,
@@ -86,8 +86,19 @@ TEXT_BUILDER_FUNCTION_RE = re.compile(
 )
 # What ends a builder: the next declaration or closing brace at the builder's own indent.
 DECLARATION_AT_INDENT = (
-    r"(?:\}|@|(?:(?:private|internal|public|protected|override|const)\s+)*"
-    r"(?:fun|val|var|class|object|enum|data|sealed|interface)\b)"
+    r"(?:\}|@|(?:(?:private|internal|public|protected|override|const|companion|open|abstract|"
+    r"inline|suspend|operator|lateinit)\s+)*(?:fun|val|var|class|object|enum|data|sealed|interface|init)\b)"
+)
+# A string built inline for a Text or a description, e.g. Text(buildString { append("...") }).
+INLINE_BUILDER_RE = re.compile(
+    r"\b(?P<sink>Text|contentDescription|text|stateDescription)\s*(?:\(|=)\s*(?:buildString|buildAnnotatedString)\s*\{"
+)
+# Where a lone lowercase word in a builder becomes text, versus a key it's compared against.
+LONE_WORD_OUTPUT_BEFORE_RE = re.compile(r"(?:->|(?<![=!<>])=|\+|\?:|\belse|\breturn|\bappend\(|Of\(|,|\(|\))\s*$")
+LONE_WORD_KEY_AFTER_RE = re.compile(r"\s*(?:,\s*\"[^\"]*\"\s*)*->")
+LONE_WORD_KEY_BEFORE_RE = re.compile(
+    r"(?:==|!=|\b(?:equals|contains|startsWith|endsWith|removePrefix|removeSuffix|split|replace|"
+    r"substringBefore|substringAfter|get|getString|optString|optInt|optBoolean|has|key|Regex)\()\s*$"
 )
 STRING_LITERAL_RE = re.compile(STRING_LITERAL_PATTERN)
 FORMAT_OR_TEMPLATE_RE = re.compile(r"\$\{[^}]*\}|\$\w+|%(?:\d+\$)?[-#+ 0,(]*\d*(?:\.\d+)?[a-zA-Z]")
@@ -178,6 +189,35 @@ def is_prose_literal(value: str) -> bool:
     if not re.search(r"[a-z]{2,}", stripped):
         return False
     return " " in stripped or bool(re.match(r"[A-Z][a-z]", stripped))
+
+
+def is_lone_output_word(text: str, start: int, end: int, value: str) -> bool:
+    """A single lowercase word like "selected" that a builder puts into its text.
+
+    The same word compared against, used as a when-branch key or looked up stays out.
+    """
+    if not re.fullmatch(r"[a-z]{3,}", FORMAT_OR_TEMPLATE_RE.sub("", value).strip()):
+        return False
+    line_start = text.rfind("\n", 0, start) + 1
+    line_end = text.find("\n", end)
+    before = text[line_start:start]
+    after = text[end : line_end if line_end != -1 else len(text)]
+    if LONE_WORD_KEY_AFTER_RE.match(after) or LONE_WORD_KEY_BEFORE_RE.search(before):
+        return False
+    return bool(LONE_WORD_OUTPUT_BEFORE_RE.search(before)) or not before.strip()
+
+
+def block_end(text: str, open_brace: int) -> int:
+    """Offset just past the brace that closes the block opening at open_brace."""
+    depth = 0
+    for offset in range(open_brace, len(text)):
+        if text[offset] == "{":
+            depth += 1
+        elif text[offset] == "}":
+            depth -= 1
+            if depth == 0:
+                return offset + 1
+    return len(text)
 
 
 def text_builder_ranges(text: str) -> list[tuple[int, int]]:
@@ -281,14 +321,21 @@ def iter_file_findings(path: Path, repo_root: Path) -> list[Finding]:
                 )
 
     claimed = {(finding.line, finding.text) for finding in findings}
-    for start, end in text_builder_ranges(text):
+    builders = [(start, end, "textBuilder") for start, end in text_builder_ranges(text)]
+    builders += [
+        (match.end(), block_end(text, match.end() - 1), match.group("sink"))
+        for match in INLINE_BUILDER_RE.finditer(text)
+    ]
+    for start, end, sink in builders:
         for match in STRING_LITERAL_RE.finditer(text, start, end):
             value = decode_kotlin_string(match.group(0))
             line = line_number_for_offset(text, match.start())
-            if (line, value) in claimed or not is_prose_literal(value):
+            if (line, value) in claimed:
+                continue
+            if not is_prose_literal(value) and not is_lone_output_word(text, match.start(), match.end(), value):
                 continue
             claimed.add((line, value))
-            findings.append(Finding(path=relative_path, sink="textBuilder", text=value, line=line))
+            findings.append(Finding(path=relative_path, sink=sink, text=value, line=line))
     return findings
 
 

@@ -111,6 +111,10 @@ SINK_FIXTURES = [
     ('    error("Fixture error call")', ("exception", "Fixture error call")),
     ('    FilterControl("Fixture filter")', ("FilterControl", "Fixture filter")),
     ('    EditorPreset("Fixture preset")', ("EditorPreset", "Fixture preset")),
+    ('    CustomAccessibilityAction("Fixture action") { true }', ("CustomAccessibilityAction", "Fixture action")),
+    ('    CustomAccessibilityAction(label = "Fixture named action") { true }', ("CustomAccessibilityAction", "Fixture named action")),
+    ('    Text(buildString { append("Fixture built text") })', ("Text", "Fixture built text")),
+    ('    Modifier.semantics { contentDescription = buildString { append("selected") } }', ("contentDescription", "selected")),
     ('    val name = raw.ifBlank { "Fixture fallback" }', ("ifBlank", "Fixture fallback")),
 ]
 
@@ -332,6 +336,32 @@ class ComposeHardcodedStringCheckTest(unittest.TestCase):
                 {"Download complete", "saved to favorites", "Source is disabled in Settings"},
                 builder,
             )
+
+    def test_text_builders_flag_lone_words_they_output_but_not_keys(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            repo_root = Path(temp_dir)
+            (repo_root / "app/src/full/java/com/freevibe/ui").mkdir(parents=True)
+            write_text(
+                repo_root / "app/src/main/java/com/freevibe/ui/Builders.kt",
+                "\n".join(
+                    [
+                        "package com.freevibe.ui",
+                        "",
+                        "internal fun favoriteStateLabel(saved: Boolean, kind: String): String = when (kind) {",
+                        '    "wallpaper", "video" -> if (saved) "selected" else "ready"',
+                        '    else -> if (kind.startsWith("sound")) "playing" else kind',
+                        "}",
+                        "",
+                        "private companion object {",
+                        '    const val SOURCE = "community"',
+                        "}",
+                    ]
+                ),
+            )
+
+            builder = {text for sink, text in scan(repo_root) if sink == "textBuilder"}
+
+            self.assertEqual({"selected", "ready", "playing"}, builder)
 
     def test_live_baseline_is_valid(self):
         repo_root = Path(__file__).resolve().parents[2]
