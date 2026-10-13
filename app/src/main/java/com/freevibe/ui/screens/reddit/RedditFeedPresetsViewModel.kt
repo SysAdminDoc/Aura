@@ -34,8 +34,19 @@ class RedditFeedPresetsViewModel @Inject constructor(
     val redditEnabled: StateFlow<Boolean> =
         prefs.redditProviderEnabled.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), false)
 
-    /** Makes [id] the feed its tab loads, then runs [onSaved] so the tab can reload from it. */
-    fun activate(id: String, onSaved: () -> Unit = {}) = edit(onSaved) { it.activate(id) }
+    private val seenFeeds = mutableMapOf<RedditFeedMediaType, String>()
+
+    /** Makes [id] the feed its tab loads. */
+    fun activate(id: String) = edit { it.activate(id) }
+
+    /**
+     * True when the feed [mediaType] loads differs from the one this screen saw last, whether the chip or
+     * Settings changed it. The first look only records it, since the tab loaded that feed already.
+     */
+    fun feedChanged(mediaType: RedditFeedMediaType, signature: String): Boolean {
+        val previous = seenFeeds.put(mediaType, signature)
+        return previous != null && previous != signature
+    }
 
     fun save(preset: RedditFeedPreset) = edit { it.upsert(preset) }
 
@@ -48,11 +59,8 @@ class RedditFeedPresetsViewModel @Inject constructor(
     /** Blank [id] lets rotation follow the feed active on the Reddit tab. */
     fun bindRotation(id: String) = edit { it.bindRotation(id) }
 
-    private fun edit(onSaved: () -> Unit = {}, transform: (RedditFeedPresetStore) -> RedditFeedPresetStore) {
-        viewModelScope.launch {
-            prefs.updateRedditFeedPresets(transform)
-            onSaved()
-        }
+    private fun edit(transform: (RedditFeedPresetStore) -> RedditFeedPresetStore) {
+        viewModelScope.launch { prefs.updateRedditFeedPresets(transform) }
     }
 }
 

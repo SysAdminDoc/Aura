@@ -58,6 +58,7 @@ import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ensureActive
@@ -88,6 +89,9 @@ import com.freevibe.data.repository.HiddenItemLabel
 
 internal const val PIXABAY_VIDEO_CACHE_TTL_MS = 24 * 60 * 60 * 1000L
 internal const val REDDIT_RSS_MOTION_CACHE_TTL_MS = 2 * 60 * 60 * 1000L
+private const val REDDIT_CLIP_LENGTH_PARALLELISM = 4
+// A clip's DASH manifest is a few KB, and the duration sits in its opening tag.
+private const val REDDIT_CLIP_MANIFEST_MAX_BYTES = 64L * 1024L
 private const val PIXABAY_VIDEO_RATE_LIMITED_UNTIL_KEY = "pixabay_video_rate_limited_until_ms"
 private const val YOUTUBE_VIDEO_METADATA_PROBE_LIMIT = 30
 private const val MAX_CACHED_VIDEO_FEED_ITEMS = 120
@@ -248,6 +252,30 @@ internal fun redditPlayableMotionUrl(mediaUrl: String): String {
         RegexOption.IGNORE_CASE,
     ).matchEntire(mediaUrl.trim()) ?: return mediaUrl
     return "https://v.redd.it/${bareVideo.groupValues[1]}/HLSPlaylist.m3u8"
+}
+
+private val REDDIT_HOSTED_VIDEO = Regex("^https://v\\.redd\\.it/([A-Za-z0-9]+)(?:[/?].*)?$", RegexOption.IGNORE_CASE)
+private val DASH_DURATION = Regex("""mediaPresentationDuration\s*=\s*"P(?:\d+D)?T(?:(\d+)H)?(?:(\d+)M)?(?:([\d.]+)S)?""")
+
+/** The v.redd.it ID of a Reddit-hosted video. GIFs and other hosts have none, so their length stays unknown. */
+internal fun redditHostedVideoId(mediaUrl: String): String? =
+    REDDIT_HOSTED_VIDEO.matchEntire(mediaUrl.trim())?.groupValues?.get(1)
+
+/** Whole seconds from a DASH manifest's mediaPresentationDuration, or null when it doesn't give one. */
+internal fun dashManifestDurationSeconds(manifest: String): Int? {
+    val (hours, minutes, seconds) = DASH_DURATION.find(manifest)?.destructured ?: return null
+    val total = (hours.toDoubleOrNull() ?: 0.0) * 3600 + (minutes.toDoubleOrNull() ?: 0.0) * 60 + (seconds.toDoubleOrNull() ?: 0.0)
+    return if (total > 0) total.toInt().coerceAtLeast(1) else null
+}
+
+/** The entries [preset] keeps. [lengths] holds seconds for clips whose length was read; the rest pass the minimum. */
+internal fun redditMotionEntriesFor(
+    entries: List<RedditRssMediaEntry>,
+    preset: RedditFeedPreset?,
+    showAdultContent: Boolean,
+    lengths: Map<String, Int> = emptyMap(),
+): List<RedditRssMediaEntry> = entries.filter { entry ->
+    preset?.accepts(entry.title, entry.width, entry.height, lengths[entry.id] ?: 0, showAdultContent) != false
 }
 
 internal fun isHlsMotionUrl(url: String): Boolean =
@@ -501,9 +529,9 @@ class VideoWallpapersViewModel @Inject constructor(
         SharingStarted.Eagerly,
         com.freevibe.data.model.DEFAULT_FIT_CANVAS_COLOR,
     )
-    /** Report goes to the community queue, so it's only offered while that provider is on. */
+    /** Report goes to the community queue, so it's only offered while that provider is on, never before that's known. */
     val communityReportsEnabled = flow { emitAll(prefs.communityProviderEnabled) }
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), true)
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), false)
     private val pixabayVideoCache = PixabayVideoCacheStore(context)
     @Volatile
     private var pixabayVideoRateLimitedUntilMs: Long = 0L
@@ -1125,9 +1153,8 @@ class VideoWallpapersViewModel @Inject constructor(
                             group = selection.group,
                             after = selection.after,
                             count = selection.count,
-                            accepts = { entry ->
-                                redditPreset?.accepts(entry.title, entry.width, entry.height, showAdultContent = showAdultContent) != false
-                            },
+                            preset = redditPreset,
+                            showAdultContent = showAdultContent,
                         )
                         rememberPixabayVideoMetadata(page.result)
                         page.copy(
@@ -1376,11 +1403,41 @@ class VideoWallpapersViewModel @Inject constructor(
         }
     }
 
+    /** Seconds for each Reddit-hosted clip whose DASH manifest says. A clip that can't be read is left out and passes. */
+    private suspend fun redditClipLengths(entries: List<RedditRssMediaEntry>): Map<String, Int> = coroutineScope {
+        val permits = Semaphore(REDDIT_CLIP_LENGTH_PARALLELISM)
+        entries.mapNotNull { entry -> redditHostedVideoId(entry.mediaUrl)?.let { entry.id to it } }
+            .map { (entryId, videoId) ->
+                async { permits.withPermit { readRedditClipLength(videoId)?.let { entryId to it } } }
+            }
+            .awaitAll()
+            .filterNotNull()
+            .toMap()
+    }
+
+    private fun readRedditClipLength(videoId: String): Int? = try {
+        val request = Request.Builder()
+            .url("https://v.redd.it/$videoId/DASHPlaylist.mpd")
+            .header("User-Agent", "Aura/${com.freevibe.BuildConfig.VERSION_NAME} open-source wallpaper reader")
+            .build()
+        okHttpClient.newCall(request).execute().use { response ->
+            if (!response.isSuccessful) null
+            else response.body?.source()?.let { body ->
+                body.request(REDDIT_CLIP_MANIFEST_MAX_BYTES)
+                dashManifestDurationSeconds(body.buffer.snapshot().utf8())
+            }
+        }
+    } catch (e: java.io.IOException) {
+        if (com.freevibe.BuildConfig.DEBUG) Log.w("VideoWP", "Reddit clip length unread for $videoId: ${e.message}")
+        null
+    }
+
     private suspend fun loadRedditRssMotionMetadata(
         group: RedditMotionFeedGroup,
         after: String?,
         count: Int,
-        accepts: (RedditRssMediaEntry) -> Boolean,
+        preset: RedditFeedPreset?,
+        showAdultContent: Boolean,
     ): RedditRssMotionPage {
         val cacheKey = redditRssMotionCacheKey(group, after)
         readVideoMetadataCache(
@@ -1417,11 +1474,14 @@ class VideoWallpapersViewModel @Inject constructor(
                 }
             }
             val urls = linkedMapOf<String, String>()
-            val items = rssPage.entries
-                .asSequence()
-                .filter { it.isAnimated }
-                .filter { entry -> junkPatterns.none { it.containsMatchIn(entry.title) } }
-                .filter(accepts)
+            val candidates = redditMotionEntriesFor(
+                rssPage.entries.filter { it.isAnimated }.filter { entry -> junkPatterns.none { it.containsMatchIn(entry.title) } },
+                preset,
+                showAdultContent,
+            )
+            // The feed never lists a clip's length, so a minimum costs one small manifest read per Reddit video.
+            val lengths = if ((preset?.minDurationSeconds ?: 0) > 0) redditClipLengths(candidates) else emptyMap()
+            val items = redditMotionEntriesFor(candidates, preset, showAdultContent, lengths)
                 .map { entry ->
                     val playbackUrl = redditPlayableMotionUrl(entry.mediaUrl)
                     VideoWallpaperItem(
@@ -1429,6 +1489,7 @@ class VideoWallpapersViewModel @Inject constructor(
                         title = entry.title,
                         thumbnailUrl = entry.thumbnailUrl,
                         source = "Reddit",
+                        duration = lengths[entry.id]?.toLong() ?: 0L,
                         uploaderName = listOfNotNull(
                             entry.author.takeIf { it.isNotBlank() }?.let { "u/$it" },
                             entry.subreddit.takeIf { it.isNotBlank() }?.let { "r/$it" },
@@ -1446,7 +1507,6 @@ class VideoWallpapersViewModel @Inject constructor(
                         sourcePageUrl = entry.sourcePageUrl,
                     ).also { item -> urls[item.id] = playbackUrl }
                 }
-                .toList()
             val result = PixabayVideoMetadataResult(items = items, streamUrls = urls)
             val exhausted = isRedditMotionPageExhausted(rssPage.rawEntryCount, rssPage.nextAfter)
             writePixabayVideoCache(

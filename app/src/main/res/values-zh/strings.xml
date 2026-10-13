@@ -1231,7 +1231,7 @@
     <string name="reddit_preset_min_height_label">最小高度（像素）</string>
     <string name="reddit_preset_min_size_hint">标明尺寸较小的帖子会被跳过，未标明尺寸的帖子仍会显示。</string>
     <string name="reddit_preset_min_duration_label">最短时长（秒）</string>
-    <string name="reddit_preset_min_duration_hint">标明时长较短的片段会被跳过。大多数 Reddit 片段不标明时长，因此仍会显示。</string>
+    <string name="reddit_preset_min_duration_hint">Reddit 托管的视频若短于此时长会被跳过。GIF 和来自其他网站的片段不标明时长，因此仍会显示。</string>
     <string name="reddit_preset_number_error">请输入 0 到 %1$d</string>
     <string name="reddit_rotation_preset_title">轮换使用的 Reddit 订阅源</string>
     <string name="reddit_rotation_preset_follow">与 Reddit 标签页相同</string>

@@ -416,6 +416,31 @@ class WallpapersViewModelTest {
     }
 
     @Test
+    fun `a swipe while the first palette read runs never lands that wallpaper's colors`() = runTest(dispatcher) {
+        val wallpaperRepo = mockk<WallpaperRepository>()
+        val redditRepo = mockk<RedditRepository>()
+        stubCommonDependencies(wallpaperRepo = wallpaperRepo, redditRepo = redditRepo)
+        val first = "https://w.wallhaven.cc/full/ab/wallhaven-ab.jpg"
+        val second = "https://w.wallhaven.cc/full/cd/wallhaven-cd.jpg"
+        val firstPalette = ColorExtractor.WallpaperPalette(dominantColor = 0x112233)
+        val secondPalette = ColorExtractor.WallpaperPalette(dominantColor = 0x445566)
+        val firstRead = CompletableDeferred<ColorExtractor.WallpaperPalette?>()
+        val extractor = mockk<ColorExtractor>()
+        coEvery { extractor.extractFromUrl(first, false) } coAnswers { firstRead.await() }
+        coEvery { extractor.extractFromUrl(second, false) } returns secondPalette
+        val viewModel = createViewModel(wallpaperRepo = wallpaperRepo, redditRepo = redditRepo, colorExtractorOverride = extractor)
+
+        viewModel.extractColors(first)
+        viewModel.onWallpaperImageLoaded(first)
+        viewModel.extractColors(second)
+        advanceUntilIdle()
+        firstRead.complete(firstPalette)
+        advanceUntilIdle()
+
+        assertEquals(secondPalette, viewModel.colorPalette.value)
+    }
+
+    @Test
     fun `newest and the search tabs count keys, not just switches`() = runTest(dispatcher) {
         val wallpaperRepo = mockk<WallpaperRepository>()
         val redditRepo = mockk<RedditRepository>()

@@ -1379,7 +1379,7 @@
     <string name="reddit_preset_min_height_label">Min height (px)</string>
     <string name="reddit_preset_min_size_hint">Posts that list a smaller size are skipped. Posts that don\'t list a size still show.</string>
     <string name="reddit_preset_min_duration_label">Min length (seconds)</string>
-    <string name="reddit_preset_min_duration_hint">Clips that list a shorter length are skipped. Most Reddit clips don\'t list one, so they still show.</string>
+    <string name="reddit_preset_min_duration_hint">Videos Reddit hosts are skipped when they\'re shorter. GIFs and clips from other sites don\'t say how long they are, so they still show.</string>
     <string name="reddit_preset_number_error">Enter 0 to %1$d</string>
     <string name="reddit_rotation_preset_title">Reddit feed for rotation</string>
     <string name="reddit_rotation_preset_follow">Same as the Reddit tab</string>

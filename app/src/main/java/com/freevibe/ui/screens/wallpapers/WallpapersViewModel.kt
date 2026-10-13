@@ -447,7 +447,7 @@ class WallpapersViewModel @Inject constructor(
         // Cancel a stale extraction so a swipe can't land the previous wallpaper's colors.
         colorExtractionJob?.cancel()
         _colorPalette.value = null
-        colorExtractionJob = viewModelScope.launch { _colorPalette.value = colorExtractor.extractFromUrl(wallpaperUrl, allowNetwork = false) }
+        colorExtractionJob = viewModelScope.launch { publishPalette(wallpaperUrl) }
     }
 
     /** The shown image reached the cache, so a palette that asked before it landed can read it now. */
@@ -457,9 +457,13 @@ class WallpapersViewModel @Inject constructor(
         val pending = colorExtractionJob
         colorExtractionJob = viewModelScope.launch {
             pending?.join()
-            if (_colorPalette.value == null) _colorPalette.value = colorExtractor.extractFromUrl(url, allowNetwork = false)
+            if (_colorPalette.value == null) publishPalette(url)
         }
     }
+
+    // Cancelling the job above doesn't cancel the read it waits on, so each read checks it's still wanted.
+    private suspend fun publishPalette(url: String) =
+        colorExtractor.extractFromUrl(url, allowNetwork = false).let { if (url == paletteUrl) _colorPalette.value = it }
 
     fun setStaticFitCanvasPreferences(presentation: String, style: FitCanvasStyle) = viewModelScope.launch { prefs.setStaticFitCanvasPreferences(presentation, style) }
 

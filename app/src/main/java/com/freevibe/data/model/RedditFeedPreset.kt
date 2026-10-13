@@ -130,11 +130,13 @@ private fun legacyCustomPreset(
     ignored: List<String>,
     name: (Int) -> String,
 ): RedditFeedPreset? {
-    // r/LiveWallpaper closed, so an old video list never carries it forward.
-    val subreddits = validateRedditSubredditList(raw).subreddits
+    // r/LiveWallpaper closed, so an old video list never carries it forward. The lists it's compared
+    // with drop it too, or the old default video list would never match itself.
+    fun open(list: String) = validateRedditSubredditList(list).subreddits
         .filterNot { mediaType == RedditFeedMediaType.VIDEO && it.equals("LiveWallpaper", ignoreCase = true) }
+    val subreddits = open(raw)
     val key = subreddits.lowercaseKey()
-    if (subreddits.isEmpty() || ignored.any { validateRedditSubredditList(it).subreddits.lowercaseKey() == key }) return null
+    if (subreddits.isEmpty() || ignored.any { open(it).lowercaseKey() == key }) return null
     return RedditFeedPreset(
         id = id,
         name = name(R.string.reddit_preset_legacy_custom),
@@ -261,17 +263,25 @@ internal fun RedditFeedPresetStore.bindRotation(id: String): RedditFeedPresetSto
 
 /**
  * Restores presets from a backup. A preset with the same ID comes back as the backup had it, new ones
- * are added, and the backup's active and rotation choices win where they still point at a preset.
+ * are added, and the backup's active and rotation choices win where they still point at a preset. A
+ * backup that left rotation following the Reddit tab restores that too.
  */
 internal fun RedditFeedPresetStore.mergeImported(imported: RedditFeedPresetStore): RedditFeedPresetStore {
     val incoming = imported.presets.associateBy { it.id }
-    val merged = presets.map { incoming[it.id] ?: it } + imported.presets.filter { new -> presets.none { it.id == new.id } }
+    val combined = presets.map { incoming[it.id] ?: it } + imported.presets.filter { new -> presets.none { it.id == new.id } }
+    // Every preset in the backup comes back. When that passes the cap, this device's own extras give way, last first.
+    val merged = RedditFeedMediaType.entries.flatMap { type ->
+        val ofType = combined.filter { it.mediaType == type }
+        val excess = (ofType.size - MAX_REDDIT_FEED_PRESETS_PER_TYPE).coerceAtLeast(0)
+        val dropped = ofType.filter { it.id !in incoming }.takeLast(excess).mapTo(HashSet()) { it.id }
+        ofType.filterNot { it.id in dropped }
+    }
     fun pick(importedId: String, currentId: String) = importedId.takeIf { id -> merged.any { it.id == id } } ?: currentId
     return copy(
         presets = merged,
         activeWallpaperPresetId = pick(imported.activeWallpaperPresetId, activeWallpaperPresetId),
         activeVideoPresetId = pick(imported.activeVideoPresetId, activeVideoPresetId),
-        rotationPresetId = pick(imported.rotationPresetId, rotationPresetId),
+        rotationPresetId = if (imported.rotationPresetId.isEmpty()) "" else pick(imported.rotationPresetId, rotationPresetId),
     )
 }
 

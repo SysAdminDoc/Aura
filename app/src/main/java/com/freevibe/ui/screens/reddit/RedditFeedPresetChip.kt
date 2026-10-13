@@ -13,6 +13,7 @@ import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -29,16 +30,18 @@ import com.freevibe.R
 import com.freevibe.data.model.RedditFeedMediaType
 import com.freevibe.data.model.RedditFeedPreset
 import com.freevibe.data.model.activePreset
+import com.freevibe.data.model.feedSignature
 import com.freevibe.data.model.presetsOf
 
 /**
  * Names the Reddit feed a tab is showing and switches to another. It hides itself while Reddit is
- * off, and [onActivated] runs once the new choice is saved so the tab reloads from it.
+ * off. [onFeedChanged] runs once a different feed is saved, from this chip or from Settings, so the
+ * tab reloads from it.
  */
 @Composable
 fun RedditFeedPresetChip(
     mediaType: RedditFeedMediaType,
-    onActivated: () -> Unit,
+    onFeedChanged: () -> Unit,
     modifier: Modifier = Modifier,
     viewModel: RedditFeedPresetsViewModel = hiltViewModel(),
 ) {
@@ -46,10 +49,16 @@ fun RedditFeedPresetChip(
     val redditEnabled by viewModel.redditEnabled.collectAsStateWithLifecycle()
     val current = store ?: return
     if (!redditEnabled) return
+    val active = current.activePreset(mediaType)
+    // The global Show NSFW setting stays out of this, so its first read doesn't count as a change.
+    val signature = active.feedSignature(showAdultContent = true)
+    LaunchedEffect(mediaType, signature) {
+        if (viewModel.feedChanged(mediaType, signature)) onFeedChanged()
+    }
     RedditFeedPresetSwitcher(
         presets = current.presetsOf(mediaType),
-        active = current.activePreset(mediaType),
-        onSelect = { preset -> viewModel.activate(preset.id, onActivated) },
+        active = active,
+        onSelect = { preset -> viewModel.activate(preset.id) },
         modifier = modifier,
     )
 }

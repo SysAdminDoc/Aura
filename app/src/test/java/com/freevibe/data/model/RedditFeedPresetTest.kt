@@ -176,6 +176,27 @@ class RedditFeedPresetTest {
     }
 
     @Test
+    fun `a restore brings back rotation that follows the Reddit tab`() {
+        val device = defaults.bindRotation("default_anime")
+
+        assertEquals("", device.mergeImported(defaults).rotationPresetId)
+    }
+
+    @Test
+    fun `a restore keeps every backed-up feed when the device is near the cap`() {
+        val device = (1..16).fold(defaults) { store, n -> store.upsert(preset("p_device_$n", "Device $n", "iWallpaper")) }
+        val backup = defaults.copy(presets = (1..3).map { preset("p_backup_$it", "Backup $it", "MobileWallpaper") })
+
+        val merged = device.mergeImported(backup).normalized(defaults)
+
+        val wallpaperIds = merged.presetsOf(RedditFeedMediaType.WALLPAPER).map { it.id }
+        assertEquals(MAX_REDDIT_FEED_PRESETS_PER_TYPE, wallpaperIds.size)
+        assertTrue(wallpaperIds.containsAll(listOf("p_backup_1", "p_backup_2", "p_backup_3")))
+        assertFalse("the device's last extras give way", wallpaperIds.contains("p_device_16"))
+        assertTrue(wallpaperIds.contains("p_device_13"))
+    }
+
+    @Test
     fun `stored presets that can't be read fall back to the defaults`() {
         assertEquals(defaults, decodeRedditFeedPresetStore(adapter, "", defaults))
         assertEquals(defaults, decodeRedditFeedPresetStore(adapter, "{not json", defaults))

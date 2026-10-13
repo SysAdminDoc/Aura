@@ -19,6 +19,7 @@ import com.freevibe.data.remote.pixabay.PixabayVideoFile
 import com.freevibe.data.remote.pixabay.PixabayVideoFiles
 import com.freevibe.data.remote.pixabay.PixabayVideoResponse
 import com.freevibe.data.repository.CommunityReportRepository
+import com.freevibe.data.repository.RedditRssMediaEntry
 import com.freevibe.data.repository.VoteRepository
 import com.freevibe.data.repository.createLegacyCompatibleYouTubeSearchHandler
 import com.freevibe.data.repository.parseRedditRssPage
@@ -469,6 +470,30 @@ class VideoWallpapersViewModelTest {
     }
 
     @Test
+    fun `a minimum length drops short reddit clips and keeps the ones it can't measure`() {
+        val preset = motionPreset("Cinemagraphs").copy(minDurationSeconds = 6)
+        val short = redditEntry("short", "https://v.redd.it/abc123")
+        val long = redditEntry("long", "https://v.redd.it/def456")
+        val gif = redditEntry("gif", "https://i.redd.it/loop.gif")
+
+        val kept = redditMotionEntriesFor(listOf(short, long, gif), preset, showAdultContent = false, lengths = mapOf("short" to 3, "long" to 9))
+
+        assertEquals(listOf("long", "gif"), kept.map { it.id })
+        assertEquals("abc123", redditHostedVideoId(short.mediaUrl))
+        assertEquals("abc123", redditHostedVideoId("https://v.redd.it/abc123/HLSPlaylist.m3u8"))
+        assertNull("a GIF's length isn't read", redditHostedVideoId(gif.mediaUrl))
+    }
+
+    @Test
+    fun `dash manifests give a clip length in whole seconds`() {
+        assertEquals(12, dashManifestDurationSeconds("""<MPD minBufferTime="PT1.5S" mediaPresentationDuration="PT12.48S">"""))
+        assertEquals(95, dashManifestDurationSeconds("""<MPD mediaPresentationDuration="PT1M35S">"""))
+        assertEquals(1, dashManifestDurationSeconds("""<MPD mediaPresentationDuration="PT0.4S">"""))
+        assertNull(dashManifestDurationSeconds("""<MPD mediaPresentationDuration="PT0S">"""))
+        assertNull(dashManifestDurationSeconds("<MPD>"))
+    }
+
+    @Test
     fun `reddit motion cache keys carry the whole preset`() {
         val base = motionPreset("Cinemagraphs,perfectloops")
         val keys = listOf(
@@ -863,6 +888,18 @@ class VideoWallpapersViewModelTest {
         subreddits = subreddits.split(','),
         sort = sort,
         timeWindow = timeWindow,
+    )
+
+    private fun redditEntry(id: String, mediaUrl: String) = RedditRssMediaEntry(
+        id = id,
+        title = "Loop $id",
+        author = "maker",
+        subreddit = "Cinemagraphs",
+        sourcePageUrl = "https://www.reddit.com/r/Cinemagraphs/comments/$id/",
+        thumbnailUrl = "",
+        mediaUrl = mediaUrl,
+        width = 0,
+        height = 0,
     )
 
     private fun pixabayVideo(

@@ -657,7 +657,7 @@ fun WallpapersScreen(
                     // Switching feeds reloads the tab from page one under the new preset's cache key.
                     RedditFeedPresetChip(
                         mediaType = RedditFeedMediaType.WALLPAPER,
-                        onActivated = { viewModel.selectTab(WallpaperTab.REDDIT) },
+                        onFeedChanged = { viewModel.selectTab(WallpaperTab.REDDIT) },
                     )
                 }
                 if (
