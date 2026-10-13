@@ -760,7 +760,7 @@ class SoundEditorViewModel @Inject constructor(
                             try {
                                 copyStreamCapped(input, output, MAX_EDIT_DOWNLOAD_BYTES)
                             } catch (e: MediaIngestionLimitExceeded) {
-                                throw Exception("Audio file too large (${MAX_EDIT_DOWNLOAD_BYTES / (1024 * 1024)} MB)", e)
+                                throw Exception("Audio file is over the ${MAX_EDIT_DOWNLOAD_BYTES / (1024 * 1024)} MB editing limit", e)
                             }
                         }
                     }
@@ -798,7 +798,7 @@ class SoundEditorViewModel @Inject constructor(
                     try {
                         copyStreamCapped(input, output, MAX_EDIT_DOWNLOAD_BYTES)
                     } catch (e: MediaIngestionLimitExceeded) {
-                        throw Exception("Audio file too large (${MAX_EDIT_DOWNLOAD_BYTES / (1024 * 1024)} MB)", e)
+                        throw Exception("Audio file is over the ${MAX_EDIT_DOWNLOAD_BYTES / (1024 * 1024)} MB editing limit", e)
                     }
                 }
             } ?: throw IllegalStateException("Cannot read file")
@@ -863,6 +863,11 @@ class SoundEditorViewModel @Inject constructor(
                 buffer.clear()
                 sampleIndex++
                 extractor.advance()
+            }
+            if (sampleIndex == 0) {
+                // Nothing was read, so a flat line would be made up.
+                Log.w(TAG, "Waveform unavailable: no samples read")
+                return null
             }
         } catch (e: Exception) {
             Log.w(TAG, "Waveform unavailable: ${e.javaClass.simpleName}")
