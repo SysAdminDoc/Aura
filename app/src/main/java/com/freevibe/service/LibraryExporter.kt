@@ -13,6 +13,9 @@ import com.freevibe.data.model.ContentSource
 import com.freevibe.data.model.FitCanvasMode
 import com.freevibe.data.model.FitCanvasPreferences
 import com.freevibe.data.model.FitCanvasStyle
+import com.freevibe.data.model.RedditFeedPresetStore
+import com.freevibe.data.model.mergeImported
+import com.freevibe.data.model.parseRedditFeedPresetStoreStrict
 import com.freevibe.data.model.LocalMediaStatus
 import com.freevibe.data.model.LocalWallpaperEntity
 import com.freevibe.data.model.LocalWallpaperFolderEntity
@@ -53,6 +56,8 @@ data class LibraryExportFile(
     val soundProfilesJson: String = "",
     val soundShufflePoolsJson: String = "",
     val fitCanvasPreferences: FitCanvasPreferencesExport? = null,
+    /** Named Reddit feeds. Blank when the device never changed the defaults. */
+    val redditFeedPresetsJson: String = "",
 )
 
 @JsonClass(generateAdapter = true)
@@ -213,6 +218,7 @@ class LibraryExporter @Inject constructor(
 ) {
     private val adapter = moshi.adapter(LibraryExportFile::class.java)
     private val envelopeAdapter = moshi.adapter(LibraryImportEnvelope::class.java)
+    private val redditFeedPresetAdapter = moshi.adapter(RedditFeedPresetStore::class.java)
 
     /**
      * Test seam: runs at the very end of the write transaction. Throwing from it
@@ -248,6 +254,7 @@ class LibraryExporter @Inject constructor(
                 prefs.soundShufflePoolsJson.first(),
             )
             val fitCanvasPreferences = prefs.fitCanvasPreferencesSnapshot()
+            val redditFeedPresets = portableRedditFeedPresetsJson(prefs.redditFeedPresetsJson.first())
 
             requireWithinTransferLimit(
                 "Library favorites",
@@ -293,6 +300,7 @@ class LibraryExporter @Inject constructor(
                 soundProfilesJson = soundProfiles,
                 soundShufflePoolsJson = soundShufflePools,
                 fitCanvasPreferences = FitCanvasPreferencesExport.from(fitCanvasPreferences),
+                redditFeedPresetsJson = redditFeedPresets,
             )
 
             val json = adapter.indent("  ").toJson(exportFile)
@@ -311,6 +319,7 @@ class LibraryExporter @Inject constructor(
                     (if (wallpaperPack.isNotBlank()) 1 else 0) +
                     (if (soundProfiles.isNotBlank()) 1 else 0) +
                     (if (soundShufflePools.isNotBlank()) 1 else 0) +
+                    (if (redditFeedPresets.isNotBlank()) 1 else 0) +
                     1,
                 skipped = 0,
                 failed = 0,
@@ -469,8 +478,16 @@ class LibraryExporter @Inject constructor(
                 encodeSoundShuffleStore(moshi, normalized)
             }.orEmpty(),
             fitCanvasPreferences = exportFile.fitCanvasPreferences?.toPreferences(),
+            redditFeedPresetsJson = portableRedditFeedPresetsJson(exportFile.redditFeedPresetsJson),
             skipped = skipped,
         )
+    }
+
+    /** Checks presets strictly and writes them back out clean, or blank when there are none to carry. */
+    private fun portableRedditFeedPresetsJson(raw: String): String {
+        if (raw.isBlank()) return ""
+        val store = parseRedditFeedPresetStoreStrict(redditFeedPresetAdapter, raw)
+        return if (store.presets.isEmpty()) "" else redditFeedPresetAdapter.toJson(store)
     }
 
     private suspend fun planFavorites(
@@ -723,6 +740,8 @@ class LibraryExporter @Inject constructor(
         val previousProfiles = prefs.soundProfilesJson.first()
         val previousSoundShufflePools = prefs.soundShufflePoolsJson.first()
         val previousFitCanvasPreferences = prefs.fitCanvasPreferencesSnapshot()
+        // Read only when the backup carries presets, so a restore without them never touches the key.
+        val previousRedditFeedPresets = if (plan.redditFeedPresetsJson.isNotBlank()) prefs.redditFeedPresetsJson.first() else null
         var prefsWritten = false
         try {
             if (plan.wallpaperPackJson.isNotBlank()) {
@@ -743,6 +762,11 @@ class LibraryExporter @Inject constructor(
             plan.fitCanvasPreferences?.let {
                 prefsWritten = true
                 prefs.restoreFitCanvasPreferences(it)
+            }
+            if (plan.redditFeedPresetsJson.isNotBlank()) {
+                prefsWritten = true
+                val imported = parseRedditFeedPresetStoreStrict(redditFeedPresetAdapter, plan.redditFeedPresetsJson)
+                prefs.updateRedditFeedPresets { it.mergeImported(imported) }
             }
             database.withTransaction {
                 plan.localWallpaperFolders.forEach { database.localWallpaperFolderDao().upsert(it) }
@@ -770,6 +794,7 @@ class LibraryExporter @Inject constructor(
                 runCatching { prefs.setSoundProfilesJson(previousProfiles) }
                 runCatching { prefs.setSoundShufflePoolsJson(previousSoundShufflePools) }
                 runCatching { prefs.restoreFitCanvasPreferences(previousFitCanvasPreferences) }
+                previousRedditFeedPresets?.let { runCatching { prefs.setRedditFeedPresetsJson(it) } }
             }
             throw error
         }

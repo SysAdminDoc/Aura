@@ -167,8 +167,6 @@ class SettingsViewModel @Inject constructor(
     val soundShuffleOriginals get() = soundShuffle.originals
     val wallpaperPackEnabled get() = media.wallpaperPackEnabled
     val wallpaperPackJson get() = media.wallpaperPackJson
-    val redditSubs get() = media.redditSubs
-    val redditVideoSubs get() = media.redditVideoSubs
     val redditProviderEnabled get() = media.redditProviderEnabled
     val preferredRes get() = media.preferredRes
     val userStyles get() = media.userStyles
@@ -332,8 +330,6 @@ class SettingsViewModel @Inject constructor(
         soundShuffle.undo(historyId, onResult)
     fun setWallpaperPackEnabled(enabled: Boolean) = media.setWallpaperPackEnabled(enabled)
     fun setWallpaperPackJson(json: String) = media.setWallpaperPackJson(json)
-    fun setRedditSubs(subs: String) = media.setRedditSubs(subs)
-    fun setRedditVideoSubs(subs: String) = media.setRedditVideoSubs(subs)
     fun setRedditProviderEnabled(enabled: Boolean) = media.setRedditProviderEnabled(enabled)
     fun setPreferredRes(resolution: String) = media.setPreferredRes(resolution)
     fun setUserStyles(styles: String) = media.setUserStyles(styles)

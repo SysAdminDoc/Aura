@@ -7,6 +7,9 @@ import com.freevibe.data.local.FreeVibeDatabase
 import com.freevibe.data.local.PreferencesManager
 import com.freevibe.data.model.FitCanvasMode
 import com.freevibe.data.model.FitCanvasStyle
+import com.freevibe.data.model.RedditFeedMediaType
+import com.freevibe.data.model.RedditFeedPreset
+import com.freevibe.data.model.RedditFeedPresetStore
 import com.freevibe.data.model.WallpaperCollectionEntity
 import com.freevibe.data.model.WallpaperCollectionItemEntity
 import com.freevibe.data.model.FitCanvasPreferences
@@ -19,8 +22,14 @@ import com.freevibe.data.model.LocalWallpaperFolderScanStatus
 import com.freevibe.data.model.RotationExclusionIndex
 import com.freevibe.data.model.WallpaperHistoryEntity
 import com.freevibe.data.model.WallpaperTarget
+import com.freevibe.data.model.activate
+import com.freevibe.data.model.bindRotation
+import com.freevibe.data.model.decodeRedditFeedPresetStore
+import com.freevibe.data.model.defaultRedditFeedPresetStore
+import com.freevibe.data.model.normalized
 import com.freevibe.data.model.rotationIdentity
 import com.freevibe.data.model.toRotationExclusion
+import com.freevibe.data.model.upsert
 import com.freevibe.data.repository.CollectionRepository
 import com.squareup.moshi.Moshi
 import io.mockk.coEvery
@@ -59,7 +68,10 @@ class LibraryImportPlanTest {
     private val packJson = MutableStateFlow("")
     private val profilesJson = MutableStateFlow("")
     private val soundShufflePoolsJson = MutableStateFlow("")
+    private val redditPresetsJson = MutableStateFlow("")
     private var fitCanvasPreferences = FitCanvasPreferences()
+    private val presetAdapter = Moshi.Builder().build().adapter(RedditFeedPresetStore::class.java)
+    private val presetDefaults = defaultRedditFeedPresetStore(name = { "name-$it" })
 
     @Before
     fun setUp() {
@@ -75,6 +87,14 @@ class LibraryImportPlanTest {
         coEvery { prefs.setSoundShufflePoolsJson(any()) } answers { soundShufflePoolsJson.value = firstArg() }
         coEvery { prefs.fitCanvasPreferencesSnapshot() } answers { fitCanvasPreferences }
         coEvery { prefs.restoreFitCanvasPreferences(any()) } answers { fitCanvasPreferences = firstArg() }
+        every { prefs.redditFeedPresetsJson } returns redditPresetsJson
+        coEvery { prefs.setRedditFeedPresetsJson(any()) } answers { redditPresetsJson.value = firstArg() }
+        // Same read, transform and normalize the real DataStore edit does.
+        coEvery { prefs.updateRedditFeedPresets(any()) } answers {
+            val transform = firstArg<(RedditFeedPresetStore) -> RedditFeedPresetStore>()
+            val current = decodeRedditFeedPresetStore(presetAdapter, redditPresetsJson.value, presetDefaults)
+            transform(current).normalized(presetDefaults).also { redditPresetsJson.value = presetAdapter.toJson(it) }
+        }
         exporter = LibraryExporter(
             context = context,
             database = db,
@@ -649,6 +669,71 @@ class LibraryImportPlanTest {
         assertEquals("original-profiles", profilesJson.value)
         assertEquals("original-pools", soundShufflePoolsJson.value)
         assertEquals(originalFitCanvasPreferences, fitCanvasPreferences)
+    }
+
+    @Test
+    fun `reddit feed presets come back the same on a fresh device`() = runTest {
+        val custom = RedditFeedPreset(
+            id = "p_custom",
+            name = "Night walls",
+            mediaType = RedditFeedMediaType.WALLPAPER,
+            subreddits = listOf("Amoledbackgrounds", "MinimalWallpaper"),
+            sort = "top",
+            timeWindow = "month",
+            minHeight = 2000,
+        )
+        val motion = presetDefaults.presets.first { it.id == "default_motion" }
+        val edited = presetDefaults
+            .upsert(custom)
+            .upsert(motion.copy(subreddits = listOf("perfectloops"), minDurationSeconds = 8))
+            .activate("p_custom")
+            .bindRotation("default_amoled")
+            .normalized(presetDefaults)
+        redditPresetsJson.value = presetAdapter.toJson(edited)
+        val destination = File(context.cacheDir, "library-presets-${System.nanoTime()}.json")
+
+        try {
+            assertTrue(exporter.exportLibrary(Uri.fromFile(destination)).isSuccess)
+            redditPresetsJson.value = ""
+
+            val plan = exporter.buildPlan(destination.readText())
+            exporter.applyPlan(plan)
+
+            assertTrue(plan.redditFeedPresetsJson.isNotBlank())
+            assertEquals(edited, presetAdapter.fromJson(redditPresetsJson.value))
+        } finally {
+            destination.delete()
+        }
+    }
+
+    @Test
+    fun `a failed restore puts the reddit feed presets back`() = runTest {
+        redditPresetsJson.value = "original-presets"
+        exporter.failBeforeCommit = { throw IllegalStateException("disk full") }
+        val imported = presetAdapter.toJson(
+            RedditFeedPresetStore(
+                presets = listOf(
+                    RedditFeedPreset("p_x", "Mine", RedditFeedMediaType.WALLPAPER, listOf("iWallpaper")),
+                ),
+            ),
+        )
+
+        val failure = runCatching {
+            exporter.applyPlan(LibraryImportPlan(sourceVersion = 4, redditFeedPresetsJson = imported))
+        }.exceptionOrNull()
+
+        assertTrue(failure is IllegalStateException)
+        assertEquals("original-presets", redditPresetsJson.value)
+    }
+
+    @Test
+    fun `a backup with presets this version can't read is refused before anything is written`() = runTest {
+        val json = Moshi.Builder().build().adapter(LibraryExportFile::class.java).toJson(
+            LibraryExportFile(version = 4, redditFeedPresetsJson = presetAdapter.toJson(RedditFeedPresetStore(version = 9))),
+        )
+
+        assertTrue(runCatching { exporter.buildPlan(json) }.isFailure)
+        assertEquals("", redditPresetsJson.value)
     }
 
     @Test

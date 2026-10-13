@@ -126,8 +126,6 @@ internal data class SettingsScreenState(
     val wallhavenProviderEnabled: Boolean,
     val bingProviderEnabled: Boolean,
     val redditProviderEnabled: Boolean,
-    val redditSubreddits: String,
-    val redditVideoSubreddits: String,
     val pexelsProviderEnabled: Boolean,
     val pixabayProviderEnabled: Boolean,
     val providerSetup: ProviderSetup,
@@ -251,8 +249,6 @@ internal fun rememberSettingsScreenState(
     val wallhavenProviderEnabled by viewModel.wallhavenProviderEnabled.collectAsStateWithLifecycle()
     val bingProviderEnabled by viewModel.bingProviderEnabled.collectAsStateWithLifecycle()
     val redditProviderEnabled by viewModel.redditProviderEnabled.collectAsStateWithLifecycle()
-    val redditSubreddits by viewModel.redditSubs.collectAsStateWithLifecycle()
-    val redditVideoSubreddits by viewModel.redditVideoSubs.collectAsStateWithLifecycle()
     val pexelsProviderEnabled by viewModel.pexelsProviderEnabled.collectAsStateWithLifecycle()
     val pixabayProviderEnabled by viewModel.pixabayProviderEnabled.collectAsStateWithLifecycle()
     val providerSetup by viewModel.providerSetup.collectAsStateWithLifecycle()
@@ -379,8 +375,6 @@ internal fun rememberSettingsScreenState(
         wallhavenProviderEnabled = wallhavenProviderEnabled,
         bingProviderEnabled = bingProviderEnabled,
         redditProviderEnabled = redditProviderEnabled,
-        redditSubreddits = redditSubreddits,
-        redditVideoSubreddits = redditVideoSubreddits,
         pexelsProviderEnabled = pexelsProviderEnabled,
         pixabayProviderEnabled = pixabayProviderEnabled,
         providerSetup = providerSetup,

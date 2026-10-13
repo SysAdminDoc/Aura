@@ -13,8 +13,12 @@ import com.freevibe.data.model.ContentSource
 import com.freevibe.data.model.FitCanvasMode
 import com.freevibe.data.model.FitCanvasPreferences
 import com.freevibe.data.model.FitCanvasStyle
+import com.freevibe.data.model.RedditFeedPresetStore
 import com.freevibe.data.model.WALLPAPER_PRESENTATION_FILL
+import com.freevibe.data.model.decodeRedditFeedPresetStore
+import com.freevibe.data.model.defaultRedditFeedPresetStore
 import com.freevibe.data.model.normalizeWallpaperPresentation
+import com.freevibe.data.model.normalized
 import com.freevibe.data.model.hasAcceptedCommunityGuidelinesVersion
 import com.freevibe.service.ADAPTIVE_TINT_ENABLED_PREF
 import com.freevibe.service.ADAPTIVE_TINT_INTENSITY_PREF
@@ -48,6 +52,7 @@ import com.freevibe.service.WALLPAPER_CLOCK_OVERLAY_POSITION_PREF
 import com.freevibe.service.WALLPAPER_CLOCK_OVERLAY_PREFS_NAME
 import com.freevibe.service.WallpaperClockOverlayMode
 import com.freevibe.service.WallpaperClockOverlayPosition
+import com.squareup.moshi.Moshi
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -123,11 +128,6 @@ internal fun validateRedditSubredditList(raw: String): RedditSubredditListValida
         invalidEntries = invalidEntries,
         exceedsLimit = validEntries.size > MAX_CONFIGURED_SUBREDDITS,
     )
-}
-
-internal fun normalizeRedditSubredditPreference(raw: String, defaults: String): String {
-    val validation = validateRedditSubredditList(raw)
-    return validation.normalized.takeIf { validation.isValid && it.isNotBlank() } ?: defaults
 }
 
 internal data class RedditRssPageMetadataEntry(
@@ -560,28 +560,52 @@ class PreferencesManager @Inject constructor(
 
     // ── Reddit settings ───────────────────────────────────────────
 
-    val redditSubreddits: Flow<String> = get(
-        Keys.REDDIT_SUBS,
-        DEFAULT_REDDIT_WALLPAPER_SUBREDDITS,
-    )
-    val redditVideoSubreddits: Flow<String> = get(
-        Keys.REDDIT_VIDEO_SUBS,
-        DEFAULT_REDDIT_VIDEO_SUBREDDITS,
-    )
     val redditProviderEnabled: Flow<Boolean> = get(
         Keys.REDDIT_PROVIDER_ENABLED,
         providerCapability(ContentSource.REDDIT).enabledByDefault,
     )
 
-    suspend fun setRedditSubreddits(subs: String) = set(
-        Keys.REDDIT_SUBS,
-        normalizeRedditSubredditPreference(subs, DEFAULT_REDDIT_WALLPAPER_SUBREDDITS),
-    )
-    suspend fun setRedditVideoSubreddits(subs: String) = set(
-        Keys.REDDIT_VIDEO_SUBS,
-        normalizeRedditSubredditPreference(subs, DEFAULT_REDDIT_VIDEO_SUBREDDITS),
-    )
     suspend fun setRedditProviderEnabled(enabled: Boolean) = set(Keys.REDDIT_PROVIDER_ENABLED, enabled)
+
+    // ── Reddit feed presets ───────────────────────────────────────
+
+    private val redditFeedPresetAdapter by lazy {
+        Moshi.Builder().build().adapter(RedditFeedPresetStore::class.java)
+    }
+
+    /** The saved presets as stored, blank until the first edit. Backups carry this as is. */
+    val redditFeedPresetsJson: Flow<String> = get(Keys.REDDIT_FEED_PRESETS, "")
+
+    /** Saved presets, or the defaults plus any subreddit list from before presets until the first edit. */
+    val redditFeedPresets: Flow<RedditFeedPresetStore> = dataStore.data
+        .catch { emit(emptyPreferences()) }
+        .map(::decodeRedditFeedPresets)
+        .distinctUntilChanged()
+
+    /** Applies [transform] to the current presets in one DataStore edit and returns what was saved. */
+    suspend fun updateRedditFeedPresets(
+        transform: (RedditFeedPresetStore) -> RedditFeedPresetStore,
+    ): RedditFeedPresetStore {
+        var saved: RedditFeedPresetStore? = null
+        dataStore.edit { values ->
+            val next = transform(decodeRedditFeedPresets(values)).normalized(redditFeedPresetDefaults(values))
+            values[Keys.REDDIT_FEED_PRESETS] = redditFeedPresetAdapter.toJson(next)
+            saved = next
+        }
+        return checkNotNull(saved)
+    }
+
+    suspend fun setRedditFeedPresetsJson(json: String) = set(Keys.REDDIT_FEED_PRESETS, json)
+
+    private fun decodeRedditFeedPresets(values: Preferences): RedditFeedPresetStore =
+        decodeRedditFeedPresetStore(redditFeedPresetAdapter, values[Keys.REDDIT_FEED_PRESETS], redditFeedPresetDefaults(values))
+
+    // The lists from before presets are only read now, to seed a custom preset.
+    private fun redditFeedPresetDefaults(values: Preferences): RedditFeedPresetStore = defaultRedditFeedPresetStore(
+        name = { context.getString(it) },
+        legacyWallpaperSubreddits = values[Keys.REDDIT_SUBS].orEmpty(),
+        legacyVideoSubreddits = values[Keys.REDDIT_VIDEO_SUBS].orEmpty(),
+    )
 
     /**
      * Persist Atom page metadata independently from usable wallpaper rows. The final raw Reddit
@@ -1074,6 +1098,7 @@ class PreferencesManager @Inject constructor(
         val PREF_RESOLUTION = stringPreferencesKey("pref_resolution")
         val REDDIT_SUBS = stringPreferencesKey("reddit_subreddits")
         val REDDIT_VIDEO_SUBS = stringPreferencesKey("reddit_video_subreddits")
+        val REDDIT_FEED_PRESETS = stringPreferencesKey("reddit_feed_presets_v1")
         val REDDIT_PROVIDER_ENABLED = booleanPreferencesKey("reddit_provider_enabled")
         val REDDIT_RSS_NEXT_ALLOWED_AT_MS = longPreferencesKey("reddit_rss_next_allowed_at_ms")
         val REDDIT_RSS_PAGE_METADATA_V3 = stringPreferencesKey("reddit_rss_page_metadata_v3")

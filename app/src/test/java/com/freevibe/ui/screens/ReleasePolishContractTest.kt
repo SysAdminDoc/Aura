@@ -404,18 +404,17 @@ class ReleasePolishContractTest {
     }
 
     @Test
-    fun `settings exposes validated wallpaper and video subreddit editors`() {
+    fun `settings manages named Reddit feeds for wallpapers, video and rotation`() {
         val screen = settingsSource()
         val preferences = File("src/main/java/com/freevibe/data/local/PreferencesManager.kt").readText()
 
-        assertTrue(screen.contains("redditSubreddits = redditSubreddits"))
-        assertTrue(screen.contains("redditVideoSubreddits = redditVideoSubreddits"))
-        assertTrue(screen.contains("RedditSubredditListEditor("))
-        assertTrue(screen.contains("viewModel::setRedditSubs"))
-        assertTrue(screen.contains("viewModel::setRedditVideoSubs"))
+        assertTrue(screen.contains("RedditFeedPresetManager(RedditFeedMediaType.WALLPAPER)"))
+        assertTrue(screen.contains("RedditFeedPresetManager(RedditFeedMediaType.VIDEO)"))
+        assertTrue(screen.contains("if (autoWpSource == \"reddit\") RedditRotationPresetPicker()"))
+        assertTrue(screen.contains("validateRedditSubredditList(subreddits)"))
         assertTrue(screen.contains("verticalScroll(rememberScrollState())"))
         assertTrue(screen.contains("imePadding()"))
-        assertTrue(preferences.contains("normalizeRedditSubredditPreference"))
+        assertTrue(preferences.contains("suspend fun updateRedditFeedPresets("))
         assertTrue(preferences.contains("MAX_CONFIGURED_SUBREDDITS"))
     }
 

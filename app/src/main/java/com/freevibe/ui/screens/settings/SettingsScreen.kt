@@ -314,7 +314,6 @@ fun SettingsScreen(
                 wallpaperStyleLearningSignalCount = wallpaperStyleLearningSignalCount,
                 bingProviderEnabled = bingProviderEnabled,
                 redditProviderEnabled = redditProviderEnabled,
-                redditSubreddits = redditSubreddits,
                 wallhavenProviderEnabled = wallhavenProviderEnabled,
                 pixabayUsable = pixabayUsable,
                 wallpaperSearchReachable = wallpaperSearchReachable,
@@ -420,7 +419,6 @@ fun SettingsScreen(
                 videoFpsOverlayEnabled = videoFpsOverlayEnabled,
                 videoAutoBatterySaver = videoAutoBatterySaver,
                 videoBatteryDashboard = videoBatteryDashboard,
-                redditVideoSubreddits = redditVideoSubreddits,
             )
 
             if (SettingsSectionKeys.SERVICES in visibleSectionKeys) ServicesCommunitySettingsSection(

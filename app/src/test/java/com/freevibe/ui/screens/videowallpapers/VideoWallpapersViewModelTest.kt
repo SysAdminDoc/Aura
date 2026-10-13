@@ -8,6 +8,9 @@ import com.freevibe.data.local.PreferencesManager
 import com.freevibe.data.model.ContentSource
 import com.freevibe.data.model.DEFAULT_FIT_CANVAS_COLOR
 import com.freevibe.data.model.FitCanvasMode
+import com.freevibe.data.model.RedditFeedDefault
+import com.freevibe.data.model.RedditFeedMediaType
+import com.freevibe.data.model.RedditFeedPreset
 import com.freevibe.data.model.WALLPAPER_PRESENTATION_FILL
 import com.freevibe.data.remote.pexels.PexelsApi
 import com.freevibe.data.remote.pixabay.PixabayApi
@@ -196,7 +199,6 @@ class VideoWallpapersViewModelTest {
         every { prefs.redditProviderEnabled } returns flowOf(false)
         every { prefs.pexelsProviderEnabled } returns flowOf(false)
         every { prefs.pixabayProviderEnabled } returns flowOf(true)
-        every { prefs.redditVideoSubreddits } returns flowOf("")
         every { prefs.pexelsApiKey } returns flowOf("")
         every { prefs.pixabayApiKey } returns flowOf("test-key")
 
@@ -415,11 +417,9 @@ class VideoWallpapersViewModelTest {
     }
 
     @Test
-    fun `reddit motion feed groups preserve validated source priority`() {
-        val groups = resolveRedditMotionFeedGroups(
-            "livewallpapers,LiveWallpaper,Cinemagraphs,perfectloops,livewallpapers,not-valid!",
-        )
-        val customGroups = resolveRedditMotionFeedGroups("CustomLoops,OLED_Motion,PixelCycles")
+    fun `reddit motion feed groups follow the preset two subreddits at a time`() {
+        val groups = resolveRedditMotionFeedGroups(RedditFeedDefault.MOTION.preset("Motion wallpapers"))
+        val customGroups = resolveRedditMotionFeedGroups(motionPreset("CustomLoops,OLED_Motion,PixelCycles"))
 
         assertEquals(
             listOf(
@@ -438,7 +438,7 @@ class VideoWallpapersViewModelTest {
 
     @Test
     fun `reddit motion feed url requests one hundred and continues after t3 cursor`() {
-        val group = resolveRedditMotionFeedGroups("Cinemagraphs,perfectloops").single()
+        val group = resolveRedditMotionFeedGroups(motionPreset("Cinemagraphs,perfectloops")).single()
         val after = redditAfterToken("rd_abc123")
         val url = Request.Builder()
             .url(redditRssMotionUrl(group, after))
@@ -456,6 +456,34 @@ class VideoWallpapersViewModelTest {
             .build()
             .url
         assertEquals("300", deeperPage.queryParameter("count"))
+        assertNull("only Top takes a time window", url.queryParameter("t"))
+    }
+
+    @Test
+    fun `a top preset asks reddit for its time window`() {
+        val group = resolveRedditMotionFeedGroups(motionPreset("Cinemagraphs", sort = "top", timeWindow = "month")).single()
+        val url = Request.Builder().url(redditRssMotionUrl(group, after = null)).build().url
+
+        assertTrue(url.encodedPath.endsWith("/r/Cinemagraphs/top/.rss"))
+        assertEquals("month", url.queryParameter("t"))
+    }
+
+    @Test
+    fun `reddit motion cache keys carry the whole preset`() {
+        val base = motionPreset("Cinemagraphs,perfectloops")
+        val keys = listOf(
+            base,
+            base.copy(sort = "top"),
+            base.copy(minDurationSeconds = 10),
+            base.copy(includeAdult = true),
+        ).map { preset -> redditRssMotionCacheKey(resolveRedditMotionFeedGroups(preset, showAdultContent = true).single(), after = null) }
+
+        assertEquals("every change to the preset gets its own pages", keys.size, keys.toSet().size)
+        assertEquals(
+            "adult posts stay out while Show NSFW is off, so that preset reads the safe pages",
+            redditRssMotionCacheKey(resolveRedditMotionFeedGroups(base).single(), after = null),
+            redditRssMotionCacheKey(resolveRedditMotionFeedGroups(base.copy(includeAdult = true)).single(), after = null),
+        )
     }
 
     @Test
@@ -474,9 +502,7 @@ class VideoWallpapersViewModelTest {
 
     @Test
     fun `reddit motion cache keys separate feed groups and cursors`() {
-        val groups = resolveRedditMotionFeedGroups(
-            "livewallpapers,LiveWallpaper,Cinemagraphs,perfectloops",
-        )
+        val groups = resolveRedditMotionFeedGroups(motionPreset("livewallpapers,Cinemagraphs,perfectloops"))
 
         val firstPage = redditRssMotionCacheKey(groups[0], after = null)
         val continued = redditRssMotionCacheKey(groups[0], after = "t3_abc123")
@@ -490,9 +516,7 @@ class VideoWallpapersViewModelTest {
 
     @Test
     fun `reddit motion selection skips exhausted groups without restarting them`() {
-        val groups = resolveRedditMotionFeedGroups(
-            "livewallpapers,Cinemagraphs,perfectloops,phonewallpapers",
-        )
+        val groups = resolveRedditMotionFeedGroups(motionPreset("livewallpapers,Cinemagraphs,perfectloops,phonewallpapers"))
         val selection = selectRedditMotionFeed(
             groups = groups,
             startIndex = 0,
@@ -831,6 +855,15 @@ class VideoWallpapersViewModelTest {
         )
         assertEquals(emptyList<String>(), curatedHandler.contentFilters)
     }
+
+    private fun motionPreset(subreddits: String, sort: String = "new", timeWindow: String = "week") = RedditFeedPreset(
+        id = "motion",
+        name = "Motion",
+        mediaType = RedditFeedMediaType.VIDEO,
+        subreddits = subreddits.split(','),
+        sort = sort,
+        timeWindow = timeWindow,
+    )
 
     private fun pixabayVideo(
         id: Long,

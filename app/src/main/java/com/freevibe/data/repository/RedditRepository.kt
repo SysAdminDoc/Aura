@@ -4,6 +4,12 @@ import com.freevibe.BuildConfig
 import com.freevibe.data.local.PreferencesManager
 import com.freevibe.data.local.WallpaperCacheManager
 import com.freevibe.data.model.ContentSource
+import com.freevibe.data.model.RedditFeedMediaType
+import com.freevibe.data.model.RedditFeedPreset
+import com.freevibe.data.model.accepts
+import com.freevibe.data.model.activePreset
+import com.freevibe.data.model.feedSignature
+import com.freevibe.data.model.isMarkedAdult
 import com.freevibe.data.model.SearchResult
 import com.freevibe.data.model.Wallpaper
 import com.freevibe.service.SourceMetrics
@@ -31,6 +37,12 @@ private data class RedditWallpaperPage(
     val hasMore: Boolean,
 )
 
+/** Which posts a feed keeps, and the key its cache rows and cursors live under. */
+private class RedditEntryFilter(
+    val feedKey: String,
+    val accepts: (RedditRssMediaEntry) -> Boolean,
+)
+
 @Singleton
 class RedditRepository @Inject constructor(
     private val okHttpClient: OkHttpClient,
@@ -44,29 +56,6 @@ class RedditRepository @Inject constructor(
     private val deferredFeeds = ConcurrentHashMap.newKeySet<String>()
     @Volatile private var forceRefreshRoot = false
 
-    private val redditWallpaperSubs = listOf(
-        "iWallpaper",
-        "Amoledbackgrounds",
-        "MobileWallpaper",
-        "AnimePhoneWallpapers",
-        "phonewallpapers",
-        "iphonewallpapers",
-        "mobilewallpapers",
-        "Verticalwallpapers",
-        "WQHD_Wallpaper",
-        "MinimalWallpaper",
-        "iphonexwallpapers",
-    )
-    private val legacyRedditWallpaperSubs = listOf(
-        "wallpapers",
-        "MobileWallpaper",
-        "wallpaper",
-        "WQHD_Wallpaper",
-        "MinimalWallpaper",
-        "phonewallpapers",
-        "iWallpaper",
-    )
-
     suspend fun getSubredditWallpapers(
         subreddit: String = "wallpapers",
         sort: String = "hot",
@@ -76,11 +65,16 @@ class RedditRepository @Inject constructor(
         if (!isProviderEnabled()) return providerDisabledResult()
         val safeSubreddit = sanitizeSubreddit(subreddit)
         if (safeSubreddit.isBlank()) return emptyWallpaperResult()
+        val showAdult = prefs.showNsfwContent.first()
         val items = loadRssWallpapers(
             subreddits = listOf(safeSubreddit),
             sort = sort,
             timeRange = timeRange,
             afterOverride = after,
+            filter = RedditEntryFilter(
+                feedKey = "${safeSubreddit.lowercase(Locale.ROOT)}|$sort|$timeRange|${if (showAdult) "adult" else "safe"}",
+                accepts = { showAdult || !isMarkedAdult(it.title) },
+            ),
         )
         return SearchResult(
             items = items.items,
@@ -119,25 +113,18 @@ class RedditRepository @Inject constructor(
     }
 
     /**
-     * Reddit-first mobile inventory backed by the public Atom listing. Reddit omits a
-     * rel=next link, so [loadRssWallpapers] carries the last raw `t3_...` entry into
-     * the next request's `after` query parameter.
+     * Reddit-first mobile inventory backed by the public Atom listing, read through [preset] or the
+     * preset active on the Reddit tab. Reddit omits a rel=next link, so [loadRssWallpapers] carries
+     * the last raw `t3_...` entry into the next request's `after` query parameter.
      */
     suspend fun getMultiSubreddit(
-        subreddits: List<String>? = null,
         page: Int = 1,
+        preset: RedditFeedPreset? = null,
     ): SearchResult<Wallpaper> {
         if (!isProviderEnabled()) return providerDisabledResult()
-        val configuredSubreddits = subreddits ?: prefs.redditSubreddits.first()
-            .split(',')
-            .map { it.trim() }
-            .filter { it.isNotBlank() }
-            .let { configured ->
-                val normalized = configured.map { it.lowercase(Locale.ROOT) }
-                val legacy = legacyRedditWallpaperSubs.map { it.lowercase(Locale.ROOT) }
-                if (configured.isEmpty() || normalized == legacy) redditWallpaperSubs else configured
-            }
-        val safeSubreddits = configuredSubreddits.map(::sanitizeSubreddit)
+        val feed = preset ?: prefs.redditFeedPresets.first().activePreset(RedditFeedMediaType.WALLPAPER)
+        val showAdult = prefs.showNsfwContent.first()
+        val safeSubreddits = feed.subreddits.map(::sanitizeSubreddit)
             .filter { it.isNotBlank() }
             .distinct()
             .take(12)
@@ -145,9 +132,12 @@ class RedditRepository @Inject constructor(
         val safePage = page.coerceAtLeast(1)
         val rssPage = loadRssWallpapers(
             subreddits = safeSubreddits,
-            sort = "new",
-            timeRange = "all",
+            sort = feed.sort,
+            timeRange = feed.timeWindow,
             page = safePage,
+            filter = RedditEntryFilter(feed.feedSignature(showAdult)) { entry ->
+                feed.accepts(entry.title, entry.width, entry.height, showAdultContent = showAdult)
+            },
         )
         return SearchResult(
             items = rssPage.items,
@@ -188,12 +178,13 @@ class RedditRepository @Inject constructor(
         timeRange: String,
         page: Int = 1,
         afterOverride: String? = null,
+        filter: RedditEntryFilter,
     ): RedditWallpaperPage {
         val normalizedSort = sort.lowercase(Locale.ROOT).takeIf { it in RSS_SORTS } ?: "top"
         val normalizedTimeRange = timeRange.lowercase(Locale.ROOT).takeIf { it in RSS_TIME_RANGES } ?: "month"
         val joinedSubreddits = subreddits.joinToString("+")
         val safePage = page.coerceAtLeast(1)
-        val feedKey = "${joinedSubreddits.lowercase(Locale.ROOT)}|$normalizedSort|$normalizedTimeRange"
+        val feedKey = filter.feedKey
         val normalizedOverride = afterOverride?.normalizeRedditAfter()
         val requestAfter = when {
             normalizedOverride != null -> normalizedOverride
@@ -274,6 +265,7 @@ class RedditRepository @Inject constructor(
                 val wallpapers = rssPage.entries
                     .asSequence()
                     .filterNot { it.isAnimated }
+                    .filter(filter.accepts)
                     .map(::toWallpaper)
                     .distinctBy { it.id }
                     .toList()

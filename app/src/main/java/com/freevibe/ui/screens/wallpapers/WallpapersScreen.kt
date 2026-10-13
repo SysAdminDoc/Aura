@@ -59,6 +59,8 @@ import coil3.compose.AsyncImagePainter
 import coil3.compose.SubcomposeAsyncImage
 import coil3.compose.SubcomposeAsyncImageContent
 import com.freevibe.R
+import com.freevibe.data.model.RedditFeedMediaType
+import com.freevibe.ui.screens.reddit.RedditFeedPresetChip
 import com.freevibe.data.legal.ProviderBlock
 import com.freevibe.data.legal.ProviderBuild
 import com.freevibe.data.legal.ProviderChannel
@@ -649,6 +651,13 @@ fun WallpapersScreen(
                             { Icon(Icons.Default.Check, contentDescription = null, modifier = Modifier.size(16.dp)) }
                         } else null,
                         shape = RoundedCornerShape(8.dp),
+                    )
+                }
+                if (state.selectedTab == WallpaperTab.REDDIT) {
+                    // Switching feeds reloads the tab from page one under the new preset's cache key.
+                    RedditFeedPresetChip(
+                        mediaType = RedditFeedMediaType.WALLPAPER,
+                        onActivated = { viewModel.selectTab(WallpaperTab.REDDIT) },
                     )
                 }
                 if (

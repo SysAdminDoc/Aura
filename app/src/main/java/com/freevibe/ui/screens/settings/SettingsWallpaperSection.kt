@@ -50,6 +50,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.freevibe.R
+import com.freevibe.data.model.RedditFeedMediaType
 import com.freevibe.data.model.WALLPAPER_SOURCE_LOCAL_FOLDER
 import com.freevibe.service.ExternalAutomationDiagnostics
 import com.freevibe.service.OemBatteryGuidance
@@ -88,7 +89,6 @@ internal fun WallpaperRotationSettingsSection(
     wallpaperStyleLearningSignalCount: Int,
     bingProviderEnabled: Boolean,
     redditProviderEnabled: Boolean,
-    redditSubreddits: String,
     wallhavenProviderEnabled: Boolean,
     /** Switched on and keyed; a switched-on Pixabay without a key loads nothing. */
     pixabayUsable: Boolean,
@@ -148,6 +148,7 @@ internal fun WallpaperRotationSettingsSection(
                 ),
                 onClick = { showSourcePicker = true },
             )
+            if (autoWpSource == "reddit") RedditRotationPresetPicker()
             SettingsItem(
                 icon = Icons.Default.Wallpaper,
                 title = stringResource(R.string.settings_wp_target_title),
@@ -390,11 +391,7 @@ internal fun WallpaperRotationSettingsSection(
             checked = redditProviderEnabled,
             onCheckedChange = viewModel::setRedditProviderEnabled,
         )
-        RedditSubredditListEditor(
-            title = stringResource(R.string.settings_wp_subreddits_title),
-            configuredSubreddits = redditSubreddits,
-            onSave = viewModel::setRedditSubs,
-        )
+        RedditFeedPresetManager(RedditFeedMediaType.WALLPAPER)
         SettingsToggle(
             icon = Icons.Default.ImageSearch,
             title = stringResource(R.string.settings_wp_bing_title),

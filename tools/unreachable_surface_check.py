@@ -36,6 +36,7 @@ IMPORTER_SOURCES = frozenset({
 SETTER_WAIVERS = {
     "setFreesoundKey": "Freesound is a dormant provider. The setter goes with it in the dormant sound provider removal.",
     "setRingtoneShuffleIntervalHours": "Legacy interval that the sound pool migration reads once. Only the migration tests write it.",
+    "setRedditFeedPresetsJson": "Backup restore puts the raw preset document back after a failed import. Users edit presets through updateRedditFeedPresets.",
 }
 
 SCREEN_OBJECT = re.compile(r"(?:data\s+)?object\s+(\w+)\s*:\s*Screen\(")

@@ -19,13 +19,19 @@ import com.freevibe.data.model.CommunityReportReason
 import com.freevibe.data.model.ContentSource
 import com.freevibe.data.model.FitCanvasMode
 import com.freevibe.data.model.FitCanvasStyle
+import com.freevibe.data.model.RedditFeedMediaType
+import com.freevibe.data.model.RedditFeedPreset
 import com.freevibe.data.model.VideoWallpaperAction
+import com.freevibe.data.model.accepts
+import com.freevibe.data.model.activePreset
 import com.freevibe.data.model.canUseVideoAction
+import com.freevibe.data.model.feedSignature
 import com.freevibe.data.model.videoActionMessage
 import com.freevibe.util.rethrowIfCancelled
 import com.freevibe.data.remote.pexels.PexelsApi
 import com.freevibe.data.remote.pixabay.PixabayVideo
 import com.freevibe.data.repository.CommunityReportRepository
+import com.freevibe.data.repository.RedditRssMediaEntry
 import com.freevibe.data.repository.YouTubeRepository
 import com.freevibe.data.repository.YouTubeVideoMetadata
 import com.freevibe.data.repository.VoteRepository
@@ -138,19 +144,8 @@ internal fun canPreviewVideoInCurrentArtifact(item: VideoWallpaperItem): Boolean
 internal data class RedditMotionFeedGroup(
     val key: String,
     val subreddits: List<String>,
-)
-
-private val LEGACY_REDDIT_MOTION_SUBREDDITS = listOf(
-    "livewallpapers", "LiveWallpaper", "Cinemagraphs", "perfectloops",
-)
-private val VALIDATED_REDDIT_MOTION_SUBREDDITS = listOf(
-    "livewallpapers",
-    "Cinemagraphs",
-    "perfectloops",
-    "phonewallpapers",
-    "AnimatedPixelArt",
-    "LivingBackgrounds",
-    "wallpaperengine",
+    val sort: String = "new",
+    val timeWindow: String = "week",
 )
 
 private data class RedditRssMotionPage(
@@ -167,24 +162,22 @@ internal data class RedditMotionFeedSelection(
     val nextSubIndex: Int,
 )
 
-internal fun resolveRedditMotionFeedGroups(configuredSubreddits: String): List<RedditMotionFeedGroup> {
-    val configured = configuredSubreddits
-        .split(',')
-        .map { it.trim().removePrefix("r/") }
-        .filter { it.matches(Regex("[A-Za-z0-9_]{2,40}")) }
-        .distinctBy { it.lowercase(java.util.Locale.ROOT) }
-    val normalizedConfigured = configured.map { it.lowercase(java.util.Locale.ROOT) }
-    val normalizedLegacy = LEGACY_REDDIT_MOTION_SUBREDDITS.map { it.lowercase(java.util.Locale.ROOT) }
-    val subreddits = when {
-        configured.isEmpty() || normalizedConfigured == normalizedLegacy -> VALIDATED_REDDIT_MOTION_SUBREDDITS
-        else -> configured.filterNot { it.equals("LiveWallpaper", ignoreCase = true) }
-            .ifEmpty { VALIDATED_REDDIT_MOTION_SUBREDDITS }
-    }
-    return subreddits.chunked(2).mapIndexed { index, group ->
-        val signature = group.joinToString("+").lowercase(java.util.Locale.ROOT)
+/**
+ * Splits [preset] into two-subreddit requests, so one busy subreddit can't bury the others. Each key
+ * carries the whole preset, so cursors and cached pages never cross presets.
+ */
+internal fun resolveRedditMotionFeedGroups(
+    preset: RedditFeedPreset,
+    showAdultContent: Boolean = false,
+): List<RedditMotionFeedGroup> {
+    val presetSignature = preset.feedSignature(showAdultContent)
+    return preset.subreddits.chunked(2).mapIndexed { index, group ->
+        val signature = "$presetSignature|${group.joinToString("+").lowercase(java.util.Locale.ROOT)}"
         RedditMotionFeedGroup(
             key = "group_${index}_${signature.hashCode()}",
             subreddits = group,
+            sort = preset.sort,
+            timeWindow = preset.timeWindow,
         )
     }
 }
@@ -228,18 +221,19 @@ internal fun redditRssMotionCacheKey(
     after: String?,
 ): String {
     val cursor = after ?: "start"
-    return "reddit_rss_motion_v2_${group.key}_$cursor"
+    return "reddit_rss_motion_v3_${group.key}_$cursor"
 }
 
 internal fun redditRssMotionUrl(
     group: RedditMotionFeedGroup,
     after: String?,
     count: Int = if (after == null) 0 else 100,
-): String = "https://www.reddit.com/r/${group.subreddits.joinToString("+")}/new/.rss"
+): String = "https://www.reddit.com/r/${group.subreddits.joinToString("+")}/${group.sort}/.rss"
     .toHttpUrl()
     .newBuilder()
     .addQueryParameter("limit", "100")
     .apply {
+        if (group.sort == "top") addQueryParameter("t", group.timeWindow)
         after?.let {
             addQueryParameter("count", count.coerceAtLeast(1).toString())
             addQueryParameter("after", it)
@@ -1064,9 +1058,13 @@ class VideoWallpapersViewModel @Inject constructor(
                     if (prefs.pixabayApiKey.first().isNotBlank()) add(com.freevibe.data.model.ContentSource.PIXABAY)
                 },
             ).searchReach(com.freevibe.data.legal.ProviderMediaType.VIDEO)
-            val redditFeedGroups = resolveRedditMotionFeedGroups(
-                configuredSubreddits = if (redditEnabled) prefs.redditVideoSubreddits.first() else "",
-            )
+            val showAdultContent = redditEnabled && prefs.showNsfwContent.first()
+            val redditPreset = if (redditEnabled) {
+                prefs.redditFeedPresets.first().activePreset(RedditFeedMediaType.VIDEO)
+            } else {
+                null
+            }
+            val redditFeedGroups = redditPreset?.let { resolveRedditMotionFeedGroups(it, showAdultContent) }.orEmpty()
             val redditFeedSelection = selectRedditMotionFeed(
                 groups = redditFeedGroups,
                 startIndex = s.redditSubIndex,
@@ -1127,6 +1125,9 @@ class VideoWallpapersViewModel @Inject constructor(
                             group = selection.group,
                             after = selection.after,
                             count = selection.count,
+                            accepts = { entry ->
+                                redditPreset?.accepts(entry.title, entry.width, entry.height, showAdultContent = showAdultContent) != false
+                            },
                         )
                         rememberPixabayVideoMetadata(page.result)
                         page.copy(
@@ -1379,6 +1380,7 @@ class VideoWallpapersViewModel @Inject constructor(
         group: RedditMotionFeedGroup,
         after: String?,
         count: Int,
+        accepts: (RedditRssMediaEntry) -> Boolean,
     ): RedditRssMotionPage {
         val cacheKey = redditRssMotionCacheKey(group, after)
         readVideoMetadataCache(
@@ -1419,6 +1421,7 @@ class VideoWallpapersViewModel @Inject constructor(
                 .asSequence()
                 .filter { it.isAnimated }
                 .filter { entry -> junkPatterns.none { it.containsMatchIn(entry.title) } }
+                .filter(accepts)
                 .map { entry ->
                     val playbackUrl = redditPlayableMotionUrl(entry.mediaUrl)
                     VideoWallpaperItem(

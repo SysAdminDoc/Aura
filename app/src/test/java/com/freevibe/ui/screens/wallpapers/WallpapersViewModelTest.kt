@@ -279,7 +279,7 @@ class WallpapersViewModelTest {
             hasMore = false,
         )
         coEvery {
-            redditRepo.getMultiSubreddit(subreddits = null, page = 1)
+            redditRepo.getMultiSubreddit(page = 1, preset = null)
         } returnsMany listOf(
             SearchResult(emptyList(), -1, 1, true),
             SearchResult(listOf(reddit), -1, 1, false),
@@ -296,7 +296,7 @@ class WallpapersViewModelTest {
         advanceUntilIdle()
 
         coVerify(exactly = 1) { wallpaperRepo.getDiscover(1, any()) }
-        coVerify(exactly = 2) { redditRepo.getMultiSubreddit(subreddits = null, page = 1) }
+        coVerify(exactly = 2) { redditRepo.getMultiSubreddit(page = 1, preset = null) }
         assertEquals(listOf("reddit_retry", "wh_secondary"), viewModel.state.value.wallpapers.map { it.id })
         assertEquals(false, viewModel.state.value.hasMore)
     }
@@ -1073,7 +1073,7 @@ class WallpapersViewModelTest {
         every { redditRepo.hasDeferredRequest() } returns false
         coEvery { redditRepo.retryDelayMs() } returns 0L
         coEvery {
-            redditRepo.getMultiSubreddit(subreddits = null, page = any())
+            redditRepo.getMultiSubreddit(page = any(), preset = null)
         } returns emptyWallpaperResult()
     }
 

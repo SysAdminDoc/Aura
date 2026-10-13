@@ -2,6 +2,9 @@ package com.freevibe.data.repository
 
 import com.freevibe.data.local.PreferencesManager
 import com.freevibe.data.local.WallpaperCacheManager
+import com.freevibe.data.model.RedditFeedMediaType
+import com.freevibe.data.model.RedditFeedPreset
+import com.freevibe.data.model.RedditFeedPresetStore
 import com.freevibe.data.model.Wallpaper
 import com.freevibe.service.SourceMetrics
 import io.mockk.coEvery
@@ -78,10 +81,10 @@ class RedditRepositoryTest {
     }
 
     @Test
-    fun `wallpaper feed honors configured subreddit list`() = runTest {
+    fun `wallpaper feed reads the active preset`() = runTest {
         val harness = Harness(
             xml = atomPage(directImages = 1),
-            configuredSubreddits = "CustomWalls,OLED_Portraits",
+            active = wallpaperPreset("CustomWalls,OLED_Portraits"),
         )
 
         harness.repository().getMultiSubreddit(page = 1)
@@ -89,9 +92,60 @@ class RedditRepositoryTest {
         assertTrue(harness.requests.single().contains("/r/CustomWalls+OLED_Portraits/new/.rss"))
     }
 
+    @Test
+    fun `a top preset asks for its time window and rotation can name its own preset`() = runTest {
+        val harness = Harness(xml = atomPage(directImages = 1))
+
+        harness.repository().getMultiSubreddit(page = 1, preset = wallpaperPreset("Amoledbackgrounds", sort = "top", timeWindow = "year"))
+
+        assertTrue(harness.requests.single().contains("/r/Amoledbackgrounds/top/.rss?limit=100&t=year"))
+    }
+
+    @Test
+    fun `adult posts stay out unless the preset and Show NSFW both allow them`() = runTest {
+        val xml = atomPage(titles = listOf("Calm lake [1440x3200]", "[NSFW] Night shot [1440x3200]", "Beach 18+ [1440x3200]"))
+        val adultPreset = wallpaperPreset("iWallpaper").copy(includeAdult = true)
+
+        val safe = Harness(xml, active = adultPreset, showNsfw = false).repository().getMultiSubreddit(page = 1)
+        val allowed = Harness(xml, active = adultPreset, showNsfw = true).repository().getMultiSubreddit(page = 1)
+        val presetOff = Harness(xml, active = wallpaperPreset("iWallpaper"), showNsfw = true).repository().getMultiSubreddit(page = 1)
+
+        assertEquals(listOf("Calm lake [1440x3200]"), safe.items.map { it.category })
+        assertEquals(3, allowed.items.size)
+        assertEquals(1, presetOff.items.size)
+    }
+
+    @Test
+    fun `minimum size skips posts that list a smaller one and keeps posts that list none`() = runTest {
+        val xml = atomPage(titles = listOf("Tall [1440x3200]", "Short [1080x1920]", "No size given"))
+        val harness = Harness(xml, active = wallpaperPreset("iWallpaper").copy(minHeight = 2400))
+
+        val page = harness.repository().getMultiSubreddit(page = 1)
+
+        assertEquals(listOf("Tall [1440x3200]", "No size given"), page.items.map { it.category })
+    }
+
+    @Test
+    fun `a stricter preset never reads the pages cached for a looser one`() = runTest {
+        val xml = atomPage(titles = listOf("Tall [1440x3200]", "Short [1080x1920]"))
+        val loose = wallpaperPreset("iWallpaper")
+        val harness = Harness(xml, active = loose)
+        val repository = harness.repository()
+
+        val first = repository.getMultiSubreddit(page = 1)
+        // The cooldown holds the second request back, so anything it shows would have to come from a cache.
+        val strict = repository.getMultiSubreddit(page = 1, preset = loose.copy(minHeight = 2400))
+
+        assertEquals(2, first.items.size)
+        assertTrue(strict.items.isEmpty())
+        assertEquals(1, harness.requests.size)
+        assertEquals(1, harness.cacheRows.size)
+    }
+
     private class Harness(
         private val xml: String,
-        configuredSubreddits: String = "iWallpaper",
+        active: RedditFeedPreset = wallpaperPreset("iWallpaper"),
+        showNsfw: Boolean = false,
     ) {
         val requests = mutableListOf<String>()
         val cacheRows = mutableMapOf<String, List<Wallpaper>>()
@@ -100,7 +154,14 @@ class RedditRepositoryTest {
 
         private val preferences = mockk<PreferencesManager>().also { prefs ->
             every { prefs.redditProviderEnabled } returns flowOf(true)
-            every { prefs.redditSubreddits } returns flowOf(configuredSubreddits)
+            every { prefs.redditFeedPresets } returns flowOf(
+                RedditFeedPresetStore(
+                    presets = listOf(active, videoPreset),
+                    activeWallpaperPresetId = active.id,
+                    activeVideoPresetId = videoPreset.id,
+                ),
+            )
+            every { prefs.showNsfwContent } returns flowOf(showNsfw)
             coEvery { prefs.getRedditRssNextCursor(any(), any()) } answers {
                 pageMetadata[firstArg<Int>() to secondArg<String?>()].orEmpty()
             }
@@ -141,11 +202,28 @@ class RedditRepositoryTest {
     }
 
     private companion object {
-        fun atomPage(directImages: Int, rawTailId: String? = null): String = buildString {
+        val videoPreset = RedditFeedPreset(
+            id = "video",
+            name = "Video",
+            mediaType = RedditFeedMediaType.VIDEO,
+            subreddits = listOf("Cinemagraphs"),
+        )
+
+        fun wallpaperPreset(subreddits: String, sort: String = "new", timeWindow: String = "week") = RedditFeedPreset(
+            id = "wall_${subreddits.hashCode()}",
+            name = "Walls",
+            mediaType = RedditFeedMediaType.WALLPAPER,
+            subreddits = subreddits.split(','),
+            sort = sort,
+            timeWindow = timeWindow,
+        )
+
+        fun atomPage(directImages: Int = 0, rawTailId: String? = null, titles: List<String>? = null): String = buildString {
             append("<feed>")
-            repeat(directImages) { index ->
+            val entryTitles = titles ?: List(directImages) { index -> "Wallpaper image${index + 1} [1440x3200]" }
+            entryTitles.forEachIndexed { index, title ->
                 val id = "image${index + 1}"
-                append("<entry><id>t3_$id</id><title>Wallpaper $id [1440x3200]</title>")
+                append("<entry><id>t3_$id</id><title>$title</title>")
                 append("<content type=\"html\">&lt;img src=&quot;https://i.redd.it/$id.jpg&quot; /&gt;</content></entry>")
             }
             rawTailId?.let { id ->

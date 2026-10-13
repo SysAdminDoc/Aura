@@ -39,7 +39,7 @@ class PreferencesManagerDefaultsTest {
     }
 
     @Test
-    fun `subreddit preferences reject unsafe or oversized lists and fall back safely`() {
+    fun `subreddit lists reject unsafe or oversized entries`() {
         val unsafe = validateRedditSubredditList("wallpapers,not-valid!,../private")
         val oversized = validateRedditSubredditList(
             (1..MAX_CONFIGURED_SUBREDDITS + 1).joinToString(",") { "wallpaper$it" },
@@ -49,13 +49,6 @@ class PreferencesManagerDefaultsTest {
         assertEquals(listOf("not-valid!", "../private"), unsafe.invalidEntries)
         assertFalse(oversized.isValid)
         assertTrue(oversized.exceedsLimit)
-        assertEquals(
-            DEFAULT_REDDIT_WALLPAPER_SUBREDDITS,
-            normalizeRedditSubredditPreference("", DEFAULT_REDDIT_WALLPAPER_SUBREDDITS),
-        )
-        assertEquals(
-            DEFAULT_REDDIT_VIDEO_SUBREDDITS,
-            normalizeRedditSubredditPreference("valid,not-valid!", DEFAULT_REDDIT_VIDEO_SUBREDDITS),
-        )
+        assertEquals(MAX_CONFIGURED_SUBREDDITS, oversized.subreddits.size)
     }
 }

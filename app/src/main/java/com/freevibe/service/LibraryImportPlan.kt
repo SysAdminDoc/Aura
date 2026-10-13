@@ -70,6 +70,8 @@ data class LibraryImportPlan(
     val soundProfilesJson: String = "",
     val soundShufflePoolsJson: String = "",
     val fitCanvasPreferences: FitCanvasPreferences? = null,
+    /** Reddit feed presets, already checked and re-encoded. Blank when the backup has none. */
+    val redditFeedPresetsJson: String = "",
     val skipped: List<LibraryImportSkip> = emptyList(),
 ) {
     /** Rows that will actually be written. */
@@ -82,7 +84,8 @@ data class LibraryImportPlan(
             (if (wallpaperPackJson.isNotBlank()) 1 else 0) +
             (if (soundProfilesJson.isNotBlank()) 1 else 0) +
             (if (soundShufflePoolsJson.isNotBlank()) 1 else 0) +
-            (if (fitCanvasPreferences != null) 1 else 0)
+            (if (fitCanvasPreferences != null) 1 else 0) +
+            (if (redditFeedPresetsJson.isNotBlank()) 1 else 0)
 
     val skippedCount: Int
         get() = skipped.count { !it.reason.isFailure }

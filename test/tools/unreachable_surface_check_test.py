@@ -27,6 +27,7 @@ class PreferencesManager {
     suspend fun setTheme(value: String) = Unit
     suspend fun setFreesoundKey(value: String) = Unit
     suspend fun setRingtoneShuffleIntervalHours(value: Long) = Unit
+    suspend fun setRedditFeedPresetsJson(json: String) = Unit
 }
 """
 

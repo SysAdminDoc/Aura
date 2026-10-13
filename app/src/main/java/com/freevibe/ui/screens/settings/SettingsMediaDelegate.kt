@@ -3,8 +3,6 @@ package com.freevibe.ui.screens.settings
 import android.content.Context
 import com.freevibe.data.legal.ProviderSetup
 import com.freevibe.data.legal.isProviderAvailableInCurrentArtifact
-import com.freevibe.data.local.DEFAULT_REDDIT_VIDEO_SUBREDDITS
-import com.freevibe.data.local.DEFAULT_REDDIT_WALLPAPER_SUBREDDITS
 import com.freevibe.data.local.PreferencesManager
 import com.freevibe.data.model.ContentSource
 import com.freevibe.service.SoundProfileWorker
@@ -46,8 +44,6 @@ internal class SettingsMediaDelegate(
     val soundProfilesJson = prefs.soundProfilesJson.stateIn(scope, sharing, "")
     val wallpaperPackEnabled = prefs.wallpaperPackEnabled.stateIn(scope, sharing, false)
     val wallpaperPackJson = prefs.wallpaperPackJson.stateIn(scope, sharing, "")
-    val redditSubs = prefs.redditSubreddits.stateIn(scope, sharing, DEFAULT_REDDIT_WALLPAPER_SUBREDDITS)
-    val redditVideoSubs = prefs.redditVideoSubreddits.stateIn(scope, sharing, DEFAULT_REDDIT_VIDEO_SUBREDDITS)
     val redditProviderEnabled = prefs.redditProviderEnabled.stateIn(scope, sharing, true)
     val preferredRes = prefs.preferredResolution.stateIn(scope, sharing, "")
     val userStyles = prefs.userStyles.stateIn(scope, sharing, "")
@@ -134,8 +130,6 @@ internal class SettingsMediaDelegate(
         prefs.setWallpaperPackLastAppliedDaypart("")
     }
 
-    fun setRedditSubs(subs: String) = scope.launch { prefs.setRedditSubreddits(subs) }
-    fun setRedditVideoSubs(subs: String) = scope.launch { prefs.setRedditVideoSubreddits(subs) }
     fun setRedditProviderEnabled(enabled: Boolean) = scope.launch { prefs.setRedditProviderEnabled(enabled) }
     fun setPreferredRes(resolution: String) = scope.launch { prefs.setPreferredResolution(resolution) }
     fun setUserStyles(styles: String) = scope.launch { prefs.setUserStyles(styles) }

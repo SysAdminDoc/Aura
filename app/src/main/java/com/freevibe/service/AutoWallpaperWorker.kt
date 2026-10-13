@@ -14,6 +14,7 @@ import com.freevibe.data.model.ContentSource
 import com.freevibe.data.model.WALLPAPER_SOURCE_LOCAL_FOLDER
 import com.freevibe.data.model.Wallpaper
 import com.freevibe.data.model.WallpaperTarget
+import com.freevibe.data.model.rotationPreset
 import com.freevibe.data.model.stableKey
 import com.freevibe.data.remote.toWallpaper
 import com.freevibe.data.repository.CollectionRepository
@@ -281,7 +282,7 @@ class AutoWallpaperWorker @AssistedInject constructor(
             "favorites" -> favoritesRepo.getWallpapers().first().map { it.toWallpaper() }
             "wallhaven" -> wallpaperRepo.getWallhaven(page = (1..5).random()).items
             "bing" -> wallpaperRepo.getBingDaily(page = 1).items
-            "reddit" -> redditRepo.getMultiSubreddit().items
+            "reddit" -> redditRepo.getMultiSubreddit(preset = prefs.redditFeedPresets.first().rotationPreset()).items
             "pixabay" -> wallpaperRepo.getPixabay(page = (1..5).random()).items
             WALLPAPER_SOURCE_LOCAL_FOLDER -> {
                 localWallpaperCatalog.migrateLegacyFolder(prefs.localWallpaperFolderUri.first())

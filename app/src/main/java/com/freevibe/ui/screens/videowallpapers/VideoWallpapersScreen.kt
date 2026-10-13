@@ -58,6 +58,8 @@ import androidx.media3.exoplayer.source.MediaSource
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil3.compose.SubcomposeAsyncImageContent
 import com.freevibe.R
+import com.freevibe.data.model.RedditFeedMediaType
+import com.freevibe.ui.screens.reddit.RedditFeedPresetChip
 import com.freevibe.data.model.VideoProviderPolicyLinks
 import com.freevibe.data.model.FitCanvasMode
 import com.freevibe.data.model.FitCanvasStyle
@@ -519,6 +521,8 @@ fun VideoWallpapersScreen(
                 )
                 Spacer(Modifier.height(4.dp))
             }
+            // The Reddit part of this feed comes from the active video preset. Switching starts the feed over.
+            RedditFeedPresetChip(mediaType = RedditFeedMediaType.VIDEO, onActivated = viewModel::refresh)
         }
 
         if (state.degradedSources.isNotEmpty()) {

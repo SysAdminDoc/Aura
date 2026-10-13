@@ -6,14 +6,6 @@ Actionable work only. Historical and completed roadmap material is archived in C
 
 ### P2
 
-- [ ] P2 — Add named Reddit feed presets for discovery and rotation
-  Why: one global comma-separated subreddit preference cannot represent different moods, devices, video feeds, or rotation contexts. Reusable presets create materially more choice while keeping the highest-quality source first.
-  Evidence: **Verified.** `PreferencesManager.kt:58,500-520` stores one wallpaper list and one video list with a twelve-subreddit cap; WallFlow supports saved searches and source configurations: https://github.com/ammargitham/WallFlow.
-  Touches: Reddit OAuth query model, Room/DataStore preset schema, Wallpapers/Video/Settings UI, rotation source selection, import/export, diagnostics, tests.
-  Acceptance: users can create, rename, duplicate, reorder, and delete presets containing subreddit/community list, media type, sort, time window, safe-content setting, and minimum dimensions/duration; Aura ships several editable defaults without silently enabling adult content; the active preset is visible in each feed; rotation can bind to a preset; pagination/cache keys include the full preset; presets round-trip through backup and survive subreddit removal.
-  Complexity: M
-
-
 - [ ] P2 — Replace or prove harmless the five under-aligned libwebp objects in the FFmpeg payload
   Why: with the 16 KB gate now reading inside `lib/<abi>/*.zip.so`, five prebuilt libwebp ELFs are measured at `p_align 4096` on both 64-bit ABIs. They are recorded as exceptions so the gate stays useful, but an exception is an acknowledgement, not a fix: on a 16 KB-page device `dlopen` of a 4 KB-aligned object fails, and FFmpeg is configured `--enable-libwebp`, so a WebP path can reach them.
   Evidence: `docs/distribution/native-alignment.json` `nestedArchiveEvidence` and `nestedArchiveAlignmentExceptions`; measured 2026-09-05 against the `io.github.junkfood02.youtubedl-android:ffmpeg:0.18.1` payload as `usr/lib/libsharpyuv.so`, `libwebp.so`, `libwebpdecoder.so`, `libwebpdemux.so`, `libwebpmux.so`, while all 400 other 64-bit LOAD segments in the same archive are 16384; `libpython.zip.so` is fully compliant. Upstream youtubedl-android issue #334.

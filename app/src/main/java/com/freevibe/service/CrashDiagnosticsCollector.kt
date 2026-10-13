@@ -6,6 +6,7 @@ import android.content.Context
 import android.os.Build
 import com.freevibe.BuildConfig
 import com.freevibe.data.local.PreferencesManager
+import com.freevibe.data.model.diagnosticsSummary
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.first
 import java.io.File
@@ -86,6 +87,9 @@ class CrashDiagnosticsCollector @Inject constructor(
         val activeSource = mostRecentSource()
         val autoSource = readPref { prefs.autoWallpaperSource.first() }
         val schedulerSource = readPref { prefs.schedulerSource.first() }
+        val redditFeeds = runCatching {
+            prefs.redditFeedPresets.first().diagnosticsSummary(prefs.showNsfwContent.first())
+        }.getOrDefault("unavailable")
         val providerCredentialStorageStatus = CrashDiagnosticsText.providerCredentialStorageStatus(
             reentryRequired = prefs.providerCredentialReentryRequired.value,
             temporarilyUnavailable = prefs.providerCredentialStorageUnavailable.value,
@@ -143,6 +147,7 @@ class CrashDiagnosticsCollector @Inject constructor(
             appendLine("- Auto-wallpaper source: $autoSource")
             appendLine("- Scheduler source: $schedulerSource")
             appendLine("- Scheduler enabled: $schedulerEnabled")
+            appendLine("- Reddit feed presets: $redditFeeds")
             appendLine("- Provider credential storage: $providerCredentialStorageStatus")
             appendLine("- Video wallpaper FPS limit: ${if (videoFps > 0) videoFps else "unavailable"}")
             appendLine("- yt-dlp active version: ${ytDlpSnapshot.activeVersionName ?: ytDlpSnapshot.activeVersion ?: "bundled or unknown"}")

@@ -17,6 +17,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import com.freevibe.R
+import com.freevibe.data.model.RedditFeedMediaType
 import com.freevibe.service.VIDEO_PLAYBACK_SPEEDS
 import com.freevibe.service.sanitizeVideoPlaybackSpeed
 import com.freevibe.service.videoBatteryImpactSummary
@@ -30,7 +31,6 @@ internal fun VideoSettingsSection(
     videoFpsOverlayEnabled: Boolean,
     videoAutoBatterySaver: Boolean,
     videoBatteryDashboard: VideoBatteryDashboardState,
-    redditVideoSubreddits: String,
 ) {
     var showFpsPicker by remember { mutableStateOf(false) }
     var showSpeedPicker by remember { mutableStateOf(false) }
@@ -44,11 +44,7 @@ internal fun VideoSettingsSection(
             state = videoBatteryDashboard,
             modifier = Modifier.fillMaxWidth(),
         )
-        RedditSubredditListEditor(
-            title = stringResource(R.string.settings_video_subreddits_title),
-            configuredSubreddits = redditVideoSubreddits,
-            onSave = viewModel::setRedditVideoSubs,
-        )
+        RedditFeedPresetManager(RedditFeedMediaType.VIDEO)
         SettingsToggle(
             icon = Icons.Default.BatteryChargingFull,
             title = stringResource(R.string.settings_video_battery_saver_title),
