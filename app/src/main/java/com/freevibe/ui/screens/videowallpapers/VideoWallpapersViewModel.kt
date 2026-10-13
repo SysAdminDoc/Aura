@@ -74,6 +74,7 @@ import java.io.ByteArrayOutputStream
 import java.nio.charset.StandardCharsets
 import java.util.Properties
 import javax.inject.Inject
+import com.freevibe.data.repository.HiddenItemLabel
 
 internal const val PIXABAY_VIDEO_CACHE_TTL_MS = 24 * 60 * 60 * 1000L
 internal const val REDDIT_RSS_MOTION_CACHE_TTL_MS = 2 * 60 * 60 * 1000L
@@ -707,7 +708,8 @@ class VideoWallpapersViewModel @Inject constructor(
     }
 
     fun upvote(id: String) { viewModelScope.launch { voteRepo.upvote(id) } }
-    fun downvote(id: String) { viewModelScope.launch { voteRepo.downvote(id) } }
+    fun downvote(id: String, label: HiddenItemLabel? = null) { viewModelScope.launch { voteRepo.downvote(id, label) } }
+    fun restoreHidden(ids: Collection<String>) = voteRepo.unhideLocally(ids)
     fun undoDownvote(id: String) { viewModelScope.launch { voteRepo.undoDownvote(id) } }
     fun clearGallerySelectionResult() { _gallerySelectionResult.value = null }
 

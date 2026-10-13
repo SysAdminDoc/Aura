@@ -95,6 +95,7 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.launch
 import kotlin.math.sin
+import com.freevibe.data.repository.hiddenItemLabel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -705,7 +706,7 @@ fun SoundsScreen(
                             onDownvote = if (communityProviderEnabled) ({ sound ->
                                 if (communityGuidelinesAccepted) {
                                     val hiddenId = sound.stableKey()
-                                    viewModel.downvote(hiddenId)
+                                    viewModel.downvote(hiddenId, sound.hiddenItemLabel())
                                     scope.launch {
                                         val result = snackbarHostState.showSnackbar(
                                             message = resources.getString(R.string.community_item_hidden),

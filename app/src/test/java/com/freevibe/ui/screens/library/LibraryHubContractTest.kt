@@ -17,6 +17,7 @@ class LibraryHubContractTest {
             "onCollectionsClick",
             "onLocalImportsClick",
             "onRecentActivityClick",
+            "onHiddenItemsClick",
             "onBackupRestoreClick",
             "library_search_title",
             "library_favorites_title",
@@ -24,6 +25,7 @@ class LibraryHubContractTest {
             "library_collections_title",
             "library_imports_title",
             "library_recent_title",
+            "library_hidden_title",
             "library_backup_title",
         ).forEach { expected ->
             assertTrue("Missing Library hub contract: $expected", source.contains(expected))
@@ -45,6 +47,7 @@ class LibraryHubContractTest {
         assertTrue("Downloads keeps the Library tab selected", root.contains("Screen.Downloads.destinationPattern,"))
         assertTrue(root.contains("Screen.Collections.route"))
         assertTrue(root.contains("Screen.WallpaperHistory.route"))
+        assertTrue("Hidden items keeps the Library tab selected", root.contains("Screen.HiddenItems.destinationPattern,"))
         assertTrue(root.contains("screen == Screen.Library && favoritesCount > 0"))
     }
 

@@ -42,6 +42,7 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+import com.freevibe.data.repository.HiddenItemLabel
 
 @HiltViewModel
 class WallpapersViewModel @Inject constructor(
@@ -403,7 +404,7 @@ class WallpapersViewModel @Inject constructor(
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptySet())
     fun getVoteCount(contentId: String) = community.getVoteCount(contentId)
     fun upvote(contentId: String) = community.upvote(contentId)
-    fun downvote(contentId: String) = community.downvote(contentId)
+    fun downvote(contentId: String, label: HiddenItemLabel? = null) = community.downvote(contentId, label)
     fun undoDownvote(contentId: String) = viewModelScope.launch { voteRepo.undoDownvote(contentId) }
     fun reportWallpaper(wallpaper: Wallpaper, reason: CommunityReportReason, note: String = "") = community.reportWallpaper(wallpaper, reason, note)
     fun canBlockCommunityWallpaper(wallpaper: Wallpaper) = community.canBlockCommunityWallpaper(wallpaper)

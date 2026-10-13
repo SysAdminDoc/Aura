@@ -71,6 +71,7 @@ import coil3.imageLoader
 import coil3.request.ImageRequest
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.launch
+import com.freevibe.data.repository.hiddenItemLabel
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
@@ -680,7 +681,7 @@ fun WallpaperDetailScreen(
                                     icon = Icons.Default.ThumbDown,
                                     label = stringResource(R.string.detail_hide),
                                     tint = MaterialTheme.colorScheme.error,
-                                    onClick = { viewModel.downvote(wp.stableKey()) },
+                                    onClick = { viewModel.downvote(wp.stableKey(), wp.hiddenItemLabel()) },
                                 )
                             }
                             if (canReportWallpaper) {

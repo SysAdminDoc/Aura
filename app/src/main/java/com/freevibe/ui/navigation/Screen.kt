@@ -9,6 +9,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import com.freevibe.R
 import com.freevibe.data.model.Sound
 import com.freevibe.data.model.Wallpaper
+import com.freevibe.data.repository.HiddenItemKind
 
 sealed class Screen(
     val route: String,
@@ -337,6 +338,19 @@ sealed class Screen(
         icon = Icons.Filled.History,
         selectedIcon = Icons.Filled.History,
     )
+
+    // ── Hidden items ────────────────────────────────────────────
+    data object HiddenItems : Screen(
+        route = "hidden_items",
+        titleRes = R.string.nav_hidden_items,
+        icon = Icons.Filled.VisibilityOff,
+        selectedIcon = Icons.Filled.VisibilityOff,
+        destinationPattern = "hidden_items?kind={kind}",
+    ) {
+        /** [kind] opens the list filtered to that feed. */
+        fun createRoute(kind: HiddenItemKind? = null): String =
+            if (kind == null) route else "$route?kind=${kind.name}"
+    }
 
     data object RotationHealth : Screen(
         route = "rotation_health",

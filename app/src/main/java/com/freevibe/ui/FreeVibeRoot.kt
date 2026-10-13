@@ -68,6 +68,8 @@ import com.freevibe.ui.screens.wallpapers.WallpapersScreen
 import com.freevibe.ui.screens.wallpapers.canApplyFromWallpaperPreview
 import com.freevibe.ui.components.AuraSnackbarHost
 import com.freevibe.ui.components.CountBadge
+import com.freevibe.data.repository.HiddenItemKind
+import com.freevibe.ui.screens.hidden.HiddenItemsScreen
 
 @EntryPoint
 @InstallIn(SingletonComponent::class)
@@ -421,6 +423,9 @@ fun FreeVibeRoot(
             ) { backStackEntry ->
                 VideoWallpapersScreen(
                     initialQuery = backStackEntry.arguments?.getString("query")?.ifBlank { null },
+                    onManageHiddenClick = {
+                        navController.navigate(Screen.HiddenItems.createRoute(HiddenItemKind.VIDEO)) { launchSingleTop = true }
+                    },
                 )
             }
             composable(
@@ -452,6 +457,7 @@ fun FreeVibeRoot(
                     onCollectionsClick = { navController.navigate(Screen.Collections.route) { launchSingleTop = true } },
                     onLocalImportsClick = { navController.navigate(Screen.Collections.route) { launchSingleTop = true } },
                     onRecentActivityClick = { navController.navigate(Screen.WallpaperHistory.route) { launchSingleTop = true } },
+                    onHiddenItemsClick = { navController.navigate(Screen.HiddenItems.createRoute()) { launchSingleTop = true } },
                     onBackupRestoreClick = {
                         navController.navigate(Screen.Settings.createRoute(Screen.Settings.BACKUP_SECTION)) {
                             launchSingleTop = true
@@ -1092,6 +1098,24 @@ fun FreeVibeRoot(
                 RotationHealthScreen(onBack = { navController.popBackStack() })
             }
 
+            // ── Hidden items ─────────────────────────────────────
+            composable(
+                route = Screen.HiddenItems.destinationPattern,
+                arguments = listOf(
+                    navArgument("kind") {
+                        type = NavType.StringType
+                        nullable = true
+                        defaultValue = null
+                    },
+                ),
+            ) { backStackEntry ->
+                HiddenItemsScreen(
+                    initialKind = backStackEntry.arguments?.getString("kind")
+                        ?.let { name -> HiddenItemKind.entries.firstOrNull { it.name == name } },
+                    onBack = { navController.popBackStack() },
+                )
+            }
+
             // ── Wallpaper History ────────────────────────────────
             composable(Screen.WallpaperHistory.route) {
                 WallpaperHistoryScreen(
@@ -1132,6 +1156,8 @@ private fun isBottomNavDestination(
             Screen.Collections.route,
             Screen.Collections.destinationPattern,
             Screen.WallpaperHistory.route,
+            Screen.HiddenItems.route,
+            Screen.HiddenItems.destinationPattern,
         )
         return destination.hierarchy.any { navDestination ->
             navDestination.route in libraryRoutes

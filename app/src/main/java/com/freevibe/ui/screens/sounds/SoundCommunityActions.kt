@@ -22,6 +22,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import com.freevibe.data.repository.HiddenItemLabel
 
 internal class SoundCommunityActions(
     private val context: Context,
@@ -87,10 +88,10 @@ internal class SoundCommunityActions(
         }
     }
 
-    fun downvote(id: String) {
+    fun downvote(id: String, label: HiddenItemLabel? = null) {
         if (isCommunityVoteId(id) && communityActionBlocked()) return
         scope.launch {
-            try { voteRepo.downvote(id) }
+            try { voteRepo.downvote(id, label) }
             catch (e: Exception) {
                 e.rethrowIfCancelled()
                 state.update { it.copy(error = e.message ?: context.getString(R.string.sound_feedback_downvote_failed)) }

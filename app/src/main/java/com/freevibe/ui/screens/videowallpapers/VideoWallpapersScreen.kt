@@ -99,6 +99,9 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
 import kotlin.math.abs
+import com.freevibe.data.repository.HiddenItemKind
+import com.freevibe.data.repository.HiddenItemLabel
+import com.freevibe.data.repository.localHidesFor
 
 @androidx.compose.runtime.Immutable
 data class VideoWallpaperItem(
@@ -257,6 +260,7 @@ internal suspend fun launchOrExportVideoWallpaper(
 @Composable
 fun VideoWallpapersScreen(
     initialQuery: String? = null,
+    onManageHiddenClick: () -> Unit = {},
     viewModel: VideoWallpapersViewModel = hiltViewModel(),
     rotationExclusionsViewModel: RotationExclusionsViewModel = hiltViewModel(),
 ) {
@@ -267,6 +271,7 @@ fun VideoWallpapersScreen(
     val savedVideoCanvasMode by viewModel.videoFitCanvasMode.collectAsStateWithLifecycle()
     val savedVideoCanvasColor by viewModel.videoFitCanvasColor.collectAsStateWithLifecycle()
     val hiddenIds by viewModel.voteRepo.hiddenIds.collectAsStateWithLifecycle(initialValue = emptySet())
+    val localHiddenIds by viewModel.voteRepo.localHiddenIds.collectAsStateWithLifecycle()
     val rotationExclusions by rotationExclusionsViewModel.exclusions.collectAsStateWithLifecycle()
     val rotationExclusionIndex = remember(rotationExclusions) { RotationExclusionIndex(rotationExclusions) }
     val itemIds = remember(state.items) { state.items.map { it.id } }
@@ -563,7 +568,6 @@ fun VideoWallpapersScreen(
                     val (icon, title, detail) = videoEmptyState(
                         query = state.searchQuery,
                         orientation = state.orientation,
-                        everythingHidden = false,
                     )
                     Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                         AuraStateCard(
@@ -611,17 +615,26 @@ fun VideoWallpapersScreen(
                         }
 
                         if (visibleItems.isEmpty()) {
-                            val (icon, title, detail) = videoEmptyState(
-                                query = state.searchQuery,
-                                orientation = state.orientation,
-                                everythingHidden = true,
-                            )
+                            // Hides outlive a refresh and a restart, so this state says so and offers the way back.
+                            // Moderator removals aren't the user's to undo, so with none of their own it only refreshes.
+                            val restorable = remember(state.items, localHiddenIds) {
+                                localHidesFor(state.items.map { it.id }, localHiddenIds)
+                            }
                             Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                                 AuraStateCard(
-                                    icon = icon,
-                                    title = title,
-                                    description = detail,
-                                    primaryAction = AuraStateAction(stringResource(R.string.video_wp_empty_refresh), Icons.Default.Refresh) { viewModel.refresh() },
+                                    icon = Icons.Default.VisibilityOff,
+                                    title = stringResource(R.string.video_wp_all_hidden_title),
+                                    description = stringResource(
+                                        if (restorable.isEmpty()) R.string.video_wp_all_hidden_moderated_body else R.string.video_wp_all_hidden_body,
+                                    ),
+                                    primaryAction = if (restorable.isEmpty()) {
+                                        AuraStateAction(stringResource(R.string.video_wp_empty_refresh), Icons.Default.Refresh) { viewModel.refresh() }
+                                    } else {
+                                        AuraStateAction(stringResource(R.string.video_wp_restore_hidden), Icons.Default.Visibility) { viewModel.restoreHidden(restorable) }
+                                    },
+                                    secondaryAction = if (restorable.isEmpty()) null else {
+                                        AuraStateAction(stringResource(R.string.video_wp_manage_hidden), Icons.Default.VisibilityOff, onManageHiddenClick)
+                                    },
                                     modifier = Modifier.padding(24.dp),
                                 )
                             }
@@ -651,7 +664,10 @@ fun VideoWallpapersScreen(
                                         onUpvote = { viewModel.upvote(item.id) },
                                         onDownvote = {
                                             val hiddenId = item.id
-                                            viewModel.downvote(hiddenId)
+                                            viewModel.downvote(
+                                                hiddenId,
+                                                HiddenItemLabel(HiddenItemKind.VIDEO, item.title, item.thumbnailUrl, item.source),
+                                            )
                                             scope.launch {
                                                 val result = snackbarHostState.showSnackbar(
                                                     message = resources.getString(R.string.community_item_hidden),
@@ -1605,13 +1621,7 @@ private fun VideoPolicyLinkButton(
 private fun videoEmptyState(
     query: String,
     orientation: OrientationFilter,
-    everythingHidden: Boolean,
 ): Triple<androidx.compose.ui.graphics.vector.ImageVector, String, String> = when {
-    everythingHidden -> Triple(
-        Icons.Default.VisibilityOff,
-        "Everything here is hidden",
-        "Pull to refresh for a fresh batch, or change orientation and focus filters.",
-    )
     query.isNotBlank() -> Triple(
         Icons.Default.SearchOff,
         "No matches for \"$query\"",

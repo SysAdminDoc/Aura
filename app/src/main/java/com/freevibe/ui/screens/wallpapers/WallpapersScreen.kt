@@ -98,6 +98,7 @@ import com.freevibe.ui.navigation.LocalAuraNavigationLayout
 import com.freevibe.ui.navigation.isExpanded
 import com.freevibe.ui.policy.CommunityUploadPolicyKind
 import com.freevibe.ui.policy.communityUploadPolicyCopy
+import com.freevibe.data.repository.hiddenItemLabel
 
 // #9: Wallhaven supported colors
 private val WALLHAVEN_COLORS = listOf(
@@ -866,7 +867,7 @@ fun WallpapersScreen(
                                     viewModel.skipWallpaper(wallpaper)
                                     if (communityProviderEnabled) {
                                         if (communityGuidelinesAccepted) {
-                                            viewModel.downvote(hiddenKey)
+                                            viewModel.downvote(hiddenKey, wallpaper.hiddenItemLabel())
                                         } else {
                                             showCommunityGuidelines = true
                                         }

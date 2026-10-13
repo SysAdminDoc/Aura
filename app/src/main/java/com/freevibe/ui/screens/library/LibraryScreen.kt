@@ -61,6 +61,8 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import javax.inject.Inject
+import androidx.compose.material.icons.filled.VisibilityOff
+import com.freevibe.data.repository.VoteRepository
 
 @Immutable
 data class LibraryHubState(
@@ -69,6 +71,7 @@ data class LibraryHubState(
     val collectionCount: Int = 0,
     val recentActivityCount: Int = 0,
     val recentSearchCount: Int = 0,
+    val hiddenCount: Int = 0,
 )
 
 @HiltViewModel
@@ -78,6 +81,7 @@ class LibraryViewModel @Inject constructor(
     collectionRepository: CollectionRepository,
     searchHistoryRepository: SearchHistoryRepository,
     wallpaperHistoryManager: WallpaperHistoryManager,
+    voteRepository: VoteRepository,
 ) : ViewModel() {
     private val recentSearchCount = combine(
         searchHistoryRepository.getRecentWallpaperSearches(limit = 50),
@@ -100,7 +104,8 @@ class LibraryViewModel @Inject constructor(
             recentActivityCount = recentActivityCount,
             recentSearchCount = recentSearchCount,
         )
-    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), LibraryHubState())
+    }.combine(voteRepository.localHiddenIds) { hub, hidden -> hub.copy(hiddenCount = hidden.size) }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), LibraryHubState())
 }
 
 @Composable
@@ -111,6 +116,7 @@ fun LibraryScreen(
     onCollectionsClick: () -> Unit,
     onLocalImportsClick: () -> Unit,
     onRecentActivityClick: () -> Unit,
+    onHiddenItemsClick: () -> Unit,
     onBackupRestoreClick: () -> Unit,
     viewModel: LibraryViewModel = hiltViewModel(),
 ) {
@@ -161,6 +167,13 @@ fun LibraryScreen(
             status = stringResource(R.string.library_recent_count, state.recentActivityCount, state.recentSearchCount),
             icon = Icons.Default.History,
             onClick = onRecentActivityClick,
+        ),
+        LibraryHubItem(
+            title = stringResource(R.string.library_hidden_title),
+            body = stringResource(R.string.library_hidden_body),
+            status = stringResource(R.string.library_hidden_count, state.hiddenCount),
+            icon = Icons.Default.VisibilityOff,
+            onClick = onHiddenItemsClick,
         ),
         LibraryHubItem(
             title = stringResource(R.string.library_backup_title),

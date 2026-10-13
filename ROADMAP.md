@@ -300,17 +300,6 @@ Evidence for every item below is in RESEARCH.md (2026-09-04 pass).
   Effort: M
 
 
-- [ ] P2 — Give an all-hidden video feed a durable recovery path
-  Category: ux
-  Where: app/src/main/java/com/freevibe/ui/screens/videowallpapers/VideoWallpapersScreen.kt:243-258,307-317,585-599; app/src/main/java/com/freevibe/ui/screens/videowallpapers/VideoWallpapersViewModel.kt:541-555; app/src/main/java/com/freevibe/data/repository/VoteRepository.kt:325,380
-  Problem: Hiding every loaded video produces an empty feed after snackbar Undo expires, with no way to restore hidden items. The preference persists across refresh/restart.
-  Evidence: Visible items filter persisted downvotes; Hide writes through VoteRepository; the empty state reloads providers but exposes no undo or hidden-items list.
-  Fix: Add Manage hidden videos and Restore all to the empty-filter state plus a durable hidden-items screen shared with wallpapers.
-  Acceptance: After hiding all fixtures and restarting, the empty state explains why and restores one/all; refresh alone does not discard the preference.
-  Confidence: Verified
-  Effort: M
-
-
 - [ ] P2 — Make the embedded image picker fit small and enlarged displays
   Category: a11y
   Where: app/src/main/java/com/freevibe/ui/components/EmbeddedImagePickerSheet.kt:45-124

@@ -199,6 +199,9 @@
     "Favorites": {
       "reason": "Superseded by Library as the bottom-nav destination; retained only so older saved state keeps resolving. Covered by the Library entry instead."
     },
+    "HiddenItems": {
+      "reason": "Lists this device's own hides from saved preferences. HiddenItemsContentUiTest renders it with seeded rows; a device scenario needs that preference fixture."
+    },
     "Library": {
       "reason": "Renders the union of favorites, downloads and collections from Room, so a seeded scenario needs a populated database rather than a state object. Reachable and worth adding after Sounds."
     },

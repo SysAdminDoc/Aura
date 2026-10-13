@@ -48,6 +48,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Semaphore
 import javax.inject.Inject
+import com.freevibe.data.repository.HiddenItemLabel
 
 @HiltViewModel
 class SoundsViewModel @Inject constructor(
@@ -335,7 +336,7 @@ class SoundsViewModel @Inject constructor(
     fun clearSuccess() = _state.update { it.copy(applySuccess = null) }
 
     fun upvote(id: String) = community.upvote(id)
-    fun downvote(id: String) = community.downvote(id)
+    fun downvote(id: String, label: HiddenItemLabel? = null) = community.downvote(id, label)
     fun undoDownvote(id: String) = community.undoDownvote(id)
 
     fun startCommunityRecording() = community.startRecording()

@@ -22,6 +22,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import com.freevibe.data.repository.HiddenItemLabel
 
 internal class WallpaperCommunityActions(
     val voteRepo: VoteRepository,
@@ -52,10 +53,10 @@ internal class WallpaperCommunityActions(
         }
     }
 
-    fun downvote(contentId: String) {
+    fun downvote(contentId: String, label: HiddenItemLabel? = null) {
         if (communityActionBlocked()) return
         scope.launch {
-            voteRepo.downvote(contentId)
+            voteRepo.downvote(contentId, label)
             state.update { it.copy(applySuccess = if (voteRepo.isAdmin) "Moderated (hidden for all)" else "Hidden") }
         }
     }

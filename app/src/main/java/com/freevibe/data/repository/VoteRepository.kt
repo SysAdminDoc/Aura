@@ -34,6 +34,8 @@ import javax.inject.Singleton
 
 private val FIREBASE_KEY_REGEX = Regex("[.#$\\[\\]/]")
 
+private const val HIDDEN_LABELS_KEY = "hidden_labels"
+
 internal fun sanitizeVoteKey(id: String): String =
     id.replace(FIREBASE_KEY_REGEX, "_")
 
@@ -280,11 +282,19 @@ class VoteRepository @Inject constructor(
     // ── Local hidden IDs (user's personal downvotes) ──
 
     private val _localHiddenIds = MutableStateFlow<Set<String>>(emptySet())
+    private val _hiddenLabels = MutableStateFlow<Map<String, HiddenItemRecord>>(emptyMap())
 
     init {
         val prefs = context.getSharedPreferences("aura_votes", Context.MODE_PRIVATE)
         _localHiddenIds.value = prefs.getStringSet("hidden_ids", emptySet()) ?: emptySet()
+        _hiddenLabels.value = decodeHiddenItemRecords(prefs.getString(HIDDEN_LABELS_KEY, null))
     }
+
+    /** This device's own hides, without the moderation list. These are the ones a user can restore. */
+    val localHiddenIds: StateFlow<Set<String>> = _localHiddenIds.asStateFlow()
+
+    /** Local hides with the label saved when each was hidden, newest first. */
+    val localHiddenItems: Flow<List<HiddenItem>> = combine(_localHiddenIds, _hiddenLabels, ::hiddenItemsOf)
 
     // ── Global moderation list (admin-hidden, synced from Firebase) ──
 
@@ -446,31 +456,47 @@ class VoteRepository @Inject constructor(
 
     // ── Downvote / Hide ──
 
-    /** Regular user: hide locally. Admin: hide globally for everyone. */
-    suspend fun downvote(contentId: String) {
+    /** Regular user: hide locally. Admin: hide globally for everyone. [label] names it in the hidden list. */
+    suspend fun downvote(contentId: String, label: HiddenItemLabel? = null) {
         if (!isCommunityAccessEnabled()) return
         if (com.freevibe.BuildConfig.DEBUG) {
             Log.d("VoteRepo", "downvote($contentId) userId=${identityProvider.currentUserId()} isAdmin=$isAdmin")
         }
         if (isAdmin) {
-            moderateHide(contentId)
+            moderateHide(contentId, label)
         } else {
-            hideLocally(contentId)
+            hideLocally(contentId, label)
         }
     }
 
     /** Local-only hide (regular users) */
-    fun hideLocally(contentId: String) {
-        val updated = _localHiddenIds.updateAndGet { it + contentId }
+    fun hideLocally(contentId: String, label: HiddenItemLabel? = null) {
+        hideLocally(listOf(HiddenItem(contentId, label, System.currentTimeMillis())))
+    }
+
+    /** Hides each item locally, keeping its label and time; the hidden list's Undo uses this to put them back. */
+    fun hideLocally(items: Collection<HiddenItem>) {
+        if (items.isEmpty()) return
+        val ids = _localHiddenIds.updateAndGet { it + items.map(HiddenItem::id) }
+        val labels = _hiddenLabels.updateAndGet { current ->
+            current + items.mapNotNull { item -> item.label?.let { item.id to HiddenItemRecord(it, item.hiddenAtMs) } }
+        }
+        persistLocalHides(ids, labels)
+    }
+
+    private fun persistLocalHides(ids: Set<String>, labels: Map<String, HiddenItemRecord>) {
         context.getSharedPreferences("aura_votes", Context.MODE_PRIVATE)
-            .edit().putStringSet("hidden_ids", updated).apply()
+            .edit()
+            .putStringSet("hidden_ids", ids)
+            .putString(HIDDEN_LABELS_KEY, encodeHiddenItemRecords(labels))
+            .apply()
     }
 
     /** Admin: globally hide content for ALL users via Firebase */
-    suspend fun moderateHide(contentId: String) {
+    suspend fun moderateHide(contentId: String, label: HiddenItemLabel? = null) {
         if (!isCommunityAccessEnabled()) return
         val moderationRefInstance = moderationRef
-        if (moderationRefInstance == null) { hideLocally(contentId); return }
+        if (moderationRefInstance == null) { hideLocally(contentId, label); return }
         val safeId = sanitizeKey(contentId)
         if (com.freevibe.BuildConfig.DEBUG) Log.d("VoteRepo", "moderateHide: safeId=$safeId path=moderation/$safeId")
         try {
@@ -479,7 +505,7 @@ class VoteRepository @Inject constructor(
         } catch (e: Exception) {
             if (e is kotlinx.coroutines.CancellationException) throw e
             if (com.freevibe.BuildConfig.DEBUG) Log.e("VoteRepo", "Moderation FAILED: ${e.javaClass.simpleName}: ${e.message}", e)
-            hideLocally(contentId)
+            hideLocally(contentId, label)
         }
     }
 
@@ -496,10 +522,14 @@ class VoteRepository @Inject constructor(
     }
 
     /** Unhide locally */
-    fun unhideLocally(contentId: String) {
-        val updated = _localHiddenIds.updateAndGet { it - contentId }
-        context.getSharedPreferences("aura_votes", Context.MODE_PRIVATE)
-            .edit().putStringSet("hidden_ids", updated).apply()
+    fun unhideLocally(contentId: String) = unhideLocally(listOf(contentId))
+
+    /** Unhides each ID and forgets its label. Works with community features off, so a hide is never stuck. */
+    fun unhideLocally(contentIds: Collection<String>) {
+        if (contentIds.isEmpty()) return
+        val ids = _localHiddenIds.updateAndGet { it - contentIds.toSet() }
+        val labels = _hiddenLabels.updateAndGet { it - contentIds.toSet() }
+        persistLocalHides(ids, labels)
     }
 
     /** Reverse a [downvote]: mirrors its admin/local branch so an accidental hide is undoable. */
