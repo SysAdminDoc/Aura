@@ -83,7 +83,7 @@ import com.freevibe.ui.components.CompactSearchField
 import com.freevibe.ui.components.CommunityGuidelinesDialog
 import com.freevibe.ui.components.CountBadge
 import com.freevibe.ui.components.CommunityPolicyNotice
-import com.freevibe.ui.components.SearchHistoryDropdown
+import com.freevibe.ui.components.SearchFieldWithHistory
 import com.freevibe.ui.components.ShimmerSoundList
 import com.freevibe.ui.components.AuraStatusAction
 import com.freevibe.ui.components.AuraStatusBanner
@@ -517,7 +517,19 @@ fun SoundsScreen(
                 }
 
                 if (searchExpanded || state.selectedTab in setOf(SoundTab.SEARCH, SoundTab.YOUTUBE) || searchQuery.isNotBlank()) {
-                    Box {
+                    SearchFieldWithHistory(
+                        recentQueries = recentSearches,
+                        isHistoryVisible = showSearchHistory && searchQuery.isEmpty(),
+                        onQueryClick = {
+                            searchQuery = it
+                            if (isYouTubeTab) viewModel.searchYouTube(it) else viewModel.search(it)
+                            showSearchHistory = false
+                            focusManager.clearFocus()
+                        },
+                        onDeleteQuery = { viewModel.removeSearch(it) },
+                        onClearAll = { viewModel.clearSearchHistory() },
+                        modifier = Modifier.fillMaxWidth(),
+                    ) {
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth(),
@@ -561,21 +573,6 @@ fun SoundsScreen(
                             }),
                         )
                     }
-                    SearchHistoryDropdown(
-                        recentQueries = recentSearches,
-                        isVisible = showSearchHistory && searchQuery.isEmpty(),
-                        onQueryClick = {
-                            searchQuery = it
-                            if (isYouTubeTab) viewModel.searchYouTube(it) else viewModel.search(it)
-                            showSearchHistory = false
-                            focusManager.clearFocus()
-                        },
-                        onDeleteQuery = { viewModel.removeSearch(it) },
-                        onClearAll = { viewModel.clearSearchHistory() },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(top = 42.dp),
-                    )
                     }
                     Spacer(Modifier.height(4.dp))
                 }

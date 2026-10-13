@@ -42,6 +42,7 @@ import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.freevibe.R
+import com.freevibe.ui.components.lineCapAtDefaultTextSize
 import com.freevibe.ui.theme.AuraShapes
 
 /**
@@ -83,7 +84,7 @@ internal fun SettingsSection(
                     text = description,
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    maxLines = 2,
+                    maxLines = lineCapAtDefaultTextSize(2),
                     overflow = TextOverflow.Ellipsis,
                 )
                 HorizontalDivider(
@@ -144,7 +145,7 @@ internal fun SettingsItem(
                         subtitle,
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        maxLines = subtitleMaxLines,
+                        maxLines = lineCapAtDefaultTextSize(subtitleMaxLines),
                         overflow = TextOverflow.Ellipsis,
                     )
                 }
@@ -215,7 +216,7 @@ internal fun SettingsToggle(
                         subtitle,
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        maxLines = 2,
+                        maxLines = lineCapAtDefaultTextSize(2),
                         overflow = TextOverflow.Ellipsis,
                     )
                 }

@@ -88,7 +88,7 @@ import com.freevibe.ui.components.CountBadge
 import com.freevibe.ui.components.DownloadProgressBar
 import com.freevibe.ui.components.EmbeddedImagePickerSheet
 import com.freevibe.ui.components.GlassCard
-import com.freevibe.ui.components.SearchHistoryDropdown
+import com.freevibe.ui.components.SearchFieldWithHistory
 import com.freevibe.ui.components.ShimmerBox
 import com.freevibe.ui.components.ShimmerWallpaperGrid
 import com.freevibe.ui.components.SourceBadge
@@ -549,7 +549,19 @@ fun WallpapersScreen(
 
                 if (searchExpanded || state.selectedTab == WallpaperTab.SEARCH || searchQuery.isNotBlank()) {
                     Spacer(Modifier.height(4.dp))
-                    Box(modifier = Modifier.fillMaxWidth()) {
+                    SearchFieldWithHistory(
+                        recentQueries = recentSearches,
+                        isHistoryVisible = showSearchHistory && searchQuery.isEmpty(),
+                        onQueryClick = { query ->
+                            searchQuery = query
+                            viewModel.search(query)
+                            showSearchHistory = false
+                            focusManager.clearFocus()
+                        },
+                        onDeleteQuery = { viewModel.removeSearch(it) },
+                        onClearAll = { viewModel.clearSearchHistory() },
+                        modifier = Modifier.fillMaxWidth(),
+                    ) {
                         CompactSearchField(
                             value = searchQuery,
                             onValueChange = { searchQuery = it; showSearchHistory = it.isEmpty() },
@@ -574,21 +586,6 @@ fun WallpapersScreen(
                                     focusManager.clearFocus()
                                 },
                             ),
-                        )
-                        SearchHistoryDropdown(
-                            recentQueries = recentSearches,
-                            isVisible = showSearchHistory && searchQuery.isEmpty(),
-                            onQueryClick = { query ->
-                                searchQuery = query
-                                viewModel.search(query)
-                                showSearchHistory = false
-                                focusManager.clearFocus()
-                            },
-                            onDeleteQuery = { viewModel.removeSearch(it) },
-                            onClearAll = { viewModel.clearSearchHistory() },
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(top = 42.dp),
                         )
                     }
                 }

@@ -24,6 +24,40 @@ import androidx.compose.ui.unit.dp
 import com.freevibe.R
 import com.freevibe.ui.theme.AuraShapes
 
+/** Space between a search field and the recent searches listed under it. */
+private val SearchHistoryGap = 4.dp
+
+/**
+ * A search [field] with its recent searches directly below it.
+ *
+ * The list starts where the measured field ends. A fixed offset put it over the field as soon as
+ * the field was taller than that offset, which a wrapped placeholder at large text makes it.
+ */
+@Composable
+fun SearchFieldWithHistory(
+    recentQueries: List<String>,
+    isHistoryVisible: Boolean,
+    onQueryClick: (String) -> Unit,
+    onDeleteQuery: (String) -> Unit,
+    onClearAll: () -> Unit,
+    modifier: Modifier = Modifier,
+    field: @Composable () -> Unit,
+) {
+    Column(modifier = modifier) {
+        field()
+        SearchHistoryDropdown(
+            recentQueries = recentQueries,
+            isVisible = isHistoryVisible,
+            onQueryClick = onQueryClick,
+            onDeleteQuery = onDeleteQuery,
+            onClearAll = onClearAll,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = SearchHistoryGap),
+        )
+    }
+}
+
 @Composable
 fun SearchHistoryDropdown(
     recentQueries: List<String>,
@@ -69,6 +103,7 @@ fun SearchHistoryDropdown(
                 ) {
                     Text(
                         stringResource(R.string.search_history_title),
+                        modifier = Modifier.weight(1f),
                         style = MaterialTheme.typography.labelMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
@@ -109,7 +144,7 @@ fun SearchHistoryDropdown(
                             query,
                             modifier = Modifier.weight(1f),
                             style = MaterialTheme.typography.bodyMedium,
-                            maxLines = 1,
+                            maxLines = lineCapAtDefaultTextSize(1),
                             overflow = TextOverflow.Ellipsis,
                         )
                         IconButton(

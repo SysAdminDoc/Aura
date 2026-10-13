@@ -56,6 +56,7 @@ import com.freevibe.service.effectiveVideoFpsLimit
 import com.freevibe.service.shouldUseVideoBatterySaver
 import com.freevibe.service.shouldPauseVideoMotionForPowerSave
 import com.freevibe.service.videoBatteryImpactSummary
+import com.freevibe.ui.components.EqualColumnsOrStack
 import com.freevibe.ui.components.GlassCard
 import com.freevibe.ui.components.HighlightPill
 import com.freevibe.ui.theme.AuraShapes
@@ -798,19 +799,17 @@ internal fun SettingsOverviewCard(
             )
         }
         Spacer(Modifier.height(16.dp))
-        Row(
+        EqualColumnsOrStack(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            spacing = 12.dp,
         ) {
             SettingsMetric(
-                modifier = Modifier.weight(1f),
                 label = stringResource(R.string.settings_dialogs_overview_automation),
                 value = if (schedulerEnabled) formatInterval(schedulerInterval) else stringResource(R.string.settings_dialogs_overview_manual),
                 icon = Icons.Default.Schedule,
                 tint = MaterialTheme.colorScheme.primary,
             )
             SettingsMetric(
-                modifier = Modifier.weight(1f),
                 label = stringResource(R.string.settings_dialogs_overview_storage),
                 value = storageLabel,
                 icon = Icons.Default.Folder,

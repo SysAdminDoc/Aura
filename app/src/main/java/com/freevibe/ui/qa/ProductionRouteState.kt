@@ -61,6 +61,7 @@ import com.freevibe.ui.components.AuraLiveStatus
 import com.freevibe.ui.components.AuraStatusAction
 import com.freevibe.ui.components.AuraStatusBanner
 import com.freevibe.ui.components.CompactSearchField
+import com.freevibe.ui.components.EqualColumnsOrStack
 import com.freevibe.ui.components.FitCanvasControls
 import com.freevibe.ui.components.FitCanvasMedia
 import com.freevibe.ui.components.ShimmerWallpaperGrid
@@ -285,20 +286,18 @@ private fun SettingsState() {
             title = stringResource(R.string.settings_diagnostics_section_title),
             description = stringResource(R.string.settings_diagnostics_section_description),
         ) {
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            EqualColumnsOrStack(spacing = 8.dp) {
                 SettingsMetric(
                     label = stringResource(R.string.settings_diag_crash_title),
                     value = stringResource(R.string.settings_diagnostics_section_description),
                     icon = Icons.Default.Info,
                     tint = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.weight(1f),
                 )
                 SettingsMetric(
                     label = stringResource(R.string.settings_diag_source_title),
                     value = stringResource(R.string.settings_diag_source_empty_subtitle),
                     icon = Icons.Default.Settings,
                     tint = MaterialTheme.colorScheme.secondary,
-                    modifier = Modifier.weight(1f),
                 )
             }
         }

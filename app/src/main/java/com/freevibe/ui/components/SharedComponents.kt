@@ -180,7 +180,7 @@ private fun DownloadItem(
                     Text(
                         download.fileName,
                         style = MaterialTheme.typography.labelMedium,
-                        maxLines = 1,
+                        maxLines = lineCapAtDefaultTextSize(1),
                         overflow = TextOverflow.Ellipsis,
                     )
                     if (download.error != null) {
@@ -453,7 +453,7 @@ fun CompactSearchField(
                                 text = placeholder,
                                 style = MaterialTheme.typography.bodyLarge,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f),
-                                maxLines = 1,
+                                maxLines = lineCapAtDefaultTextSize(1),
                                 overflow = TextOverflow.Ellipsis,
                             )
                         }
@@ -509,7 +509,7 @@ fun AuraScreenHeader(
             text = subtitle,
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
-            maxLines = 2,
+            maxLines = lineCapAtDefaultTextSize(2),
             overflow = TextOverflow.Ellipsis,
         )
         Spacer(Modifier.height(8.dp))

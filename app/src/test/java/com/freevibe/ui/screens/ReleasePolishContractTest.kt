@@ -133,15 +133,41 @@ class ReleasePolishContractTest {
     }
 
     @Test
-    fun `library and settings descriptions remain bounded on phone screens`() {
+    fun `library and settings descriptions are bounded at the default text size only`() {
         val shared = File("src/main/java/com/freevibe/ui/components/SharedComponents.kt").readText()
         val header = shared.substringAfter("fun AuraScreenHeader(").substringBefore("fun SourceBadge(")
         val settings = File("src/main/java/com/freevibe/ui/screens/settings/SettingsComponents.kt").readText()
+        val library = File("src/main/java/com/freevibe/ui/screens/library/LibraryScreen.kt").readText()
+        val lineCap = File("src/main/java/com/freevibe/ui/components/LargeTextLayout.kt").readText()
 
-        assertTrue(header.contains("maxLines = 2"))
-        assertTrue(settings.contains("maxLines = 2"))
+        assertTrue(header.contains("maxLines = lineCapAtDefaultTextSize(2)"))
+        assertTrue(settings.contains("maxLines = lineCapAtDefaultTextSize(2)"))
         assertTrue(settings.contains("subtitleMaxLines: Int = 2"))
-        assertTrue(settings.contains("maxLines = subtitleMaxLines"))
+        assertTrue(settings.contains("maxLines = lineCapAtDefaultTextSize(subtitleMaxLines)"))
+        assertTrue(library.contains("maxLines = lineCapAtDefaultTextSize(2)"))
+        assertTrue(lineCap.contains("if (fontScale > DEFAULT_FONT_SCALE) Int.MAX_VALUE else maxLines"))
+
+        // A cap that ignores the text size ends these descriptions in an ellipsis at 200 percent.
+        val fixedCap = Regex("""maxLines = (\d+|subtitleMaxLines)\b""")
+        mapOf("AuraScreenHeader" to header, "SettingsComponents" to settings, "LibraryScreen" to library)
+            .forEach { (name, source) ->
+                assertFalse("$name caps lines at every text size", fixedCap.containsMatchIn(source))
+            }
+    }
+
+    @Test
+    fun `search screens list recent searches under the field instead of at a fixed offset`() {
+        listOf(
+            "src/main/java/com/freevibe/ui/screens/wallpapers/WallpapersScreen.kt",
+            "src/main/java/com/freevibe/ui/screens/sounds/SoundsScreen.kt",
+            "src/main/java/com/freevibe/ui/screens/search/UniversalSearchScreen.kt",
+        ).forEach { path ->
+            val source = File(path).readText()
+
+            assertTrue("$path should use the shared field and history layout", source.contains("SearchFieldWithHistory("))
+            assertFalse("$path places the recent searches itself", source.contains("SearchHistoryDropdown("))
+            assertFalse("$path offsets the recent searches by a fixed height", source.contains("padding(top = 42.dp)"))
+        }
     }
 
     @Test

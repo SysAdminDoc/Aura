@@ -54,6 +54,8 @@ import com.freevibe.data.repository.FavoritesRepository
 import com.freevibe.data.repository.SearchHistoryRepository
 import com.freevibe.service.WallpaperHistoryManager
 import com.freevibe.ui.components.AuraScreenHeader
+import com.freevibe.ui.components.EqualColumnsOrStack
+import com.freevibe.ui.components.lineCapAtDefaultTextSize
 import com.freevibe.ui.theme.AuraShapes
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.SharingStarted
@@ -121,6 +123,33 @@ fun LibraryScreen(
     viewModel: LibraryViewModel = hiltViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
+    LibraryHubContent(
+        state = state,
+        onSearchClick = onSearchClick,
+        onFavoritesClick = onFavoritesClick,
+        onDownloadsClick = onDownloadsClick,
+        onCollectionsClick = onCollectionsClick,
+        onLocalImportsClick = onLocalImportsClick,
+        onRecentActivityClick = onRecentActivityClick,
+        onHiddenItemsClick = onHiddenItemsClick,
+        onBackupRestoreClick = onBackupRestoreClick,
+    )
+}
+
+/** The Library hub for one [state]. It reads no database, so a route check can render it as it ships. */
+@Composable
+internal fun LibraryHubContent(
+    state: LibraryHubState,
+    onSearchClick: () -> Unit,
+    onFavoritesClick: () -> Unit,
+    onDownloadsClick: () -> Unit,
+    onCollectionsClick: () -> Unit,
+    onLocalImportsClick: () -> Unit,
+    onRecentActivityClick: () -> Unit,
+    onHiddenItemsClick: () -> Unit,
+    onBackupRestoreClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
     val items = listOf(
         LibraryHubItem(
             title = stringResource(R.string.library_search_title),
@@ -185,7 +214,7 @@ fun LibraryScreen(
     )
 
     LazyColumn(
-        modifier = Modifier.fillMaxSize(),
+        modifier = modifier.fillMaxSize(),
         contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp),
         verticalArrangement = Arrangement.spacedBy(10.dp),
     ) {
@@ -210,21 +239,19 @@ fun LibraryScreen(
 
 @Composable
 private fun LibrarySummaryRow(state: LibraryHubState) {
-    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+    // Three across while each label fits its column, one per row once a label would be cut.
+    EqualColumnsOrStack(spacing = 8.dp) {
         LibrarySummaryMetric(
             label = stringResource(R.string.library_summary_favorites),
             value = state.favoriteCount.toString(),
-            modifier = Modifier.weight(1f),
         )
         LibrarySummaryMetric(
             label = stringResource(R.string.library_summary_downloads),
             value = state.downloadCount.toString(),
-            modifier = Modifier.weight(1f),
         )
         LibrarySummaryMetric(
             label = stringResource(R.string.library_summary_collections),
             value = state.collectionCount.toString(),
-            modifier = Modifier.weight(1f),
         )
     }
 }
@@ -249,7 +276,12 @@ private fun LibrarySummaryMetric(
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             Text(value, style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.primary)
-            Text(label, style = MaterialTheme.typography.labelSmall, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            Text(
+                label,
+                style = MaterialTheme.typography.labelSmall,
+                maxLines = lineCapAtDefaultTextSize(1),
+                overflow = TextOverflow.Ellipsis,
+            )
         }
     }
 }
@@ -300,21 +332,21 @@ private fun LibraryHubCard(item: LibraryHubItem) {
                     item.title,
                     modifier = Modifier.semantics { heading() },
                     style = MaterialTheme.typography.titleMedium,
-                    maxLines = 1,
+                    maxLines = lineCapAtDefaultTextSize(1),
                     overflow = TextOverflow.Ellipsis,
                 )
                 Text(
                     item.body,
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    maxLines = 2,
+                    maxLines = lineCapAtDefaultTextSize(2),
                     overflow = TextOverflow.Ellipsis,
                 )
                 Text(
                     item.status,
                     style = MaterialTheme.typography.labelMedium,
                     color = MaterialTheme.colorScheme.primary,
-                    maxLines = 1,
+                    maxLines = lineCapAtDefaultTextSize(1),
                     overflow = TextOverflow.Ellipsis,
                 )
             }

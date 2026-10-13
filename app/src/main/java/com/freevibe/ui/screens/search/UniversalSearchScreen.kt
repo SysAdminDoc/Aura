@@ -51,17 +51,13 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.layout.onGloballyPositioned
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
@@ -99,7 +95,7 @@ import com.freevibe.data.repository.FavoritesRepository
 import com.freevibe.data.repository.SearchHistoryRepository
 import com.freevibe.ui.components.AuraStateCard
 import com.freevibe.ui.components.CompactSearchField
-import com.freevibe.ui.components.SearchHistoryDropdown
+import com.freevibe.ui.components.SearchFieldWithHistory
 import com.freevibe.ui.theme.AuraShapes
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -321,10 +317,18 @@ fun UniversalSearchScreen(
                 color = MaterialTheme.colorScheme.surfaceContainer,
                 border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.32f)),
             ) {
-                Box(Modifier.padding(12.dp)) {
-                    // Measured, not hardcoded: at large font scale the field grows past
-                    // the old fixed 42dp offset and the dropdown would overlap the input.
-                    var fieldHeightPx by remember { mutableIntStateOf(0) }
+                SearchFieldWithHistory(
+                    recentQueries = state.recentQueries,
+                    isHistoryVisible = text.isBlank(),
+                    onQueryClick = {
+                        text = it
+                        viewModel.submitSearch(it)
+                        focusManager.clearFocus()
+                    },
+                    onDeleteQuery = viewModel::removeSearch,
+                    onClearAll = viewModel::clearSearchHistory,
+                    modifier = Modifier.padding(12.dp),
+                ) {
                     CompactSearchField(
                         value = text,
                         onValueChange = {
@@ -333,9 +337,7 @@ fun UniversalSearchScreen(
                         },
                         placeholder = stringResource(R.string.search_placeholder),
                         leadingIcon = Icons.Default.Search,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .onGloballyPositioned { fieldHeightPx = it.size.height },
+                        modifier = Modifier.fillMaxWidth(),
                         onClear = {
                             text = ""
                             viewModel.updateQuery("")
@@ -348,20 +350,6 @@ fun UniversalSearchScreen(
                                 focusManager.clearFocus()
                             },
                         ),
-                    )
-                    SearchHistoryDropdown(
-                        recentQueries = state.recentQueries,
-                        isVisible = text.isBlank(),
-                        onQueryClick = {
-                            text = it
-                            viewModel.submitSearch(it)
-                            focusManager.clearFocus()
-                        },
-                        onDeleteQuery = viewModel::removeSearch,
-                        onClearAll = viewModel::clearSearchHistory,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(top = with(LocalDensity.current) { fieldHeightPx.toDp() } + 4.dp),
                     )
                 }
             }
