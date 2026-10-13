@@ -6,12 +6,15 @@ import com.freevibe.data.legal.isProviderAvailableInCurrentArtifact
 import com.freevibe.data.local.PreferencesManager
 import com.freevibe.data.model.ContentSource
 import com.freevibe.service.SoundProfileWorker
+import com.freevibe.service.parseProfiles
+import com.freevibe.service.soundProfilesNeedWorker
 import com.freevibe.service.WallpaperPackWorker
 import com.freevibe.service.WallpaperStyleLearningProfile
 import com.freevibe.service.WallpaperClockOverlayMode
 import com.freevibe.service.WallpaperClockOverlayPosition
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
@@ -112,12 +115,24 @@ internal class SettingsMediaDelegate(
 
     fun setSoundProfilesEnabled(enabled: Boolean) = scope.launch {
         prefs.setSoundProfilesEnabled(enabled)
-        if (enabled) SoundProfileWorker.schedule(context) else SoundProfileWorker.cancel(context)
+        syncSoundProfileWork()
     }
 
     fun setSoundProfilesJson(json: String) = scope.launch {
         prefs.setSoundProfilesJson(json)
         prefs.setSoundProfileLastAppliedId("")
+        // An edit should be heard now, not at the next 15 minute tick.
+        if (syncSoundProfileWork()) SoundProfileWorker.runNow(context)
+    }
+
+    /** The worker runs only while the switch is on and a profile can change a sound. */
+    private suspend fun syncSoundProfileWork(): Boolean {
+        val needed = soundProfilesNeedWorker(
+            prefs.soundProfilesEnabled.first(),
+            parseProfiles(prefs.soundProfilesJson.first()),
+        )
+        if (needed) SoundProfileWorker.schedule(context) else SoundProfileWorker.cancel(context)
+        return needed
     }
 
     fun setWallpaperPackEnabled(enabled: Boolean) = scope.launch {

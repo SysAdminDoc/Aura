@@ -7,6 +7,8 @@ import androidx.hilt.work.HiltWorker
 import androidx.work.BackoffPolicy
 import androidx.work.CoroutineWorker
 import androidx.work.ExistingPeriodicWorkPolicy
+import androidx.work.ExistingWorkPolicy
+import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
 import androidx.work.WorkerParameters
@@ -66,6 +68,13 @@ class SoundProfileWorker @AssistedInject constructor(
 
     override suspend fun doWork(): Result {
         return try {
+            val profiles = parseProfiles(prefs.soundProfilesJson.first())
+            if (!soundProfilesNeedWorker(prefs.soundProfilesEnabled.first(), profiles)) {
+                // Nothing here can change a sound, so stop waking up every 15 minutes for it.
+                cancel(applicationContext)
+                return Result.success()
+            }
+
             if (!Settings.System.canWrite(applicationContext)) {
                 receiptStore.recordFailure(
                     uniqueWorkName = WORK_NAME,
@@ -73,20 +82,6 @@ class SoundProfileWorker @AssistedInject constructor(
                     deferralReason = "WRITE_SETTINGS not granted",
                 )
                 return Result.failure()
-            }
-
-            if (!prefs.soundProfilesEnabled.first()) {
-                return Result.success()
-            }
-
-            val profiles = parseProfiles(prefs.soundProfilesJson.first())
-            if (profiles.isEmpty()) {
-                receiptStore.recordFailure(
-                    uniqueWorkName = WORK_NAME,
-                    errorClass = "NoProfiles",
-                    deferralReason = "no sound profiles defined",
-                )
-                return Result.success()
             }
 
             val hour = Calendar.getInstance().get(Calendar.HOUR_OF_DAY)
@@ -139,6 +134,19 @@ class SoundProfileWorker @AssistedInject constructor(
 
     companion object {
         const val WORK_NAME = "sound_profile"
+        private const val RUN_NOW_WORK_NAME = "sound_profile_now"
+
+        /** Schedules the worker when a profile can change a sound, and cancels it when none can. */
+        fun sync(context: Context, needed: Boolean) = if (needed) schedule(context) else cancel(context)
+
+        /** Runs one pass now, so an edit is heard without waiting for the next 15 minute tick. */
+        fun runNow(context: Context) {
+            WorkManager.getInstance(context).enqueueUniqueWork(
+                RUN_NOW_WORK_NAME,
+                ExistingWorkPolicy.REPLACE,
+                OneTimeWorkRequestBuilder<SoundProfileWorker>().build(),
+            )
+        }
 
         fun schedule(context: Context) {
             val request = PeriodicWorkRequestBuilder<SoundProfileWorker>(
@@ -157,6 +165,7 @@ class SoundProfileWorker @AssistedInject constructor(
 
         fun cancel(context: Context) {
             WorkManager.getInstance(context).cancelUniqueWork(WORK_NAME)
+            WorkManager.getInstance(context).cancelUniqueWork(RUN_NOW_WORK_NAME)
         }
     }
 }

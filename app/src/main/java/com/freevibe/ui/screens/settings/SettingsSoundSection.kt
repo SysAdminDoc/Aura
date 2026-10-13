@@ -43,6 +43,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.res.pluralStringResource
+import androidx.compose.material.icons.filled.Tune
+import com.freevibe.service.changesASound
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.freevibe.R
@@ -75,6 +77,7 @@ internal fun SoundSettingsSection(
     var showPoTokenProviderEditor by remember { mutableStateOf(false) }
     var showYtDlpConsent by remember { mutableStateOf(false) }
     var showSoundShufflePools by remember { mutableStateOf(false) }
+    var showSoundProfiles by remember { mutableStateOf(false) }
     val soundShuffleStore by viewModel.soundShuffleStore.collectAsStateWithLifecycle(
         initialValue = SoundShuffleStore(),
     )
@@ -182,19 +185,50 @@ internal fun SoundSettingsSection(
             onClick = { showSoundShufflePools = true },
             searchAliases = setOf("ringtone", "notification", "alarm", "schedule", "random"),
         )
-        val profileCount = remember(soundProfilesJson) {
-            com.freevibe.service.parseProfiles(soundProfilesJson).size
+        val soundProfiles = remember(soundProfilesJson) {
+            com.freevibe.service.parseProfiles(soundProfilesJson)
         }
+        val usableProfileCount = soundProfiles.count { it.enabled && it.changesASound }
         SettingsToggle(
             icon = Icons.Default.Schedule,
             title = stringResource(R.string.settings_sounds_profiles_title),
-            subtitle = if (soundProfilesEnabled) {
-                stringResource(R.string.settings_sounds_profiles_on_subtitle, profileCount)
-            } else {
-                stringResource(R.string.settings_sounds_profiles_off_subtitle)
+            subtitle = when {
+                !soundProfilesEnabled -> stringResource(R.string.settings_sounds_profiles_off_subtitle)
+                // On with nothing to apply: say what's missing instead of claiming a schedule.
+                usableProfileCount == 0 -> stringResource(R.string.settings_sounds_profiles_none_subtitle)
+                else -> pluralStringResource(
+                    R.plurals.settings_sounds_profiles_active,
+                    usableProfileCount,
+                    usableProfileCount,
+                )
             },
             checked = soundProfilesEnabled,
             onCheckedChange = viewModel::setSoundProfilesEnabled,
+        )
+        SettingsItem(
+            icon = Icons.Default.Tune,
+            title = stringResource(R.string.settings_sounds_profiles_edit_title),
+            subtitle = if (soundProfiles.isEmpty()) {
+                stringResource(R.string.settings_sounds_profiles_edit_empty_subtitle)
+            } else {
+                pluralStringResource(
+                    R.plurals.settings_sounds_profiles_count,
+                    soundProfiles.size,
+                    soundProfiles.size,
+                )
+            },
+            onClick = { showSoundProfiles = true },
+            searchAliases = setOf("ringtone", "notification", "alarm", "schedule", "night", "work"),
+        )
+    }
+
+    if (showSoundProfiles) {
+        SoundProfilesDialog(
+            profilesJson = soundProfilesJson,
+            profilesEnabled = soundProfilesEnabled,
+            onSave = viewModel::setSoundProfilesJson,
+            onDismiss = { showSoundProfiles = false },
+            onFeedback = onFeedback,
         )
     }
 

@@ -108,6 +108,7 @@ class FreeVibeApp : Application(), Configuration.Provider, SingletonImageLoader.
         retireLegacyProviderCredentials()
         initYtDlp()
         enqueueAuraOriginalsDownload()
+        reconcileSoundProfileWork()
         publishWidgetPreview()
         reconcileRotationTriggers()
     }
@@ -158,6 +159,29 @@ class FreeVibeApp : Application(), Configuration.Provider, SingletonImageLoader.
             } catch (e: Exception) {
                 if (e is kotlinx.coroutines.CancellationException) throw e
                 if (BuildConfig.DEBUG) Log.w("FreeVibeApp", "Rotation trigger reconcile failed: ${e.message}")
+            }
+        }
+    }
+
+    /**
+     * With the sound profile switch on, makes the 15 minute worker match what the profiles can do:
+     * scheduled when one can change a sound (an import may have brought it in), cancelled when
+     * none can (builds before the editor scheduled it with nothing to apply). Off means no work
+     * exists, so nothing is touched.
+     */
+    private fun reconcileSoundProfileWork() {
+        appScope.launch {
+            try {
+                val prefs = com.freevibe.data.local.PreferencesManager(this@FreeVibeApp)
+                if (!prefs.soundProfilesEnabled.first()) return@launch
+                val profiles = com.freevibe.service.parseProfiles(prefs.soundProfilesJson.first())
+                com.freevibe.service.SoundProfileWorker.sync(
+                    this@FreeVibeApp,
+                    com.freevibe.service.soundProfilesNeedWorker(enabled = true, profiles = profiles),
+                )
+            } catch (e: Exception) {
+                if (e is kotlinx.coroutines.CancellationException) throw e
+                if (BuildConfig.DEBUG) Log.w("FreeVibeApp", "Sound profile reconcile failed: ${e.message}")
             }
         }
     }

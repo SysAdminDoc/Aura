@@ -2168,8 +2168,46 @@
 
     <!-- Sound profiles -->
     <string name="settings_sounds_profiles_title">Time-of-day sound profiles</string>
-    <string name="settings_sounds_profiles_on_subtitle">%1$d profile(s) active. Sounds change by schedule.</string>
     <string name="settings_sounds_profiles_off_subtitle">Assign different ringtone, notification, and alarm sounds to time slots</string>
+    <string name="settings_sounds_profiles_none_subtitle">On, but no profile has a sound yet. Add one in Edit sound profiles.</string>
+    <plurals name="settings_sounds_profiles_active">
+        <item quantity="one">%1$d profile is changing sounds by time of day</item>
+        <item quantity="other">%1$d profiles are changing sounds by time of day</item>
+    </plurals>
+    <string name="settings_sounds_profiles_edit_title">Edit sound profiles</string>
+    <string name="settings_sounds_profiles_edit_empty_subtitle">None yet. Add one to use different sounds for part of the day.</string>
+    <plurals name="settings_sounds_profiles_count">
+        <item quantity="one">%1$d profile</item>
+        <item quantity="other">%1$d profiles</item>
+    </plurals>
+    <string name="sound_profiles_dialog_title">Sound profiles</string>
+    <string name="sound_profiles_new_title">New profile</string>
+    <string name="sound_profiles_default_name">Profile %1$d</string>
+    <string name="sound_profiles_empty">No profiles yet. A profile swaps your ringtone, notification sound or alarm for part of the day, like a quieter set at night.</string>
+    <string name="sound_profiles_add">Add a profile</string>
+    <string name="sound_profiles_turn_on_hint">Profiles are saved but won\'t run until Time-of-day sound profiles is switched on.</string>
+    <string name="sound_profiles_order_hint">When two profiles cover the same hour, the higher one wins.</string>
+    <string name="sound_profiles_window">%1$s to %2$s</string>
+    <string name="sound_profiles_window_all_day">All day</string>
+    <string name="sound_profiles_window_overnight">%1$s to %2$s the next day</string>
+    <string name="sound_profiles_row_no_sound">No sound picked yet</string>
+    <string name="sound_profiles_row_enabled_label">Use %1$s</string>
+    <string name="sound_profiles_starts">Starts</string>
+    <string name="sound_profiles_ends">Ends</string>
+    <string name="sound_profiles_start_earlier">Start an hour earlier</string>
+    <string name="sound_profiles_start_later">Start an hour later</string>
+    <string name="sound_profiles_end_earlier">End an hour earlier</string>
+    <string name="sound_profiles_end_later">End an hour later</string>
+    <string name="sound_profiles_sound_unchanged">Left as it is</string>
+    <string name="sound_profiles_sound_missing">This sound is no longer on the phone</string>
+    <string name="sound_profiles_choose">Choose</string>
+    <string name="sound_profiles_clear_sound">Stop changing the %1$s</string>
+    <string name="sound_profiles_need_sound">Pick at least one sound to save this profile.</string>
+    <string name="sound_profiles_overlap">Shares hours with %1$s. The higher one in the list wins.</string>
+    <string name="sound_profiles_picker_title">Sound for %1$s</string>
+    <string name="sound_profiles_picker_missing">This phone has no sound picker Aura can open.</string>
+    <string name="sound_profiles_saved">Profile saved</string>
+    <string name="sound_profiles_deleted">Profile deleted</string>
 
     <!-- Wallpaper packs (24H) -->
     <string name="settings_wp_pack_title">24H wallpaper pack</string>

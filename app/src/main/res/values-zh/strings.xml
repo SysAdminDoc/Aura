@@ -1990,8 +1990,44 @@
 
     <!-- Sound profiles -->
     <string name="settings_sounds_profiles_title">按时段的声音配置文件</string>
-    <string name="settings_sounds_profiles_on_subtitle">%1$d 个配置文件生效中。声音按计划变化。</string>
     <string name="settings_sounds_profiles_off_subtitle">为不同时间段分配不同的铃声、通知音和闹钟音</string>
+    <string name="settings_sounds_profiles_none_subtitle">已开启，但还没有配置文件选了声音。请在“编辑声音配置文件”中添加。</string>
+    <plurals name="settings_sounds_profiles_active">
+        <item quantity="other">%1$d 个配置文件正在按时段更换声音</item>
+    </plurals>
+    <string name="settings_sounds_profiles_edit_title">编辑声音配置文件</string>
+    <string name="settings_sounds_profiles_edit_empty_subtitle">还没有。添加一个，在一天中的某个时段使用不同的声音。</string>
+    <plurals name="settings_sounds_profiles_count">
+        <item quantity="other">%1$d 个配置文件</item>
+    </plurals>
+    <string name="sound_profiles_dialog_title">声音配置文件</string>
+    <string name="sound_profiles_new_title">新建配置文件</string>
+    <string name="sound_profiles_default_name">配置文件 %1$d</string>
+    <string name="sound_profiles_empty">还没有配置文件。配置文件会在一天中的某个时段更换铃声、通知音或闹钟音，比如夜间换成更安静的一组。</string>
+    <string name="sound_profiles_add">添加配置文件</string>
+    <string name="sound_profiles_turn_on_hint">配置文件已保存，但要打开“按时段的声音配置文件”后才会生效。</string>
+    <string name="sound_profiles_order_hint">两个配置文件覆盖同一小时时，排在上面的生效。</string>
+    <string name="sound_profiles_window">%1$s 至 %2$s</string>
+    <string name="sound_profiles_window_all_day">全天</string>
+    <string name="sound_profiles_window_overnight">%1$s 至次日 %2$s</string>
+    <string name="sound_profiles_row_no_sound">还没有选择声音</string>
+    <string name="sound_profiles_row_enabled_label">使用%1$s</string>
+    <string name="sound_profiles_starts">开始</string>
+    <string name="sound_profiles_ends">结束</string>
+    <string name="sound_profiles_start_earlier">提前一小时开始</string>
+    <string name="sound_profiles_start_later">推迟一小时开始</string>
+    <string name="sound_profiles_end_earlier">提前一小时结束</string>
+    <string name="sound_profiles_end_later">推迟一小时结束</string>
+    <string name="sound_profiles_sound_unchanged">保持不变</string>
+    <string name="sound_profiles_sound_missing">此声音已不在手机上</string>
+    <string name="sound_profiles_choose">选择</string>
+    <string name="sound_profiles_clear_sound">不再更换%1$s</string>
+    <string name="sound_profiles_need_sound">至少选择一个声音才能保存此配置文件。</string>
+    <string name="sound_profiles_overlap">与%1$s的时段重叠。列表中靠上的生效。</string>
+    <string name="sound_profiles_picker_title">%1$s的声音</string>
+    <string name="sound_profiles_picker_missing">此手机没有 Aura 可以打开的声音选择器。</string>
+    <string name="sound_profiles_saved">配置文件已保存</string>
+    <string name="sound_profiles_deleted">配置文件已删除</string>
 
     <!-- Wallpaper packs (24H) -->
     <string name="settings_wp_pack_title">24 小时壁纸包</string>
