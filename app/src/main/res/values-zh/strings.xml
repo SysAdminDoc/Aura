@@ -1701,6 +1701,7 @@
     <string name="video_wp_all_hidden_moderated_body">这一批视频都已被管理员移除。刷新以获取新的一批，或更改方向和焦点筛选。</string>
     <string name="video_wp_restore_hidden">恢复这些视频</string>
     <string name="video_wp_manage_hidden">管理已隐藏内容</string>
+    <string name="embedded_picker_no_room">此窗口太矮，放不下选择器，请改用完整的选择器。</string>
     <string name="library_backup_title">备份与恢复</string>
     <string name="library_backup_body">使用设置来导出、导入、安排和验证本地 Aura 备份。</string>
     <string name="library_backup_status">本地备份工具</string>

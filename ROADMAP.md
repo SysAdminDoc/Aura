@@ -300,16 +300,6 @@ Evidence for every item below is in RESEARCH.md (2026-09-04 pass).
   Effort: M
 
 
-- [ ] P2 — Make the embedded image picker fit small and enlarged displays
-  Category: a11y
-  Where: app/src/main/java/com/freevibe/ui/components/EmbeddedImagePickerSheet.kt:45-124
-  Problem: The picker uses a fixed 420 dp non-scrollable layout. Small windows, landscape, or enlarged display/text can clip choices/actions.
-  Evidence: The sheet fixes height at line 89 and its content has no scrolling. The 200-percent matrix does not cover it.
-  Fix: Use window-aware max height, verticalScroll or LazyColumn, safe insets, sticky actions, and adaptive thumbnails.
-  Acceptance: 320x480, landscape, split-screen, and 200-percent tests reach every image/action without overlap; focus scrolls selection into view.
-  Confidence: Verified
-  Effort: S
-
 - [ ] P2 — Reuse one bounded image request for wallpaper detail and palette extraction
   Category: perf
   Where: app/src/main/java/com/freevibe/ui/screens/wallpapers/WallpaperDetailScreen.kt:109-110,221-234,312-333,829-852; app/src/main/java/com/freevibe/ui/screens/wallpapers/WallpapersViewModel.kt:455-467; app/src/main/java/com/freevibe/service/ColorExtractor.kt:46-62,106-109; app/src/main/java/com/freevibe/di/AppModule.kt:65-90

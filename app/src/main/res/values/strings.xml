@@ -1867,6 +1867,7 @@
     <string name="video_wp_all_hidden_moderated_body">Moderators removed every video in this batch. Refresh for a new one, or change the orientation and focus filters.</string>
     <string name="video_wp_restore_hidden">Restore these videos</string>
     <string name="video_wp_manage_hidden">Manage hidden</string>
+    <string name="embedded_picker_no_room">This window is too short for the picker, so open the full one instead.</string>
     <string name="library_backup_title">Backup and restore</string>
     <string name="library_backup_body">Use Settings to export, import, schedule, and validate local Aura backups.</string>
     <string name="library_backup_status">Local backup tools</string>
