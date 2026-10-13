@@ -253,7 +253,7 @@ class ProviderCapabilityContractTest {
 
     @Test
     fun `every manifest endpoint is owned by exactly one source`() {
-        val declared = providerCapabilities.flatMap { it.endpointIds }
+        val declared = providerCapabilities.flatMap { it.endpointIds } + appEndpointIds
         assertEquals(
             "an endpoint may not be claimed twice",
             declared.size,

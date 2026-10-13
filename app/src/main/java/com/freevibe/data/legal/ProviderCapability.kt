@@ -646,6 +646,12 @@ val providerCapabilities: List<ProviderCapability> = listOf(
     ),
 )
 
+/**
+ * Ids in `docs/security/network-endpoints.json` that belong to the app itself, not to a content
+ * source. The update check reads GitHub's release feed whichever sources are switched on.
+ */
+val appEndpointIds: Set<String> = setOf("aura-update-check")
+
 val providerCapabilitiesBySource: Map<ContentSource, ProviderCapability> =
     providerCapabilities.associateBy { it.source }
 
