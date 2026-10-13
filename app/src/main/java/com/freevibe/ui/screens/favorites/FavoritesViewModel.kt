@@ -137,9 +137,35 @@ class FavoritesViewModel @Inject constructor(
     fun downloadAllWallpapers() {
         val wps = wallpapers.value.map { it.toWallpaper() }
         if (wps.isEmpty()) return
+        startBatch(wps)
+    }
+
+    /** Persisting the batch and enqueueing its work can both throw; a failure becomes a message, not a crash. */
+    internal fun startBatch(wps: List<com.freevibe.data.model.Wallpaper>) {
         viewModelScope.launch {
-            val result = batchDownloadService.downloadBatch(wps)
-            _message.update { batchDownloadMessage(result, context) }
+            val message = try {
+                batchDownloadMessage(batchDownloadService.downloadBatch(wps), context)
+            } catch (e: kotlinx.coroutines.CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                android.util.Log.w("FavoritesViewModel", "Batch download couldn't start: ${e.javaClass.simpleName}")
+                context.getString(R.string.favorites_batch_start_failed)
+            }
+            _message.update { message }
+        }
+    }
+
+    /** Stops a queued or running batch, including one waiting for a connection. */
+    fun cancelBatch() {
+        viewModelScope.launch {
+            try {
+                batchDownloadService.cancel()
+            } catch (e: kotlinx.coroutines.CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                android.util.Log.w("FavoritesViewModel", "Batch download couldn't be cancelled: ${e.javaClass.simpleName}")
+                _message.update { context.getString(R.string.common_retry_later) }
+            }
         }
     }
 
@@ -167,10 +193,7 @@ class FavoritesViewModel @Inject constructor(
             _message.update { context.getString(R.string.favorites_select_wallpaper) }
             return
         }
-        viewModelScope.launch {
-            val result = batchDownloadService.downloadBatch(wps)
-            _message.update { batchDownloadMessage(result, context) }
-        }
+        startBatch(wps)
     }
 
     fun clearMessage() { _message.update { _ -> null } }

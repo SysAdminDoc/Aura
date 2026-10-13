@@ -856,6 +856,7 @@
     <string name="favorites_import_summary">Favorites import complete: %1$d imported, %2$d skipped, %3$d failed.</string>
     <string name="favorites_select_wallpaper">Select at least one wallpaper</string>
     <string name="favorites_batch_already_running">A batch download is already running</string>
+    <string name="favorites_batch_start_failed">Couldn\'t start the download. Try again in a moment.</string>
     <plurals name="favorites_batch_provider_blocked">
         <item quantity="one">Provider policy blocked %1$d wallpaper</item>
         <item quantity="other">Provider policy blocked %1$d wallpapers</item>

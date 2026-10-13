@@ -23,6 +23,7 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withTimeoutOrNull
@@ -147,6 +148,7 @@ class BatchDownloadService @Inject constructor(
             return BatchDownloadStartResult(acceptedCount = 0, blockedCount = plan.blockedCount)
         }
         starting.value = true
+        var watcherClearsStarting = false
         try {
             store.replace(
                 BatchDownloadRecord(
@@ -157,9 +159,20 @@ class BatchDownloadService @Inject constructor(
             )
             val requestId = BatchDownloadWorker.enqueue(context)
             // An earlier finished batch can still be listed, so wait for this request by id.
-            withTimeoutOrNull(START_HANDOFF_TIMEOUT_MS) { workInfo.first { it?.id == requestId } }
+            val listed = withTimeoutOrNull(START_HANDOFF_TIMEOUT_MS) { workInfo.first { it?.id == requestId } }
+            if (listed == null) {
+                // Without this the banner would count the new batch as finished until WorkManager lists it.
+                watcherClearsStarting = true
+                scope.launch {
+                    try {
+                        withTimeoutOrNull(START_WATCH_LIMIT_MS) { workInfo.first { it?.id == requestId } }
+                    } finally {
+                        starting.value = false
+                    }
+                }
+            }
         } finally {
-            starting.value = false
+            if (!watcherClearsStarting) starting.value = false
         }
         BatchDownloadStartResult(acceptedCount = plan.allowed.size, blockedCount = plan.blockedCount)
     }
@@ -178,6 +191,7 @@ class BatchDownloadService @Inject constructor(
 
     private companion object {
         const val START_HANDOFF_TIMEOUT_MS = 5_000L
+        const val START_WATCH_LIMIT_MS = 60_000L
     }
 }
 

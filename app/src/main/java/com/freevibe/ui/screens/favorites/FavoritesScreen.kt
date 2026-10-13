@@ -390,6 +390,11 @@ fun FavoritesScreen(
                                 trackColor = MaterialTheme.colorScheme.surfaceContainerHigh,
                             )
                         }
+                        if (batchState.isRunning) {
+                            TextButton(onClick = viewModel::cancelBatch) {
+                                Text(stringResource(R.string.common_cancel))
+                            }
+                        }
                     }
                 }
             }
