@@ -1684,7 +1684,7 @@
     <string name="sound_shuffle_reason_not_audio">File is not audio</string>
     <string name="sound_shuffle_reason_apply_failed">Sound could not be applied</string>
     <string name="settings_video_battery_saver_title">Automatic motion guard</string>
-    <string name="settings_video_battery_saver_on_subtitle">Freezes motion during system Battery Saver and caps it at 15 FPS below 15%% battery</string>
+    <string name="settings_video_battery_saver_on_subtitle" formatted="false">Freezes motion during system Battery Saver and caps it at 15 FPS when the battery is under 15%</string>
     <string name="settings_video_battery_saver_off_subtitle">Keep motion playing and use the selected FPS limit during battery-saving conditions</string>
     <string name="settings_video_fps_overlay_title">FPS overlay</string>
     <string name="settings_video_fps_overlay_on_subtitle">Show a small debug FPS readout on Canvas-rendered motion wallpapers</string>

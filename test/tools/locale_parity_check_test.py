@@ -127,6 +127,28 @@ class LocaleParityFixtureTest(unittest.TestCase):
     def test_non_translatable_key_is_not_required(self) -> None:
         self.assertEqual(self.run_gate(), "")
 
+    def test_doubled_percent_without_arguments_fails(self) -> None:
+        default = BASE_DEFAULT.replace("Title", "Below 15%% battery")
+        zh = BASE_ZH.replace("标题", "低于 15%%")
+        message = self.run_gate(default=default, zh=zh)
+        self.assertIn("doubled percent sign", message)
+        self.assertIn("values/strings.xml", message)
+        self.assertIn("values-zh/strings.xml", message)
+
+    def test_doubled_percent_beside_an_argument_passes(self) -> None:
+        default = BASE_DEFAULT.replace("<string name=\"title\">Title</string>",
+                                       "<string name=\"title\">%1$d%% done</string>")
+        zh = BASE_ZH.replace("<string name=\"title\">标题</string>",
+                             "<string name=\"title\">已完成 %1$d%%</string>")
+        self.assertEqual(self.run_gate(default=default, zh=zh), "")
+
+    def test_single_percent_without_arguments_passes(self) -> None:
+        default = BASE_DEFAULT.replace("<string name=\"title\">Title</string>",
+                                       "<string name=\"title\" formatted=\"false\">Under 15%</string>")
+        zh = BASE_ZH.replace("<string name=\"title\">标题</string>",
+                             "<string name=\"title\" formatted=\"false\">低于 15%</string>")
+        self.assertEqual(self.run_gate(default=default, zh=zh), "")
+
     def test_bare_apostrophe_fails(self) -> None:
         default = BASE_DEFAULT.replace("Title", "Couldn't open")
         self.assertIn("unescaped quote", self.run_gate(default=default))

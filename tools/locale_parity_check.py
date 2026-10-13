@@ -154,6 +154,24 @@ def check_quotes(repo_root: Path, errors: list[str]) -> None:
             )
 
 
+def check_doubled_percent(repo_root: Path, errors: list[str]) -> None:
+    """%% only becomes one percent sign when the text goes through a formatter.
+
+    A string with no placeholder is read with a plain getString, which hands the two characters
+    back as they are, so the screen shows "15%%".
+    """
+    for path in sorted((repo_root / SOURCE_ROOT).glob("*/res/values*/*.xml")):
+        rel = path.relative_to(repo_root).as_posix()
+        for match in BODY.finditer(path.read_text(encoding="utf-8")):
+            body = match.group(2)
+            if "%%" in body and not placeholders(body):
+                snippet = " ".join(body.split())[:60]
+                errors.append(
+                    f"{rel}: doubled percent sign in \"{snippet}\", which takes no arguments "
+                    "(write a single % and set formatted=\"false\")"
+                )
+
+
 def check_pair(
     rel: str, default: dict[Key, ET.Element], translated: dict[Key, ET.Element],
     fallbacks: dict[str, str], used: set[str], errors: list[str],
@@ -219,6 +237,7 @@ def validate(repo_root: Path) -> dict[str, object]:
     for key in sorted(set(fallbacks) - used):
         errors.append(f"{FALLBACKS}: '{key}' is no longer missing, remove it from the list")
     check_quotes(repo_root, errors)
+    check_doubled_percent(repo_root, errors)
     if errors:
         raise LocaleParityError("\n".join(errors))
     return {"localesChecked": checked, "fallbacks": sorted(used)}

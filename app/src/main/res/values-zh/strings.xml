@@ -1530,7 +1530,7 @@
     <string name="sound_shuffle_reason_not_audio">文件不是音频</string>
     <string name="sound_shuffle_reason_apply_failed">无法应用该声音</string>
     <string name="settings_video_battery_saver_title">自动动态保护</string>
-    <string name="settings_video_battery_saver_on_subtitle">在系统省电模式下冻结动态，并在电量低于 15%% 时将其限制为 15 FPS</string>
+    <string name="settings_video_battery_saver_on_subtitle" formatted="false">在系统省电模式下冻结动态，并在电量低于 15% 时将其限制为 15 FPS</string>
     <string name="settings_video_battery_saver_off_subtitle">在省电条件下保持动态播放，并使用所选 FPS 上限</string>
     <string name="settings_video_fps_overlay_title">FPS 叠加层</string>
     <string name="settings_video_fps_overlay_on_subtitle">在 Canvas 渲染的动态壁纸上显示小型调试 FPS 读数</string>
