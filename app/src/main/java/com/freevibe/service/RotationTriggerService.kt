@@ -13,12 +13,19 @@ import android.os.IBinder
 import androidx.core.app.NotificationCompat
 import androidx.work.Constraints
 import androidx.work.ExistingWorkPolicy
-import kotlinx.coroutines.flow.first
 import androidx.work.NetworkType
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.OutOfQuotaPolicy
 import androidx.work.WorkManager
 import androidx.work.workDataOf
+import com.freevibe.MainActivity
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 /**
  * Foreground service that dynamically registers broadcast receivers for
@@ -45,9 +52,12 @@ import androidx.work.workDataOf
  */
 class RotationTriggerService : Service() {
 
+    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
     private var receiver: BroadcastReceiver? = null
     @Volatile private var screenOffEnabled = false
     @Volatile private var unlockEnabled = false
+    // Main-thread only: bumped by every onStartCommand.
+    private var commandGeneration = 0
 
     override fun onBind(intent: Intent?): IBinder? = null
 
@@ -59,14 +69,22 @@ class RotationTriggerService : Service() {
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        val generation = ++commandGeneration
         if (intent == null) {
             // START_STICKY restart after process death: the volatile flags are gone
             // and defaulting them to false would stopSelf() — silently killing
-            // rotate-on-unlock until the app is next opened. Re-read the toggles.
+            // rotate-on-unlock until the app is next opened. Re-read the toggles off
+            // the main thread; triggers stay idle until the read lands.
             val prefs = com.freevibe.data.local.PreferencesManager(applicationContext)
-            kotlinx.coroutines.runBlocking {
-                unlockEnabled = prefs.rotateOnUnlock.first()
-                screenOffEnabled = prefs.rotateOnScreenOff.first()
+            scope.launch {
+                val (unlock, screenOff) = withContext(Dispatchers.IO) {
+                    prefs.rotateOnUnlock.first() to prefs.rotateOnScreenOff.first()
+                }
+                // An explicit start that arrived during the read carries newer toggles.
+                if (generation != commandGeneration) return@launch
+                unlockEnabled = unlock
+                screenOffEnabled = screenOff
+                stopIfIdle(startId)
             }
         } else {
             // Allow Intent extras to update which triggers are active without
@@ -74,17 +92,21 @@ class RotationTriggerService : Service() {
             // current state so the caller can selectively flip one.
             screenOffEnabled = intent.getBooleanExtra(EXTRA_SCREEN_OFF, screenOffEnabled)
             unlockEnabled = intent.getBooleanExtra(EXTRA_UNLOCK, unlockEnabled)
-        }
-        if (!screenOffEnabled && !unlockEnabled) {
-            stopSelf()
+            stopIfIdle(startId)
         }
         return START_STICKY
+    }
+
+    private fun stopIfIdle(startId: Int) {
+        if (!screenOffEnabled && !unlockEnabled) {
+            stopSelf(startId)
+        }
     }
 
     private fun startInForeground() {
         val pendingIntent = PendingIntent.getActivity(
             this, 0,
-            packageManager.getLaunchIntentForPackage(packageName),
+            rotationTriggerContentIntent(this, packageManager.getLaunchIntentForPackage(packageName)),
             PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT,
         )
         val notif: Notification = NotificationCompat.Builder(this, NotificationChannels.ROTATION_TRIGGERS)
@@ -133,6 +155,7 @@ class RotationTriggerService : Service() {
     }
 
     override fun onDestroy() {
+        scope.cancel()
         receiver?.let { runCatching { unregisterReceiver(it) } }
         receiver = null
         super.onDestroy()
@@ -213,3 +236,14 @@ class RotationTriggerService : Service() {
  */
 internal fun triggeredRotationPolicy(restartCountdown: Boolean): ExistingWorkPolicy =
     if (restartCountdown) ExistingWorkPolicy.REPLACE else ExistingWorkPolicy.KEEP
+
+/**
+ * The trigger notification's tap target. The package manager can return no launch intent (a
+ * launcher alias disabled, or a query that races an update), and handing null to
+ * PendingIntent.getActivity would crash the service before it reaches startForeground.
+ */
+internal fun rotationTriggerContentIntent(context: Context, launchIntent: Intent?): Intent =
+    launchIntent ?: Intent(context, MainActivity::class.java)
+        .setAction(Intent.ACTION_MAIN)
+        .addCategory(Intent.CATEGORY_LAUNCHER)
+        .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)

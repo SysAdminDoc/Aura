@@ -233,6 +233,24 @@ class SoundEditorViewModelTest {
     }
 
     @Test
+    fun `an unreadable waveform is a flat line rather than a fake signal`() {
+        val waveform = unavailableWaveform()
+
+        assertEquals(WAVEFORM_SAMPLES, waveform.size)
+        assertEquals(1, waveform.distinct().size)
+        assertTrue("the line stays visible above the baseline", waveform.first() > 0f)
+    }
+
+    @Test
+    fun `editor state tells a real waveform from the unavailable stand-in`() {
+        val readable = SoundEditorState(waveform = unavailableWaveform())
+        val unavailable = readable.copy(waveformUnavailable = true)
+
+        assertNotEquals(readable, unavailable)
+        assertNotEquals(readable.hashCode(), unavailable.hashCode())
+    }
+
+    @Test
     fun `local audio editor identity is scoped to uri`() {
         val first = buildLocalAudioEditorIdentity("content://audio/1")
         val second = buildLocalAudioEditorIdentity("content://audio/2")

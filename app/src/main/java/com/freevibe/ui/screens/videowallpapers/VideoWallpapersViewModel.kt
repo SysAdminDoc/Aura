@@ -1392,40 +1392,44 @@ class VideoWallpapersViewModel @Inject constructor(
         }
     }
 
-    private fun readPixabayVideoCache(
+    private suspend fun readPixabayVideoCache(
         cacheKey: String,
         freshOnly: Boolean,
         freshnessTtlMs: Long = PIXABAY_VIDEO_CACHE_TTL_MS,
     ): PixabayVideoMetadataResult? =
         readVideoMetadataCache(cacheKey, freshOnly, freshnessTtlMs)?.result
 
-    private fun readVideoMetadataCache(
+    private suspend fun readVideoMetadataCache(
         cacheKey: String,
         freshOnly: Boolean,
         freshnessTtlMs: Long,
-    ): CachedPixabayVideoMetadata? =
-        decodePixabayVideoCache(
-            raw = pixabayVideoCache.readString(cacheKey),
-            nowMs = System.currentTimeMillis(),
-            requireFresh = freshOnly,
-            freshnessTtlMs = freshnessTtlMs,
-        )?.let { cached ->
-            val filtered = filterVideoMetadataForCurrentArtifact(cached.result)
-            if (cached.result.items.isNotEmpty() && filtered.items.isEmpty()) {
-                null
-            } else {
-                cached.copy(result = filtered)
+    ): CachedPixabayVideoMetadata? {
+        val raw = pixabayVideoCache.readString(cacheKey) ?: return null
+        // A cached feed holds up to MAX_CACHED_VIDEO_FEED_ITEMS rows; keep the parse off the main thread.
+        return withContext(Dispatchers.Default) {
+            decodePixabayVideoCache(
+                raw = raw,
+                nowMs = System.currentTimeMillis(),
+                requireFresh = freshOnly,
+                freshnessTtlMs = freshnessTtlMs,
+            )?.let { cached ->
+                val filtered = filterVideoMetadataForCurrentArtifact(cached.result)
+                if (cached.result.items.isNotEmpty() && filtered.items.isEmpty()) {
+                    null
+                } else {
+                    cached.copy(result = filtered)
+                }
             }
         }
+    }
 
-    private fun writePixabayVideoCache(
+    private suspend fun writePixabayVideoCache(
         cacheKey: String,
         result: PixabayVideoMetadataResult,
         nextAfter: String? = null,
         pageExhausted: Boolean? = null,
     ) {
-        pixabayVideoCache.writeString(
-            cacheKey,
+        val encoded = withContext(Dispatchers.Default) {
             encodePixabayVideoCache(
                 CachedPixabayVideoMetadata(
                     result = result,
@@ -1433,8 +1437,9 @@ class VideoWallpapersViewModel @Inject constructor(
                     nextAfter = nextAfter,
                     pageExhausted = pageExhausted,
                 ),
-            ),
-        )
+            )
+        }
+        pixabayVideoCache.writeString(cacheKey, encoded)
     }
 
     private fun rememberPixabayVideoMetadata(result: PixabayVideoMetadataResult) {
@@ -1450,7 +1455,7 @@ class VideoWallpapersViewModel @Inject constructor(
         _resolvedIds.update { it + item.id }
     }
 
-    private fun cacheVisibleVideoFeed(snapshot: VideoWallpapersState) {
+    private suspend fun cacheVisibleVideoFeed(snapshot: VideoWallpapersState) {
         val items = _state.value.items.take(MAX_CACHED_VIDEO_FEED_ITEMS)
         val urls = items.mapNotNull { item -> streamUrls[item.id]?.let { item.id to it } }.toMap()
         if (urls.isEmpty()) return
@@ -1463,13 +1468,13 @@ class VideoWallpapersViewModel @Inject constructor(
         )
     }
 
-    private fun activePixabayVideoRateLimitUntilMs(): Long {
+    private suspend fun activePixabayVideoRateLimitUntilMs(): Long {
         val persisted = pixabayVideoCache.readLong(PIXABAY_VIDEO_RATE_LIMITED_UNTIL_KEY)
         pixabayVideoRateLimitedUntilMs = maxOf(pixabayVideoRateLimitedUntilMs, persisted)
         return pixabayVideoRateLimitedUntilMs
     }
 
-    private fun updatePixabayVideoRateLimit(backoffMs: Long) {
+    private suspend fun updatePixabayVideoRateLimit(backoffMs: Long) {
         val untilMs = System.currentTimeMillis() + backoffMs
         pixabayVideoRateLimitedUntilMs = maxOf(pixabayVideoRateLimitedUntilMs, untilMs)
         pixabayVideoCache.writeLong(PIXABAY_VIDEO_RATE_LIMITED_UNTIL_KEY, pixabayVideoRateLimitedUntilMs)

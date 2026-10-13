@@ -32,7 +32,7 @@
     "OutOfQuotaPolicy.RUN_AS_NON_EXPEDITED_WORK_REQUEST",
     "setRequiredNetworkType(NetworkType.CONNECTED)",
     "setRequiresBatteryNotLow(true)",
-    "stopSelf()"
+    "stopSelf(startId)"
   ],
   "requiredSettingsTerms": [
     "Change on every unlock",

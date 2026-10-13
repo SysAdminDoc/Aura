@@ -396,6 +396,7 @@
     <string name="editor_sound_trim_end">结束</string>
     <string name="editor_sound_milliseconds_suffix">毫秒</string>
     <string name="editor_sound_zoom_hint">双指缩放或使用控件进行缩放 · %1$.1f×</string>
+    <string name="editor_sound_waveform_unavailable">Aura 无法读取此文件的波形，因此上方显示为平直线。仍可按时间裁剪。</string>
     <string name="editor_sound_zoom_out">缩小波形</string>
     <string name="editor_sound_zoom_reset">重置波形缩放</string>
     <string name="editor_sound_zoom_in">放大波形</string>

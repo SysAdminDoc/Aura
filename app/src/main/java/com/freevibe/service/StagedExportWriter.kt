@@ -95,21 +95,29 @@ internal fun publishAtomicLocalFile(destination: File, bytes: ByteArray) {
             output.write(bytes)
             output.fd.sync()
         }
-        try {
-            Files.move(
-                staged.toPath(),
-                destination.toPath(),
-                StandardCopyOption.ATOMIC_MOVE,
-                StandardCopyOption.REPLACE_EXISTING,
-            )
-        } catch (_: AtomicMoveNotSupportedException) {
-            Files.move(
-                staged.toPath(),
-                destination.toPath(),
-                StandardCopyOption.REPLACE_EXISTING,
-            )
-        }
+        moveStagedFileIntoPlace(staged, destination)
     } finally {
         staged.delete()
+    }
+}
+
+/**
+ * Replace [destination] with a fully written [staged] file in one rename, so a reader never sees
+ * a half-copied file. Callers stage in the destination's directory, where the rename is atomic.
+ */
+internal fun moveStagedFileIntoPlace(staged: File, destination: File) {
+    try {
+        Files.move(
+            staged.toPath(),
+            destination.toPath(),
+            StandardCopyOption.ATOMIC_MOVE,
+            StandardCopyOption.REPLACE_EXISTING,
+        )
+    } catch (_: AtomicMoveNotSupportedException) {
+        Files.move(
+            staged.toPath(),
+            destination.toPath(),
+            StandardCopyOption.REPLACE_EXISTING,
+        )
     }
 }

@@ -324,6 +324,13 @@ fun SoundEditorScreen(
                         .fillMaxWidth()
                         .height(180.dp),
                 )
+                if (state.waveformUnavailable) {
+                    Text(
+                        stringResource(R.string.editor_sound_waveform_unavailable),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
 
                 Row(
                     modifier = Modifier.fillMaxWidth(),

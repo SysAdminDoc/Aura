@@ -117,6 +117,18 @@ class LibraryTransferContractTest {
         assertFalse(directory.listFiles().orEmpty().any { it.name.endsWith(".tmp") })
     }
 
+    @Test
+    fun `a staged cache file replaces the destination and leaves no part file`() {
+        val directory = temporaryDirectory()
+        val destination = File(directory, "clip.mp3").apply { writeText("stale") }
+        val staged = File(directory, ".clip.mp3.1.part").apply { writeText("complete audio") }
+
+        moveStagedFileIntoPlace(staged, destination)
+
+        assertEquals("complete audio", destination.readText())
+        assertFalse(staged.exists())
+    }
+
     private fun temporaryDirectory(): File =
         kotlin.io.path.createTempDirectory("aura-transfer-test-").toFile().also {
             it.deleteOnExit()

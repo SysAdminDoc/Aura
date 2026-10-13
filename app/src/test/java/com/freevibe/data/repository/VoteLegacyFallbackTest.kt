@@ -83,4 +83,15 @@ class VoteLegacyFallbackTest {
         assertNull(refusedLegacy.onLegacy(null))
         assertEquals(0, refusedLegacy.onCurrent(null))
     }
+
+    @Test
+    fun `a refused public count is never reported as zero`() {
+        val noLegacy = UpvoteTally()
+        assertNull(noLegacy.onLegacy(null))
+        assertNull("an error must not read as zero votes", noLegacy.onCurrentFailed())
+
+        val withLegacy = UpvoteTally()
+        assertNull(withLegacy.onCurrentFailed())
+        assertEquals(4, withLegacy.onLegacy(4))
+    }
 }

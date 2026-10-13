@@ -138,7 +138,8 @@ class VideoWallpapersViewModelTest {
         val context = mockk<Context>()
         val cachePreferences = mockk<SharedPreferences>()
         val cacheEditor = mockk<SharedPreferences.Editor>()
-        val cacheValues = mutableMapOf<String, Any?>()
+        // Cache access runs on the IO dispatcher, so the fake store is shared across threads.
+        val cacheValues = java.util.Collections.synchronizedMap(mutableMapOf<String, Any?>())
         every { context.applicationContext } returns context
         every {
             context.getSharedPreferences("freevibe_pixabay_video_cache", Context.MODE_PRIVATE)
@@ -149,8 +150,14 @@ class VideoWallpapersViewModelTest {
         every { cachePreferences.getLong(any(), any()) } answers {
             cacheValues[firstArg<String>()] as? Long ?: secondArg()
         }
+        // The store reads every entry on write to prune the oldest ones.
+        every { cachePreferences.all } answers { synchronized(cacheValues) { cacheValues.toMap() } }
         every { cachePreferences.edit() } returns cacheEditor
         every { cacheEditor.clear() } answers { cacheValues.clear(); cacheEditor }
+        every { cacheEditor.remove(any()) } answers {
+            cacheValues.remove(firstArg<String>())
+            cacheEditor
+        }
         every { cacheEditor.putString(any(), any()) } answers {
             cacheValues[firstArg<String>()] = secondArg<String?>()
             cacheEditor

@@ -440,6 +440,7 @@
     <string name="editor_sound_trim_end">End</string>
     <string name="editor_sound_milliseconds_suffix">ms</string>
     <string name="editor_sound_zoom_hint">Pinch or use controls to zoom · %1$.1f×</string>
+    <string name="editor_sound_waveform_unavailable">Aura couldn\'t read this file\'s waveform, so the line above is flat. Trimming by time still works.</string>
     <string name="editor_sound_zoom_out">Zoom out waveform</string>
     <string name="editor_sound_zoom_reset">Reset waveform zoom</string>
     <string name="editor_sound_zoom_in">Zoom in waveform</string>

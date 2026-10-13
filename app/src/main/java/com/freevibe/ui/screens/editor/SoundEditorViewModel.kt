@@ -4,6 +4,7 @@ import android.content.Context
 import android.media.MediaExtractor
 import android.media.MediaFormat
 import android.net.Uri
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.freevibe.R
@@ -27,6 +28,7 @@ import com.freevibe.service.copyStreamCapped
 import com.freevibe.service.downloadHistoryId
 import com.freevibe.service.isLosslessCutAllowed
 import com.freevibe.service.losslessCutExportFormat
+import com.freevibe.service.moveStagedFileIntoPlace
 import com.freevibe.service.normalizeMediaFileName
 import com.freevibe.service.requireSniffedMediaFile
 import com.freevibe.service.sha256File
@@ -53,6 +55,8 @@ import kotlin.math.roundToLong
 data class SoundEditorState(
     val isLoading: Boolean = false,
     val waveform: FloatArray = floatArrayOf(),
+    /** True when [waveform] is a flat stand-in because the file's amplitudes could not be read. */
+    val waveformUnavailable: Boolean = false,
     val durationMs: Long = 0,
     val frameDurationMs: Long = 1,
     val trimStartMs: Long = 0,
@@ -90,6 +94,7 @@ data class SoundEditorState(
         if (this === other) return true
         if (other !is SoundEditorState) return false
         return isLoading == other.isLoading && waveform.contentEquals(other.waveform) &&
+            waveformUnavailable == other.waveformUnavailable &&
             durationMs == other.durationMs && frameDurationMs == other.frameDurationMs &&
             trimStartMs == other.trimStartMs && trimEndMs == other.trimEndMs &&
             playbackPosition == other.playbackPosition &&
@@ -106,6 +111,7 @@ data class SoundEditorState(
     override fun hashCode(): Int {
         var result = isLoading.hashCode()
         result = 31 * result + waveform.contentHashCode()
+        result = 31 * result + waveformUnavailable.hashCode()
         result = 31 * result + durationMs.hashCode()
         result = 31 * result + frameDurationMs.hashCode()
         result = 31 * result + trimStartMs.hashCode()
@@ -201,6 +207,7 @@ class SoundEditorViewModel @Inject constructor(
                 it.copy(
                     isLoading = true,
                     waveform = floatArrayOf(),
+                    waveformUnavailable = false,
                     durationMs = 0,
                     frameDurationMs = 1,
                     trimStartMs = 0,
@@ -229,7 +236,8 @@ class SoundEditorViewModel @Inject constructor(
                 _state.update {
                     it.copy(
                         isLoading = false,
-                        waveform = waveform,
+                        waveform = waveform ?: unavailableWaveform(),
+                        waveformUnavailable = waveform == null,
                         durationMs = timing.durationMs,
                         frameDurationMs = timing.frameDurationMs,
                         localFilePath = file.absolutePath,
@@ -259,6 +267,7 @@ class SoundEditorViewModel @Inject constructor(
                 it.copy(
                     isLoading = true,
                     waveform = floatArrayOf(),
+                    waveformUnavailable = false,
                     durationMs = 0,
                     frameDurationMs = 1,
                     trimStartMs = 0,
@@ -288,7 +297,8 @@ class SoundEditorViewModel @Inject constructor(
                     it.copy(
                         isLoading = false,
                         fileName = name,
-                        waveform = waveform,
+                        waveform = waveform ?: unavailableWaveform(),
+                        waveformUnavailable = waveform == null,
                         durationMs = timing.durationMs,
                         frameDurationMs = timing.frameDurationMs,
                         localFilePath = file.absolutePath,
@@ -756,10 +766,8 @@ class SoundEditorViewModel @Inject constructor(
                     }
                 }
                 if (tmpFile.length() > 0) {
-                    if (!tmpFile.renameTo(file)) {
-                        tmpFile.copyTo(file, overwrite = true)
-                        tmpFile.delete()
-                    }
+                    // A half-copied final file would be reused by the exists() check above.
+                    moveStagedFileIntoPlace(tmpFile, file)
                 } else {
                     tmpFile.delete()
                     throw Exception("Download produced empty file")
@@ -773,6 +781,7 @@ class SoundEditorViewModel @Inject constructor(
     }
 
     private companion object {
+        private const val TAG = "SoundEditor"
         /** Max size for an audio file downloaded into the editor's cache. */
         private const val MAX_EDIT_DOWNLOAD_BYTES = 96L * 1024 * 1024
     }
@@ -786,17 +795,18 @@ class SoundEditorViewModel @Inject constructor(
         try {
             context.contentResolver.openInputStream(uri)?.use { input ->
                 FileOutputStream(tempFile).use { output ->
-                    copyStreamCapped(input, output, MAX_EDIT_DOWNLOAD_BYTES)
+                    try {
+                        copyStreamCapped(input, output, MAX_EDIT_DOWNLOAD_BYTES)
+                    } catch (e: MediaIngestionLimitExceeded) {
+                        throw Exception("Audio file too large (${MAX_EDIT_DOWNLOAD_BYTES / (1024 * 1024)} MB)", e)
+                    }
                 }
             } ?: throw IllegalStateException("Cannot read file")
             if (tempFile.length() <= 0L) throw IllegalStateException("The selected file is empty")
 
             val sniffed = requireSniffedMediaFile(tempFile, MediaFamily.AUDIO, "Sound")
             val file = File(cacheDir, normalizeMediaFileName(safeName, sniffed))
-            if (!tempFile.renameTo(file)) {
-                tempFile.copyTo(file, overwrite = true)
-                tempFile.delete()
-            }
+            moveStagedFileIntoPlace(tempFile, file)
             ShareOutbox.deleteExternalMedia(context, uri)
             file
         } catch (error: Exception) {
@@ -805,7 +815,8 @@ class SoundEditorViewModel @Inject constructor(
         }
     }
 
-    private fun extractWaveform(path: String, numSamples: Int = 200): FloatArray {
+    /** Returns null when the file's amplitudes can't be read, so the screen can say so. */
+    private fun extractWaveform(path: String, numSamples: Int = WAVEFORM_SAMPLES): FloatArray? {
         val amplitudes = FloatArray(numSamples)
         val extractor = MediaExtractor()
         try {
@@ -819,7 +830,10 @@ class SoundEditorViewModel @Inject constructor(
                     break
                 }
             }
-            if (audioTrack < 0) return amplitudes
+            if (audioTrack < 0) {
+                Log.w(TAG, "Waveform unavailable: no audio track")
+                return null
+            }
 
             extractor.selectTrack(audioTrack)
             val format = extractor.getTrackFormat(audioTrack)
@@ -850,10 +864,9 @@ class SoundEditorViewModel @Inject constructor(
                 sampleIndex++
                 extractor.advance()
             }
-        } catch (_: Exception) {
-            for (i in amplitudes.indices) {
-                amplitudes[i] = (Math.sin(i * 0.3) * 0.5 + 0.5).toFloat() * 0.7f
-            }
+        } catch (e: Exception) {
+            Log.w(TAG, "Waveform unavailable: ${e.javaClass.simpleName}")
+            return null
         } finally {
             try { extractor.release() } catch (_: Exception) {}
         }
@@ -965,6 +978,16 @@ internal fun updateWaveformViewport(
 }
 
 internal const val MAX_WAVEFORM_ZOOM = 8f
+
+internal const val WAVEFORM_SAMPLES = 200
+private const val UNAVAILABLE_WAVEFORM_LEVEL = 0.08f
+
+/**
+ * A flat line that keeps trimming usable when amplitudes can't be read. It replaces a sine wave
+ * that looked like real audio; the screen pairs it with a notice.
+ */
+internal fun unavailableWaveform(samples: Int = WAVEFORM_SAMPLES): FloatArray =
+    FloatArray(samples) { UNAVAILABLE_WAVEFORM_LEVEL }
 
 internal val SOUND_EDITOR_PLAYBACK_SPEEDS = listOf(0.5f, 0.75f, 1f, 1.25f, 1.5f, 2f)
 

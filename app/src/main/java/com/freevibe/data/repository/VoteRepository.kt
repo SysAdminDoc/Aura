@@ -107,11 +107,24 @@ internal class UpvoteTally {
     private var current: Int? = null
     private var legacy: Int? = null
     private var currentAnswered = false
+    private var currentFailed = false
     private var legacyAnswered = false
 
     fun onCurrent(value: Int?): Int? {
         current = value
         currentAnswered = true
+        currentFailed = false
+        return settled()
+    }
+
+    /**
+     * The public count couldn't be read (rules refused it or the socket dropped). Only a legacy
+     * tally can stand in; without one nothing is reported, because zero would read as a real count.
+     */
+    fun onCurrentFailed(): Int? {
+        current = null
+        currentAnswered = true
+        currentFailed = true
         return settled()
     }
 
@@ -121,8 +134,11 @@ internal class UpvoteTally {
         return settled()
     }
 
-    private fun settled(): Int? =
-        if (currentAnswered && legacyAnswered) preferredUpvotes(current, legacy) else null
+    private fun settled(): Int? = when {
+        !currentAnswered || !legacyAnswered -> null
+        currentFailed -> legacy
+        else -> preferredUpvotes(current, legacy)
+    }
 }
 
 /**
@@ -503,7 +519,7 @@ class VoteRepository @Inject constructor(
             }
             override fun onCancelled(error: DatabaseError) {
                 Log.w("VoteRepository", "Vote listener cancelled: ${error.message}")
-                tally.onCurrent(null)?.let(onCount)
+                tally.onCurrentFailed()?.let(onCount)
             }
         }
         // Refused once the private vote rules are deployed, which is expected.
