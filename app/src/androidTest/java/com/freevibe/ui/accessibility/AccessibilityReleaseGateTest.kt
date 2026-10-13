@@ -89,6 +89,12 @@ class AccessibilityReleaseGateTest {
         renderScenario(ProductionRouteScenario.DownloadsMissingMedia)
     }
 
+    @SdkSuppress(minSdkVersion = 34)
+    @Test
+    fun soundShufflePoolsProductionStatePassesAccessibilityChecks() {
+        renderScenario(ProductionRouteScenario.SoundShufflePools)
+    }
+
     private fun renderScenario(
         scenario: ProductionRouteScenario,
         darkTheme: Boolean = true,

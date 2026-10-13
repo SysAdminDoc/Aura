@@ -58,6 +58,7 @@ class LibraryImportPlanTest {
 
     private val packJson = MutableStateFlow("")
     private val profilesJson = MutableStateFlow("")
+    private val soundShufflePoolsJson = MutableStateFlow("")
     private var fitCanvasPreferences = FitCanvasPreferences()
 
     @Before
@@ -68,8 +69,10 @@ class LibraryImportPlanTest {
         prefs = mockk()
         every { prefs.wallpaperPackJson } returns packJson
         every { prefs.soundProfilesJson } returns profilesJson
+        every { prefs.soundShufflePoolsJson } returns soundShufflePoolsJson
         coEvery { prefs.setWallpaperPackJson(any()) } answers { packJson.value = firstArg() }
         coEvery { prefs.setSoundProfilesJson(any()) } answers { profilesJson.value = firstArg() }
+        coEvery { prefs.setSoundShufflePoolsJson(any()) } answers { soundShufflePoolsJson.value = firstArg() }
         coEvery { prefs.fitCanvasPreferencesSnapshot() } answers { fitCanvasPreferences }
         coEvery { prefs.restoreFitCanvasPreferences(any()) } answers { fitCanvasPreferences = firstArg() }
         exporter = LibraryExporter(
@@ -81,6 +84,7 @@ class LibraryImportPlanTest {
             rotationExclusionDao = db.rotationExclusionDao(),
             prefs = prefs,
             moshi = Moshi.Builder().build(),
+            soundShufflePoolManager = mockk(relaxed = true),
         )
     }
 
@@ -164,6 +168,45 @@ class LibraryImportPlanTest {
 
         assertEquals(2, plan.sourceVersion)
         assertEquals(listOf("wp-1"), plan.favorites.map { it.id })
+    }
+
+    @Test
+    fun `v4 sound pools restore schedules and locator free assignments`() = runTest {
+        val soundStoreJson = Moshi.Builder().build().adapter(SoundShuffleStore::class.java).toJson(
+            SoundShuffleStore(
+                legacyMigrated = true,
+                pools = listOf(
+                    SoundShufflePool(
+                        poolId = "pool-1",
+                        name = "Workday",
+                        enabled = true,
+                        targets = listOf(SoundShuffleTarget.NOTIFICATION),
+                        intervalHours = 6,
+                        items = listOf(
+                            SoundShufflePoolItem(
+                                itemId = "local:saved",
+                                sourceKind = SoundShuffleSourceKind.LOCAL,
+                                sourceId = "saved",
+                                name = "Ping",
+                                localMediaStatus = LocalMediaStatus.MISSING,
+                            ),
+                        ),
+                    ),
+                ),
+            ),
+        )
+        val json = Moshi.Builder().build().adapter(LibraryExportFile::class.java).toJson(
+            LibraryExportFile(version = 4, soundShufflePoolsJson = soundStoreJson),
+        )
+
+        val plan = exporter.buildPlan(json)
+        exporter.applyPlan(plan)
+
+        assertEquals(4, plan.sourceVersion)
+        val restored = parseSoundShuffleStoreStrict(Moshi.Builder().build(), soundShufflePoolsJson.value)
+        assertEquals("Workday", restored.pools.single().name)
+        assertEquals(SoundShuffleTarget.NOTIFICATION, restored.pools.single().targets.single())
+        assertEquals(LocalMediaStatus.MISSING, restored.pools.single().items.single().localMediaStatus)
     }
 
     @Test
@@ -280,7 +323,7 @@ class LibraryImportPlanTest {
             assertTrue(result.isSuccess)
             val json = destination.readText()
             val parsed = Moshi.Builder().build().adapter(LibraryExportFile::class.java).fromJson(json)!!
-            assertEquals(3, parsed.version)
+            assertEquals(4, parsed.version)
             assertTrue(parsed.favorites.single().localMedia)
             assertTrue(parsed.localWallpapers.single().id.startsWith("local-"))
             assertFalse(parsed.localWallpapers.single().id.endsWith(hash))
@@ -569,6 +612,7 @@ class LibraryImportPlanTest {
     fun `an injected mid-write failure leaves the pre-import state intact`() = runTest {
         packJson.value = "original-pack"
         profilesJson.value = "original-profiles"
+        soundShufflePoolsJson.value = "original-pools"
         val originalFitCanvasPreferences = FitCanvasPreferences(
             staticPresentation = "fit",
             staticStyle = FitCanvasStyle(FitCanvasMode.CUSTOM_COLOR, 0xFF123456.toInt()),
@@ -585,6 +629,7 @@ class LibraryImportPlanTest {
                     [{"mediaType":"WALLPAPER","source":"REDDIT","contentId":"blocked-post"}]
                 """.trimIndent(),
                 extra = ""","wallpaperPackJson":"new-pack","soundProfilesJson":"new-profiles",
+                    "soundShufflePoolsJson":"{\"version\":1,\"legacyMigrated\":true,\"pools\":[],\"history\":[]}",
                     "fitCanvasPreferences":{
                       "staticPresentation":"fill","staticCanvasMode":"amoled_black",
                       "staticCanvasColor":-16777216,"videoPresentation":"fit",
@@ -602,6 +647,7 @@ class LibraryImportPlanTest {
         assertTrue(db.rotationExclusionDao().getAll().isEmpty())
         assertEquals("original-pack", packJson.value)
         assertEquals("original-profiles", profilesJson.value)
+        assertEquals("original-pools", soundShufflePoolsJson.value)
         assertEquals(originalFitCanvasPreferences, fitCanvasPreferences)
     }
 

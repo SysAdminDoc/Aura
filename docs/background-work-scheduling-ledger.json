@@ -205,35 +205,66 @@
     },
     {
       "id": "ringtone-shuffle-periodic",
-      "uniqueWorkName": "ringtone_shuffle",
+      "uniqueWorkName": "sound_shuffle_pool_$poolId",
       "workerClass": "RingtoneShuffleWorker",
       "sourcePath": "app/src/main/java/com/freevibe/service/RingtoneShuffleWorker.kt",
       "settingsSources": [
-        "app/src/main/java/com/freevibe/ui/screens/settings/SettingsMediaDelegate.kt"
+        "app/src/main/java/com/freevibe/service/SoundShufflePoolManager.kt"
       ],
       "workKind": "periodic",
       "enqueueApi": "enqueueUniquePeriodicWork",
       "existingWorkPolicy": "ExistingPeriodicWorkPolicy.UPDATE",
-      "interval": "user-selected hours; minimum 1 hour",
+      "interval": "per pool: 1, 6, 12, 24, or 72 hours",
       "initialDelay": "none",
       "constraints": [
         "no explicit WorkManager constraints"
       ],
       "backoff": "exponential, 15 minutes",
       "expedited": false,
-      "enabledSurface": "Settings ringtone and alarm shuffle controls",
-      "scheduleTrigger": "Enable ringtone or alarm shuffle or change its interval",
-      "cancelTrigger": "Disable both ringtone and alarm shuffle",
+      "enabledSurface": "Settings sound shuffle pools, one job per enabled pool",
+      "scheduleTrigger": "A pool is enabled with at least one target and one sound, or its interval changes; boot restore and backup import reconcile every pool",
+      "cancelTrigger": "A pool is disabled, deleted, or left without targets or sounds",
       "deferralReasons": [
-        "WRITE_SETTINGS permission unavailable or no eligible downloaded sound",
+        "WRITE_SETTINGS permission unavailable or no compatible sound for a target",
         "Android job quota or Doze/App Standby delay"
       ],
       "sourceTerms": [
         "const val WORK_NAME = \"ringtone_shuffle\"",
         "PeriodicWorkRequestBuilder<RingtoneShuffleWorker>",
-        "intervalHours.coerceAtLeast(1L)",
+        "intervalHours.coerceAtLeast(1)",
         "ExistingPeriodicWorkPolicy.UPDATE",
         "setBackoffCriteria",
+        "CancellationException"
+      ]
+    },
+    {
+      "id": "sound-shuffle-pool-run-now",
+      "uniqueWorkName": "sound_shuffle_pool_${poolId}_now",
+      "workerClass": "RingtoneShuffleWorker",
+      "sourcePath": "app/src/main/java/com/freevibe/service/RingtoneShuffleWorker.kt",
+      "settingsSources": [
+        "app/src/main/java/com/freevibe/service/SoundShufflePoolManager.kt"
+      ],
+      "workKind": "oneTime",
+      "enqueueApi": "enqueueUniqueWork",
+      "existingWorkPolicy": "ExistingWorkPolicy.REPLACE",
+      "interval": "not periodic",
+      "initialDelay": "none",
+      "constraints": [
+        "no explicit WorkManager constraints"
+      ],
+      "backoff": "exponential, 15 minutes, only when every target failed with an I/O error",
+      "expedited": false,
+      "enabledSurface": "Run now in a sound shuffle pool",
+      "scheduleTrigger": "The person taps Run now",
+      "cancelTrigger": "The pool is disabled, deleted, or emptied",
+      "deferralReasons": [
+        "WRITE_SETTINGS permission unavailable or no compatible sound for a target",
+        "Android job quota or Doze/App Standby delay"
+      ],
+      "sourceTerms": [
+        "OneTimeWorkRequestBuilder<RingtoneShuffleWorker>",
+        "ExistingWorkPolicy.REPLACE",
         "CancellationException"
       ]
     },

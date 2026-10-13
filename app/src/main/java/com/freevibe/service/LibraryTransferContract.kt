@@ -17,6 +17,7 @@ internal object LibraryTransferContract {
     const val MAX_FAVORITES_DOCUMENT_CHARS = 64_000_000
     const val MAX_COLLECTION_DOCUMENT_BYTES = 4_194_304
     const val MAX_LIBRARY_DOCUMENT_CHARS = 128_000_000
+    const val MAX_SOUND_SHUFFLE_DOCUMENT_CHARS = 4_000_000
 
     const val MAX_TEXT_CHARS = 512
     const val MAX_URL_CHARS = 2_048

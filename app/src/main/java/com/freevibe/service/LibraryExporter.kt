@@ -51,6 +51,7 @@ data class LibraryExportFile(
     val wallpaperHistory: List<WallpaperHistoryExportEntry> = emptyList(),
     val wallpaperPackJson: String = "",
     val soundProfilesJson: String = "",
+    val soundShufflePoolsJson: String = "",
     val fitCanvasPreferences: FitCanvasPreferencesExport? = null,
 )
 
@@ -208,6 +209,7 @@ class LibraryExporter @Inject constructor(
     private val rotationExclusionDao: RotationExclusionDao,
     private val prefs: PreferencesManager,
     private val moshi: Moshi,
+    private val soundShufflePoolManager: SoundShufflePoolManager,
 ) {
     private val adapter = moshi.adapter(LibraryExportFile::class.java)
     private val envelopeAdapter = moshi.adapter(LibraryImportEnvelope::class.java)
@@ -241,6 +243,10 @@ class LibraryExporter @Inject constructor(
                 .map { it.toExportEntry(portableLocalIds) }
             val wallpaperPack = prefs.wallpaperPackJson.first()
             val soundProfiles = prefs.soundProfilesJson.first()
+            val soundShufflePools = portableSoundShuffleStoreJson(
+                moshi,
+                prefs.soundShufflePoolsJson.first(),
+            )
             val fitCanvasPreferences = prefs.fitCanvasPreferencesSnapshot()
 
             requireWithinTransferLimit(
@@ -285,6 +291,7 @@ class LibraryExporter @Inject constructor(
                 wallpaperHistory = wallpaperHistory,
                 wallpaperPackJson = wallpaperPack,
                 soundProfilesJson = soundProfiles,
+                soundShufflePoolsJson = soundShufflePools,
                 fitCanvasPreferences = FitCanvasPreferencesExport.from(fitCanvasPreferences),
             )
 
@@ -303,6 +310,7 @@ class LibraryExporter @Inject constructor(
                     localWallpapers.size + wallpaperHistory.size +
                     (if (wallpaperPack.isNotBlank()) 1 else 0) +
                     (if (soundProfiles.isNotBlank()) 1 else 0) +
+                    (if (soundShufflePools.isNotBlank()) 1 else 0) +
                     1,
                 skipped = 0,
                 failed = 0,
@@ -417,6 +425,11 @@ class LibraryExporter @Inject constructor(
             exportFile.wallpaperHistory.size,
             LibraryTransferContract.MAX_WALLPAPER_HISTORY_ITEMS,
         )
+        requireWithinTransferLimit(
+            "Library sound pool document characters",
+            exportFile.soundShufflePoolsJson.length,
+            LibraryTransferContract.MAX_SOUND_SHUFFLE_DOCUMENT_CHARS,
+        )
 
         val skipped = mutableListOf<LibraryImportSkip>()
 
@@ -451,6 +464,10 @@ class LibraryExporter @Inject constructor(
             wallpaperHistory = wallpaperHistory,
             wallpaperPackJson = exportFile.wallpaperPackJson,
             soundProfilesJson = exportFile.soundProfilesJson,
+            soundShufflePoolsJson = exportFile.soundShufflePoolsJson.takeIf(String::isNotBlank)?.let {
+                val normalized = parseSoundShuffleStoreStrict(moshi, it)
+                encodeSoundShuffleStore(moshi, normalized)
+            }.orEmpty(),
             fitCanvasPreferences = exportFile.fitCanvasPreferences?.toPreferences(),
             skipped = skipped,
         )
@@ -704,6 +721,7 @@ class LibraryExporter @Inject constructor(
         // its static, video, and service-mirror values.
         val previousPack = prefs.wallpaperPackJson.first()
         val previousProfiles = prefs.soundProfilesJson.first()
+        val previousSoundShufflePools = prefs.soundShufflePoolsJson.first()
         val previousFitCanvasPreferences = prefs.fitCanvasPreferencesSnapshot()
         var prefsWritten = false
         try {
@@ -714,6 +732,13 @@ class LibraryExporter @Inject constructor(
             if (plan.soundProfilesJson.isNotBlank()) {
                 prefsWritten = true
                 prefs.setSoundProfilesJson(plan.soundProfilesJson)
+            }
+            if (plan.soundShufflePoolsJson.isNotBlank()) {
+                prefsWritten = true
+                val existing = parseSoundShuffleStore(moshi, previousSoundShufflePools)
+                val imported = parseSoundShuffleStoreStrict(moshi, plan.soundShufflePoolsJson)
+                val merged = mergeSoundShuffleStores(existing, imported)
+                prefs.setSoundShufflePoolsJson(encodeSoundShuffleStore(moshi, merged))
             }
             plan.fitCanvasPreferences?.let {
                 prefsWritten = true
@@ -743,9 +768,13 @@ class LibraryExporter @Inject constructor(
             if (prefsWritten) {
                 runCatching { prefs.setWallpaperPackJson(previousPack) }
                 runCatching { prefs.setSoundProfilesJson(previousProfiles) }
+                runCatching { prefs.setSoundShufflePoolsJson(previousSoundShufflePools) }
                 runCatching { prefs.restoreFitCanvasPreferences(previousFitCanvasPreferences) }
             }
             throw error
+        }
+        if (plan.soundShufflePoolsJson.isNotBlank()) {
+            runCatching { soundShufflePoolManager.restoreSchedules() }
         }
     }
 

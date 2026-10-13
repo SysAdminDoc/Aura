@@ -75,6 +75,7 @@ class SettingsViewModel @Inject constructor(
     ytDlpUpdateManager: YtDlpUpdateManager,
     themePackRecipeManager: ThemePackRecipeManager,
     libraryExporter: LibraryExporter,
+    soundShufflePoolManager: SoundShufflePoolManager,
     aiWallpaperRepository: AiWallpaperRepository,
     @IoDispatcher ioDispatcher: CoroutineDispatcher,
 ) : ViewModel() {
@@ -107,6 +108,7 @@ class SettingsViewModel @Inject constructor(
         ioDispatcher = ioDispatcher,
         scope = viewModelScope,
     )
+    private val soundShuffle = SettingsSoundShuffleDelegate(soundShufflePoolManager, scope = viewModelScope)
 
     val parallaxGalleryResult get() = diagnosticsDelegate.parallaxGalleryResult
     val videoWallpaperSelectionResult get() = diagnosticsDelegate.videoWallpaperSelectionResult
@@ -152,9 +154,6 @@ class SettingsViewModel @Inject constructor(
     val autoPreview get() = media.autoPreview
     val gridColumns get() = media.gridColumns
     val previewVolume get() = media.previewVolume
-    val ringtoneShuffleEnabled get() = media.ringtoneShuffleEnabled
-    val ringtoneShuffleIntervalHours get() = media.ringtoneShuffleIntervalHours
-    val alarmShuffleEnabled get() = media.alarmShuffleEnabled
     val soundProfilesEnabled get() = media.soundProfilesEnabled
     val liveWallpaperDimEnabled get() = media.liveWallpaperDimEnabled
     val liveWallpaperColorsEnabled get() = media.liveWallpaperColorsEnabled
@@ -162,6 +161,9 @@ class SettingsViewModel @Inject constructor(
     val wallpaperClockOverlayMode get() = media.wallpaperClockOverlayMode
     val wallpaperClockOverlayPosition get() = media.wallpaperClockOverlayPosition
     val soundProfilesJson get() = media.soundProfilesJson
+    val soundShuffleStore get() = soundShuffle.store
+    val soundShuffleDownloads get() = soundShuffle.downloads
+    val soundShuffleOriginals get() = soundShuffle.originals
     val wallpaperPackEnabled get() = media.wallpaperPackEnabled
     val wallpaperPackJson get() = media.wallpaperPackJson
     val redditSubs get() = media.redditSubs
@@ -294,11 +296,36 @@ class SettingsViewModel @Inject constructor(
     fun setAutoPreview(enabled: Boolean) = media.setAutoPreview(enabled)
     fun setGridColumns(columns: Int) = media.setGridColumns(columns)
     fun setPreviewVolume(volume: Float) = media.setPreviewVolume(volume)
-    fun setRingtoneShuffleEnabled(enabled: Boolean) = media.setRingtoneShuffleEnabled(enabled)
-    fun setRingtoneShuffleIntervalHours(hours: Long) = media.setRingtoneShuffleIntervalHours(hours)
-    fun setAlarmShuffleEnabled(enabled: Boolean) = media.setAlarmShuffleEnabled(enabled)
     fun setSoundProfilesEnabled(enabled: Boolean) = media.setSoundProfilesEnabled(enabled)
     fun setSoundProfilesJson(json: String) = media.setSoundProfilesJson(json)
+    fun createSoundShufflePool(name: String, onResult: (Result<String>) -> Unit = {}) =
+        soundShuffle.create(name, onResult)
+    fun renameSoundShufflePool(poolId: String, name: String, onResult: (Result<Unit>) -> Unit = {}) =
+        soundShuffle.rename(poolId, name, onResult)
+    fun deleteSoundShufflePool(poolId: String, onResult: (Result<Unit>) -> Unit = {}) =
+        soundShuffle.delete(poolId, onResult)
+    fun setSoundShufflePoolEnabled(poolId: String, enabled: Boolean, onResult: (Result<Unit>) -> Unit = {}) =
+        soundShuffle.setEnabled(poolId, enabled, onResult)
+    fun setSoundShufflePoolTargets(
+        poolId: String,
+        targets: Collection<SoundShuffleTarget>,
+        onResult: (Result<Unit>) -> Unit = {},
+    ) = soundShuffle.setTargets(poolId, targets, onResult)
+    fun setSoundShufflePoolInterval(poolId: String, hours: Long, onResult: (Result<Unit>) -> Unit = {}) =
+        soundShuffle.setInterval(poolId, hours, onResult)
+    fun addSoundShuffleDownload(poolId: String, downloadId: String, onResult: (Result<Unit>) -> Unit = {}) =
+        soundShuffle.addDownload(poolId, downloadId, onResult)
+    fun addSoundShuffleOriginal(poolId: String, originalId: String, onResult: (Result<Unit>) -> Unit = {}) =
+        soundShuffle.addOriginal(poolId, originalId, onResult)
+    fun addSoundShuffleLocal(poolId: String, uri: Uri, onResult: (Result<Unit>) -> Unit = {}) =
+        soundShuffle.addLocal(poolId, uri, onResult)
+    fun relinkSoundShuffleItem(poolId: String, itemId: String, uri: Uri, onResult: (Result<Unit>) -> Unit = {}) =
+        soundShuffle.relink(poolId, itemId, uri, onResult)
+    fun removeSoundShuffleItem(poolId: String, itemId: String, onResult: (Result<Unit>) -> Unit = {}) =
+        soundShuffle.remove(poolId, itemId, onResult)
+    fun runSoundShufflePoolNow(poolId: String) = soundShuffle.runNow(poolId)
+    fun undoSoundShuffle(historyId: String, onResult: (Result<Unit>) -> Unit = {}) =
+        soundShuffle.undo(historyId, onResult)
     fun setWallpaperPackEnabled(enabled: Boolean) = media.setWallpaperPackEnabled(enabled)
     fun setWallpaperPackJson(json: String) = media.setWallpaperPackJson(json)
     fun setRedditSubs(subs: String) = media.setRedditSubs(subs)

@@ -73,6 +73,14 @@ import com.freevibe.ui.screens.settings.RotationExclusionsManagerDialog
 import com.freevibe.ui.screens.settings.SettingsItem
 import com.freevibe.ui.screens.settings.SettingsSection
 import com.freevibe.ui.screens.settings.SettingsToggle
+import com.freevibe.ui.screens.settings.SoundShufflePoolEditorPanel
+import com.freevibe.service.SoundShuffleHistoryEntry
+import com.freevibe.service.SoundShuffleHistoryStatus
+import com.freevibe.service.SoundShuffleReason
+import com.freevibe.service.SoundShufflePool
+import com.freevibe.service.SoundShufflePoolItem
+import com.freevibe.service.SoundShuffleSourceKind
+import com.freevibe.service.SoundShuffleTarget
 import com.freevibe.ui.screens.sounds.ApplyButton
 import com.freevibe.ui.screens.sounds.DetailWaveform
 import com.freevibe.ui.screens.videowallpapers.VideoCard
@@ -103,6 +111,7 @@ enum class ProductionRouteScenario(
     RotationExclusionsManager("rotation_exclusions_manager", R.string.settings_rotation_exclusions_title),
     DownloadsMediaCopies("downloads_media_copies", R.string.downloads_optimized_copy),
     DownloadsMissingMedia("downloads_missing_media", R.string.media_relink_action),
+    SoundShufflePools("sound_shuffle_pools", R.string.sound_shuffle_pool_name),
 }
 
 @Composable
@@ -126,6 +135,7 @@ fun ProductionRouteState(
             ProductionRouteScenario.RotationExclusionsManager -> RotationExclusionsManagerState()
             ProductionRouteScenario.DownloadsMediaCopies -> DownloadsMediaCopiesState()
             ProductionRouteScenario.DownloadsMissingMedia -> DownloadsMissingMediaState()
+            ProductionRouteScenario.SoundShufflePools -> SoundShufflePoolsState()
         }
     }
 }
@@ -565,4 +575,95 @@ private fun DownloadsMissingMediaState() {
             onRelink = {},
         )
     }
+}
+
+@Composable
+private fun SoundShufflePoolsState() {
+    val pool = SoundShufflePool(
+        poolId = "preview-pool",
+        name = "Morning mix",
+        enabled = true,
+        targets = SoundShuffleTarget.entries,
+        intervalHours = 6,
+        items = listOf(
+            SoundShufflePoolItem(
+                itemId = "bundled:preview_s1",
+                sourceKind = SoundShuffleSourceKind.BUNDLED,
+                sourceId = "preview_s1",
+                name = "Morning Melody",
+                locator = "rawresource:///1",
+                mimeType = "audio/ogg",
+                durationMs = 28_500,
+            ),
+            SoundShufflePoolItem(
+                itemId = "local:missing",
+                sourceKind = SoundShuffleSourceKind.LOCAL,
+                sourceId = "missing",
+                name = "Soft office ping",
+                localMediaStatus = LocalMediaStatus.MISSING,
+                durationMs = 1_200,
+            ),
+        ),
+    )
+    val originals = PREVIEW_SOUNDS.mapIndexed { index, sound ->
+        sound.copy(
+            id = "original-$index",
+            source = ContentSource.BUNDLED,
+            name = if (index == 0) "Crystal Chime" else "Soft Pop",
+            duration = if (index == 0) 11.7 else 0.7,
+            fileType = "audio/ogg",
+        )
+    }
+    SoundShufflePoolEditorPanel(
+        pool = pool,
+        downloads = listOf(
+            DownloadEntity(
+                id = "download-1",
+                source = "YOUTUBE",
+                type = "SOUND",
+                localPath = "content://media/audio/1",
+                name = "Clean digital bell",
+                originalMimeType = "audio/mp4",
+                originalDurationMs = 8_400,
+            ),
+            DownloadEntity(
+                id = "download-2",
+                source = "YOUTUBE",
+                type = "SOUND",
+                localPath = "content://media/audio/2",
+                name = "Ocean wake alarm",
+                originalMimeType = "audio/mp4",
+                originalDurationMs = 22_000,
+            ),
+        ),
+        originals = originals,
+        history = listOf(
+            SoundShuffleHistoryEntry(
+                historyId = "history-1",
+                poolId = pool.poolId,
+                poolName = pool.name,
+                itemId = pool.items.first().itemId,
+                itemName = pool.items.first().name,
+                target = SoundShuffleTarget.RINGTONE,
+                status = SoundShuffleHistoryStatus.APPLIED,
+                appliedUri = "content://media/audio/applied",
+                reason = SoundShuffleReason.APPLIED_AUTOMATICALLY.name,
+            ),
+        ),
+        canWriteSettings = true,
+        onOpenWriteSettings = {},
+        onRename = {},
+        onDelete = {},
+        onEnabledChange = {},
+        onTargetsChange = {},
+        onIntervalChange = {},
+        onRunNow = {},
+        onAddLocal = {},
+        onRelink = {},
+        onRemove = {},
+        onToggleDownload = { _, _ -> },
+        onToggleOriginal = { _, _ -> },
+        onUndo = {},
+        modifier = Modifier.fillMaxSize(),
+    )
 }

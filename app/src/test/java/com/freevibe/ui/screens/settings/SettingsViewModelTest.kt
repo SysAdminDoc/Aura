@@ -19,6 +19,8 @@ import com.freevibe.service.CommunityIdentitySummary
 import com.freevibe.service.CrashDiagnosticsCollector
 import com.freevibe.service.OfflineFavoritesManager
 import com.freevibe.service.LocalWallpaperCatalog
+import com.freevibe.service.SoundShufflePoolManager
+import com.freevibe.service.SoundShuffleStore
 import com.freevibe.service.ThemePackExportReport
 import com.freevibe.service.ThemePackImportReport
 import com.freevibe.service.ThemePackRecipeManager
@@ -497,6 +499,11 @@ class SettingsViewModelTest {
             coEvery { it.exportThemePack(any(), any()) } returns Result.success(ThemePackExportReport(0, 0, 0))
             coEvery { it.importThemePack(any()) } returns Result.success(ThemePackImportReport(0, emptyList()))
         }
+        val soundShufflePoolManager = mockk<SoundShufflePoolManager>(relaxed = true).also {
+            every { it.store } returns flowOf(SoundShuffleStore())
+            every { it.downloads } returns flowOf(emptyList())
+            every { it.originals } returns emptyList()
+        }
         return SettingsViewModel(
             context = context,
             prefs = prefs,
@@ -538,6 +545,7 @@ class SettingsViewModelTest {
                     ),
                 )
             },
+            soundShufflePoolManager = soundShufflePoolManager,
             aiWallpaperRepository = mockk<com.freevibe.data.repository.AiWallpaperRepository>().also {
                 coEvery { it.auditGeneratedAssets() } returns
                     com.freevibe.data.repository.GeneratedAssetAudit()

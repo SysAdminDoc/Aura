@@ -25,7 +25,7 @@ class LibraryExporterFormatTest {
             ),
         )
 
-        assertTrue(json.contains("\"version\":3"))
+        assertTrue(json.contains("\"version\":4"))
         assertTrue(json.contains("\"favorites\""))
         assertFalse(json.contains("\"downloads\""))
         assertFalse(json.contains("localPath"))

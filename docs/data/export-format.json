@@ -12,6 +12,7 @@
     "MAX_FAVORITES_DOCUMENT_CHARS",
     "MAX_COLLECTION_DOCUMENT_BYTES",
     "MAX_LIBRARY_DOCUMENT_CHARS",
+    "MAX_SOUND_SHUFFLE_DOCUMENT_CHARS",
     "MAX_TEXT_CHARS",
     "MAX_URL_CHARS",
     "MAX_COLLECTION_NAME_CHARS",
@@ -145,7 +146,7 @@
       ]
     },
     "library": {
-      "currentVersion": 3,
+      "currentVersion": 4,
       "sourceFile": "app/src/main/java/com/freevibe/service/LibraryExporter.kt",
       "rootClass": "LibraryExportFile",
       "mimeType": "application/json",
@@ -159,6 +160,7 @@
         "MAX_LOCAL_WALLPAPERS",
         "MAX_WALLPAPER_HISTORY_ITEMS",
         "MAX_LIBRARY_DOCUMENT_CHARS",
+        "MAX_SOUND_SHUFFLE_DOCUMENT_CHARS",
         "MAX_TEXT_CHARS",
         "MAX_URL_CHARS",
         "MAX_COLLECTION_NAME_CHARS"
@@ -166,7 +168,8 @@
       "overflowPolicy": "Refuse the whole export or import before opening the destination or writing any restored row.",
       "publicationPolicy": "Serialize and sync a private staging file before opening an external destination; clean the destination and staging file after a failed or cancelled copy.",
       "portablePreferenceSections": {
-        "fitCanvasPreferences": "Optional static and video Fill or Fit defaults, canvas mode, and opaque custom color. Media files and generated canvas images are not included."
+        "fitCanvasPreferences": "Optional static and video Fill or Fit defaults, canvas mode, and opaque custom color. Media files and generated canvas images are not included.",
+        "soundShufflePoolsJson": "Named ringtone, notification, and alarm pools with targets and intervals. Local and downloaded assignments keep identity and metadata but omit locators. History and media bytes are not included."
       },
       "portableDataSections": {
         "rotationExclusions": "Optional persistent wallpaper and video rotation exclusions. Provider IDs, local content hashes, and one-way locator fingerprints preserve choices without exporting device paths.",
@@ -184,12 +187,13 @@
         "Library backups do not include device-local downloaded media bytes",
         "Local media locators are replaced with portable IDs before export",
         "Library backups do not include raw paths or URLs from rotation exclusions",
+        "Sound pool assignments never include content URIs, file paths, applied system URIs, or activity history",
         "Legacy device-local download rows are reported but not restored"
       ],
       "versionPolicy": {
-        "current": "Version 3 adds locator-free local wallpaper metadata and recent wallpaper history.",
-        "backwardCompat": "Versions 1 and 2 remain importable. Version 1 download rows are reported as device-only instead of being silently discarded.",
-        "forwardCompat": "A version newer than 3 is rejected before any database or preference write."
+        "current": "Version 4 adds locator-free named sound shuffle pools and their target schedules.",
+        "backwardCompat": "Versions 1, 2, and 3 remain importable. Version 1 download rows are reported as device-only instead of being silently discarded.",
+        "forwardCompat": "A version newer than 4 is rejected before any database or preference write."
       }
     }
   }

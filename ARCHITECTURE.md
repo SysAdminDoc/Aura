@@ -36,8 +36,8 @@ Living architecture overview for contributors. Internal working notes live in `C
 │   cache, wallpaper_history, wallpaper_collections,                 │
 │   wallpaper_collection_items, local_wallpapers, and                │
 │   rotation_exclusions). DataStore: Settings + Onboarding +         │
-│   User Styles + Rotation triggers. PreferencesManager is the only  │
-│   reader/writer.                                                   │
+│   User Styles + Rotation triggers + named sound shuffle pools.     │
+│   PreferencesManager is the only reader/writer.                    │
 ├────────────────────────────────────────────────────────────────────┤
 │  Services (service/)                                               │
 │   WallpaperService implementations:                                │
@@ -55,6 +55,7 @@ Living architecture overview for contributors. Internal working notes live in `C
 │     DailyWallpaperWorker (daily pick refresh)                      │
 │     WeatherUpdateWorker (30-min weather poll)                      │
 │     AuraOriginalsDownloader (N-5: CC0 sound pack download)         │
+│     RingtoneShuffleWorker (one schedule per named sound pool)      │
 │   One-shot services:                                               │
 │     WallpaperApplier (applyByLocator: http/file/content/path)      │
 │     SoundApplier (RingtoneManager + MediaStore)                    │
@@ -171,6 +172,17 @@ all Room associations in one transaction, and preserves rotation and theme
 references. SAF folder repair uses exact SHA-256 matches and a 500-item batch
 limit. See [`docs/local-media-relink.md`](docs/local-media-relink.md).
 
+### `SoundShufflePoolManager`
+
+Named sound pools live as bounded Moshi JSON in DataStore. The manager owns all
+pool mutations, resolves downloaded and bundled IDs at run time, filters each
+candidate against ringtone, notification, or alarm duration limits, and writes
+a bounded apply history. One unique WorkManager job is scheduled per enabled
+pool. Boot and package-replacement handling migrate the former global toggles
+once, then restore every eligible pool schedule. Portable backup strips file
+locators and history before export. See
+[`docs/sound-shuffle-pools.md`](docs/sound-shuffle-pools.md).
+
 ## Process-death + lifecycle
 
 - ViewModels: scoped to `NavBackStackEntry`. Survive config changes; recreated after process death.
@@ -214,3 +226,4 @@ Every live wallpaper must:
 - [`docs/firebase-admin-claims.md`](docs/firebase-admin-claims.md): Firebase Custom Claims runbook (N-2).
 - [`docs/aura-originals-curation.md`](docs/aura-originals-curation.md): Aura Originals CC0 curation workflow (N-5).
 - [`docs/media-copy-lifecycle.md`](docs/media-copy-lifecycle.md) explains source preservation, optimized apply copies, rollback, and HDR handling.
+- [`docs/sound-shuffle-pools.md`](docs/sound-shuffle-pools.md) defines sound pool membership, target limits, scheduling, history, and backup behavior.

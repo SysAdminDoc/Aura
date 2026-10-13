@@ -1,168 +1,134 @@
 package com.freevibe.service
 
 import android.content.Context
-import android.media.RingtoneManager
-import android.net.Uri
-import android.provider.Settings
 import androidx.hilt.work.HiltWorker
 import androidx.work.BackoffPolicy
 import androidx.work.CoroutineWorker
 import androidx.work.ExistingPeriodicWorkPolicy
+import androidx.work.ExistingWorkPolicy
+import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
 import androidx.work.WorkerParameters
-import com.freevibe.data.local.DownloadDao
-import com.freevibe.data.local.PreferencesManager
+import androidx.work.workDataOf
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
 import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.flow.first
 import java.util.concurrent.TimeUnit
 
 @HiltWorker
 class RingtoneShuffleWorker @AssistedInject constructor(
     @Assisted appContext: Context,
     @Assisted workerParams: WorkerParameters,
-    private val downloadDao: DownloadDao,
-    private val prefs: PreferencesManager,
+    private val poolManager: SoundShufflePoolManager,
     private val receiptStore: BackgroundWorkReceiptStore,
 ) : CoroutineWorker(appContext, workerParams) {
 
     override suspend fun doWork(): Result {
+        val poolId = inputData.getString(INPUT_POOL_ID).orEmpty()
+        if (poolId.isBlank()) {
+            return try {
+                poolManager.migrateLegacyIfNeeded()
+                poolManager.restoreSchedules()
+                receiptStore.recordSuccess(WORK_NAME)
+                Result.success()
+            } catch (error: Exception) {
+                if (error is CancellationException) throw error
+                receiptStore.recordFailure(
+                    uniqueWorkName = WORK_NAME,
+                    errorClass = error.javaClass.simpleName,
+                    deferralReason = error.message ?: "sound pool migration failed",
+                )
+                Result.retry()
+            }
+        }
+
+        val uniqueName = workName(poolId)
         return try {
-            if (!Settings.System.canWrite(applicationContext)) {
+            val outcome = poolManager.runPool(poolId)
+            if (outcome.applied == 0 && (outcome.failed > 0 || outcome.skipped > 0)) {
+                val errorClass = if (outcome.failed > 0) {
+                    "SoundPoolApplyFailed"
+                } else {
+                    "NoCompatiblePoolSounds"
+                }
+                receiptStore.recordFailure(
+                    uniqueWorkName = uniqueName,
+                    errorClass = errorClass,
+                    deferralReason = outcome.summary,
+                )
                 receiptStore.recordFailure(
                     uniqueWorkName = WORK_NAME,
-                    errorClass = "MissingPermission",
-                    deferralReason = "WRITE_SETTINGS not granted",
+                    errorClass = errorClass,
+                    deferralReason = outcome.summary,
                 )
-                return Result.failure()
+            } else {
+                receiptStore.recordSuccess(uniqueName)
+                receiptStore.recordSuccess(WORK_NAME)
             }
-
-            val soundDownloads = downloadDao.getByType("SOUND").first()
-                .filter { it.localPath.isNotBlank() }
-
-            if (soundDownloads.isEmpty()) {
-                receiptStore.recordFailure(
-                    uniqueWorkName = WORK_NAME,
-                    errorClass = "NoSounds",
-                    deferralReason = "no downloaded sounds available for shuffle",
-                )
-                return Result.failure()
-            }
-
-            if (prefs.ringtoneShuffleEnabled.first()) {
-                val lastApplied = prefs.ringtoneShuffleLastAppliedId()
-                val candidates = if (soundDownloads.size > 1) {
-                    soundDownloads.filter { it.id != lastApplied }
-                } else {
-                    soundDownloads
-                }
-                val chosen = candidates.random()
-                val uri = Uri.parse(chosen.localPath)
-                RingtoneManager.setActualDefaultRingtoneUri(
-                    applicationContext,
-                    RingtoneManager.TYPE_RINGTONE,
-                    uri,
-                )
-                prefs.setRingtoneShuffleLastAppliedId(chosen.id)
-                // Keep the restoration receiver's expectation in sync — otherwise the
-                // next boot/app update reverts the shuffled sound to the stale
-                // last-manually-applied one.
-                prefs.setLastAppliedRingtoneUri(uri.toString())
-            }
-
-            if (prefs.alarmShuffleEnabled.first()) {
-                val lastApplied = prefs.alarmShuffleLastAppliedId()
-                val alarmCandidates = filterAlarmDuration(applicationContext, soundDownloads)
-                    .let { pool ->
-                        if (pool.size > 1) pool.filter { it.id != lastApplied }
-                        else pool
-                    }
-                if (alarmCandidates.isNotEmpty()) {
-                    val chosen = alarmCandidates.random()
-                    val uri = Uri.parse(chosen.localPath)
-                    RingtoneManager.setActualDefaultRingtoneUri(
-                        applicationContext,
-                        RingtoneManager.TYPE_ALARM,
-                        uri,
-                    )
-                    prefs.setAlarmShuffleLastAppliedId(chosen.id)
-                    prefs.setLastAppliedAlarmUri(uri.toString())
-                } else {
-                    receiptStore.recordFailure(
-                        uniqueWorkName = WORK_NAME,
-                        errorClass = "NoAlarmSounds",
-                        deferralReason = "no downloaded sounds with alarm-appropriate duration (5-60s)",
-                    )
-                }
-            }
-
-            receiptStore.recordSuccess(WORK_NAME)
-            Result.success()
-        } catch (e: Exception) {
-            if (e is CancellationException) throw e
+            if (outcome.shouldRetry) Result.retry() else Result.success()
+        } catch (error: Exception) {
+            if (error is CancellationException) throw error
+            receiptStore.recordFailure(
+                uniqueWorkName = uniqueName,
+                errorClass = error.javaClass.simpleName,
+                deferralReason = error.message ?: "sound pool failed",
+            )
             receiptStore.recordFailure(
                 uniqueWorkName = WORK_NAME,
-                errorClass = e.javaClass.simpleName,
-                deferralReason = e.message ?: "unknown error",
+                errorClass = error.javaClass.simpleName,
+                deferralReason = error.message ?: "sound pool failed",
             )
             Result.retry()
         }
     }
 
     companion object {
+        /** Pre-pool shuffle job. Nothing enqueues it now; a leftover run migrates and cancels it. */
         const val WORK_NAME = "ringtone_shuffle"
+        internal const val INPUT_POOL_ID = "sound_shuffle_pool_id"
 
-        fun schedule(context: Context, intervalHours: Long = 24L) {
+        fun workName(poolId: String): String = "sound_shuffle_pool_$poolId"
+
+        private fun runNowWorkName(poolId: String): String = "sound_shuffle_pool_${poolId}_now"
+
+        fun schedule(context: Context, poolId: String, intervalHours: Long) {
             val request = PeriodicWorkRequestBuilder<RingtoneShuffleWorker>(
-                intervalHours.coerceAtLeast(1L), TimeUnit.HOURS,
+                intervalHours.coerceAtLeast(1),
+                TimeUnit.HOURS,
+            ).setInputData(
+                workDataOf(INPUT_POOL_ID to poolId),
             ).setBackoffCriteria(
                 BackoffPolicy.EXPONENTIAL,
-                15, TimeUnit.MINUTES,
+                15,
+                TimeUnit.MINUTES,
             ).build()
-
             WorkManager.getInstance(context).enqueueUniquePeriodicWork(
-                WORK_NAME,
+                workName(poolId),
                 ExistingPeriodicWorkPolicy.UPDATE,
                 request,
             )
         }
 
-        fun cancel(context: Context) {
+        fun runNow(context: Context, poolId: String) {
+            val request = OneTimeWorkRequestBuilder<RingtoneShuffleWorker>()
+                .setInputData(workDataOf(INPUT_POOL_ID to poolId))
+                .setBackoffCriteria(BackoffPolicy.EXPONENTIAL, 15, TimeUnit.MINUTES)
+                .build()
+            WorkManager.getInstance(context).enqueueUniqueWork(
+                runNowWorkName(poolId),
+                ExistingWorkPolicy.REPLACE,
+                request,
+            )
+        }
+
+        fun cancel(context: Context, poolId: String) {
+            WorkManager.getInstance(context).cancelUniqueWork(workName(poolId))
+            WorkManager.getInstance(context).cancelUniqueWork(runNowWorkName(poolId))
+        }
+
+        fun cancelLegacy(context: Context) {
             WorkManager.getInstance(context).cancelUniqueWork(WORK_NAME)
         }
-
-        private const val ALARM_MIN_DURATION_MS = 5_000L
-        private const val ALARM_MAX_DURATION_MS = 60_000L
-    }
-}
-
-internal fun filterAlarmDuration(
-    context: Context,
-    downloads: List<com.freevibe.data.model.DownloadEntity>,
-): List<com.freevibe.data.model.DownloadEntity> {
-    return downloads.filter { entry ->
-        val durationMs = getMediaDurationMs(context, entry.localPath)
-        durationMs in 5_000L..60_000L
-    }
-}
-
-private fun getMediaDurationMs(context: Context, path: String): Long {
-    if (path.isBlank()) return 0L
-    val retriever = android.media.MediaMetadataRetriever()
-    return try {
-        val uri = Uri.parse(path)
-        if (uri.scheme == "content") {
-            retriever.setDataSource(context, uri)
-        } else {
-            retriever.setDataSource(path)
-        }
-        retriever.extractMetadata(android.media.MediaMetadataRetriever.METADATA_KEY_DURATION)
-            ?.toLongOrNull() ?: 0L
-    } catch (_: Exception) {
-        0L
-    } finally {
-        runCatching { retriever.release() }
     }
 }

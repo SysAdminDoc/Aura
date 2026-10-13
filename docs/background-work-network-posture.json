@@ -95,22 +95,41 @@
     },
     {
       "id": "ringtone-shuffle-periodic",
-      "uniqueWorkName": "ringtone_shuffle",
+      "uniqueWorkName": "sound_shuffle_pool_$poolId",
       "networkPosture": "notRequired",
       "sourcePath": "app/src/main/java/com/freevibe/service/RingtoneShuffleWorker.kt",
       "requiredSourceTerms": [
         "PeriodicWorkRequestBuilder<RingtoneShuffleWorker>",
-        "downloadDao.getByType(\"SOUND\")",
-        "RingtoneManager.setActualDefaultRingtoneUri"
+        "poolManager.runPool(poolId)"
       ],
-      "settingsSourcePath": "app/src/main/java/com/freevibe/ui/screens/settings/SettingsMediaDelegate.kt",
+      "settingsSourcePath": "app/src/main/java/com/freevibe/service/SoundShufflePoolManager.kt",
       "requiredSettingsTerms": [
         "RingtoneShuffleWorker.schedule",
-        "RingtoneShuffleWorker.cancel"
+        "RingtoneShuffleWorker.cancel",
+        "isReadableLocalSound"
       ],
-      "meteredPolicy": "No network is used; shuffle candidates are existing local SOUND downloads.",
-      "dataSaverPolicy": "Data Saver does not affect local ringtone or alarm shuffle; WRITE_SETTINGS and local media availability are the applicable gates.",
-      "privacySurface": "The worker reads the local download database and applies a local media URI without uploading data.",
+      "meteredPolicy": "No network is used; pool members must resolve to a local download, a picked local file, or a bundled Aura Original before they are applied.",
+      "dataSaverPolicy": "Data Saver does not affect pool shuffles; WRITE_SETTINGS and local media availability are the applicable gates.",
+      "privacySurface": "The worker reads the local pool store and download database and applies a local media URI without uploading data.",
+      "releaseRisk": "Low"
+    },
+    {
+      "id": "sound-shuffle-pool-run-now",
+      "uniqueWorkName": "sound_shuffle_pool_${poolId}_now",
+      "networkPosture": "notRequired",
+      "sourcePath": "app/src/main/java/com/freevibe/service/RingtoneShuffleWorker.kt",
+      "requiredSourceTerms": [
+        "OneTimeWorkRequestBuilder<RingtoneShuffleWorker>",
+        "poolManager.runPool(poolId)"
+      ],
+      "settingsSourcePath": "app/src/main/java/com/freevibe/service/SoundShufflePoolManager.kt",
+      "requiredSettingsTerms": [
+        "RingtoneShuffleWorker.runNow",
+        "isReadableLocalSound"
+      ],
+      "meteredPolicy": "No network is used; Run now applies the same local pool members as the scheduled job.",
+      "dataSaverPolicy": "Data Saver does not affect a manual pool run because it performs no remote request.",
+      "privacySurface": "The worker reads the local pool store and applies a local media URI without uploading data.",
       "releaseRisk": "Low"
     },
     {

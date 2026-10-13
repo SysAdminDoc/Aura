@@ -24,7 +24,8 @@ bundles.
 | Automatic backup | `auto_backup` | Not required | No network used | Local SAF export is unaffected by Data Saver |
 | Daily wallpaper notification | `daily_wallpaper` | Connected | Allowed for Reddit metadata and thumbnail fetch | Settings reads active metered/Data Saver state |
 | Ringtone restoration | `ringtone_restoration` | Not required | No network used | Local URI restoration is unaffected by Data Saver |
-| Ringtone shuffle | `ringtone_shuffle` | Not required | No network used | Local download selection is unaffected by Data Saver |
+| Sound shuffle pool | `sound_shuffle_pool_$poolId` | Not required | No network used | Local pool members are unaffected by Data Saver |
+| Sound shuffle pool, Run now | `sound_shuffle_pool_${poolId}_now` | Not required | No network used | Local pool members are unaffected by Data Saver |
 | Sound profile | `sound_profile` | Not required | No network used | Local profile application is unaffected by Data Saver |
 | Wallpaper pack | `wallpaper_pack` | Not required at scheduling time | Local slots use no network; remote locators may use the active metered network | Remote locators inherit platform Data Saver behavior and retry on the next periodic run |
 | Weather effect refresh | `weather_update` | Connected | Allowed for lightweight Open-Meteo refresh | Settings reads active metered/Data Saver state |
@@ -41,7 +42,7 @@ data for Aura or use Wi-Fi before refreshing the receipt. The release posture
 is:
 
 - larger first-run Aura Originals downloads require unmetered network;
-- automatic backup, ringtone restoration/shuffle, sound profiles, and local
+- automatic backup, ringtone restoration, sound shuffle pools, sound profiles, and local
   wallpaper-pack slots perform no remote request;
 - auto wallpaper can be user-tightened to unmetered network through the
   existing Wi-Fi-only setting;

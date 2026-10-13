@@ -13,7 +13,7 @@ import java.util.Locale
 
 /** Backup payload versions this build can restore. */
 internal const val LIBRARY_EXPORT_MIN_SUPPORTED_VERSION = 1
-internal const val LIBRARY_EXPORT_VERSION = 3
+internal const val LIBRARY_EXPORT_VERSION = 4
 
 /** Why a row in a backup will not be written. */
 enum class LibraryImportSkipReason {
@@ -68,6 +68,7 @@ data class LibraryImportPlan(
     val wallpaperHistory: List<WallpaperHistoryEntity> = emptyList(),
     val wallpaperPackJson: String = "",
     val soundProfilesJson: String = "",
+    val soundShufflePoolsJson: String = "",
     val fitCanvasPreferences: FitCanvasPreferences? = null,
     val skipped: List<LibraryImportSkip> = emptyList(),
 ) {
@@ -80,6 +81,7 @@ data class LibraryImportPlan(
             localWallpaperFolders.size + localWallpapers.size + wallpaperHistory.size +
             (if (wallpaperPackJson.isNotBlank()) 1 else 0) +
             (if (soundProfilesJson.isNotBlank()) 1 else 0) +
+            (if (soundShufflePoolsJson.isNotBlank()) 1 else 0) +
             (if (fitCanvasPreferences != null) 1 else 0)
 
     val skippedCount: Int

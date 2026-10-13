@@ -143,6 +143,11 @@ class ProductionRouteStateScreenshotTest {
     }
 
     @Test
+    fun soundShufflePoolsAmoled() {
+        captureScenario(ProductionRouteScenario.SoundShufflePools, darkTheme = true)
+    }
+
+    @Test
     @Config(sdk = [35], qualifiers = "en-rXA-w411dp-h891dp-xhdpi")
     fun wallpaperEditorLoadingCompactEnglishXa() {
         captureScenario(

@@ -16,14 +16,12 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.VolumeUp
-import androidx.compose.material.icons.filled.Alarm
 import androidx.compose.material.icons.filled.Block
 import androidx.compose.material.icons.filled.LibraryMusic
 import androidx.compose.material.icons.filled.PlayCircle
 import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material.icons.filled.Shuffle
 import androidx.compose.material.icons.filled.SmartDisplay
-import androidx.compose.material.icons.filled.Timer
 import androidx.compose.material.icons.filled.Update
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
@@ -40,6 +38,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.ImeAction
@@ -51,6 +50,7 @@ import com.freevibe.data.legal.isProviderAvailableInCurrentArtifact
 import com.freevibe.data.model.ContentSource
 import com.freevibe.service.normalizeYouTubePoTokenProviderUrl
 import com.freevibe.service.YtDlpUpdateConsent
+import com.freevibe.service.SoundShuffleStore
 
 @Composable
 internal fun SoundSettingsSection(
@@ -63,9 +63,6 @@ internal fun SoundSettingsSection(
     ytBlockedWords: String,
     youtubeProviderEnabled: Boolean,
     youtubePoTokenProviderUrl: String,
-    ringtoneShuffleEnabled: Boolean,
-    ringtoneShuffleIntervalHours: Long,
-    alarmShuffleEnabled: Boolean,
     soundProfilesEnabled: Boolean,
     soundProfilesJson: String,
     ytDlpUpdate: YtDlpUpdateUiState,
@@ -76,6 +73,10 @@ internal fun SoundSettingsSection(
     var showYtBlockedEditor by remember { mutableStateOf(false) }
     var showPoTokenProviderEditor by remember { mutableStateOf(false) }
     var showYtDlpConsent by remember { mutableStateOf(false) }
+    var showSoundShufflePools by remember { mutableStateOf(false) }
+    val soundShuffleStore by viewModel.soundShuffleStore.collectAsStateWithLifecycle(
+        initialValue = SoundShuffleStore(),
+    )
     val youtubeProviderAvailable = isProviderAvailableInCurrentArtifact(ContentSource.YOUTUBE)
     val ytDlpUpdateNotice = ytDlpUpdateFeedbackMessage(ytDlpUpdate)
 
@@ -164,33 +165,20 @@ internal fun SoundSettingsSection(
             subtitle = stringResource(R.string.settings_sounds_sources_subtitle),
             onClick = onLicensesClick,
         )
-        SettingsToggle(
+        SettingsItem(
             icon = Icons.Default.Shuffle,
-            title = stringResource(R.string.settings_sounds_ringtone_shuffle_title),
-            subtitle = if (ringtoneShuffleEnabled) {
-                stringResource(R.string.settings_sounds_ringtone_shuffle_on_subtitle, formatInterval(ringtoneShuffleIntervalHours * 60))
+            title = stringResource(R.string.settings_sounds_shuffle_pools_title),
+            subtitle = if (soundShuffleStore.pools.isEmpty()) {
+                stringResource(R.string.settings_sounds_shuffle_pools_empty_subtitle)
             } else {
-                stringResource(R.string.settings_sounds_ringtone_shuffle_off_subtitle)
+                stringResource(
+                    R.string.settings_sounds_shuffle_pools_count_subtitle,
+                    soundShuffleStore.pools.size,
+                    soundShuffleStore.pools.count { it.enabled },
+                )
             },
-            checked = ringtoneShuffleEnabled,
-            onCheckedChange = viewModel::setRingtoneShuffleEnabled,
-        )
-        if (ringtoneShuffleEnabled) {
-            RingtoneShuffleIntervalPicker(
-                ringtoneShuffleIntervalHours = ringtoneShuffleIntervalHours,
-                onSetIntervalHours = viewModel::setRingtoneShuffleIntervalHours,
-            )
-        }
-        SettingsToggle(
-            icon = Icons.Default.Alarm,
-            title = stringResource(R.string.settings_sounds_alarm_shuffle_title),
-            subtitle = if (alarmShuffleEnabled) {
-                stringResource(R.string.settings_sounds_alarm_shuffle_on_subtitle)
-            } else {
-                stringResource(R.string.settings_sounds_alarm_shuffle_off_subtitle)
-            },
-            checked = alarmShuffleEnabled,
-            onCheckedChange = viewModel::setAlarmShuffleEnabled,
+            onClick = { showSoundShufflePools = true },
+            searchAliases = setOf("ringtone", "notification", "alarm", "schedule", "random"),
         )
         val profileCount = remember(soundProfilesJson) {
             com.freevibe.service.parseProfiles(soundProfilesJson).size
@@ -205,6 +193,14 @@ internal fun SoundSettingsSection(
             },
             checked = soundProfilesEnabled,
             onCheckedChange = viewModel::setSoundProfilesEnabled,
+        )
+    }
+
+    if (showSoundShufflePools) {
+        SoundShufflePoolsDialog(
+            viewModel = viewModel,
+            onDismiss = { showSoundShufflePools = false },
+            onFeedback = onFeedback,
         )
     }
 
@@ -395,50 +391,6 @@ private fun PreviewVolumeSlider(
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
         }
-    }
-}
-
-@Composable
-private fun RingtoneShuffleIntervalPicker(
-    ringtoneShuffleIntervalHours: Long,
-    onSetIntervalHours: (Long) -> Unit,
-) {
-    var showShuffleIntervalPicker by remember { mutableStateOf(false) }
-    SettingsItem(
-        icon = Icons.Default.Timer,
-        title = stringResource(R.string.settings_sounds_shuffle_interval_title),
-        subtitle = formatInterval(ringtoneShuffleIntervalHours * 60),
-        onClick = { showShuffleIntervalPicker = true },
-    )
-    if (showShuffleIntervalPicker) {
-        val intervals = listOf(
-            1L to stringResource(R.string.settings_sounds_shuffle_every_hour),
-            6L to stringResource(R.string.settings_sounds_shuffle_every_6h),
-            12L to stringResource(R.string.settings_sounds_shuffle_every_12h),
-            24L to stringResource(R.string.settings_sounds_shuffle_every_day),
-            72L to stringResource(R.string.settings_sounds_shuffle_every_3d),
-        )
-        AlertDialog(
-            onDismissRequest = { showShuffleIntervalPicker = false },
-            title = { Text(stringResource(R.string.settings_sounds_shuffle_interval_title)) },
-            text = {
-                Column {
-                    intervals.forEach { (hours, label) ->
-                        SettingsRadioOptionRow(
-                            label = label,
-                            selected = ringtoneShuffleIntervalHours == hours,
-                            onClick = {
-                                onSetIntervalHours(hours)
-                                showShuffleIntervalPicker = false
-                            },
-                        )
-                    }
-                }
-            },
-            confirmButton = {
-                TextButton(onClick = { showShuffleIntervalPicker = false }) { Text(stringResource(R.string.common_cancel)) }
-            },
-        )
     }
 }
 

@@ -153,6 +153,7 @@ the same link is available in Settings > About > Privacy policy.
 | **Touch-Reactive Effects** | Optional ripple and sparkle bursts on live wallpaper touches |
 | **YouTube Sounds** | YouTube-first ringtone, notification, and alarm discovery with duration-aware searches powered by NewPipe + yt-dlp |
 | **Aura Originals** | 25 small CC0 tones included for offline ringtone, notification, and alarm preview, download, and apply |
+| **Sound Shuffle Pools** | Build named mixes from your downloads, local files, or Aura Originals. Each pool rotates the ringtone, notification sound, alarm, or any mix of them on its own schedule. Missing files can be relinked, and every change lands in a history you can undo. [How pools work](docs/sound-shuffle-pools.md). |
 | **Community Sound Uploads** | Pick or record sounds, tag them, vote on community picks, and share via Firebase Storage |
 | **Sound Source Badges** | Color-coded source indicators on every sound card |
 | **Sound Quality Filters** | Best, Clean, Short, Calm, and Punchy filters with intent-aware badges |
@@ -170,7 +171,7 @@ the same link is available in Settings > About > Privacy policy.
 | **Shuffle FAB** | One-tap random wallpaper from current tab |
 | **Per-Contact Ringtones** | Assign custom ringtones with DND priority guidance and a VIP-only silent-default preset |
 | **Dual Wallpapers** | Coordinated home + lock screen wallpaper pairs |
-| **Portable Library Backup** | Staged JSON export/import for favorites, collections, searches, packs, profiles, Fit Canvas defaults, rotation exclusions, local wallpaper metadata, and recent wallpaper history. Local paths and media bytes stay off the backup. Restored local records remain visible until the user relinks them. |
+| **Portable Library Backup** | Staged JSON export/import for favorites, collections, searches, packs, profiles, sound shuffle pools, Fit Canvas defaults, rotation exclusions, local wallpaper metadata, and recent wallpaper history. Local paths and media bytes stay off the backup. Restored local records remain visible until the user relinks them. |
 | **Theme Packs** | Local zip export/import for wallpaper, video, sound, widget tint, and launcher shortcut recipes |
 | **Community Voting** | Upvote/downvote wallpapers and sounds via Firebase |
 | **OLED Dark Theme** | Deep blacks, zero burn-in, Material 3 |

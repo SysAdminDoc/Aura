@@ -75,9 +75,6 @@ internal data class SettingsScreenState(
     val youtubeProviderEnabled: Boolean,
     val youtubePoTokenProviderUrl: String,
     val previewVolume: Float,
-    val ringtoneShuffleEnabled: Boolean,
-    val ringtoneShuffleIntervalHours: Long,
-    val alarmShuffleEnabled: Boolean,
     val soundProfilesEnabled: Boolean,
     val liveWallpaperDimEnabled: Boolean,
     val liveWallpaperColorsEnabled: Boolean,
@@ -193,9 +190,6 @@ internal fun rememberSettingsScreenState(
     val youtubeProviderEnabled by viewModel.youtubeProviderEnabled.collectAsStateWithLifecycle()
     val youtubePoTokenProviderUrl by viewModel.youtubePoTokenProviderUrl.collectAsStateWithLifecycle()
     val previewVolume by viewModel.previewVolume.collectAsStateWithLifecycle()
-    val ringtoneShuffleEnabled by viewModel.ringtoneShuffleEnabled.collectAsStateWithLifecycle()
-    val ringtoneShuffleIntervalHours by viewModel.ringtoneShuffleIntervalHours.collectAsStateWithLifecycle()
-    val alarmShuffleEnabled by viewModel.alarmShuffleEnabled.collectAsStateWithLifecycle()
     val soundProfilesEnabled by viewModel.soundProfilesEnabled.collectAsStateWithLifecycle()
     val liveWallpaperDimEnabled by viewModel.liveWallpaperDimEnabled.collectAsStateWithLifecycle()
     val liveWallpaperColorsEnabled by viewModel.liveWallpaperColorsEnabled.collectAsStateWithLifecycle()
@@ -321,9 +315,6 @@ internal fun rememberSettingsScreenState(
         youtubeProviderEnabled = youtubeProviderEnabled,
         youtubePoTokenProviderUrl = youtubePoTokenProviderUrl,
         previewVolume = previewVolume,
-        ringtoneShuffleEnabled = ringtoneShuffleEnabled,
-        ringtoneShuffleIntervalHours = ringtoneShuffleIntervalHours,
-        alarmShuffleEnabled = alarmShuffleEnabled,
         soundProfilesEnabled = soundProfilesEnabled,
         liveWallpaperDimEnabled = liveWallpaperDimEnabled,
         liveWallpaperColorsEnabled = liveWallpaperColorsEnabled,

@@ -6,7 +6,6 @@ import com.freevibe.data.local.DEFAULT_REDDIT_VIDEO_SUBREDDITS
 import com.freevibe.data.local.DEFAULT_REDDIT_WALLPAPER_SUBREDDITS
 import com.freevibe.data.local.PreferencesManager
 import com.freevibe.data.model.ContentSource
-import com.freevibe.service.RingtoneShuffleWorker
 import com.freevibe.service.SoundProfileWorker
 import com.freevibe.service.WallpaperPackWorker
 import com.freevibe.service.WallpaperStyleLearningProfile
@@ -15,7 +14,6 @@ import com.freevibe.service.WallpaperClockOverlayPosition
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.stateIn
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 
@@ -30,9 +28,6 @@ internal class SettingsMediaDelegate(
     val autoPreview = prefs.autoPreviewSounds.stateIn(scope, sharing, true)
     val gridColumns = prefs.wallpaperGridColumns.stateIn(scope, sharing, 2)
     val previewVolume = prefs.soundPreviewVolume.stateIn(scope, sharing, 0.7f)
-    val ringtoneShuffleEnabled = prefs.ringtoneShuffleEnabled.stateIn(scope, sharing, false)
-    val ringtoneShuffleIntervalHours = prefs.ringtoneShuffleIntervalHours.stateIn(scope, sharing, 24L)
-    val alarmShuffleEnabled = prefs.alarmShuffleEnabled.stateIn(scope, sharing, false)
     val soundProfilesEnabled = prefs.soundProfilesEnabled.stateIn(scope, sharing, false)
     val liveWallpaperDimEnabled = prefs.liveWallpaperDimEnabled.stateIn(scope, sharing, false)
     val liveWallpaperColorsEnabled = prefs.liveWallpaperColorsEnabled.stateIn(scope, sharing, true)
@@ -115,33 +110,6 @@ internal class SettingsMediaDelegate(
     fun setAutoPreview(enabled: Boolean) = scope.launch { prefs.setAutoPreview(enabled) }
     fun setGridColumns(columns: Int) = scope.launch { prefs.setGridColumns(columns) }
     fun setPreviewVolume(volume: Float) = scope.launch { prefs.setPreviewVolume(volume) }
-
-    fun setRingtoneShuffleEnabled(enabled: Boolean) = scope.launch {
-        prefs.setRingtoneShuffleEnabled(enabled)
-        if (enabled) {
-            val interval = prefs.ringtoneShuffleIntervalHours.first()
-            RingtoneShuffleWorker.schedule(context, interval)
-        } else if (!prefs.alarmShuffleEnabled.first()) {
-            RingtoneShuffleWorker.cancel(context)
-        }
-    }
-
-    fun setRingtoneShuffleIntervalHours(hours: Long) = scope.launch {
-        prefs.setRingtoneShuffleIntervalHours(hours)
-        if (prefs.ringtoneShuffleEnabled.first()) RingtoneShuffleWorker.schedule(context, hours)
-    }
-
-    fun setAlarmShuffleEnabled(enabled: Boolean) = scope.launch {
-        prefs.setAlarmShuffleEnabled(enabled)
-        if (enabled) {
-            if (!prefs.ringtoneShuffleEnabled.first()) {
-                val interval = prefs.ringtoneShuffleIntervalHours.first()
-                RingtoneShuffleWorker.schedule(context, interval)
-            }
-        } else if (!prefs.ringtoneShuffleEnabled.first()) {
-            RingtoneShuffleWorker.cancel(context)
-        }
-    }
 
     fun setSoundProfilesEnabled(enabled: Boolean) = scope.launch {
         prefs.setSoundProfilesEnabled(enabled)

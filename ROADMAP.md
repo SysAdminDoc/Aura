@@ -6,16 +6,6 @@ Actionable work only. Historical and completed roadmap material is archived in C
 
 ### P2
 
-- [ ] P2 — Add named shuffle pools for ringtone, notification, and alarm sounds
-  Why: the current shuffle worker draws from all downloaded sounds and does not offer notification shuffle. Users need small intentional pools, per-target control, and predictable recovery rather than a global randomizer.
-  Evidence: **Verified.** `RingtoneShuffleWorker.kt` reads the broad SOUND download set for ringtone/alarm selection; no notification pool or user-managed membership exists; Peristyle and wallpaper competitors validate named pools as a comprehensible automation model, while ringtone users currently build folder-based rotation externally.
-  Touches: sound collection/profile schema, `RingtoneShuffleWorker.kt`, notification target support, Sounds/Library UI, scheduler and boot restoration, history/Undo, export/import, tests.
-  Acceptance: users create named pools, add local/downloaded/original sounds, choose ringtone, notification, alarm, or any combination, and set a schedule; the worker avoids an immediate repeat when another valid item exists, skips missing/incompatible media visibly, records history, and restores scheduling after reboot; disabling a pool cancels its work; pools and assignments round-trip through backup.
-  Boot restore 2026-09-30: `RingtoneRestorationWorker` no longer calls `soundShufflePoolManager.migrateLegacyIfNeeded()` and `restoreSchedules()`, because the manager was never committed and a clean checkout failed KSP. Put the injection and both calls back in the same commit that adds `SoundShufflePoolManager.kt`.
-  JVM evidence 2026-09-30: with the in-progress files in the tree, `SettingsViewModelDelegateContractTest` fails ("the facade must not create independent jobs") because `SettingsViewModel.kt` launches the pool operations on `viewModelScope` itself. Move them into a settings delegate.
-  Audit evidence 2026-09-25: the in-progress implementation is not ready to merge. The repository gate currently reports 655 passing and five failing tool tests: the network and scheduling ledgers still require the replaced broad-download calls, the hardcoded-string baseline is missing `Applied automatically`, and two documentation-link checks reject the untracked sound shuffle pools doc. Full and FOSS lint also report nine `LocalContextGetResourceValueCall` errors in `SoundShufflePoolsDialog.kt:105-244`. Treat these as acceptance blockers for this item, not separate roadmap work.
-  Complexity: M
-
 - [ ] P2 — Add named Reddit feed presets for discovery and rotation
   Why: one global comma-separated subreddit preference cannot represent different moods, devices, video feeds, or rotation contexts. Reusable presets create materially more choice while keeping the highest-quality source first.
   Evidence: **Verified.** `PreferencesManager.kt:58,500-520` stores one wallpaper list and one video list with a twelve-subreddit cap; WallFlow supports saved searches and source configurations: https://github.com/ammargitham/WallFlow.
