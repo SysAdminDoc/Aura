@@ -15,13 +15,6 @@ Actionable work only. Historical and completed roadmap material is archived in C
 
   Note 2026-08-23: compileSdk 36 and Media3 1.11.0 are already shipped, so the old dependency gate is gone. Keep this sequenced after the existing video-cache and main-thread encode reliability work; use Media3 preload first and retain the custom engine only if a measured black-frame test still fails.
 
-- [ ] P2 — Make direct media downloads validator-aware and resumable
-  Why: `DownloadManager.downloadFile()` always issues an unconditional GET, starts a new temp file at byte zero, and deletes it after interruption; `DownloadProgress` is process-local and `DownloadEntity` stores only completed MediaStore rows. Size caps prevent oversized writes but do not prevent a mobile user from paying for the same interrupted 64 MiB transfer repeatedly. This complements, rather than duplicates, the existing BatchDownloadService item: that item fixes job lifetime, while this one fixes per-file transport.
-  Evidence: `app/src/main/java/com/freevibe/service/DownloadManager.kt:114-185`, `app/src/main/java/com/freevibe/data/model/Models.kt:150-159`; RFC 9111 sections on incomplete/partial responses and validation; OkHttp’s cache/client API; cssnr/remote-wallpaper-android issue #26 requesting HTTP caching.
-  Touches: `DownloadManager.kt`, `Models.kt`, `Database.kt`/Room migration, `DownloadEntity`/DAO, `DownloadsScreen.kt`, transport tests with a local HTTP server, cleanup/diagnostics.
-  Acceptance: a stable download identity persists temp path, URL, byte count, size, and ETag/Last-Modified when available; retries send `Range` plus `If-Range` only with a matching validator and accept continuation only for a valid `206`; `200`, validator mismatch, range mismatch, or changed length safely truncates and restarts; completion remains temp-then-atomic MediaStore publication; process death resumes or clearly marks a recoverable failure; size/sniffing caps apply to the aggregate bytes; tests cover 206 resume, 200 restart, 412/validator change, cancellation, stale-temp cleanup, and no duplicate MediaStore rows.
-  Complexity: M
-
 
 
 ### P3
@@ -260,6 +253,13 @@ Remainders of items closed in the 2026-09-30 drain whose full acceptance did not
   Complexity: S
 
 ### P3
+
+- [ ] P3 — Finish resumable downloads and prove a resume on a phone
+  Why: interrupted downloads now resume from a kept partial file, but only on paper and in JVM tests. A download started from a detail screen still dies with that screen, signed links never resume, and a cancelled transfer waits for the next read before it lets go of the socket.
+  Evidence: `ResumableDownloadTransport.kt` resumes only when the URL matches exactly and the server sent a strong ETag (a weak one blocks it even with a usable Last-Modified); `DownloadManager.kt` restores interrupted cards when Hilt first builds the manager, not at app start; a file that arrived whole but failed to publish is reused on retry without revalidating; cancellation is checked between reads and the OkHttp `Call` isn't cancelled.
+  Touches: `DownloadManager.kt`, `ResumableDownloadTransport.kt`, `DownloadResumeLedger.kt`, the detail screens' ViewModels, a device session.
+  Acceptance: on a phone, a download cut by airplane mode resumes with a 206 and leaves one MediaStore copy; killing the app mid-download brings back an interrupted card whose Retry finishes it, and TalkBack reads that card; Settings > Clear cache removes the partials; a batch favorites download resumes after a WorkManager retry; a download started from a detail screen survives leaving the screen; cancelling closes the connection at once; the weak ETag and signed link limits are either lifted or written down in the download docs.
+  Complexity: M
 
 - [ ] P3 — Finish the TalkBack announcements and hear them on a phone
   Why: feeds, downloads and sound previews now announce through polite live regions, but nobody has listened to them. Playback announcements cover the Sounds feed and sound detail only, and the gate checks that some live region exists on each async surface, which the older status banners already satisfied.
