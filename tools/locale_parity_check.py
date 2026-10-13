@@ -2,9 +2,10 @@
 """Keep Aura's translations in step with the English strings.
 
 For every source set that ships default strings, each values-<locale> folder has to carry the
-same keys, the same resource kinds, the same placeholders and the same array lengths. Every
-strings file under app/src is also checked for unescaped quotes, which aapt rejects or silently
-eats. A gap that is on purpose goes in docs/localization/locale-fallbacks.json with a reason.
+same keys, the same resource kinds, the same placeholders and the same array lengths. A folder
+is read as Android reads it: every XML file in it together, and a key defined twice is an error.
+Every values file under app/src is also checked for unescaped quotes, which aapt rejects or
+silently eats. A gap that is on purpose goes in docs/localization/locale-fallbacks.json with a reason.
 """
 
 from __future__ import annotations
@@ -42,19 +43,32 @@ def parse_args() -> argparse.Namespace:
 Key = tuple[str, str]
 
 
-def load(path: Path) -> dict[Key, ET.Element]:
-    try:
-        root = ET.parse(path).getroot()
-    except (OSError, ET.ParseError) as exc:
-        raise LocaleParityError(f"cannot read {path}: {exc}") from exc
+def load(folder: Path, repo_root: Path, errors: list[str]) -> dict[Key, ET.Element]:
+    """Every string resource in a values folder, whichever XML file it sits in.
+
+    Android merges all the files in a folder, so a key counts as translated wherever it lives,
+    and the same key in two files is a build error, not a second translation.
+    """
     found: dict[Key, ET.Element] = {}
-    for element in root:
-        name = element.get("name")
-        if element.tag not in KINDS or not name:
-            continue
-        if element.get("translatable") == "false":
-            continue
-        found[(element.tag, name)] = element
+    origin: dict[Key, str] = {}
+    for path in sorted(folder.glob("*.xml")):
+        try:
+            root = ET.parse(path).getroot()
+        except (OSError, ET.ParseError) as exc:
+            raise LocaleParityError(f"cannot read {path}: {exc}") from exc
+        rel = path.relative_to(repo_root).as_posix()
+        for element in root:
+            name = element.get("name")
+            if element.tag not in KINDS or not name:
+                continue
+            key = (element.tag, name)
+            if key in origin:
+                errors.append(f"{rel}: {element.tag} '{name}' is already defined in {origin[key]}")
+                continue
+            origin[key] = rel
+            if element.get("translatable") == "false":
+                continue
+            found[key] = element
     return found
 
 
@@ -130,7 +144,7 @@ def quote_problems(path: Path) -> list[str]:
 
 
 def check_quotes(repo_root: Path, errors: list[str]) -> None:
-    for path in sorted((repo_root / SOURCE_ROOT).glob("*/res/values*/strings.xml")):
+    for path in sorted((repo_root / SOURCE_ROOT).glob("*/res/values*/*.xml")):
         rel = path.relative_to(repo_root).as_posix()
         for body in quote_problems(path):
             snippet = " ".join(body.split())[:60]
@@ -191,14 +205,14 @@ def validate(repo_root: Path) -> dict[str, object]:
     for default_path in sorted((repo_root / SOURCE_ROOT).glob("*/res/values/strings.xml")):
         res = default_path.parent.parent
         defaults += 1
-        default = load(default_path)
+        default = load(default_path.parent, repo_root, errors)
         for folder in locale_dirs(res):
             path = folder / "strings.xml"
             rel = path.relative_to(repo_root).as_posix()
             if not path.is_file():
                 errors.append(f"{rel}: missing file")
                 continue
-            check_pair(rel, default, load(path), fallbacks, used, errors)
+            check_pair(rel, default, load(folder, repo_root, errors), fallbacks, used, errors)
             checked += 1
     if defaults == 0:
         raise LocaleParityError(f"no strings files found under {SOURCE_ROOT}")

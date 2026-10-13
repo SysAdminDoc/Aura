@@ -180,5 +180,38 @@ class LocaleParityFixtureTest(unittest.TestCase):
             self.assertIn("values-de", str(caught.exception))
 
 
+class LocaleParityFolderTest(unittest.TestCase):
+    """A values folder is read the way Android merges it: every XML file together."""
+
+    SECOND_ZH = "app/src/main/res/values-zh/strings_recent_features.xml"
+    TITLE_LINE = '    <string name="title">标题</string>\n'
+
+    def gate(self, zh: str, second: str) -> str:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = make_repo(Path(tmp), zh=zh)
+            write(root, self.SECOND_ZH, second)
+            try:
+                validate(root)
+            except LocaleParityError as exc:
+                return str(exc)
+            return ""
+
+    def test_a_key_translated_in_a_second_file_counts(self) -> None:
+        second = "<resources>\n" + self.TITLE_LINE + "</resources>\n"
+
+        self.assertEqual("", self.gate(BASE_ZH.replace(self.TITLE_LINE, ""), second))
+
+    def test_a_key_defined_in_two_files_is_reported(self) -> None:
+        second = "<resources>\n" + self.TITLE_LINE + "</resources>\n"
+
+        message = self.gate(BASE_ZH, second)
+
+        self.assertIn("string 'title' is already defined in app/src/main/res/values-zh/strings.xml", message)
+
+    def test_a_bare_quote_in_a_second_file_is_reported(self) -> None:
+        second = '<resources>\n    <string name="title">It\'s here</string>\n</resources>\n'
+
+        self.assertIn("unescaped quote", self.gate(BASE_ZH.replace(self.TITLE_LINE, ""), second))
+
 if __name__ == "__main__":
     unittest.main()
