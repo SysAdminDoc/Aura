@@ -252,6 +252,16 @@ These items require adb-connected device or Android 17 emulator testing:
     way `createVersion8Database()` already is, then
     `helper.runMigrationsAndValidate(TEST_DB, 16, true, *DatabaseMigrations.ALL_MIGRATIONS)`.
 
+- **P2 — Measure the collection QR dialog's frame times on a device**
+  - The code half landed 2026-10-13: the share dialog builds its QR on `Dispatchers.Default` behind a
+    progress state, the bitmap is filled with one `setPixels` call, and imports are sampled down before
+    ZXing reads one byte of luma a pixel. `CollectionQrImportTest` (Robolectric NATIVE) decodes an exported
+    QR inside a 4096 x 2929 photo through the real `BitmapFactory` path.
+  - Blocker: the acceptance was no dropped frames while the dialog opens, which only a device trace shows.
+  - Resume by resetting `adb shell dumpsys gfxinfo com.freevibe reset`, opening and closing a collection's
+    share dialog ten times, then reading `dumpsys gfxinfo com.freevibe` (or JankStats in a debug build) and
+    recording the janky-frame count here.
+
 - **P2 — Record the GridScrollBenchmark frame timings the stability work was meant to move**
   - The stability half landed 2026-08-20: every model rendered in a Compose list carries
     `@Immutable`, `composeCompiler` emits metrics and reports, `compose-stability.conf` is

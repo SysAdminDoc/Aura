@@ -341,34 +341,39 @@ class CollectionExporter @Inject constructor(
         } catch (e: MediaIngestionLimitExceeded) {
             throw IllegalArgumentException("QR image is too large to import safely.", e)
         } ?: throw IllegalArgumentException("Could not read the selected QR image.")
-        val bounds = BitmapFactory.Options().apply { inJustDecodeBounds = true }
-        BitmapFactory.decodeByteArray(bytes, 0, bytes.size, bounds)
-        val width = bounds.outWidth
-        val height = bounds.outHeight
-        val pixels = width.toLong() * height.toLong()
-        if (
-            width <= 0 ||
-            height <= 0 ||
-            width > LibraryTransferContract.MAX_QR_IMAGE_DIMENSION ||
-            height > LibraryTransferContract.MAX_QR_IMAGE_DIMENSION ||
-            pixels > LibraryTransferContract.MAX_QR_IMAGE_PIXELS
-        ) {
-            throw IllegalArgumentException("QR image is too large to import safely.")
-        }
-        // Shrink before allocating: a 12 MP photo decodes at a quarter edge, and ZXing reads one
-        // byte of luma per pixel instead of a full ARGB copy.
-        val decodeOptions = BitmapFactory.Options().apply { inSampleSize = qrDecodeSampleSize(width, height) }
-        val bitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.size, decodeOptions)
-            ?: throw IllegalArgumentException("Could not decode the selected QR image.")
-        return try {
-            val w = bitmap.width
-            val h = bitmap.height
-            val luma = qrLuminance(w, h) { y, row -> bitmap.getPixels(row, 0, w, 0, y, w, 1) }
-            bitmap.recycle()
-            decodeCollectionQr(luma, w, h)
-        } finally {
-            if (!bitmap.isRecycled) bitmap.recycle()
-        }
+        return decodeQrImageBytes(bytes)
+    }
+}
+
+/** Reads a collection link from an image file, refusing one past the size caps before any pixel is allocated. */
+internal fun decodeQrImageBytes(bytes: ByteArray): String {
+    val bounds = BitmapFactory.Options().apply { inJustDecodeBounds = true }
+    BitmapFactory.decodeByteArray(bytes, 0, bytes.size, bounds)
+    val width = bounds.outWidth
+    val height = bounds.outHeight
+    val pixels = width.toLong() * height.toLong()
+    if (
+        width <= 0 ||
+        height <= 0 ||
+        width > LibraryTransferContract.MAX_QR_IMAGE_DIMENSION ||
+        height > LibraryTransferContract.MAX_QR_IMAGE_DIMENSION ||
+        pixels > LibraryTransferContract.MAX_QR_IMAGE_PIXELS
+    ) {
+        throw IllegalArgumentException("QR image is too large to import safely.")
+    }
+    // Shrink before allocating: a 12 MP photo decodes at a quarter edge, and ZXing reads one
+    // byte of luma per pixel instead of a full ARGB copy.
+    val decodeOptions = BitmapFactory.Options().apply { inSampleSize = qrDecodeSampleSize(width, height) }
+    val bitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.size, decodeOptions)
+        ?: throw IllegalArgumentException("Could not decode the selected QR image.")
+    return try {
+        val w = bitmap.width
+        val h = bitmap.height
+        val luma = qrLuminance(w, h) { y, row -> bitmap.getPixels(row, 0, w, 0, y, w, 1) }
+        bitmap.recycle()
+        decodeCollectionQr(luma, w, h)
+    } finally {
+        if (!bitmap.isRecycled) bitmap.recycle()
     }
 }
 
