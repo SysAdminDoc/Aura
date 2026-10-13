@@ -148,7 +148,7 @@ class ContactPickerViewModelTest {
         coEvery { soundUrlResolver.resolve(sound) } returns sound.downloadUrl
         coEvery { soundApplier.downloadOnly(sound.downloadUrl, sound.name, ContentType.RINGTONE) } returns
             Result.success(mockk<Uri>())
-        coEvery { contactService.setContactRingtone(42L, any()) } returns Result.success(Unit)
+        coEvery { contactService.setContactRingtone(42L, any(), any()) } returns Result.success(Unit)
         coEvery { soundApplier.setDefaultRingtoneSilent() } returns Result.success(Unit)
 
         val viewModel = ContactPickerViewModel(
@@ -166,7 +166,7 @@ class ContactPickerViewModelTest {
         viewModel.assignVipOnlyRinging(42L, confirmed = true)
         advanceUntilIdle()
 
-        coVerify(exactly = 1) { contactService.setContactRingtone(42L, any()) }
+        coVerify(exactly = 1) { contactService.setContactRingtone(42L, any(), any()) }
         coVerify(exactly = 1) { soundApplier.setDefaultRingtoneSilent() }
         assertNotNull(viewModel.state.value.success)
     }

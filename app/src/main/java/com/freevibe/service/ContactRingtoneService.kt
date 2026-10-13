@@ -71,9 +71,20 @@ internal fun classifyContactDndGuidance(
 class ContactRingtoneNotKeptException(val storedUri: String?) :
     IllegalStateException("The contact didn't keep the new ringtone")
 
-/** Null when the stored value matches; otherwise the exception that explains the mismatch. */
-internal fun contactRingtoneReadBackFailure(expected: Uri, stored: String?): ContactRingtoneNotKeptException? =
-    if (stored == expected.toString()) null else ContactRingtoneNotKeptException(stored)
+/**
+ * Null when the stored value is the ringtone just written; otherwise the exception that explains
+ * the mismatch. A provider may rewrite the volume name (`external` to `external_primary`), so the
+ * same authority and media row id also count as kept.
+ */
+internal fun contactRingtoneReadBackFailure(expected: Uri, stored: String?): ContactRingtoneNotKeptException? {
+    if (stored == expected.toString()) return null
+    val storedUri = stored?.takeIf { it.isNotBlank() }?.let(Uri::parse)
+    val sameRow = storedUri != null &&
+        storedUri.authority == expected.authority &&
+        storedUri.lastPathSegment != null &&
+        storedUri.lastPathSegment == expected.lastPathSegment
+    return if (sameRow) null else ContactRingtoneNotKeptException(stored)
+}
 
 internal fun contactEditorUri(contact: ContactInfo): Uri =
     if (contact.lookupKey.isNotBlank()) {

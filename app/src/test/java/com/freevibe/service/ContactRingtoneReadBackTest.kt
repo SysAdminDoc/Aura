@@ -75,9 +75,17 @@ class ContactRingtoneReadBackTest {
     }
 
     @Test
-    fun `read back compares the exact stored value`() {
+    fun `read back accepts the same media row and rejects anything else`() {
         assertNull(contactRingtoneReadBackFailure(ringtone, ringtone.toString()))
         assertEquals("", contactRingtoneReadBackFailure(ringtone, "")?.storedUri)
+        assertNull(
+            "a rewritten volume name for the same row still counts as kept",
+            contactRingtoneReadBackFailure(ringtone, "content://media/external_primary/audio/media/42"),
+        )
+        assertEquals(
+            "content://media/external/audio/media/43",
+            contactRingtoneReadBackFailure(ringtone, "content://media/external/audio/media/43")?.storedUri,
+        )
     }
 
     class FakeContactsProvider : ContentProvider() {
