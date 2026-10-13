@@ -80,6 +80,7 @@ internal class SettingsMediaDelegate(
     )
     val youtubePoTokenProviderUrl = prefs.youtubePoTokenProviderUrl.stateIn(scope, sharing, "")
     val videoFpsLimit = prefs.videoFpsLimit.stateIn(scope, sharing, 30)
+    val videoPlaybackSpeed = prefs.videoPlaybackSpeed.stateIn(scope, sharing, 1f)
     val videoFpsOverlayEnabled = prefs.videoFpsOverlayEnabled.stateIn(scope, sharing, false)
     val videoAutoBatterySaver = prefs.videoAutoBatterySaver.stateIn(scope, sharing, true)
     val wallhavenApiKey = prefs.wallhavenApiKey.stateIn(scope, sharing, "")
@@ -148,6 +149,7 @@ internal class SettingsMediaDelegate(
     fun setPexelsProviderEnabled(enabled: Boolean) = scope.launch { prefs.setPexelsProviderEnabled(enabled) }
     fun setPixabayProviderEnabled(enabled: Boolean) = scope.launch { prefs.setPixabayProviderEnabled(enabled) }
     fun setVideoFpsLimit(fps: Int) = scope.launch { prefs.setVideoFpsLimit(fps) }
+    fun setVideoPlaybackSpeed(speed: Float) = scope.launch { prefs.setVideoPlaybackSpeed(speed) }
     fun setVideoFpsOverlayEnabled(enabled: Boolean) = scope.launch { prefs.setVideoFpsOverlayEnabled(enabled) }
     fun setVideoAutoBatterySaver(enabled: Boolean) = scope.launch { prefs.setVideoAutoBatterySaver(enabled) }
     fun setLiveWallpaperDimEnabled(enabled: Boolean) = scope.launch { prefs.setLiveWallpaperDimEnabled(enabled) }

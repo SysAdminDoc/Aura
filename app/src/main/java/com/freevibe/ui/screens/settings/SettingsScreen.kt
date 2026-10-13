@@ -291,6 +291,7 @@ fun SettingsScreen(
                 autoWpEnabled = autoWpEnabled,
                 autoWpInterval = autoWpInterval,
                 autoWpSource = autoWpSource,
+                autoWpTarget = autoWpTarget,
                 localWallpaperFolderUri = localWallpaperFolderUri,
                 localFolderPermissionActive = localFolderPermissionActive,
                 localWallpaperFolderCount = localWallpaperFolders.size,
@@ -414,6 +415,7 @@ fun SettingsScreen(
             if (SettingsSectionKeys.VIDEO in visibleSectionKeys) VideoSettingsSection(
                 viewModel = viewModel,
                 videoFpsLimit = videoFpsLimit,
+                videoPlaybackSpeed = videoPlaybackSpeed,
                 videoFpsOverlayEnabled = videoFpsOverlayEnabled,
                 videoAutoBatterySaver = videoAutoBatterySaver,
                 videoBatteryDashboard = videoBatteryDashboard,

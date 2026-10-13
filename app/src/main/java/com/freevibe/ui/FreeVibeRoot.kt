@@ -739,32 +739,6 @@ fun FreeVibeRoot(
                 )
             }
             composable(
-                Screen.VideoWallpaperPreview.destinationPattern,
-                arguments = listOf(
-                    navArgument("streamUrl") { type = NavType.StringType },
-                    navArgument("title") {
-                        type = NavType.StringType
-                        nullable = true
-                        defaultValue = ""
-                    },
-                ),
-            ) { backStackEntry ->
-                val streamUrl = backStackEntry.arguments?.getString("streamUrl").orEmpty()
-                val title = backStackEntry.arguments?.getString("title").orEmpty()
-                com.freevibe.ui.screens.videowallpapers.VideoWallpaperPreviewScreen(
-                    streamUrl = streamUrl,
-                    title = title,
-                    onBack = { navController.popBackStack() },
-                    onApply = {
-                        // Pop back to the source (video wallpapers list / detail) so the
-                        // Apply flow that lives there fires. User already had the stream
-                        // context before entering preview.
-                        navController.popBackStack()
-                    },
-                    onCrop = { navController.popBackStack() },
-                )
-            }
-            composable(
                 Screen.WallpaperPreview.destinationPattern,
                 arguments = listOf(
                     navArgument("id") { type = NavType.StringType },

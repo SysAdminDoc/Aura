@@ -50,6 +50,7 @@ import androidx.compose.ui.unit.dp
 import com.freevibe.R
 import com.freevibe.data.local.PreferencesManager
 import com.freevibe.data.model.WALLPAPER_SOURCE_LOCAL_FOLDER
+import com.freevibe.data.model.WallpaperTarget
 import com.freevibe.data.repository.CommunityBlockedUser
 import com.freevibe.service.CommunityIdentitySummary
 import com.freevibe.service.effectiveVideoFpsLimit
@@ -262,6 +263,45 @@ internal fun IntervalPickerDialog(
                         label = label,
                         selected = currentInterval == hours,
                         onClick = { onSelect(hours) },
+                    )
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = onDismiss) { Text(stringResource(R.string.common_cancel)) }
+        },
+    )
+}
+
+// ── Rotation target picker dialog ────────────────────────────────────
+
+/** Reads the stored rotation target the way AutoWallpaperWorker does, so the label matches what runs. */
+internal fun autoWallpaperTargetOf(stored: String): WallpaperTarget =
+    WallpaperTarget.entries.find { it.name == stored } ?: WallpaperTarget.BOTH
+
+@Composable
+internal fun rotationTargetLabel(target: WallpaperTarget): String = when (target) {
+    WallpaperTarget.HOME -> stringResource(R.string.detail_home_screen)
+    WallpaperTarget.LOCK -> stringResource(R.string.detail_lock_screen)
+    WallpaperTarget.BOTH -> stringResource(R.string.detail_home_lock)
+}
+
+@Composable
+internal fun RotationTargetPickerDialog(
+    currentTarget: WallpaperTarget,
+    onDismiss: () -> Unit,
+    onSelect: (WallpaperTarget) -> Unit,
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(stringResource(R.string.settings_wp_target_title)) },
+        text = {
+            Column {
+                listOf(WallpaperTarget.BOTH, WallpaperTarget.HOME, WallpaperTarget.LOCK).forEach { target ->
+                    SettingsRadioOptionRow(
+                        label = rotationTargetLabel(target),
+                        selected = currentTarget == target,
+                        onClick = { onSelect(target) },
                     )
                 }
             }

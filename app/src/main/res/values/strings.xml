@@ -1203,6 +1203,11 @@
     <string name="settings_wp_wifi_only_subtitle">Skip cellular fetches; honors data-saver</string>
     <string name="settings_wp_idle_only_title">Device idle only</string>
     <string name="settings_wp_idle_only_subtitle">Defer rotation until you\'re not actively using the phone</string>
+    <string name="settings_wp_target_title">Rotate on</string>
+    <string name="settings_video_speed_title">Playback speed</string>
+    <string name="settings_video_speed_subtitle">%1$s. Takes effect the next time the video wallpaper starts.</string>
+    <string name="settings_video_speed_normal">1× (normal)</string>
+    <string name="settings_video_speed_value">%1$s×</string>
     <string name="settings_wp_dimming_title">Rotation dimming</string>
     <string name="settings_wp_dimming_percent">%1$d%%</string>
     <string name="settings_wp_dimming_keep_unchanged">Keep rotated wallpapers unchanged</string>

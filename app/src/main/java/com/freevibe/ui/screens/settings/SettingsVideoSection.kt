@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.BatteryChargingFull
+import androidx.compose.material.icons.filled.SlowMotionVideo
 import androidx.compose.material.icons.filled.Speed
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Text
@@ -16,18 +17,23 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import com.freevibe.R
+import com.freevibe.service.VIDEO_PLAYBACK_SPEEDS
+import com.freevibe.service.sanitizeVideoPlaybackSpeed
 import com.freevibe.service.videoBatteryImpactSummary
+import java.math.BigDecimal
 
 @Composable
 internal fun VideoSettingsSection(
     viewModel: SettingsViewModel,
     videoFpsLimit: Int,
+    videoPlaybackSpeed: Float,
     videoFpsOverlayEnabled: Boolean,
     videoAutoBatterySaver: Boolean,
     videoBatteryDashboard: VideoBatteryDashboardState,
     redditVideoSubreddits: String,
 ) {
     var showFpsPicker by remember { mutableStateOf(false) }
+    var showSpeedPicker by remember { mutableStateOf(false) }
 
     SettingsSection(
         sectionKey = SettingsSectionKeys.VIDEO,
@@ -78,6 +84,40 @@ internal fun VideoSettingsSection(
             ),
             onClick = { showFpsPicker = true },
         )
+        SettingsItem(
+            icon = Icons.Default.SlowMotionVideo,
+            title = stringResource(R.string.settings_video_speed_title),
+            subtitle = stringResource(
+                R.string.settings_video_speed_subtitle,
+                videoPlaybackSpeedLabel(sanitizeVideoPlaybackSpeed(videoPlaybackSpeed)),
+            ),
+            onClick = { showSpeedPicker = true },
+        )
+    }
+
+    if (showSpeedPicker) {
+        val current = sanitizeVideoPlaybackSpeed(videoPlaybackSpeed)
+        AlertDialog(
+            onDismissRequest = { showSpeedPicker = false },
+            title = { Text(stringResource(R.string.settings_video_speed_title)) },
+            text = {
+                Column {
+                    VIDEO_PLAYBACK_SPEEDS.forEach { speed ->
+                        SettingsRadioOptionRow(
+                            label = videoPlaybackSpeedLabel(speed),
+                            selected = current == speed,
+                            onClick = {
+                                viewModel.setVideoPlaybackSpeed(speed)
+                                showSpeedPicker = false
+                            },
+                        )
+                    }
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = { showSpeedPicker = false }) { Text(stringResource(R.string.common_cancel)) }
+            },
+        )
     }
 
     if (showFpsPicker) {
@@ -108,3 +148,11 @@ internal fun VideoSettingsSection(
         )
     }
 }
+
+@Composable
+private fun videoPlaybackSpeedLabel(speed: Float): String =
+    if (speed == 1f) {
+        stringResource(R.string.settings_video_speed_normal)
+    } else {
+        stringResource(R.string.settings_video_speed_value, BigDecimal(speed.toString()).stripTrailingZeros().toPlainString())
+    }

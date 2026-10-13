@@ -211,20 +211,6 @@ sealed class Screen(
         }
     }
 
-    // ── Video-wallpaper preview (mock lock + home screen over live video) ──
-    data object VideoWallpaperPreview : Screen(
-        route = "video_wallpaper_preview/{streamUrl}",
-        titleRes = R.string.nav_preview,
-        icon = Icons.Filled.Visibility,
-        selectedIcon = Icons.Filled.Visibility,
-        destinationPattern = "video_wallpaper_preview/{streamUrl}?title={title}",
-    ) {
-        fun createRoute(streamUrl: String, title: String): String {
-            val t = if (title.isBlank()) "" else "?title=${Uri.encode(title)}"
-            return "video_wallpaper_preview/${Uri.encode(streamUrl)}$t"
-        }
-    }
-
     // ── Preview (mock lock + home screen over the wallpaper) ────
     data object WallpaperPreview : Screen(
         route = "wallpaper_preview/{id}",

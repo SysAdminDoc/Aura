@@ -40,6 +40,7 @@ import com.freevibe.service.VIDEO_PLAYBACK_SPEED_PREF
 import com.freevibe.service.VIDEO_PREFS_NAME
 import com.freevibe.service.VIDEO_STATS_PREFS_NAME
 import com.freevibe.service.sanitizeVideoFpsLimit
+import com.freevibe.service.sanitizeVideoPlaybackSpeed
 import com.freevibe.service.WALLPAPER_CLOCK_OVERLAY_ENABLED_PREF
 import com.freevibe.service.WALLPAPER_CLOCK_OVERLAY_MODE_PREF
 import com.freevibe.service.WALLPAPER_CLOCK_OVERLAY_POSITION_PREF
@@ -428,12 +429,8 @@ class PreferencesManager @Inject constructor(
     val ringtoneShuffleIntervalHours: Flow<Long> = get(Keys.RINGTONE_SHUFFLE_INTERVAL_HOURS, 24L)
     suspend fun setRingtoneShuffleEnabled(v: Boolean) = set(Keys.RINGTONE_SHUFFLE_ENABLED, v)
     suspend fun setRingtoneShuffleIntervalHours(hours: Long) = set(Keys.RINGTONE_SHUFFLE_INTERVAL_HOURS, hours)
-    suspend fun ringtoneShuffleLastAppliedId(): String = get(Keys.RINGTONE_SHUFFLE_LAST_APPLIED_ID, "").first()
-    suspend fun setRingtoneShuffleLastAppliedId(id: String) = set(Keys.RINGTONE_SHUFFLE_LAST_APPLIED_ID, id)
     val alarmShuffleEnabled: Flow<Boolean> = get(Keys.ALARM_SHUFFLE_ENABLED, false)
     suspend fun setAlarmShuffleEnabled(v: Boolean) = set(Keys.ALARM_SHUFFLE_ENABLED, v)
-    suspend fun alarmShuffleLastAppliedId(): String = get(Keys.ALARM_SHUFFLE_LAST_APPLIED_ID, "").first()
-    suspend fun setAlarmShuffleLastAppliedId(id: String) = set(Keys.ALARM_SHUFFLE_LAST_APPLIED_ID, id)
 
     // Sound profiles
     val soundProfilesEnabled: Flow<Boolean> = get(Keys.SOUND_PROFILES_ENABLED, false)
@@ -709,11 +706,12 @@ class PreferencesManager @Inject constructor(
         set(Keys.VIDEO_FPS_LIMIT, sanitized)
     }
     suspend fun setVideoPlaybackSpeed(speed: Float) {
+        val sanitized = sanitizeVideoPlaybackSpeed(speed)
         // SharedPreferences first — same rationale as setVideoFpsLimit. WallpaperService
         // cannot easily subscribe to DataStore, so SP is the source of truth for the runtime.
         context.getSharedPreferences(VIDEO_PREFS_NAME, Context.MODE_PRIVATE)
-            .edit().putFloat(VIDEO_PLAYBACK_SPEED_PREF, speed).apply()
-        set(Keys.VIDEO_PLAYBACK_SPEED, speed)
+            .edit().putFloat(VIDEO_PLAYBACK_SPEED_PREF, sanitized).apply()
+        set(Keys.VIDEO_PLAYBACK_SPEED, sanitized)
     }
     suspend fun setVideoFpsOverlayEnabled(enabled: Boolean) {
         context.getSharedPreferences(VIDEO_PREFS_NAME, Context.MODE_PRIVATE)

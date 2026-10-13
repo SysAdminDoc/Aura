@@ -115,6 +115,7 @@ class SettingsViewModel @Inject constructor(
     val autoWpEnabled get() = rotation.autoWpEnabled
     val autoWpInterval get() = rotation.autoWpInterval
     val autoWpSource get() = rotation.autoWpSource
+    val autoWpTarget get() = rotation.autoWpTarget
     val localWallpaperFolderUri get() = rotation.localWallpaperFolderUri
     val autoWpRequiresCharging get() = rotation.autoWpRequiresCharging
     val autoWpRequiresWiFi get() = rotation.autoWpRequiresWiFi
@@ -179,6 +180,7 @@ class SettingsViewModel @Inject constructor(
     val youtubeProviderEnabled get() = media.youtubeProviderEnabled
     val youtubePoTokenProviderUrl get() = media.youtubePoTokenProviderUrl
     val videoFpsLimit get() = media.videoFpsLimit
+    val videoPlaybackSpeed get() = media.videoPlaybackSpeed
     val videoFpsOverlayEnabled get() = media.videoFpsOverlayEnabled
     val videoAutoBatterySaver get() = media.videoAutoBatterySaver
     val wallhavenApiKey get() = media.wallhavenApiKey
@@ -222,6 +224,7 @@ class SettingsViewModel @Inject constructor(
     fun setAutoWallpaper(enabled: Boolean) = rotation.setAutoWallpaper(enabled)
     fun setAutoWpInterval(hours: Long) = rotation.setAutoWpInterval(hours)
     fun setAutoWpSource(source: String) = rotation.setAutoWpSource(source)
+    fun setAutoWpTarget(target: com.freevibe.data.model.WallpaperTarget) = rotation.setAutoWpTarget(target)
     fun setLocalWallpaperFolderUri(uri: String) = rotation.setLocalWallpaperFolderUri(uri)
     fun addLocalWallpaperFolder(uri: String, makePrimary: Boolean = true) =
         rotation.addLocalWallpaperFolder(uri, makePrimary)
@@ -344,6 +347,7 @@ class SettingsViewModel @Inject constructor(
     fun setPexelsProviderEnabled(enabled: Boolean) = media.setPexelsProviderEnabled(enabled)
     fun setPixabayProviderEnabled(enabled: Boolean) = media.setPixabayProviderEnabled(enabled)
     fun setVideoFpsLimit(fps: Int) = media.setVideoFpsLimit(fps)
+    fun setVideoPlaybackSpeed(speed: Float) = media.setVideoPlaybackSpeed(speed)
     fun setVideoFpsOverlayEnabled(enabled: Boolean) = media.setVideoFpsOverlayEnabled(enabled)
     fun setVideoAutoBatterySaver(enabled: Boolean) = media.setVideoAutoBatterySaver(enabled)
     fun setLiveWallpaperDimEnabled(enabled: Boolean) = media.setLiveWallpaperDimEnabled(enabled)

@@ -555,7 +555,6 @@ class ReleasePolishContractTest {
             "src/main/java/com/freevibe/ui/screens/wallpapers/WallpapersScreen.kt",
             "src/main/java/com/freevibe/ui/screens/wallpapers/WallpaperDetailScreen.kt",
             "src/main/java/com/freevibe/ui/screens/wallpapers/WallpaperPreviewScreen.kt",
-            "src/main/java/com/freevibe/ui/screens/videowallpapers/VideoWallpaperPreviewScreen.kt",
             "src/main/java/com/freevibe/ui/screens/videowallpapers/VideoWallpapersScreen.kt",
             "src/main/java/com/freevibe/ui/screens/sounds/SoundsScreen.kt",
         )

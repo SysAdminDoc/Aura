@@ -17,6 +17,15 @@ class VideoBatteryProfileTest {
     }
 
     @Test
+    fun `sanitizeVideoPlaybackSpeed keeps the offered range`() {
+        assertEquals(1f, sanitizeVideoPlaybackSpeed(0f), 0f)
+        assertEquals(1f, sanitizeVideoPlaybackSpeed(Float.NaN), 0f)
+        assertEquals(0.5f, sanitizeVideoPlaybackSpeed(0.1f), 0f)
+        assertEquals(1.25f, sanitizeVideoPlaybackSpeed(1.25f), 0f)
+        assertEquals(2f, sanitizeVideoPlaybackSpeed(8f), 0f)
+    }
+
+    @Test
     fun `low battery saver only activates below fifteen percent while unplugged`() {
         assertTrue(shouldUseVideoBatterySaver(batteryPercent = 14, isCharging = false, autoSaverEnabled = true))
         assertFalse(shouldUseVideoBatterySaver(batteryPercent = 15, isCharging = false, autoSaverEnabled = true))

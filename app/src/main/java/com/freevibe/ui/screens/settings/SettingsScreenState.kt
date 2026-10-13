@@ -47,6 +47,7 @@ internal data class SettingsScreenState(
     val autoWpEnabled: Boolean,
     val autoWpInterval: Long,
     val autoWpSource: String,
+    val autoWpTarget: String,
     val localWallpaperFolderUri: String,
     val localFolderPermissionActive: Boolean,
     val localWallpaperFolders: List<LocalWallpaperFolderEntity>,
@@ -107,6 +108,7 @@ internal data class SettingsScreenState(
     val lightModeWallpaperId: String,
     val liveWallpaperShaderPreset: String,
     val videoFpsLimit: Int,
+    val videoPlaybackSpeed: Float,
     val wallhavenApiKey: String,
     val pexelsApiKey: String,
     val pixabayApiKey: String,
@@ -158,6 +160,7 @@ internal fun rememberSettingsScreenState(
     val autoWpEnabled by viewModel.autoWpEnabled.collectAsStateWithLifecycle()
     val autoWpInterval by viewModel.autoWpInterval.collectAsStateWithLifecycle()
     val autoWpSource by viewModel.autoWpSource.collectAsStateWithLifecycle()
+    val autoWpTarget by viewModel.autoWpTarget.collectAsStateWithLifecycle()
     val localWallpaperFolderUri by viewModel.localWallpaperFolderUri.collectAsStateWithLifecycle()
     val localWallpaperFolders by viewModel.localWallpaperFolders.collectAsStateWithLifecycle()
     val localWallpaperItems by viewModel.localWallpaperItems.collectAsStateWithLifecycle()
@@ -222,6 +225,7 @@ internal fun rememberSettingsScreenState(
     val lightModeWallpaperId by viewModel.lightModeWallpaperId.collectAsStateWithLifecycle()
     val liveWallpaperShaderPreset by viewModel.liveWallpaperShaderPreset.collectAsStateWithLifecycle()
     val videoFpsLimit by viewModel.videoFpsLimit.collectAsStateWithLifecycle()
+    val videoPlaybackSpeed by viewModel.videoPlaybackSpeed.collectAsStateWithLifecycle()
     val wallhavenApiKey by viewModel.wallhavenApiKey.collectAsStateWithLifecycle()
     val pexelsApiKey by viewModel.pexelsApiKey.collectAsStateWithLifecycle()
     val pixabayApiKey by viewModel.pixabayApiKey.collectAsStateWithLifecycle()
@@ -287,6 +291,7 @@ internal fun rememberSettingsScreenState(
         autoWpEnabled = autoWpEnabled,
         autoWpInterval = autoWpInterval,
         autoWpSource = autoWpSource,
+        autoWpTarget = autoWpTarget,
         localWallpaperFolderUri = localWallpaperFolderUri,
         localFolderPermissionActive = localFolderPermissionActive,
         localWallpaperFolders = localWallpaperFolders,
@@ -347,6 +352,7 @@ internal fun rememberSettingsScreenState(
         lightModeWallpaperId = lightModeWallpaperId,
         liveWallpaperShaderPreset = liveWallpaperShaderPreset,
         videoFpsLimit = videoFpsLimit,
+        videoPlaybackSpeed = videoPlaybackSpeed,
         wallhavenApiKey = wallhavenApiKey,
         pexelsApiKey = pexelsApiKey,
         pixabayApiKey = pixabayApiKey,

@@ -198,9 +198,6 @@
     "UniversalSearch": {
       "reason": "Search results come from every provider at once, so a deterministic scenario needs all provider fakes wired together at once."
     },
-    "VideoWallpaperPreview": {
-      "reason": "Registered as a destination that nothing navigates to, so there is no user path to exercise. Tracked separately as a dead route to reach or remove."
-    },
     "VideoWallpapers": {
       "executedSurface": "video-wallpapers"
     },

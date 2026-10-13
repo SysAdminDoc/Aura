@@ -6,6 +6,7 @@ import android.net.Uri
 import com.freevibe.data.local.PreferencesManager
 import com.freevibe.data.local.SCHEDULER_DAY_NIGHT_MODE_SINGLE
 import com.freevibe.data.model.WallpaperCollectionEntity
+import com.freevibe.data.model.WallpaperTarget
 import com.freevibe.data.repository.CollectionRepository
 import com.freevibe.service.AgslShaderGallery
 import com.freevibe.service.AutoBackupWorker
@@ -33,6 +34,7 @@ internal class SettingsRotationDelegate(
     val autoWpEnabled = prefs.autoWallpaperEnabled.stateIn(scope, sharing, false)
     val autoWpInterval = prefs.autoWallpaperInterval.stateIn(scope, sharing, 12L)
     val autoWpSource = prefs.autoWallpaperSource.stateIn(scope, sharing, "wallhaven")
+    val autoWpTarget = prefs.autoWallpaperTarget.stateIn(scope, sharing, WallpaperTarget.BOTH.name)
     val localWallpaperFolderUri = prefs.localWallpaperFolderUri.stateIn(scope, sharing, "")
     val autoWpRequiresCharging = prefs.autoWallpaperRequiresCharging.stateIn(scope, sharing, false)
     val autoWpRequiresWiFi = prefs.autoWallpaperRequiresWiFiOnly.stateIn(scope, sharing, false)
@@ -93,6 +95,8 @@ internal class SettingsRotationDelegate(
 
     fun setAutoWpSource(source: String) = scope.launch { prefs.setAutoWallpaperSource(source) }
 
+    fun setAutoWpTarget(target: WallpaperTarget) = scope.launch { prefs.setAutoWallpaperTarget(target.name) }
+
     fun setLocalWallpaperFolderUri(uri: String) = scope.launch {
         val nextUri = uri.trim()
         val previousUri = prefs.localWallpaperFolderUri.first().trim()
@@ -132,7 +136,7 @@ internal class SettingsRotationDelegate(
         localWallpaperCatalog.rescanAll()
     }
 
-    fun setLocalWallpaperFolderTarget(uri: String, target: com.freevibe.data.model.WallpaperTarget) = scope.launch {
+    fun setLocalWallpaperFolderTarget(uri: String, target: WallpaperTarget) = scope.launch {
         localWallpaperCatalog.updateFolderTarget(uri, target)
     }
 

@@ -32,6 +32,7 @@ import androidx.compose.material.icons.filled.Shuffle
 import androidx.compose.material.icons.filled.Source
 import androidx.compose.material.icons.filled.Timer
 import androidx.compose.material.icons.filled.VideoFile
+import androidx.compose.material.icons.filled.Wallpaper
 import androidx.compose.material.icons.filled.WbTwilight
 import androidx.compose.material.icons.filled.Wifi
 import androidx.compose.material3.AlertDialog
@@ -64,6 +65,7 @@ internal fun WallpaperRotationSettingsSection(
     autoWpEnabled: Boolean,
     autoWpInterval: Long,
     autoWpSource: String,
+    autoWpTarget: String,
     localWallpaperFolderUri: String,
     localFolderPermissionActive: Boolean,
     localWallpaperFolderCount: Int,
@@ -106,6 +108,7 @@ internal fun WallpaperRotationSettingsSection(
 ) {
     var showIntervalPicker by remember { mutableStateOf(false) }
     var showSourcePicker by remember { mutableStateOf(false) }
+    var showTargetPicker by remember { mutableStateOf(false) }
     var showColumnsPicker by remember { mutableStateOf(false) }
     var showResPicker by remember { mutableStateOf(false) }
     var showStylePicker by remember { mutableStateOf(false) }
@@ -141,6 +144,12 @@ internal fun WallpaperRotationSettingsSection(
                     localCatalogReady = localCatalogReady,
                 ),
                 onClick = { showSourcePicker = true },
+            )
+            SettingsItem(
+                icon = Icons.Default.Wallpaper,
+                title = stringResource(R.string.settings_wp_target_title),
+                subtitle = rotationTargetLabel(autoWallpaperTargetOf(autoWpTarget)),
+                onClick = { showTargetPicker = true },
             )
             SettingsToggle(
                 icon = Icons.Default.BatteryChargingFull,
@@ -431,6 +440,17 @@ internal fun WallpaperRotationSettingsSection(
             onSelect = { hours ->
                 viewModel.setAutoWpInterval(hours)
                 showIntervalPicker = false
+            },
+        )
+    }
+
+    if (showTargetPicker) {
+        RotationTargetPickerDialog(
+            currentTarget = autoWallpaperTargetOf(autoWpTarget),
+            onDismiss = { showTargetPicker = false },
+            onSelect = { target ->
+                viewModel.setAutoWpTarget(target)
+                showTargetPicker = false
             },
         )
     }

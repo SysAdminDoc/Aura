@@ -239,13 +239,6 @@ Evidence for every item below is in RESEARCH.md (2026-09-04 pass).
   Confidence: Verified
   Effort: M
 
-- [ ] P2 — Reach or remove the three unreachable surfaces beyond the two already tracked
-  Why: the wallpaper-pack and sound-profile editors are already tracked, but the same defect class has three more instances that nothing records, and one of them silently disables a documented setting.
-  Evidence: `PreferencesManager.kt:342` `setAutoWallpaperTarget` has no caller anywhere, so `AutoWallpaperWorker.kt:144` always reads the `"BOTH"` default from `PreferencesManager.kt:308` and the rotation home/lock target cannot be changed by any user action; `Screen.kt:215-227` `Screen.VideoWallpaperPreview` is registered as a destination in `FreeVibeRoot.kt:738-756` but `createRoute` is never called and no literal navigation to that route exists; `ThemePackRecipeManager.kt:273,285` is the only non-import writer of the two tracked pack and profile stores, so a theme pack can populate a feature the user cannot otherwise reach or edit.
-  Touches: `app/src/main/java/com/freevibe/data/local/PreferencesManager.kt`, `app/src/main/java/com/freevibe/ui/screens/settings/SettingsRotationDelegate.kt`, `app/src/main/java/com/freevibe/ui/navigation/Screen.kt`, `app/src/main/java/com/freevibe/ui/FreeVibeRoot.kt`, `tools/`, tests.
-  Acceptance: the rotation target is either settable from Settings with the three states the worker already understands, or the preference and its read are removed and the worker's behavior documented as fixed; `Screen.VideoWallpaperPreview` is either reachable from the video feed or removed along with its destination; a gate fails when a `Screen` object is registered as a destination with no `createRoute` call site, and when a `PreferencesManager` setter has no caller outside tests and importers.
-  Complexity: M
-
 - [ ] P2 — Pool and preload the video-feed player
   Why: every scroll stop in the video feed constructs, prepares, and releases an ExoPlayer, so the user sees "Preparing preview" on each card instead of a preview that is already warm. Media3 1.11.0 is already pinned and ships the pieces for this exact pattern.
   Evidence: `VideoWallpapersScreen.kt:952` builds `ExoPlayer.Builder(context)…prepare(); play()` inside `remember(item.id, streamUrl)` and releases it in `onDispose`; only one card previews at a time (`VideoWallpapersScreen.kt:569`, `activePreviewId`); Media3 1.11.0 added `PlayerPool` and `rememberPooledPlayer` in `media3-ui-compose` for preloading in a sliding-window UI, plus `DefaultPreloadManager` and `ExoPlayer.Builder.enablePerStreamMediaProgression()` (https://developer.android.com/jetpack/androidx/releases/media3).

@@ -55,6 +55,7 @@ python3 tools/background_work_scheduling_check.py --policy docs/background-work-
 python3 tools/background_work_network_check.py --policy docs/background-work-network-posture.json --repo-root .
 python3 tools/background_work_device_evidence_check.py --policy docs/background-work-device-evidence.json --repo-root .
 python3 tools/community_guidelines_consent_check.py --repo-root .
+python3 tools/unreachable_surface_check.py --repo-root .
 python3 tools/play_app_content_packet_check.py --policy docs/distribution/play-app-content.json --repo-root .
 python3 tools/alt_store_metadata_check.py --policy docs/distribution/alt-store-metadata.json --repo-root .
 python3 tools/release_metadata_consistency_check.py --policy docs/distribution/release-metadata-consistency.json --repo-root .
