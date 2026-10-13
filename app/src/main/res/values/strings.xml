@@ -2193,4 +2193,17 @@
     <string name="settings_rotation_exclusions_item_summary">%1$s • %2$s</string>
     <string name="settings_rotation_exclusions_subtitle">%1$d excluded. Review or restore items.</string>
     <string name="settings_rotation_exclusions_manage_subtitle">Keep unwanted items out of automatic changes without hiding or deleting them.</string>
+    <string name="video_wp_download">Download</string>
+    <string name="video_wp_downloading">Downloading…</string>
+    <string name="video_wp_download_title">Download video</string>
+    <string name="video_wp_downloaded">Saved to Downloads in your Library</string>
+    <string name="video_wp_download_already_saved">Already in Downloads</string>
+    <string name="video_wp_download_failed">Download failed: %1$s</string>
+    <string name="video_wp_download_in_progress">This video is still downloading. Try again when it\'s done.</string>
+    <string name="video_wp_share_source">Share source</string>
+    <string name="video_wp_share_title">Share video source</string>
+    <string name="video_wp_share_text">%1$s by %2$s on %3$s: %4$s</string>
+    <string name="video_wp_share_text_no_creator">%1$s on %2$s: %3$s</string>
+    <string name="video_wp_report">Report video</string>
+    <string name="video_wp_report_guidelines">Accept the Community Guidelines in Settings to send reports</string>
 </resources>

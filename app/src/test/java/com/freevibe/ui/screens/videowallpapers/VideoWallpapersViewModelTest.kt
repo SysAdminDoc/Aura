@@ -15,6 +15,7 @@ import com.freevibe.data.remote.pixabay.PixabayVideo
 import com.freevibe.data.remote.pixabay.PixabayVideoFile
 import com.freevibe.data.remote.pixabay.PixabayVideoFiles
 import com.freevibe.data.remote.pixabay.PixabayVideoResponse
+import com.freevibe.data.repository.CommunityReportRepository
 import com.freevibe.data.repository.VoteRepository
 import com.freevibe.data.repository.createLegacyCompatibleYouTubeSearchHandler
 import com.freevibe.data.repository.parseRedditRssPage
@@ -256,6 +257,7 @@ class VideoWallpapersViewModelTest {
             videoPreviewCache = mockk<VideoPreviewCache>(relaxed = true),
             av1CodecSupport = mockk<Av1CodecSupport>(relaxed = true),
             voteRepo = mockk<VoteRepository>(relaxed = true),
+            reportRepo = mockk<CommunityReportRepository>(relaxed = true),
         )
 
         runCurrent()

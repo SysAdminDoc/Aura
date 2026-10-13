@@ -15,6 +15,7 @@ import com.freevibe.data.legal.currentProviderBuild
 import com.freevibe.data.legal.currentProviderChannel
 import com.freevibe.data.legal.isProviderActionPermitted
 import com.freevibe.data.legal.isProviderActionPermittedIn
+import com.freevibe.data.model.CommunityReportReason
 import com.freevibe.data.model.ContentSource
 import com.freevibe.data.model.FitCanvasMode
 import com.freevibe.data.model.FitCanvasStyle
@@ -24,6 +25,7 @@ import com.freevibe.data.model.videoActionMessage
 import com.freevibe.util.rethrowIfCancelled
 import com.freevibe.data.remote.pexels.PexelsApi
 import com.freevibe.data.remote.pixabay.PixabayVideo
+import com.freevibe.data.repository.CommunityReportRepository
 import com.freevibe.data.repository.YouTubeRepository
 import com.freevibe.data.repository.YouTubeVideoMetadata
 import com.freevibe.data.repository.VoteRepository
@@ -481,6 +483,7 @@ class VideoWallpapersViewModel @Inject constructor(
     private val videoPreviewCache: VideoPreviewCache,
     private val av1CodecSupport: com.freevibe.service.Av1CodecSupport,
     val voteRepo: VoteRepository,
+    private val reportRepo: CommunityReportRepository,
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(VideoWallpapersState())
@@ -736,6 +739,10 @@ class VideoWallpapersViewModel @Inject constructor(
         canvasStyle: FitCanvasStyle = FitCanvasStyle(),
     ) {
         if (_state.value.isApplying != null) return
+        if (item.id in _state.value.downloadingIds) {
+            Toast.makeText(context, context.getString(com.freevibe.R.string.video_wp_download_in_progress), Toast.LENGTH_SHORT).show()
+            return
+        }
         if (!item.canUseVideoAction(VideoWallpaperAction.APPLY)) {
             Toast.makeText(
                 context,
@@ -747,149 +754,11 @@ class VideoWallpapersViewModel @Inject constructor(
         viewModelScope.launch {
             _state.update { it.copy(isApplying = item.id) }
             try {
-                videoWallpaperStorage.findSavedDownloadedVideo(item.id, item.source)?.let { savedOriginal ->
-                    val preparedFile = videoWallpaperStorage.preparePresentation(
-                        file = savedOriginal,
-                        scaleMode = scaleMode,
-                        canvasStyle = canvasStyle,
-                    ).getOrElse { throw it }
-                    launchOrExportVideoWallpaper(
-                        context = context,
-                        file = preparedFile,
-                        scaleMode = scaleMode,
-                        canvasStyle = canvasStyle,
-                        selectionAlreadyPersisted = true,
-                    )
-                    _state.update { it.copy(isApplying = null) }
-                    return@launch
-                }
-                if (item.source == "YouTube" && !prefs.youtubeProviderEnabled.first()) {
-                    sourceMetrics.recordDisabled("youtube")
-                    withContext(Dispatchers.Main) {
-                        Toast.makeText(context, context.getString(com.freevibe.R.string.video_wp_youtube_disabled), Toast.LENGTH_SHORT).show()
-                    }
-                    _state.update { it.copy(isApplying = null) }
-                    return@launch
-                }
-                // Get stream URL (cached or resolve)
-                val videoUrl = streamUrls[item.id] ?: run {
-                    if (com.freevibe.BuildConfig.DEBUG) Log.d("VideoWP", "Resolving stream URL for apply: ${item.videoId}")
-                    val url = youtubeRepo.getVideoStreamUrl(item.videoId)
-                    if (url != null) rememberStreamUrl(item, url)
-                    url
-                }
-
-                if (videoUrl == null) {
-                    withContext(Dispatchers.Main) {
-                        Toast.makeText(context, context.getString(com.freevibe.R.string.ytdlp_video_url_update_hint), Toast.LENGTH_SHORT).show()
-                    }
-                    _state.update { it.copy(isApplying = null) }
-                    return@launch
-                }
-
-                if (com.freevibe.BuildConfig.DEBUG) Log.d("VideoWP", "Downloading video (source: ${item.source})...")
-                val downloadedExtension = when {
-                    videoUrl.substringBefore('?').endsWith(".gif", ignoreCase = true) -> "gif"
-                    videoUrl.substringBefore('?').endsWith(".webm", ignoreCase = true) -> "webm"
-                    else -> "mp4"
-                }
-                val file = videoWallpaperStorage.prepareDownloadedVideo(
-                    extension = downloadedExtension,
-                    contentId = item.id,
-                    source = item.source,
-                    displayName = item.title,
-                    provenanceUrl = item.sourcePageUrl.ifBlank { videoUrl },
-                ) { cacheFile ->
-                    if (isHlsMotionUrl(videoUrl)) {
-                        // A Reddit HLS URL is a playlist, not a video file. Let yt-dlp and
-                        // ffmpeg fetch its segments and produce a bounded MP4; raw-copying
-                        // the m3u8 bytes would create an invalid wallpaper file.
-                        val hlsOutput = java.io.File(cacheFile.parentFile, "${cacheFile.name}.hls.mp4")
-                        try {
-                            val request = com.yausername.youtubedl_android.YoutubeDLRequest(videoUrl)
-                            request.addOption("-f", "bestvideo[height<=1080]+bestaudio/best[height<=1080]/best")
-                            request.addOption("--merge-output-format", "mp4")
-                            request.addOption("--remux-video", "mp4")
-                            request.addOption("--force-overwrites")
-                            request.addOption("-o", hlsOutput.absolutePath)
-                            applyYtDlpDownloadBounds(request)
-                            com.yausername.youtubedl_android.YoutubeDL.getInstance().execute(request)
-                            if (!hlsOutput.exists()) throw java.io.IOException("HLS download did not produce an MP4")
-                            // Move rather than copy: both files live in the same
-                            // directory, so a copy would briefly need twice the
-                            // video's size on a device already near its cap.
-                            moveIntoPlace(hlsOutput, cacheFile)
-                            ytDlpUpdateManager.recordExtractionSuccess()
-                        } catch (e: Exception) {
-                            if (e is kotlinx.coroutines.CancellationException) throw e
-                            ytDlpUpdateManager.recordExtractionFailure(e)
-                            throw e
-                        } finally {
-                            hlsOutput.delete()
-                        }
-                    } else if (item.source == "YouTube" && item.videoId.isNotEmpty()) {
-                        // YouTube: use yt-dlp for download
-                        try {
-                            val ytUrl = "https://www.youtube.com/watch?v=${item.videoId}"
-                            val request = ytDlpRequestFactory.create(ytUrl)
-                            val formatSelector = if (av1CodecSupport.hasHardwareAv1Decode) {
-                                "bestvideo[ext=mp4][height<=1080]/best[ext=mp4]/best"
-                            } else {
-                                "bestvideo[ext=mp4][height<=1080][vcodec!~='av0?1']/best[ext=mp4][vcodec!~='av0?1']/best"
-                            }
-                            request.addOption("-f", formatSelector)
-                            request.addOption("-o", cacheFile.absolutePath)
-                            request.addOption("--force-overwrites")
-                            applyYtDlpDownloadBounds(request)
-                            com.yausername.youtubedl_android.YoutubeDL.getInstance().execute(request)
-                            ytDlpUpdateManager.recordExtractionSuccess()
-                        } catch (e: Exception) {
-                            if (e is kotlinx.coroutines.CancellationException) throw e
-                            ytDlpUpdateManager.recordExtractionFailure(e)
-                            if (com.freevibe.BuildConfig.DEBUG) Log.e("VideoWP", "yt-dlp download failed: ${e.message}, using stream URL")
-                            okHttpClient.newCall(Request.Builder().url(videoUrl).build()).execute().use { resp ->
-                                if (!resp.isSuccessful) throw Exception("HTTP ${resp.code}")
-                                val body = resp.body ?: throw Exception("Empty response body")
-                                if (advertisedLengthExceeds(body.contentLength(), MAX_VIDEO_WALLPAPER_BYTES)) {
-                                    throw Exception("Video exceeds size limit")
-                                }
-                                body.byteStream().use { input ->
-                                    cacheFile.parentFile?.mkdirs()
-                                    cacheFile.outputStream().use { output ->
-                                        copyStreamCapped(input, output, MAX_VIDEO_WALLPAPER_BYTES)
-                                    }
-                                }
-                            }
-                        }
-                    } else {
-                        // Pexels / direct URL: simple download
-                        okHttpClient.newCall(Request.Builder().url(videoUrl).build()).execute().use { resp ->
-                            if (!resp.isSuccessful) throw Exception("HTTP ${resp.code}")
-                            val body = resp.body ?: throw Exception("Empty response body")
-                            if (advertisedLengthExceeds(body.contentLength(), MAX_VIDEO_WALLPAPER_BYTES)) {
-                                throw Exception("Video exceeds size limit")
-                            }
-                            body.byteStream().use { input ->
-                                cacheFile.parentFile?.mkdirs()
-                                cacheFile.outputStream().use { output ->
-                                    copyStreamCapped(input, output, MAX_VIDEO_WALLPAPER_BYTES)
-                                }
-                            }
-                        }
-                    }
-                    if (com.freevibe.BuildConfig.DEBUG) Log.d("VideoWP", "Downloaded: ${cacheFile.length() / 1024}KB")
-                }.getOrElse { throw it }
-
-                if (!av1CodecSupport.hasHardwareAv1Decode) {
-                    val metadata = com.freevibe.service.readMediaTechnicalMetadata(file)
-                    if (metadata.codec?.contains("av01", ignoreCase = true) == true ||
-                        metadata.codec?.contains("av1", ignoreCase = true) == true
-                    ) {
-                        throw IllegalStateException("This device cannot play AV1 video. Try a different clip.")
-                    }
-                }
+                // A Download or an earlier apply already saved the original, so reapply works offline.
+                val original = (videoWallpaperStorage.findSavedDownloadedVideo(item.id, item.source) ?: downloadOriginal(item))
+                    .also(::requirePlayableCodec)
                 val preparedFile = videoWallpaperStorage.preparePresentation(
-                    file = file,
+                    file = original,
                     scaleMode = scaleMode,
                     canvasStyle = canvasStyle,
                 ).getOrElse { throw it }
@@ -903,6 +772,11 @@ class VideoWallpapersViewModel @Inject constructor(
                     // request just before opening the system picker.
                     selectionAlreadyPersisted = true,
                 )
+                _state.update { it.copy(isApplying = null) }
+            } catch (stop: VideoFetchStopped) {
+                withContext(Dispatchers.Main) {
+                    Toast.makeText(context, stop.message, Toast.LENGTH_SHORT).show()
+                }
                 _state.update { it.copy(isApplying = null) }
             } catch (e: Exception) {
                 if (e is CancellationException) throw e
@@ -919,6 +793,189 @@ class VideoWallpapersViewModel @Inject constructor(
                 }
                 _state.update { it.copy(isApplying = null) }
             }
+        }
+    }
+
+    /**
+     * Saves [item]'s original to Downloads. It's the managed copy Apply makes and reuses, kept under one
+     * record per video, so downloading twice or applying afterwards never makes a second copy.
+     */
+    fun downloadVideo(item: VideoWallpaperItem) {
+        if (item.id in _state.value.downloadingIds || _state.value.isApplying == item.id) return
+        if (!item.canUseVideoAction(VideoWallpaperAction.DOWNLOAD)) {
+            Toast.makeText(context, item.videoActionMessage(VideoWallpaperAction.DOWNLOAD), Toast.LENGTH_SHORT).show()
+            return
+        }
+        _state.update { it.copy(downloadingIds = it.downloadingIds + item.id) }
+        viewModelScope.launch {
+            val message = try {
+                if (videoWallpaperStorage.findSavedDownloadedVideo(item.id, item.source) != null) {
+                    context.getString(com.freevibe.R.string.video_wp_download_already_saved)
+                } else {
+                    downloadOriginal(item)
+                    context.getString(com.freevibe.R.string.video_wp_downloaded)
+                }
+            } catch (stop: VideoFetchStopped) {
+                stop.message
+            } catch (e: Exception) {
+                if (e is CancellationException) throw e
+                if (com.freevibe.BuildConfig.DEBUG) Log.e("VideoWP", "Download failed", e)
+                context.getString(
+                    com.freevibe.R.string.video_wp_download_failed,
+                    e.message ?: context.getString(com.freevibe.R.string.settings_ytdlp_update_unknown_error),
+                )
+            } finally {
+                _state.update { it.copy(downloadingIds = it.downloadingIds - item.id) }
+            }
+            withContext(Dispatchers.Main) { Toast.makeText(context, message, Toast.LENGTH_SHORT).show() }
+        }
+    }
+
+    /** Sends [item] to the community moderation queue, the same service wallpaper and sound reports use. */
+    fun reportVideo(item: VideoWallpaperItem, reason: CommunityReportReason, note: String) {
+        viewModelScope.launch {
+            val message = when {
+                !prefs.communityProviderEnabled.first() ->
+                    context.getString(com.freevibe.R.string.sound_feedback_community_disabled)
+                !prefs.communityGuidelinesAccepted.first() ->
+                    context.getString(com.freevibe.R.string.video_wp_report_guidelines)
+                else -> reportRepo.submitReport(item.reportInput(reason, note, streamUrls[item.id])).fold(
+                    onSuccess = { context.getString(com.freevibe.R.string.feedback_report_submitted) },
+                    onFailure = { error ->
+                        context.getString(
+                            com.freevibe.R.string.feedback_report_failed,
+                            error.message ?: context.getString(com.freevibe.R.string.settings_ytdlp_update_unknown_error),
+                        )
+                    },
+                )
+            }
+            withContext(Dispatchers.Main) { Toast.makeText(context, message, Toast.LENGTH_SHORT).show() }
+        }
+    }
+
+    /**
+     * Fetches [item]'s original into managed storage and records it in Downloads under one ID per video.
+     * Throws [VideoFetchStopped] when the user only needs to read why (YouTube off, no stream URL).
+     */
+    private suspend fun downloadOriginal(item: VideoWallpaperItem): java.io.File {
+        if (item.source == "YouTube" && !prefs.youtubeProviderEnabled.first()) {
+            sourceMetrics.recordDisabled("youtube")
+            throw VideoFetchStopped(context.getString(com.freevibe.R.string.video_wp_youtube_disabled))
+        }
+        // Get stream URL (cached or resolve)
+        val videoUrl = streamUrls[item.id] ?: run {
+            if (com.freevibe.BuildConfig.DEBUG) Log.d("VideoWP", "Resolving stream URL for download: ${item.videoId}")
+            val url = youtubeRepo.getVideoStreamUrl(item.videoId)
+            if (url != null) rememberStreamUrl(item, url)
+            url
+        } ?: throw VideoFetchStopped(context.getString(com.freevibe.R.string.ytdlp_video_url_update_hint))
+
+        if (com.freevibe.BuildConfig.DEBUG) Log.d("VideoWP", "Downloading video (source: ${item.source})...")
+        val downloadedExtension = when {
+            videoUrl.substringBefore('?').endsWith(".gif", ignoreCase = true) -> "gif"
+            videoUrl.substringBefore('?').endsWith(".webm", ignoreCase = true) -> "webm"
+            else -> "mp4"
+        }
+        val file = videoWallpaperStorage.prepareDownloadedVideo(
+            extension = downloadedExtension,
+            contentId = item.id,
+            source = item.source,
+            displayName = item.title,
+            provenanceUrl = item.sourcePageUrl.ifBlank { videoUrl },
+        ) { cacheFile ->
+            if (isHlsMotionUrl(videoUrl)) {
+                // A Reddit HLS URL is a playlist, not a video file. Let yt-dlp and
+                // ffmpeg fetch its segments and produce a bounded MP4; raw-copying
+                // the m3u8 bytes would create an invalid wallpaper file.
+                val hlsOutput = java.io.File(cacheFile.parentFile, "${cacheFile.name}.hls.mp4")
+                try {
+                    val request = com.yausername.youtubedl_android.YoutubeDLRequest(videoUrl)
+                    request.addOption("-f", "bestvideo[height<=1080]+bestaudio/best[height<=1080]/best")
+                    request.addOption("--merge-output-format", "mp4")
+                    request.addOption("--remux-video", "mp4")
+                    request.addOption("--force-overwrites")
+                    request.addOption("-o", hlsOutput.absolutePath)
+                    applyYtDlpDownloadBounds(request)
+                    com.yausername.youtubedl_android.YoutubeDL.getInstance().execute(request)
+                    if (!hlsOutput.exists()) throw java.io.IOException("HLS download did not produce an MP4")
+                    // Move rather than copy: both files live in the same
+                    // directory, so a copy would briefly need twice the
+                    // video's size on a device already near its cap.
+                    moveIntoPlace(hlsOutput, cacheFile)
+                    ytDlpUpdateManager.recordExtractionSuccess()
+                } catch (e: Exception) {
+                    if (e is kotlinx.coroutines.CancellationException) throw e
+                    ytDlpUpdateManager.recordExtractionFailure(e)
+                    throw e
+                } finally {
+                    hlsOutput.delete()
+                }
+            } else if (item.source == "YouTube" && item.videoId.isNotEmpty()) {
+                // YouTube: use yt-dlp for download
+                try {
+                    val ytUrl = "https://www.youtube.com/watch?v=${item.videoId}"
+                    val request = ytDlpRequestFactory.create(ytUrl)
+                    val formatSelector = if (av1CodecSupport.hasHardwareAv1Decode) {
+                        "bestvideo[ext=mp4][height<=1080]/best[ext=mp4]/best"
+                    } else {
+                        "bestvideo[ext=mp4][height<=1080][vcodec!~='av0?1']/best[ext=mp4][vcodec!~='av0?1']/best"
+                    }
+                    request.addOption("-f", formatSelector)
+                    request.addOption("-o", cacheFile.absolutePath)
+                    request.addOption("--force-overwrites")
+                    applyYtDlpDownloadBounds(request)
+                    com.yausername.youtubedl_android.YoutubeDL.getInstance().execute(request)
+                    ytDlpUpdateManager.recordExtractionSuccess()
+                } catch (e: Exception) {
+                    if (e is kotlinx.coroutines.CancellationException) throw e
+                    ytDlpUpdateManager.recordExtractionFailure(e)
+                    if (com.freevibe.BuildConfig.DEBUG) Log.e("VideoWP", "yt-dlp download failed: ${e.message}, using stream URL")
+                    okHttpClient.newCall(Request.Builder().url(videoUrl).build()).execute().use { resp ->
+                        if (!resp.isSuccessful) throw Exception("HTTP ${resp.code}")
+                        val body = resp.body ?: throw Exception("Empty response body")
+                        if (advertisedLengthExceeds(body.contentLength(), MAX_VIDEO_WALLPAPER_BYTES)) {
+                            throw Exception("Video exceeds size limit")
+                        }
+                        body.byteStream().use { input ->
+                            cacheFile.parentFile?.mkdirs()
+                            cacheFile.outputStream().use { output ->
+                                copyStreamCapped(input, output, MAX_VIDEO_WALLPAPER_BYTES)
+                            }
+                        }
+                    }
+                }
+            } else {
+                // Pexels / direct URL: simple download
+                okHttpClient.newCall(Request.Builder().url(videoUrl).build()).execute().use { resp ->
+                    if (!resp.isSuccessful) throw Exception("HTTP ${resp.code}")
+                    val body = resp.body ?: throw Exception("Empty response body")
+                    if (advertisedLengthExceeds(body.contentLength(), MAX_VIDEO_WALLPAPER_BYTES)) {
+                        throw Exception("Video exceeds size limit")
+                    }
+                    body.byteStream().use { input ->
+                        cacheFile.parentFile?.mkdirs()
+                        cacheFile.outputStream().use { output ->
+                            copyStreamCapped(input, output, MAX_VIDEO_WALLPAPER_BYTES)
+                        }
+                    }
+                }
+            }
+            if (com.freevibe.BuildConfig.DEBUG) Log.d("VideoWP", "Downloaded: ${cacheFile.length() / 1024}KB")
+        }.getOrElse { throw it }
+        return file
+    }
+
+    /**
+     * Apply stops on an AV1 original the device can't decode in hardware. It runs on every original,
+     * saved or fresh, since a Download keeps an AV1 file that is still worth having.
+     */
+    private fun requirePlayableCodec(file: java.io.File) {
+        if (av1CodecSupport.hasHardwareAv1Decode) return
+        val metadata = com.freevibe.service.readMediaTechnicalMetadata(file)
+        if (metadata.codec?.contains("av01", ignoreCase = true) == true ||
+            metadata.codec?.contains("av1", ignoreCase = true) == true
+        ) {
+            throw IllegalStateException("This device cannot play AV1 video. Try a different clip.")
         }
     }
 
@@ -1500,3 +1557,6 @@ class VideoWallpapersViewModel @Inject constructor(
     }
 
 }
+
+/** A stop the user only needs to read, like a disabled source. Not logged as a failure. */
+private class VideoFetchStopped(override val message: String) : Exception(message)

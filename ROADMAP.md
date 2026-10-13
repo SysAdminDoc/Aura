@@ -300,13 +300,12 @@ Evidence for every item below is in RESEARCH.md (2026-09-04 pass).
   Effort: M
 
 
-- [ ] P2 — Add save, download, share, and in-app report actions to video items
-  Category: ux
-  Where: app/src/main/java/com/freevibe/ui/screens/videowallpapers/VideoWallpapersScreen.kt:605-634,883-949,1168-1402
-  Problem: Video cards/immersive preview expose Apply plus Upvote/Hide, while wallpapers and sounds support richer keep/share/report workflows. Useful Reddit media cannot be retained without applying it.
-  Evidence: Current-run S22 capture 13-video-actions.png shows only Upvote video wallpaper and Hide video wallpaper. Code confirms those are the only card callbacks; immersive mode adds Apply but no save/download/share.
-  Fix: Add Favorite/collection, Download, Share source, and Report using existing license checks, DownloadManager, attribution, and report paths. Keep Reddit attribution/terms visible.
-  Acceptance: Each action works for Reddit and YouTube fixtures, respects terms, creates one canonical download, and is reachable from card and immersive views.
+- [ ] P2 — Let people favorite motion wallpapers and add them to collections
+  Category: feature
+  Where: app/src/main/java/com/freevibe/ui/screens/favorites/FavoritesScreen.kt, FavoritesViewModel.kt, data/repository/FavoritesRepository.kt, ui/screens/videowallpapers/VideoWallpapersScreen.kt
+  Problem: Videos can now be downloaded, shared and reported, but not favorited or collected. Favorites only has Wallpapers and Sounds tabs, FavoritesRepository reads only WALLPAPER and SOUND types, and nothing can rebuild a VideoWallpaperItem from a saved row to apply it later.
+  Fix: Store VIDEO favorites with the fields Apply needs (source, video ID, page URL, creator, license, size, duration), add a Videos tab that opens the item in the video preview with Apply and Download, and carry them through favorites backup export/import and collections.
+  Acceptance: A Reddit and a YouTube video favorited from the card and the full-screen preview appear under Favorites > Videos after a restart and a backup round trip, apply from there, and respect the same license checks as the feed.
   Confidence: Verified
   Effort: M
 

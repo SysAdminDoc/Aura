@@ -85,6 +85,7 @@ import com.freevibe.ui.components.AuraStateCard
 import com.freevibe.ui.components.AuraSnackbarHost
 import com.freevibe.ui.components.AuraStatusAction
 import com.freevibe.ui.components.AuraStatusBanner
+import com.freevibe.ui.components.CommunityReportDialog
 import com.freevibe.ui.components.CompactSearchField
 import com.freevibe.ui.components.CountBadge
 import com.freevibe.ui.components.FitCanvasControls
@@ -138,6 +139,8 @@ data class VideoWallpapersState(
     val isLoadingMore: Boolean = false,
     val isRefreshing: Boolean = false,
     val isApplying: String? = null,
+    /** Videos whose Download is still running. */
+    val downloadingIds: Set<String> = emptySet(),
     val error: String? = null,
     val searchQuery: String = "",
     val pexelsPage: Int = 1,
@@ -283,6 +286,17 @@ fun VideoWallpapersScreen(
     // Reading a string off LocalContext is not a composition read. LocalResources is.
     val resources = LocalResources.current
     var confirmItem by remember { mutableStateOf<VideoWallpaperItem?>(null) }
+    var downloadConfirmItem by remember { mutableStateOf<VideoWallpaperItem?>(null) }
+    var reportItem by remember { mutableStateOf<VideoWallpaperItem?>(null) }
+    val requestDownload: (VideoWallpaperItem) -> Unit = { item ->
+        // Provider terms come first when the license policy asks for them, as they do for Apply.
+        if (item.itemActionAvailability().downloadNeedsConfirmation) downloadConfirmItem = item else viewModel.downloadVideo(item)
+    }
+    val shareSource: (VideoWallpaperItem) -> Unit = { item ->
+        if (!context.shareVideoSource(item)) {
+            Toast.makeText(context, resources.getString(R.string.common_share_failed), Toast.LENGTH_SHORT).show()
+        }
+    }
     var cropItem by remember { mutableStateOf<Pair<VideoWallpaperItem, String>?>(null) }
     val appContext = context.applicationContext
     val scope = rememberCoroutineScope()
@@ -655,6 +669,10 @@ fun VideoWallpapersScreen(
                                         mediaSourceFactory = previewMediaSourceFactory,
                                         shouldPreview = immersiveVideoIndex < 0 && item.id == activePreviewId,
                                         isApplying = state.isApplying == item.id,
+                                        isDownloading = item.id in state.downloadingIds,
+                                        onDownload = { requestDownload(item) },
+                                        onShare = { shareSource(item) },
+                                        onReport = { reportItem = item },
                                         voteCount = voteCounts[item.id] ?: 0,
                                         onApply = { confirmItem = item },
                                         onOpen = {
@@ -731,6 +749,10 @@ fun VideoWallpapersScreen(
             onResolve = viewModel::ensureStreamResolved,
             onLoadMore = viewModel::loadMore,
             isLoadingMore = state.isLoadingMore,
+            downloadingIds = state.downloadingIds,
+            onDownload = requestDownload,
+            onShare = shareSource,
+            onReport = { reportItem = it },
             onApply = {
                 immersiveVideoIndex = -1
                 immersiveVideoItems = emptyList()
@@ -931,6 +953,48 @@ fun VideoWallpapersScreen(
             dismissButton = { TextButton(onClick = { confirmItem = null }) { Text(stringResource(R.string.common_cancel)) } },
         )
     }
+
+    // Provider terms before a download, with the same source and rights links Apply shows.
+    downloadConfirmItem?.let { item ->
+        val capabilities = remember(item) { item.videoWallpaperLicenseCapabilities() }
+        AlertDialog(
+            onDismissRequest = { downloadConfirmItem = null },
+            title = { Text(stringResource(R.string.video_wp_download_title)) },
+            text = {
+                Column(Modifier.verticalScroll(rememberScrollState())) {
+                    Text(item.title, style = MaterialTheme.typography.bodyMedium)
+                    Spacer(Modifier.height(12.dp))
+                    VideoProvenanceBlock(
+                        item = item,
+                        normalizedLicense = capabilities.normalizedLicense,
+                        policyLinks = capabilities.providerPolicyLinks,
+                        onOpenUrl = { url -> openExternalUrl(context, url) },
+                    )
+                    Spacer(Modifier.height(8.dp))
+                    Text(
+                        item.videoActionMessage(VideoWallpaperAction.DOWNLOAD),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.tertiary,
+                    )
+                }
+            },
+            confirmButton = {
+                Button(onClick = {
+                    downloadConfirmItem = null
+                    viewModel.downloadVideo(item)
+                }) { Text(stringResource(R.string.video_wp_download)) }
+            },
+            dismissButton = { TextButton(onClick = { downloadConfirmItem = null }) { Text(stringResource(R.string.common_cancel)) } },
+        )
+    }
+
+    reportItem?.let { item ->
+        CommunityReportDialog(
+            title = stringResource(R.string.video_wp_report),
+            onDismiss = { reportItem = null },
+            onSubmit = { reason, note -> viewModel.reportVideo(item, reason, note) },
+        )
+    }
     } // end Scaffold
 
     if (showFiltersSheet) {
@@ -1011,6 +1075,10 @@ private fun VideoImmersivePager(
     onResolve: (VideoWallpaperItem) -> Unit,
     onLoadMore: () -> Unit,
     isLoadingMore: Boolean,
+    downloadingIds: Set<String>,
+    onDownload: (VideoWallpaperItem) -> Unit,
+    onShare: (VideoWallpaperItem) -> Unit,
+    onReport: (VideoWallpaperItem) -> Unit,
     onApply: (VideoWallpaperItem) -> Unit,
     onDismiss: () -> Unit,
 ) {
@@ -1041,6 +1109,10 @@ private fun VideoImmersivePager(
                     streamUrl = if (item.id in resolvedIds) streamUrlFor(item.id) else null,
                     isActive = page == pagerState.currentPage,
                     mediaSourceFactory = mediaSourceFactory,
+                    isDownloading = item.id in downloadingIds,
+                    onDownload = { onDownload(item) },
+                    onShare = { onShare(item) },
+                    onReport = { onReport(item) },
                     onApply = { onApply(item) },
                 )
             }
@@ -1083,6 +1155,10 @@ private fun ImmersiveVideoPage(
     streamUrl: String?,
     isActive: Boolean,
     mediaSourceFactory: MediaSource.Factory,
+    isDownloading: Boolean,
+    onDownload: () -> Unit,
+    onShare: () -> Unit,
+    onReport: () -> Unit,
     onApply: () -> Unit,
 ) {
     val context = LocalContext.current
@@ -1191,7 +1267,7 @@ private fun ImmersiveVideoPage(
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(240.dp)
+                .height(320.dp)
                 .align(Alignment.BottomCenter)
                 .background(Brush.verticalGradient(listOf(Color.Transparent, Color.Black.copy(alpha = 0.92f)))),
         )
@@ -1211,8 +1287,10 @@ private fun ImmersiveVideoPage(
             )
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(
+                    // The creator stays next to the provider so credit is visible before any action.
                     listOfNotNull(
                         item.source,
+                        item.uploaderName.takeIf(String::isNotBlank),
                         item.duration.takeIf { it > 0 }?.let { "${it}s" },
                     ).joinToString(" · "),
                     modifier = Modifier.weight(1f),
@@ -1230,6 +1308,13 @@ private fun ImmersiveVideoPage(
                     Text(stringResource(R.string.video_apply))
                 }
             }
+            ImmersiveVideoActions(
+                actions = remember(item) { item.itemActionAvailability() },
+                isDownloading = isDownloading,
+                onDownload = onDownload,
+                onShare = onShare,
+                onReport = onReport,
+            )
         }
     }
 }
@@ -1298,6 +1383,10 @@ internal fun VideoCard(
     onOpen: () -> Unit,
     onUpvote: () -> Unit = {},
     onDownvote: () -> Unit = {},
+    isDownloading: Boolean = false,
+    onDownload: () -> Unit = {},
+    onShare: () -> Unit = {},
+    onReport: () -> Unit = {},
     rotationExcluded: Boolean = false,
     onToggleRotationExclusion: () -> Unit = {},
 ) {
@@ -1323,6 +1412,7 @@ internal fun VideoCard(
     val readyLabel = stringResource(R.string.a11y_ready)
     val voteStateDescription = stringResource(R.string.a11y_vote_count, voteCount)
     val canApplyVideo = remember(item) { item.canUseVideoAction(VideoWallpaperAction.APPLY) }
+    val itemActions = remember(item) { item.itemActionAvailability() }
     val unavailableLabel = stringResource(R.string.video_wp_unavailable)
     val applyBlockedMessage = remember(item, unavailableLabel) { item.videoActionMessage(VideoWallpaperAction.APPLY).ifBlank { unavailableLabel } }
 
@@ -1488,6 +1578,37 @@ internal fun VideoCard(
                         },
                         modifier = Modifier.semantics { stateDescription = voteStateDescription },
                     )
+                    if (itemActions.canDownload) {
+                        DropdownMenuItem(
+                            text = { Text(stringResource(if (isDownloading) R.string.video_wp_downloading else R.string.video_wp_download)) },
+                            leadingIcon = { Icon(Icons.Default.Download, contentDescription = null) },
+                            enabled = !isDownloading,
+                            onClick = {
+                                showItemActions = false
+                                onDownload()
+                            },
+                        )
+                    }
+                    if (itemActions.canShare) {
+                        DropdownMenuItem(
+                            text = { Text(stringResource(R.string.video_wp_share_source)) },
+                            leadingIcon = { Icon(Icons.Default.Share, contentDescription = null) },
+                            onClick = {
+                                showItemActions = false
+                                onShare()
+                            },
+                        )
+                    }
+                    if (itemActions.canReport) {
+                        DropdownMenuItem(
+                            text = { Text(stringResource(R.string.video_wp_report)) },
+                            leadingIcon = { Icon(Icons.Default.Flag, contentDescription = null) },
+                            onClick = {
+                                showItemActions = false
+                                onReport()
+                            },
+                        )
+                    }
                     DropdownMenuItem(
                         text = { Text(hideVideoLabel) },
                         leadingIcon = { Icon(Icons.Default.VisibilityOff, contentDescription = null) },

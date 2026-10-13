@@ -1981,4 +1981,17 @@
     <string name="settings_rotation_exclusions_subtitle">已排除 %1$d 项。查看或恢复项目。</string>
     <string name="settings_rotation_exclusions_manage_subtitle">无需隐藏或删除，即可阻止不需要的项目自动更换。</string>
     <string name="favorites_batch_start_failed">无法开始下载，请稍后再试。</string>
+    <string name="video_wp_download">下载</string>
+    <string name="video_wp_downloading">正在下载…</string>
+    <string name="video_wp_download_title">下载视频</string>
+    <string name="video_wp_downloaded">已保存到“库”中的“下载”</string>
+    <string name="video_wp_download_already_saved">已在下载中</string>
+    <string name="video_wp_download_failed">下载失败：%1$s</string>
+    <string name="video_wp_download_in_progress">此视频仍在下载，完成后再试。</string>
+    <string name="video_wp_share_source">分享来源</string>
+    <string name="video_wp_share_title">分享视频来源</string>
+    <string name="video_wp_share_text">%1$s，作者 %2$s，来自 %3$s：%4$s</string>
+    <string name="video_wp_share_text_no_creator">%1$s，来自 %2$s：%3$s</string>
+    <string name="video_wp_report">举报视频</string>
+    <string name="video_wp_report_guidelines">请先在设置中接受社区准则，然后再举报</string>
 </resources>
