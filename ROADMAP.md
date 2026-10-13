@@ -522,20 +522,6 @@ Evidence for every item below is in RESEARCH.md (2026-09-04 pass).
 
 Remainders of items closed in the 2026-09-30 drain whose full acceptance did not land.
 
-### P1
-
-- [ ] P1 — Turn on Firebase Authentication so community sign-in and admin moderation work
-  Why: Firebase Auth was never set up on `aura-1b494` (the Identity Toolkit config answers `CONFIGURATION_NOT_FOUND` and the project has no users), so `ensureSignedIn()` fails on every install and every signed-in community action fails before it reaches the backend. Since the private database rules went live on 2026-09-30, a global hide from the app also needs an account with the `admin` claim.
-  Needs: Matt signed in to the Firebase console: Authentication, Get started, then enable Anonymous. The API route (`identityPlatform:initializeAuth`) answers `BILLING_NOT_ENABLED` on Spark, while the console's own Get started doesn't need billing.
-  Then: open Aura on the phone Matt moderates from, find its new anonymous UID in the Authentication users list, and grant `admin: true` (`docs/firebase-admin-claims.md`, or Identity Toolkit `accounts:update` with `customAttributes` using the CLI login). Until then, hide content globally with `npx firebase database:set /moderation/<contentId> true --project aura-1b494`.
-  Acceptance: a fresh install signs in anonymously; an admin hide from the app lands in `/moderation`; a non-admin hide stays on that phone.
-
-- [ ] P1 — Deploy the community functions, then finish the vote migration
-  Why: production has never had a Cloud Function (the Cloud Functions, Cloud Build and Artifact Registry APIs were never enabled), so votes aren't recorded, and reports, follows, blocks, profile edits and collection links all fail. The private database rules went live on 2026-09-30 ahead of the functions. `/vote_counts` was seeded by running the backend's own `seedLegacyVoteCounts` locally against production (33 rows, 36 votes) and the 35 legacy vote markers were backfilled, so counts and Top Voted already read the new paths. Cloud Storage for Firebase isn't enabled and the project has no bucket (`aura-1b494.firebasestorage.app` doesn't exist), so community uploads need that too.
-  Needs: Firebase Auth (item above) and the Blaze plan on `aura-1b494`. The project is on Spark, and `snafumatthew@gmail.com` (the account the Firebase CLI on this PC is signed in to since 2026-09-30) has no Cloud billing account, so the functions dry run stops at enabling Artifact Registry. At current usage Blaze stays inside its no-cost quotas, but it needs a card and has no hard cap, so set a budget alert.
-  Steps: `npx firebase deploy --only functions:community --project aura-1b494` (it also creates the Scheduler jobs for `pruneExpiredSharedCollections` and `seedLegacyVoteCounts`); create the default Storage bucket and deploy `storage.rules`; check the seeding job's "Seeded legacy vote counts" log line. Once most installs run 6.46.1 or later, export the database, run `python tools/community_vote_privacy_backfill.py --database-export <export.json> --output <update.json> --drop-legacy`, apply it with `firebase database:update / <update.json> --project aura-1b494`, then delete the `seedLegacyVoteCounts` export from `functions/src/index.ts`.
-  Acceptance: a vote from a phone raises its `/vote_counts` row; a real community sound upload finalizes; a collection link made on one phone imports on the other; the prune job shows a successful run in the Functions log.
-
 ### P2
 
 - [ ] P2 — Give restart-on-manual-apply a Settings switch and a diagnostics line
