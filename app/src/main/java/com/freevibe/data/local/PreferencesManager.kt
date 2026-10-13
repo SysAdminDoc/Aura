@@ -10,6 +10,7 @@ import com.freevibe.data.legal.isProviderAvailableInCurrentArtifact
 import com.freevibe.data.legal.providerCapability
 import com.freevibe.data.model.COMMUNITY_GUIDELINES_VERSION
 import com.freevibe.data.model.ContentSource
+import com.freevibe.data.model.ContentType
 import com.freevibe.data.model.FitCanvasMode
 import com.freevibe.data.model.FitCanvasPreferences
 import com.freevibe.data.model.FitCanvasStyle
@@ -532,6 +533,27 @@ class PreferencesManager @Inject constructor(
     suspend fun setLastAppliedNotificationUri(uri: String) = set(Keys.LAST_APPLIED_NOTIFICATION_URI, uri)
     val lastAppliedAlarmUri: kotlinx.coroutines.flow.Flow<String> = get(Keys.LAST_APPLIED_ALARM_URI, "")
     suspend fun setLastAppliedAlarmUri(uri: String) = set(Keys.LAST_APPLIED_ALARM_URI, uri)
+
+    fun lastAppliedSoundUri(type: ContentType): Flow<String> = get(lastAppliedSoundKey(type), "")
+    suspend fun setLastAppliedSoundUri(type: ContentType, uri: String) = set(lastAppliedSoundKey(type), uri)
+
+    /** What a default sound was before Aura first replaced it, as SystemSoundOriginal encodes it. Empty until then. */
+    fun systemSoundOriginal(type: ContentType): Flow<String> = get(systemSoundOriginalKey(type), "")
+    suspend fun setSystemSoundOriginal(type: ContentType, encoded: String) = set(systemSoundOriginalKey(type), encoded)
+
+    private fun lastAppliedSoundKey(type: ContentType) = when (type) {
+        ContentType.RINGTONE -> Keys.LAST_APPLIED_RINGTONE_URI
+        ContentType.NOTIFICATION -> Keys.LAST_APPLIED_NOTIFICATION_URI
+        ContentType.ALARM -> Keys.LAST_APPLIED_ALARM_URI
+        else -> throw IllegalArgumentException("Not a sound type: $type")
+    }
+
+    private fun systemSoundOriginalKey(type: ContentType) = when (type) {
+        ContentType.RINGTONE -> Keys.ORIGINAL_RINGTONE_SOUND
+        ContentType.NOTIFICATION -> Keys.ORIGINAL_NOTIFICATION_SOUND
+        ContentType.ALARM -> Keys.ORIGINAL_ALARM_SOUND
+        else -> throw IllegalArgumentException("Not a sound type: $type")
+    }
 
     // ── Sound settings ────────────────────────────────────────────
 
@@ -1168,5 +1190,8 @@ class PreferencesManager @Inject constructor(
         val LAST_APPLIED_RINGTONE_URI = stringPreferencesKey("last_applied_ringtone_uri")
         val LAST_APPLIED_NOTIFICATION_URI = stringPreferencesKey("last_applied_notification_uri")
         val LAST_APPLIED_ALARM_URI = stringPreferencesKey("last_applied_alarm_uri")
+        val ORIGINAL_RINGTONE_SOUND = stringPreferencesKey("original_ringtone_sound")
+        val ORIGINAL_NOTIFICATION_SOUND = stringPreferencesKey("original_notification_sound")
+        val ORIGINAL_ALARM_SOUND = stringPreferencesKey("original_alarm_sound")
     }
 }

@@ -4,7 +4,6 @@ import android.content.ContentValues
 import android.content.Context
 import android.content.Intent
 import com.freevibe.util.rethrowIfCancelled
-import android.media.RingtoneManager
 import android.net.Uri
 import android.os.Build
 import android.os.Environment
@@ -36,6 +35,7 @@ class SoundApplier @Inject constructor(
     private val prefs: PreferencesManager,
     private val mediaCopyStore: MediaCopyStore,
     private val audioTrimmer: AudioTrimmer,
+    private val systemSounds: SystemSoundWriter,
 ) {
     /** Check if app has WRITE_SETTINGS permission */
     fun canWriteSettings(): Boolean = Settings.System.canWrite(context)
@@ -106,14 +106,9 @@ class SoundApplier @Inject constructor(
             }
 
             // Set as system sound
-            val ringtoneType = when (type) {
-                ContentType.RINGTONE -> RingtoneManager.TYPE_RINGTONE
-                ContentType.NOTIFICATION -> RingtoneManager.TYPE_NOTIFICATION
-                ContentType.ALARM -> RingtoneManager.TYPE_ALARM
-                else -> throw IllegalArgumentException("Invalid sound type: $type")
-            }
+            val target = soundTargetFor(type) ?: throw IllegalArgumentException("Invalid sound type: $type")
             try {
-                RingtoneManager.setActualDefaultRingtoneUri(context, ringtoneType, uri)
+                systemSounds.write(target, uri)
             } catch (e: IllegalArgumentException) {
                 throw IllegalStateException(
                     context.getString(R.string.sound_apply_oem_failure), e
@@ -147,11 +142,7 @@ class SoundApplier @Inject constructor(
             if (!canWriteSettings()) {
                 throw SecurityException("WRITE_SETTINGS permission not granted")
             }
-            RingtoneManager.setActualDefaultRingtoneUri(
-                context,
-                RingtoneManager.TYPE_RINGTONE,
-                null,
-            )
+            systemSounds.write(SoundShuffleTarget.RINGTONE, null)
             prefs.setLastAppliedRingtoneUri("")
         }.onFailure { it.rethrowIfCancelled() }
     }
@@ -167,14 +158,9 @@ class SoundApplier @Inject constructor(
                     if (input.read() < 0) throw IllegalStateException("Saved sound is empty")
                 } ?: throw IllegalStateException("Saved sound is no longer available")
             }
-            val ringtoneType = when (type) {
-                ContentType.RINGTONE -> RingtoneManager.TYPE_RINGTONE
-                ContentType.NOTIFICATION -> RingtoneManager.TYPE_NOTIFICATION
-                ContentType.ALARM -> RingtoneManager.TYPE_ALARM
-                else -> throw IllegalArgumentException("Invalid sound type: $type")
-            }
+            val target = soundTargetFor(type) ?: throw IllegalArgumentException("Invalid sound type: $type")
             try {
-                RingtoneManager.setActualDefaultRingtoneUri(context, ringtoneType, uri)
+                systemSounds.write(target, uri)
             } catch (e: IllegalArgumentException) {
                 throw IllegalStateException(
                     context.getString(R.string.sound_apply_oem_failure), e
@@ -203,13 +189,8 @@ class SoundApplier @Inject constructor(
             val uri = saveLocalFileToMediaStore(fileName.replace(SANITIZE_REGEX, "_"), type, File(filePath))
                 ?: throw IllegalStateException("Failed to save audio to MediaStore")
 
-            val ringtoneType = when (type) {
-                ContentType.RINGTONE -> RingtoneManager.TYPE_RINGTONE
-                ContentType.NOTIFICATION -> RingtoneManager.TYPE_NOTIFICATION
-                ContentType.ALARM -> RingtoneManager.TYPE_ALARM
-                else -> throw IllegalArgumentException("Invalid sound type: $type")
-            }
-            RingtoneManager.setActualDefaultRingtoneUri(context, ringtoneType, uri)
+            val target = soundTargetFor(type) ?: throw IllegalArgumentException("Invalid sound type: $type")
+            systemSounds.write(target, uri)
             persistAppliedUri(type, uri)
 
             uri

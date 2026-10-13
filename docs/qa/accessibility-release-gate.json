@@ -193,6 +193,9 @@
     "CreatorProfile": {
       "reason": "Needs a live Firebase community identity and upload history, which the FOSS flavor does not build at all."
     },
+    "DeviceSounds": {
+      "reason": "Lists the sounds this phone's RingtoneManager reports and which one is set, so a device scenario needs real device media and the Modify system settings permission. The capture and restore rules are covered by SystemSoundWriterTest."
+    },
     "Downloads": {
       "reason": "Lists real download history from Room and the file system, so a seeded scenario needs staged files on disk."
     },

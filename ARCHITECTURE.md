@@ -59,6 +59,7 @@ Living architecture overview for contributors. Internal working notes live in `C
 │   One-shot services:                                               │
 │     WallpaperApplier (applyByLocator: http/file/content/path)      │
 │     SoundApplier (RingtoneManager + MediaStore)                    │
+│     SystemSoundWriter (default sounds, keeps the pre-Aura one)     │
 │     DownloadManager (StateFlow-driven download queue)              │
 │     MediaCopyStore (original provenance + optimized apply copies)  │
 │     AudioTrimmer (Media3 transforms + final-codec fallback)        │

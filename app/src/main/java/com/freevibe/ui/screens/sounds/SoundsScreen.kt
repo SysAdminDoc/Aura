@@ -102,6 +102,7 @@ import com.freevibe.data.repository.hiddenItemLabel
 fun SoundsScreen(
     onSoundClick: (Sound) -> Unit,
     onCreateRingtone: (Uri) -> Unit = {},
+    onOpenDeviceSounds: () -> Unit = {},
     initialQuery: String? = null,
     isExpandedLayout: Boolean = LocalAuraNavigationLayout.current.isExpanded,
     viewModel: SoundsViewModel = hiltViewModel(),
@@ -474,6 +475,14 @@ fun SoundsScreen(
                                         pendingPersonalRecording = true
                                         showRecordPermissionPrompt = true
                                     }
+                                },
+                            )
+                            DropdownMenuItem(
+                                text = { Text(stringResource(R.string.nav_device_sounds)) },
+                                leadingIcon = { Icon(Icons.Default.PhoneAndroid, contentDescription = null) },
+                                onClick = {
+                                    showQuickActionsMenu = false
+                                    onOpenDeviceSounds()
                                 },
                             )
                             if (communityProviderEnabled) {

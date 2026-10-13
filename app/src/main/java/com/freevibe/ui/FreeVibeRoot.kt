@@ -61,6 +61,7 @@ import com.freevibe.ui.screens.settings.SettingsNavigation
 import com.freevibe.ui.screens.settings.WallpaperHistoryScreen
 import com.freevibe.ui.screens.search.UniversalSearchScreen
 import com.freevibe.ui.screens.sounds.ContactPickerScreen
+import com.freevibe.ui.screens.sounds.DeviceSoundsScreen
 import com.freevibe.ui.screens.sounds.SoundDetailScreen
 import com.freevibe.ui.screens.sounds.SoundsScreen
 import com.freevibe.ui.screens.wallpapers.WallpaperDetailScreen
@@ -444,6 +445,9 @@ fun FreeVibeRoot(
                     },
                     onCreateRingtone = { uri ->
                         navController.navigate(Screen.SoundEditor.createLocalRoute(uri)) { launchSingleTop = true }
+                    },
+                    onOpenDeviceSounds = {
+                        navController.navigate(Screen.DeviceSounds.route) { launchSingleTop = true }
                     },
                     initialQuery = backStackEntry.arguments?.getString("query")?.ifBlank { null },
                     isExpandedLayout = navigationLayout.isExpanded,
@@ -1091,6 +1095,11 @@ fun FreeVibeRoot(
                 CommunityReportsScreen(
                     onBack = { navController.popBackStack() },
                 )
+            }
+
+            // ── Sounds already on the phone ──────────────────────
+            composable(Screen.DeviceSounds.route) {
+                DeviceSoundsScreen(onBack = { navController.popBackStack() })
             }
 
             // ── Rotation Health ──────────────────────────────────

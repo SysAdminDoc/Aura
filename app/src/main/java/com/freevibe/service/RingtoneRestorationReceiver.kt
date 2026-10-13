@@ -58,6 +58,7 @@ class RingtoneRestorationWorker @AssistedInject constructor(
     private val prefs: PreferencesManager,
     private val livenessMonitor: LiveWallpaperLivenessMonitor,
     private val soundShufflePoolManager: SoundShufflePoolManager,
+    private val systemSounds: SystemSoundWriter,
 ) : CoroutineWorker(appContext, workerParams) {
 
     override suspend fun doWork(): Result {
@@ -86,7 +87,7 @@ class RingtoneRestorationWorker @AssistedInject constructor(
         }
     }
 
-    private fun restoreIfNeeded(type: Int, lastAppliedUri: String): Boolean {
+    private suspend fun restoreIfNeeded(type: Int, lastAppliedUri: String): Boolean {
         val typeName = when (type) {
             RingtoneManager.TYPE_RINGTONE -> "ringtone"
             RingtoneManager.TYPE_NOTIFICATION -> "notification"
@@ -106,11 +107,12 @@ class RingtoneRestorationWorker @AssistedInject constructor(
                     Log.w(TAG, "Boot restore: $typeName source missing ($expected)")
                     return false
                 }
-            RingtoneManager.setActualDefaultRingtoneUri(applicationContext, type, expected)
+            systemSounds.write(SoundShuffleTarget.entries.first { it.ringtoneManagerType == type }, expected)
         } catch (e: SecurityException) {
             Log.w(TAG, "Boot restore: $typeName write refused", e)
             return false
         } catch (e: Exception) {
+            if (e is CancellationException) throw e
             Log.w(TAG, "Boot restore: $typeName failed", e)
             return false
         }

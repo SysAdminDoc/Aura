@@ -81,7 +81,7 @@
       "requiredSourceTerms": [
         "OneTimeWorkRequestBuilder<RingtoneRestorationWorker>",
         "Intent.ACTION_BOOT_COMPLETED",
-        "RingtoneManager.setActualDefaultRingtoneUri"
+        "systemSounds.write("
       ],
       "settingsSourcePath": "app/src/main/java/com/freevibe/service/RingtoneRestorationReceiver.kt",
       "requiredSettingsTerms": [
@@ -140,7 +140,7 @@
       "requiredSourceTerms": [
         "PeriodicWorkRequestBuilder<SoundProfileWorker>",
         "parseProfiles",
-        "RingtoneManager.setActualDefaultRingtoneUri"
+        "systemSounds.write("
       ],
       "settingsSourcePath": "app/src/main/java/com/freevibe/ui/screens/settings/SettingsMediaDelegate.kt",
       "requiredSettingsTerms": [

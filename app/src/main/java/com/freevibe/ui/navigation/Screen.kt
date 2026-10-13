@@ -352,6 +352,14 @@ sealed class Screen(
             if (kind == null) route else "$route?kind=${kind.name}"
     }
 
+    // ── Sounds already on the phone ─────────────────────────────
+    data object DeviceSounds : Screen(
+        route = "device_sounds",
+        titleRes = R.string.nav_device_sounds,
+        icon = Icons.Filled.PhoneAndroid,
+        selectedIcon = Icons.Filled.PhoneAndroid,
+    )
+
     data object RotationHealth : Screen(
         route = "rotation_health",
         titleRes = R.string.nav_rotation_health,

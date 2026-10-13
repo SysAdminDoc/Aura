@@ -73,6 +73,7 @@ The [privacy policy](https://github.com/SysAdminDoc/Aura/blob/main/docs/privacy/
 | **Sound editor** | Trim, fade and change speed without changing pitch, then export OGG, MP3 or FLAC. |
 | **Sound Shuffle Pools** | Build named mixes from your downloads, local files, or Aura Originals. Each pool rotates the ringtone, notification sound, alarm, or any mix of them on its own schedule. Missing files can be relinked, and every change lands in a history you can undo. [How pools work](docs/sound-shuffle-pools.md). |
 | **Per-contact ringtones** | Give a contact their own ringtone, with Do Not Disturb guidance and a VIP-only silent default. |
+| **Sounds on this phone** | Browse and preview the ringtones, notification sounds and alarms already on your phone, see which one is set, and go back to the sound you had before Aura changed it. |
 | **Auto rotation** | Change the wallpaper on a schedule, by time of day, or with the system's light and dark theme. You can [leave any wallpaper out of rotation](docs/rotation-exclusions.md) without hiding it. |
 | **Widget and tile** | A home screen shuffle widget and a "Next wallpaper" Quick Settings tile. |
 | **Library** | Favorites, collections you can share as a link, QR code or file, and downloads that keep the original bytes. [Saved originals](docs/media-copy-lifecycle.md) and [relinking](docs/local-media-relink.md) have their own notes. |

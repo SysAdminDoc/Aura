@@ -1,7 +1,6 @@
 package com.freevibe.service
 
 import android.content.Context
-import android.media.RingtoneManager
 import android.net.Uri
 import android.provider.Settings
 import androidx.hilt.work.HiltWorker
@@ -62,6 +61,7 @@ class SoundProfileWorker @AssistedInject constructor(
     @Assisted workerParams: WorkerParameters,
     private val prefs: PreferencesManager,
     private val receiptStore: BackgroundWorkReceiptStore,
+    private val systemSounds: SystemSoundWriter,
 ) : CoroutineWorker(appContext, workerParams) {
 
     override suspend fun doWork(): Result {
@@ -111,27 +111,15 @@ class SoundProfileWorker @AssistedInject constructor(
             // receiver restores the profile sound instead of stomping it with a stale
             // manually-applied one.
             if (active.ringtoneUri.isNotBlank()) {
-                RingtoneManager.setActualDefaultRingtoneUri(
-                    applicationContext,
-                    RingtoneManager.TYPE_RINGTONE,
-                    Uri.parse(active.ringtoneUri),
-                )
+                systemSounds.write(SoundShuffleTarget.RINGTONE, Uri.parse(active.ringtoneUri))
                 prefs.setLastAppliedRingtoneUri(active.ringtoneUri)
             }
             if (active.notificationUri.isNotBlank()) {
-                RingtoneManager.setActualDefaultRingtoneUri(
-                    applicationContext,
-                    RingtoneManager.TYPE_NOTIFICATION,
-                    Uri.parse(active.notificationUri),
-                )
+                systemSounds.write(SoundShuffleTarget.NOTIFICATION, Uri.parse(active.notificationUri))
                 prefs.setLastAppliedNotificationUri(active.notificationUri)
             }
             if (active.alarmUri.isNotBlank()) {
-                RingtoneManager.setActualDefaultRingtoneUri(
-                    applicationContext,
-                    RingtoneManager.TYPE_ALARM,
-                    Uri.parse(active.alarmUri),
-                )
+                systemSounds.write(SoundShuffleTarget.ALARM, Uri.parse(active.alarmUri))
                 prefs.setLastAppliedAlarmUri(active.alarmUri)
             }
 
