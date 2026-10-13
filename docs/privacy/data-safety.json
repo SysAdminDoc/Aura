@@ -380,6 +380,15 @@
       "deletionPath": "Delete imported collections or clear app data."
     },
     {
+      "endpointId": "aura-update-check",
+      "dataTypes": ["App version", "Provider response metadata"],
+      "collectionStatus": "featureDependentCollection",
+      "sharingStatus": "sharedWithServiceProviders",
+      "userControl": "Check for updates switch in Settings, off by default; the automatic check never runs on a metered network or with Data Saver on.",
+      "retention": "The newest version's number, notes, and release page link are kept in app preferences until that version is installed or the check is turned off.",
+      "deletionPath": "Turn off Check for updates or clear app data."
+    },
+    {
       "endpointId": "firebase-community",
       "dataTypes": ["Firebase UID", "Community uploads", "Votes", "Follows", "Reports", "Blocks", "Creator profiles", "Storage uploads", "Callable payloads"],
       "collectionStatus": "userInitiatedCollection",

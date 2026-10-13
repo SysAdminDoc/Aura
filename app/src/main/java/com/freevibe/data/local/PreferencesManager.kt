@@ -555,6 +555,23 @@ class PreferencesManager @Inject constructor(
         else -> throw IllegalArgumentException("Not a sound type: $type")
     }
 
+    // ── Update check ──────────────────────────────────────────────
+
+    /** Off until the user turns it on. Nothing asks GitHub about new versions before that. */
+    val updateCheckEnabled: Flow<Boolean> = get(Keys.UPDATE_CHECK_ENABLED, false)
+    suspend fun setUpdateCheckEnabled(enabled: Boolean) = set(Keys.UPDATE_CHECK_ENABLED, enabled)
+
+    val updateCheckLastAt: Flow<Long> = get(Keys.UPDATE_CHECK_LAST_AT, 0L)
+    suspend fun setUpdateCheckLastAt(at: Long) = set(Keys.UPDATE_CHECK_LAST_AT, at)
+
+    /** The newer release the last check found, as UpdateChecker stores it. Blank when there isn't one. */
+    val updateCheckRelease: Flow<String> = get(Keys.UPDATE_CHECK_RELEASE, "")
+    suspend fun setUpdateCheckRelease(encoded: String) = set(Keys.UPDATE_CHECK_RELEASE, encoded)
+
+    /** The release tag whose notice the user closed, so it isn't raised again for the same version. */
+    val updateCheckDismissedTag: Flow<String> = get(Keys.UPDATE_CHECK_DISMISSED_TAG, "")
+    suspend fun setUpdateCheckDismissedTag(tag: String) = set(Keys.UPDATE_CHECK_DISMISSED_TAG, tag)
+
     // ── Sound settings ────────────────────────────────────────────
 
     val autoPreviewSounds: Flow<Boolean> = get(Keys.AUTO_PREVIEW, true)
@@ -1193,5 +1210,9 @@ class PreferencesManager @Inject constructor(
         val ORIGINAL_RINGTONE_SOUND = stringPreferencesKey("original_ringtone_sound")
         val ORIGINAL_NOTIFICATION_SOUND = stringPreferencesKey("original_notification_sound")
         val ORIGINAL_ALARM_SOUND = stringPreferencesKey("original_alarm_sound")
+        val UPDATE_CHECK_ENABLED = booleanPreferencesKey("update_check_enabled")
+        val UPDATE_CHECK_LAST_AT = longPreferencesKey("update_check_last_at")
+        val UPDATE_CHECK_RELEASE = stringPreferencesKey("update_check_release")
+        val UPDATE_CHECK_DISMISSED_TAG = stringPreferencesKey("update_check_dismissed_tag")
     }
 }

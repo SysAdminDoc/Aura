@@ -7,6 +7,10 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Description
+import androidx.compose.material.icons.filled.NewReleases
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -81,6 +85,7 @@ interface FreeVibeRootEntryPoint {
     fun wallpaperApplier(): com.freevibe.service.WallpaperApplier
     fun wallpaperHistoryManager(): com.freevibe.service.WallpaperHistoryManager
     fun databaseDowngradeReceiptStore(): com.freevibe.data.local.DatabaseDowngradeReceiptStore
+    fun updateChecker(): com.freevibe.service.UpdateChecker
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -116,6 +121,13 @@ fun FreeVibeRoot(
     // actually been read.
     val downgradeReceiptStore = remember { entryPoint.databaseDowngradeReceiptStore() }
     var downgradeReceipt by remember { mutableStateOf(downgradeReceiptStore.read()) }
+
+    // The update check is off until the user turns it on in Settings. When it is on, this is the
+    // one automatic try per app run, and the notice stays up until it is closed or the update lands.
+    val updateChecker = remember { entryPoint.updateChecker() }
+    val updateNotice by updateChecker.notice.collectAsStateWithLifecycle(initialValue = null)
+    var showUpdateNotes by rememberSaveable { mutableStateOf(false) }
+    LaunchedEffect(updateChecker) { updateChecker.checkIfDue() }
 
     // Handle deep-link navigation from widget or notification
     LaunchedEffect(navigationToken, initialNavigateTo, initialWallpaper?.id) {
@@ -229,6 +241,12 @@ fun FreeVibeRoot(
                 },
             )
         }
+        updateNotice?.takeIf { showUpdateNotes }?.let { release ->
+            com.freevibe.ui.components.UpdateNotesDialog(
+                release = release,
+                onDismiss = { showUpdateNotes = false },
+            )
+        }
         Scaffold(
             containerColor = Color.Transparent,
             snackbarHost = {
@@ -316,6 +334,25 @@ fun FreeVibeRoot(
                 if (showBottomBar && onMeteredConnection && !dataWarningDismissed) {
                     com.freevibe.ui.components.MobileDataWarningBanner(
                         onDismiss = { dataWarningDismissed = true },
+                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp),
+                    )
+                }
+                val shownUpdateNotice = updateNotice
+                if (showBottomBar && shownUpdateNotice != null) {
+                    com.freevibe.ui.components.AuraStatusBanner(
+                        icon = Icons.Default.NewReleases,
+                        title = stringResource(R.string.update_available_title, shownUpdateNotice.versionName),
+                        message = stringResource(R.string.update_notice_message),
+                        primaryAction = com.freevibe.ui.components.AuraStatusAction(
+                            label = stringResource(R.string.update_notice_whats_new),
+                            icon = Icons.Default.Description,
+                            onClick = { showUpdateNotes = true },
+                        ),
+                        secondaryAction = com.freevibe.ui.components.AuraStatusAction(
+                            label = stringResource(R.string.update_notice_dismiss),
+                            icon = Icons.Default.Close,
+                            onClick = { scope.launch { updateChecker.dismissNotice(shownUpdateNotice) } },
+                        ),
                         modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp),
                     )
                 }

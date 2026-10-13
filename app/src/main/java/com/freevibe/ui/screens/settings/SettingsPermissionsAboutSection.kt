@@ -13,18 +13,30 @@ import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Language
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Mic
+import androidx.compose.material.icons.filled.NewReleases
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.PlayCircle
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Security
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.SystemUpdate
 import androidx.compose.material.icons.filled.Wallpaper
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.res.stringResource
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.freevibe.R
+import com.freevibe.service.UpdateCheckFailure
+import com.freevibe.service.UpdateCheckResult
+import com.freevibe.service.UpdateCheckSkip
+import com.freevibe.ui.components.UpdateNotesDialog
 import com.freevibe.ui.util.openExternalUrl
 
 internal const val AURA_SOURCE_URL = "https://github.com/SysAdminDoc/Aura"
@@ -192,11 +204,46 @@ internal fun PermissionsSettingsSection(context: Context) {
     }
 }
 
+/** The line under "Check now": what the last check found, or what a tap will do. */
+@Composable
+internal fun updateCheckStatusText(checking: Boolean, result: UpdateCheckResult?): String = when {
+    checking -> stringResource(R.string.settings_update_check_status_checking)
+    result is UpdateCheckResult.Available ->
+        stringResource(R.string.update_available_title, result.release.versionName)
+    result is UpdateCheckResult.UpToDate ->
+        stringResource(R.string.settings_update_check_status_current, result.latestVersionName)
+    result is UpdateCheckResult.NoRelease -> stringResource(R.string.settings_update_check_status_no_release)
+    result is UpdateCheckResult.Failed -> stringResource(
+        when (result.reason) {
+            UpdateCheckFailure.NETWORK -> R.string.settings_update_check_status_offline
+            UpdateCheckFailure.RATE_LIMITED -> R.string.settings_update_check_status_rate_limited
+            UpdateCheckFailure.UNREADABLE -> R.string.settings_update_check_status_unreadable
+        },
+    )
+    result is UpdateCheckResult.Skipped && result.reason == UpdateCheckSkip.METERED ->
+        stringResource(R.string.settings_update_check_status_metered)
+    result is UpdateCheckResult.Skipped && result.reason == UpdateCheckSkip.DATA_SAVER ->
+        stringResource(R.string.settings_update_check_status_data_saver)
+    else -> stringResource(R.string.settings_update_check_status_idle)
+}
+
 @Composable
 internal fun AboutSettingsSection(
     context: Context,
+    viewModel: SettingsViewModel,
     onLicensesClick: () -> Unit,
 ) {
+    val updateCheckEnabled by viewModel.updateCheckEnabled.collectAsStateWithLifecycle(initialValue = false)
+    val availableUpdate by viewModel.availableUpdate.collectAsStateWithLifecycle(initialValue = null)
+    val updateCheckRunning by viewModel.updateCheckRunning.collectAsStateWithLifecycle()
+    val updateCheckResult by viewModel.updateCheckResult.collectAsStateWithLifecycle()
+    var showUpdateNotes by rememberSaveable { mutableStateOf(false) }
+
+    val shownUpdate = availableUpdate
+    if (showUpdateNotes && shownUpdate != null) {
+        UpdateNotesDialog(release = shownUpdate, onDismiss = { showUpdateNotes = false })
+    }
+
     SettingsSection(
         sectionKey = SettingsSectionKeys.ABOUT,
         title = stringResource(R.string.settings_about_section_title),
@@ -208,6 +255,33 @@ internal fun AboutSettingsSection(
             subtitle = stringResource(R.string.settings_about_app_subtitle, com.freevibe.BuildConfig.VERSION_NAME),
             onClick = {},
         )
+        // A Play build has no update rows: Play keeps it current and the checker never runs there.
+        if (viewModel.updateCheckOffered) {
+            SettingsToggle(
+                icon = Icons.Default.SystemUpdate,
+                title = stringResource(R.string.settings_update_check_title),
+                subtitle = stringResource(R.string.settings_update_check_subtitle),
+                checked = updateCheckEnabled,
+                onCheckedChange = viewModel::setUpdateCheckEnabled,
+            )
+        }
+        if (shownUpdate != null) {
+            SettingsItem(
+                icon = Icons.Default.NewReleases,
+                title = stringResource(R.string.update_available_title, shownUpdate.versionName),
+                subtitle = stringResource(R.string.settings_update_available_subtitle),
+                onClick = { showUpdateNotes = true },
+            )
+        }
+        if (viewModel.updateCheckOffered && updateCheckEnabled) {
+            SettingsItem(
+                icon = Icons.Default.Refresh,
+                title = stringResource(R.string.settings_update_check_now_title),
+                subtitle = updateCheckStatusText(updateCheckRunning, updateCheckResult),
+                onClick = viewModel::checkForUpdateNow,
+                enabled = !updateCheckRunning,
+            )
+        }
         SettingsItem(
             icon = Icons.Default.Code,
             title = stringResource(R.string.settings_about_source_title),

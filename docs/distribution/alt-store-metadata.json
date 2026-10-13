@@ -318,6 +318,10 @@
       "disclosure": "Local deep-link namespace for shared collection imports."
     },
     {
+      "id": "aura-update-check",
+      "disclosure": "Opt-in check of GitHub for a newer Aura release, off by default; it never downloads or installs anything."
+    },
+    {
       "id": "firebase-community",
       "disclosure": "Firebase community backend for anonymous identity, uploads, votes, reports, follows, blocks, profiles, and moderation."
     }

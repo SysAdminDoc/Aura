@@ -11,6 +11,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 data class CacheUsageState(
@@ -77,6 +78,7 @@ class SettingsViewModel @Inject constructor(
     libraryExporter: LibraryExporter,
     soundShufflePoolManager: SoundShufflePoolManager,
     aiWallpaperRepository: AiWallpaperRepository,
+    private val updateChecker: UpdateChecker,
     @IoDispatcher ioDispatcher: CoroutineDispatcher,
 ) : ViewModel() {
     private val rotation = SettingsRotationDelegate(context, prefs, collectionRepo, localWallpaperCatalog, viewModelScope)
@@ -215,6 +217,19 @@ class SettingsViewModel @Inject constructor(
     val themePackTransfer get() = diagnosticsDelegate.themePackTransfer
     val generatedAssets get() = diagnosticsDelegate.generatedAssets
     val diagnostics get() = diagnosticsDelegate.diagnostics
+    val updateCheckOffered get() = updateChecker.offered
+    val updateCheckEnabled get() = prefs.updateCheckEnabled
+    val availableUpdate get() = updateChecker.available
+    val updateCheckRunning get() = updateChecker.checking
+    val updateCheckResult get() = updateChecker.lastResult
+
+    fun setUpdateCheckEnabled(enabled: Boolean) {
+        viewModelScope.launch { updateChecker.setEnabled(enabled) }
+    }
+
+    fun checkForUpdateNow() {
+        viewModelScope.launch { updateChecker.checkNow() }
+    }
 
     fun clearParallaxGalleryResult() = diagnosticsDelegate.clearParallaxGalleryResult()
     fun clearVideoWallpaperSelectionResult() = diagnosticsDelegate.clearVideoWallpaperSelectionResult()

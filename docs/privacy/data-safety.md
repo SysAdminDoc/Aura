@@ -74,6 +74,7 @@ must have a matching `networkSurfaces` row in `docs/privacy/data-safety.json`.
 | `youtube-newpipe` | Video IDs and provider response metadata shared with YouTube tooling during enabled YouTube flows. | YouTube source switch and sound query settings. |
 | `youtube-pot-provider` | YouTube attestation challenge, video-bound token context, and response metadata shared only with the HTTPS provider selected by the user. | PO-token provider URL, YouTube source switch, and clear-app-data controls. |
 | `aura-collection-links` | No app-initiated network collection; links are import locators. | User chooses whether to import a collection link. |
+| `aura-update-check` | Aura's version in the User-Agent of one request to GitHub for the latest release, only when the user turns the update check on. | Check for updates switch, off by default. |
 | `firebase-community` | Firebase UID, community uploads, votes, follows, reports, blocks, profile edits, storage uploads, and callable payloads. | Community source switch, upload/report/delete flows, and support deletion tools. |
 
 ## Local Storage Ledger

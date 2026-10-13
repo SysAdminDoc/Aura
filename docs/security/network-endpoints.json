@@ -352,6 +352,22 @@
       ]
     },
     {
+      "id": "aura-update-check",
+      "hosts": ["api.github.com", "github.com"],
+      "schemes": ["https"],
+      "surface": "Opt-in check for a newer published Aura release",
+      "authLocation": "none",
+      "dataSent": "one GET for the latest release of SysAdminDoc/Aura with Aura's version in the User-Agent; no account, device, or install identifier",
+      "mediaCached": "no media; the newest version's number, notes, and release page link are kept in app preferences until it is installed or the check is turned off",
+      "rateLimitCachePolicy": "at most one automatic request a day and one try per app start, skipped on metered networks and with Data Saver on; a 403 or 429 is reported and not retried",
+      "fallbackBehavior": "a failed check changes nothing and reports the reason in Settings; github.com is only opened in the browser when the user taps the release page link",
+      "killSwitch": "update_check_enabled (off by default)",
+      "releaseOwner": "maintainer",
+      "sourceFiles": [
+        "app/src/main/java/com/freevibe/service/UpdateChecker.kt"
+      ]
+    },
+    {
       "id": "firebase-community",
       "hosts": [
         "firebaseio.com",

@@ -472,7 +472,7 @@ fun SettingsScreen(
 
             if (SettingsSectionKeys.PERMISSIONS in visibleSectionKeys) PermissionsSettingsSection(context)
             if (SettingsSectionKeys.ABOUT in visibleSectionKeys) {
-                AboutSettingsSection(context = context, onLicensesClick = navigation.onLicensesClick)
+                AboutSettingsSection(context = context, viewModel = viewModel, onLicensesClick = navigation.onLicensesClick)
             }
             }
             Spacer(Modifier.height(24.dp))

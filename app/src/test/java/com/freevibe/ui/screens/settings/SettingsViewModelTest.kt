@@ -551,6 +551,7 @@ class SettingsViewModelTest {
                 coEvery { it.auditGeneratedAssets() } returns
                     com.freevibe.data.repository.GeneratedAssetAudit()
             },
+            updateChecker = mockk(relaxed = true),
             ioDispatcher = dispatcher,
         )
     }

@@ -1701,6 +1701,26 @@
     <string name="settings_about_privacy_subtitle">查看数据使用、诊断、社区删除和生成壁纸的处理方式</string>
     <string name="settings_about_licenses_title">开源许可证</string>
     <string name="settings_about_licenses_subtitle">查看生成的声明、库许可证和内容来源归属</string>
+    <string name="settings_update_check_title">检查更新</string>
+    <string name="settings_update_check_subtitle">每天向 GitHub 询问一次是否有新版 Aura。不会下载任何内容。</string>
+    <string name="settings_update_available_subtitle">查看更新内容并打开发布页面</string>
+    <string name="settings_update_check_now_title">立即检查</string>
+    <string name="settings_update_check_status_idle">连接 Wi-Fi 时每天自动检查一次。点按可立即检查。</string>
+    <string name="settings_update_check_status_checking">正在检查…</string>
+    <string name="settings_update_check_status_current">你使用的已是最新版本。最新发布的版本是 %1$s。</string>
+    <string name="settings_update_check_status_no_release">目前还没有可供比较的已发布版本。</string>
+    <string name="settings_update_check_status_offline">无法连接 GitHub。请检查网络连接后重试。</string>
+    <string name="settings_update_check_status_rate_limited">GitHub 正在限制此网络的请求。请稍后再试。</string>
+    <string name="settings_update_check_status_unreadable">无法读取 GitHub 的回应。请稍后再试。</string>
+    <string name="settings_update_check_status_metered">正在使用移动数据，已跳过今天的检查。点按可立即检查。</string>
+    <string name="settings_update_check_status_data_saver">流量节省程序已开启，已跳过今天的检查。点按可立即检查。</string>
+    <string name="update_available_title">Aura %1$s 已发布</string>
+    <string name="update_notice_message">查看更新内容，然后前往发布页面获取。</string>
+    <string name="update_notice_whats_new">更新内容</string>
+    <string name="update_notice_dismiss">关闭</string>
+    <string name="update_notes_empty">此版本没有发布说明。</string>
+    <string name="update_notes_open_page">打开发布页面</string>
+    <string name="update_notes_open_failed">无法打开发布页面</string>
 
     <!-- App language -->
 

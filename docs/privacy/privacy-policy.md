@@ -107,6 +107,8 @@ Pexels, Pixabay, Reddit, YouTube tooling, Open-Meteo, Firebase, and optional
 Stability image generation. Provider usage depends on enabled features,
 provider switches, and user actions.
 
+Aura doesn't look for new versions by itself. If you turn on Check for updates in Settings, it asks GitHub for the latest Aura release at most once a day, and never on mobile data or with Data Saver on. That request carries Aura's version and nothing that identifies you or your phone. Aura shows the release notes and a link to the release page. It never downloads or installs an update.
+
 Generated wallpaper prompts are sent to Stability only after the user reviews
 and accepts the in-app disclosure. The generated wallpaper privacy runbook is
 tracked in [`docs/privacy/ai-generation.md`](ai-generation.md).
