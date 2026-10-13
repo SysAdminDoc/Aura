@@ -126,6 +126,8 @@ class BatchDownloadService @Inject constructor(
     private val startMutex = Mutex()
     // Covers the gap between persisting a batch and WorkManager reporting its work.
     private val starting = MutableStateFlow(false)
+    // Bumped per start, so a slow watcher from an earlier batch can't clear a newer batch's flag.
+    private var startGeneration = 0L
     private val workInfo: Flow<WorkInfo?> = WorkManager.getInstance(context)
         .getWorkInfosForUniqueWorkFlow(BatchDownloadWorker.WORK_NAME)
         .map { infos -> infos.firstOrNull { !it.state.isFinished } ?: infos.firstOrNull() }
@@ -148,6 +150,7 @@ class BatchDownloadService @Inject constructor(
             return BatchDownloadStartResult(acceptedCount = 0, blockedCount = plan.blockedCount)
         }
         starting.value = true
+        val generation = ++startGeneration
         var watcherClearsStarting = false
         try {
             store.replace(
@@ -167,7 +170,7 @@ class BatchDownloadService @Inject constructor(
                     try {
                         withTimeoutOrNull(START_WATCH_LIMIT_MS) { workInfo.first { it?.id == requestId } }
                     } finally {
-                        starting.value = false
+                        startMutex.withLock { if (startGeneration == generation) starting.value = false }
                     }
                 }
             }
