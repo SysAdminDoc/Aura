@@ -313,19 +313,6 @@ Evidence for every item below is in RESEARCH.md (2026-09-04 pass).
   Confidence: Verified
   Effort: M
 
-- [ ] P2 — Preserve result identity when Universal Search opens or downloads media
-  Category: correctness
-  Where: app/src/main/java/com/freevibe/ui/screens/search/UniversalSearchScreen.kt:422-430,740-817; app/src/main/java/com/freevibe/ui/FreeVibeRoot.kt:478-480
-  Problem: Search can insert duplicate downloaded media and Open often routes to a generic destination rather than the selected item. Users lose context and may see multiple rows for one asset.
-  Evidence: Download actions construct rows independently instead of using the canonical scoped identity path, while Open passes only a broad destination for multiple result types. No exact-detail locator travels with the result.
-  Fix: Reuse DownloadManager identity/replacement semantics and route with media type, provider, item ID, and source URL. Use a generic feed only when the item is unavailable, with an explanation.
-  Acceptance: Downloading a result twice leaves one history row and one MediaStore object; Open lands on that exact wallpaper/sound/video; unavailable legacy results show a specific fallback.
-  Confidence: Verified
-  Effort: M
-
-
-
-
 - [ ] P2 — Make wallpaper-editor overlays operable and announced
   Category: a11y
   Where: app/src/main/java/com/freevibe/ui/screens/editor/WallpaperEditorScreen.kt:520-590,735-765,809-839

@@ -10,6 +10,18 @@ import org.junit.Test
 class DownloadsScreenPolishTest {
 
     @Test
+    fun `focus index finds the row a search result opened`() {
+        val rows = listOf(
+            DownloadEntity(id = "a", source = "WALLHAVEN", type = "WALLPAPER", localPath = "/a.jpg"),
+            DownloadEntity(id = "b", source = "PEXELS", type = "VIDEO", localPath = "/b.mp4"),
+        )
+
+        assertEquals(1, downloadFocusIndex(rows, "b"))
+        assertNull("a row deleted since the search has nothing to scroll to", downloadFocusIndex(rows, "gone"))
+        assertNull(downloadFocusIndex(rows, null))
+    }
+
+    @Test
     fun `download history summary includes file health and date`() {
         val download = DownloadEntity(
             id = "wall-1",

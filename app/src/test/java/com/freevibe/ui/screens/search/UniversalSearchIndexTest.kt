@@ -90,6 +90,35 @@ class UniversalSearchIndexTest {
     }
 
     @Test
+    fun `download results carry the download itself so Open can land on its row`() {
+        val video = DownloadEntity(
+            id = "pexels_video_9",
+            source = "PEXELS",
+            type = "VIDEO",
+            localPath = "/storage/emulated/0/Movies/tide-loop.mp4",
+            name = "Tide loop",
+        )
+        val results = buildUniversalSearchResults(
+            query = "tide",
+            favorites = emptyList(),
+            downloads = listOf(video),
+            collections = emptyList(),
+        )
+
+        listOf(
+            UniversalSearchSection.VIDEOS,
+            UniversalSearchSection.DOWNLOADS,
+            UniversalSearchSection.LOCAL_FILES,
+        ).forEach { section ->
+            assertEquals(
+                "$section result must target the exact download",
+                UniversalSearchTarget.Download(video),
+                results.single { it.section == section }.target,
+            )
+        }
+    }
+
+    @Test
     fun `url and raw path fields do not match queries`() {
         val results = buildUniversalSearchResults(
             query = "https",

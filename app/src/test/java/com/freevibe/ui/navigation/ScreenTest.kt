@@ -21,6 +21,13 @@ class ScreenTest {
     }
 
     @Test
+    fun `downloads route takes an optional row to focus`() {
+        assertTrue(Screen.Downloads.destinationPattern.contains("focus={focus}"))
+        assertEquals("downloads", Screen.Downloads.createRoute())
+        assertEquals("downloads", Screen.Downloads.createRoute(" "))
+    }
+
+    @Test
     fun `searchable media routes expose query parameters`() {
         assertTrue(Screen.Wallpapers.destinationPattern.contains("query={query}"))
         assertTrue(Screen.VideoWallpapers.destinationPattern.contains("query={query}"))

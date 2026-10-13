@@ -168,7 +168,6 @@ sealed interface UniversalSearchTarget {
     data class Collection(val entity: WallpaperCollectionEntity) : UniversalSearchTarget
     data class Download(val entity: DownloadEntity) : UniversalSearchTarget
     data class FavoriteBucket(val type: String) : UniversalSearchTarget
-    data class LocalFile(val label: String) : UniversalSearchTarget
 }
 
 private data class LocalSearchIndex(
@@ -286,7 +285,7 @@ fun UniversalSearchScreen(
     onBack: () -> Unit,
     onWallpaperClick: (FavoriteEntity) -> Unit,
     onSoundClick: (FavoriteEntity) -> Unit,
-    onDownloadsClick: () -> Unit,
+    onDownloadClick: (DownloadEntity) -> Unit,
     onCollectionsClick: () -> Unit,
     onFavoritesClick: () -> Unit,
     onSearchWallpapers: (String) -> Unit,
@@ -424,9 +423,8 @@ fun UniversalSearchScreen(
                             is UniversalSearchTarget.WallpaperFavorite -> onWallpaperClick(target.entity)
                             is UniversalSearchTarget.SoundFavorite -> onSoundClick(target.entity)
                             is UniversalSearchTarget.Collection -> onCollectionsClick()
-                            is UniversalSearchTarget.Download -> onDownloadsClick()
+                            is UniversalSearchTarget.Download -> onDownloadClick(target.entity)
                             is UniversalSearchTarget.FavoriteBucket -> onFavoritesClick()
-                            is UniversalSearchTarget.LocalFile -> onDownloadsClick()
                         }
                     },
                     onProviderClick = { action ->
@@ -791,7 +789,7 @@ internal fun buildUniversalSearchResults(
                     title = download.localPath.fileNameFromPath().ifBlank { download.displayTitle() },
                     subtitle = download.localPath,
                     badge = UniversalSearchBadge.LOCAL,
-                    target = UniversalSearchTarget.LocalFile(download.localPath),
+                    target = UniversalSearchTarget.Download(download),
                 )
             } +
             favorites

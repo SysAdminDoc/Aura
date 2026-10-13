@@ -478,7 +478,9 @@ fun FreeVibeRoot(
                     onSoundClick = { favorite ->
                         navController.navigate(Screen.SoundDetail.createRoute(favorite.toSound())) { launchSingleTop = true }
                     },
-                    onDownloadsClick = { navController.navigate(Screen.Downloads.route) { launchSingleTop = true } },
+                    onDownloadClick = { download ->
+                        navController.navigate(Screen.Downloads.createRoute(download.id)) { launchSingleTop = true }
+                    },
                     onCollectionsClick = { navController.navigate(Screen.Collections.route) { launchSingleTop = true } },
                     onFavoritesClick = { navController.navigate(Screen.Favorites.route) { launchSingleTop = true } },
                     onSearchWallpapers = { query ->
@@ -1008,8 +1010,20 @@ fun FreeVibeRoot(
             }
 
             // ── Downloads ─────────────────────────────────────────
-            composable(Screen.Downloads.route) {
-                DownloadsScreen(onBack = { navController.popBackStack() })
+            composable(
+                route = Screen.Downloads.destinationPattern,
+                arguments = listOf(
+                    navArgument("focus") {
+                        type = NavType.StringType
+                        nullable = true
+                        defaultValue = null
+                    },
+                ),
+            ) { backStackEntry ->
+                DownloadsScreen(
+                    onBack = { navController.popBackStack() },
+                    focusDownloadId = backStackEntry.arguments?.getString("focus")?.ifBlank { null },
+                )
             }
 
             // ── Categories ────────────────────────────────────────

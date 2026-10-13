@@ -34,6 +34,7 @@ class UniversalSearchContractTest {
             "Screen.Wallpapers.createRoute(query = query)",
             "Screen.VideoWallpapers.createRoute(query = query)",
             "Screen.Sounds.createRoute(query = query)",
+            "Screen.Downloads.createRoute(download.id)",
             "video_wallpapers?query={query}",
             "global_search?query={query}",
         ).forEach { expected ->

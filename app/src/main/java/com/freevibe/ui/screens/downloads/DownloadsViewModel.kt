@@ -29,6 +29,7 @@ class DownloadsViewModel @Inject constructor(
     val soundDownloads = downloadDao.getByType("SOUND").stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
     val activeDownloads = downloadManager.activeDownloads
 
+    suspend fun downloadExists(id: String): Boolean = downloadDao.getById(id) != null
     fun deleteDownload(id: String) = viewModelScope.launch { downloadManager.deleteDownload(id) }
     suspend fun deleteOptimizedCopy(id: String): Boolean = mediaCopyStore.deleteOptimizedCopy(id)
     suspend fun relinkDownload(id: String, uri: Uri, acceptMismatch: Boolean = false): LocalMediaRelinkOutcome =

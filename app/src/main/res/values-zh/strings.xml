@@ -703,6 +703,7 @@
     <string name="downloads_file_path_missing">文件路径缺失</string>
     <string name="downloads_file_no_longer_exists">文件不再存在</string>
     <string name="downloads_cannot_open_file">无法打开文件</string>
+    <string name="downloads_focus_missing">这个下载已不在下载记录中，可能已被删除。</string>
     <string name="downloads_dismiss_file">忽略 %1$s</string>
     <string name="downloads_retry_file">重试 %1$s</string>
     <string name="download_failed_offline">无法连接服务器。请检查网络连接。</string>

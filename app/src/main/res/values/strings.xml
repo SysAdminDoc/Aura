@@ -756,6 +756,7 @@
     <string name="downloads_file_path_missing">File path is missing</string>
     <string name="downloads_file_no_longer_exists">File no longer exists</string>
     <string name="downloads_cannot_open_file">Cannot open file</string>
+    <string name="downloads_focus_missing">That download isn\'t in your history anymore. It may have been deleted.</string>
     <string name="downloads_dismiss_file">Dismiss %1$s</string>
     <string name="downloads_retry_file">Retry %1$s</string>
     <string name="download_failed_offline">Couldn\'t reach the server. Check your connection.</string>

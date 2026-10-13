@@ -290,7 +290,12 @@ sealed class Screen(
         titleRes = R.string.nav_downloads,
         icon = Icons.Filled.Download,
         selectedIcon = Icons.Filled.Download,
-    )
+        destinationPattern = "downloads?focus={focus}",
+    ) {
+        /** [focusDownloadId] scrolls to and highlights that history row. */
+        fun createRoute(focusDownloadId: String? = null): String =
+            focusDownloadId?.takeIf { it.isNotBlank() }?.let { "$route?focus=${Uri.encode(it)}" } ?: route
+    }
 
     // ── Categories ────────────────────────────────────────────────
     data object Categories : Screen(

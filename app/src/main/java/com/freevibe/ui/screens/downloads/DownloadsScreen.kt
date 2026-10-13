@@ -8,6 +8,7 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -55,6 +56,7 @@ import java.util.Locale
 @Composable
 fun DownloadsScreen(
     onBack: () -> Unit,
+    focusDownloadId: String? = null,
     viewModel: DownloadsViewModel = hiltViewModel(),
     rotationExclusionsViewModel: RotationExclusionsViewModel = hiltViewModel(),
 ) {
@@ -94,6 +96,27 @@ fun DownloadsScreen(
                 if (file != null && !file.exists()) item.id else null
             }
         }
+    }
+    // A row opened from Universal Search: scroll to it once, keep it highlighted while here.
+    val listState = rememberLazyListState()
+    var focusHandled by rememberSaveable { mutableStateOf(false) }
+    var focusedId by rememberSaveable { mutableStateOf<String?>(null) }
+    var focusScrolled by rememberSaveable { mutableStateOf(false) }
+    LaunchedEffect(focusDownloadId) {
+        if (focusHandled || focusDownloadId == null) return@LaunchedEffect
+        focusHandled = true
+        if (viewModel.downloadExists(focusDownloadId)) {
+            selectedTab = 0
+            focusedId = focusDownloadId
+        } else {
+            snackbarHostState.showSnackbar(resources.getString(R.string.downloads_focus_missing))
+        }
+    }
+    LaunchedEffect(focusedId, displayList) {
+        if (focusScrolled) return@LaunchedEffect
+        val index = downloadFocusIndex(displayList, focusedId) ?: return@LaunchedEffect
+        focusScrolled = true
+        listState.scrollToItem(index)
     }
     var pendingRelink by remember { mutableStateOf<DownloadEntity?>(null) }
     suspend fun finishRelink(download: DownloadEntity, uri: Uri, acceptMismatch: Boolean = false) {
@@ -171,6 +194,7 @@ fun DownloadsScreen(
                 }
             } else {
                 LazyColumn(
+                    state = listState,
                     contentPadding = PaddingValues(16.dp),
                     verticalArrangement = Arrangement.spacedBy(6.dp),
                 ) {
@@ -183,6 +207,7 @@ fun DownloadsScreen(
                             download = download,
                             broken = needsRelink,
                             sourceUnavailable = download.isSourceUnavailable(),
+                            highlighted = download.id == focusedId,
                             onOpen = {
                                 try {
                                     val path = download.localPath
@@ -365,6 +390,7 @@ internal fun DownloadHistoryCard(
     download: DownloadEntity,
     broken: Boolean = false,
     sourceUnavailable: Boolean = false,
+    highlighted: Boolean = false,
     onOpen: () -> Unit,
     onDelete: () -> Unit,
     onDeleteOptimized: (() -> Unit)? = null,
@@ -410,7 +436,11 @@ internal fun DownloadHistoryCard(
         },
         color = MaterialTheme.colorScheme.surfaceContainer,
         shape = RoundedCornerShape(8.dp),
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.24f)),
+        border = if (highlighted) {
+            BorderStroke(2.dp, MaterialTheme.colorScheme.primary)
+        } else {
+            BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.24f))
+        },
     ) {
         Column(Modifier.fillMaxWidth().padding(14.dp)) {
             Row(
@@ -584,6 +614,9 @@ internal fun downloadHealthLabel(
     download.type == "VIDEO" -> "Video"
     else -> "Sound"
 }
+
+internal fun downloadFocusIndex(downloads: List<DownloadEntity>, focusId: String?): Int? =
+    focusId?.let { id -> downloads.indexOfFirst { it.id == id }.takeIf { it >= 0 } }
 
 internal fun downloadOpenMimeType(download: DownloadEntity): String = when (download.type) {
     "WALLPAPER" -> "image/*"
