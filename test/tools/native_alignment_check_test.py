@@ -51,6 +51,71 @@ def minimal_elf32(load_alignments):
     return bytes(header + program_headers)
 
 
+def linked_elf64(alignment, soname=None, needed=()):
+    """A 64-bit ELF whose one PT_LOAD covers the file, with a dynamic section naming its links."""
+    strings = bytearray(b"\x00")
+    positions = {}
+    for name in ([soname] if soname else []) + list(needed):
+        positions[name] = len(strings)
+        strings += name.encode() + b"\x00"
+    phoff, phentsize, phnum = 64, 56, 2
+    strings_offset = phoff + phentsize * phnum
+    entries = [(native_alignment_check.DT_STRTAB, strings_offset)]
+    if soname:
+        entries.append((native_alignment_check.DT_SONAME, positions[soname]))
+    entries += [(native_alignment_check.DT_NEEDED, positions[name]) for name in needed]
+    entries.append((native_alignment_check.DT_NULL, 0))
+    dynamic = b"".join(struct.pack("<qQ", tag, value) for tag, value in entries)
+    dynamic_offset = strings_offset + len(strings)
+    header = bytearray(64)
+    header[:4] = b"\x7fELF"
+    header[4] = 2
+    header[5] = 1
+    struct.pack_into("<Q", header, 32, phoff)
+    struct.pack_into("<H", header, 54, phentsize)
+    struct.pack_into("<H", header, 56, phnum)
+    program_headers = bytearray(phentsize * phnum)
+    struct.pack_into("<I", program_headers, 0, native_alignment_check.PT_LOAD)
+    struct.pack_into("<Q", program_headers, 32, dynamic_offset + len(dynamic))
+    struct.pack_into("<Q", program_headers, 48, alignment)
+    struct.pack_into("<I", program_headers, phentsize, native_alignment_check.PT_DYNAMIC)
+    struct.pack_into("<Q", program_headers, phentsize + 8, dynamic_offset)
+    struct.pack_into("<Q", program_headers, phentsize + 16, dynamic_offset)
+    struct.pack_into("<Q", program_headers, phentsize + 32, len(dynamic))
+    return bytes(header + program_headers + strings + dynamic)
+
+
+def ffmpeg_like_apk():
+    """The real shape: libffmpeg.so links libavcodec, which links libwebp; nothing links libwebpdemux."""
+    return write_apk(
+        {
+            "lib/arm64-v8a/libffmpeg.so": linked_elf64(16384, needed=["libavcodec.so.61", "libc.so"]),
+            "lib/arm64-v8a/libffmpeg.zip.so": nested_zip(
+                {
+                    "usr/lib/libavcodec.so.61": b"libavcodec.so.61.19.101",
+                    "usr/lib/libavcodec.so.61.19.101": linked_elf64(
+                        16384, soname="libavcodec.so.61", needed=["libwebp.so", "libm.so"]
+                    ),
+                    "usr/lib/libwebp.so": linked_elf64(4096, needed=["libc.so"]),
+                    "usr/lib/libwebpdemux.so": linked_elf64(4096, needed=["libwebp.so"]),
+                }
+            ),
+        }
+    )
+
+
+def webp_exception(inner_path, loaded_at_startup):
+    return native_alignment_check.AlignmentException(
+        archive_entry="libffmpeg.zip.so",
+        inner_path=inner_path,
+        abis=frozenset({"arm64-v8a"}),
+        observed_alignment=4096,
+        reason="prebuilt upstream object",
+        upstream="https://example.invalid/issue",
+        loaded_at_startup=loaded_at_startup,
+    )
+
+
 def nested_zip(entries):
     """Real ZIP bytes, the way youtubedl-android ships FFmpeg and CPython."""
     buffer = io.BytesIO()
@@ -614,6 +679,89 @@ class ExpectedAbisForApkTest(unittest.TestCase):
         message = str(ctx.exception)
         self.assertIn("byte ceiling", message)
         self.assertIn("usr/lib/big.so", message)
+
+    def test_reads_the_soname_and_the_libraries_an_elf_links(self):
+        library = native_alignment_check.parse_elf(
+            "lib/arm64-v8a/libavcodec.so",
+            linked_elf64(16384, soname="libavcodec.so.61", needed=["libwebp.so", "libm.so"]),
+        )
+
+        self.assertEqual("libavcodec.so.61", library.soname)
+        self.assertEqual(("libwebp.so", "libm.so"), library.needed)
+        self.assertEqual({"libavcodec.so", "libavcodec.so.61"}, library.load_names)
+
+    def test_an_exception_records_truthfully_whether_ffmpeg_maps_it(self):
+        temp_dir, apk_path = ffmpeg_like_apk()
+        self.addCleanup(temp_dir.cleanup)
+        libraries = native_alignment_check.inspect_apk(apk_path)
+
+        result = native_alignment_check.validate_libraries(
+            libraries,
+            required_alignment=16384,
+            required_abis={"arm64-v8a"},
+            expected_abis={"arm64-v8a"},
+            require_64_bit_only=False,
+            variant="split:arm64-v8a",
+            alignment_exceptions=(
+                webp_exception("usr/lib/libwebp.so", loaded_at_startup=True),
+                webp_exception("usr/lib/libwebpdemux.so", loaded_at_startup=False),
+            ),
+        )
+
+        self.assertEqual(
+            ["lib/arm64-v8a/libffmpeg.so > libavcodec.so.61 > libwebp.so"],
+            result["acknowledgedUnderAlignedStartupLoads"],
+        )
+
+    def test_an_exception_claiming_ffmpeg_never_maps_a_linked_object_fails(self):
+        # The five libwebp exceptions said FFmpeg dlopened libwebp only when it
+        # needed it, while libavcodec listed libwebp in DT_NEEDED.
+        temp_dir, apk_path = ffmpeg_like_apk()
+        self.addCleanup(temp_dir.cleanup)
+        libraries = native_alignment_check.inspect_apk(apk_path)
+
+        with self.assertRaises(native_alignment_check.NativeAlignmentError) as ctx:
+            native_alignment_check.validate_libraries(
+                libraries,
+                required_alignment=16384,
+                required_abis={"arm64-v8a"},
+                expected_abis={"arm64-v8a"},
+                require_64_bit_only=False,
+                variant="split:arm64-v8a",
+                alignment_exceptions=(
+                    webp_exception("usr/lib/libwebp.so", loaded_at_startup=False),
+                    webp_exception("usr/lib/libwebpdemux.so", loaded_at_startup=True),
+                ),
+            )
+
+        message = str(ctx.exception)
+        self.assertIn(
+            "libffmpeg.zip.so!usr/lib/libwebp.so as not loaded at startup, but "
+            "lib/arm64-v8a/libffmpeg.so > libavcodec.so.61 > libwebp.so maps it",
+            message,
+        )
+        self.assertIn(
+            "libffmpeg.zip.so!usr/lib/libwebpdemux.so as loaded at startup, but nothing", message
+        )
+
+    def test_an_exception_without_a_startup_load_record_is_rejected_as_policy(self):
+        with self.assertRaises(native_alignment_check.NativeAlignmentError) as ctx:
+            native_alignment_check.parse_alignment_exceptions(
+                [
+                    {
+                        "archiveEntry": "libffmpeg.zip.so",
+                        "innerPath": "usr/lib/libwebp.so",
+                        "abis": ["arm64-v8a"],
+                        "observedAlignmentBytes": 4096,
+                        "reason": "prebuilt upstream object",
+                        "upstream": "https://example.invalid/issue",
+                    }
+                ],
+                16384,
+                {"arm64-v8a"},
+            )
+
+        self.assertIn("loadedAtStartup", str(ctx.exception))
 
     def test_an_exception_that_meets_the_requirement_is_rejected_as_policy(self):
         with self.assertRaises(native_alignment_check.NativeAlignmentError) as ctx:

@@ -11,7 +11,8 @@ import re
 import struct
 import sys
 import zipfile
-from dataclasses import dataclass
+from collections import deque
+from dataclasses import dataclass, replace
 from pathlib import Path
 from typing import Any
 
@@ -25,6 +26,11 @@ from tools.published_state import PublishedStateError, assert_enforcement_mechan
 
 PACKAGE_RE = re.compile(r'applicationId\s*=\s*"([^"]+)"')
 PT_LOAD = 1
+PT_DYNAMIC = 2
+DT_NULL = 0
+DT_NEEDED = 1
+DT_STRTAB = 5
+DT_SONAME = 14
 ELF_MAGIC = b"\x7fELF"
 ABI_64_BIT = {"arm64-v8a", "x86_64", "riscv64"}
 # The shipped payloads are one level deep. Allowing a little more room keeps a
@@ -50,6 +56,12 @@ class AlignmentException:
     An exception is only tolerated while it is still observed. A listed entry
     that the APK no longer contains fails the gate, so the list cannot decay
     into a blanket suppression that hides the next regression.
+
+    ``loaded_at_startup`` records whether a DT_NEEDED chain from something the
+    APK ships reaches the object, so the loader maps it whenever that program
+    runs. The gate measures it. These five entries once claimed FFmpeg only
+    dlopened libwebp when it needed it, while libavcodec named libwebp in
+    DT_NEEDED and every FFmpeg run mapped it.
     """
 
     archive_entry: str
@@ -58,6 +70,7 @@ class AlignmentException:
     observed_alignment: int
     reason: str
     upstream: str
+    loaded_at_startup: bool = False
 
     def matches(self, library: NativeLibrary) -> bool:
         if library.archive_entry is None or library.abi not in self.abis:
@@ -86,10 +99,20 @@ class NativeLibrary:
     load_segments: tuple[LoadSegment, ...]
     archive_entry: str | None = None
     inner_path: str | None = None
+    soname: str | None = None
+    needed: tuple[str, ...] = ()
 
     @property
     def is_64_bit(self) -> bool:
         return self.elf_class == 2 or self.abi in ABI_64_BIT
+
+    @property
+    def load_names(self) -> set[str]:
+        """Names a DT_NEEDED entry can use for this object: its SONAME and its file name."""
+        names = {(self.inner_path or self.apk_entry).rsplit("/", 1)[-1]}
+        if self.soname:
+            names.add(self.soname)
+        return names
 
 
 def parse_args() -> argparse.Namespace:
@@ -295,19 +318,30 @@ def parse_elf(entry_name: str, data: bytes) -> NativeLibrary:
         raise NativeAlignmentError(f"{entry_name} program headers are truncated")
 
     segments: list[LoadSegment] = []
+    file_ranges: list[tuple[int, int, int]] = []
+    dynamic: tuple[int, int] | None = None
     for index in range(phnum):
         base = phoff + (index * phentsize)
         p_type = unpack(endian + "I", data, base)[0]
+        if p_type == PT_DYNAMIC:
+            if elf_class == 2:
+                dynamic = (unpack(endian + "Q", data, base + 8)[0], unpack(endian + "Q", data, base + 32)[0])
+            else:
+                dynamic = (unpack(endian + "I", data, base + 4)[0], unpack(endian + "I", data, base + 16)[0])
+            continue
         if p_type != PT_LOAD:
             continue
         if elf_class == 2:
             p_offset = unpack(endian + "Q", data, base + 8)[0]
             p_vaddr = unpack(endian + "Q", data, base + 16)[0]
+            p_filesz = unpack(endian + "Q", data, base + 32)[0]
             p_align = unpack(endian + "Q", data, base + 48)[0]
         else:
             p_offset = unpack(endian + "I", data, base + 4)[0]
             p_vaddr = unpack(endian + "I", data, base + 8)[0]
+            p_filesz = unpack(endian + "I", data, base + 16)[0]
             p_align = unpack(endian + "I", data, base + 28)[0]
+        file_ranges.append((p_offset, p_vaddr, p_filesz))
         segments.append(
             LoadSegment(
                 offset=p_offset,
@@ -319,6 +353,7 @@ def parse_elf(entry_name: str, data: bytes) -> NativeLibrary:
     if not segments:
         raise NativeAlignmentError(f"{entry_name} has no PT_LOAD segments")
 
+    soname, needed = read_dynamic_names(entry_name, data, endian, elf_class, dynamic, file_ranges)
     parts = entry_name.split("/")
     abi = parts[1] if len(parts) >= 3 and parts[0] == "lib" else "unknown"
     return NativeLibrary(
@@ -326,7 +361,65 @@ def parse_elf(entry_name: str, data: bytes) -> NativeLibrary:
         abi=abi,
         elf_class=elf_class,
         load_segments=tuple(segments),
+        soname=soname,
+        needed=needed,
     )
+
+
+def read_dynamic_names(
+    entry_name: str,
+    data: bytes,
+    endian: str,
+    elf_class: int,
+    dynamic: tuple[int, int] | None,
+    file_ranges: list[tuple[int, int, int]],
+) -> tuple[str | None, tuple[str, ...]]:
+    """Return the SONAME and the DT_NEEDED names, or nothing for an ELF without a dynamic section."""
+    if dynamic is None:
+        return None, ()
+    dynamic_offset, dynamic_size = dynamic
+    entry_format = endian + ("qQ" if elf_class == 2 else "iI")
+    entry_size = struct.calcsize(entry_format)
+    string_table_address: int | None = None
+    named: list[tuple[int, int]] = []
+    for index in range(dynamic_size // entry_size):
+        tag, value = unpack(entry_format, data, dynamic_offset + index * entry_size)
+        if tag == DT_NULL:
+            break
+        if tag == DT_STRTAB:
+            string_table_address = value
+        elif tag in (DT_NEEDED, DT_SONAME):
+            named.append((tag, value))
+    if not named:
+        return None, ()
+    if string_table_address is None:
+        raise NativeAlignmentError(f"{entry_name} names libraries but has no dynamic string table")
+    string_table = next(
+        (
+            offset + string_table_address - address
+            for offset, address, size in file_ranges
+            if address <= string_table_address < address + size
+        ),
+        None,
+    )
+    if string_table is None:
+        raise NativeAlignmentError(f"{entry_name} dynamic string table lies outside its loaded segments")
+
+    def string_at(position: int) -> str:
+        start = string_table + position
+        end = data.find(b"\x00", start)
+        if start >= len(data) or end < 0:
+            raise NativeAlignmentError(f"{entry_name} dynamic string table is truncated")
+        return data[start:end].decode("utf-8", "replace")
+
+    soname: str | None = None
+    needed: list[str] = []
+    for tag, value in named:
+        if tag == DT_SONAME:
+            soname = string_at(value)
+        else:
+            needed.append(string_at(value))
+    return soname, tuple(needed)
 
 
 def inspect_nested_archive(
@@ -379,17 +472,43 @@ def inspect_nested_archive(
                 non_elf_entries += 1
                 continue
             library = parse_elf(f"{outer_entry}!{info.filename}", blob)
-            libraries.append(
-                NativeLibrary(
-                    apk_entry=library.apk_entry,
-                    abi=library.abi,
-                    elf_class=library.elf_class,
-                    load_segments=library.load_segments,
-                    archive_entry=outer_entry,
-                    inner_path=info.filename,
-                )
-            )
+            libraries.append(replace(library, archive_entry=outer_entry, inner_path=info.filename))
     return libraries, non_elf_entries
+
+
+def startup_load_chains(libraries: list[NativeLibrary]) -> dict[str, list[str]]:
+    """Map every ELF the loader maps at startup to the DT_NEEDED chain that reaches it.
+
+    The roots are the ELFs the APK ships directly under lib/<abi>/: the app's own
+    JNI libraries and the FFmpeg and ffprobe executables youtubedl-android runs.
+    Whatever they name in DT_NEEDED, and whatever those name in turn, is mapped
+    every time they run, whatever the input. An ELF outside this closure can only
+    arrive through an explicit dlopen. A name resolves inside the requesting
+    object's own archive first, since that is the directory its loader searches.
+    """
+    chains: dict[str, list[str]] = {}
+    for abi in sorted({library.abi for library in libraries}):
+        in_abi = [library for library in libraries if library.abi == abi]
+        by_archive_name: dict[tuple[str | None, str], NativeLibrary] = {}
+        by_name: dict[str, NativeLibrary] = {}
+        for library in in_abi:
+            for name in library.load_names:
+                by_archive_name.setdefault((library.archive_entry, name), library)
+                by_name.setdefault(name, library)
+        queue: deque[NativeLibrary] = deque()
+        for library in in_abi:
+            if library.archive_entry is None:
+                chains[library.apk_entry] = [library.apk_entry]
+                queue.append(library)
+        while queue:
+            library = queue.popleft()
+            for name in library.needed:
+                target = by_archive_name.get((library.archive_entry, name)) or by_name.get(name)
+                if target is None or target.apk_entry in chains:
+                    continue
+                chains[target.apk_entry] = chains[library.apk_entry] + [name]
+                queue.append(target)
+    return chains
 
 
 def inspect_apk(
@@ -552,6 +671,9 @@ def parse_alignment_exceptions(
                 upstream=require_string(
                     entry.get("upstream"), "nestedArchiveAlignmentExceptions[].upstream"
                 ),
+                loaded_at_startup=require_bool(
+                    entry.get("loadedAtStartup"), "nestedArchiveAlignmentExceptions[].loadedAtStartup"
+                ),
             )
         )
     return tuple(exceptions)
@@ -614,7 +736,9 @@ def validate_libraries(
     checked_segments = 0
     nested_libraries = 0
     excused: list[str] = []
+    excused_startup_loads: set[str] = set()
     matched_exceptions: set[AlignmentException] = set()
+    load_chains = startup_load_chains(libraries)
     for library in libraries:
         if library.archive_entry is not None:
             nested_libraries += 1
@@ -623,6 +747,7 @@ def validate_libraries(
         if not library.is_64_bit:
             continue
         exception = next((item for item in alignment_exceptions if item.matches(library)), None)
+        excused_here = False
         for segment in library.load_segments:
             checked_segments += 1
             if segment.alignment >= required_alignment and segment.alignment % required_alignment == 0:
@@ -630,10 +755,26 @@ def validate_libraries(
             if exception is not None and segment.alignment == exception.observed_alignment:
                 matched_exceptions.add(exception)
                 excused.append(f"{library.apk_entry} p_align {segment.alignment}")
+                excused_here = True
                 continue
             errors.append(
                 f"{library.apk_entry} PT_LOAD offset 0x{segment.offset:x} "
                 f"has p_align {segment.alignment}, expected a multiple of {required_alignment}"
+            )
+        if not excused_here or exception is None:
+            continue
+        chain = load_chains.get(library.apk_entry)
+        if chain is not None:
+            excused_startup_loads.add(" > ".join(chain))
+        if chain is not None and not exception.loaded_at_startup:
+            errors.append(
+                f"nestedArchiveAlignmentExceptions records {exception.archive_entry}!{exception.inner_path} "
+                f"as not loaded at startup, but {' > '.join(chain)} maps it on {library.abi}"
+            )
+        elif chain is None and exception.loaded_at_startup:
+            errors.append(
+                f"nestedArchiveAlignmentExceptions records {exception.archive_entry}!{exception.inner_path} "
+                f"as loaded at startup, but nothing this APK ships names it in DT_NEEDED on {library.abi}"
             )
 
     # A recorded exception the artifact no longer contains is a stale suppression.
@@ -663,6 +804,7 @@ def validate_libraries(
         "nativeLibraryCount": len(libraries),
         "nestedArchiveLibraryCount": nested_libraries,
         "acknowledgedUnderAlignedSegments": sorted(excused),
+        "acknowledgedUnderAlignedStartupLoads": sorted(excused_startup_loads),
         "seen64BitAbis": sorted(seen_64_bit_abis),
         "seenAbis": sorted(seen_abis),
         "expectedAbis": sorted(expected_abis),

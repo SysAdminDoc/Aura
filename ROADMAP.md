@@ -6,13 +6,6 @@ Actionable work only. Historical and completed roadmap material is archived in C
 
 ### P2
 
-- [ ] P2 — Replace or prove harmless the five under-aligned libwebp objects in the FFmpeg payload
-  Why: with the 16 KB gate now reading inside `lib/<abi>/*.zip.so`, five prebuilt libwebp ELFs are measured at `p_align 4096` on both 64-bit ABIs. They are recorded as exceptions so the gate stays useful, but an exception is an acknowledgement, not a fix: on a 16 KB-page device `dlopen` of a 4 KB-aligned object fails, and FFmpeg is configured `--enable-libwebp`, so a WebP path can reach them.
-  Evidence: `docs/distribution/native-alignment.json` `nestedArchiveEvidence` and `nestedArchiveAlignmentExceptions`; measured 2026-09-05 against the `io.github.junkfood02.youtubedl-android:ffmpeg:0.18.1` payload as `usr/lib/libsharpyuv.so`, `libwebp.so`, `libwebpdecoder.so`, `libwebpdemux.so`, `libwebpmux.so`, while all 400 other 64-bit LOAD segments in the same archive are 16384; `libpython.zip.so` is fully compliant. Upstream youtubedl-android issue #334.
-  Touches: `docs/distribution/native-alignment.json`, `app/build.gradle.kts` (dependency pin), `AudioTrimmer.kt` and `VideoCropScreen.kt` if a WebP path has to be closed off.
-  Acceptance: one of three outcomes is committed with its evidence — a newer or rebuilt FFmpeg payload ships all five at 16384 and the exceptions are deleted; or a test proves no Aura code path can make FFmpeg load libwebp, and the policy records that reachability argument instead of a bare exception; or the WebP inputs are rejected before FFmpeg is invoked. In every case the gate still fails if a sixth under-aligned object appears.
-  Complexity: M
-
 - [ ] P2 — Add the fastlane store images IzzyOnDroid requires
   Why: `fastlane/metadata/android/en-US/` has no `images/` directory, so there is no icon, phone screenshot, or feature graphic for a store listing to consume. (Changelogs are current — an earlier claim that they stopped at versionCode 8 was a lexical-sort artifact; 22 exist, through 141.)
   Evidence: `ls fastlane/metadata/android/en-US/` returns only `changelogs/`, `full_description.txt`, `short_description.txt`, `title.txt`; IzzyOnDroid App Inclusion Policy requires in-repo Fastlane metadata with icon and screenshots. Screenshot capture itself stays blocked in `Roadmap_Blocked.md`.

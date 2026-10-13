@@ -160,7 +160,8 @@
         "x86_64"
       ],
       "observedAlignmentBytes": 4096,
-      "reason": "Prebuilt libwebp object inside the published io.github.junkfood02.youtubedl-android:ffmpeg:0.18.1 AAR. yt-dlp extracts the archive at runtime and the FFmpeg binary dlopens what it needs, so the system loader never maps this ELF from the APK. It cannot be rebuilt here: the bytes ship inside a third-party artifact. Recorded rather than skipped so a new under-aligned payload still fails the gate.",
+      "loadedAtStartup": true,
+      "reason": "Byte for byte the copy in Termux's libwebp 1.6.0-rc1-0 package, shipped inside io.github.junkfood02.youtubedl-android:ffmpeg:0.18.1, which is still the newest release. libwebp.so lists it in DT_NEEDED and libavcodec lists libwebp.so, so the loader maps it every time FFmpeg or ffprobe runs, whatever the input. On a phone with 16 KB pages the loader is expected to refuse a 4 KB-aligned object, which would stop FFmpeg from starting at all. That hasn't been tried on such a phone yet. Termux's current package is the same 4 KB build, so there's no aligned copy to swap in. The fix is a 16 KB rebuild of libwebp or dropping FFmpeg.",
       "upstream": "https://github.com/yausername/youtubedl-android/issues/334"
     },
     {
@@ -171,7 +172,8 @@
         "x86_64"
       ],
       "observedAlignmentBytes": 4096,
-      "reason": "Prebuilt libwebp object inside the published io.github.junkfood02.youtubedl-android:ffmpeg:0.18.1 AAR. yt-dlp extracts the archive at runtime and the FFmpeg binary dlopens what it needs, so the system loader never maps this ELF from the APK. It cannot be rebuilt here: the bytes ship inside a third-party artifact. Recorded rather than skipped so a new under-aligned payload still fails the gate.",
+      "loadedAtStartup": true,
+      "reason": "Byte for byte the copy in Termux's libwebp 1.6.0-rc1-0 package, shipped inside io.github.junkfood02.youtubedl-android:ffmpeg:0.18.1, which is still the newest release. libavcodec lists it in DT_NEEDED, so the loader maps it every time FFmpeg or ffprobe runs, whatever the input. On a phone with 16 KB pages the loader is expected to refuse a 4 KB-aligned object, which would stop FFmpeg from starting at all. That hasn't been tried on such a phone yet. Termux's current package is the same 4 KB build, so there's no aligned copy to swap in. The fix is a 16 KB rebuild of libwebp or dropping FFmpeg.",
       "upstream": "https://github.com/yausername/youtubedl-android/issues/334"
     },
     {
@@ -182,7 +184,8 @@
         "x86_64"
       ],
       "observedAlignmentBytes": 4096,
-      "reason": "Prebuilt libwebp object inside the published io.github.junkfood02.youtubedl-android:ffmpeg:0.18.1 AAR. yt-dlp extracts the archive at runtime and the FFmpeg binary dlopens what it needs, so the system loader never maps this ELF from the APK. It cannot be rebuilt here: the bytes ship inside a third-party artifact. Recorded rather than skipped so a new under-aligned payload still fails the gate.",
+      "loadedAtStartup": false,
+      "reason": "Byte for byte the copy in Termux's libwebp 1.6.0-rc1-0 package, shipped inside io.github.junkfood02.youtubedl-android:ffmpeg:0.18.1, which is still the newest release. Nothing the APK ships lists it in DT_NEEDED and no payload binary names it for dlopen, so it's extracted to disk but never mapped. It's recorded rather than skipped so a new under-aligned object still fails the gate.",
       "upstream": "https://github.com/yausername/youtubedl-android/issues/334"
     },
     {
@@ -193,7 +196,8 @@
         "x86_64"
       ],
       "observedAlignmentBytes": 4096,
-      "reason": "Prebuilt libwebp object inside the published io.github.junkfood02.youtubedl-android:ffmpeg:0.18.1 AAR. yt-dlp extracts the archive at runtime and the FFmpeg binary dlopens what it needs, so the system loader never maps this ELF from the APK. It cannot be rebuilt here: the bytes ship inside a third-party artifact. Recorded rather than skipped so a new under-aligned payload still fails the gate.",
+      "loadedAtStartup": false,
+      "reason": "Byte for byte the copy in Termux's libwebp 1.6.0-rc1-0 package, shipped inside io.github.junkfood02.youtubedl-android:ffmpeg:0.18.1, which is still the newest release. Nothing the APK ships lists it in DT_NEEDED and no payload binary names it for dlopen, so it's extracted to disk but never mapped. It's recorded rather than skipped so a new under-aligned object still fails the gate.",
       "upstream": "https://github.com/yausername/youtubedl-android/issues/334"
     },
     {
@@ -204,7 +208,8 @@
         "x86_64"
       ],
       "observedAlignmentBytes": 4096,
-      "reason": "Prebuilt libwebp object inside the published io.github.junkfood02.youtubedl-android:ffmpeg:0.18.1 AAR. yt-dlp extracts the archive at runtime and the FFmpeg binary dlopens what it needs, so the system loader never maps this ELF from the APK. It cannot be rebuilt here: the bytes ship inside a third-party artifact. Recorded rather than skipped so a new under-aligned payload still fails the gate.",
+      "loadedAtStartup": true,
+      "reason": "Byte for byte the copy in Termux's libwebp 1.6.0-rc1-0 package, shipped inside io.github.junkfood02.youtubedl-android:ffmpeg:0.18.1, which is still the newest release. libavcodec lists it in DT_NEEDED, so the loader maps it every time FFmpeg or ffprobe runs, whatever the input. On a phone with 16 KB pages the loader is expected to refuse a 4 KB-aligned object, which would stop FFmpeg from starting at all. That hasn't been tried on such a phone yet. Termux's current package is the same 4 KB build, so there's no aligned copy to swap in. The fix is a 16 KB rebuild of libwebp or dropping FFmpeg.",
       "upstream": "https://github.com/yausername/youtubedl-android/issues/334"
     }
   ],
@@ -232,5 +237,11 @@
     },
     "skippedArchivePayloads": 0,
     "finding": "Five libwebp objects inside libffmpeg.zip.so carry p_align 4096 on arm64-v8a and x86_64; every other 64-bit LOAD segment in both nested payloads is 16384. libpython.zip.so is fully compliant on both 64-bit ABIs. 32-bit ABIs are 4096 throughout, which carries no 16 KB obligation. The five are recorded in nestedArchiveAlignmentExceptions and the gate fails if a sixth appears or if a listed one stops being observed."
+  },
+  "nestedArchiveDependencyEvidence": {
+    "date": "2026-10-13",
+    "status": "verified",
+    "method": "Read PT_DYNAMIC DT_NEEDED and DT_SONAME from every ELF in the io.github.junkfood02.youtubedl-android:ffmpeg:0.18.1 AAR (jni/<abi>/libffmpeg.so, libffprobe.so and everything in libffmpeg.zip.so) on arm64-v8a and x86_64, and compared the five libwebp objects by SHA-256 with Termux's libwebp_1.6.0-rc1-0 packages.",
+    "finding": "libffmpeg.so and libffprobe.so need libavcodec.so.61, which needs libwebp.so and libwebpmux.so, and libwebp.so needs libsharpyuv.so. Those three are mapped on every FFmpeg run. libwebpdecoder.so and libwebpdemux.so are needed by nothing. All five match Termux's current package byte for byte, and that package is 4 KB aligned too. The gate now measures this chain and fails when an exception's loadedAtStartup disagrees."
   }
 }

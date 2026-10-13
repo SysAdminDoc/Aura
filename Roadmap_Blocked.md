@@ -252,6 +252,13 @@ These items require adb-connected device or Android 17 emulator testing:
     way `createVersion8Database()` already is, then
     `helper.runMigrationsAndValidate(TEST_DB, 16, true, *DatabaseMigrations.ALL_MIGRATIONS)`.
 
+- **P2 — Replace the three libwebp objects every FFmpeg run maps, or drop FFmpeg**
+  - Measured 2026-10-13 from the youtubedl-android 0.18.1 AARs on arm64-v8a and x86_64: `libffmpeg.so` and `libffprobe.so` need `libavcodec.so.61`, which lists `libwebp.so` and `libwebpmux.so` in DT_NEEDED, and `libwebp.so` needs `libsharpyuv.so`. Those three are 4 KB aligned and mapped on every FFmpeg run, whatever the input, so the "dlopens what it needs" exception reason was false. Neither "prove no path loads libwebp" nor "reject WebP inputs" can work. `libwebpdecoder.so` and `libwebpdemux.so` are linked by nothing.
+  - All five are byte-identical to Termux's current `libwebp_1.6.0-rc1-0` packages, which are 4 KB aligned too, and 0.18.1 is still the newest youtubedl-android release, so there's no aligned prebuilt to switch to. Patching `p_align` in place is unsafe because the segments share 16 KB pages.
+  - Landed: the alignment gate reads DT_NEEDED and DT_SONAME, each exception records `loadedAtStartup`, and the gate fails when that disagrees with the measured chain (`nestedArchiveDependencyEvidence` in `docs/distribution/native-alignment.json`).
+  - Blocker: the fix is a native build (libwebp 1.6.0 with the NDK and `-Wl,-z,max-page-size=16384`, repacked into `libffmpeg.zip.so` at build time), which waits on a go-ahead to run builds, plus a 16 KB-page emulator (Android 15+ "16k" system image) to confirm FFmpeg starts. The FFmpeg removal item in ROADMAP.md makes this moot if it lands first.
+  - Resume by first confirming the failure on a 16 KB emulator: push the extracted payload and run `LD_LIBRARY_PATH=<usr/lib> ./libffmpeg.so -version`. Then rebuild the three linked objects, swap them into the payload with a pinned hash, and delete their exceptions. The gate fails while any exception still matches.
+
 - **P2 — Measure the collection QR dialog's frame times on a device**
   - The code half landed 2026-10-13: the share dialog builds its QR on `Dispatchers.Default` behind a
     progress state, the bitmap is filled with one `setPixels` call, and imports are sampled down before
