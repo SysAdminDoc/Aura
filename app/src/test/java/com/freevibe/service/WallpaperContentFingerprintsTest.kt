@@ -16,12 +16,12 @@ class WallpaperContentFingerprintsTest {
 
     @Test
     fun `difference hashes compare each cell with its right and lower neighbour`() {
-        val fallingLeftToRight = ThumbnailSample(IntArray(81) { i -> (8 - i % 9) * 10 }, 40, 80)
+        val fallingLeftToRight = ThumbnailSample(IntArray(289) { i -> (16 - i % 17) * 10 }, 40, 80)
 
         val fingerprint = wallpaperFingerprintOf(fallingLeftToRight)
 
-        assertEquals(-1L, fingerprint.horizontal)
-        assertEquals(0L, fingerprint.vertical)
+        assertEquals(List(4) { -1L }, fingerprint.horizontal)
+        assertEquals(List(4) { 0L }, fingerprint.vertical)
         assertEquals(40, fingerprint.sampleWidth)
         assertFalse("every bit the same says nothing about the picture", fingerprint.isDistinctive)
     }
@@ -30,11 +30,23 @@ class WallpaperContentFingerprintsTest {
     fun `the same thumbnail fingerprints the same and a detailed one is distinctive`() {
         assertEquals(wallpaperFingerprintOf(detailed()), wallpaperFingerprintOf(detailed()))
         assertTrue(wallpaperFingerprintOf(detailed()).isDistinctive)
-        assertFalse(wallpaperFingerprintOf(ThumbnailSample(IntArray(81), 40, 80)).isDistinctive)
+        assertFalse(wallpaperFingerprintOf(ThumbnailSample(IntArray(289), 40, 80)).isDistinctive)
     }
 
     @Test
-    fun `a pass samples at most the limit and never retries a failed thumbnail`() = runTest {
+    fun `the tone map keeps a brighter copy of the same shape apart`() {
+        val brighter = ThumbnailSample(detailed().luma.map { (it / 2) + 120 }.toIntArray(), 40, 80)
+        val darker = ThumbnailSample(detailed().luma.map { it / 2 }.toIntArray(), 40, 80)
+
+        val a = wallpaperFingerprintOf(brighter)
+        val b = wallpaperFingerprintOf(darker)
+
+        assertEquals("same shape", a.horizontal, b.horizontal)
+        assertTrue("different brightness", a != b)
+    }
+
+    @Test
+    fun `a pass samples every new thumbnail in batches and never retries a failed one`() = runTest {
         val calls = mutableListOf<String>()
         val store = WallpaperContentFingerprints { url ->
             calls += url
@@ -42,9 +54,8 @@ class WallpaperContentFingerprintsTest {
         }
         val feed = listOf(wallpaper("a"), wallpaper("broken"), wallpaper("c"))
 
-        store.fingerprint(feed, limit = 2)
-        store.fingerprint(feed, limit = 2)
-        store.fingerprint(feed, limit = 2)
+        store.fingerprint(feed, batchSize = 2)
+        store.fingerprint(feed, batchSize = 2)
 
         assertEquals(listOf("a.jpg", "broken.jpg", "c.jpg"), calls.map { it.substringAfterLast('/') })
         assertEquals(setOf(wallpaper("a").stableKey(), wallpaper("c").stableKey()), store.known.value.keys)
@@ -65,7 +76,7 @@ class WallpaperContentFingerprintsTest {
         assertEquals(1, store.known.value.size)
     }
 
-    private fun detailed() = ThumbnailSample(IntArray(81) { i -> (i % 9 * 53 + i / 9 * 97 + i % 9 * (i / 9) * 13) % 256 }, 40, 80)
+    private fun detailed() = ThumbnailSample(IntArray(289) { i -> (i % 17 * 53 + i / 17 * 97 + i % 17 * (i / 17) * 13) % 256 }, 40, 80)
 
     private fun wallpaper(id: String) = Wallpaper(
         id = id,

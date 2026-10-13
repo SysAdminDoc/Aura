@@ -27,46 +27,61 @@ import kotlinx.coroutines.withContext
 import javax.inject.Inject
 import javax.inject.Singleton
 
-internal const val FINGERPRINT_GRID = 9
+/** Side of the luma grid a thumbnail is reduced to; each hash has (side - 1) squared bits. */
+internal const val FINGERPRINT_GRID = 17
+private const val HASH_CELLS = FINGERPRINT_GRID - 1
+private const val HASH_WORDS = HASH_CELLS * HASH_CELLS / Long.SIZE_BITS
+private const val TONE_BLOCK = HASH_CELLS / 4
 private const val FINGERPRINT_DECODE_PX = 64
-private val DISTINCTIVE_BITS = 8..56
+private val DISTINCTIVE_BITS = (HASH_CELLS * HASH_CELLS / 8)..(HASH_CELLS * HASH_CELLS * 7 / 8)
 
 /**
- * Left-right and top-bottom difference hashes of a decoded thumbnail, plus the size it decoded
- * at. The same file posted under two URLs gives the same value; the decoded size stands in for
- * the pixel size, which Reddit often doesn't report.
+ * Left-right and top-bottom difference hashes of a decoded thumbnail, a coarse 4 by 4 tone map,
+ * and the size it decoded at. The same file posted under two URLs gives the same value; the tone
+ * map keeps two gradients with the same shape but different brightness apart, and the decoded size
+ * stands in for the pixel size, which Reddit often doesn't report.
  */
 data class WallpaperFingerprint(
-    val horizontal: Long,
-    val vertical: Long,
+    val horizontal: List<Long>,
+    val vertical: List<Long>,
+    val tone: Long,
     val sampleWidth: Int,
     val sampleHeight: Int,
 ) {
     /** Near-flat images, such as plain black AMOLED walls, hash alike even when they differ. */
     val isDistinctive: Boolean
         get() = sampleWidth > 0 && sampleHeight > 0 &&
-            java.lang.Long.bitCount(horizontal) in DISTINCTIVE_BITS &&
-            java.lang.Long.bitCount(vertical) in DISTINCTIVE_BITS
+            horizontal.sumOf { it.countOneBits() } in DISTINCTIVE_BITS &&
+            vertical.sumOf { it.countOneBits() } in DISTINCTIVE_BITS
 }
 
-/** A thumbnail reduced to a [FINGERPRINT_GRID] square of luma values, row by row. */
+/** A thumbnail reduced to a [FINGERPRINT_GRID] square of luma values (0 to 255), row by row. */
 internal class ThumbnailSample(val luma: IntArray, val width: Int, val height: Int)
 
 internal fun wallpaperFingerprintOf(sample: ThumbnailSample): WallpaperFingerprint {
     val luma = sample.luma
     require(luma.size == FINGERPRINT_GRID * FINGERPRINT_GRID) { "Expected a $FINGERPRINT_GRID by $FINGERPRINT_GRID grid" }
-    var horizontal = 0L
-    var vertical = 0L
+    val horizontal = LongArray(HASH_WORDS)
+    val vertical = LongArray(HASH_WORDS)
+    val toneSums = IntArray(16)
     var bit = 0
-    for (y in 0 until FINGERPRINT_GRID - 1) {
-        for (x in 0 until FINGERPRINT_GRID - 1) {
+    for (y in 0 until HASH_CELLS) {
+        for (x in 0 until HASH_CELLS) {
             val here = luma[y * FINGERPRINT_GRID + x]
-            if (here > luma[y * FINGERPRINT_GRID + x + 1]) horizontal = horizontal or (1L shl bit)
-            if (here > luma[(y + 1) * FINGERPRINT_GRID + x]) vertical = vertical or (1L shl bit)
+            val word = bit / Long.SIZE_BITS
+            val mask = 1L shl (bit % Long.SIZE_BITS)
+            if (here > luma[y * FINGERPRINT_GRID + x + 1]) horizontal[word] = horizontal[word] or mask
+            if (here > luma[(y + 1) * FINGERPRINT_GRID + x]) vertical[word] = vertical[word] or mask
+            toneSums[(y / TONE_BLOCK) * 4 + x / TONE_BLOCK] += here
             bit++
         }
     }
-    return WallpaperFingerprint(horizontal, vertical, sample.width, sample.height)
+    var tone = 0L
+    toneSums.forEachIndexed { block, sum ->
+        val level = (sum / (TONE_BLOCK * TONE_BLOCK)).coerceIn(0, 255) shr 4
+        tone = tone or (level.toLong() shl (block * 4))
+    }
+    return WallpaperFingerprint(horizontal.toList(), vertical.toList(), tone, sample.width, sample.height)
 }
 
 /**
@@ -86,21 +101,26 @@ class WallpaperContentFingerprints internal constructor(
     // Keys already tried, failures included, so a broken thumbnail isn't fetched on every pass.
     private val attempted = LinkedHashSet<String>()
 
-    /** Samples up to [limit] thumbnails not tried yet and publishes the results in one update. */
-    suspend fun fingerprint(wallpapers: List<Wallpaper>, limit: Int = PASS_LIMIT) {
+    /**
+     * Samples every thumbnail in [wallpapers] not tried yet, [batchSize] at a time, publishing
+     * each batch as it finishes so a long restored feed starts coalescing early.
+     */
+    suspend fun fingerprint(wallpapers: List<Wallpaper>, batchSize: Int = BATCH_SIZE) {
         val pending = synchronized(attempted) {
             wallpapers.asSequence()
                 .filter { it.thumbnailUrl.isNotBlank() }
                 .map { it.stableKey() to it.thumbnailUrl }
                 .filter { (key, _) -> key !in attempted }
                 .distinctBy { (key, _) -> key }
-                .take(limit)
                 .toList()
         }
-        if (pending.isEmpty()) return
+        pending.chunked(batchSize.coerceAtLeast(1)).forEach { batch -> sampleBatch(batch) }
+    }
+
+    private suspend fun sampleBatch(batch: List<Pair<String, String>>) {
         val gate = Semaphore(PARALLEL_SAMPLES)
         val results = coroutineScope {
-            pending.map { (key, url) ->
+            batch.map { (key, url) ->
                 async {
                     val sample = gate.withPermit {
                         try {
@@ -128,7 +148,7 @@ class WallpaperContentFingerprints internal constructor(
     }
 
     private companion object {
-        const val PASS_LIMIT = 40
+        const val BATCH_SIZE = 40
         const val PARALLEL_SAMPLES = 3
         const val MAX_ENTRIES = 1_500
     }

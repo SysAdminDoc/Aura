@@ -62,10 +62,16 @@ class WallpaperFeedQualityTest {
         val first = wallpaper("rd_1wpu3qi", ContentSource.REDDIT, "https://i.redd.it/aaa.jpeg", 0, 0)
         val other = wallpaper("rd_other", ContentSource.REDDIT, "https://i.redd.it/bbb.jpeg", 0, 0)
         val repost = wallpaper("rd_1wpu03j", ContentSource.REDDIT, "https://i.redd.it/ccc.jpeg", 0, 0)
-        val same = WallpaperFingerprint(0x0F0F_3C3C_5A5A_6969L, 0x1234_5678_9ABC_DEF0L, 31, 64)
+        val same = WallpaperFingerprint(
+            horizontal = List(4) { 0x0F0F_3C3C_5A5A_6969L },
+            vertical = List(4) { 0x1234_5678_9ABC_DEF0L },
+            tone = 0x0123_4567_89AB_CDEFL,
+            sampleWidth = 31,
+            sampleHeight = 64,
+        )
         val fingerprints = mapOf(
             first.stableKey() to same,
-            other.stableKey() to same.copy(horizontal = 0x7777_1111_2222_4444L),
+            other.stableKey() to same.copy(horizontal = List(4) { 0x7777_1111_2222_4444L }),
             repost.stableKey() to same,
         )
 
@@ -79,7 +85,7 @@ class WallpaperFeedQualityTest {
         val a = wallpaper("a", ContentSource.REDDIT, "https://i.redd.it/a.jpeg", 0, 0)
         val b = wallpaper("b", ContentSource.REDDIT, "https://i.redd.it/b.jpeg", 0, 0)
         val c = wallpaper("c", ContentSource.REDDIT, "https://i.redd.it/c.jpeg", 0, 0)
-        val black = WallpaperFingerprint(0L, 0L, 31, 64)
+        val black = WallpaperFingerprint(List(4) { 0L }, List(4) { 0L }, tone = 0L, sampleWidth = 31, sampleHeight = 64)
 
         assertEquals(
             listOf(a, b, c),
