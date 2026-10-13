@@ -109,6 +109,7 @@ class FreeVibeApp : Application(), Configuration.Provider, SingletonImageLoader.
         initYtDlp()
         enqueueAuraOriginalsDownload()
         reconcileSoundProfileWork()
+        reconcileWallpaperPackWork()
         publishWidgetPreview()
         reconcileRotationTriggers()
         relaxRotationNetworkConstraint()
@@ -193,6 +194,21 @@ class FreeVibeApp : Application(), Configuration.Provider, SingletonImageLoader.
             } catch (e: Exception) {
                 if (e is kotlinx.coroutines.CancellationException) throw e
                 if (BuildConfig.DEBUG) Log.w("FreeVibeApp", "Sound profile reconcile failed: ${e.message}")
+            }
+        }
+    }
+
+    /** The same start-up repair for the 24H pack, which had none and could stay unscheduled for good. */
+    private fun reconcileWallpaperPackWork() {
+        appScope.launch {
+            try {
+                com.freevibe.service.reconcileWallpaperPackSchedule(
+                    this@FreeVibeApp,
+                    com.freevibe.data.local.PreferencesManager(this@FreeVibeApp),
+                )
+            } catch (e: Exception) {
+                if (e is kotlinx.coroutines.CancellationException) throw e
+                if (BuildConfig.DEBUG) Log.w("FreeVibeApp", "24H pack reconcile failed: ${e.message}")
             }
         }
     }

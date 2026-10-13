@@ -15,7 +15,9 @@ import androidx.work.WorkerParameters
 import com.freevibe.data.local.PreferencesManager
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.withContext
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
@@ -101,7 +103,7 @@ class SoundProfileWorker @AssistedInject constructor(
                     handBackAll()
                     clearLastAppliedId()
                 }
-                cancel(applicationContext)
+                stopUnlessNeededAgain()
                 return Result.success()
             }
 
@@ -211,6 +213,24 @@ class SoundProfileWorker @AssistedInject constructor(
 
     private suspend fun clearLastAppliedId() {
         if (prefs.soundProfileLastAppliedId.first().isNotBlank()) prefs.setSoundProfileLastAppliedId("")
+    }
+
+    /**
+     * Cancels this schedule, then looks at the profiles once more. A profile saved after the look
+     * that brought the run here asks for a schedule and a run of its own, and this cancel would
+     * sweep both away with the old schedule, so they are put back. The cancel also stops this very
+     * run, which is why the second look is shielded from being cut short.
+     */
+    private suspend fun stopUnlessNeededAgain() = withContext(NonCancellable) {
+        cancel(applicationContext)
+        val neededAgain = soundProfilesNeedWorker(
+            prefs.soundProfilesEnabled.first(),
+            parseProfiles(prefs.soundProfilesJson.first()),
+        )
+        if (neededAgain) {
+            schedule(applicationContext)
+            runNow(applicationContext)
+        }
     }
 
     companion object {

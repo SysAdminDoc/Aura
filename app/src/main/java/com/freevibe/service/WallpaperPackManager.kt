@@ -14,7 +14,9 @@ import com.freevibe.data.model.rotationIdentityForLocator
 import com.freevibe.data.repository.RotationExclusionRepository
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.withContext
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
@@ -110,6 +112,17 @@ fun restartWallpaperPackSchedule(context: Context, toggleOn: Boolean, packJson: 
 }
 
 /**
+ * Start-up repair. With the pack switch on, the worker should exist exactly when a slot can be
+ * applied. A schedule can go missing when the app dies between saving a pack and enqueueing the
+ * work, and this puts it back the next time Aura starts. With the switch off no work exists, so
+ * nothing is touched.
+ */
+suspend fun reconcileWallpaperPackSchedule(context: Context, prefs: PreferencesManager) {
+    if (!prefs.wallpaperPackEnabled.first()) return
+    syncWallpaperPackSchedule(context, toggleOn = true, packJson = prefs.wallpaperPackJson.first())
+}
+
+/**
  * What the dedup marker holds for a time of day whose picture Aura may no longer open. It stops the
  * 15 minute retries without claiming the wallpaper was applied.
  */
@@ -133,7 +146,7 @@ class WallpaperPackWorker @AssistedInject constructor(
             val packJson = prefs.wallpaperPackJson.first()
             if (!shouldSchedulePack(prefs.wallpaperPackEnabled.first(), packJson)) {
                 // No slot can be applied, so stop waking up every 15 minutes for it.
-                cancel(applicationContext)
+                stopUnlessNeededAgain()
                 return Result.success()
             }
             val pack = parsePack(packJson) ?: return Result.success()
@@ -206,6 +219,19 @@ class WallpaperPackWorker @AssistedInject constructor(
                 deferralReason = e.message ?: "unknown error",
             )
             Result.retry()
+        }
+    }
+
+    /**
+     * Cancels this schedule, then looks at the pack once more. A pack saved after the look that
+     * brought the run here asks for a schedule too, and this cancel would sweep that request away
+     * with the old one, so it is put back. The cancel also stops this very run, which is why the
+     * second look is shielded from being cut short.
+     */
+    private suspend fun stopUnlessNeededAgain() = withContext(NonCancellable) {
+        cancel(applicationContext)
+        if (shouldSchedulePack(prefs.wallpaperPackEnabled.first(), prefs.wallpaperPackJson.first())) {
+            schedule(applicationContext)
         }
     }
 
