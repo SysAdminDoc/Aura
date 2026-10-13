@@ -13,7 +13,6 @@ import android.os.IBinder
 import androidx.core.app.NotificationCompat
 import androidx.work.Constraints
 import androidx.work.ExistingWorkPolicy
-import androidx.work.NetworkType
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.OutOfQuotaPolicy
 import androidx.work.WorkManager
@@ -205,15 +204,8 @@ class RotationTriggerService : Service() {
          * change shows right away.
          */
         internal fun enqueueRotation(context: Context, restartCountdown: Boolean = true) {
-            // WorkManager refuses to build expedited work with a battery constraint, so only a
-            // tap or automation action is expedited; unlock and screen-off rotations run as
-            // ordinary work and keep the battery floor.
-            val constraints = Constraints.Builder()
-                .setRequiredNetworkType(NetworkType.CONNECTED)
-                .apply { if (!restartCountdown) setRequiresBatteryNotLow(true) }
-                .build()
             val request = OneTimeWorkRequestBuilder<AutoWallpaperWorker>()
-                .setConstraints(constraints)
+                .setConstraints(triggeredRotationConstraints(restartCountdown))
                 .setInputData(
                     workDataOf(
                         AutoWallpaperWorker.RECEIPT_WORK_NAME_KEY to WORK_NAME,
@@ -238,3 +230,15 @@ class RotationTriggerService : Service() {
  */
 internal fun triggeredRotationPolicy(restartCountdown: Boolean): ExistingWorkPolicy =
     if (restartCountdown) ExistingWorkPolicy.REPLACE else ExistingWorkPolicy.KEEP
+
+/**
+ * There is no network constraint: the work has to start offline to apply a wallpaper saved ahead
+ * of time, and [AutoWallpaperWorker] checks the connection itself before it fetches anything.
+ * WorkManager refuses to build expedited work with a battery constraint, so only a tap or
+ * automation action is expedited; unlock and screen-off rotations run as ordinary work and keep
+ * the battery floor.
+ */
+internal fun triggeredRotationConstraints(restartCountdown: Boolean): Constraints =
+    Constraints.Builder()
+        .apply { if (!restartCountdown) setRequiresBatteryNotLow(true) }
+        .build()

@@ -27,10 +27,13 @@ notification, and starts foreground with
 
 Each trigger enqueues the existing `AutoWallpaperWorker` as one unique
 `rotation_trigger_oneshot` request with `ExistingWorkPolicy.KEEP`. The request
-uses connected-network and battery-not-low constraints, and `OutOfQuotaPolicy`
-downgrades expedited work to non-expedited work when quota is unavailable. This
-means the service listens for opted-in trigger events, while actual wallpaper
-application can still be deferred by system constraints.
+carries no network constraint, so a wallpaper saved ahead can apply offline.
+Unlock and screen-off requests keep the battery-not-low constraint, and
+`OutOfQuotaPolicy` downgrades expedited work to non-expedited work when quota is
+unavailable. The worker checks the connection itself before it fetches anything.
+This means the service listens for opted-in trigger events, while actual
+wallpaper application can still be deferred by system constraints or by a
+missing connection.
 
 ## Play Console declaration packet
 
@@ -40,7 +43,7 @@ Use these answers for the Play Console foreground-service declaration:
 | --- | --- |
 | App functionality | Aura lets users opt into wallpaper rotation when the device unlocks or when the screen turns off, so the next visible wallpaper can be refreshed without requiring a manual app open. |
 | Why foreground service | Android does not deliver these trigger broadcasts to a manifest-only background receiver for Aura's use case. The foreground service keeps a user-visible, opt-in listener alive only while at least one trigger toggle is enabled. |
-| If deferred | Wallpaper rotation may happen later or not at all until network and battery constraints allow `AutoWallpaperWorker` to run. The app remains usable and the user can still change wallpaper manually. |
+| If deferred | Wallpaper rotation may happen later or not at all until the battery constraint allows `AutoWallpaperWorker` to run and, when no wallpaper is saved ahead, a network is available. The app remains usable and the user can still change wallpaper manually. |
 | If interrupted | Trigger listening stops until Aura restarts the service from Settings or app cold start. Existing wallpapers remain applied; no user data is lost. |
 | Demo video status | `ownerActionRequired`; record Settings toggle enablement, the persistent notification, unlock or screen-off trigger behavior, and toggle disablement stopping the service. |
 

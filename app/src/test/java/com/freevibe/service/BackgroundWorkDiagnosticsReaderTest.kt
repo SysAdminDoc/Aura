@@ -153,6 +153,28 @@ class BackgroundWorkDiagnosticsReaderTest {
     }
 
     @Test
+    fun backgroundWorkActionHintTreatsAWaitForConnectionAsNothingToFix() {
+        val hint = backgroundWorkActionHint(
+            row = BackgroundWorkStatusRow(
+                label = "Auto wallpaper rotation",
+                uniqueWorkName = AutoWallpaperWorker.WORK_NAME,
+                workInfoStatus = "ENQUEUED=1",
+                lastResult = "deferred",
+                lastDeferralReason = rotationHoldReason(RotationNetworkAccess.OFFLINE),
+            ),
+            network = BackgroundNetworkDiagnostics(
+                activeNetworkMetered = false,
+                restrictBackgroundStatus = "disabled",
+            ),
+        )
+
+        assertEquals(
+            "Nothing to fix. The last run waited for a connection, and the next one tries again on its own.",
+            hint,
+        )
+    }
+
+    @Test
     fun backgroundBatteryGuidanceSelectsSamsungRecovery() {
         val guide = backgroundBatteryGuidanceForManufacturer("Samsung")
 

@@ -42,7 +42,7 @@ class BackgroundWorkNetworkCheckTest(unittest.TestCase):
         result = validate_policy(REPO_ROOT, live_policy())
 
         self.assertEqual("ok", result["status"])
-        self.assertEqual(12, result["postureRowCount"])
+        self.assertEqual(13, result["postureRowCount"])
         self.assertIn("notRequired", result["networkPostures"])
         self.assertIn("unmetered", result["networkPostures"])
 

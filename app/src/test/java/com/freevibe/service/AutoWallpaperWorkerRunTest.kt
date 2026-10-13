@@ -193,6 +193,8 @@ class AutoWallpaperWorkerRunTest {
                         receiptStore = mockk(relaxed = true),
                         // Local folders never use the cache, so these runs must not touch it.
                         prefetch = mockk(),
+                        // Nor do they need a connection, so they must not ask about one.
+                        network = mockk(),
                     )
                 },
             )

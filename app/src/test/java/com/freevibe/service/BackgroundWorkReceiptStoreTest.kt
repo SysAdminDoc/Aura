@@ -56,6 +56,27 @@ class BackgroundWorkReceiptStoreTest {
         assertNotNull(failure.lastFailureUtc)
     }
 
+    @Test
+    fun recordDeferredKeepsBothTimestampsAndDropsTheError() {
+        val store = BackgroundWorkReceiptStore(mockContextWithPrefs())
+        store.recordSuccess("auto_wallpaper")
+        store.recordRetry(
+            uniqueWorkName = "auto_wallpaper",
+            errorClass = "IOException",
+            deferralReason = "network unavailable",
+        )
+        val before = store.read("auto_wallpaper")
+
+        store.recordDeferred("auto_wallpaper", "waiting for a connection")
+
+        val deferred = store.read("auto_wallpaper")
+        assertEquals("deferred", deferred.lastResult)
+        assertEquals("waiting for a connection", deferred.lastDeferralReason)
+        assertNull("waiting is not an error", deferred.lastErrorClass)
+        assertEquals("nothing rotated, so the last success stands", before.lastSuccessUtc, deferred.lastSuccessUtc)
+        assertEquals("nothing failed, so the last failure stands", before.lastFailureUtc, deferred.lastFailureUtc)
+    }
+
     private fun mockContextWithPrefs(): Context {
         val values = linkedMapOf<String, String>()
         val editor = mockk<SharedPreferences.Editor>()

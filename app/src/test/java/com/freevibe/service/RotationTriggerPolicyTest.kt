@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.test.core.app.ApplicationProvider
 import androidx.work.Configuration
 import androidx.work.ExistingWorkPolicy
+import androidx.work.NetworkType
 import androidx.work.WorkInfo
 import androidx.work.WorkManager
 import androidx.work.testing.SynchronousExecutor
@@ -40,25 +41,31 @@ class RotationTriggerPolicyTest {
     }
 
     @Test
-    fun `a tap replaces a waiting unlock rotation and a second unlock keeps the tap`() {
+    fun `a second unlock coalesces and a tap takes the waiting unlock rotation's place`() {
         RotationTriggerService.enqueueRotation(context, restartCountdown = false)
         RotationTriggerService.enqueueRotation(context, restartCountdown = false)
-        val passive = waiting().single()
+        val passive = records().single()
+        assertEquals(WorkInfo.State.ENQUEUED, passive.state)
         assertTrue("unlock rotations keep the battery floor", passive.constraints.requiresBatteryNotLow())
+        assertEquals(
+            "a saved wallpaper has to be able to apply offline",
+            NetworkType.NOT_REQUIRED,
+            passive.constraints.requiredNetworkType,
+        )
 
         RotationTriggerService.enqueueRotation(context, restartCountdown = true)
-        val tapped = waiting().single().id
-        assertNotEquals(passive.id, tapped)
-        // Expedited work only accepts a network constraint; building it with more throws.
-        assertFalse(waiting().single().constraints.requiresBatteryNotLow())
 
-        RotationTriggerService.enqueueRotation(context, restartCountdown = false)
-        assertEquals(tapped, waiting().single().id)
+        // Nothing holds a tap back any more, so this harness starts it at once and it may be over
+        // already. What matters here is that it replaced the unlock rotation instead of being dropped.
+        val tapped = records().single()
+        assertNotEquals(passive.id, tapped.id)
+        // Expedited work only accepts network and storage constraints; building it with more throws.
+        assertFalse(tapped.constraints.requiresBatteryNotLow())
+        assertEquals(NetworkType.NOT_REQUIRED, tapped.constraints.requiredNetworkType)
     }
 
-    private fun waiting(): List<WorkInfo> =
+    private fun records(): List<WorkInfo> =
         WorkManager.getInstance(context)
             .getWorkInfosForUniqueWork(RotationTriggerService.WORK_NAME)
             .get()
-            .filter { it.state == WorkInfo.State.ENQUEUED }
 }

@@ -39,6 +39,7 @@
       "No CoroutineWorker calls setForeground or setForegroundAsync; Aura has no long-running WorkManager worker that consumes Android 16 quota through a worker-owned foreground service.",
       "Ordinary and expedited WorkManager jobs consume quota when started while the app is TOP and while concurrent with a foreground service on Android 16.",
       "RotationTriggerService can overlap rotation_trigger_oneshot; unique KEEP coalesces passive triggers, only explicit requests are expedited, and expedited quota exhaustion downgrades to ordinary work instead of dropping the request.",
+      "auto_wallpaper_catch_up is ordinary constrained work that WorkManager holds until its network constraint is met; the worker never retries or polls for a connection itself, and a catch-up never queues another.",
       "Every CoroutineWorker rethrows CancellationException so WorkManager can complete stop handling without abandoned in-process work.",
       "Settings and support diagnostics expose WorkInfo stop reasons, including QUOTA, TIMEOUT, and BACKGROUND_RESTRICTION."
     ]
@@ -58,20 +59,19 @@
       "interval": "default 360 minutes; minimum 15 minutes",
       "initialDelay": "none",
       "constraints": [
-        "NetworkType.CONNECTED by default",
-        "NetworkType.UNMETERED when Wi-Fi-only is enabled",
+        "no WorkManager network constraint; the worker checks the connection before it fetches",
         "battery not low",
         "charging when enabled",
         "device idle when enabled"
       ],
-      "backoff": "exponential, 15 minutes",
+      "backoff": "exponential, 15 minutes; WorkManager default when device idle is required",
       "expedited": false,
       "enabledSurface": "Settings auto wallpaper and enhanced scheduler toggles",
-      "scheduleTrigger": "Enable auto wallpaper or scheduler; changing interval or constraint preferences reschedules the unique work; a manual apply, widget shuffle, tile tap, automation broadcast, or Run now re-enqueues it with CANCEL_AND_REENQUEUE so the interval starts over",
+      "scheduleTrigger": "Enable auto wallpaper or scheduler; changing interval or constraint preferences reschedules the unique work; a manual apply, widget shuffle, tile tap, automation broadcast, or Run now re-enqueues it with CANCEL_AND_REENQUEUE so the interval starts over; app start re-arms work that an older build scheduled with a network constraint, keeping its countdown",
       "cancelTrigger": "Disable auto wallpaper or scheduler",
       "deferralReasons": [
-        "network unavailable",
-        "metered network when Wi-Fi-only is enabled",
+        "no connection and nothing saved ahead (the run ends and a catch-up waits for the network)",
+        "metered network when Wi-Fi-only is enabled and nothing is saved ahead (same hand-off)",
         "battery low",
         "charging constraint not met",
         "device-idle constraint not met",
@@ -89,12 +89,54 @@
         "schedulerDayNightMode.first()",
         "schedulerDayStartHour.first()",
         "schedulerNightStartHour.first()",
-        "scheduledSourceCandidates(",
-        "NetworkType.UNMETERED",
+        "relaxStoredNetworkConstraint",
+        "requiresNetwork = false,",
         "setRequiresBatteryNotLow(true)",
         "setRequiresCharging(true)",
         "setRequiresDeviceIdle(true)",
         "setBackoffCriteria(BackoffPolicy.EXPONENTIAL, 15, TimeUnit.MINUTES)"
+      ]
+    },
+    {
+      "id": "auto-wallpaper-catch-up",
+      "uniqueWorkName": "auto_wallpaper_catch_up",
+      "workerClass": "AutoWallpaperWorker",
+      "sourcePath": "app/src/main/java/com/freevibe/service/AutoWallpaperWorker.kt",
+      "settingsSources": [
+        "app/src/main/java/com/freevibe/ui/screens/settings/SettingsRotationDelegate.kt"
+      ],
+      "workKind": "oneTime",
+      "enqueueApi": "enqueueUniqueWork",
+      "existingWorkPolicy": "ExistingWorkPolicy.REPLACE",
+      "interval": "not periodic",
+      "initialDelay": "none",
+      "constraints": [
+        "NetworkType.CONNECTED by default",
+        "NetworkType.UNMETERED when Wi-Fi-only is enabled",
+        "battery not low",
+        "charging when enabled (scheduled rotations only)",
+        "device idle when enabled (scheduled rotations only)"
+      ],
+      "backoff": "exponential, 15 minutes; WorkManager default when device idle is required",
+      "expedited": false,
+      "enabledSurface": "No setting of its own; follows auto wallpaper, the enhanced scheduler, and the rotation triggers",
+      "scheduleTrigger": "A rotation run with nothing saved ahead and no connection it may use (offline, or metered with Wi-Fi-only enabled) ends with success and hands the rotation to this one-shot",
+      "cancelTrigger": "Disable auto wallpaper or scheduler; any other rotation that changes the wallpaper; a manual apply that restarts the countdown; a newer hand-off replaces a waiting one. A catch-up that is held again ends without queuing another",
+      "deferralReasons": [
+        "network unavailable",
+        "metered network when Wi-Fi-only is enabled",
+        "battery low",
+        "charging or device-idle constraint not met",
+        "Doze or App Standby maintenance window delay"
+      ],
+      "sourceTerms": [
+        "const val CATCH_UP_WORK_NAME = \"auto_wallpaper_catch_up\"",
+        "OneTimeWorkRequestBuilder<AutoWallpaperWorker>",
+        "enqueueUniqueWork(CATCH_UP_WORK_NAME, ExistingWorkPolicy.REPLACE, request)",
+        "cancelUniqueWork(CATCH_UP_WORK_NAME)",
+        "CATCH_UP_KEY to true",
+        "if (catchUp) return",
+        "requiresNetwork = true,"
       ]
     },
     {
@@ -427,7 +469,7 @@
       "interval": "not periodic",
       "initialDelay": "none",
       "constraints": [
-        "NetworkType.CONNECTED",
+        "no WorkManager network constraint; the worker checks the connection before it fetches",
         "battery not low (unlock and screen-off only; expedited work accepts network and storage constraints only)"
       ],
       "backoff": "WorkManager default for one-shot trigger work",
@@ -437,7 +479,8 @@
       "scheduleTrigger": "Unlock, screen-off, ROTATE_NOW, or SHUFFLE_NOW trigger",
       "cancelTrigger": "Unique KEEP coalesces unlock and screen-off triggers; an explicit tile, ROTATE_NOW, or SHUFFLE_NOW request uses REPLACE so a waiting passive trigger cannot swallow its countdown restart; a rotation that is already applying finishes first because AutoWallpaperWorker applies NonCancellable under one run lock; no explicit cancel path",
       "deferralReasons": [
-        "network unavailable",
+        "no connection and nothing saved ahead (the run ends and a catch-up waits for the network)",
+        "metered network when Wi-Fi-only is enabled and nothing is saved ahead (same hand-off)",
         "battery low",
         "expedited quota exhausted and downgraded",
         "existing trigger work already enqueued",
@@ -448,7 +491,7 @@
         "OneTimeWorkRequestBuilder<AutoWallpaperWorker>",
         "ExistingWorkPolicy.KEEP",
         "ExistingWorkPolicy.REPLACE",
-        "NetworkType.CONNECTED",
+        "triggeredRotationConstraints",
         "setRequiresBatteryNotLow(true)",
         "setExpedited(OutOfQuotaPolicy.RUN_AS_NON_EXPEDITED_WORK_REQUEST)"
       ]

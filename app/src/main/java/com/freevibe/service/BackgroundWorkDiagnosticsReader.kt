@@ -250,6 +250,10 @@ internal fun backgroundWorkActionHint(
             batteryGuidance,
         )
     }
+    if (row.lastResult.equals("deferred", ignoreCase = true)) {
+        // The reason line already says what the run is waiting for, and none of the fixes below apply.
+        return "Nothing to fix. The last run waited for a connection, and the next one tries again on its own."
+    }
     val reason = row.lastDeferralReason.orEmpty().lowercase(Locale.ROOT)
     if (row.lastErrorClass == "RotationItemExcluded" || reason.contains("excluded")) {
         return "Restore the item in Settings > Wallpaper rotation > Rotation exclusions, then change theme again."

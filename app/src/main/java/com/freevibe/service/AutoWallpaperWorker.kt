@@ -3,12 +3,15 @@ package com.freevibe.service
 import android.content.Context
 import android.content.res.Configuration
 import android.net.Uri
+import android.os.Handler
+import android.os.Looper
 import android.provider.DocumentsContract
+import android.widget.Toast
 import androidx.hilt.work.HiltWorker
 import androidx.work.*
+import com.freevibe.R
 import com.freevibe.data.local.PreferencesManager
 import com.freevibe.data.local.SCHEDULER_DAY_NIGHT_MODE_CLOCK
-import com.freevibe.data.local.SCHEDULER_DAY_NIGHT_MODE_SINGLE
 import com.freevibe.data.local.SCHEDULER_DAY_NIGHT_MODE_SYSTEM_THEME
 import com.freevibe.data.model.ContentSource
 import com.freevibe.data.model.WALLPAPER_SOURCE_LOCAL_FOLDER
@@ -24,6 +27,7 @@ import com.freevibe.data.repository.RotationExclusionRepository
 import com.freevibe.data.repository.WallpaperRepository
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.sync.Mutex
@@ -48,10 +52,17 @@ class AutoWallpaperWorker @AssistedInject constructor(
     private val localWallpaperCatalog: LocalWallpaperCatalog,
     private val receiptStore: BackgroundWorkReceiptStore,
     private val prefetch: RotationPrefetchCache,
+    private val network: RotationNetworkGate,
 ) : CoroutineWorker(appContext, workerParams) {
 
     /** True once this run changed a wallpaper; a disabled provider returns success without one. */
     private var appliedWallpaper = false
+
+    /** Why this run stopped short of its source: nothing was saved ahead and no connection it may use. */
+    private var networkHold: RotationNetworkAccess? = null
+
+    /** True when this run looked for a wallpaper saved ahead of time and had none it could use. */
+    private var prefetchMissed = false
 
     override suspend fun doWork(): Result = rotationRunLock.withLock { runRotation() }
 
@@ -61,6 +72,7 @@ class AutoWallpaperWorker @AssistedInject constructor(
             val schedulerEnabled = prefs.schedulerEnabled.first()
             val legacyEnabled = prefs.autoWallpaperEnabled.first()
             val triggeredRotation = inputData.getBoolean(TRIGGERED_ROTATION_KEY, false)
+            val catchUp = inputData.getBoolean(CATCH_UP_KEY, false)
 
             val result = try {
                 when {
@@ -70,11 +82,17 @@ class AutoWallpaperWorker @AssistedInject constructor(
                 }.also { result ->
                     // An apply that finished counts even if a tap replaced this run meanwhile.
                     withContext(NonCancellable) {
-                        receiptStore.recordWorkerResult(
-                            uniqueWorkName = receiptWorkName,
-                            resultClassName = result.javaClass.simpleName,
-                            retryReason = "wallpaper source returned no usable item or apply failed; check selected source, saved collection, and wallpaper permission",
-                        )
+                        val hold = networkHold
+                        if (hold != null) {
+                            // Waiting for a connection is neither a failure nor a rotation.
+                            receiptStore.recordDeferred(receiptWorkName, rotationHoldReason(hold))
+                        } else {
+                            receiptStore.recordWorkerResult(
+                                uniqueWorkName = receiptWorkName,
+                                resultClassName = result.javaClass.simpleName,
+                                retryReason = "wallpaper source returned no usable item or apply failed; check selected source, saved collection, and wallpaper permission",
+                            )
+                        }
                     }
                 }
             } catch (excluded: AllRotationCandidatesExcludedException) {
@@ -86,6 +104,13 @@ class AutoWallpaperWorker @AssistedInject constructor(
                 // A persistent user choice is not transient work failure. Returning
                 // success prevents WorkManager from retrying the same empty pool.
                 Result.success()
+            }
+            val hold = networkHold
+            if (hold != null) {
+                withContext(NonCancellable) { handOffHeldRotation(hold, receiptWorkName, triggeredRotation, catchUp) }
+            } else if (appliedWallpaper && !catchUp) {
+                // This change stands in for a rotation that was still waiting on a connection.
+                cancelCatchUp(applicationContext)
             }
             // One-shot work runs under its own unique name, so re-enqueueing the
             // periodic work here cannot cancel this run. A run that changed home but
@@ -179,6 +204,7 @@ class AutoWallpaperWorker @AssistedInject constructor(
             return Result.success()
         }
 
+        if (!mayReachSource(source)) return Result.success()
         val rawWallpapers = fetchWallpapers(source, target)
         if (rawWallpapers.isEmpty()) return Result.retry()
 
@@ -219,6 +245,7 @@ class AutoWallpaperWorker @AssistedInject constructor(
             return Result.success()
         }
 
+        if (!mayReachSource(source)) return Result.success()
         val fetched = fetchWallpapers(source, target)
         val wallpapers = filterRecentRepeats(filterPersistentExclusions(fetched, source))
         val wallpaper = pickScheduledWallpaper(
@@ -244,7 +271,7 @@ class AutoWallpaperWorker @AssistedInject constructor(
         val saved = prefetch.peek(slot)
         if (saved == null || !isStillWanted(saved.wallpaper)) {
             prefetch.discard(slot)
-            prefetch.recordMiss()
+            prefetchMissed = true
             return false
         }
         val appliedBefore = appliedWallpaper
@@ -254,7 +281,11 @@ class AutoWallpaperWorker @AssistedInject constructor(
         appliedWallpaper = appliedBefore || applied
         // Used or unusable, the file is done with. A picture that wouldn't decode falls back to a fetch.
         prefetch.discard(slot)
-        if (applied) prefetch.recordHit() else prefetch.recordMiss()
+        if (applied) {
+            prefetch.recordHit()
+        } else {
+            prefetchMissed = true
+        }
         return applied
     }
 
@@ -262,6 +293,67 @@ class AutoWallpaperWorker @AssistedInject constructor(
     private suspend fun isStillWanted(wallpaper: Wallpaper): Boolean {
         if (rotationExclusions.filter(listOf(wallpaper)).candidates.isEmpty()) return false
         return !prefs.avoidRecentRepeats.first() || wallpaper.stableKey() !in prefs.getRecentRotationIds()
+    }
+
+    /**
+     * The work itself no longer waits for a network, so this is asked before every source call and
+     * every download. False means [source] needs a connection this run may not use: there is none,
+     * or it is metered and Wi-Fi only is on. A local folder never asks.
+     */
+    private suspend fun mayReachSource(source: String): Boolean {
+        if (!sourceRequiresNetwork(source)) return true
+        val access = network.access(wifiOnly = prefs.autoWallpaperRequiresWiFiOnly.first())
+        if (access != RotationNetworkAccess.ALLOWED) {
+            networkHold = access
+            return false
+        }
+        // Counted only now that the run goes on to fetch. One that waits for a connection didn't.
+        if (prefetchMissed) prefetch.recordMiss()
+        return true
+    }
+
+    /**
+     * Ends a run that had nothing saved and no connection it may use. A person who asked for the
+     * change is told why nothing happened. The rotation is handed to a one-shot that waits for the
+     * network inside WorkManager, so nothing here retries or polls while the phone is offline.
+     */
+    private suspend fun handOffHeldRotation(
+        hold: RotationNetworkAccess,
+        receiptWorkName: String,
+        triggeredRotation: Boolean,
+        catchUp: Boolean,
+    ) {
+        // A catch-up that is held again stops here, and the next scheduled run starts over.
+        if (catchUp) return
+        val requested = inputData.getBoolean(RESTART_COUNTDOWN_KEY, false)
+        if (requested) showHoldMessage(hold)
+        try {
+            // Charging and idle are choices about the schedule. A trigger or a tap never waited on them.
+            val scheduled = !triggeredRotation && !requested
+            enqueueCatchUp(
+                context = applicationContext,
+                receiptWorkName = receiptWorkName,
+                triggeredRotation = triggeredRotation,
+                requiresCharging = scheduled && prefs.autoWallpaperRequiresCharging.first(),
+                requiresWiFiOnly = prefs.autoWallpaperRequiresWiFiOnly.first(),
+                requiresIdle = scheduled && prefs.autoWallpaperRequiresIdle.first(),
+            )
+        } catch (e: Exception) {
+            if (e is kotlinx.coroutines.CancellationException) throw e
+            android.util.Log.w("AutoWallpaperWorker", "Rotation catch-up could not be queued", e)
+        }
+    }
+
+    /** Posted to the main thread without waiting on it: a worker has no screen of its own to show this on. */
+    private fun showHoldMessage(hold: RotationNetworkAccess) {
+        val message = if (hold == RotationNetworkAccess.WAITING_FOR_WIFI) {
+            R.string.rotation_waiting_for_wifi
+        } else {
+            R.string.rotation_waiting_offline
+        }
+        Handler(Looper.getMainLooper()).post {
+            Toast.makeText(applicationContext, message, Toast.LENGTH_LONG).show()
+        }
     }
 
     /**
@@ -278,6 +370,19 @@ class AutoWallpaperWorker @AssistedInject constructor(
     ) {
         if (!sourceRequiresNetwork(source)) return
         try {
+            // A run that applied a saved wallpaper offline, or on mobile data with Wi-Fi only on,
+            // must not reach the source or download the next one either.
+            val access = network.access(wifiOnly = prefs.autoWallpaperRequiresWiFiOnly.first())
+            if (access != RotationNetworkAccess.ALLOWED) {
+                prefetch.recordSkipped(
+                    if (access == RotationNetworkAccess.OFFLINE) {
+                        RotationPrefetchOutcome.DEFERRED_OFFLINE
+                    } else {
+                        RotationPrefetchOutcome.DEFERRED_METERED
+                    },
+                )
+                return
+            }
             if (prefetch.shouldDefer()) return
             val pool = candidates ?: rotationExclusions.filter(fetchWallpapers(source, fetchTarget)).candidates
             val recentIds = if (prefs.avoidRecentRepeats.first()) prefs.getRecentRotationIds().toSet() else emptySet()
@@ -430,6 +535,14 @@ class AutoWallpaperWorker @AssistedInject constructor(
         const val RESTART_COUNTDOWN_KEY = "restart_countdown"
 
         /**
+         * The one-shot that makes up a rotation the connection held back. It carries the network
+         * constraint the periodic and trigger work gave up, so WorkManager does the waiting.
+         */
+        const val CATCH_UP_WORK_NAME = "auto_wallpaper_catch_up"
+        /** Set on the catch-up run itself, so a run that is held again never queues another. */
+        const val CATCH_UP_KEY = "catch_up"
+
+        /**
          * Starts the rotation interval over after a wallpaper change a person asked
          * for (browse, widget, tile, automation), so the next automatic change is a
          * full interval away instead of minutes later. Never throws: the change
@@ -462,10 +575,11 @@ class AutoWallpaperWorker @AssistedInject constructor(
          * calls inside a UI-thread coroutine — observable ANR risk on cold starts
          * where DataStore had to hit disk).
          *
-         * Constraints flow through to WorkManager which gates execution: a worker
-         * fires only when ALL constraints satisfy. Off-by-default for charging /
-         * Wi-Fi / idle so existing users keep current behavior on upgrade; opt-in
-         * via Settings.
+         * Charging and idle flow through to WorkManager, which fires the worker
+         * only while they hold. Both are off by default and opt-in via Settings.
+         * The network is not a constraint here. The worker checks it for itself,
+         * so a wallpaper saved ahead of time still applies with the phone offline,
+         * and the Wi-Fi only choice is enforced there before anything is fetched.
          */
         suspend fun schedule(
             context: Context,
@@ -473,26 +587,11 @@ class AutoWallpaperWorker @AssistedInject constructor(
             restartCountdown: Boolean = false,
         ) {
             val prefs = PreferencesManager(context)
-            val requiresCharging = prefs.autoWallpaperRequiresCharging.first()
-            val requiresWiFiOnly = prefs.autoWallpaperRequiresWiFiOnly.first()
-            val requiresIdle = prefs.autoWallpaperRequiresIdle.first()
-            val requiresNetwork = if (prefs.schedulerEnabled.first()) {
-                scheduledSourceCandidates(
-                    defaultSource = prefs.schedulerSource.first(),
-                    daySource = prefs.schedulerDaySource.first(),
-                    nightSource = prefs.schedulerNightSource.first(),
-                    mode = prefs.schedulerDayNightMode.first(),
-                ).any(::sourceRequiresNetwork)
-            } else {
-                sourceRequiresNetwork(prefs.autoWallpaperSource.first())
-            }
             scheduleWithConstraints(
                 context = context,
                 intervalMinutes = intervalMinutes,
-                requiresCharging = requiresCharging,
-                requiresWiFiOnly = requiresWiFiOnly,
-                requiresIdle = requiresIdle,
-                requiresNetwork = requiresNetwork,
+                requiresCharging = prefs.autoWallpaperRequiresCharging.first(),
+                requiresIdle = prefs.autoWallpaperRequiresIdle.first(),
                 restartCountdown = restartCountdown,
             )
         }
@@ -506,23 +605,22 @@ class AutoWallpaperWorker @AssistedInject constructor(
             context: Context,
             intervalMinutes: Long = 360,
             requiresCharging: Boolean,
-            requiresWiFiOnly: Boolean,
             requiresIdle: Boolean,
-            requiresNetwork: Boolean = true,
             restartCountdown: Boolean = false,
         ) {
             val constraints = buildAutoWallpaperConstraints(
                 requiresCharging = requiresCharging,
-                requiresWiFiOnly = requiresWiFiOnly,
+                requiresWiFiOnly = false,
                 requiresIdle = requiresIdle,
-                requiresNetwork = requiresNetwork,
+                requiresNetwork = false,
             )
 
             val request = PeriodicWorkRequestBuilder<AutoWallpaperWorker>(
                 intervalMinutes.coerceAtLeast(15), TimeUnit.MINUTES,
             )
                 .setConstraints(constraints)
-                .setBackoffCriteria(BackoffPolicy.EXPONENTIAL, 15, TimeUnit.MINUTES)
+                // WorkManager refuses to build idle-mode work that sets its own backoff.
+                .apply { if (!requiresIdle) setBackoffCriteria(BackoffPolicy.EXPONENTIAL, 15, TimeUnit.MINUTES) }
                 .build()
 
             // UPDATE keeps the existing period's start time, so it cannot reset the
@@ -536,6 +634,67 @@ class AutoWallpaperWorker @AssistedInject constructor(
                 },
                 request,
             )
+            // A person just changed the wallpaper, so a rotation still waiting on a connection is stale.
+            if (restartCountdown) cancelCatchUp(context)
+        }
+
+        /**
+         * Work scheduled by a build that still put the network in WorkManager keeps that constraint
+         * until it is enqueued again, and nothing else does that before the next Settings change.
+         * Called at app start: re-arms such work once with UPDATE, which swaps the constraints in
+         * and leaves the interval and the running countdown alone. Never throws.
+         */
+        suspend fun relaxStoredNetworkConstraint(context: Context) {
+            try {
+                val stored = withContext(Dispatchers.IO) {
+                    WorkManager.getInstance(context).getWorkInfosForUniqueWork(WORK_NAME).get()
+                }.firstOrNull { !it.state.isFinished } ?: return
+                if (stored.constraints.requiredNetworkType == NetworkType.NOT_REQUIRED) return
+                val intervalMillis = stored.periodicityInfo?.repeatIntervalMillis ?: return
+                schedule(context, TimeUnit.MILLISECONDS.toMinutes(intervalMillis))
+            } catch (e: Exception) {
+                if (e is kotlinx.coroutines.CancellationException) throw e
+                android.util.Log.w("AutoWallpaperWorker", "Rotation constraint update failed", e)
+            }
+        }
+
+        /**
+         * Queues the rotation a held run could not make. [requiresWiFiOnly] picks an unmetered or
+         * any connected network. A newer hand-off replaces a waiting one, so the request always
+         * carries the current settings and the latest caller's receipt name.
+         */
+        internal fun enqueueCatchUp(
+            context: Context,
+            receiptWorkName: String,
+            triggeredRotation: Boolean,
+            requiresCharging: Boolean,
+            requiresWiFiOnly: Boolean,
+            requiresIdle: Boolean,
+        ) {
+            val request = OneTimeWorkRequestBuilder<AutoWallpaperWorker>()
+                .setConstraints(
+                    buildAutoWallpaperConstraints(
+                        requiresCharging = requiresCharging,
+                        requiresWiFiOnly = requiresWiFiOnly,
+                        requiresIdle = requiresIdle,
+                        requiresNetwork = true,
+                    ),
+                )
+                .setInputData(
+                    workDataOf(
+                        RECEIPT_WORK_NAME_KEY to receiptWorkName,
+                        TRIGGERED_ROTATION_KEY to triggeredRotation,
+                        CATCH_UP_KEY to true,
+                    ),
+                )
+                .apply { if (!requiresIdle) setBackoffCriteria(BackoffPolicy.EXPONENTIAL, 15, TimeUnit.MINUTES) }
+                .build()
+            WorkManager.getInstance(context)
+                .enqueueUniqueWork(CATCH_UP_WORK_NAME, ExistingWorkPolicy.REPLACE, request)
+        }
+
+        internal fun cancelCatchUp(context: Context) {
+            WorkManager.getInstance(context).cancelUniqueWork(CATCH_UP_WORK_NAME)
         }
 
         /** Legacy schedule for backward compatibility */
@@ -545,6 +704,7 @@ class AutoWallpaperWorker @AssistedInject constructor(
 
         fun cancel(context: Context) {
             WorkManager.getInstance(context).cancelUniqueWork(WORK_NAME)
+            cancelCatchUp(context)
         }
     }
 }
@@ -593,12 +753,24 @@ internal fun shouldRestartRotationCountdown(
     applied: Boolean,
 ): Boolean = requested && succeeded && applied
 
+/** What diagnostics show for a run that waited on a connection instead of failing. */
+internal fun rotationHoldReason(hold: RotationNetworkAccess): String =
+    if (hold == RotationNetworkAccess.WAITING_FOR_WIFI) {
+        "Wi-Fi only is on and this connection is metered. The next wallpaper loads on Wi-Fi."
+    } else {
+        "No connection and no wallpaper saved ahead. The next one loads when the phone is back online."
+    }
+
 /**
  * Pure builder for AutoWallpaper rotation constraints. Always sets
- * battery-not-low (energy-floor — was already the default, kept). Network type
- * defaults to CONNECTED but tightens to UNMETERED when [requiresWiFiOnly] is
- * set so cellular billed users aren't charged for background fetches. Charging
+ * battery-not-low (energy-floor — was already the default, kept). Charging
  * + idle are pure-additive opt-ins.
+ *
+ * The periodic work passes [requiresNetwork] false: it has to fire offline to
+ * apply a wallpaper saved ahead of time, and [RotationNetworkGate] guards every
+ * fetch inside the worker. Only the catch-up one-shot asks for a network, which
+ * is CONNECTED and tightens to UNMETERED when [requiresWiFiOnly] is set so
+ * cellular billed users aren't charged for background fetches.
  *
  * Visible for unit testing.
  */
@@ -651,19 +823,6 @@ internal fun resolveScheduledWallpaperSource(
         SCHEDULER_DAY_NIGHT_MODE_SYSTEM_THEME -> if (isSystemDark) night else day
         else -> defaultSource
     }
-}
-
-internal fun scheduledSourceCandidates(
-    defaultSource: String,
-    daySource: String,
-    nightSource: String,
-    mode: String,
-): Set<String> = when (mode) {
-    SCHEDULER_DAY_NIGHT_MODE_CLOCK,
-    SCHEDULER_DAY_NIGHT_MODE_SYSTEM_THEME,
-    -> setOf(daySource.ifBlank { defaultSource }, nightSource.ifBlank { defaultSource })
-    SCHEDULER_DAY_NIGHT_MODE_SINGLE -> setOf(defaultSource)
-    else -> setOf(defaultSource)
 }
 
 internal fun isHourInScheduledDayWindow(hour: Int, dayStartHour: Int, nightStartHour: Int): Boolean {

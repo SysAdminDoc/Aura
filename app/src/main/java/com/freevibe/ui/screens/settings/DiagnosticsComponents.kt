@@ -343,6 +343,7 @@ internal fun rotationPrefetchOutcomeRes(outcome: RotationPrefetchOutcome?): Int?
     RotationPrefetchOutcome.STORED -> R.string.settings_diag_prefetch_stored
     RotationPrefetchOutcome.DEFERRED_METERED -> R.string.settings_diag_prefetch_metered
     RotationPrefetchOutcome.DEFERRED_DATA_SAVER -> R.string.settings_diag_prefetch_data_saver
+    RotationPrefetchOutcome.DEFERRED_OFFLINE -> R.string.settings_diag_prefetch_offline
     RotationPrefetchOutcome.FAILED -> R.string.settings_diag_prefetch_failed
     RotationPrefetchOutcome.OVER_BUDGET -> R.string.settings_diag_prefetch_over_budget
     null -> null
@@ -502,7 +503,8 @@ internal fun BackgroundWorkDiagnosticRow(row: BackgroundWorkStatusRow) {
                 Text(
                     stringResource(R.string.settings_diag_action, hint),
                     style = MaterialTheme.typography.bodySmall,
-                    color = if (row.lastResult == "success") {
+                    // A run that waited for a connection has nothing to fix, so its hint isn't an error.
+                    color = if (row.lastResult == "success" || row.lastResult == "deferred") {
                         MaterialTheme.colorScheme.onSurfaceVariant
                     } else {
                         MaterialTheme.colorScheme.error

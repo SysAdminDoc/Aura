@@ -280,9 +280,9 @@ class CrashDiagnosticsCollector @Inject constructor(
             label = "Auto wallpaper rotation",
             uniqueWorkName = AutoWallpaperWorker.WORK_NAME,
             enabledState = if (autoWallpaperEnabled || schedulerEnabled) "enabled" else "disabled",
-            networkPosture = if (requiresWiFiOnly) "unmetered network" else "connected network",
+            networkPosture = rotationNetworkPosture(requiresWiFiOnly),
             constraints = buildList {
-                add(if (requiresWiFiOnly) "NetworkType.UNMETERED" else "NetworkType.CONNECTED")
+                add("NetworkType.NOT_REQUIRED")
                 add("battery not low")
                 if (requiresCharging) add("charging")
                 if (requiresIdle) add("device idle")
@@ -318,10 +318,25 @@ class CrashDiagnosticsCollector @Inject constructor(
                 rotateOnScreenOff -> "screen-off enabled"
                 else -> "disabled"
             },
-            networkPosture = "connected network",
-            constraints = listOf("NetworkType.CONNECTED", "battery not low", "foreground-service trigger opt-in"),
+            networkPosture = rotationNetworkPosture(requiresWiFiOnly),
+            constraints = listOf(
+                "NetworkType.NOT_REQUIRED",
+                "battery not low for unlock and screen-off",
+                "foreground-service trigger opt-in",
+            ),
         ),
     )
+
+    /**
+     * Rotation work starts without a network so a saved wallpaper can apply offline, and the worker
+     * checks before it fetches. No semicolon: the bundle line uses one between fields.
+     */
+    private fun rotationNetworkPosture(requiresWiFiOnly: Boolean): String =
+        if (requiresWiFiOnly) {
+            "checked by the worker, fetches wait for an unmetered network"
+        } else {
+            "checked by the worker, fetches wait for a connected network"
+        }
 
     private fun formatLiveWallpaperReceipts(): String = buildString {
         appendLine("## Live wallpaper engine receipts")

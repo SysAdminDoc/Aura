@@ -8,15 +8,14 @@
     {
       "id": "auto-wallpaper-periodic",
       "uniqueWorkName": "auto_wallpaper",
-      "networkPosture": "userSelectableConnectedOrUnmetered",
+      "networkPosture": "notRequired",
       "sourcePath": "app/src/main/java/com/freevibe/service/AutoWallpaperWorker.kt",
       "requiredSourceTerms": [
+        "requiresNetwork = false,",
         "!requiresNetwork -> NetworkType.NOT_REQUIRED",
-        "requiresWiFiOnly -> NetworkType.UNMETERED",
-        "else -> NetworkType.CONNECTED",
-        "scheduledSourceCandidates(",
-        "mode = prefs.schedulerDayNightMode.first()",
-        ".any(::sourceRequiresNetwork)",
+        "private suspend fun mayReachSource(source: String): Boolean",
+        "network.access(wifiOnly = prefs.autoWallpaperRequiresWiFiOnly.first())",
+        "if (!mayReachSource(source)) return Result.success()",
         "setRequiresBatteryNotLow(true)",
         "setRequiresCharging(true)",
         "setRequiresDeviceIdle(true)"
@@ -27,9 +26,31 @@
         "setAutoWallpaperRequiresCharging",
         "setAutoWallpaperRequiresIdle"
       ],
-      "meteredPolicy": "Metered network is allowed only when the user has not enabled Wi-Fi-only rotation.",
+      "meteredPolicy": "WorkManager starts the run on any network or none, so a wallpaper saved ahead can apply offline. AutoWallpaperWorker checks the connection before every source call and download, and on a metered network with Wi-Fi-only rotation enabled it fetches nothing.",
       "dataSaverPolicy": "Settings diagnostics and support bundles read ConnectivityManager metered/Data Saver status and show action hints for restricted background data plus OEM battery recovery guidance.",
       "privacySurface": "Remote wallpaper provider fetches already map through Data safety network endpoint rows.",
+      "releaseRisk": "Medium"
+    },
+    {
+      "id": "auto-wallpaper-catch-up",
+      "uniqueWorkName": "auto_wallpaper_catch_up",
+      "networkPosture": "userSelectableConnectedOrUnmetered",
+      "sourcePath": "app/src/main/java/com/freevibe/service/AutoWallpaperWorker.kt",
+      "requiredSourceTerms": [
+        "const val CATCH_UP_WORK_NAME = \"auto_wallpaper_catch_up\"",
+        "requiresWiFiOnly -> NetworkType.UNMETERED",
+        "else -> NetworkType.CONNECTED",
+        "requiresWiFiOnly = prefs.autoWallpaperRequiresWiFiOnly.first(),",
+        "requiresNetwork = true,",
+        "if (catchUp) return"
+      ],
+      "settingsSourcePath": "app/src/main/java/com/freevibe/ui/screens/settings/SettingsRotationDelegate.kt",
+      "requiredSettingsTerms": [
+        "setAutoWallpaperRequiresWiFiOnly"
+      ],
+      "meteredPolicy": "Metered network is allowed only when the user has not enabled Wi-Fi-only rotation. With it enabled the catch-up waits for an unmetered network.",
+      "dataSaverPolicy": "Settings diagnostics and support bundles read ConnectivityManager metered/Data Saver status and show action hints for restricted background data plus OEM battery recovery guidance.",
+      "privacySurface": "Provider fetches inherit the selected wallpaper source's network/Data safety rows.",
       "releaseRisk": "Medium"
     },
     {
@@ -218,10 +239,11 @@
     {
       "id": "rotation-trigger-one-shot",
       "uniqueWorkName": "rotation_trigger_oneshot",
-      "networkPosture": "connected",
+      "networkPosture": "notRequired",
       "sourcePath": "app/src/main/java/com/freevibe/service/RotationTriggerService.kt",
       "requiredSourceTerms": [
-        "setRequiredNetworkType(NetworkType.CONNECTED)",
+        "internal fun triggeredRotationConstraints(restartCountdown: Boolean): Constraints",
+        ".setConstraints(triggeredRotationConstraints(restartCountdown))",
         "setRequiresBatteryNotLow(true)",
         "OutOfQuotaPolicy.RUN_AS_NON_EXPEDITED_WORK_REQUEST"
       ],
@@ -231,7 +253,7 @@
         "ACTION_SHUFFLE_NOW",
         "ExternalAutomationDispatcher.dispatch"
       ],
-      "meteredPolicy": "Metered network is allowed for explicit user/automation-triggered one-shot rotations.",
+      "meteredPolicy": "The one-shot starts on any network or none. AutoWallpaperWorker's own connection check then applies the Wi-Fi-only setting to tile, automation, unlock, and screen-off rotations before anything is fetched.",
       "dataSaverPolicy": "Settings diagnostics and support bundles read ConnectivityManager metered/Data Saver status and show action hints for restricted background data plus OEM battery recovery guidance; direct expedited quota receipt remains future OS evidence.",
       "privacySurface": "Provider fetches inherit the selected wallpaper source's network/Data safety rows.",
       "releaseRisk": "Medium"

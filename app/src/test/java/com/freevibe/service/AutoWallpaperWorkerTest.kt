@@ -101,12 +101,16 @@ class AutoWallpaperWorkerTest {
             ),
         )
         assertEquals(
-            setOf("discover", "wallhaven"),
-            scheduledSourceCandidates(
+            "discover",
+            resolveScheduledWallpaperSource(
                 defaultSource = "discover",
                 daySource = "",
                 nightSource = "wallhaven",
                 mode = SCHEDULER_DAY_NIGHT_MODE_CLOCK,
+                hour = 12,
+                dayStartHour = 6,
+                nightStartHour = 18,
+                isSystemDark = false,
             ),
         )
     }

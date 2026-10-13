@@ -61,6 +61,22 @@ class BackgroundWorkReceiptStore @Inject constructor(
             .apply()
     }
 
+    /**
+     * A run that chose to wait, such as a rotation with no connection it may use. Nothing went
+     * wrong and nothing changed, so both timestamps stay as they were and no error is kept.
+     */
+    fun recordDeferred(
+        uniqueWorkName: String,
+        deferralReason: String,
+    ) {
+        val prefix = keyPrefix(uniqueWorkName)
+        prefs.edit()
+            .putString("${prefix}last_result", "deferred")
+            .putString("${prefix}last_deferral_reason", deferralReason)
+            .remove("${prefix}last_error_class")
+            .apply()
+    }
+
     fun recordFailure(
         uniqueWorkName: String,
         errorClass: String,

@@ -20,6 +20,8 @@
     <string name="quick_settings_rotate_disabled">自动轮换已关闭</string>
     <string name="quick_settings_rotate_queued">壁纸更换已加入队列</string>
     <string name="quick_settings_rotate_description">下一张壁纸。%1$s</string>
+    <string name="rotation_waiting_offline">当前处于离线状态，还没有预先保存的壁纸。恢复联网后会自动更换。</string>
+    <string name="rotation_waiting_for_wifi">已开启“仅 Wi-Fi”，连上 Wi-Fi 后才会加载下一张壁纸。</string>
     <string name="common_cancel">取消</string>
     <string name="common_close">关闭</string>
     <string name="common_clear">清除</string>
@@ -1617,6 +1619,7 @@
     <string name="settings_diag_prefetch_stored">下次轮换的壁纸已保存在此手机上。</string>
     <string name="settings_diag_prefetch_metered">当前网络按流量计费，未预先保存下一张壁纸。</string>
     <string name="settings_diag_prefetch_data_saver">数据节省程序已开启，未预先保存下一张壁纸。</string>
+    <string name="settings_diag_prefetch_offline">手机当时处于离线状态，未预先保存下一张壁纸。</string>
     <string name="settings_diag_prefetch_failed">下一张壁纸未能预先保存，下次轮换时会照常获取。</string>
     <string name="settings_diag_prefetch_over_budget">下一张壁纸太大，无法预先保存。</string>
     <string name="settings_diag_background_check_subtitle">检查 WorkManager 和数据节省程序状态</string>

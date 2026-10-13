@@ -111,6 +111,7 @@ class FreeVibeApp : Application(), Configuration.Provider, SingletonImageLoader.
         reconcileSoundProfileWork()
         publishWidgetPreview()
         reconcileRotationTriggers()
+        relaxRotationNetworkConstraint()
     }
 
     private fun installStrictMode() {
@@ -160,6 +161,16 @@ class FreeVibeApp : Application(), Configuration.Provider, SingletonImageLoader.
                 if (e is kotlinx.coroutines.CancellationException) throw e
                 if (BuildConfig.DEBUG) Log.w("FreeVibeApp", "Rotation trigger reconcile failed: ${e.message}")
             }
+        }
+    }
+
+    /**
+     * Rotation scheduled before this build still waits on a WorkManager network constraint, which
+     * keeps a wallpaper saved ahead of time from applying offline. Re-arms it once without one.
+     */
+    private fun relaxRotationNetworkConstraint() {
+        appScope.launch {
+            com.freevibe.service.AutoWallpaperWorker.relaxStoredNetworkConstraint(this@FreeVibeApp)
         }
     }
 

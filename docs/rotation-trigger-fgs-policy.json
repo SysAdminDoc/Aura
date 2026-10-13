@@ -30,7 +30,7 @@
     "Intent.ACTION_SCREEN_OFF",
     "ExistingWorkPolicy.KEEP",
     "OutOfQuotaPolicy.RUN_AS_NON_EXPEDITED_WORK_REQUEST",
-    "setRequiredNetworkType(NetworkType.CONNECTED)",
+    "triggeredRotationConstraints(restartCountdown)",
     "setRequiresBatteryNotLow(true)",
     "stopSelf(startId)"
   ],

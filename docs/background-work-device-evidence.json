@@ -12,6 +12,7 @@
       "title": "WorkManager baseline state",
       "coversWorkNames": [
         "auto_wallpaper",
+        "auto_wallpaper_catch_up",
         "daily_wallpaper",
         "weather_update",
         "aura_originals_download",
@@ -39,6 +40,7 @@
       "title": "Metered network and Data Saver state",
       "coversWorkNames": [
         "auto_wallpaper",
+        "auto_wallpaper_catch_up",
         "auto_backup",
         "daily_wallpaper",
         "ringtone_restoration",
@@ -72,6 +74,7 @@
       "title": "Low battery constraint state",
       "coversWorkNames": [
         "auto_wallpaper",
+        "auto_wallpaper_catch_up",
         "auto_backup",
         "rotation_trigger_oneshot"
       ],
@@ -97,6 +100,7 @@
       "title": "Doze and App Standby scheduling delay",
       "coversWorkNames": [
         "auto_wallpaper",
+        "auto_wallpaper_catch_up",
         "auto_backup",
         "daily_wallpaper",
         "ringtone_restoration",
@@ -132,6 +136,7 @@
       "title": "Android 16 TOP-started and foreground-service-concurrent job quota",
       "coversWorkNames": [
         "auto_wallpaper",
+        "auto_wallpaper_catch_up",
         "auto_backup",
         "daily_wallpaper",
         "ringtone_restoration",

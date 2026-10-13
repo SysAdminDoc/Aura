@@ -134,6 +134,12 @@ class RotationHealthClassifierTest {
     }
 
     @Test
+    fun `a run that waited for a connection is not a problem to report`() {
+        // Offline with nothing saved, or on mobile data with Wi-Fi only on: the schedule is fine.
+        assertEquals(RotationHealthVerdict.HEALTHY, classify(lastResult = "deferred"))
+    }
+
+    @Test
     fun `last result casing does not change the verdict`() {
         assertEquals(RotationHealthVerdict.FAILING, classify(lastResult = "FAILURE"))
         assertEquals(RotationHealthVerdict.THROTTLED, classify(lastResult = "Retry"))

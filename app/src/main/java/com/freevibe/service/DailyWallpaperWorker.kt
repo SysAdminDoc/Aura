@@ -28,6 +28,15 @@ import java.util.concurrent.TimeUnit
 /**
  * Daily wallpaper notification. Uses Bing Daily first, then Wallhaven toplist
  * as a fallback so the worker is not coupled to retired Reddit JSON endpoints.
+ *
+ * Unlike [AutoWallpaperWorker], this work keeps its connected-network constraint
+ * and has no saved-ahead path, on purpose. It never changes the wallpaper. It
+ * only announces today's pick, and that pick doesn't exist until the day it is
+ * published, so anything saved on an earlier run would be yesterday's picture
+ * under today's notification. Tapping the notification opens a preview that
+ * needs the network as well. While the phone is offline WorkManager holds the
+ * work, which costs nothing, and the next connected run announces the pick
+ * that is current then.
  */
 @HiltWorker
 class DailyWallpaperWorker @AssistedInject constructor(

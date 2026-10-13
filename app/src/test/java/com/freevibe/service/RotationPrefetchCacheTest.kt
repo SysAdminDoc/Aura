@@ -106,6 +106,17 @@ class RotationPrefetchCacheTest {
     }
 
     @Test
+    fun `a rotation that skipped saving ahead leaves its reason behind`() = runBlocking {
+        val cache = cache()
+        cache.store("wallhaven|BOTH", wallpaper("a"), download(40))
+
+        cache.recordSkipped(RotationPrefetchOutcome.DEFERRED_OFFLINE)
+
+        assertEquals(RotationPrefetchOutcome.DEFERRED_OFFLINE, cache.diagnostics().lastOutcome)
+        assertEquals("what was already saved stays saved", wallpaper("a"), cache.peek("wallhaven|BOTH")?.wallpaper)
+    }
+
+    @Test
     fun `an unmetered connection is not deferred`() = runBlocking {
         assertFalse(cache().shouldDefer())
     }

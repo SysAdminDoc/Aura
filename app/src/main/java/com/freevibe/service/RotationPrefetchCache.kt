@@ -27,6 +27,9 @@ enum class RotationPrefetchOutcome {
     /** Data Saver is on, so nothing is downloaded in the background. */
     DEFERRED_DATA_SAVER,
 
+    /** The phone had no connection when the rotation ran. */
+    DEFERRED_OFFLINE,
+
     /** The download failed or came back empty. */
     FAILED,
 
@@ -201,6 +204,10 @@ class RotationPrefetchCache internal constructor(
         locked { writeIndex(readIndex().copy(lastOutcome = outcome.name)) }
         return true
     }
+
+    /** Notes why nothing was saved ahead when the rotation worked that out before asking the cache. */
+    suspend fun recordSkipped(outcome: RotationPrefetchOutcome): Unit =
+        locked { writeIndex(readIndex().copy(lastOutcome = outcome.name)) }
 
     suspend fun diagnostics(): RotationPrefetchDiagnostics = locked {
         val index = readIndex()

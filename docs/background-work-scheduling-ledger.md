@@ -16,7 +16,8 @@ release docs, and verify/release workflow wiring.
 
 | Work | Worker | Type | Unique work | Policy | Timing | Constraints | Expedited |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| Auto wallpaper rotation | `AutoWallpaperWorker` | Periodic | `auto_wallpaper` | `ExistingPeriodicWorkPolicy.UPDATE` | Default 360 minutes; WorkManager floor 15 minutes; one source, configurable clock-based day/night sources, or system light/dark theme sources | Connected network when any active phase is remote, unmetered when Wi-Fi-only is enabled, battery-not-low, optional charging, optional idle | No |
+| Auto wallpaper rotation | `AutoWallpaperWorker` | Periodic | `auto_wallpaper` | `ExistingPeriodicWorkPolicy.UPDATE` | Default 360 minutes; WorkManager floor 15 minutes; one source, configurable clock-based day/night sources, or system light/dark theme sources | No network constraint (the worker checks the connection before it fetches), battery-not-low, optional charging, optional idle | No |
+| Rotation catch-up | `AutoWallpaperWorker` | One-time | `auto_wallpaper_catch_up` | `ExistingWorkPolicy.REPLACE` | When a rotation has nothing saved ahead and no connection it may use | Connected network, unmetered when Wi-Fi-only is enabled, battery-not-low; charging and idle follow the scheduled rotation's options | No |
 | Automatic backup | `AutoBackupWorker` | Periodic | `auto_backup` | `ExistingPeriodicWorkPolicy.UPDATE` | User-selected hours; minimum 1 hour | Battery-not-low | No |
 | Daily wallpaper notification | `DailyWallpaperWorker` | Periodic | `daily_wallpaper` | `ExistingPeriodicWorkPolicy.KEEP` | 24 hours with 8-hour initial delay | Connected network | No |
 | Ringtone restoration | `RingtoneRestorationWorker` | One-time | `ringtone_restoration` | `ExistingWorkPolicy.REPLACE` | Device boot or package replacement | No explicit constraints | No |
@@ -26,7 +27,7 @@ release docs, and verify/release workflow wiring.
 | Wallpaper pack | `WallpaperPackWorker` | Periodic | `wallpaper_pack` | `ExistingPeriodicWorkPolicy.UPDATE` | 15 minutes | No explicit constraints | No |
 | Weather effect refresh | `WeatherUpdateWorker` | Periodic | `weather_update` | `ExistingPeriodicWorkPolicy.KEEP` | 30 minutes | Connected network | No |
 | Aura Originals download | `AuraOriginalsDownloader` | One-time | `aura_originals_download` | `ExistingWorkPolicy.KEEP` | Enqueued on app startup, idempotent after hashes match | Unmetered network | Yes, downgraded to non-expedited on quota exhaustion |
-| Rotation trigger one-shot | `AutoWallpaperWorker` through `RotationTriggerService` | One-time | `rotation_trigger_oneshot` | `ExistingWorkPolicy.KEEP` | Unlock, screen-off, Tasker, MacroDroid, adb, or Termux trigger | Connected network; battery-not-low for unlock and screen-off | Tile and automation requests only, downgraded to non-expedited on quota exhaustion |
+| Rotation trigger one-shot | `AutoWallpaperWorker` through `RotationTriggerService` | One-time | `rotation_trigger_oneshot` | `ExistingWorkPolicy.KEEP` | Unlock, screen-off, Tasker, MacroDroid, adb, or Termux trigger | No network constraint (the worker checks the connection before it fetches); battery-not-low for unlock and screen-off | Tile and automation requests only, downgraded to non-expedited on quota exhaustion |
 | Favorites batch download | `BatchDownloadWorker` | One-time | `favorites_batch_download` | `ExistingWorkPolicy.KEEP` | Download all or Download selected in Library favorites; resumes pending items after process death | Connected network | No |
 
 ## Android 16 quota audit
@@ -55,7 +56,12 @@ mid-apply), and
 `RUN_AS_NON_EXPEDITED_WORK_REQUEST` to preserve the request when expedited quota
 is unavailable. Only explicit requests are expedited. WorkManager refuses to
 build expedited work with a battery constraint, so the unlock and screen-off
-rotations run as ordinary work and keep battery-not-low. Settings and copied support diagnostics now report every unique
+rotations run as ordinary work and keep battery-not-low. A trigger rotation that
+finds nothing saved ahead and no connection it may use ends at once and hands
+off to `auto_wallpaper_catch_up`, which WorkManager holds on its network
+constraint. That one-shot is ordinary work, is replaced by a newer hand-off, and
+never queues another, so a phone that stays offline through many unlocks has one
+waiting job and no retries. Settings and copied support diagnostics now report every unique
 work name and summarize non-active `WorkInfo.stopReason` values such as `QUOTA`,
 `TIMEOUT`, `BACKGROUND_RESTRICTION`, and constraint stops.
 
@@ -66,6 +72,9 @@ where Aura can infer them from WorkInfo, metered/Data Saver receipts, and local
 worker receipts:
 
 - Connected network is unavailable.
+- A wallpaper rotation ran with no connection it may use and nothing saved
+  ahead. Its receipt reads `deferred`, the run counts as healthy, and the
+  catch-up one-shot waits for the network.
 - Unmetered network is unavailable for Wi-Fi-only or Aura Originals work.
 - Battery-not-low, charging, or idle constraints are not met.
 - Location permission or last-known location is missing for weather effects.
