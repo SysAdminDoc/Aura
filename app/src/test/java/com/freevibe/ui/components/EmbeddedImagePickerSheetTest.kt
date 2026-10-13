@@ -4,7 +4,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.test.assertHeightIsAtMost
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.getUnclippedBoundsInRoot
 import androidx.compose.ui.test.junit4.createComposeRule
@@ -68,7 +67,9 @@ class EmbeddedImagePickerSheetTest {
             }
         }
 
-        composeRule.onNodeWithTag("picker").assertIsDisplayed().assertHeightIsAtMost(202.dp)
+        val pickerBounds = composeRule.onNodeWithTag("picker").assertIsDisplayed().getUnclippedBoundsInRoot()
+        val pickerHeight = pickerBounds.bottom - pickerBounds.top
+        assertTrue("picker is $pickerHeight tall, 202dp at most", pickerHeight <= 202.dp)
         val button = composeRule.onNodeWithText("Open full picker").assertIsDisplayed()
         val bottom = button.getUnclippedBoundsInRoot().bottom
         assertTrue("button ends at $bottom, inside the 480dp window", bottom <= 480.dp)
