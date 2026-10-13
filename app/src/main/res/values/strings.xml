@@ -1206,6 +1206,7 @@
     <string name="settings_wp_idle_only_title">Device idle only</string>
     <string name="settings_wp_idle_only_subtitle">Defer rotation until you\'re not actively using the phone</string>
     <string name="settings_wp_target_title">Rotate on</string>
+    <string name="settings_wp_target_scheduler_note">The scheduler is on, so its Home screen and Lock screen switches decide this.</string>
     <string name="settings_video_speed_title">Playback speed</string>
     <string name="settings_video_speed_subtitle">%1$s. Takes effect the next time the video wallpaper starts.</string>
     <string name="settings_video_speed_normal">1× (normal)</string>

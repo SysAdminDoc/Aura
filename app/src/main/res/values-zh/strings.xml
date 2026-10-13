@@ -1108,6 +1108,7 @@
     <string name="settings_wp_idle_only_title">仅设备空闲时</string>
     <string name="settings_wp_idle_only_subtitle">推迟轮换，直到你不再频繁使用手机</string>
     <string name="settings_wp_target_title">轮换位置</string>
+    <string name="settings_wp_target_scheduler_note">定时器已开启，此项由定时器的“主屏幕”和“锁屏”开关决定。</string>
     <string name="settings_video_speed_title">播放速度</string>
     <string name="settings_video_speed_subtitle">%1$s。下次视频壁纸启动时生效。</string>
     <string name="settings_video_speed_normal">1×（正常）</string>

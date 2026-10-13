@@ -148,7 +148,12 @@ internal fun WallpaperRotationSettingsSection(
             SettingsItem(
                 icon = Icons.Default.Wallpaper,
                 title = stringResource(R.string.settings_wp_target_title),
-                subtitle = rotationTargetLabel(autoWallpaperTargetOf(autoWpTarget)),
+                // The scheduler runs instead of this rotation when it's on, with its own home and lock switches.
+                subtitle = if (schedulerEnabled) {
+                    stringResource(R.string.settings_wp_target_scheduler_note)
+                } else {
+                    rotationTargetLabel(autoWallpaperTargetOf(autoWpTarget))
+                },
                 onClick = { showTargetPicker = true },
             )
             SettingsToggle(
