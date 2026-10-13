@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import math
 import re
 import sys
 
@@ -38,8 +39,21 @@ REQUIRED_PRIMARY_DESTINATIONS = {
     "Settings",
 }
 REQUIRED_THEMES = {"dark", "light"}
-REQUIRED_PRIMARY_CHECKS = {"semantics", "contrast", "touchTargets", "noClippedText"}
+REQUIRED_PRIMARY_CHECKS = {"semantics", "contrast", "touchTargets", "noClippedText", "scrollReachability"}
 MINIMUM_FONT_SCALE = 2.0
+# A screenshot shows one destination in one theme; a report file can cover a whole run.
+EVIDENCE_IMAGE_SUFFIXES = {".png", ".jpg", ".jpeg", ".webp"}
+EVIDENCE_REPORT_SUFFIXES = {".json", ".xml", ".html", ".txt"}
+
+
+def large_enough_scale(value: Any, minimum: float) -> bool:
+    """True for a real number at or above minimum. NaN compares false both ways, so it fails here."""
+    return (
+        isinstance(value, (int, float))
+        and not isinstance(value, bool)
+        and math.isfinite(value)
+        and value >= minimum
+    )
 
 REQUIRED_EXECUTED_SURFACES = {
     "wallpapers-grid",
@@ -212,6 +226,7 @@ def validate_primary_matrix(
     policy: dict[str, Any],
     version_name: str,
     destinations: list[str],
+    policy_path: str,
 ) -> dict[str, int]:
     """Every primary destination, in both themes at 200 percent text, with evidence.
 
@@ -226,7 +241,7 @@ def validate_primary_matrix(
             "primaryMatrix cells can't be waived; record evidence for them instead"
         )
     font_scale = matrix.get("fontScale")
-    if not isinstance(font_scale, (int, float)) or font_scale < MINIMUM_FONT_SCALE:
+    if not large_enough_scale(font_scale, MINIMUM_FONT_SCALE):
         raise AccessibilityReleaseGateError(
             f"primaryMatrix.fontScale must be at least {MINIMUM_FONT_SCALE}, got {font_scale!r}"
         )
@@ -265,6 +280,7 @@ def validate_primary_matrix(
         raise AccessibilityReleaseGateError("primaryMatrix.evidence must be a list")
     problems: list[str] = []
     recorded: set[str] = set()
+    screenshot_cells: dict[str, list[str]] = {}
     for item in evidence:
         row = require_object(item, "primaryMatrix.evidence[]")
         destination = require_string(row.get("destination"), "primaryMatrix.evidence[].destination")
@@ -285,16 +301,30 @@ def validate_primary_matrix(
         source = require_string(row.get("source"), f"primaryMatrix.evidence[{cell}].source")
         if stamped != version_name:
             problems.append(f"{cell}: evidence is for {stamped}, but the build declares {version_name}")
-        if not (repo_root / source).is_file():
+        source_path = Path(source)
+        suffix = source_path.suffix.lower()
+        if source_path.is_absolute() or ".." in source_path.parts:
+            problems.append(f"{cell}: evidence file {source} must be a path inside the repository")
+        elif source_path.as_posix() == Path(policy_path).as_posix():
+            problems.append(f"{cell}: evidence file {source} is this policy, not evidence")
+        elif suffix not in EVIDENCE_IMAGE_SUFFIXES | EVIDENCE_REPORT_SUFFIXES:
+            problems.append(f"{cell}: evidence file {source} isn't a screenshot or a report")
+        elif not (repo_root / source).is_file():
             problems.append(f"{cell}: evidence file {source} doesn't exist")
+        if suffix in EVIDENCE_IMAGE_SUFFIXES:
+            screenshot_cells.setdefault(source_path.as_posix(), []).append(cell)
         row_scale = row.get("fontScale")
-        if not isinstance(row_scale, (int, float)) or row_scale < font_scale:
+        if not large_enough_scale(row_scale, font_scale):
             problems.append(f"{cell}: recorded at font scale {row_scale!r}, below {font_scale}")
         results = require_object(row.get("results"), f"primaryMatrix.evidence[{cell}].results")
         for check in sorted(checks):
             outcome = results.get(check)
             if outcome != "pass":
                 problems.append(f"{cell}: {check} is {outcome if outcome else 'not recorded'}")
+
+    for screenshot, cells in sorted(screenshot_cells.items()):
+        if len(cells) > 1:
+            problems.append(f"screenshot {screenshot} is recorded for more than one cell: " + ", ".join(cells))
 
     absent = [
         f"{destination}/{theme}"
@@ -465,7 +495,7 @@ def validate_accessibility_release_gate(repo_root: Path, policy_path: str) -> di
     currency = validate_scenario_currency(policy, scenario_rows, version_name)
     # Last on purpose: it fails until a release's evidence exists, and the
     # structural checks above should still report their own errors first.
-    primary = validate_primary_matrix(repo_root, policy, version_name, screen_destinations(repo_root))
+    primary = validate_primary_matrix(repo_root, policy, version_name, screen_destinations(repo_root), policy_path)
 
     return {
         "status": "ok",

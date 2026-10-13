@@ -136,7 +136,8 @@
       "semantics",
       "contrast",
       "touchTargets",
-      "noClippedText"
+      "noClippedText",
+      "scrollReachability"
     ],
     "destinations": [
       "Onboarding",
@@ -160,7 +161,8 @@
           "semantics": "not checked",
           "contrast": "not checked",
           "touchTargets": "not checked",
-          "noClippedText": "fail"
+          "noClippedText": "fail",
+          "scrollReachability": "not checked"
         },
         "notes": "Reviewed baseline from ProductionRouteStateScreenshotTest. The section and switch summaries end in an ellipsis, and the diagnostics card titles break mid-word (troublesho / oting)."
       }

@@ -141,8 +141,58 @@ class AccessibilityReleaseGateCheckTest(unittest.TestCase):
 
                 self.assertIn(expected, str(ctx.exception))
 
+    def test_a_nan_font_scale_fails(self) -> None:
+        for where, expected in (("matrix", "fontScale must be at least 2.0, got nan"), ("row", "font scale nan")):
+            with self.subTest(where=where), tempfile.TemporaryDirectory() as tmpdir:
+                repo = copy_required_tree(Path(tmpdir))
+                complete_primary_matrix(repo)
+                policy = self._policy(repo)
+                target = policy["primaryMatrix"] if where == "matrix" else policy["primaryMatrix"]["evidence"][0]
+                target["fontScale"] = float("nan")
+                self._write_policy(repo, policy)
+
+                with self.assertRaises(AccessibilityReleaseGateError) as ctx:
+                    validate_accessibility_release_gate(repo, POLICY)
+
+                self.assertIn(expected, str(ctx.exception))
+
+    def test_evidence_must_be_a_real_file_inside_the_repository(self) -> None:
+        cases = {
+            "absolute": ("C:/evidence/settings.png" if Path("C:/").is_absolute() else "/evidence/settings.png", "inside the repository"),
+            "escapes": ("../outside.png", "inside the repository"),
+            "the policy": (POLICY, "is this policy"),
+            "not evidence": ("app/build.gradle.kts", "isn't a screenshot or a report"),
+        }
+        for name, (source, expected) in cases.items():
+            with self.subTest(case=name), tempfile.TemporaryDirectory() as tmpdir:
+                repo = copy_required_tree(Path(tmpdir))
+                complete_primary_matrix(repo)
+                policy = self._policy(repo)
+                policy["primaryMatrix"]["evidence"][0]["source"] = source
+                self._write_policy(repo, policy)
+
+                with self.assertRaises(AccessibilityReleaseGateError) as ctx:
+                    validate_accessibility_release_gate(repo, POLICY)
+
+                self.assertIn(expected, str(ctx.exception))
+
+    def test_one_screenshot_cannot_stand_for_two_cells(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            repo = copy_required_tree(Path(tmpdir))
+            copy_file(TRUNCATED_BASELINE, repo)
+            complete_primary_matrix(repo)
+            policy = self._policy(repo)
+            for row in policy["primaryMatrix"]["evidence"][:2]:
+                row["source"] = TRUNCATED_BASELINE
+            self._write_policy(repo, policy)
+
+            with self.assertRaises(AccessibilityReleaseGateError) as ctx:
+                validate_accessibility_release_gate(repo, POLICY)
+
+            self.assertIn("is recorded for more than one cell", str(ctx.exception))
+
     def test_every_required_check_must_pass(self) -> None:
-        for check in ("semantics", "contrast", "touchTargets", "noClippedText"):
+        for check in ("semantics", "contrast", "touchTargets", "noClippedText", "scrollReachability"):
             with self.subTest(check=check), tempfile.TemporaryDirectory() as tmpdir:
                 repo = copy_required_tree(Path(tmpdir))
                 complete_primary_matrix(repo)
@@ -161,8 +211,13 @@ class AccessibilityReleaseGateCheckTest(unittest.TestCase):
             test_path = repo / "app/src/androidTest/java/com/freevibe/ui/accessibility/AccessibilityReleaseGateTest.kt"
             test_path.write_text(test_path.read_text(encoding="utf-8").replace("enableAccessibilityChecks", ""), encoding="utf-8")
 
-            with self.assertRaises(AccessibilityReleaseGateError):
-                validate_accessibility_release_gate(repo, "docs/qa/accessibility-release-gate.json")
+            # A complete matrix, so only the check under test can be what fails.
+            complete_primary_matrix(repo)
+
+            with self.assertRaises(AccessibilityReleaseGateError) as ctx:
+                validate_accessibility_release_gate(repo, POLICY)
+
+            self.assertIn('missing automated accessibility term: enableAccessibilityChecks', str(ctx.exception))
 
     def test_rejects_missing_manual_scenario(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -174,8 +229,13 @@ class AccessibilityReleaseGateCheckTest(unittest.TestCase):
             ]
             policy_path.write_text(json.dumps(policy), encoding="utf-8")
 
-            with self.assertRaises(AccessibilityReleaseGateError):
-                validate_accessibility_release_gate(repo, "docs/qa/accessibility-release-gate.json")
+            # A complete matrix, so only the check under test can be what fails.
+            complete_primary_matrix(repo)
+
+            with self.assertRaises(AccessibilityReleaseGateError) as ctx:
+                validate_accessibility_release_gate(repo, POLICY)
+
+            self.assertIn('manualScenarios missing: sounds-editor', str(ctx.exception))
 
     def test_rejects_compose_test_dependencies_without_supported_bom(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -193,8 +253,13 @@ class AccessibilityReleaseGateCheckTest(unittest.TestCase):
                 encoding="utf-8",
             )
 
-            with self.assertRaises(AccessibilityReleaseGateError):
-                validate_accessibility_release_gate(repo, "docs/qa/accessibility-release-gate.json")
+            # A complete matrix, so only the check under test can be what fails.
+            complete_primary_matrix(repo)
+
+            with self.assertRaises(AccessibilityReleaseGateError) as ctx:
+                validate_accessibility_release_gate(repo, POLICY)
+
+            self.assertIn('older than the', str(ctx.exception))
 
     def test_accepts_a_bom_newer_than_the_floor(self) -> None:
         """The floor is a floor. The old exact-match check failed every upgrade."""
@@ -229,8 +294,13 @@ class AccessibilityReleaseGateCheckTest(unittest.TestCase):
                 encoding="utf-8",
             )
 
-            with self.assertRaises(AccessibilityReleaseGateError):
-                validate_accessibility_release_gate(repo, "docs/qa/accessibility-release-gate.json")
+            # A complete matrix, so only the check under test can be what fails.
+            complete_primary_matrix(repo)
+
+            with self.assertRaises(AccessibilityReleaseGateError) as ctx:
+                validate_accessibility_release_gate(repo, POLICY)
+
+            self.assertIn('declares no calendar-versioned compose-bom', str(ctx.exception))
 
     def test_rejects_missing_executed_surface(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -242,8 +312,13 @@ class AccessibilityReleaseGateCheckTest(unittest.TestCase):
             ]
             policy_path.write_text(json.dumps(policy), encoding="utf-8")
 
-            with self.assertRaises(AccessibilityReleaseGateError):
-                validate_accessibility_release_gate(repo, "docs/qa/accessibility-release-gate.json")
+            # A complete matrix, so only the check under test can be what fails.
+            complete_primary_matrix(repo)
+
+            with self.assertRaises(AccessibilityReleaseGateError) as ctx:
+                validate_accessibility_release_gate(repo, POLICY)
+
+            self.assertIn('automatedGate.executedSurfaces missing: wallpaper-editor', str(ctx.exception))
 
     def _policy(self, repo: Path) -> dict:
         return json.loads(
@@ -415,8 +490,13 @@ class AccessibilityReleaseGateCheckTest(unittest.TestCase):
                 encoding="utf-8",
             )
 
-            with self.assertRaises(AccessibilityReleaseGateError):
-                validate_accessibility_release_gate(repo, "docs/qa/accessibility-release-gate.json")
+            # A complete matrix, so only the check under test can be what fails.
+            complete_primary_matrix(repo)
+
+            with self.assertRaises(AccessibilityReleaseGateError) as ctx:
+                validate_accessibility_release_gate(repo, POLICY)
+
+            self.assertIn('must render production route states, not SettingsToggle(', str(ctx.exception))
 
 
 def copy_file(relative_path: str, destination: Path) -> None:
