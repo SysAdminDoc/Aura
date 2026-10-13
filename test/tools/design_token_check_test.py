@@ -194,6 +194,50 @@ class DesignTokenCheckTest(unittest.TestCase):
             "GlassCard must paint with GLASS_CARD_ALPHA",
         )
 
+    def test_material_pill_defaults_fail_even_as_an_explicit_shape(self) -> None:
+        for pill in ("ShapeDefaults.Full", "ButtonDefaults.shape", "IconButtonDefaults.filledShape"):
+            with self.subTest(pill=pill):
+                self.assert_fails(
+                    {SCREEN: SAMPLE.replace("shape = AuraShapes.Small", f"shape = {pill}")},
+                    f"Sample.kt:10 uses {pill}, a Material default that draws a pill or circle",
+                )
+
+    def test_shape_named_inside_a_lambda_does_not_count(self) -> None:
+        self.assert_fails(
+            {SCREEN: SAMPLE.replace(
+                "OutlinedButton(onClick = onPick, shape = AuraShapes.Small)",
+                "OutlinedButton(onClick = { resize(shape = AuraShapes.Small) })",
+            )},
+            "Sample.kt:10 OutlinedButton keeps Material's pill shape",
+        )
+
+    def test_aliased_shape_or_button_import_fails(self) -> None:
+        for aliased in (
+            "import androidx.compose.foundation.shape.RoundedCornerShape as Rounded",
+            "import androidx.compose.material3.Button as Pill",
+        ):
+            with self.subTest(aliased=aliased):
+                self.assert_fails(
+                    {SCREEN: SAMPLE.replace("@Composable", f"{aliased}\n\n@Composable", 1)},
+                    "Sample.kt:3 aliases a guarded import",
+                )
+
+    def test_every_spelling_of_a_colour_literal_is_counted(self) -> None:
+        for literal in ("Color (0xFF112233)", "Color(4278190080)", "Color(color = 0xFF112233)", "Color(0.2f, 0.4f, 0.6f)"):
+            with self.subTest(literal=literal):
+                self.assert_fails(
+                    {SCREEN: SAMPLE.replace("Text(\"Later\")", f"Text(\"Later\", color = {literal})")},
+                    "Sample.kt has 1 Color(0x...) literal(s)",
+                )
+
+    def test_badge_that_computes_the_tone_but_draws_another_colour_fails(self) -> None:
+        self.assert_fails(
+            {"app/src/main/java/com/freevibe/ui/components/SharedComponents.kt": SHARED.replace(
+                "color = color)", "color = MaterialTheme.colorScheme.outline)",
+            )},
+            "SourceBadge must take its colour from sourceBadgeTone",
+        )
+
     def assert_fails(self, overrides: dict[str, str], message: str) -> None:
         with self.fixture(overrides) as root:
             with self.assertRaises(DesignTokenError) as raised:

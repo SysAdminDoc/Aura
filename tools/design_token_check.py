@@ -35,10 +35,17 @@ SHAPE_CALL = re.compile(r"\b(RoundedCornerShape|AbsoluteRoundedCornerShape|CutCo
 CIRCLE_SHAPE = re.compile(r"\bCircleShape\b")
 CEILING = re.compile(r"const val MAX_CORNER_RADIUS_DP = (\d+)\b")
 DP_ARGUMENT = re.compile(r"^(?:\w+\s*=\s*)?(\d+(?:\.\d+)?)\.dp$")
-GLANCE_RADIUS = re.compile(r"\.cornerRadius\(\s*([^)]*)\)")
+GLANCE_RADIUS = re.compile(r"\bcornerRadius\s*\(\s*([^)]*)\)")
 CONTAINER_BUTTON = re.compile(r"(?<![\w.])(Button|OutlinedButton|FilledTonalButton|ElevatedButton)\s*\(")
 NAVIGATION_ITEM = re.compile(r"(?<![\w.])(NavigationBarItem|NavigationRailItem)\s*\(")
-COLOR_LITERAL = re.compile(r"\bColor\(\s*0[xX][0-9A-Fa-f]")
+COLOR_LITERAL = re.compile(r"\bColor\s*\(\s*(?:\w+\s*=\s*)?(?:0[xX]|\d)")
+# Material component defaults such as ButtonDefaults.shape or ShapeDefaults.Full are pills or circles.
+PILL_DEFAULT = re.compile(r"\bShapeDefaults\b(?:\.\w+)?|\b[A-Z]\w*Defaults\.\w*[sS]hape\b")
+GUARDED_IMPORT_ALIAS = re.compile(
+    r"^import androidx\.compose\.(?:foundation\.shape\.\w+|material3\.(?:Button|OutlinedButton|FilledTonalButton|"
+    r"ElevatedButton|NavigationBarItem|NavigationRailItem)) as \w+",
+    re.M,
+)
 
 # Files outside ui/theme that may spell colours out, with the exact count and why.
 COLOR_LITERAL_REGISTRY: dict[str, tuple[int, str]] = {
@@ -101,9 +108,9 @@ def call_arguments(text: str, open_paren_end: int) -> str:
 def split_arguments(arguments: str) -> list[str]:
     parts, depth, current = [], 0, []
     for char in arguments:
-        if char in "([":
+        if char in "([{":
             depth += 1
-        elif char in ")]":
+        elif char in ")]}":
             depth -= 1
         if char == "," and depth == 0:
             parts.append("".join(current).strip())
@@ -218,6 +225,13 @@ def check_shapes(sources: dict[str, str], errors: list[str]) -> int:
                     errors.append(f"{where} uses '{argument}'. Token radii are written in dp, never percent or px")
                 elif float(radius.group(1)) > ceiling:
                     errors.append(f"{where} uses {argument}, above the {ceiling} dp ceiling")
+        for match in PILL_DEFAULT.finditer(text):
+            errors.append(
+                f"{path}:{line_of(text, match.start())} uses {match.group(0)}, a Material default that draws a pill or circle. "
+                "Use an AuraShapes token"
+            )
+        for match in GUARDED_IMPORT_ALIAS.finditer(text):
+            errors.append(f"{path}:{line_of(text, match.start())} aliases a guarded import, which would hide it from this check")
         for match in CIRCLE_SHAPE.finditer(text):
             errors.append(f"{path}:{line_of(text, match.start())} uses CircleShape. Aura draws no circle or pill backdrops")
         for match in GLANCE_RADIUS.finditer(text):
@@ -239,7 +253,8 @@ def check_component_defaults(sources: dict[str, str], errors: list[str]) -> int:
             continue
         for match in CONTAINER_BUTTON.finditer(text):
             checked += 1
-            if not re.search(r"\bshape\s*=", call_arguments(text, match.end())):
+            arguments = split_arguments(call_arguments(text, match.end()))
+            if not any(re.match(r"shape\s*=", argument) for argument in arguments):
                 errors.append(
                     f"{path}:{line_of(text, match.start())} {match.group(1)} keeps Material's pill shape. Pass shape = AuraShapes.Medium"
                 )
@@ -296,7 +311,7 @@ def check_badge_contrast(sources: dict[str, str], errors: list[str]) -> None:
     badge = shared.partition("fun SourceBadge(")[2].partition("\n}\n")[0]
     if not badge:
         errors.append(f"{SHARED_COMPONENTS_FILE} no longer defines SourceBadge")
-    elif "sourceBadgeTone(" not in badge:
+    elif not re.search(r"val color = [^\n]*sourceBadgeTone\(", badge) or "color = color" not in badge:
         errors.append("SourceBadge must take its colour from sourceBadgeTone so it keeps 4.5:1 contrast")
     if "surfaceContainer.copy(alpha = GLASS_CARD_ALPHA)" not in shared:
         errors.append("GlassCard must paint with GLASS_CARD_ALPHA, the alpha the badge contrast check assumes")
