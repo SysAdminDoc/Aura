@@ -128,7 +128,9 @@ class VideoCropPreviewTest {
         val screen = File("src/main/java/com/freevibe/ui/screens/videowallpapers/VideoCropScreen.kt").readText()
 
         val listens = screen.indexOf("addListener(previewTracker)")
-        assertTrue("the tracker hears the player from its first prepare", listens in 0 until screen.indexOf("prepare()"))
+        // The call itself, not a comment that mentions it.
+        val prepares = screen.indexOf("\n            prepare()")
+        assertTrue("the tracker hears the player from its first prepare", listens in 0 until prepares)
         assertTrue(screen.contains("enabled = !isCropping && dimensionsReady && previewReady"))
         assertTrue(screen.contains("enabled = !smartCropInFlight && dimensionsReady && previewReady"))
         assertTrue(screen.contains("VideoCropPreviewOverlay("))

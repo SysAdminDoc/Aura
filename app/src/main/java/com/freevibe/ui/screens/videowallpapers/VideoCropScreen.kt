@@ -139,7 +139,7 @@ fun VideoCropScreen(
     val previewTracker = remember { VideoCropPreviewTracker() }
     val exoPlayer = remember {
         ExoPlayer.Builder(context).experimentalSetDynamicSchedulingEnabled(true).build().apply {
-            // Attached before prepare(), so the first frame or an early error can't arrive before it.
+            // Attached before the player prepares, so the first frame or an early error can't arrive before it.
             addListener(previewTracker)
             setMediaItem(MediaItem.fromUri(videoUrl))
             repeatMode = Player.REPEAT_MODE_ALL
