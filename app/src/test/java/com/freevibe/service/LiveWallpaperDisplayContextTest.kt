@@ -1,8 +1,15 @@
 package com.freevibe.service
 
 import android.content.Context
+import android.content.ContextWrapper
+import android.graphics.Rect
 import android.hardware.display.DisplayManager
 import android.service.wallpaper.WallpaperService
+import android.view.WindowInsets
+import android.view.WindowManager
+import android.view.WindowMetrics
+import io.mockk.every
+import io.mockk.mockk
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Test
@@ -41,6 +48,17 @@ class LiveWallpaperDisplayContextTest {
         val displayId = ShadowDisplayManager.addDisplay(qualifiers)
         val display = app.getSystemService(DisplayManager::class.java).getDisplay(displayId)
         return app.createDisplayContext(display)
+    }
+
+    /** [display] with a window manager that reports a window of [width] by [height] pixels. */
+    private fun reporting(display: Context, width: Int, height: Int): Context {
+        val windowManager = mockk<WindowManager>()
+        every { windowManager.currentWindowMetrics } returns
+            WindowMetrics(Rect(0, 0, width, height), WindowInsets.Builder().build(), 1f)
+        return object : ContextWrapper(display) {
+            override fun getSystemService(name: String): Any? =
+                if (name == Context.WINDOW_SERVICE) windowManager else super.getSystemService(name)
+        }
     }
 
     private fun engineOn(serviceClass: Class<out WallpaperService>, display: Context): WallpaperService.Engine {
@@ -82,8 +100,10 @@ class LiveWallpaperDisplayContextTest {
 
     @Test
     fun `two video engines each measure their own display`() {
-        val onPhone = engineOn(VideoWallpaperService::class.java, phoneDisplay())
-        val onMonitor = engineOn(VideoWallpaperService::class.java, monitorDisplay())
+        // Window metrics here don't follow a display context, so each display's window manager is
+        // stood in. What this proves is that an engine asks its own display and not the service.
+        val onPhone = engineOn(VideoWallpaperService::class.java, reporting(phoneDisplay(), 1080, 2400))
+        val onMonitor = engineOn(VideoWallpaperService::class.java, reporting(monitorDisplay(), 1280, 720))
 
         assertEquals(1080 to 2400, screenSize(onPhone))
         assertEquals(1280 to 720, screenSize(onMonitor))

@@ -2211,7 +2211,7 @@
 
     <!-- Wallpaper packs (24H) -->
     <string name="settings_wp_pack_title">24H wallpaper pack</string>
-    <string name="settings_wp_pack_on_subtitle">%1$d daypart slot(s) active. Wallpaper changes by time of day.</string>
+    <string name="settings_wp_pack_on_subtitle">On. %1$d of 4 times of day have a wallpaper.</string>
     <string name="settings_wp_pack_off_subtitle">Map different wallpapers to morning, day, evening, and night</string>
     <string name="settings_wp_pack_empty_subtitle">No wallpapers yet. Open the editor below to add one first.</string>
     <string name="settings_wp_pack_needs_slot_feedback">Add a wallpaper in the pack editor first. Nothing runs until you do.</string>
@@ -2234,7 +2234,7 @@
     <string name="settings_wp_pack_slot_removed">Removed.</string>
     <string name="settings_wp_pack_deleted">Pack deleted.</string>
     <string name="settings_wp_pack_delete">Delete pack</string>
-    <string name="settings_wp_pack_access_failed">Couldn't keep access to that picture. Try another one.</string>
+    <string name="settings_wp_pack_access_failed">Couldn\'t keep access to that picture. Try another one.</string>
 
     <!-- Sound detail: similar sounds -->
     <string name="sound_detail_similar_load_failed">Couldn\'t load similar sounds. Check your connection.</string>

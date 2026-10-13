@@ -2031,7 +2031,7 @@
 
     <!-- Wallpaper packs (24H) -->
     <string name="settings_wp_pack_title">24 小时壁纸包</string>
-    <string name="settings_wp_pack_on_subtitle">%1$d 个时段槽位生效中。壁纸按一天中的时间变化。</string>
+    <string name="settings_wp_pack_on_subtitle">已开启。4 个时段中有 %1$d 个设置了壁纸。</string>
     <string name="settings_wp_pack_off_subtitle">将不同的壁纸映射到早晨、白天、傍晚和夜间</string>
     <string name="settings_wp_pack_empty_subtitle">还没有壁纸。请先打开下方的编辑器添加一张。</string>
     <string name="settings_wp_pack_needs_slot_feedback">请先在壁纸包编辑器中添加壁纸。添加之前不会运行。</string>

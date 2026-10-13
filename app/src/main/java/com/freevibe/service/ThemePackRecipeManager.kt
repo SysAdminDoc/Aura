@@ -487,6 +487,14 @@ class ThemePackRecipeManager @Inject constructor(
             plan.wallpaperPackJson?.let { packJson ->
                 runCatching { syncWallpaperPackSchedule(context, prefs.wallpaperPackEnabled.first(), packJson) }
             }
+            plan.soundProfilesJson?.let { profilesJson ->
+                runCatching {
+                    SoundProfileWorker.sync(
+                        context,
+                        soundProfilesNeedWorker(prefs.soundProfilesEnabled.first(), parseProfiles(profilesJson)),
+                    )
+                }
+            }
         } catch (e: Throwable) {
             videoPrefs.restoreKeys(VIDEO_IMPORT_KEYS, videoBefore)
             widgetPrefs.restoreKeys(WIDGET_IMPORT_KEYS, widgetBefore)

@@ -111,19 +111,13 @@ class WallpaperPackWorker @AssistedInject constructor(
 
     override suspend fun doWork(): Result {
         return try {
-            if (!prefs.wallpaperPackEnabled.first()) {
+            val packJson = prefs.wallpaperPackJson.first()
+            if (!shouldSchedulePack(prefs.wallpaperPackEnabled.first(), packJson)) {
+                // No slot can be applied, so stop waking up every 15 minutes for it.
+                cancel(applicationContext)
                 return Result.success()
             }
-
-            val pack = parsePack(prefs.wallpaperPackJson.first())
-            if (pack == null || !pack.enabled || usableSlots(pack).isEmpty()) {
-                receiptStore.recordFailure(
-                    uniqueWorkName = WORK_NAME,
-                    errorClass = "NoPack",
-                    deferralReason = "no wallpaper pack defined",
-                )
-                return Result.success()
-            }
+            val pack = parsePack(packJson) ?: return Result.success()
 
             val hour = Calendar.getInstance().get(Calendar.HOUR_OF_DAY)
             val slot = activeSlotForHour(pack, hour)
