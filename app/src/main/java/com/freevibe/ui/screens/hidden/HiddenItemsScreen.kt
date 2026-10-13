@@ -83,9 +83,9 @@ class HiddenItemsViewModel @Inject constructor(
     fun hideAgain(items: List<HiddenItem>) = voteRepo.hideLocally(items)
 }
 
-/** Items in [filter]; unlabeled hides have no kind, so they only show under All. */
-internal fun List<HiddenItem>.inKind(filter: HiddenItemKind?): List<HiddenItem> =
-    if (filter == null) this else filter { it.label?.kind == filter }
+/** Items of [kind]; unlabeled hides have no kind, so they only show under All (null). */
+internal fun List<HiddenItem>.inKind(kind: HiddenItemKind?): List<HiddenItem> =
+    if (kind == null) this else filter { it.label?.kind == kind }
 
 @Composable
 fun HiddenItemsScreen(

@@ -127,8 +127,8 @@ class VideoCropPreviewTest {
     fun `the crop screen waits for a frame before cropping`() {
         val screen = File("src/main/java/com/freevibe/ui/screens/videowallpapers/VideoCropScreen.kt").readText()
 
-        assertTrue(screen.contains("exoPlayer.addListener(previewTracker)"))
-        assertTrue(screen.contains("exoPlayer.removeListener(previewTracker)"))
+        val listens = screen.indexOf("addListener(previewTracker)")
+        assertTrue("the tracker hears the player from its first prepare", listens in 0 until screen.indexOf("prepare()"))
         assertTrue(screen.contains("enabled = !isCropping && dimensionsReady && previewReady"))
         assertTrue(screen.contains("enabled = !smartCropInFlight && dimensionsReady && previewReady"))
         assertTrue(screen.contains("VideoCropPreviewOverlay("))

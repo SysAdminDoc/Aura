@@ -31,6 +31,7 @@ import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.mutableStateOf
@@ -81,6 +82,8 @@ fun EmbeddedImagePickerSheet(
     val pickerMaxHeightDp = remember(windowHeightDp, fontScale) { embeddedPickerHeightDp(windowHeightDp, fontScale) }
     ModalBottomSheet(
         onDismissRequest = onDismiss,
+        // Half-open, a tall phone would show the picker with its button below the fold.
+        sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
         shape = RoundedCornerShape(topStart = 12.dp, topEnd = 12.dp),
     ) {
         EmbeddedImagePickerSheetContent(

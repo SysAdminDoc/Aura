@@ -522,7 +522,7 @@ class VoteRepository @Inject constructor(
     }
 
     /** Unhide locally */
-    fun unhideLocally(contentId: String) = unhideLocally(listOf(contentId))
+    fun unhideLocally(contentId: String): Unit = unhideLocally(listOf(contentId))
 
     /** Unhides each ID and forgets its label. Works with community features off, so a hide is never stuck. */
     fun unhideLocally(contentIds: Collection<String>) {

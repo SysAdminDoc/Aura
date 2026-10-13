@@ -136,8 +136,11 @@ fun VideoCropScreen(
         }
     }
 
+    val previewTracker = remember { VideoCropPreviewTracker() }
     val exoPlayer = remember {
         ExoPlayer.Builder(context).experimentalSetDynamicSchedulingEnabled(true).build().apply {
+            // Attached before prepare(), so the first frame or an early error can't arrive before it.
+            addListener(previewTracker)
             setMediaItem(MediaItem.fromUri(videoUrl))
             repeatMode = Player.REPEAT_MODE_ALL
             volume = 0f
@@ -145,14 +148,8 @@ fun VideoCropScreen(
             play()
         }
     }
+    // release() also drops the tracker.
     DisposableEffect(Unit) { onDispose { exoPlayer.release() } }
-    // Declared after the release effect, so it's disposed first and the listener goes before the player.
-    val previewTracker = remember { VideoCropPreviewTracker() }
-    DisposableEffect(exoPlayer) {
-        exoPlayer.addListener(previewTracker)
-        exoPlayer.playerError?.let(previewTracker::onPlayerError)
-        onDispose { exoPlayer.removeListener(previewTracker) }
-    }
     val preview = previewTracker.state
     val previewReady = preview == VideoCropPreview.Ready
 

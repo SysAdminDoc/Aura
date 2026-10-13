@@ -41,6 +41,13 @@ class EmbeddedImagePickerSheetTest {
     }
 
     @Test
+    fun `the sheet opens all the way so its button isn't below the fold`() {
+        val sheet = java.io.File("src/main/java/com/freevibe/ui/components/EmbeddedImagePickerSheet.kt").readText()
+
+        assertTrue(sheet.contains("rememberModalBottomSheetState(skipPartiallyExpanded = true)"))
+    }
+
+    @Test
     @Config(sdk = [35], qualifiers = "w320dp-h480dp")
     fun `on a 320 x 480 window the picker and the button both fit`() {
         var fallbacks = 0
