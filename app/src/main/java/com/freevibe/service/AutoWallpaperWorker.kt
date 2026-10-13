@@ -91,7 +91,8 @@ class AutoWallpaperWorker @AssistedInject constructor(
             // found every lock item excluded still changed the wallpaper.
             if (shouldRestartRotationCountdown(
                     requested = inputData.getBoolean(RESTART_COUNTDOWN_KEY, false),
-                    succeeded = result is Result.Success,
+                    // Result.Success is restricted to the WorkManager library, so compare classes.
+                    succeeded = result.javaClass == Result.success().javaClass,
                     applied = appliedWallpaper,
                 )
             ) {

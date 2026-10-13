@@ -817,13 +817,14 @@ internal fun withoutFinishedProgress(
 internal fun downloadFailureReason(context: Context, error: Throwable): String {
     val causes = generateSequence(error) { it.cause }.take(8).toList()
     val message = error.message.orEmpty()
-    val httpStatus = HTTP_STATUS_REGEX.find(message)?.groupValues?.get(1)?.toInt()
+    // A plain Int, zero for none: lint can't see through a null check to the %d this fills.
+    val httpStatus: Int = HTTP_STATUS_REGEX.find(message)?.groupValues?.get(1)?.toInt() ?: 0
     return when {
         causes.any { it is UnknownHostException || it is ConnectException || it is NoRouteToHostException } ->
             context.getString(R.string.download_failed_offline)
         causes.any { it is SocketTimeoutException } -> context.getString(R.string.download_failed_timeout)
         causes.any { it is SSLException } -> context.getString(R.string.download_failed_secure)
-        httpStatus != null -> context.getString(R.string.download_failed_http, httpStatus)
+        httpStatus != 0 -> context.getString(R.string.download_failed_http, httpStatus)
         message.contains("size limit", ignoreCase = true) -> context.getString(R.string.download_failed_too_large)
         message.contains("content type", ignoreCase = true) -> context.getString(R.string.download_failed_not_media)
         error is SecurityException || STORAGE_FAILURE_MARKERS.any { message.contains(it, ignoreCase = true) } ->
