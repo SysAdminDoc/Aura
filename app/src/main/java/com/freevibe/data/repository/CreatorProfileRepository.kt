@@ -59,7 +59,45 @@ data class CreatorProfileDashboard(
     val authLabel: String,
     val googleSignInAvailable: Boolean,
     val currentProfile: CreatorPublicProfile = CreatorPublicProfile(),
+    /** The follow list couldn't be read, so the empty sections mean "unknown", not "none". */
+    val followsUnavailable: Boolean = false,
 )
+
+internal data class FollowedSections(
+    val creators: List<CreatorStats>,
+    val uploads: List<CreatorUploadRef>,
+)
+
+/**
+ * Every followed creator stays listed, with zero counts when none of their uploads is in the
+ * recent window, so a quiet creator can still be unfollowed. Uploads come only from followed
+ * creators, newest first.
+ */
+internal fun followedCreatorSections(
+    followed: Map<String, String>,
+    rankedCreators: List<CreatorStats>,
+    uploads: List<CreatorUploadRef>,
+    excludedCreatorIds: Set<String> = emptySet(),
+    uploadLimit: Int = 20,
+): FollowedSections {
+    val ids = followed.keys - excludedCreatorIds
+    val ranked = rankedCreators.associateBy { it.creatorId }
+    val creators = ids.map { id ->
+        ranked[id]?.copy(isFollowed = true) ?: CreatorStats(
+            creatorId = id,
+            label = followed[id].orEmpty().ifBlank { id.take(8) },
+            soundUploads = 0,
+            wallpaperUploads = 0,
+            totalVotes = 0,
+            favoritesCount = 0,
+            isFollowed = true,
+        )
+    }.sortedBy { it.label.lowercase(java.util.Locale.ROOT) }
+    return FollowedSections(
+        creators = creators,
+        uploads = uploads.filter { it.creatorId in ids }.sortedByDescending { it.uploadedAt }.take(uploadLimit),
+    )
+}
 
 data class CreatorPublicProfile(
     val displayName: String = "",
@@ -87,7 +125,8 @@ class CreatorProfileRepository @Inject constructor(
         val currentUserId = identityProvider.ensureSignedIn()
         val knownIds = identityProvider.knownIdentityIds().toSet() + currentUserId
         val currentProfile = readCreatorProfile(currentUserId)
-        val followed = getFollowedCreatorIds()
+        val followedById = getFollowedCreators()
+        val followed = followedById?.keys.orEmpty()
         val blockedCreatorIds = communityBlockRepo.blockedUserIdsOnce()
         val uploads = filterCreatorUploadsForBlockedUsers(fetchCommunityUploads(limit), blockedCreatorIds)
         val localFavoritesCount = favoritesRepo.count().first()
@@ -112,22 +151,24 @@ class CreatorProfileRepository @Inject constructor(
                 favoritesCount = localFavoritesCount,
                 isFollowed = false,
             )
+        val followedSections = followedCreatorSections(
+            followed = followedById.orEmpty(),
+            rankedCreators = rankedCreators,
+            uploads = uploads,
+            excludedCreatorIds = blockedCreatorIds + knownIds,
+        )
         CreatorProfileDashboard(
             currentCreator = current,
             topCreators = rankedCreators
                 .filter { it.uploadCount > 0 }
                 .sortedWith(compareByDescending<CreatorStats> { it.totalVotes }.thenByDescending { it.uploadCount })
                 .take(10),
-            followedCreators = rankedCreators
-                .filter { it.creatorId in followed }
-                .sortedBy { it.label.lowercase(java.util.Locale.ROOT) },
-            followedUploads = uploads
-                .filter { it.creatorId in followed }
-                .sortedByDescending { it.uploadedAt }
-                .take(20),
+            followedCreators = followedSections.creators,
+            followedUploads = followedSections.uploads,
             authLabel = identityProvider.currentAuthLabel(),
             googleSignInAvailable = identityProvider.hasGoogleOAuthClient(),
             currentProfile = currentProfile,
+            followsUnavailable = followedById == null,
         )
     }
 
@@ -204,8 +245,9 @@ class CreatorProfileRepository @Inject constructor(
         }
     }
 
-    private suspend fun getFollowedCreatorIds(): Set<String> {
-        val db = database ?: return emptySet()
+    /** Followed creator id to the label saved with the follow; null when the list couldn't be read. */
+    private suspend fun getFollowedCreators(): Map<String, String>? {
+        val db = database ?: return null
         val currentUserId = voteRepo.sanitizeKey(identityProvider.ensureSignedIn())
         return try {
             awaitFirebaseRead("Creator follows") {
@@ -213,13 +255,14 @@ class CreatorProfileRepository @Inject constructor(
             }
                 .children
                 .mapNotNull { child ->
-                    child.child("creatorId").getValue(String::class.java) ?: child.key
+                    val id = child.child("creatorId").getValue(String::class.java) ?: child.key
+                    id?.takeIf { it.isNotBlank() }?.let { it to child.child("label").getValue(String::class.java).orEmpty() }
                 }
-                .filter { it.isNotBlank() }
-                .toSet()
+                .toMap()
         } catch (e: Exception) {
             e.rethrowIfCancelled()
-            emptySet()
+            android.util.Log.w("CreatorProfileRepo", "Creator follows unavailable: ${e.javaClass.simpleName}")
+            null
         }
     }
 

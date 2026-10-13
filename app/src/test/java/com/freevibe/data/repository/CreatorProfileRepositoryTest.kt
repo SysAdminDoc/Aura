@@ -59,6 +59,59 @@ class CreatorProfileRepositoryTest {
         assertEquals(listOf("creator_a"), visible.map { it.creatorId })
     }
 
+    @Test
+    fun `followed sections show only followed creators and their uploads`() {
+        val uploads = listOf(
+            upload("s1", "alice", "Alice", "sound", 1),
+            upload("w1", "bob", "Bob", "wallpaper", 2),
+            upload("w2", "carol", "Carol", "wallpaper", 9),
+        )
+        val sections = followedCreatorSections(
+            followed = mapOf("alice" to "Alice", "bob" to "Bob"),
+            rankedCreators = aggregateCreatorStats(uploads),
+            uploads = uploads,
+        )
+
+        assertEquals(listOf("alice", "bob"), sections.creators.map { it.creatorId })
+        assertEquals(setOf("s1", "w1"), sections.uploads.map { it.id }.toSet())
+        assertEquals(listOf(true, true), sections.creators.map { it.isFollowed })
+    }
+
+    @Test
+    fun `a followed creator with nothing recent stays listed so it can be unfollowed`() {
+        val sections = followedCreatorSections(
+            followed = mapOf("quiet" to "Quiet Creator"),
+            rankedCreators = emptyList(),
+            uploads = emptyList(),
+        )
+
+        assertEquals("Quiet Creator", sections.creators.single().label)
+        assertEquals(0, sections.creators.single().uploadCount)
+        assertEquals(emptyList<CreatorUploadRef>(), sections.uploads)
+    }
+
+    @Test
+    fun `unfollowing or blocking drops the creator and their uploads`() {
+        val uploads = listOf(upload("s1", "alice", "Alice", "sound", 1), upload("w1", "bob", "Bob", "wallpaper", 2))
+        val ranked = aggregateCreatorStats(uploads)
+
+        val afterUnfollow = followedCreatorSections(mapOf("alice" to "Alice"), ranked, uploads)
+        val blocked = followedCreatorSections(mapOf("alice" to "Alice", "bob" to "Bob"), ranked, uploads, excludedCreatorIds = setOf("bob"))
+
+        assertEquals(listOf("alice"), afterUnfollow.creators.map { it.creatorId })
+        assertEquals(listOf("s1"), afterUnfollow.uploads.map { it.id })
+        assertEquals(listOf("alice"), blocked.creators.map { it.creatorId })
+        assertEquals(listOf("s1"), blocked.uploads.map { it.id })
+    }
+
+    @Test
+    fun `no follows leaves both sections empty`() {
+        val sections = followedCreatorSections(emptyMap(), emptyList(), listOf(upload("s1", "alice", "Alice", "sound", 1)))
+
+        assertEquals(emptyList<CreatorStats>(), sections.creators)
+        assertEquals(emptyList<CreatorUploadRef>(), sections.uploads)
+    }
+
     private fun upload(
         id: String,
         creatorId: String,

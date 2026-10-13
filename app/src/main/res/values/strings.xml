@@ -696,6 +696,7 @@
     <string name="profile_following">Following</string>
     <string name="profile_follow">Follow</string>
     <string name="profile_following_empty">Follow creators from the leaderboard to track their new uploads.</string>
+    <string name="profile_following_unavailable">Aura couldn\'t load who you follow. Try again in a moment.</string>
     <string name="profile_new_from_follows">New from follows</string>
     <string name="profile_followed_uploads_empty">Followed creator uploads will appear here.</string>
     <string name="profile_metric_uploads">Uploads</string>

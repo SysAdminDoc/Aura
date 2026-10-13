@@ -357,18 +357,6 @@ Evidence for every item below is in RESEARCH.md (2026-09-04 pass).
   Effort: M
 
 
-- [ ] P2 — Wire New from follows to actual followed creators
-  Category: correctness
-  Where: app/src/main/java/com/freevibe/ui/screens/community/CreatorProfileScreen.kt:326-335,634-665
-  Problem: The New from follows control is visible but does not change the displayed uploads.
-  Evidence: UI state toggles the option, but the list pipeline does not consume followed creator IDs. Follow state already exists in CreatorProfileRepository.
-  Fix: Feed followed IDs into query/filter state, define empty/loading/error states, and preserve the choice across recreation.
-  Acceptance: With two followed and one unfollowed fixtures, the filter shows only two; unfollow updates it; zero follows explains how to follow.
-  Confidence: Verified
-  Effort: M
-
-
-
 - [ ] P2 — Make the embedded image picker fit small and enlarged displays
   Category: a11y
   Where: app/src/main/java/com/freevibe/ui/components/EmbeddedImagePickerSheet.kt:45-124

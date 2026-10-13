@@ -307,7 +307,11 @@ fun CreatorProfileScreen(
                         item {
                             SectionHeader(stringResource(R.string.profile_following), Icons.Default.Favorite)
                         }
-                        if (dashboard.followedCreators.isEmpty()) {
+                        if (dashboard.followsUnavailable) {
+                            item {
+                                EmptyCreatorSection(stringResource(R.string.profile_following_unavailable))
+                            }
+                        } else if (dashboard.followedCreators.isEmpty()) {
                             item {
                                 EmptyCreatorSection(stringResource(R.string.profile_following_empty))
                             }
@@ -326,9 +330,17 @@ fun CreatorProfileScreen(
                         item {
                             SectionHeader(stringResource(R.string.profile_new_from_follows), Icons.Default.Upload)
                         }
-                        if (dashboard.followedUploads.isEmpty()) {
+                        if (dashboard.followedUploads.isEmpty() && !dashboard.followsUnavailable) {
                             item {
-                                EmptyCreatorSection(stringResource(R.string.profile_followed_uploads_empty))
+                                EmptyCreatorSection(
+                                    stringResource(
+                                        if (dashboard.followedCreators.isEmpty()) {
+                                            R.string.profile_following_empty
+                                        } else {
+                                            R.string.profile_followed_uploads_empty
+                                        },
+                                    ),
+                                )
                             }
                         } else {
                             items(dashboard.followedUploads, key = { it.stableKey }) { upload ->
