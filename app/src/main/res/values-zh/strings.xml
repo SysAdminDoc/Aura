@@ -1988,6 +1988,7 @@
     <string name="video_wp_download_already_saved">已在下载中</string>
     <string name="video_wp_download_failed">下载失败：%1$s</string>
     <string name="video_wp_download_in_progress">此视频仍在下载，完成后再试。</string>
+    <string name="video_wp_download_while_applying">正在应用此视频，同时会保存它，完成后会出现在“下载”中。</string>
     <string name="video_wp_share_source">分享来源</string>
     <string name="video_wp_share_title">分享视频来源</string>
     <string name="video_wp_share_text">%1$s，作者 %2$s，来自 %3$s：%4$s</string>

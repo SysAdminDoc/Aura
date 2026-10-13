@@ -45,15 +45,16 @@ internal data class VideoItemActionAvailability(
     val canReport: Boolean,
 )
 
-internal fun VideoWallpaperItem.itemActionAvailability(): VideoItemActionAvailability {
+internal fun VideoWallpaperItem.itemActionAvailability(reportsEnabled: Boolean = true): VideoItemActionAvailability {
     val capabilities = videoWallpaperLicenseCapabilities()
     return VideoItemActionAvailability(
         canDownload = capabilities.canUse(VideoWallpaperAction.DOWNLOAD),
         downloadNeedsConfirmation = capabilities.requiresConfirmation(VideoWallpaperAction.DOWNLOAD),
         // Share sends the source page, never the file, so there has to be one.
         canShare = capabilities.canUse(VideoWallpaperAction.SHARE) && sourcePageUrl.isNotBlank(),
-        // A gallery clip is the user's own, so there's nobody to report it to.
-        canReport = contentSource != ContentSource.LOCAL,
+        // A gallery clip is the user's own, so there's nobody to report it to. Reports go to the
+        // community queue, so they're off while that provider is.
+        canReport = reportsEnabled && contentSource != ContentSource.LOCAL,
     )
 }
 

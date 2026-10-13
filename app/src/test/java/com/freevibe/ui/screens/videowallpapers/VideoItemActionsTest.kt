@@ -78,6 +78,29 @@ class VideoItemActionsTest {
         val galleryActions = gallery.itemActionAvailability()
         assertFalse("a gallery clip has no source page to share", galleryActions.canShare)
         assertFalse("nobody to report a gallery clip to", galleryActions.canReport)
+
+        assertFalse("reports go to the community queue, which is off", reddit.itemActionAvailability(reportsEnabled = false).canReport)
+    }
+
+    @Test
+    fun `the card menu has no report while the community provider is off`() {
+        composeRule.setContent {
+            FreeVibeTheme(darkTheme = true) {
+                VideoCard(
+                    item = reddit,
+                    streamUrl = null,
+                    mediaSourceFactory = mockk(relaxed = true),
+                    shouldPreview = false,
+                    isApplying = false,
+                    onApply = {},
+                    onOpen = {},
+                    reportsEnabled = false,
+                )
+            }
+        }
+
+        composeRule.onNodeWithContentDescription("Show quick actions").performClick()
+        composeRule.onNodeWithText("Report video").assertDoesNotExist()
     }
 
     @Test
@@ -163,5 +186,9 @@ class VideoItemActionsTest {
         // Download and Apply look for the saved original first and share the one fetch path.
         assertEquals(2, Regex("""findSavedDownloadedVideo\(item\.id, item\.source\)""").findAll(model).count())
         assertEquals(1, Regex("""prepareDownloadedVideo\(""").findAll(model).count())
+        // A Download tap while Apply saves the same video says so instead of doing nothing.
+        assertTrue(model.contains("isApplying == item.id) {"))
+        assertTrue(model.contains("R.string.video_wp_download_while_applying"))
+        assertTrue(screen.contains("reportsEnabled = reportsEnabled"))
     }
 }

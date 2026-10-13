@@ -58,7 +58,9 @@ import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -505,6 +507,9 @@ class VideoWallpapersViewModel @Inject constructor(
         SharingStarted.Eagerly,
         com.freevibe.data.model.DEFAULT_FIT_CANVAS_COLOR,
     )
+    /** Report goes to the community queue, so it's only offered while that provider is on. */
+    val communityReportsEnabled = flow { emitAll(prefs.communityProviderEnabled) }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), true)
     private val pixabayVideoCache = PixabayVideoCacheStore(context)
     @Volatile
     private var pixabayVideoRateLimitedUntilMs: Long = 0L
@@ -801,7 +806,12 @@ class VideoWallpapersViewModel @Inject constructor(
      * record per video, so downloading twice or applying afterwards never makes a second copy.
      */
     fun downloadVideo(item: VideoWallpaperItem) {
-        if (item.id in _state.value.downloadingIds || _state.value.isApplying == item.id) return
+        if (item.id in _state.value.downloadingIds) return
+        if (_state.value.isApplying == item.id) {
+            // Apply is saving this same original, and it lands in Downloads when that finishes.
+            Toast.makeText(context, context.getString(com.freevibe.R.string.video_wp_download_while_applying), Toast.LENGTH_SHORT).show()
+            return
+        }
         if (!item.canUseVideoAction(VideoWallpaperAction.DOWNLOAD)) {
             Toast.makeText(context, item.videoActionMessage(VideoWallpaperAction.DOWNLOAD), Toast.LENGTH_SHORT).show()
             return

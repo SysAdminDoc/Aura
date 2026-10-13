@@ -275,6 +275,7 @@ fun VideoWallpapersScreen(
     val savedVideoPresentation by viewModel.videoWallpaperPresentation.collectAsStateWithLifecycle()
     val savedVideoCanvasMode by viewModel.videoFitCanvasMode.collectAsStateWithLifecycle()
     val savedVideoCanvasColor by viewModel.videoFitCanvasColor.collectAsStateWithLifecycle()
+    val reportsEnabled by viewModel.communityReportsEnabled.collectAsStateWithLifecycle()
     val hiddenIds by viewModel.voteRepo.hiddenIds.collectAsStateWithLifecycle(initialValue = emptySet())
     val localHiddenIds by viewModel.voteRepo.localHiddenIds.collectAsStateWithLifecycle()
     val rotationExclusions by rotationExclusionsViewModel.exclusions.collectAsStateWithLifecycle()
@@ -676,6 +677,7 @@ fun VideoWallpapersScreen(
                                         onDownload = { requestDownload(item) },
                                         onShare = { shareSource(item) },
                                         onReport = { reportItem = item },
+                                        reportsEnabled = reportsEnabled,
                                         voteCount = voteCounts[item.id] ?: 0,
                                         onApply = { confirmItem = item },
                                         onOpen = {
@@ -756,6 +758,7 @@ fun VideoWallpapersScreen(
             onDownload = requestDownload,
             onShare = shareSource,
             onReport = { reportItem = it },
+            reportsEnabled = reportsEnabled,
             onApply = {
                 immersiveVideoIndex = -1
                 immersiveVideoItems = emptyList()
@@ -1082,6 +1085,7 @@ private fun VideoImmersivePager(
     onDownload: (VideoWallpaperItem) -> Unit,
     onShare: (VideoWallpaperItem) -> Unit,
     onReport: (VideoWallpaperItem) -> Unit,
+    reportsEnabled: Boolean,
     onApply: (VideoWallpaperItem) -> Unit,
     onDismiss: () -> Unit,
 ) {
@@ -1116,6 +1120,7 @@ private fun VideoImmersivePager(
                     onDownload = { onDownload(item) },
                     onShare = { onShare(item) },
                     onReport = { onReport(item) },
+                    reportsEnabled = reportsEnabled,
                     onApply = { onApply(item) },
                 )
             }
@@ -1162,6 +1167,7 @@ private fun ImmersiveVideoPage(
     onDownload: () -> Unit,
     onShare: () -> Unit,
     onReport: () -> Unit,
+    reportsEnabled: Boolean,
     onApply: () -> Unit,
 ) {
     val context = LocalContext.current
@@ -1312,7 +1318,7 @@ private fun ImmersiveVideoPage(
                 }
             }
             ImmersiveVideoActions(
-                actions = remember(item) { item.itemActionAvailability() },
+                actions = remember(item, reportsEnabled) { item.itemActionAvailability(reportsEnabled) },
                 isDownloading = isDownloading,
                 onDownload = onDownload,
                 onShare = onShare,
@@ -1390,6 +1396,7 @@ internal fun VideoCard(
     onDownload: () -> Unit = {},
     onShare: () -> Unit = {},
     onReport: () -> Unit = {},
+    reportsEnabled: Boolean = true,
     rotationExcluded: Boolean = false,
     onToggleRotationExclusion: () -> Unit = {},
 ) {
@@ -1415,7 +1422,7 @@ internal fun VideoCard(
     val readyLabel = stringResource(R.string.a11y_ready)
     val voteStateDescription = stringResource(R.string.a11y_vote_count, voteCount)
     val canApplyVideo = remember(item) { item.canUseVideoAction(VideoWallpaperAction.APPLY) }
-    val itemActions = remember(item) { item.itemActionAvailability() }
+    val itemActions = remember(item, reportsEnabled) { item.itemActionAvailability(reportsEnabled) }
     val unavailableLabel = stringResource(R.string.video_wp_unavailable)
     val applyBlockedMessage = remember(item, unavailableLabel) { item.videoActionMessage(VideoWallpaperAction.APPLY).ifBlank { unavailableLabel } }
 

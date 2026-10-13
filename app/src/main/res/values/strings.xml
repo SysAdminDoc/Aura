@@ -2200,6 +2200,7 @@
     <string name="video_wp_download_already_saved">Already in Downloads</string>
     <string name="video_wp_download_failed">Download failed: %1$s</string>
     <string name="video_wp_download_in_progress">This video is still downloading. Try again when it\'s done.</string>
+    <string name="video_wp_download_while_applying">Apply is saving this video now. It\'ll be in Downloads when it\'s done.</string>
     <string name="video_wp_share_source">Share source</string>
     <string name="video_wp_share_title">Share video source</string>
     <string name="video_wp_share_text">%1$s by %2$s on %3$s: %4$s</string>
