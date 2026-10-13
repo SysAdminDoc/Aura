@@ -573,6 +573,8 @@ class SettingsViewModelTest {
     private fun mockPreferences(): PreferencesManager =
         mockk<PreferencesManager>().also { prefs ->
             every { prefs.autoWallpaperEnabled } returns flowOf(false)
+            every { prefs.autoWallpaperTarget } returns flowOf("BOTH")
+            every { prefs.videoPlaybackSpeed } returns flowOf(1f)
             every { prefs.autoWallpaperInterval } returns flowOf(12L)
             every { prefs.autoWallpaperSource } returns flowOf("discover")
             every { prefs.localWallpaperFolderUri } returns flowOf("")

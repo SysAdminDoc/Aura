@@ -96,10 +96,10 @@ class TaskerActionReceiverContractTest {
     fun `readme documents public intent contract and risks`() {
         val readme = File("../README.md").readText()
 
-        assertTrue(readme.contains("## External Automation"))
+        assertTrue(readme.contains("## Automation"))
         assertTrue(readme.contains("com.freevibe.action.ROTATE_NOW"))
         assertTrue(readme.contains("com.freevibe.action.SHUFFLE_NOW"))
-        assertTrue(readme.contains("one every 30 seconds"))
-        assertTrue(readme.contains("Doze"))
+        assertTrue(readme.contains("one broadcast every 30 seconds"))
+        assertTrue(readme.contains("battery rules can still hold it back"))
     }
 }
