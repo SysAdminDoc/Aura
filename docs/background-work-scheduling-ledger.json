@@ -57,7 +57,7 @@
       "enqueueApi": "enqueueUniquePeriodicWork",
       "existingWorkPolicy": "ExistingPeriodicWorkPolicy.UPDATE",
       "interval": "default 360 minutes; minimum 15 minutes",
-      "initialDelay": "none",
+      "initialDelay": "none when rotation is turned on; one full interval when a manual change restarts the countdown, kept by later re-arms of that work",
       "constraints": [
         "no WorkManager network constraint; the worker checks the connection before it fetches",
         "battery not low",
@@ -67,7 +67,7 @@
       "backoff": "exponential, 15 minutes; WorkManager default when device idle is required",
       "expedited": false,
       "enabledSurface": "Settings auto wallpaper and enhanced scheduler toggles",
-      "scheduleTrigger": "Enable auto wallpaper or scheduler; changing interval or constraint preferences reschedules the unique work; a manual apply, widget shuffle, tile tap, automation broadcast, or Run now re-enqueues it with CANCEL_AND_REENQUEUE so the interval starts over; app start re-arms work that an older build scheduled with a network constraint, keeping its countdown",
+      "scheduleTrigger": "Enable auto wallpaper or scheduler; changing interval or constraint preferences reschedules the unique work; a manual apply, widget shuffle, tile tap, automation broadcast, or Run now re-enqueues it with CANCEL_AND_REENQUEUE and an initial delay of one interval, so the next automatic rotation is a full interval away; app start re-arms work that an older build scheduled with a network constraint, keeping its countdown",
       "cancelTrigger": "Disable auto wallpaper or scheduler",
       "deferralReasons": [
         "no connection and nothing saved ahead (the run ends and a catch-up waits for the network)",
@@ -84,6 +84,8 @@
         "ExistingPeriodicWorkPolicy.UPDATE",
         "ExistingPeriodicWorkPolicy.CANCEL_AND_REENQUEUE",
         "restartCountdownAfterManualChange",
+        "rotationInitialDelayMillis",
+        "setInitialDelay(initialDelayMillis, TimeUnit.MILLISECONDS)",
         "buildAutoWallpaperConstraints",
         "resolveScheduledWallpaperSource",
         "schedulerDayNightMode.first()",

@@ -134,6 +134,8 @@ class AutoWallpaperWorkerSchedulingTest {
         assertEquals("UPDATE keeps the same work item and its period start", before.id, after.id)
         assertEquals(NetworkType.NOT_REQUIRED, after.constraints.requiredNetworkType)
         assertEquals(TimeUnit.MINUTES.toMillis(90), after.periodicityInfo?.repeatIntervalMillis)
+        assertEquals("work that never waited before its first run still doesn't", 0L, after.initialDelayMillis)
+        assertEquals("the next run stays where it was", before.nextScheduleTimeMillis, after.nextScheduleTimeMillis)
     }
 
     @Test
@@ -203,25 +205,90 @@ class AutoWallpaperWorkerSchedulingTest {
     @Test
     fun `a plain re-arm keeps the running countdown`() {
         arm(restartCountdown = false)
-        val first = enqueuedWork().single().id
+        val first = enqueuedWork().single()
+        assertEquals("turning rotation on rotates without waiting", 0L, first.initialDelayMillis)
 
         arm(restartCountdown = false)
 
-        assertEquals("UPDATE keeps the same work item and its period start", first, enqueuedWork().single().id)
+        val rearmed = enqueuedWork().single()
+        assertEquals("UPDATE keeps the same work item and its period start", first.id, rearmed.id)
+        assertEquals(0L, rearmed.initialDelayMillis)
+        assertEquals(first.nextScheduleTimeMillis, rearmed.nextScheduleTimeMillis)
     }
 
     @Test
     fun `a manual apply restart replaces the work so the interval starts over`() {
         arm(restartCountdown = false)
-        val first = enqueuedWork().single().id
+        val first = enqueuedWork().single()
 
         arm(restartCountdown = true)
 
-        val restarted = enqueuedWork().single().id
-        assertNotEquals("restart must enqueue a fresh periodic work item", first, restarted)
+        val restarted = enqueuedWork().single()
+        assertNotEquals("restart must enqueue a fresh periodic work item", first.id, restarted.id)
         assertTrue(
             "the replaced item must not stay scheduled",
-            uniqueWork().filter { it.id == first }.all { it.state == WorkInfo.State.CANCELLED },
+            uniqueWork().filter { it.id == first.id }.all { it.state == WorkInfo.State.CANCELLED },
+        )
+        // A fresh periodic item runs its first period at once unless it waits out the interval itself.
+        assertEquals(DEFAULT_INTERVAL_MS, restarted.initialDelayMillis)
+        assertTrue(
+            "the next rotation is a whole interval after the change, not seconds after it",
+            restarted.nextScheduleTimeMillis >= first.nextScheduleTimeMillis + DEFAULT_INTERVAL_MS,
+        )
+    }
+
+    @Test
+    fun `a settings change during a restarted countdown doesn't rotate at once`() = runBlocking {
+        arm(restartCountdown = false)
+        arm(restartCountdown = true)
+        val restarted = enqueuedWork().single()
+
+        // What Settings does for a charging, idle, Wi-Fi only or source change.
+        AutoWallpaperWorker.schedule(context, intervalMinutes = 360)
+
+        val rearmed = enqueuedWork().single()
+        assertEquals("UPDATE keeps the restarted work item", restarted.id, rearmed.id)
+        assertEquals(DEFAULT_INTERVAL_MS, rearmed.initialDelayMillis)
+        assertEquals(
+            "the countdown the restart began is still running",
+            restarted.nextScheduleTimeMillis,
+            rearmed.nextScheduleTimeMillis,
+        )
+    }
+
+    @Test
+    fun `a new interval chosen during a restarted countdown counts from the change`() = runBlocking {
+        arm(restartCountdown = false)
+        arm(restartCountdown = true)
+        val restarted = enqueuedWork().single()
+
+        AutoWallpaperWorker.schedule(context, intervalMinutes = 60)
+
+        val rearmed = enqueuedWork().single()
+        val hour = TimeUnit.MINUTES.toMillis(60)
+        assertEquals(restarted.id, rearmed.id)
+        assertEquals(hour, rearmed.periodicityInfo?.repeatIntervalMillis)
+        assertEquals(hour, rearmed.initialDelayMillis)
+        assertEquals(
+            restarted.nextScheduleTimeMillis - DEFAULT_INTERVAL_MS + hour,
+            rearmed.nextScheduleTimeMillis,
+        )
+    }
+
+    @Test
+    fun `only a restarted countdown waits before its first run`() {
+        val interval = TimeUnit.MINUTES.toMillis(45)
+
+        assertEquals(interval, rotationInitialDelayMillis(restartCountdown = true, interval, storedInitialDelayMillis = 0L))
+        assertEquals(0L, rotationInitialDelayMillis(restartCountdown = false, interval, storedInitialDelayMillis = 0L))
+        // A re-arm of restarted work keeps waiting, by the interval now in force.
+        assertEquals(
+            interval,
+            rotationInitialDelayMillis(
+                restartCountdown = false,
+                intervalMillis = interval,
+                storedInitialDelayMillis = TimeUnit.HOURS.toMillis(6),
+            ),
         )
     }
 
@@ -273,5 +340,10 @@ class AutoWallpaperWorkerSchedulingTest {
                 autoWallpaperIntervalHours = 12L,
             ),
         )
+    }
+
+    private companion object {
+        /** What [AutoWallpaperWorker.scheduleWithConstraints] uses when no interval is passed. */
+        val DEFAULT_INTERVAL_MS = TimeUnit.MINUTES.toMillis(360)
     }
 }

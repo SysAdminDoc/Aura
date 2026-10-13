@@ -593,13 +593,28 @@ class AutoWallpaperWorker @AssistedInject constructor(
                 requiresCharging = prefs.autoWallpaperRequiresCharging.first(),
                 requiresIdle = prefs.autoWallpaperRequiresIdle.first(),
                 restartCountdown = restartCountdown,
+                // A restart sets its own delay. Any other re-arm keeps the one the stored work has.
+                storedInitialDelayMillis = if (restartCountdown) 0L else readStoredInitialDelayMillis(context),
             )
+        }
+
+        /** The first-run delay of the rotation work WorkManager is holding, or 0 when it holds none. */
+        private suspend fun readStoredInitialDelayMillis(context: Context): Long = try {
+            withContext(Dispatchers.IO) {
+                WorkManager.getInstance(context).getWorkInfosForUniqueWork(WORK_NAME).get()
+            }.firstOrNull { !it.state.isFinished }?.initialDelayMillis ?: 0L
+        } catch (e: Exception) {
+            if (e is kotlinx.coroutines.CancellationException) throw e
+            android.util.Log.w("AutoWallpaperWorker", "Stored rotation work could not be read", e)
+            0L
         }
 
         /**
          * Non-suspend variant for the very rare callers that genuinely cannot
          * suspend (e.g. broadcast receivers or non-Hilt entry points). Caller
          * must already have the resolved constraint flags; we never block here.
+         * [storedInitialDelayMillis] is the first-run delay of the work this
+         * call re-arms, see [rotationInitialDelayMillis].
          */
         fun scheduleWithConstraints(
             context: Context,
@@ -607,6 +622,7 @@ class AutoWallpaperWorker @AssistedInject constructor(
             requiresCharging: Boolean,
             requiresIdle: Boolean,
             restartCountdown: Boolean = false,
+            storedInitialDelayMillis: Long = 0L,
         ) {
             val constraints = buildAutoWallpaperConstraints(
                 requiresCharging = requiresCharging,
@@ -615,16 +631,22 @@ class AutoWallpaperWorker @AssistedInject constructor(
                 requiresNetwork = false,
             )
 
-            val request = PeriodicWorkRequestBuilder<AutoWallpaperWorker>(
-                intervalMinutes.coerceAtLeast(15), TimeUnit.MINUTES,
+            val interval = intervalMinutes.coerceAtLeast(15)
+            val initialDelayMillis = rotationInitialDelayMillis(
+                restartCountdown = restartCountdown,
+                intervalMillis = TimeUnit.MINUTES.toMillis(interval),
+                storedInitialDelayMillis = storedInitialDelayMillis,
             )
+            val request = PeriodicWorkRequestBuilder<AutoWallpaperWorker>(interval, TimeUnit.MINUTES)
                 .setConstraints(constraints)
+                .apply { if (initialDelayMillis > 0L) setInitialDelay(initialDelayMillis, TimeUnit.MILLISECONDS) }
                 // WorkManager refuses to build idle-mode work that sets its own backoff.
                 .apply { if (!requiresIdle) setBackoffCriteria(BackoffPolicy.EXPONENTIAL, 15, TimeUnit.MINUTES) }
                 .build()
 
             // UPDATE keeps the existing period's start time, so it cannot reset the
-            // countdown. A manual apply needs a fresh work item to start a full interval.
+            // countdown. A manual apply needs a fresh work item, and that item waits a
+            // full interval before its first run instead of rotating again at once.
             WorkManager.getInstance(context).enqueueUniquePeriodicWork(
                 WORK_NAME,
                 if (restartCountdown) {
@@ -708,6 +730,24 @@ class AutoWallpaperWorker @AssistedInject constructor(
         }
     }
 }
+
+/**
+ * How long the periodic rotation request waits before its first run.
+ *
+ * WorkManager runs the first period of a new periodic request at once. A countdown restarted
+ * after a person's own change therefore waits out a whole interval here, or the wallpaper they
+ * just picked is replaced seconds later.
+ *
+ * UPDATE keeps the stored enqueue time and period count but takes the new request's delay. So a
+ * re-arm for a settings change keeps a restarted countdown by asking for a whole interval again,
+ * counted from that same enqueue time. Asking for none would fire the rotation on the spot. Work
+ * that never had a delay (rotation just turned on, or scheduled by an older build) still has none.
+ */
+internal fun rotationInitialDelayMillis(
+    restartCountdown: Boolean,
+    intervalMillis: Long,
+    storedInitialDelayMillis: Long,
+): Long = if (restartCountdown || storedInitialDelayMillis > 0L) intervalMillis else 0L
 
 /**
  * The interval a manual change restarts the rotation with, or null when nothing

@@ -16,7 +16,7 @@ release docs, and verify/release workflow wiring.
 
 | Work | Worker | Type | Unique work | Policy | Timing | Constraints | Expedited |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| Auto wallpaper rotation | `AutoWallpaperWorker` | Periodic | `auto_wallpaper` | `ExistingPeriodicWorkPolicy.UPDATE` | Default 360 minutes; WorkManager floor 15 minutes; one source, configurable clock-based day/night sources, or system light/dark theme sources | No network constraint (the worker checks the connection before it fetches), battery-not-low, optional charging, optional idle | No |
+| Auto wallpaper rotation | `AutoWallpaperWorker` | Periodic | `auto_wallpaper` | `ExistingPeriodicWorkPolicy.UPDATE` | Default 360 minutes; WorkManager floor 15 minutes; one source, configurable clock-based day/night sources, or system light/dark theme sources; after a manual change the restarted work waits one full interval before its first run | No network constraint (the worker checks the connection before it fetches), battery-not-low, optional charging, optional idle | No |
 | Rotation catch-up | `AutoWallpaperWorker` | One-time | `auto_wallpaper_catch_up` | `ExistingWorkPolicy.REPLACE` | When a rotation has nothing saved ahead and no connection it may use | Connected network, unmetered when Wi-Fi-only is enabled, battery-not-low; charging and idle follow the scheduled rotation's options | No |
 | Automatic backup | `AutoBackupWorker` | Periodic | `auto_backup` | `ExistingPeriodicWorkPolicy.UPDATE` | User-selected hours; minimum 1 hour | Battery-not-low | No |
 | Daily wallpaper notification | `DailyWallpaperWorker` | Periodic | `daily_wallpaper` | `ExistingPeriodicWorkPolicy.KEEP` | 24 hours with 8-hour initial delay | Connected network | No |
