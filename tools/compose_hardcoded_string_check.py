@@ -1,5 +1,9 @@
 #!/usr/bin/env python3
-"""Validate Aura's Compose hardcoded-string localization baseline."""
+"""Validate Aura's hardcoded user-facing string baseline.
+
+Every remaining entry carries a reviewed reason, and write mode only ever shrinks the baseline:
+a new literal has to be extracted to a string resource or added by hand with its reason.
+"""
 
 from __future__ import annotations
 
@@ -39,10 +43,27 @@ LABELLED_ARG_RE = re.compile(
     + r")",
     re.DOTALL,
 )
-STATE_MESSAGE_RE = re.compile(
-    r"\b(?P<sink>success|error|notice|message|qualityWarning|fileUsageLabel)\s*=\s*(?P<literal>"
+SEMANTICS_RE = re.compile(
+    r"\b(?P<sink>stateDescription|onClickLabel|onLongClickLabel|paneTitle|actionLabel)\s*=\s*(?P<literal>"
     + STRING_LITERAL_PATTERN
     + r")",
+    re.DOTALL,
+)
+ICON_DESCRIPTION_RE = re.compile(
+    r"\b(?P<sink>Icon|Image)\s*\(\s*(?:[\w.]+|painterResource\([^()]*\))\s*,\s*(?P<literal>"
+    + STRING_LITERAL_PATTERN
+    + r")",
+    re.DOTALL,
+)
+STATE_MESSAGE_RE = re.compile(
+    r"\b(?P<sink>success|error|notice|message|warning|qualityWarning|fileUsageLabel"
+    r"|[a-z]\w*(?:Success|Error|Notice|Message|Warning))\s*=\s*(?P<literal>"
+    + STRING_LITERAL_PATTERN
+    + r")",
+    re.DOTALL,
+)
+EXCEPTION_RE = re.compile(
+    r"(?:\b\w*Exception|(?<![.\w])error)\s*\(\s*(?P<literal>" + STRING_LITERAL_PATTERN + r")",
     re.DOTALL,
 )
 EDITOR_CONTROL_RE = re.compile(
@@ -55,6 +76,21 @@ BLANK_DEFAULT_RE = re.compile(
     r"\bifBlank\s*\{\s*(?P<literal>" + STRING_LITERAL_PATTERN + r")",
     re.DOTALL,
 )
+
+# Plain functions that build spoken or visible text. Their prose literals are findings even when
+# no Compose sink is in sight, since the result reaches TalkBack or a Text later.
+TEXT_BUILDER_FUNCTION_RE = re.compile(
+    r"^(?P<indent>[ \t]*)(?:(?:private|internal|public|protected|override)\s+)*fun\s+(?:[\w.<>?, ]+\.)?"
+    r"(?P<name>\w*(?:Label|Summary|Description|Title|Text|Message|Caption|Announcement|Hint))\s*\(",
+    re.MULTILINE,
+)
+# What ends a builder: the next declaration or closing brace at the builder's own indent.
+DECLARATION_AT_INDENT = (
+    r"(?:\}|@|(?:(?:private|internal|public|protected|override|const)\s+)*"
+    r"(?:fun|val|var|class|object|enum|data|sealed|interface)\b)"
+)
+STRING_LITERAL_RE = re.compile(STRING_LITERAL_PATTERN)
+FORMAT_OR_TEMPLATE_RE = re.compile(r"\$\{[^}]*\}|\$\w+|%(?:\d+\$)?[-#+ 0,(]*\d*(?:\.\d+)?[a-zA-Z]")
 
 SOURCE_SUFFIXES = {".kt", ".kts"}
 DEFAULT_SCAN_ROOTS = [
@@ -131,6 +167,31 @@ def is_visible_literal(value: str) -> bool:
     return True
 
 
+def is_prose_literal(value: str) -> bool:
+    """A word a person reads: a lowercase letter pair, and a space or a capitalized word.
+
+    Unit and format tokens like MB, QHD or %.1f stay out, as do URLs and bare template fragments.
+    """
+    stripped = FORMAT_OR_TEMPLATE_RE.sub("", value).strip()
+    if stripped.startswith(("http://", "https://")):
+        return False
+    if not re.search(r"[a-z]{2,}", stripped):
+        return False
+    return " " in stripped or bool(re.match(r"[A-Z][a-z]", stripped))
+
+
+def text_builder_ranges(text: str) -> list[tuple[int, int]]:
+    """Signature and body of each non-Composable text builder, top level or inside a class."""
+    ranges: list[tuple[int, int]] = []
+    for match in TEXT_BUILDER_FUNCTION_RE.finditer(text):
+        if "@Composable" in text[max(0, match.start() - 40) : match.start()]:
+            continue
+        indent = re.escape(match.group("indent"))
+        end = re.compile(rf"^{indent}{DECLARATION_AT_INDENT}", re.MULTILINE).search(text, match.end())
+        ranges.append((match.end(), end.start() if end else len(text)))
+    return ranges
+
+
 def is_compose_animation_label(source: str, offset: int) -> bool:
     context = source[max(0, offset - 500) : offset]
     return any(
@@ -199,18 +260,35 @@ def iter_file_findings(path: Path, repo_root: Path) -> list[Finding]:
                 )
             )
 
-    for pattern in (STATE_MESSAGE_RE, EDITOR_CONTROL_RE, BLANK_DEFAULT_RE):
+    for pattern, default_sink in (
+        (SEMANTICS_RE, ""),
+        (ICON_DESCRIPTION_RE, ""),
+        (STATE_MESSAGE_RE, ""),
+        (EDITOR_CONTROL_RE, ""),
+        (BLANK_DEFAULT_RE, "ifBlank"),
+        (EXCEPTION_RE, "exception"),
+    ):
         for match in pattern.finditer(text):
             value = decode_kotlin_string(match.group("literal"))
             if is_visible_literal(value):
                 findings.append(
                     Finding(
                         path=relative_path,
-                        sink=match.groupdict().get("sink") or "ifBlank",
+                        sink=match.groupdict().get("sink") or default_sink,
                         text=value,
                         line=line_number_for_offset(text, match.start("literal")),
                     )
                 )
+
+    claimed = {(finding.line, finding.text) for finding in findings}
+    for start, end in text_builder_ranges(text):
+        for match in STRING_LITERAL_RE.finditer(text, start, end):
+            value = decode_kotlin_string(match.group(0))
+            line = line_number_for_offset(text, match.start())
+            if (line, value) in claimed or not is_prose_literal(value):
+                continue
+            claimed.add((line, value))
+            findings.append(Finding(path=relative_path, sink="textBuilder", text=value, line=line))
     return findings
 
 
@@ -247,15 +325,31 @@ def summarize_findings(findings: Iterable[Finding]) -> list[dict[str, Any]]:
 
 
 def write_baseline(repo_root: Path, baseline_path: Path) -> dict[str, Any]:
-    scan_roots = DEFAULT_SCAN_ROOTS
-    ignored_path_fragments = DEFAULT_IGNORED_PATH_FRAGMENTS
-    findings = find_hardcoded_strings(repo_root, scan_roots, ignored_path_fragments)
+    """Prune extracted strings and lower counts. Never adds an entry or raises a count."""
     existing: dict[str, Any] = {}
     if baseline_path.is_file():
         loaded = json.loads(baseline_path.read_text(encoding="utf-8"))
         if not isinstance(loaded, dict):
             raise ComposeHardcodedStringError("baseline file must contain a JSON object")
         existing = loaded
+    scan_roots = existing.get("scanSourceRoots") or DEFAULT_SCAN_ROOTS
+    ignored_path_fragments = existing.get("ignoredPathFragments") or DEFAULT_IGNORED_PATH_FRAGMENTS
+    actual_entries = summarize_findings(find_hardcoded_strings(repo_root, scan_roots, ignored_path_fragments))
+    known = {
+        entry.get("id"): entry
+        for entry in existing.get("baseline", [])
+        if isinstance(entry, dict) and entry.get("id")
+    }
+    growth = [
+        {key: entry[key] for key in ("path", "sink", "text", "count", "firstLine")}
+        for entry in actual_entries
+        if entry["id"] not in known or entry["count"] > known[entry["id"]].get("count", 0)
+    ]
+    if growth:
+        raise ComposeHardcodedStringError(
+            "write mode only shrinks the baseline. Move these strings to resources, or add each entry "
+            "by hand with a reason: " + json.dumps(growth, indent=2, sort_keys=True)
+        )
     baseline = {
         **existing,
         "schemaVersion": 1,
@@ -264,7 +358,7 @@ def write_baseline(repo_root: Path, baseline_path: Path) -> dict[str, Any]:
         "ignoredPathFragments": ignored_path_fragments,
         "allowedExistingStatus": "baselineGateActiveExtractionPending",
         "migrationPlan": existing.get("migrationPlan", DEFAULT_MIGRATION_PLAN),
-        "baseline": summarize_findings(findings),
+        "baseline": [{**entry, "reason": known[entry["id"]].get("reason", "")} for entry in actual_entries],
     }
     baseline_path.parent.mkdir(parents=True, exist_ok=True)
     baseline_path.write_text(
@@ -318,6 +412,7 @@ def require_baseline_entries(value: Any) -> list[dict[str, Any]]:
         require_string(entry.get("text"), f"baseline[{index}].text")
         if not isinstance(entry.get("count"), int) or entry["count"] < 1:
             raise ComposeHardcodedStringError(f"baseline[{index}].count must be a positive integer")
+        require_string(entry.get("reason"), f"baseline[{index}].reason")
         entries.append(entry)
     return entries
 
@@ -374,8 +469,8 @@ def validate_baseline(repo_root: Path, baseline_path: Path) -> dict[str, Any]:
             "countChanges": changed_counts,
         }
         raise ComposeHardcodedStringError(
-            "Compose hardcoded-string baseline drifted; run "
-            "tools/compose_hardcoded_string_check.py --mode write after intentional extraction. "
+            "hardcoded-string baseline drifted. Move new strings to resources; after an extraction, "
+            "tools/compose_hardcoded_string_check.py --mode write prunes the baseline. "
             + json.dumps(details, indent=2, sort_keys=True)
         )
 

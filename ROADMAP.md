@@ -309,18 +309,14 @@ Evidence for every item below is in RESEARCH.md (2026-09-04 pass).
   Confidence: Verified
   Effort: M
 
-- [ ] P2 — Expand the localization gate to every user-facing string path
-  Category: testing
-  Where: tools/compose_hardcoded_string_check.py; docs/localization/hardcoded-string-baseline.json; app/src/main/java/com/freevibe/ui/screens/downloads/DownloadsScreen.kt:329-364; app/src/main/java/com/freevibe/ui/screens/favorites/FavoritesScreen.kt:667-731; app/src/main/java/com/freevibe/ui/screens/settings/WallpaperHistoryScreen.kt:48,54,115-122; app/src/main/java/com/freevibe/ui/screens/sounds/SoundsScreen.kt:770-777,1019-1047; app/src/main/java/com/freevibe/ui/screens/wallpapers/WallpaperFeedQuality.kt:88-123; app/src/main/java/com/freevibe/data/repository/AiWallpaperRepository.kt:19-27; app/src/main/java/com/freevibe/service/MediaIngestion.kt:488-494
-  Problem: The current checker and baseline miss user-visible literals outside its narrow Compose patterns, so Chinese and future locales silently fall back to embedded English that the gate reports as clean.
-  Evidence: Direct review found hardcoded labels/status text in the listed production screens, repository errors, and English-built list conjunctions. The wallpaper card's TalkBack summary also assembles English-only orientation, AMOLED, vote-count, and saved-state phrases outside Android resources. The baseline can be grown in write mode without a required reason, and the 2026-09-25 tool run already drifted on a new `Applied automatically` message.
-  Fix: Parse all Kotlin user-facing sinks, including Snackbar/toast/state/error constructors and content descriptions. Extract current literals, require a reason for any unavoidable baseline entry, and forbid automatic baseline growth.
-  Acceptance: The named strings and wallpaper-card semantics come from resources in English and Chinese, including proper plurals for vote counts; a fixture in each supported sink fails; the baseline is empty or every entry has a reviewed reason; write mode cannot increase it silently.
+- [ ] P2 — Move ViewModel and repository messages to string resources
+  Category: ux
+  Where: docs/localization/hardcoded-string-baseline.json (each entry whose reason names this item); app/src/main/java/com/freevibe/ui/screens/**/*ViewModel.kt; ui/screens/wallpapers/WallpaperCommunityActions.kt, WallpaperSearchActions.kt; ui/screens/sounds/SoundApplyActions.kt, SoundIdentity.kt, SoundQuality.kt; ui/screens/settings/SettingsDialogs.kt (communityIdentitySuffixLabel); app/src/main/java/com/freevibe/service/MediaIngestion.kt (imageFormatSupportForFlow, toHumanList, sniff errors); wallpapers/WallpaperDetailScreen.kt sourceDisplayName; sounds/SoundUiTokens.kt soundSourceTone; settings/DiagnosticsComponents.kt sourceDisplayName
+  Problem: 77 of the 91 entries left in the hardcoded-string baseline are English messages set in ViewModel state, thrown as exception messages or built by media ingestion, so Chinese users still see English errors and confirmations. Labels for Aura's own sources (Community, Local, AI generated, Aura Originals) are also spelled in Kotlin outside Resources.wallpaperSourceName, and the image-format error joins formats with an English "or".
+  Fix: Give ViewModel state a UiText type (a resource ID with arguments, or a provider's own message) that Compose resolves. Have MediaIngestion return a resource ID and arguments instead of a sentence, and join format names with ListFormatter on API 33+ and a resource conjunction below it. Route the own-source labels through Resources.wallpaperSourceName and its sound counterpart.
+  Acceptance: Every baseline entry whose reason points here is gone and write mode has pruned it; Chinese shows translated text for a failed upload, a blocked creator, a disabled source and a rejected image format; what's left in the baseline is brand names, file names and internal signals.
   Confidence: Verified
   Effort: M
-
-
-### P3
 
 - [ ] P3 — Replace OEM emoji category art with adaptive app-owned visuals
   Category: visual
