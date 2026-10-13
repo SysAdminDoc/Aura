@@ -18,9 +18,13 @@ import androidx.work.workDataOf
 import com.freevibe.R
 import com.freevibe.data.local.PreferencesManager
 import com.freevibe.data.model.ContentSource
+import com.freevibe.data.model.FavoriteEntity
 import com.freevibe.data.model.SearchResult
 import com.freevibe.data.model.Wallpaper
+import com.freevibe.data.model.WallpaperCollectionItemEntity
 import com.freevibe.data.model.WallpaperTarget
+import com.freevibe.data.repository.CollectionRepository
+import com.freevibe.data.repository.FavoritesRepository
 import com.freevibe.data.repository.RotationCandidateSet
 import com.freevibe.data.repository.RotationExclusionRepository
 import com.freevibe.data.repository.WallpaperRepository
@@ -72,6 +76,8 @@ class AutoWallpaperWorkerPrefetchTest {
     private val exclusions = mockk<RotationExclusionRepository>()
     private val history = mockk<WallpaperHistoryManager>(relaxed = true)
     private val receipts = mockk<BackgroundWorkReceiptStore>(relaxed = true)
+    private val collections = mockk<CollectionRepository>(relaxed = true)
+    private val favorites = mockk<FavoritesRepository>(relaxed = true)
 
     @Before
     fun setUp(): Unit = runBlocking {
@@ -84,6 +90,7 @@ class AutoWallpaperWorkerPrefetchTest {
         // DataStore outlives a single test in this process, so put back whatever this class changes.
         val enabled = prefs.schedulerEnabled.first()
         val source = prefs.schedulerSource.first()
+        val collection = prefs.schedulerCollectionId.first()
         val shuffle = prefs.schedulerShuffle.first()
         val home = prefs.schedulerHomeEnabled.first()
         val lock = prefs.schedulerLockEnabled.first()
@@ -93,6 +100,7 @@ class AutoWallpaperWorkerPrefetchTest {
         restore = {
             prefs.setSchedulerEnabled(enabled)
             prefs.setSchedulerSource(source)
+            prefs.setSchedulerCollection(collection)
             prefs.setSchedulerShuffle(shuffle)
             prefs.setSchedulerHome(home)
             prefs.setSchedulerLock(lock)
@@ -103,6 +111,7 @@ class AutoWallpaperWorkerPrefetchTest {
         }
         prefs.setSchedulerEnabled(true)
         prefs.setSchedulerSource("wallhaven")
+        prefs.setSchedulerCollection(-1L)
         // In order, and never the same one twice, so each test knows which wallpaper comes next.
         prefs.setSchedulerShuffle(false)
         prefs.setAvoidRecentRepeats(true)
@@ -351,6 +360,187 @@ class AutoWallpaperWorkerPrefetchTest {
         assertTrue(waitingCatchUp().isEmpty())
     }
 
+    @Test
+    fun `a picture saved from one collection is not applied after a switch to another`() = runBlocking {
+        val old = listOf("a1", "a2", "a3").map { wallpaper(it) }
+        val chosen = listOf("b1", "b2", "b3").map { wallpaper(it) }
+        every { collections.getItems(7L) } returns flowOf(old.map { it.inCollection(7L) })
+        every { collections.getItems(8L) } returns flowOf(chosen.map { it.inCollection(8L) })
+        prefs.setSchedulerSource("collection")
+        prefs.setSchedulerCollection(7L)
+        runWorker()
+        val saved = cache.peek(collectionSlot("7"))!!
+        assertEquals("a2", saved.wallpaper.id)
+
+        prefs.setSchedulerCollection(8L)
+        assertEquals(ListenableWorker.Result.success(), runWorker())
+
+        coVerify(exactly = 0) {
+            applier.applyByLocator(
+                saved.file.absolutePath, any(), any(), any(), any(), any(), any(), any(), any(), any(),
+            )
+        }
+        coVerify(exactly = 0) { history.record(match { it.id == "a2" }, any()) }
+        coVerify(exactly = 1) {
+            applier.applyByLocator(
+                chosen[0].fullUrl, WallpaperTarget.BOTH, any(), any(), any(), any(), any(), any(), any(), any(),
+            )
+        }
+        assertEquals(0, cache.diagnostics().hits)
+        assertEquals("b2", cache.peek(collectionSlot("8"))?.wallpaper?.id)
+    }
+
+    @Test
+    fun `a picture taken out of the collection since it was saved is not applied`() = runBlocking {
+        val pictures = listOf("a1", "a2", "a3").map { wallpaper(it) }
+        every { collections.getItems(7L) } returns flowOf(pictures.map { it.inCollection(7L) })
+        prefs.setSchedulerSource("collection")
+        prefs.setSchedulerCollection(7L)
+        runWorker()
+        val saved = cache.peek(collectionSlot("7"))!!
+        assertEquals("a2", saved.wallpaper.id)
+        every { collections.getItems(7L) } returns
+            flowOf(listOf(pictures[0], pictures[2]).map { it.inCollection(7L) })
+
+        assertEquals(ListenableWorker.Result.success(), runWorker())
+
+        coVerify(exactly = 0) {
+            applier.applyByLocator(
+                saved.file.absolutePath, any(), any(), any(), any(), any(), any(), any(), any(), any(),
+            )
+        }
+        coVerify(exactly = 0) { history.record(match { it.id == "a2" }, any()) }
+        coVerify(exactly = 1) {
+            applier.applyByLocator(
+                pictures[2].fullUrl, WallpaperTarget.BOTH, any(), any(), any(), any(), any(), any(), any(), any(),
+            )
+        }
+        assertEquals(0, cache.diagnostics().hits)
+        assertNull(cache.peek(collectionSlot("7")))
+    }
+
+    @Test
+    fun `a picture still in the collection applies from its saved file`() = runBlocking {
+        val pictures = listOf("a1", "a2", "a3").map { wallpaper(it) }
+        every { collections.getItems(7L) } returns flowOf(pictures.map { it.inCollection(7L) })
+        prefs.setSchedulerSource("collection")
+        prefs.setSchedulerCollection(7L)
+        runWorker()
+        val saved = cache.peek(collectionSlot("7"))!!
+
+        assertEquals(ListenableWorker.Result.success(), runWorker())
+
+        coVerify(exactly = 1) {
+            applier.applyByLocator(
+                saved.file.absolutePath, WallpaperTarget.BOTH, any(), any(), any(), any(), any(), any(), any(), any(),
+            )
+        }
+        coVerify(exactly = 1) { history.record(match { it.id == "a2" }, WallpaperTarget.BOTH) }
+        assertEquals(1, cache.diagnostics().hits)
+    }
+
+    @Test
+    fun `a picture no longer a favorite is not applied from what was saved`() = runBlocking {
+        val pictures = listOf("f1", "f2", "f3").map { wallpaper(it) }
+        every { favorites.getWallpapers() } returns flowOf(pictures.map { it.asFavorite() })
+        prefs.setSchedulerSource("favorites")
+        runWorker()
+        val saved = cache.peek(rotationPrefetchSlot("favorites", WallpaperTarget.BOTH))!!
+        assertEquals("f2", saved.wallpaper.id)
+        every { favorites.getWallpapers() } returns flowOf(listOf(pictures[0], pictures[2]).map { it.asFavorite() })
+
+        assertEquals(ListenableWorker.Result.success(), runWorker())
+
+        coVerify(exactly = 0) {
+            applier.applyByLocator(
+                saved.file.absolutePath, any(), any(), any(), any(), any(), any(), any(), any(), any(),
+            )
+        }
+        coVerify(exactly = 0) { history.record(match { it.id == "f2" }, any()) }
+        coVerify(exactly = 1) {
+            applier.applyByLocator(
+                pictures[2].fullUrl, WallpaperTarget.BOTH, any(), any(), any(), any(), any(), any(), any(), any(),
+            )
+        }
+        assertEquals(0, cache.diagnostics().hits)
+    }
+
+    @Test
+    fun `an emptied collection rotates through Discover and the two never mix`() = runBlocking {
+        val pictures = listOf("a1", "a2", "a3").map { wallpaper(it) }
+        val discover = listOf("d1", "d2", "d3").map { wallpaper(it) }
+        every { collections.getItems(7L) } returns flowOf(pictures.map { it.inCollection(7L) })
+        coEvery { repo.getDiscover(any(), any()) } returns
+            SearchResult(discover, totalCount = 3, currentPage = 1, hasMore = false)
+        prefs.setSchedulerSource("collection")
+        prefs.setSchedulerCollection(7L)
+        runWorker()
+        val fromCollection = cache.peek(collectionSlot("7"))!!
+        assertEquals("a2", fromCollection.wallpaper.id)
+
+        // Everything is taken out. The rotation falls back to Discover, and a2 is no longer wanted.
+        every { collections.getItems(7L) } returns flowOf(emptyList())
+        assertEquals(ListenableWorker.Result.success(), runWorker())
+
+        coVerify(exactly = 0) {
+            applier.applyByLocator(
+                fromCollection.file.absolutePath, any(), any(), any(), any(), any(), any(), any(), any(), any(),
+            )
+        }
+        coVerify(exactly = 1) {
+            applier.applyByLocator(
+                discover[0].fullUrl, WallpaperTarget.BOTH, any(), any(), any(), any(), any(), any(), any(), any(),
+            )
+        }
+        val fromDiscover = cache.peek(collectionSlot("7:discover"))!!
+        assertEquals("d2", fromDiscover.wallpaper.id)
+
+        // Pictures go back in. What Discover saved in the meantime isn't one of them.
+        val added = listOf("c1", "c2").map { wallpaper(it) }
+        every { collections.getItems(7L) } returns flowOf(added.map { it.inCollection(7L) })
+        assertEquals(ListenableWorker.Result.success(), runWorker())
+
+        coVerify(exactly = 0) {
+            applier.applyByLocator(
+                fromDiscover.file.absolutePath, any(), any(), any(), any(), any(), any(), any(), any(), any(),
+            )
+        }
+        coVerify(exactly = 0) {
+            applier.applyByLocator(
+                fromCollection.file.absolutePath, any(), any(), any(), any(), any(), any(), any(), any(), any(),
+            )
+        }
+        coVerify(exactly = 1) {
+            applier.applyByLocator(
+                added[0].fullUrl, WallpaperTarget.BOTH, any(), any(), any(), any(), any(), any(), any(), any(),
+            )
+        }
+        assertEquals(0, cache.diagnostics().hits)
+    }
+
+    private fun collectionSlot(contents: String) =
+        rotationPrefetchSlot("collection", WallpaperTarget.BOTH, contents)
+
+    private fun Wallpaper.inCollection(collectionId: Long) = WallpaperCollectionItemEntity(
+        collectionId = collectionId,
+        wallpaperId = id,
+        thumbnailUrl = thumbnailUrl,
+        fullUrl = fullUrl,
+        source = source.name,
+        width = width,
+        height = height,
+    )
+
+    private fun Wallpaper.asFavorite() = FavoriteEntity(
+        id = id,
+        source = source.name,
+        type = "WALLPAPER",
+        thumbnailUrl = thumbnailUrl,
+        fullUrl = fullUrl,
+        width = width,
+        height = height,
+    )
+
     private fun waitingCatchUp(): List<WorkInfo> =
         WorkManager.getInstance(context)
             .getWorkInfosForUniqueWork(AutoWallpaperWorker.CATCH_UP_WORK_NAME)
@@ -371,8 +561,8 @@ class AutoWallpaperWorkerPrefetchTest {
                         workerParameters,
                         wallpaperRepo = repo,
                         redditRepo = mockk(relaxed = true),
-                        favoritesRepo = mockk(relaxed = true),
-                        collectionRepo = mockk(relaxed = true),
+                        favoritesRepo = favorites,
+                        collectionRepo = collections,
                         rotationExclusions = exclusions,
                         wallpaperApplier = applier,
                         historyManager = history,

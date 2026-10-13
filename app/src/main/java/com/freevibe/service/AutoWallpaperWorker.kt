@@ -267,9 +267,9 @@ class AutoWallpaperWorker @AssistedInject constructor(
      */
     private suspend fun applyPrefetched(source: String, target: WallpaperTarget): Boolean {
         if (!sourceRequiresNetwork(source)) return false
-        val slot = rotationPrefetchSlot(source, target)
+        val slot = prefetchSlot(source, target)
         val saved = prefetch.peek(slot)
-        if (saved == null || !isStillWanted(saved.wallpaper)) {
+        if (saved == null || !isStillWanted(source, saved.wallpaper)) {
             prefetch.discard(slot)
             prefetchMissed = true
             return false
@@ -289,10 +289,40 @@ class AutoWallpaperWorker @AssistedInject constructor(
         return applied
     }
 
-    /** A saved wallpaper is skipped when it has since been excluded or already shown. */
-    private suspend fun isStillWanted(wallpaper: Wallpaper): Boolean {
+    /**
+     * A saved wallpaper is skipped when it has since been excluded, already shown, or taken out of
+     * the favorites or the collection it was saved from.
+     */
+    private suspend fun isStillWanted(source: String, wallpaper: Wallpaper): Boolean {
         if (rotationExclusions.filter(listOf(wallpaper)).candidates.isEmpty()) return false
+        if (!isStillInSource(source, wallpaper)) return false
         return !prefs.avoidRecentRepeats.first() || wallpaper.stableKey() !in prefs.getRecentRotationIds()
+    }
+
+    /** Favorites and collections are sets a person edits. Every other source is whatever it returns. */
+    private suspend fun isStillInSource(source: String, wallpaper: Wallpaper): Boolean {
+        val key = wallpaper.stableKey()
+        return when (source) {
+            "favorites" -> favoritesRepo.getWallpapers().first().any { it.toWallpaper().stableKey() == key }
+            "collection" -> {
+                val items = collectionWallpapers()
+                // With nothing in the collection the slot is the Discover one, and there is no set to be in.
+                items.isEmpty() || items.any { it.stableKey() == key }
+            }
+            else -> true
+        }
+    }
+
+    /**
+     * The saved-ahead slot for this setup. A collection is named by its id. One with nothing in it
+     * rotates through Discover instead, and gets a name of its own for as long as that lasts, so a
+     * Discover picture is never taken for one of the collection's or the other way round.
+     */
+    private suspend fun prefetchSlot(source: String, target: WallpaperTarget): String {
+        if (source != "collection") return rotationPrefetchSlot(source, target)
+        val collectionId = prefs.schedulerCollectionId.first()
+        val contents = if (collectionWallpapers().isEmpty()) "$collectionId:discover" else collectionId.toString()
+        return rotationPrefetchSlot(source, target, contents)
     }
 
     /**
@@ -392,7 +422,7 @@ class AutoWallpaperWorker @AssistedInject constructor(
                 shuffle = shuffle,
                 recentKeys = recentShuffleKeys(eligible.size),
             ) ?: return
-            prefetch.store(rotationPrefetchSlot(source, target), next) { file ->
+            prefetch.store(prefetchSlot(source, target), next) { file ->
                 wallpaperApplier.downloadToFile(next.fullUrl, file)
             }
         } catch (e: Exception) {
@@ -449,27 +479,26 @@ class AutoWallpaperWorker @AssistedInject constructor(
         return result.candidates
     }
 
-    private suspend fun fetchWallpapers(source: String, target: WallpaperTarget? = null): List<Wallpaper> {
+    /** The pictures in the collection rotation is set to. Empty when none is chosen or it has nothing in it. */
+    private suspend fun collectionWallpapers(): List<Wallpaper> {
         val collectionId = prefs.schedulerCollectionId.first()
+        if (collectionId <= 0) return emptyList()
+        return collectionRepo.getItems(collectionId).first().map {
+            Wallpaper(
+                id = it.wallpaperId,
+                source = try { com.freevibe.data.model.ContentSource.valueOf(it.source) }
+                    catch (_: Exception) { com.freevibe.data.model.ContentSource.WALLHAVEN },
+                thumbnailUrl = it.thumbnailUrl,
+                fullUrl = it.fullUrl,
+                width = it.width,
+                height = it.height,
+            )
+        }
+    }
+
+    private suspend fun fetchWallpapers(source: String, target: WallpaperTarget? = null): List<Wallpaper> {
         return when (source) {
-            "collection" -> {
-                val collectionItems = if (collectionId > 0) {
-                    collectionRepo.getItems(collectionId).first().map {
-                        Wallpaper(
-                            id = it.wallpaperId,
-                            source = try { com.freevibe.data.model.ContentSource.valueOf(it.source) }
-                                catch (_: Exception) { com.freevibe.data.model.ContentSource.WALLHAVEN },
-                            thumbnailUrl = it.thumbnailUrl,
-                            fullUrl = it.fullUrl,
-                            width = it.width,
-                            height = it.height,
-                        )
-                    }
-                } else {
-                    emptyList()
-                }
-                collectionItems.ifEmpty { wallpaperRepo.getDiscover(page = 1).items }
-            }
+            "collection" -> collectionWallpapers().ifEmpty { wallpaperRepo.getDiscover(page = 1).items }
             "favorites" -> favoritesRepo.getWallpapers().first().map { it.toWallpaper() }
             "wallhaven" -> wallpaperRepo.getWallhaven(page = (1..5).random()).items
             "bing" -> wallpaperRepo.getBingDaily(page = 1).items

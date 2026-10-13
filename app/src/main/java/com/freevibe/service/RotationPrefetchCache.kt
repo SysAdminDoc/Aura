@@ -87,10 +87,11 @@ internal data class RotationPrefetchIndex(
  * still has something to apply. It is a cache in the plain sense: anything missing, stale or
  * unreadable is treated as nothing saved, and the rotation falls back to fetching.
  *
- * A slot names one setup (source plus screens). Each slot keeps one wallpaper. The whole cache is
- * held to [maxEntries] files and [maxBytes] bytes, oldest out first. A file the index doesn't name
- * is swept when a download ends and once when the folder is first read, so a run cancelled or
- * killed in the middle of a download can't leave its picture behind.
+ * A slot names one setup: the source, which collection when the source is one, and the screens.
+ * Each slot keeps one wallpaper. The whole cache is held to [maxEntries] files and [maxBytes]
+ * bytes, oldest out first. A file the index doesn't name is swept when a download ends and once
+ * when the folder is first read, so a run cancelled or killed in the middle of a download can't
+ * leave its picture behind.
  */
 @Singleton
 class RotationPrefetchCache internal constructor(
@@ -297,9 +298,17 @@ class RotationPrefetchCache internal constructor(
     }
 }
 
-/** Names one rotation setup: the wallpaper saved for one never fits another's source or screens. */
-internal fun rotationPrefetchSlot(source: String, target: com.freevibe.data.model.WallpaperTarget): String =
-    "$source|${target.name}"
+/**
+ * Names one rotation setup: the wallpaper saved for one never fits another's source or screens.
+ * [contents] names the set when the source alone doesn't. "collection" is whichever collection
+ * is chosen, so its slot carries that collection's id, and a picture saved from one collection is
+ * never handed over after a switch to another.
+ */
+internal fun rotationPrefetchSlot(
+    source: String,
+    target: com.freevibe.data.model.WallpaperTarget,
+    contents: String = "",
+): String = if (contents.isEmpty()) "$source|${target.name}" else "$source:$contents|${target.name}"
 
 private val PREFETCH_EXTENSIONS = setOf("jpg", "jpeg", "png", "webp", "gif", "heic", "heif", "avif")
 

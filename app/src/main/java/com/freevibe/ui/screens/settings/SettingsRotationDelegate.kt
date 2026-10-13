@@ -12,6 +12,7 @@ import com.freevibe.service.AgslShaderGallery
 import com.freevibe.service.AutoBackupWorker
 import com.freevibe.service.AutoWallpaperWorker
 import com.freevibe.service.LocalWallpaperCatalog
+import com.freevibe.service.RotationPrefetchCache
 import com.freevibe.service.RotationTriggerService
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -27,6 +28,7 @@ internal class SettingsRotationDelegate(
     private val prefs: PreferencesManager,
     private val collectionRepo: CollectionRepository,
     private val localWallpaperCatalog: LocalWallpaperCatalog,
+    private val rotationPrefetch: RotationPrefetchCache,
     private val scope: CoroutineScope,
 ) {
     private val sharing = SharingStarted.WhileSubscribed(5000)
@@ -86,6 +88,7 @@ internal class SettingsRotationDelegate(
             AutoWallpaperWorker.schedule(context, autoWpInterval.value * 60)
         } else {
             AutoWallpaperWorker.cancel(context)
+            rotationPrefetch.clear()
         }
     }
 
@@ -94,7 +97,10 @@ internal class SettingsRotationDelegate(
         if (autoWpEnabled.value) AutoWallpaperWorker.schedule(context, hours * 60)
     }
 
-    fun setAutoWpSource(source: String) = scope.launch { prefs.setAutoWallpaperSource(source) }
+    fun setAutoWpSource(source: String) = scope.launch {
+        prefs.setAutoWallpaperSource(source)
+        rotationPrefetch.clear()
+    }
 
     fun setAutoWpTarget(target: WallpaperTarget) = scope.launch { prefs.setAutoWallpaperTarget(target.name) }
 
@@ -230,8 +236,12 @@ internal class SettingsRotationDelegate(
 
     fun setSchedulerEnabled(enabled: Boolean) = scope.launch {
         prefs.setSchedulerEnabled(enabled)
-        if (enabled) AutoWallpaperWorker.schedule(context, schedulerInterval.value)
-        else AutoWallpaperWorker.cancel(context)
+        if (enabled) {
+            AutoWallpaperWorker.schedule(context, schedulerInterval.value)
+        } else {
+            AutoWallpaperWorker.cancel(context)
+            rotationPrefetch.clear()
+        }
     }
 
     fun setSchedulerInterval(minutes: Long) = scope.launch {
@@ -247,6 +257,8 @@ internal class SettingsRotationDelegate(
             SchedulerSourceTarget.DAY -> prefs.setSchedulerDaySource(source)
             SchedulerSourceTarget.NIGHT -> prefs.setSchedulerNightSource(source)
         }
+        // What was saved ahead came from the source that was just replaced.
+        rotationPrefetch.clear()
         rescheduleSchedulerIfEnabled()
     }
 
@@ -269,6 +281,7 @@ internal class SettingsRotationDelegate(
             SchedulerSourceTarget.DAY -> prefs.setSchedulerDaySource("collection")
             SchedulerSourceTarget.NIGHT -> prefs.setSchedulerNightSource("collection")
         }
+        rotationPrefetch.clear()
         rescheduleSchedulerIfEnabled()
     }
 

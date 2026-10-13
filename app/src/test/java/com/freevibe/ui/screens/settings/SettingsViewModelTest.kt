@@ -567,6 +567,7 @@ class SettingsViewModelTest {
                     com.freevibe.data.repository.GeneratedAssetAudit()
             },
             updateChecker = mockk(relaxed = true),
+            rotationPrefetch = mockk(relaxed = true),
             ioDispatcher = dispatcher,
         )
     }

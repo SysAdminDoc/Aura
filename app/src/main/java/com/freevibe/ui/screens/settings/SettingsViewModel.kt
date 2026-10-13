@@ -86,9 +86,17 @@ class SettingsViewModel @Inject constructor(
     soundShufflePoolManager: SoundShufflePoolManager,
     aiWallpaperRepository: AiWallpaperRepository,
     updateChecker: UpdateChecker,
+    rotationPrefetch: RotationPrefetchCache,
     @IoDispatcher ioDispatcher: CoroutineDispatcher,
 ) : ViewModel() {
-    private val rotation = SettingsRotationDelegate(context, prefs, collectionRepo, localWallpaperCatalog, viewModelScope)
+    private val rotation = SettingsRotationDelegate(
+        context = context,
+        prefs = prefs,
+        collectionRepo = collectionRepo,
+        localWallpaperCatalog = localWallpaperCatalog,
+        rotationPrefetch = rotationPrefetch,
+        scope = viewModelScope,
+    )
     private val media = SettingsMediaDelegate(context, prefs, viewModelScope)
     private val community = SettingsCommunityDelegate(
         context = context,

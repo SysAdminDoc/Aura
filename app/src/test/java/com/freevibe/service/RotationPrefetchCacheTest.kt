@@ -345,4 +345,24 @@ class RotationPrefetchCacheTest {
         assertEquals("wallhaven|BOTH", rotationPrefetchSlot("wallhaven", com.freevibe.data.model.WallpaperTarget.BOTH))
         assertEquals("wallhaven|LOCK", rotationPrefetchSlot("wallhaven", com.freevibe.data.model.WallpaperTarget.LOCK))
     }
+
+    @Test
+    fun `a collection's setup is named by which collection it is`() {
+        val both = com.freevibe.data.model.WallpaperTarget.BOTH
+
+        assertEquals("collection:7|BOTH", rotationPrefetchSlot("collection", both, "7"))
+        assertEquals("collection:7:discover|BOTH", rotationPrefetchSlot("collection", both, "7:discover"))
+        assertEquals("favorites|BOTH", rotationPrefetchSlot("favorites", both, ""))
+        assertFalse(rotationPrefetchSlot("collection", both, "7") == rotationPrefetchSlot("collection", both, "8"))
+    }
+
+    @Test
+    fun `what one collection saved is not what another finds`() = runBlocking {
+        val cache = cache()
+        val both = com.freevibe.data.model.WallpaperTarget.BOTH
+        cache.store(rotationPrefetchSlot("collection", both, "7"), wallpaper("a"), download(10))
+
+        assertNull(cache.peek(rotationPrefetchSlot("collection", both, "8")))
+        assertEquals("a", cache.peek(rotationPrefetchSlot("collection", both, "7"))?.wallpaper?.id)
+    }
 }
