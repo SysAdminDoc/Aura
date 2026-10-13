@@ -3,6 +3,7 @@ package com.freevibe.ui.screens.downloads
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshots.Snapshot
 import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.semantics.SemanticsProperties
@@ -92,12 +93,18 @@ class ActiveDownloadCardUiTest {
         val polite = SemanticsMatcher.expectValue(SemanticsProperties.LiveRegion, LiveRegionMode.Polite)
         composeRule.onNode(card).assert(SemanticsMatcher.keyNotDefined(SemanticsProperties.LiveRegion))
 
-        dl = DownloadProgress("d1", "night.png", 1f, 1000, 1000, isComplete = true)
-        composeRule.mainClock.advanceTimeByFrame()
+        // A write from the test thread only reaches a paused composition once the snapshot is applied.
+        Snapshot.withMutableSnapshot { dl = DownloadProgress("d1", "night.png", 1f, 1000, 1000, isComplete = true) }
+        composeRule.mainClock.advanceTimeBy(FEW_FRAMES_MS)
         composeRule.onNode(card).assert(polite)
 
-        dl = DownloadProgress("d1", "night.png", 0f, 0, 0, error = "No connection")
-        composeRule.mainClock.advanceTimeByFrame()
+        Snapshot.withMutableSnapshot { dl = DownloadProgress("d1", "night.png", 0f, 0, 0, error = "No connection") }
+        composeRule.mainClock.advanceTimeBy(FEW_FRAMES_MS)
         composeRule.onNode(card).assert(polite)
+    }
+
+    private companion object {
+        // A state change, the recomposition it causes, and a frame to spare.
+        const val FEW_FRAMES_MS = 100L
     }
 }

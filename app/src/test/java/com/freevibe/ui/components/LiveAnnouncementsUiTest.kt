@@ -9,6 +9,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshots.Snapshot
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.LiveRegionMode
@@ -79,8 +80,7 @@ class LiveAnnouncementsUiTest {
         val message = hasText("Nothing here") and hasText("Try another search")
         val before = composeRule.onNode(message).fetchSemanticsNode().config.getOrNull(SemanticsProperties.Text)
 
-        tick++
-        composeRule.mainClock.advanceTimeByFrame()
+        change { tick++ }
 
         composeRule.onNodeWithText("tick 1").assertExists()
         // Still live without a second wait, and nothing about it changed for TalkBack to read again.
@@ -104,8 +104,7 @@ class LiveAnnouncementsUiTest {
         composeRule.mainClock.advanceTimeBy(STATE_MESSAGE_SETTLE_MS + 100)
         composeRule.onNode(hasText("Loading")).assert(polite)
 
-        failed = true
-        composeRule.mainClock.advanceTimeByFrame()
+        change { failed = true }
         composeRule.onNode(hasText("Couldn't load")).assert(notLive)
 
         composeRule.mainClock.advanceTimeBy(STATE_MESSAGE_SETTLE_MS + 100)
@@ -120,8 +119,7 @@ class LiveAnnouncementsUiTest {
         composeRule.mainClock.advanceTimeByFrame()
         composeRule.onNodeWithTag(STATUS).assert(polite).assert(nothingToSay)
 
-        status = "Wallpapers loaded"
-        composeRule.mainClock.advanceTimeByFrame()
+        change { status = "Wallpapers loaded" }
 
         composeRule.onNodeWithTag(STATUS).assert(polite).assertContentDescriptionEquals("Wallpapers loaded")
     }
@@ -142,12 +140,10 @@ class LiveAnnouncementsUiTest {
         composeRule.mainClock.advanceTimeByFrame()
         composeRule.onNodeWithTag(STATUS).assert(polite).assert(nothingToSay)
 
-        loading = true
-        composeRule.mainClock.advanceTimeBy(FEW_FRAMES_MS)
+        change { loading = true }
         composeRule.onNodeWithTag(STATUS).assertContentDescriptionEquals("Loading feed")
 
-        loading = false
-        composeRule.mainClock.advanceTimeBy(FEW_FRAMES_MS)
+        change { loading = false }
         composeRule.onNodeWithTag(STATUS).assertContentDescriptionEquals("Feed loaded")
     }
 
@@ -168,9 +164,10 @@ class LiveAnnouncementsUiTest {
         composeRule.mainClock.advanceTimeBy(FEW_FRAMES_MS)
         composeRule.onNodeWithTag(STATUS).assert(nothingToSay)
 
-        loading = false
-        hasContent = true
-        composeRule.mainClock.advanceTimeBy(FEW_FRAMES_MS)
+        change {
+            loading = false
+            hasContent = true
+        }
 
         composeRule.onNodeWithTag(STATUS).assertContentDescriptionEquals("Feed loaded")
     }
@@ -223,16 +220,13 @@ class LiveAnnouncementsUiTest {
         composeRule.mainClock.advanceTimeByFrame()
         composeRule.onNodeWithContentDescription("night.png").assert(notLive)
 
-        download = DownloadProgress("d1", "night.png", 0.9f, 1000, 900)
-        composeRule.mainClock.advanceTimeByFrame()
+        change { download = DownloadProgress("d1", "night.png", 0.9f, 1000, 900) }
         composeRule.onNodeWithContentDescription("night.png").assert(notLive)
 
-        download = DownloadProgress("d1", "night.png", 1f, 1000, 1000, isComplete = true)
-        composeRule.mainClock.advanceTimeByFrame()
+        change { download = DownloadProgress("d1", "night.png", 1f, 1000, 1000, isComplete = true) }
         composeRule.onNodeWithContentDescription("night.png").assert(polite)
 
-        download = DownloadProgress("d1", "night.png", 0f, 0, 0, error = "No connection")
-        composeRule.mainClock.advanceTimeByFrame()
+        change { download = DownloadProgress("d1", "night.png", 0f, 0, 0, error = "No connection") }
         composeRule.onNodeWithContentDescription("night.png").assert(polite)
     }
 
@@ -252,17 +246,16 @@ class LiveAnnouncementsUiTest {
         composeRule.mainClock.advanceTimeByFrame()
         composeRule.onNodeWithTag(STATUS).assert(polite).assert(nothingToSay)
 
-        preparing = true
-        composeRule.mainClock.advanceTimeBy(FEW_FRAMES_MS)
+        change { preparing = true }
         composeRule.onNodeWithTag(STATUS).assertContentDescriptionEquals("Preparing preview")
 
-        preparing = false
-        playing = true
-        composeRule.mainClock.advanceTimeBy(FEW_FRAMES_MS)
+        change {
+            preparing = false
+            playing = true
+        }
         composeRule.onNodeWithTag(STATUS).assertContentDescriptionEquals("Playing Ocean Breeze")
 
-        playing = false
-        composeRule.mainClock.advanceTimeBy(FEW_FRAMES_MS)
+        change { playing = false }
         composeRule.onNodeWithTag(STATUS).assertContentDescriptionEquals("Preview stopped")
     }
 
@@ -278,6 +271,16 @@ class LiveAnnouncementsUiTest {
         }
 
         composeRule.onNodeWithTag(STATUS).assert(polite).assertContentDescriptionEquals("Playing")
+    }
+
+    /**
+     * A write from the test thread sits in the global snapshot until something applies it, and a
+     * paused clock with nothing animating never does. Applying it here is what lets the frames
+     * that follow recompose.
+     */
+    private fun change(write: () -> Unit) {
+        Snapshot.withMutableSnapshot(write)
+        composeRule.mainClock.advanceTimeBy(FEW_FRAMES_MS)
     }
 
     private companion object {
