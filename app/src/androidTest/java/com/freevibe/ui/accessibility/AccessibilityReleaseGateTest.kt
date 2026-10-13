@@ -27,7 +27,7 @@ import org.junit.runner.RunWith
  * Release accessibility gate for production route-state renderers.
  *
  * These checks render the same production subcomposables used by the live
- * Wallpapers, Sounds, Settings, Videos, and editor/detail routes. Scenario data
+ * Wallpapers, Sounds, Settings, Videos, Library, and editor/detail routes. Scenario data
  * is deterministic, but the UI under test is compiled into the release source set.
  */
 @RunWith(AndroidJUnit4::class)
@@ -111,6 +111,16 @@ class AccessibilityReleaseGateTest {
     @Test
     fun soundShufflePoolsProductionStatePassesAccessibilityChecks() {
         renderScenario(ProductionRouteScenario.SoundShufflePools)
+    }
+
+    @SdkSuppress(minSdkVersion = 34)
+    @Test
+    fun libraryHubProductionStatePassesAccessibilityChecks() {
+        renderScenario(
+            ProductionRouteScenario.LibraryHub,
+            darkTheme = false,
+            fontScale = 2.0f,
+        )
     }
 
     private fun renderScenario(

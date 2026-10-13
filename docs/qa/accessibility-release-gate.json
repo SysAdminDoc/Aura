@@ -51,6 +51,13 @@
         "scenario": "ProductionRouteScenario.WallpaperEditorLoading",
         "assertionResource": "R.string.editor_wallpaper_title",
         "liveRegion": true
+      },
+      {
+        "id": "library-hub",
+        "surface": "Library hub with its summary counts and section cards at large font scale",
+        "scenario": "ProductionRouteScenario.LibraryHub",
+        "assertionResource": "R.string.library_title",
+        "liveRegion": false
       }
     ],
     "verifyCommand": "./gradlew :app:connectedDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.class=com.freevibe.ui.accessibility.AccessibilityReleaseGateTest"
@@ -167,10 +174,42 @@
           "semantics": "not checked",
           "contrast": "not checked",
           "touchTargets": "not checked",
-          "noClippedText": "fail",
+          "noClippedText": "pass",
           "scrollReachability": "not checked"
         },
-        "notes": "Reviewed baseline from ProductionRouteStateScreenshotTest. The section and switch summaries end in an ellipsis, and the diagnostics card titles break mid-word (troublesho / oting)."
+        "notes": "Baseline from ProductionRouteStateScreenshotTest. Summaries are no longer capped to two lines above the default text size, and the diagnostics cards stack when a word doesn't fit a column. LargeTextRouteStateTest renders the same route and fails on an ellipsis, an overflow or a word split across lines. The other four checks haven't been run."
+      },
+      {
+        "destination": "Library",
+        "theme": "light",
+        "fontScale": 2.0,
+        "version": "6.46.1",
+        "date": "2026-10-13",
+        "source": "app/src/test/screenshots/library_hub_light_font2_0.png",
+        "results": {
+          "semantics": "not checked",
+          "contrast": "not checked",
+          "touchTargets": "not checked",
+          "noClippedText": "pass",
+          "scrollReachability": "not checked"
+        },
+        "notes": "Baseline from ProductionRouteStateScreenshotTest: the hub with seeded counts. Card titles, descriptions and status lines wrap in full, and the three counts stack when a label doesn't fit a column. LargeTextRouteStateTest renders the same route and fails on an ellipsis, an overflow or a word split across lines. The other four checks haven't been run."
+      },
+      {
+        "destination": "Wallpapers",
+        "theme": "light",
+        "fontScale": 2.0,
+        "version": "6.46.1",
+        "date": "2026-10-13",
+        "source": "app/src/test/screenshots/wallpapers_search_history_light_font2_0.png",
+        "results": {
+          "semantics": "not checked",
+          "contrast": "not checked",
+          "touchTargets": "not checked",
+          "noClippedText": "pass",
+          "scrollReachability": "not checked"
+        },
+        "notes": "Baseline from ProductionRouteStateScreenshotTest: the feed with search open and recent searches listed over the grid. It doesn't show the header actions or the browse rail. LargeTextRouteStateTest renders the same route and fails on an ellipsis, an overflow, a word split across lines, or a recent search that starts above the bottom of the search field. The other four checks haven't been run."
       }
     ]
   },
@@ -212,7 +251,7 @@
       "reason": "Lists this device's own hides from saved preferences. HiddenItemsContentUiTest renders it with seeded rows; a device scenario needs that preference fixture."
     },
     "Library": {
-      "reason": "Renders the union of favorites, downloads and collections from Room, so a seeded scenario needs a populated database rather than a state object. Reachable and worth adding after Sounds."
+      "executedSurface": "library-hub"
     },
     "Licenses": {
       "reason": "Generated dependency-notice text with no interactive state beyond scrolling."

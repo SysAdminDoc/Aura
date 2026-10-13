@@ -19,18 +19,23 @@ from tools.accessibility_release_gate_check import (
 REPO_ROOT = Path(__file__).resolve().parents[2]
 POLICY = "docs/qa/accessibility-release-gate.json"
 GATE_TEST = "app/src/androidTest/java/com/freevibe/ui/accessibility/AccessibilityReleaseGateTest.kt"
-TRUNCATED_BASELINE = "app/src/test/screenshots/settings_provider_disabled_light_font2_0.png"
+SETTINGS_BASELINE = "app/src/test/screenshots/settings_provider_disabled_light_font2_0.png"
+# Cells the live policy records from a 200 percent baseline. Each one settles clipped text and nothing else.
+LIVE_BASELINE_CELLS = ("Settings/light", "Library/light", "Wallpapers/light")
 
 
 class AccessibilityReleaseGateCheckTest(unittest.TestCase):
     def test_live_gate_blocks_release_until_primary_evidence_exists(self) -> None:
-        # The live policy is honest about the state of 6.46.1: one reviewed
-        # 200 percent baseline, and it clips. The gate has to say so.
+        # The live policy is honest about the state of 6.46.1: three 200 percent
+        # baselines that no longer clip, with nothing else checked on them, and
+        # most cells not recorded at all. The gate has to say so.
         with self.assertRaises(AccessibilityReleaseGateError) as ctx:
             validate_accessibility_release_gate(REPO_ROOT, POLICY)
 
         message = str(ctx.exception)
-        self.assertIn("Settings/light: noClippedText is fail", message)
+        for cell in LIVE_BASELINE_CELLS:
+            self.assertIn(f"{cell}: contrast is not checked", message)
+            self.assertNotIn(f"{cell}: noClippedText", message)
         self.assertIn("no evidence for", message)
         self.assertIn("Onboarding/dark", message)
 
@@ -47,11 +52,20 @@ class AccessibilityReleaseGateCheckTest(unittest.TestCase):
         self.assertGreaterEqual(result["executedSurfaceCount"], 6)
         self.assertEqual(len(REQUIRED_PRIMARY_DESTINATIONS) * 2, result["primaryCells"])
 
-    def test_the_reviewed_truncated_baseline_fails(self) -> None:
+    def test_a_baseline_recorded_as_clipped_fails(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
             repo = copy_required_tree(Path(tmpdir))
-            copy_file(TRUNCATED_BASELINE, repo)
-            complete_primary_matrix(repo, keep_live_rows=True)
+            copy_file(SETTINGS_BASELINE, repo)
+            complete_primary_matrix(repo)
+            policy = self._policy(repo)
+            row = next(
+                row
+                for row in policy["primaryMatrix"]["evidence"]
+                if (row["destination"], row["theme"]) == ("Settings", "light")
+            )
+            row["source"] = SETTINGS_BASELINE
+            row["results"]["noClippedText"] = "fail"
+            self._write_policy(repo, policy)
 
             with self.assertRaises(AccessibilityReleaseGateError) as ctx:
                 validate_accessibility_release_gate(repo, POLICY)
@@ -60,6 +74,21 @@ class AccessibilityReleaseGateCheckTest(unittest.TestCase):
         self.assertIn("Settings/light: noClippedText is fail", message)
         self.assertNotIn("no evidence for", message)
         self.assertNotIn("doesn't exist", message)
+
+    def test_a_live_baseline_fails_on_the_checks_it_has_not_run(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            repo = copy_required_tree(Path(tmpdir))
+            complete_primary_matrix(repo, keep_live_rows=True)
+
+            with self.assertRaises(AccessibilityReleaseGateError) as ctx:
+                validate_accessibility_release_gate(repo, POLICY)
+
+        message = str(ctx.exception)
+        for cell in LIVE_BASELINE_CELLS:
+            for check in ("semantics", "contrast", "touchTargets", "scrollReachability"):
+                self.assertIn(f"{cell}: {check} is not checked", message)
+            self.assertNotIn(f"{cell}: noClippedText", message)
+        self.assertNotIn("no evidence for", message)
 
     def test_removing_any_required_primary_destination_fails(self) -> None:
         for destination in sorted(REQUIRED_PRIMARY_DESTINATIONS):
@@ -182,11 +211,11 @@ class AccessibilityReleaseGateCheckTest(unittest.TestCase):
     def test_one_screenshot_cannot_stand_for_two_cells(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
             repo = copy_required_tree(Path(tmpdir))
-            copy_file(TRUNCATED_BASELINE, repo)
+            copy_file(SETTINGS_BASELINE, repo)
             complete_primary_matrix(repo)
             policy = self._policy(repo)
             for row in policy["primaryMatrix"]["evidence"][:2]:
-                row["source"] = TRUNCATED_BASELINE
+                row["source"] = SETTINGS_BASELINE
             self._write_policy(repo, policy)
 
             with self.assertRaises(AccessibilityReleaseGateError) as ctx:
@@ -197,13 +226,13 @@ class AccessibilityReleaseGateCheckTest(unittest.TestCase):
     def test_a_renamed_copy_of_one_screenshot_cannot_stand_for_two_cells(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
             repo = copy_required_tree(Path(tmpdir))
-            copy_file(TRUNCATED_BASELINE, repo)
+            copy_file(SETTINGS_BASELINE, repo)
             renamed = "app/src/test/screenshots/settings_copy_font2_0.png"
-            shutil.copyfile(repo / TRUNCATED_BASELINE, repo / renamed)
+            shutil.copyfile(repo / SETTINGS_BASELINE, repo / renamed)
             complete_primary_matrix(repo)
             policy = self._policy(repo)
             first, second = policy["primaryMatrix"]["evidence"][:2]
-            first["source"] = TRUNCATED_BASELINE
+            first["source"] = SETTINGS_BASELINE
             second["source"] = renamed
             self._write_policy(repo, policy)
 

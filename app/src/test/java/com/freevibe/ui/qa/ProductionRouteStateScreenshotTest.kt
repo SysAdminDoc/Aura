@@ -79,6 +79,24 @@ class ProductionRouteStateScreenshotTest {
     }
 
     @Test
+    fun libraryHubLightLargeFont() {
+        captureScenario(
+            scenario = ProductionRouteScenario.LibraryHub,
+            darkTheme = false,
+            fontScale = 2.0f,
+        )
+    }
+
+    @Test
+    fun wallpapersSearchHistoryLightLargeFont() {
+        captureScenario(
+            scenario = ProductionRouteScenario.WallpapersSearchHistory,
+            darkTheme = false,
+            fontScale = 2.0f,
+        )
+    }
+
+    @Test
     fun settingsCredentialRecoveryAmoled() {
         captureScenario(
             scenario = ProductionRouteScenario.SettingsCredentialRecovery,

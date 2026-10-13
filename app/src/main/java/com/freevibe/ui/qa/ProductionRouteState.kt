@@ -64,12 +64,15 @@ import com.freevibe.ui.components.CompactSearchField
 import com.freevibe.ui.components.EqualColumnsOrStack
 import com.freevibe.ui.components.FitCanvasControls
 import com.freevibe.ui.components.FitCanvasMedia
+import com.freevibe.ui.components.SearchFieldWithHistory
 import com.freevibe.ui.components.ShimmerWallpaperGrid
 import com.freevibe.ui.components.politeAnnouncement
 import com.freevibe.ui.preview.PREVIEW_SOUNDS
 import com.freevibe.ui.preview.PREVIEW_WALLPAPERS
 import com.freevibe.ui.screens.editor.WallpaperEditorPreview
 import com.freevibe.ui.screens.downloads.DownloadHistoryCard
+import com.freevibe.ui.screens.library.LibraryHubContent
+import com.freevibe.ui.screens.library.LibraryHubState
 import com.freevibe.ui.screens.settings.SettingsMetric
 import com.freevibe.ui.screens.settings.RotationExclusionsManagerDialog
 import com.freevibe.ui.screens.settings.SettingsItem
@@ -116,6 +119,8 @@ enum class ProductionRouteScenario(
     DownloadsMediaCopies("downloads_media_copies", R.string.downloads_optimized_copy),
     DownloadsMissingMedia("downloads_missing_media", R.string.media_relink_action),
     SoundShufflePools("sound_shuffle_pools", R.string.sound_shuffle_pool_name),
+    LibraryHub("library_hub", R.string.library_title),
+    WallpapersSearchHistory("wallpapers_search_history", R.string.search_history_title),
 }
 
 @Composable
@@ -140,6 +145,8 @@ fun ProductionRouteState(
             ProductionRouteScenario.DownloadsMediaCopies -> DownloadsMediaCopiesState()
             ProductionRouteScenario.DownloadsMissingMedia -> DownloadsMissingMediaState()
             ProductionRouteScenario.SoundShufflePools -> SoundShufflePoolsState()
+            ProductionRouteScenario.LibraryHub -> LibraryHubRouteState()
+            ProductionRouteScenario.WallpapersSearchHistory -> WallpapersSearchHistoryState()
         }
     }
 }
@@ -175,6 +182,42 @@ private fun WallpapersGridState() {
                 message = stringResource(R.string.wallpapers_subtitle_search_default),
                 tone = MaterialTheme.colorScheme.secondary,
             )
+        }
+        Box(modifier = Modifier.fillMaxWidth().weight(1f)) {
+            WallpaperGrid(
+                wallpapers = PREVIEW_WALLPAPERS,
+                isLoadingMore = false,
+                columns = 2,
+                onWallpaperClick = {},
+                favoriteIdentities = emptySet(),
+                onLoadMore = {},
+            )
+            AuraLiveStatus(stringResource(R.string.a11y_wallpapers_loaded))
+        }
+    }
+}
+
+/** The Wallpapers feed with its search field open, nothing typed yet and recent searches listed. */
+@Composable
+private fun WallpapersSearchHistoryState() {
+    Column(modifier = Modifier.fillMaxSize()) {
+        RouteColumn(modifier = Modifier.fillMaxWidth()) {
+            Text(stringResource(R.string.nav_wallpapers), style = MaterialTheme.typography.headlineSmall)
+            SearchFieldWithHistory(
+                recentQueries = listOf("aurora over mountains", "minimal dark", "neon city at night"),
+                isHistoryVisible = true,
+                onQueryClick = {},
+                onDeleteQuery = {},
+                onClearAll = {},
+                modifier = Modifier.fillMaxWidth(),
+            ) {
+                CompactSearchField(
+                    value = "",
+                    onValueChange = {},
+                    placeholder = stringResource(R.string.wallpapers_search_placeholder),
+                    modifier = Modifier.fillMaxWidth(),
+                )
+            }
         }
         Box(modifier = Modifier.fillMaxWidth().weight(1f)) {
             WallpaperGrid(
@@ -308,6 +351,28 @@ private fun SettingsState() {
             tone = MaterialTheme.colorScheme.primary,
         )
     }
+}
+
+@Composable
+private fun LibraryHubRouteState() {
+    LibraryHubContent(
+        state = LibraryHubState(
+            favoriteCount = 128,
+            downloadCount = 36,
+            collectionCount = 7,
+            recentActivityCount = 12,
+            recentSearchCount = 5,
+            hiddenCount = 3,
+        ),
+        onSearchClick = {},
+        onFavoritesClick = {},
+        onDownloadsClick = {},
+        onCollectionsClick = {},
+        onLocalImportsClick = {},
+        onRecentActivityClick = {},
+        onHiddenItemsClick = {},
+        onBackupRestoreClick = {},
+    )
 }
 
 @Composable
