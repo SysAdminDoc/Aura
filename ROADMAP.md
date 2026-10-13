@@ -169,16 +169,6 @@ Evidence for every item below is in RESEARCH.md (2026-09-04 pass).
   Acceptance: an export records each assignment by contact lookup key and display name plus the sound's own identity, never a raw contact `_id` or a MediaStore row id; an import matches contacts by lookup key, falls back to display name, and reports every entry it could not match instead of failing the whole import; the export-format gate covers the new section; tests cover a matched restore, a changed lookup key, a missing contact, and a missing sound.
   Complexity: M
 
-- [ ] P2 — Remove dormant legacy sound providers while preserving saved attribution
-  Category: maintainability
-  Where: app/src/main/java/com/freevibe/data/repository/AudiusRepository.kt, CcMixterRepository.kt, SoundCloudRepository.kt, FreesoundRepository.kt, FreesoundV2Repository.kt; app/src/main/java/com/freevibe/di/AppModule.kt:109-117,179-227; app/src/test/java/com/freevibe/ui/screens/sounds/SoundsViewModelTest.kt:1461-1572; ROADMAP.md and Roadmap_Blocked.md provider entries
-  Problem: Five repository implementations and their Hilt clients have no production caller, yet tests carry inert mocks and release R8 retains about 48 KB of abandoned provider DTO/API code. The old roadmap and blocked roadmap also disagree on whether they are actionable.
-  Evidence: Repository-wide reference tracing finds no production construction or injection. SoundsViewModel tests stub all five but pass none to the ViewModel. The product direction is now explicit: preserve Reddit-first discovery and YouTube sound/video, so the earlier provider-choice blocker is resolved.
-  Fix: Remove all five repositories, Retrofit providers, obsolete credentials/endpoints, and inert test parameters. Keep ContentSource enum values and legacy attribution parsing so saved rows remain readable. Update provider disclosure to describe only live sources.
-  Acceptance: No abandoned endpoint has a repository/provider; sound tests construct only real dependencies; release APK contains none of those packages; legacy saved metadata still shows correct attribution; Reddit remains the primary media source and YouTube remains available for sound/video.
-  Confidence: Verified
-  Effort: M
-
 - [ ] P2 — Pool and preload the video-feed player
   Why: every scroll stop in the video feed constructs, prepares, and releases an ExoPlayer, so the user sees "Preparing preview" on each card instead of a preview that is already warm. Media3 1.11.0 is already pinned and ships the pieces for this exact pattern.
   Evidence: `VideoWallpapersScreen.kt:952` builds `ExoPlayer.Builder(context)…prepare(); play()` inside `remember(item.id, streamUrl)` and releases it in `onDispose`; only one card previews at a time (`VideoWallpapersScreen.kt:569`, `activePreviewId`); Media3 1.11.0 added `PlayerPool` and `rememberPooledPlayer` in `media3-ui-compose` for preloading in a sliding-window UI, plus `DefaultPreloadManager` and `ExoPlayer.Builder.enablePerStreamMediaProgression()` (https://developer.android.com/jetpack/androidx/releases/media3).
