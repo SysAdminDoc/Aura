@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import math
 import re
@@ -44,6 +45,14 @@ MINIMUM_FONT_SCALE = 2.0
 # A screenshot shows one destination in one theme; a report file can cover a whole run.
 EVIDENCE_IMAGE_SUFFIXES = {".png", ".jpg", ".jpeg", ".webp"}
 EVIDENCE_REPORT_SUFFIXES = {".json", ".xml", ".html", ".txt"}
+
+
+def screenshot_identity(repo_root: Path, source_path: Path) -> str:
+    """The image's content hash when it's readable, so a copy under a second name is still the same screenshot."""
+    target = repo_root / source_path
+    if not source_path.is_absolute() and ".." not in source_path.parts and target.is_file():
+        return "sha256:" + hashlib.sha256(target.read_bytes()).hexdigest()
+    return source_path.as_posix()
 
 
 def large_enough_scale(value: Any, minimum: float) -> bool:
@@ -280,7 +289,7 @@ def validate_primary_matrix(
         raise AccessibilityReleaseGateError("primaryMatrix.evidence must be a list")
     problems: list[str] = []
     recorded: set[str] = set()
-    screenshot_cells: dict[str, list[str]] = {}
+    screenshot_cells: dict[str, list[tuple[str, str]]] = {}
     for item in evidence:
         row = require_object(item, "primaryMatrix.evidence[]")
         destination = require_string(row.get("destination"), "primaryMatrix.evidence[].destination")
@@ -312,7 +321,9 @@ def validate_primary_matrix(
         elif not (repo_root / source).is_file():
             problems.append(f"{cell}: evidence file {source} doesn't exist")
         if suffix in EVIDENCE_IMAGE_SUFFIXES:
-            screenshot_cells.setdefault(source_path.as_posix(), []).append(cell)
+            screenshot_cells.setdefault(screenshot_identity(repo_root, source_path), []).append(
+                (cell, source_path.as_posix())
+            )
         row_scale = row.get("fontScale")
         if not large_enough_scale(row_scale, font_scale):
             problems.append(f"{cell}: recorded at font scale {row_scale!r}, below {font_scale}")
@@ -322,9 +333,11 @@ def validate_primary_matrix(
             if outcome != "pass":
                 problems.append(f"{cell}: {check} is {outcome if outcome else 'not recorded'}")
 
-    for screenshot, cells in sorted(screenshot_cells.items()):
-        if len(cells) > 1:
-            problems.append(f"screenshot {screenshot} is recorded for more than one cell: " + ", ".join(cells))
+    for _, entries in sorted(screenshot_cells.items()):
+        if len(entries) > 1:
+            names = ", ".join(sorted({source for _, source in entries}))
+            cells = ", ".join(cell for cell, _ in entries)
+            problems.append(f"screenshot {names} is recorded for more than one cell: {cells}")
 
     absent = [
         f"{destination}/{theme}"

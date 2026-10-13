@@ -191,6 +191,25 @@ class AccessibilityReleaseGateCheckTest(unittest.TestCase):
 
             self.assertIn("is recorded for more than one cell", str(ctx.exception))
 
+    def test_a_renamed_copy_of_one_screenshot_cannot_stand_for_two_cells(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            repo = copy_required_tree(Path(tmpdir))
+            copy_file(TRUNCATED_BASELINE, repo)
+            renamed = "app/src/test/screenshots/settings_copy_font2_0.png"
+            shutil.copyfile(repo / TRUNCATED_BASELINE, repo / renamed)
+            complete_primary_matrix(repo)
+            policy = self._policy(repo)
+            first, second = policy["primaryMatrix"]["evidence"][:2]
+            first["source"] = TRUNCATED_BASELINE
+            second["source"] = renamed
+            self._write_policy(repo, policy)
+
+            with self.assertRaises(AccessibilityReleaseGateError) as ctx:
+                validate_accessibility_release_gate(repo, POLICY)
+
+            self.assertIn("is recorded for more than one cell", str(ctx.exception))
+            self.assertIn(renamed, str(ctx.exception))
+
     def test_every_required_check_must_pass(self) -> None:
         for check in ("semantics", "contrast", "touchTargets", "noClippedText", "scrollReachability"):
             with self.subTest(check=check), tempfile.TemporaryDirectory() as tmpdir:
