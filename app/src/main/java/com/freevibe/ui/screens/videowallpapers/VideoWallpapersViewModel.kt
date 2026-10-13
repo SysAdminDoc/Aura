@@ -275,7 +275,7 @@ internal fun redditMotionEntriesFor(
     showAdultContent: Boolean,
     lengths: Map<String, Int> = emptyMap(),
 ): List<RedditRssMediaEntry> = entries.filter { entry ->
-    preset?.accepts(entry.title, entry.width, entry.height, lengths[entry.id] ?: 0, showAdultContent) != false
+    preset?.accepts(entry.title, entry.width, entry.height, (lengths[entry.id] ?: 0).toLong(), showAdultContent) != false
 }
 
 internal fun isHlsMotionUrl(url: String): Boolean =
