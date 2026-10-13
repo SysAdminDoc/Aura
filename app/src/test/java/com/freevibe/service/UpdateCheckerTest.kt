@@ -214,10 +214,59 @@ class UpdateCheckerTest {
     @Test
     fun `only a page under Aura's own releases is opened`() {
         assertEquals(PAGE, releasePageUrl(PAGE))
+        assertEquals(PAGE, releasePageUrl("  $PAGE\n"))
+        assertEquals(RELEASES_PAGE_URL, releasePageUrl(RELEASES_PAGE_URL))
+        assertEquals("$RELEASES/tag/v6.47.1-rc.1", releasePageUrl("$RELEASES/tag/v6.47.1-rc.1"))
         assertEquals(RELEASES_PAGE_URL, releasePageUrl(null))
         assertEquals(RELEASES_PAGE_URL, releasePageUrl("https://example.com/SysAdminDoc/Aura/releases/tag/v6.47.0"))
         assertEquals(RELEASES_PAGE_URL, releasePageUrl("https://github.com/SysAdminDoc/Aura/releases/tag/v6.47.0 x"))
         assertEquals(RELEASES_PAGE_URL, releasePageUrl("http://github.com/SysAdminDoc/Aura/releases/tag/v6.47.0"))
+        assertEquals(RELEASES_PAGE_URL, releasePageUrl("https://github.com/SysAdminDoc/Other/releases/tag/v6.47.0"))
+        assertEquals(RELEASES_PAGE_URL, releasePageUrl("$RELEASES/"))
+        assertEquals(RELEASES_PAGE_URL, releasePageUrl("$PAGE?next=https://evil.example"))
+    }
+
+    @Test
+    fun `an address that climbs out of Aura's releases is not opened`() {
+        // A browser resolves these dot segments and lands on another repository.
+        assertEquals(RELEASES_PAGE_URL, releasePageUrl("$RELEASES/../../../other/repo/releases/tag/v9"))
+        assertEquals(RELEASES_PAGE_URL, releasePageUrl("$RELEASES/%2e%2e/%2E%2E/%2e%2e/other/repo/releases/tag/v9"))
+        assertEquals(RELEASES_PAGE_URL, releasePageUrl("$RELEASES/tag/.%2e/%2e./../../other/repo/releases/tag/v9"))
+        // A slash hidden inside a segment, and the backslash a browser reads as one.
+        assertEquals(RELEASES_PAGE_URL, releasePageUrl("$RELEASES/tag/..%2f..%2f..%2f..%2fother%2frepo"))
+        assertEquals(RELEASES_PAGE_URL, releasePageUrl("$RELEASES\\..\\..\\..\\other\\repo"))
+    }
+
+    @Test
+    fun `another host is not opened however the address is dressed up`() {
+        val path = "SysAdminDoc/Aura/releases/tag/v6.47.0"
+
+        assertEquals(RELEASES_PAGE_URL, releasePageUrl("https://evil.example/https://github.com/$path"))
+        assertEquals(RELEASES_PAGE_URL, releasePageUrl("https://github.com@evil.example/$path"))
+        assertEquals(RELEASES_PAGE_URL, releasePageUrl("https://github.com:443@evil.example/$path"))
+        assertEquals(RELEASES_PAGE_URL, releasePageUrl("https://github.com.evil.example/$path"))
+        assertEquals(RELEASES_PAGE_URL, releasePageUrl("https://github.com:8443/$path"))
+        assertEquals(RELEASES_PAGE_URL, releasePageUrl("https://someone@github.com/$path"))
+    }
+
+    @Test
+    fun `a release whose page climbs out is still offered, with the latest-release page`() = runTest {
+        val json = releaseJson(tag = "v6.47.0", versionCode = 152)
+            .replace(PAGE, "$RELEASES/../../../other/repo/releases/tag/v9")
+        feed.response = ReleaseFeedResponse(200, json)
+
+        val result = checker().checkNow() as UpdateCheckResult.Available
+
+        assertEquals(RELEASES_PAGE_URL, result.release.pageUrl)
+    }
+
+    @Test
+    fun `a stored notice is held to the same pages`() = runTest {
+        val climbing = "$RELEASES/../../../other/repo/releases/tag/v9"
+        stored.value =
+            """{"tag":"v6.47.0","versionName":"6.47.0","versionCode":152,"notes":"","pageUrl":"$climbing"}"""
+
+        assertEquals(RELEASES_PAGE_URL, checker().available.first()?.pageUrl)
     }
 
     @Test
@@ -285,7 +334,8 @@ class UpdateCheckerTest {
 
     private companion object {
         const val NOW = 1_800_000_000_000L
-        const val PAGE = "https://github.com/SysAdminDoc/Aura/releases/tag/v6.47.0"
+        const val RELEASES = "https://github.com/SysAdminDoc/Aura/releases"
+        const val PAGE = "$RELEASES/tag/v6.47.0"
 
         fun releaseJson(tag: String, versionCode: Int?, body: String = "", extra: String = ""): String {
             val assets = if (versionCode == null) {

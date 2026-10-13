@@ -23,6 +23,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
+import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import java.io.IOException
@@ -34,7 +35,13 @@ internal const val RELEASES_API_URL = "https://api.github.com/repos/SysAdminDoc/
 
 /** Where the notice sends the user. Aura opens this page and never downloads or installs anything itself. */
 internal const val RELEASES_PAGE_URL = "https://github.com/SysAdminDoc/Aura/releases/latest"
-private const val RELEASE_PAGE_PREFIX = "https://github.com/SysAdminDoc/Aura/releases/"
+private const val RELEASE_PAGE_HOST = "github.com"
+
+/** What every release page's path starts with: the owner, the repository, then `releases`. */
+private val RELEASE_PAGE_PATH = listOf("SysAdminDoc", "Aura", "releases")
+
+/** One path segment of a release page. It starts with a letter or digit, so it is never `.` or `..`. */
+private val RELEASE_PAGE_SEGMENT = Regex("""[A-Za-z0-9][A-Za-z0-9._+-]*""")
 
 internal const val AUTOMATIC_CHECK_INTERVAL_MS = 24L * 60 * 60 * 1000
 internal const val MAX_RELEASE_NOTES_CHARS = 4_000
@@ -189,11 +196,31 @@ private fun versionParts(name: String): List<Long> =
         ?.map { it.toLongOrNull() ?: Long.MAX_VALUE }
         .orEmpty()
 
-/** Only a page under Aura's own releases is ever opened. Anything else falls back to the latest-release page. */
+/**
+ * Only a page under Aura's own releases is ever opened. Anything else falls back to the
+ * latest-release page.
+ *
+ * The address is parsed before it is judged, the way a browser reads it: `..` and `%2e%2e` are
+ * resolved, and the host is what follows any `user@` part. Matching the text against a prefix
+ * passes `releases/../../../other/repo`, which a browser opens outside Aura's releases. The
+ * parsed form is what comes back, so the page that was checked is the page that opens.
+ */
 internal fun releasePageUrl(raw: String?): String {
-    val url = raw?.trim().orEmpty()
-    val trusted = url.startsWith(RELEASE_PAGE_PREFIX) && url.none { it.isWhitespace() || it.isISOControl() }
-    return if (trusted) url else RELEASES_PAGE_URL
+    val text = raw?.trim().orEmpty()
+    if (text.any { it.isWhitespace() || it.isISOControl() }) return RELEASES_PAGE_URL
+    val url = text.toHttpUrlOrNull() ?: return RELEASES_PAGE_URL
+    val segments = url.pathSegments
+    val trusted = url.isHttps &&
+        url.host == RELEASE_PAGE_HOST &&
+        url.port == 443 &&
+        url.username.isEmpty() &&
+        url.password.isEmpty() &&
+        url.query == null &&
+        url.fragment == null &&
+        segments.size > RELEASE_PAGE_PATH.size &&
+        segments.take(RELEASE_PAGE_PATH.size) == RELEASE_PAGE_PATH &&
+        segments.drop(RELEASE_PAGE_PATH.size).all { RELEASE_PAGE_SEGMENT.matches(it) }
+    return if (trusted) url.toString() else RELEASES_PAGE_URL
 }
 
 /** Release notes are written in Markdown. This keeps the words and drops the markup. */
@@ -345,8 +372,13 @@ class UpdateChecker internal constructor(
     private fun isNewer(release: PublishedRelease): Boolean =
         isNewerRelease(release, installedVersionCode, installedVersionName)
 
+    /** The stored address is checked again on the way out, so nothing read from disk skips [releasePageUrl]. */
     private fun decodeStored(stored: String): PublishedRelease? =
-        if (stored.isBlank()) null else storedAdapter.fromJsonOrNull(stored)
+        if (stored.isBlank()) {
+            null
+        } else {
+            storedAdapter.fromJsonOrNull(stored)?.let { it.copy(pageUrl = releasePageUrl(it.pageUrl)) }
+        }
 }
 
 private class OkHttpReleaseFeed(private val client: OkHttpClient) : ReleaseFeed {
