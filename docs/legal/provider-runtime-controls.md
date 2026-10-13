@@ -15,7 +15,7 @@ runtime-control row.
 | Internet Archive | Covered | Removed active feed. | New sound feeds do not request Internet Archive; old saved records can still render. | None. |
 | Reddit | Covered | Settings exposes a Reddit provider-enabled flag in addition to editable wallpaper subreddit lists. | Disabled mode hides Reddit wallpaper browsing, skips daily picks, video wallpaper Reddit jobs, scheduled Reddit rotations, and repository network calls while recording disabled diagnostics. | Move video subreddit lists into Preferences if distribution profiles need source-specific Reddit video curation. |
 | NASA | Covered | Discover can request the daily APOD and a small historical selection through the shared secondary-source budget. | It is skipped when secondary discovery is disabled or the provider is unavailable; saved rows keep attribution. | None. |
-| Freesound | Covered | No active browsing tab uses Freesound; optional key is retained for compatibility. | New sound browsing uses YouTube/community/bundled paths; saved records keep attribution. | None. |
+| Freesound | Covered | No active browsing tab uses Freesound; any old stored key is deleted at startup. | New sound browsing uses YouTube/community/bundled paths; saved records keep attribution. | None. |
 | Jamendo | Covered | No active repository path. | New feeds do not request Jamendo; saved legacy rows can remain visible. | None. |
 | Audius | Covered | No active browsing tab uses Audius. | New feeds do not request Audius; saved legacy rows can remain visible. | None. |
 | ccMixter | Covered | No active browsing tab uses ccMixter. | New feeds do not request ccMixter; saved legacy rows can remain visible. | None. |

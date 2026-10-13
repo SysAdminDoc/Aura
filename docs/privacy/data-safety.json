@@ -272,51 +272,6 @@
       "deletionPath": "Clear caches, remove downloads/favorites, disable the provider path, or clear app data."
     },
     {
-      "endpointId": "openverse-audio",
-      "dataTypes": ["Search queries", "Provider response metadata"],
-      "collectionStatus": "featureDependentCollection",
-      "sharingStatus": "sharedWithSelectedProviders",
-      "userControl": "Sound browsing controls and local cache cleanup.",
-      "retention": "Returned preview URLs can be cached as favorites or offline sound media.",
-      "deletionPath": "Remove favorites/downloads, clear caches, or clear app data."
-    },
-    {
-      "endpointId": "freesound-v2",
-      "dataTypes": ["Search queries", "Provider response metadata"],
-      "collectionStatus": "featureDependentCollection",
-      "sharingStatus": "sharedWithSelectedProviders",
-      "userControl": "Freesound API key controls and local sound cleanup.",
-      "retention": "Returned previews can be cached as favorite or offline sound media.",
-      "deletionPath": "Remove favorites/downloads, clear caches, clear the key, or clear app data."
-    },
-    {
-      "endpointId": "soundcloud-api",
-      "dataTypes": ["Search queries", "Provider response metadata"],
-      "collectionStatus": "featureDependentCollection",
-      "sharingStatus": "sharedWithSelectedProviders",
-      "userControl": "SoundCloud client ID controls and local sound cleanup.",
-      "retention": "Stream URLs can be cached as favorite or offline sound media.",
-      "deletionPath": "Remove favorites/downloads, clear caches, clear the client ID, or clear app data."
-    },
-    {
-      "endpointId": "audius-api",
-      "dataTypes": ["Search queries", "Provider response metadata"],
-      "collectionStatus": "featureDependentCollection",
-      "sharingStatus": "sharedWithSelectedProviders",
-      "userControl": "Sound browsing controls and local cache cleanup.",
-      "retention": "Returned stream URLs can be cached as favorite or offline sound media.",
-      "deletionPath": "Remove favorites/downloads, clear caches, or clear app data."
-    },
-    {
-      "endpointId": "ccmixter-api",
-      "dataTypes": ["Search queries", "Provider response metadata"],
-      "collectionStatus": "featureDependentCollection",
-      "sharingStatus": "sharedWithSelectedProviders",
-      "userControl": "Sound browsing controls and local cache cleanup.",
-      "retention": "Returned download URLs can be cached as favorite or offline sound media.",
-      "deletionPath": "Remove favorites/downloads, clear caches, or clear app data."
-    },
-    {
       "endpointId": "open-meteo-api",
       "dataTypes": ["Approximate location", "Weather data"],
       "collectionStatus": "featureDependentCollection",

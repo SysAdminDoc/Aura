@@ -70,21 +70,21 @@ class ProviderCredentialApkScanTest(unittest.TestCase):
             local_properties = root / "local.properties"
             universal = root / "universal.apk"
             arm64 = root / "arm64.apk"
-            write(local_properties, "freesound.api.key=sentinel-provider-key\n")
+            write(local_properties, "pixabay.api.key=sentinel-provider-key\n")
             write_apk(universal, {"classes.dex": b"clean"})
             write_apk(arm64, {"classes2.dex": b"sentinel-provider-key"})
 
             with self.assertRaises(ProviderCredentialApkScanError) as context:
                 scan_release_apks(local_properties, [universal, arm64])
 
-            self.assertIn("freesound.api.key", str(context.exception))
+            self.assertIn("pixabay.api.key", str(context.exception))
             self.assertIn("arm64.apk!classes2.dex", str(context.exception))
 
     def test_rejects_missing_apk(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
             root = Path(tmpdir)
             local_properties = root / "local.properties"
-            write(local_properties, "soundcloud.client.id=sentinel-provider-key\n")
+            write(local_properties, "stability.ai.key=sentinel-provider-key\n")
 
             with self.assertRaises(ProviderCredentialApkScanError):
                 scan_release_apks(local_properties, [root / "missing.apk"])

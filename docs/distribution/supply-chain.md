@@ -210,7 +210,7 @@ catalog change.
 ## Provider credential release guard
 
 Provider API keys and client IDs are optional user-controlled settings. Public
-release builds must not bundle local Pexels, Pixabay, Freesound, SoundCloud, or
+release builds must not bundle local Pexels, Pixabay, or
 Stability values into `BuildConfig`. For local development, a nonblank ignored
 `local.properties` provider key fails by default. Use
 `--allow-nonblank-local-provider-keys` only for an explicitly internal build

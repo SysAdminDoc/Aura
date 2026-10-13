@@ -22,10 +22,10 @@ class NetworkEndpointInventoryCheckTest(unittest.TestCase):
 
         self.assertEqual("networkEndpointInventory", result["policyKind"])
         self.assertEqual(1, result["schemaVersion"])
-        self.assertEqual(22, result["endpointCount"])
+        self.assertEqual(17, result["endpointCount"])
         self.assertIn("wallhaven.cc", result["scannedLiteralHosts"])
         self.assertIn("api.github.com", result["scannedLiteralHosts"])
-        self.assertIn("api-v2.soundcloud.com", result["scannedLiteralHosts"])
+        self.assertNotIn("api-v2.soundcloud.com", result["scannedLiteralHosts"])
 
     def test_rejects_unreviewed_literal_host(self) -> None:
         inventory = copy.deepcopy(live_inventory())

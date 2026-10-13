@@ -13,6 +13,14 @@ import org.junit.Test
 class SoundQualityTest {
 
     @Test
+    fun `retired providers still get a readable source label for saved sounds`() {
+        assertEquals("Freesound", soundSourceLabel(ContentSource.FREESOUND))
+        assertEquals("Audius", soundSourceLabel(ContentSource.AUDIUS))
+        assertEquals("ccMixter", soundSourceLabel(ContentSource.CCMIXTER))
+        assertEquals("SoundCloud", soundSourceLabel(ContentSource.SOUNDCLOUD))
+    }
+
+    @Test
     fun `core sound tabs stay limited to everyday sound types`() {
         assertEquals(
             listOf(SoundTab.RINGTONES, SoundTab.NOTIFICATIONS, SoundTab.ALARMS),

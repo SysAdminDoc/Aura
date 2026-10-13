@@ -34,7 +34,6 @@ IMPORTER_SOURCES = frozenset({
 
 # Setters allowed to have no user path, each with the reason it is still there.
 SETTER_WAIVERS = {
-    "setFreesoundKey": "Freesound is a dormant provider. The setter goes with it in the dormant sound provider removal.",
     "setRingtoneShuffleIntervalHours": "Legacy interval that the sound pool migration reads once. Only the migration tests write it.",
     "setRedditFeedPresetsJson": "Backup restore puts the raw preset document back after a failed import. Users edit presets through updateRedditFeedPresets.",
 }

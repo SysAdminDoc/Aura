@@ -73,7 +73,7 @@
       "id": "NonFreeNet",
       "applies": true,
       "details": {
-        "en-US": "Active remote paths include Reddit, Wallhaven, Bing, Pexels, Pixabay, Wikimedia Commons, NASA APOD, Lemmy, Open-Meteo, Stability, Firebase community services, and YouTube in GitHub-channel builds. Freesound, SoundCloud, Audius, Openverse, and ccMixter entries document legacy attribution only and are not active feeds."
+        "en-US": "Active remote paths include Reddit, Wallhaven, Bing, Pexels, Pixabay, Wikimedia Commons, NASA APOD, Lemmy, Open-Meteo, Stability, Firebase community services, and YouTube in GitHub-channel builds. Sounds saved from the retired Freesound, SoundCloud, Audius, Openverse, and ccMixter sources keep their attribution, and Aura makes no requests to those services."
       },
       "evidenceRefs": [
         "docs/security/network-endpoints.json",
@@ -268,26 +268,6 @@
     {
       "id": "lemmy-wallpapers",
       "disclosure": "Lemmy wallpaper community discovery provider using public lemmy.world posts."
-    },
-    {
-      "id": "openverse-audio",
-      "disclosure": "Legacy attribution only; no active Openverse audio feed is requested."
-    },
-    {
-      "id": "freesound-v2",
-      "disclosure": "Legacy attribution only; no active Freesound feed is requested."
-    },
-    {
-      "id": "soundcloud-api",
-      "disclosure": "Legacy attribution only; no active SoundCloud feed is requested."
-    },
-    {
-      "id": "audius-api",
-      "disclosure": "Legacy attribution only; no active Audius feed is requested."
-    },
-    {
-      "id": "ccmixter-api",
-      "disclosure": "Legacy attribution only; no active ccMixter feed is requested."
     },
     {
       "id": "open-meteo-api",

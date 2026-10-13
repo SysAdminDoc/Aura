@@ -376,7 +376,7 @@
       "requiresAttribution": true,
       "enabledByDefault": false,
       "killSwitchKey": null,
-      "endpointIds": ["freesound-v2", "openverse-audio"]
+      "endpointIds": []
     },
     {
       "id": "JAMENDO",
@@ -414,7 +414,7 @@
       "requiresAttribution": true,
       "enabledByDefault": false,
       "killSwitchKey": null,
-      "endpointIds": ["audius-api"]
+      "endpointIds": []
     },
     {
       "id": "CCMIXTER",
@@ -433,7 +433,7 @@
       "requiresAttribution": true,
       "enabledByDefault": false,
       "killSwitchKey": null,
-      "endpointIds": ["ccmixter-api"]
+      "endpointIds": []
     },
     {
       "id": "KLIPY",
@@ -471,7 +471,7 @@
       "requiresAttribution": true,
       "enabledByDefault": false,
       "killSwitchKey": null,
-      "endpointIds": ["soundcloud-api"]
+      "endpointIds": []
     }
   ]
 }

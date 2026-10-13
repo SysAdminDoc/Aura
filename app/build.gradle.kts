@@ -111,8 +111,6 @@ android {
         // API keys — defaults baked in, user can override via settings
         buildConfigField("String", "PEXELS_API_KEY", "\"${localProps.getProperty("pexels.api.key", "")}\"")
         buildConfigField("String", "PIXABAY_API_KEY", "\"${localProps.getProperty("pixabay.api.key", "")}\"")
-        buildConfigField("String", "FREESOUND_API_KEY", "\"${localProps.getProperty("freesound.api.key", "")}\"")
-        buildConfigField("String", "SOUNDCLOUD_CLIENT_ID", "\"${localProps.getProperty("soundcloud.client.id", "")}\"")
     }
 
     flavorDimensions += "distribution"
@@ -139,8 +137,6 @@ android {
             // Users can still add their own provider keys securely in Settings.
             buildConfigField("String", "PEXELS_API_KEY", "\"\"")
             buildConfigField("String", "PIXABAY_API_KEY", "\"\"")
-            buildConfigField("String", "FREESOUND_API_KEY", "\"\"")
-            buildConfigField("String", "SOUNDCLOUD_CLIENT_ID", "\"\"")
             testProguardFiles("android-test-proguard-rules.pro")
             // Verification builders compare an unsigned FOSS artifact with the
             // owner-signed release modulo its signature. Keeping this opt-in avoids

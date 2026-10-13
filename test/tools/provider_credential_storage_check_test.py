@@ -28,9 +28,9 @@ class ProviderCredentialStorageCheckTest(unittest.TestCase):
         result = validate_policy(REPO_ROOT, live_policy())
 
         self.assertEqual("ok", result["status"])
-        self.assertEqual(6, result["credentialCount"])
+        self.assertEqual(5, result["credentialCount"])
         self.assertEqual(5, result["encryptedCredentialCount"])
-        self.assertEqual(5, result["buildConfigCredentialCount"])
+        self.assertEqual(3, result["buildConfigCredentialCount"])
         self.assertEqual(1, result["paidSensitiveCredentialCount"])
         self.assertEqual("ok", result["stabilityCredentialStatus"])
 

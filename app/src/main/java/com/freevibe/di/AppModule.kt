@@ -19,18 +19,13 @@ import com.freevibe.data.local.WallpaperHistoryDao
 import com.freevibe.data.model.providerRetryAfterHostSuffixes
 import com.freevibe.data.remote.ProviderAvailabilityInterceptor
 import com.freevibe.data.remote.RateLimitInterceptor
-import com.freevibe.data.remote.audius.AudiusApi
 import com.freevibe.data.remote.bing.BingDailyApi
-import com.freevibe.data.remote.ccmixter.CcMixterApi
 import com.freevibe.data.remote.lemmy.LemmyApi
 import com.freevibe.data.remote.nasa.NasaApodApi
 import com.freevibe.data.remote.wikimedia.WikimediaPotdApi
-import com.freevibe.data.remote.freesound.FreesoundV2Api
 import com.freevibe.data.remote.weather.OpenMeteoApi
 import com.freevibe.data.remote.pexels.PexelsApi
 import com.freevibe.data.remote.pixabay.PixabayApi
-import com.freevibe.data.remote.freesound.FreesoundApi
-import com.freevibe.data.remote.soundcloud.SoundCloudApi
 import com.freevibe.data.remote.wallhaven.WallhavenApi
 import com.squareup.moshi.Moshi
 import dagger.Module
@@ -111,16 +106,6 @@ object AppModule {
 
     @Provides
     @Singleton
-    fun provideFreesoundV2Api(client: OkHttpClient, moshi: Moshi): FreesoundV2Api =
-        Retrofit.Builder()
-            .baseUrl(FreesoundV2Api.BASE_URL)
-            .client(client)
-            .addConverterFactory(MoshiConverterFactory.create(moshi))
-            .build()
-            .create(FreesoundV2Api::class.java)
-
-    @Provides
-    @Singleton
     fun provideNasaApodApi(client: OkHttpClient, moshi: Moshi): NasaApodApi =
         Retrofit.Builder()
             .baseUrl(NasaApodApi.BASE_URL)
@@ -181,16 +166,6 @@ object AppModule {
 
     @Provides
     @Singleton
-    fun provideFreesoundApi(client: OkHttpClient, moshi: Moshi): FreesoundApi =
-        Retrofit.Builder()
-            .baseUrl("https://api.openverse.org/")
-            .client(client)
-            .addConverterFactory(MoshiConverterFactory.create(moshi))
-            .build()
-            .create(FreesoundApi::class.java)
-
-    @Provides
-    @Singleton
     fun provideOpenMeteoApi(client: OkHttpClient, moshi: Moshi): OpenMeteoApi =
         Retrofit.Builder()
             .baseUrl(OpenMeteoApi.BASE_URL)
@@ -198,36 +173,6 @@ object AppModule {
             .addConverterFactory(MoshiConverterFactory.create(moshi))
             .build()
             .create(OpenMeteoApi::class.java)
-
-    @Provides
-    @Singleton
-    fun provideSoundCloudApi(client: OkHttpClient, moshi: Moshi): SoundCloudApi =
-        Retrofit.Builder()
-            .baseUrl(SoundCloudApi.BASE_URL)
-            .client(client)
-            .addConverterFactory(MoshiConverterFactory.create(moshi))
-            .build()
-            .create(SoundCloudApi::class.java)
-
-    @Provides
-    @Singleton
-    fun provideAudiusApi(client: OkHttpClient, moshi: Moshi): AudiusApi =
-        Retrofit.Builder()
-            .baseUrl(AudiusApi.BASE_URL)
-            .client(client)
-            .addConverterFactory(MoshiConverterFactory.create(moshi))
-            .build()
-            .create(AudiusApi::class.java)
-
-    @Provides
-    @Singleton
-    fun provideCcMixterApi(client: OkHttpClient, moshi: Moshi): CcMixterApi =
-        Retrofit.Builder()
-            .baseUrl(CcMixterApi.BASE_URL)
-            .client(client)
-            .addConverterFactory(MoshiConverterFactory.create(moshi))
-            .build()
-            .create(CcMixterApi::class.java)
 
     // -- Database --
 

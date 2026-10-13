@@ -27,7 +27,7 @@ class ProviderCredentialReleaseCheckTest(unittest.TestCase):
         )
 
         self.assertEqual("ok", result["status"])
-        self.assertEqual(5, len(result["buildConfigProviderKeys"]))
+        self.assertEqual(3, len(result["buildConfigProviderKeys"]))
         self.assertEqual([], result["releaseWorkflowBlankProviderKeys"])
         self.assertEqual("local-only release; no workflow", result["releaseWorkflow"])
 
@@ -72,8 +72,6 @@ class ProviderCredentialReleaseCheckTest(unittest.TestCase):
                 f"            printf '{key}=\\n'"
                 for key in (
                     "pixabay.api.key",
-                    "freesound.api.key",
-                    "soundcloud.client.id",
                     "stability.ai.key",
                 )
             )

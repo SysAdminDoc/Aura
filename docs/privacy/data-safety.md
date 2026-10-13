@@ -62,11 +62,6 @@ must have a matching `networkSurfaces` row in `docs/privacy/data-safety.json`.
 | `nasa-apod` | Date parameters, APOD metadata, and provider key parameter shared with NASA when enabled. | Wallpaper source/provider controls and local cache cleanup. |
 | `wikimedia-potd` | Date parameters and provider response metadata shared with Wikimedia when enabled. | Wallpaper source/provider controls and local cache cleanup. |
 | `lemmy-wallpapers` | Community names, post metadata, and source URLs shared with Lemmy when enabled. | Wallpaper source/provider controls and local cache cleanup. |
-| `openverse-audio` | Search queries and provider response metadata shared with Openverse during sound browsing. | Sound browsing controls and local cache cleanup. |
-| `freesound-v2` | Search queries and provider response metadata shared with Freesound during sound browsing. | Freesound key controls and local sound cleanup. |
-| `soundcloud-api` | Search queries and provider response metadata shared with SoundCloud during sound browsing. | SoundCloud client ID controls and local sound cleanup. |
-| `audius-api` | Search queries and provider response metadata shared with Audius during sound browsing. | Sound browsing controls and local cache cleanup. |
-| `ccmixter-api` | Search queries and provider response metadata shared with ccMixter during sound browsing. | Sound browsing controls and local cache cleanup. |
 | `open-meteo-api` | Approximate location shared with Open-Meteo only when weather effects are enabled. | Weather effects toggle and Android location permission. |
 | `generated-wallpaper-api` | Prompt, key-authenticated request metadata, and generated output handled through Stability when the user starts generation. | Generated wallpaper switch, disclosure, and Stability key controls. |
 | `tiktok-creator-embed` | Creator handles, video IDs, and embed metadata shared with TikTok when the Ringtones tab loads in GitHub and Obtainium builds. | Ringtones tab use, cache cleanup, and favorites removal. |

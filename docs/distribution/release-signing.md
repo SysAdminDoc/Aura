@@ -95,8 +95,8 @@ python tools\sbom_readiness_check.py --policy docs\distribution\sbom-readiness.j
 python tools\provider_credential_apk_scan.py --local-properties local.properties --apk app\build\outputs\apk\full\release\app-full-release.apk
 ```
 
-The provider credential check confirms that release variants force Pexels,
-Pixabay, Freesound, and SoundCloud values blank. Full releases also force the
+The provider credential check confirms that release variants force the Pexels
+and Pixabay values blank. Full releases also force the
 Stability value blank, while FOSS builds omit that integration entirely. Local
 debug keys can remain in the ignored `local.properties`; public builds rely on
 keys entered by the user in Settings.

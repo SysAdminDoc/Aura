@@ -262,8 +262,6 @@ class PreferencesManager @Inject constructor(
         providerCredential(ProviderCredentialKey.PEXELS, Keys.PEXELS_KEY, com.freevibe.BuildConfig.PEXELS_API_KEY)
     val pixabayApiKey: Flow<String> =
         providerCredential(ProviderCredentialKey.PIXABAY, Keys.PIXABAY_KEY, com.freevibe.BuildConfig.PIXABAY_API_KEY)
-    val freesoundApiKey: Flow<String> =
-        providerCredential(ProviderCredentialKey.FREESOUND, Keys.FREESOUND_KEY, com.freevibe.BuildConfig.FREESOUND_API_KEY)
     val generatedWallpaperProviderKey: Flow<String> = generatedWallpaperProviderKeyForFlavor()
     val generatedContentProviderEnabled: Flow<Boolean> = get(
         Keys.GENERATED_CONTENT_PROVIDER_ENABLED,
@@ -313,8 +311,6 @@ class PreferencesManager @Inject constructor(
         setProviderCredential(ProviderCredentialKey.PEXELS, Keys.PEXELS_KEY, key)
     suspend fun setPixabayKey(key: String) =
         setProviderCredential(ProviderCredentialKey.PIXABAY, Keys.PIXABAY_KEY, key)
-    suspend fun setFreesoundKey(key: String) =
-        setProviderCredential(ProviderCredentialKey.FREESOUND, Keys.FREESOUND_KEY, key)
 
     /** Re-runs active encrypted credential reads after a temporary Keystore failure. */
     fun retryProviderCredentials() {

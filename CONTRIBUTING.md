@@ -45,8 +45,6 @@ Gradle wrapper is pinned to 8.12. AGP 8.9.3. Kotlin 2.1.0. JDK 21 to run the bui
 sdk.dir=/Users/you/Library/Android/sdk
 pexels.api.key=    # optional — Aura ships a default
 pixabay.api.key=   # optional
-freesound.api.key= # optional
-soundcloud.client.id= # optional
 stability.ai.key= # optional — user-supplied for AI wallpaper generation
 signing.keystore.path=../freevibe.jks  # release builds only
 signing.keystore.password=

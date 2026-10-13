@@ -14,8 +14,6 @@ from typing import Any
 PROVIDER_KEYS = [
     {"property": "pexels.api.key", "buildConfig": "PEXELS_API_KEY"},
     {"property": "pixabay.api.key", "buildConfig": "PIXABAY_API_KEY"},
-    {"property": "freesound.api.key", "buildConfig": "FREESOUND_API_KEY"},
-    {"property": "soundcloud.client.id", "buildConfig": "SOUNDCLOUD_CLIENT_ID"},
     {"property": "stability.ai.key", "buildConfig": "STABILITY_AI_KEY"},
 ]
 

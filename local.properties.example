@@ -6,8 +6,6 @@ sdk.dir=C:/Users/<you>/AppData/Local/Android/Sdk
 # Optional provider keys. The app also lets users configure keys in Settings.
 pexels.api.key=
 pixabay.api.key=
-freesound.api.key=
-soundcloud.client.id=
 stability.ai.key=
 
 # Required only for signed release builds.

@@ -160,6 +160,35 @@ class MappersTest {
     }
 
     @Test
+    fun `saved rows from retired sound providers keep their attribution`() {
+        val saved = listOf(
+            Sound(
+                id = "fs_42", source = ContentSource.FREESOUND,
+                name = "bird chirp", previewUrl = "https://cdn.freesound.org/previews/42.mp3",
+                downloadUrl = "https://cdn.freesound.org/previews/42.mp3",
+                uploaderName = "recorder", license = "CC BY",
+                sourcePageUrl = "https://freesound.org/s/42/",
+            ),
+            Sound(
+                id = "au_7", source = ContentSource.AUDIUS,
+                name = "night drive", previewUrl = "https://audius.co/stream/7",
+                downloadUrl = "https://audius.co/stream/7",
+                uploaderName = "an artist", license = "Audius",
+                sourcePageUrl = "https://audius.co/artist/night-drive",
+            ),
+        )
+
+        saved.forEach { original ->
+            val restored = original.toFavoriteEntity().toSound()
+
+            assertEquals(original.source, restored.source)
+            assertEquals(original.uploaderName, restored.uploaderName)
+            assertEquals(original.license, restored.license)
+            assertEquals(original.sourcePageUrl, restored.sourcePageUrl)
+        }
+    }
+
+    @Test
     fun `YouTube favorites store page urls and restore with fresh resolution fields`() {
         val original = Sound(
             id = "yt_focus12345",

@@ -51,7 +51,6 @@ is available, temporarily unavailable, or needs re-entry.
 | `pexels-api-key` | Pexels | `optionalQuotaKey` | Android Keystore AES-GCM. Public BuildConfig default is blank. | Excluded. | Clear unreadable ciphertext and request re-entry. | Settings Clear, save blank, clear app data, or uninstall. | Excluded. |
 | `pixabay-api-key` | Pixabay | `optionalQuotaKey` | Android Keystore AES-GCM. Public BuildConfig default is blank. | Excluded. | Clear unreadable ciphertext and request re-entry. | Settings Clear, save blank, clear app data, or uninstall. | Excluded. |
 | `freesound-api-key` | Freesound | `optionalQuotaKey` and retired. | Encrypted only until startup cleanup. | Excluded. | Never restored. | Startup cleanup, clear app data, or uninstall. | Excluded. |
-| `soundcloud-client-id` | SoundCloud | `publicClientId` | BuildConfig only. Public default is blank. | Not app data. | Resolved from the installed build only. | Replace or uninstall the locally configured build. | Excluded and redacted from diagnostics. |
 | `stability-ai-key` | Stability AI | `paidSensitiveSecret` | Android Keystore AES-GCM. Public BuildConfig default is blank and the FOSS build has no field. | Excluded. | Clear unreadable ciphertext and request re-entry. | Settings Clear, save blank, clear app data, or uninstall. | Excluded, including generated wallpaper reports. |
 
 ## Guard

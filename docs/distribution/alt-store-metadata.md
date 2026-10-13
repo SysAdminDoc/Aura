@@ -42,8 +42,8 @@ listed in the JSON `networkServices` array. Active rows cover Reddit first,
 Wallhaven, Bing, Pexels, Pixabay, NASA APOD, Wikimedia Commons, Lemmy,
 Open-Meteo, Stability, YouTube for GitHub-channel builds, Aura collection links,
 and Firebase community surfaces. Openverse, Freesound, SoundCloud, Audius, and
-ccMixter are retained as legacy attribution only. Aura does not fetch new media
-from those legacy entries.
+ccMixter have no endpoint rows. Sounds saved from them keep their attribution,
+and Aura makes no requests to those services.
 
 ## Generated wallpaper provider key behavior
 

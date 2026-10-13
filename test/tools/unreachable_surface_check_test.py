@@ -25,7 +25,6 @@ PREFERENCES = """package com.freevibe.data.local
 
 class PreferencesManager {
     suspend fun setTheme(value: String) = Unit
-    suspend fun setFreesoundKey(value: String) = Unit
     suspend fun setRingtoneShuffleIntervalHours(value: Long) = Unit
     suspend fun setRedditFeedPresetsJson(json: String) = Unit
 }
@@ -137,9 +136,9 @@ class UnreachableSurfaceCheckTest(unittest.TestCase):
     def test_waiver_for_a_removed_setter_fails(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
             repo = Path(tmpdir)
-            write_tree(repo, preferences=PREFERENCES.replace("    suspend fun setFreesoundKey(value: String) = Unit\n", ""))
+            write_tree(repo, preferences=PREFERENCES.replace("    suspend fun setRedditFeedPresetsJson(json: String) = Unit\n", ""))
 
-            with self.assertRaisesRegex(UnreachableSurfaceError, "no longer declares: setFreesoundKey"):
+            with self.assertRaisesRegex(UnreachableSurfaceError, "no longer declares: setRedditFeedPresetsJson"):
                 validate(repo)
 
 

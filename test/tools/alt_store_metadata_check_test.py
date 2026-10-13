@@ -42,7 +42,7 @@ class AltStoreMetadataCheckTest(unittest.TestCase):
         self.assertEqual("ok", result["status"])
         self.assertEqual("com.freevibe", result["packageName"])
         self.assertEqual(14, result["permissionCount"])
-        self.assertEqual(22, result["networkServiceCount"])
+        self.assertEqual(17, result["networkServiceCount"])
 
     def test_rejects_missing_manifest_permission_row(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:

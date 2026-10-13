@@ -624,7 +624,6 @@ class SettingsViewModelTest {
             every { prefs.communityGuidelinesAcceptedVersion } returns flowOf(0)
             every { prefs.generatedContentProviderEnabled } returns flowOf(true)
             every { prefs.generatedContentDisclosureAccepted } returns flowOf(false)
-            every { prefs.freesoundApiKey } returns flowOf("")
             every { prefs.schedulerCollectionId } returns flowOf(-1L)
             every { prefs.showSketchyContent } returns flowOf(false)
             every { prefs.showNsfwContent } returns flowOf(false)
