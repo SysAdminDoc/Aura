@@ -29,6 +29,15 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.CustomAccessibilityAction
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.customActions
+import androidx.compose.ui.semantics.isTraversalGroup
+import androidx.compose.ui.semantics.selected
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.stateDescription
+import androidx.compose.ui.semantics.traversalIndex
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -275,6 +284,8 @@ fun WallpaperEditorScreen(
                             selectedOverlayId = state.selectedOverlayId,
                             onSelectOverlay = viewModel::selectOverlay,
                             onMoveOverlay = viewModel::moveOverlay,
+                            onResizeOverlay = viewModel::scaleOverlay,
+                            onDeleteOverlay = viewModel::deleteOverlay,
                         )
                     }
                     state.error != null && state.originalBitmap == null -> {
@@ -455,6 +466,8 @@ internal fun WallpaperEditorPreview(
     selectedOverlayId: Long?,
     onSelectOverlay: (Long?) -> Unit,
     onMoveOverlay: (Long, Float, Float) -> Unit,
+    onResizeOverlay: (Long, Float) -> Unit,
+    onDeleteOverlay: (Long) -> Unit,
 ) {
     BoxWithConstraints(
         modifier = modifier,
@@ -472,35 +485,62 @@ internal fun WallpaperEditorPreview(
                 .height(maxWidth / bitmapAspect.coerceAtLeast(0.01f))
         }
 
+        // One traversal group, so a screen reader reads the picture, then its layers, then the controls.
         Box(
-            modifier = imageModifier,
+            modifier = imageModifier.semantics { isTraversalGroup = true },
             contentAlignment = Alignment.Center,
         ) {
             Image(
                 bitmap = bitmap,
                 contentDescription = contentDescription,
                 contentScale = ContentScale.Fit,
-                modifier = Modifier.fillMaxSize(),
+                modifier = Modifier
+                    .fillMaxSize()
+                    .semantics { traversalIndex = -1f },
             )
             OverlayLayerPreview(
                 overlays = overlays,
                 selectedOverlayId = selectedOverlayId,
                 onSelectOverlay = onSelectOverlay,
                 onMoveOverlay = onMoveOverlay,
+                onResizeOverlay = onResizeOverlay,
+                onDeleteOverlay = onDeleteOverlay,
                 modifier = Modifier.matchParentSize(),
             )
         }
     }
 }
 
+/** Share of the picture one Move step covers, for the buttons and the screen-reader actions. */
+internal const val OVERLAY_MOVE_STEP = 0.04f
+
+/** Scale one Bigger or Smaller step adds or removes. */
+internal const val OVERLAY_SCALE_STEP = 0.25f
+
+/**
+ * Layers drawn over the preview. Dragging is the fast path; each layer also names itself, says
+ * where it sits and how big it is, and offers Move, resize and Delete actions, so TalkBack and
+ * Switch Access users can do everything a drag does.
+ */
 @Composable
 private fun OverlayLayerPreview(
     overlays: List<WallpaperOverlayLayer>,
     selectedOverlayId: Long?,
     onSelectOverlay: (Long?) -> Unit,
     onMoveOverlay: (Long, Float, Float) -> Unit,
+    onResizeOverlay: (Long, Float) -> Unit,
+    onDeleteOverlay: (Long) -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val selectLabel = stringResource(R.string.editor_wallpaper_layers_select)
+    val moveLeft = stringResource(R.string.editor_wallpaper_layers_move_left)
+    val moveRight = stringResource(R.string.editor_wallpaper_layers_move_right)
+    val moveUp = stringResource(R.string.editor_wallpaper_layers_move_up)
+    val moveDown = stringResource(R.string.editor_wallpaper_layers_move_down)
+    val bigger = stringResource(R.string.editor_wallpaper_layers_bigger)
+    val smaller = stringResource(R.string.editor_wallpaper_layers_smaller)
+    val deleteLabel = stringResource(R.string.editor_wallpaper_layers_delete)
+    val defaultText = stringResource(R.string.editor_wallpaper_default_overlay_text)
     BoxWithConstraints(modifier = modifier) {
         val density = LocalDensity.current
         val widthPx = constraints.maxWidth.toFloat().coerceAtLeast(1f)
@@ -519,6 +559,18 @@ private fun OverlayLayerPreview(
             }.coerceAtLeast(48f)
             val baseWidth = with(density) { baseWidthPx.toDp() }
             val baseHeight = with(density) { baseHeightPx.toDp() }
+            val overlayLabel = when (layer.type) {
+                WallpaperOverlayType.TEXT ->
+                    stringResource(R.string.editor_wallpaper_layers_text_layer_cd, layer.text.ifBlank { defaultText })
+                WallpaperOverlayType.STICKER ->
+                    stringResource(R.string.editor_wallpaper_layers_sticker_layer_cd, stringResource(stickerLabel(layer.sticker)))
+            }
+            val geometry = stringResource(
+                R.string.editor_wallpaper_layers_geometry,
+                (layer.x * 100f).roundToInt(),
+                (layer.y * 100f).roundToInt(),
+                String.format(java.util.Locale.ROOT, "%.2fx", layer.scale),
+            )
 
             Box(
                 modifier = Modifier
@@ -558,16 +610,32 @@ private fun OverlayLayerPreview(
                             },
                         )
                     }
-                    .clickable { onSelectOverlay(layer.id) },
+                    .clickable(onClickLabel = selectLabel) { onSelectOverlay(layer.id) }
+                    .semantics(mergeDescendants = true) {
+                        contentDescription = overlayLabel
+                        stateDescription = geometry
+                        selected = isSelected
+                        customActions = listOf(
+                            CustomAccessibilityAction(moveLeft) { onMoveOverlay(layer.id, -OVERLAY_MOVE_STEP, 0f); true },
+                            CustomAccessibilityAction(moveRight) { onMoveOverlay(layer.id, OVERLAY_MOVE_STEP, 0f); true },
+                            CustomAccessibilityAction(moveUp) { onMoveOverlay(layer.id, 0f, -OVERLAY_MOVE_STEP); true },
+                            CustomAccessibilityAction(moveDown) { onMoveOverlay(layer.id, 0f, OVERLAY_MOVE_STEP); true },
+                            CustomAccessibilityAction(bigger) { onResizeOverlay(layer.id, OVERLAY_SCALE_STEP); true },
+                            CustomAccessibilityAction(smaller) { onResizeOverlay(layer.id, -OVERLAY_SCALE_STEP); true },
+                            CustomAccessibilityAction(deleteLabel) { onDeleteOverlay(layer.id); true },
+                        )
+                    },
                 contentAlignment = Alignment.Center,
             ) {
                 when (layer.type) {
                     WallpaperOverlayType.TEXT -> {
                         Text(
-                            text = layer.text.ifBlank { stringResource(R.string.editor_wallpaper_default_overlay_text) },
+                            text = layer.text.ifBlank { defaultText },
                             color = Color(layer.color),
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis,
+                            // The layer's description already carries the text; don't read it twice.
+                            modifier = Modifier.clearAndSetSemantics {},
                             style = TextStyle(
                                 fontSize = textFontSize,
                                 fontWeight = FontWeight.Bold,
@@ -597,6 +665,12 @@ private fun OverlayLayerPreview(
     }
 }
 
+private fun stickerLabel(sticker: WallpaperSticker): Int = when (sticker) {
+    WallpaperSticker.STAR -> R.string.editor_wallpaper_layers_sticker_star
+    WallpaperSticker.HEART -> R.string.editor_wallpaper_layers_sticker_heart
+    WallpaperSticker.SPARKLE -> R.string.editor_wallpaper_layers_sticker_sparkle
+}
+
 @Composable
 private fun WallpaperLayerControls(
     state: EditorState,
@@ -605,12 +679,12 @@ private fun WallpaperLayerControls(
     val enabled = state.isSourceReady && !state.isApplying && !state.isExporting && !state.isPreparingParallax
     val selectedLayer = state.overlayLayers.firstOrNull { it.id == state.selectedOverlayId }
     val colorOptions = listOf(
-        0xFFFFFFFF.toInt(),
-        0xFF111111.toInt(),
-        0xFFFFD54F.toInt(),
-        0xFF4FC3F7.toInt(),
-        0xFFFF5C8A.toInt(),
-        0xFF81C784.toInt(),
+        0xFFFFFFFF.toInt() to R.string.editor_wallpaper_layers_color_white,
+        0xFF111111.toInt() to R.string.editor_wallpaper_layers_color_black,
+        0xFFFFD54F.toInt() to R.string.editor_wallpaper_layers_color_yellow,
+        0xFF4FC3F7.toInt() to R.string.editor_wallpaper_layers_color_blue,
+        0xFFFF5C8A.toInt() to R.string.editor_wallpaper_layers_color_pink,
+        0xFF81C784.toInt() to R.string.editor_wallpaper_layers_color_green,
     )
 
     Column(
@@ -744,10 +818,13 @@ private fun WallpaperLayerControls(
                 .horizontalScroll(rememberScrollState()),
             horizontalArrangement = Arrangement.spacedBy(8.dp),
         ) {
-            colorOptions.forEach { color ->
+            colorOptions.forEach { (color, nameRes) ->
+                val colorName = stringResource(nameRes)
                 FilterChip(
                     selected = selectedLayer.color == color,
                     onClick = { viewModel.updateSelectedOverlayColor(color) },
+                    // The swatch is the only content, so the chip needs a spoken name.
+                    modifier = Modifier.semantics { contentDescription = colorName },
                     label = {
                         Box(
                             Modifier
@@ -790,19 +867,25 @@ private fun WallpaperLayerControls(
             horizontalArrangement = Arrangement.Center,
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            IconButton(onClick = { viewModel.moveOverlay(selectedLayer.id, -0.04f, 0f) }) {
+            IconButton(onClick = { viewModel.scaleOverlay(selectedLayer.id, -OVERLAY_SCALE_STEP) }) {
+                Icon(Icons.Default.ZoomOut, stringResource(R.string.editor_wallpaper_layers_smaller))
+            }
+            IconButton(onClick = { viewModel.moveOverlay(selectedLayer.id, -OVERLAY_MOVE_STEP, 0f) }) {
                 Icon(Icons.AutoMirrored.Filled.KeyboardArrowLeft, stringResource(R.string.editor_wallpaper_layers_move_left))
             }
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                IconButton(onClick = { viewModel.moveOverlay(selectedLayer.id, 0f, -0.04f) }) {
+                IconButton(onClick = { viewModel.moveOverlay(selectedLayer.id, 0f, -OVERLAY_MOVE_STEP) }) {
                     Icon(Icons.Default.KeyboardArrowUp, stringResource(R.string.editor_wallpaper_layers_move_up))
                 }
-                IconButton(onClick = { viewModel.moveOverlay(selectedLayer.id, 0f, 0.04f) }) {
+                IconButton(onClick = { viewModel.moveOverlay(selectedLayer.id, 0f, OVERLAY_MOVE_STEP) }) {
                     Icon(Icons.Default.KeyboardArrowDown, stringResource(R.string.editor_wallpaper_layers_move_down))
                 }
             }
-            IconButton(onClick = { viewModel.moveOverlay(selectedLayer.id, 0.04f, 0f) }) {
+            IconButton(onClick = { viewModel.moveOverlay(selectedLayer.id, OVERLAY_MOVE_STEP, 0f) }) {
                 Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, stringResource(R.string.editor_wallpaper_layers_move_right))
+            }
+            IconButton(onClick = { viewModel.scaleOverlay(selectedLayer.id, OVERLAY_SCALE_STEP) }) {
+                Icon(Icons.Default.ZoomIn, stringResource(R.string.editor_wallpaper_layers_bigger))
             }
         }
     }
@@ -833,6 +916,11 @@ private fun OverlaySlider(
             value = value,
             onValueChange = onValueChange,
             valueRange = valueRange,
+            // The label and value sit in a separate row, so give the slider its own name and reading.
+            modifier = Modifier.semantics {
+                contentDescription = label
+                stateDescription = valueLabel
+            },
             colors = SliderDefaults.colors(
                 thumbColor = MaterialTheme.colorScheme.primary,
                 activeTrackColor = MaterialTheme.colorScheme.primary,

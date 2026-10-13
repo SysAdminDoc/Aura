@@ -300,16 +300,6 @@ Evidence for every item below is in RESEARCH.md (2026-09-04 pass).
   Effort: M
 
 
-- [ ] P2 — Make wallpaper-editor overlays operable and announced
-  Category: a11y
-  Where: app/src/main/java/com/freevibe/ui/screens/editor/WallpaperEditorScreen.kt:520-590,735-765,809-839
-  Problem: Overlay handles rely on precise drag/tap interaction and expose incomplete semantics. TalkBack cannot identify the active overlay, its bounds, or equivalent move/resize actions.
-  Evidence: Production manipulation uses pointer input/custom drawing without adjustable or custom actions. The accessibility gate does not exercise this editor.
-  Fix: Add selected overlay semantics, named Move/Resize/Delete actions, coarse step controls, and focus order between canvas, overlays, and properties.
-  Acceptance: A TalkBack-only test selects, moves, resizes, and deletes overlays; focus never lands on an unlabeled handle; exported geometry is unchanged.
-  Confidence: Verified
-  Effort: M
-
 - [ ] P2 — Add loading, first-frame, and decode-failure states to video crop
   Category: ux
   Where: app/src/main/java/com/freevibe/ui/screens/videowallpapers/VideoCropScreen.kt:139-147,185-236,403-490

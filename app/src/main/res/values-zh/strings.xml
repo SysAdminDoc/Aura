@@ -357,11 +357,24 @@
     <string name="editor_wallpaper_layers_color">颜色</string>
     <string name="editor_wallpaper_layers_scale">比例</string>
     <string name="editor_wallpaper_layers_rotation">旋转</string>
-    <string name="editor_wallpaper_layers_move">移动</string>
+    <string name="editor_wallpaper_layers_move">移动和缩放</string>
     <string name="editor_wallpaper_layers_move_left">向左移动图层</string>
     <string name="editor_wallpaper_layers_move_right">向右移动图层</string>
     <string name="editor_wallpaper_layers_move_up">向上移动图层</string>
     <string name="editor_wallpaper_layers_move_down">向下移动图层</string>
+    <string name="editor_wallpaper_layers_text_layer_cd">文字图层，%1$s</string>
+    <string name="editor_wallpaper_layers_sticker_layer_cd">%1$s贴纸图层</string>
+    <string name="editor_wallpaper_layers_geometry">距左 %1$d%%，距顶 %2$d%%，缩放 %3$s</string>
+    <string name="editor_wallpaper_layers_select">选择图层</string>
+    <string name="editor_wallpaper_layers_bigger">放大图层</string>
+    <string name="editor_wallpaper_layers_smaller">缩小图层</string>
+    <string name="editor_wallpaper_layers_delete">删除图层</string>
+    <string name="editor_wallpaper_layers_color_white">白色</string>
+    <string name="editor_wallpaper_layers_color_black">黑色</string>
+    <string name="editor_wallpaper_layers_color_yellow">黄色</string>
+    <string name="editor_wallpaper_layers_color_blue">蓝色</string>
+    <string name="editor_wallpaper_layers_color_pink">粉色</string>
+    <string name="editor_wallpaper_layers_color_green">绿色</string>
 
     <!-- Wallpaper crop -->
     <string name="editor_crop_title">裁剪 &amp; 位置</string>

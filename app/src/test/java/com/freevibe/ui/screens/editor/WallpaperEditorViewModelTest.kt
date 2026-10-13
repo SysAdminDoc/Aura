@@ -137,6 +137,27 @@ class WallpaperEditorViewModelTest {
     }
 
     @Test
+    fun `step resize and delete by id leave the other layer selected`() = runTest {
+        viewModel.addTextOverlay("Keep")
+        val keep = viewModel.state.value.overlayLayers.single().id
+        viewModel.addStickerOverlay(WallpaperSticker.STAR)
+        val star = viewModel.state.value.overlayLayers.last().id
+
+        viewModel.scaleOverlay(star, 0.25f)
+        assertEquals(1.25f, viewModel.state.value.overlayLayers.single { it.id == star }.scale, 0.001f)
+        viewModel.scaleOverlay(star, 5f)
+        assertEquals("a step can't pass the slider's maximum", 2.25f, viewModel.state.value.overlayLayers.single { it.id == star }.scale, 0.001f)
+
+        viewModel.selectOverlay(keep)
+        viewModel.deleteOverlay(star)
+        assertEquals(listOf(keep), viewModel.state.value.overlayLayers.map { it.id })
+        assertEquals(keep, viewModel.state.value.selectedOverlayId)
+
+        viewModel.undoOverlayEdit()
+        assertEquals(listOf(keep, star), viewModel.state.value.overlayLayers.map { it.id })
+    }
+
+    @Test
     fun `sticker overlay stores style scale rotation and color`() = runTest {
         viewModel.addStickerOverlay(WallpaperSticker.HEART)
         viewModel.updateSelectedSticker(WallpaperSticker.SPARKLE)

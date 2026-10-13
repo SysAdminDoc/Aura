@@ -498,6 +498,11 @@ class WallpaperEditorViewModel @Inject constructor(
         updateOverlay(id) { layer -> layer.copy(scale = value.coerceIn(0.5f, 2.25f)) }
     }
 
+    /** One step bigger or smaller, for the resize buttons and the screen-reader actions. */
+    fun scaleOverlay(id: Long, delta: Float) {
+        updateOverlay(id) { layer -> layer.copy(scale = (layer.scale + delta).coerceIn(0.5f, 2.25f)) }
+    }
+
     fun updateSelectedOverlayRotation(value: Float) {
         val id = _state.value.selectedOverlayId ?: return
         updateOverlay(id) { layer -> layer.copy(rotationDegrees = value.coerceIn(-180f, 180f)) }
@@ -514,15 +519,19 @@ class WallpaperEditorViewModel @Inject constructor(
     }
 
     fun deleteSelectedOverlay() {
+        deleteOverlay(_state.value.selectedOverlayId ?: return)
+    }
+
+    /** Deletes [id]; the selection moves to the newest layer only when [id] was the selected one. */
+    fun deleteOverlay(id: Long) {
         val state = _state.value
-        val selectedId = state.selectedOverlayId ?: return
-        if (state.overlayLayers.none { it.id == selectedId }) return
+        if (state.overlayLayers.none { it.id == id }) return
         saveOverlayUndoSnapshot(state)
-        val remaining = state.overlayLayers.filterNot { it.id == selectedId }
+        val remaining = state.overlayLayers.filterNot { it.id == id }
         _state.update {
             it.copy(
                 overlayLayers = remaining,
-                selectedOverlayId = remaining.lastOrNull()?.id,
+                selectedOverlayId = if (state.selectedOverlayId == id) remaining.lastOrNull()?.id else state.selectedOverlayId,
                 canUndoOverlay = overlayUndoStack.isNotEmpty(),
             )
         }

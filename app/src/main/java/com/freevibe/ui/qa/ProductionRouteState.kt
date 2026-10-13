@@ -395,6 +395,8 @@ private fun WallpaperEditorState() {
                 selectedOverlayId = null,
                 onSelectOverlay = {},
                 onMoveOverlay = { _, _, _ -> },
+                onResizeOverlay = { _, _ -> },
+                onDeleteOverlay = {},
             )
             Surface(
                 color = Color.Black.copy(alpha = 0.62f),
