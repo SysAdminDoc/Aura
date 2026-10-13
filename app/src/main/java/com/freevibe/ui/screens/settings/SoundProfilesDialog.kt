@@ -55,8 +55,8 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalLocale
 import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.LiveRegionMode
@@ -68,7 +68,6 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.core.content.IntentCompat
-import androidx.core.os.ConfigurationCompat
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
@@ -94,7 +93,6 @@ import com.freevibe.ui.theme.AuraShapes
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.util.Calendar
-import java.util.Locale
 import java.util.UUID
 
 private const val MAX_PROFILE_NAME_LENGTH = 40
@@ -604,8 +602,7 @@ private fun soundProfileSoundsText(profile: SoundProfile): String {
 /** Joins names the way the person's language does ("A, B and C"), with no English glue in code. */
 @Composable
 private fun formatNameList(names: List<String>): String {
-    val locale = ConfigurationCompat.getLocales(LocalConfiguration.current)[0] ?: Locale.getDefault()
-    return ListFormatter.getInstance(locale).format(names)
+    return ListFormatter.getInstance(LocalLocale.current.platformLocale).format(names)
 }
 
 /** The hour in the phone's own 12 or 24 hour style. 24 is midnight at the end of the day. */

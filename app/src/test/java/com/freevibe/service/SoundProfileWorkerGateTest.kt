@@ -1,7 +1,9 @@
 package com.freevibe.service
 
+import android.app.AppOpsManager
 import android.content.Context
 import android.net.Uri
+import android.os.Process
 import androidx.test.core.app.ApplicationProvider
 import androidx.work.Configuration
 import androidx.work.ExistingPeriodicWorkPolicy
@@ -27,7 +29,7 @@ import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
-import org.robolectric.shadows.ShadowSettings
+import org.robolectric.Shadows.shadowOf
 import java.util.concurrent.TimeUnit
 
 /** The 15 minute worker only stays scheduled while a profile can change a sound. */
@@ -66,12 +68,12 @@ class SoundProfileWorkerGateTest {
         }
         prefs.setSoundProfileLastAppliedId("")
         coEvery { systemSounds.write(any(), any()) } returns Unit
-        ShadowSettings.setCanWrite(true)
+        allowSystemWrites(AppOpsManager.MODE_ALLOWED)
     }
 
     @After
     fun tearDown(): Unit = runBlocking {
-        ShadowSettings.setCanWrite(false)
+        allowSystemWrites(AppOpsManager.MODE_ERRORED)
         restore()
     }
 
@@ -131,6 +133,12 @@ class SoundProfileWorkerGateTest {
 
         assertEquals(WorkInfo.State.ENQUEUED, periodicState())
         assertTrue(uniqueWork("sound_profile_now").isNotEmpty())
+    }
+
+    /** Settings.System.canWrite reads the write-settings app op, which Robolectric lets a test set. */
+    private fun allowSystemWrites(mode: Int) {
+        shadowOf(context.getSystemService(AppOpsManager::class.java))
+            .setMode(AppOpsManager.OPSTR_WRITE_SETTINGS, Process.myUid(), context.packageName, mode)
     }
 
     /**
