@@ -3,6 +3,10 @@ package com.freevibe.service
 import android.content.Context
 import android.net.Uri
 import androidx.room.Room
+import androidx.work.Configuration
+import androidx.work.WorkManager
+import androidx.work.testing.SynchronousExecutor
+import androidx.work.testing.WorkManagerTestInitHelper
 import com.freevibe.data.local.FreeVibeDatabase
 import com.freevibe.data.local.PreferencesManager
 import com.freevibe.data.model.FitCanvasMode
@@ -38,7 +42,9 @@ import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
+import org.json.JSONObject
 import java.io.File
 import org.junit.After
 import org.junit.Assert.assertEquals
@@ -695,6 +701,26 @@ class LibraryImportPlanTest {
         assertEquals("original-profiles", profilesJson.value)
         assertEquals("original-pools", soundShufflePoolsJson.value)
         assertEquals(originalFitCanvasPreferences, fitCanvasPreferences)
+    }
+
+    @Test
+    fun `a restored 24H pack gets its worker back when the switch is on`() = runTest {
+        WorkManagerTestInitHelper.initializeTestWorkManager(
+            context,
+            Configuration.Builder().setExecutor(SynchronousExecutor()).build(),
+        )
+        every { prefs.wallpaperPackEnabled } returns flowOf(true)
+        val pack = serializePack(
+            WallpaperPack(id = "main", name = "Mine", slots = listOf(DaypartSlot(Daypart.NIGHT, "content://a"))),
+        )
+        val plan = exporter.buildPlan(payload(extra = ""","wallpaperPackJson":${JSONObject.quote(pack)}"""))
+
+        exporter.applyPlan(plan)
+
+        assertEquals(pack, packJson.value)
+        assertTrue(
+            WorkManager.getInstance(context).getWorkInfosForUniqueWork(WallpaperPackWorker.WORK_NAME).get().isNotEmpty(),
+        )
     }
 
     @Test

@@ -893,6 +893,29 @@ class LibraryExporter @Inject constructor(
                 android.util.Log.w("LibraryExporter", "Sound pool schedules weren't restored: ${e.javaClass.simpleName}")
             }
         }
+        resyncRestoredSchedules(plan)
+    }
+
+    /**
+     * A restored 24H pack or sound profile list only takes effect once its worker matches it. The
+     * import already landed, so a schedule that fails to follow is put right by the next edit in Settings.
+     */
+    private suspend fun resyncRestoredSchedules(plan: LibraryImportPlan) {
+        try {
+            if (plan.wallpaperPackJson.isNotBlank()) {
+                syncWallpaperPackSchedule(context, prefs.wallpaperPackEnabled.first(), plan.wallpaperPackJson)
+            }
+            if (plan.soundProfilesJson.isNotBlank()) {
+                SoundProfileWorker.sync(
+                    context,
+                    soundProfilesNeedWorker(prefs.soundProfilesEnabled.first(), parseProfiles(plan.soundProfilesJson)),
+                )
+            }
+        } catch (e: kotlinx.coroutines.CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            android.util.Log.w("LibraryExporter", "Pack and profile schedules weren't resynced: ${e.javaClass.simpleName}")
+        }
     }
 
     private suspend fun exportCollections(

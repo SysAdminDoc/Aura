@@ -130,13 +130,6 @@ Evidence for every item below is in RESEARCH.md (2026-09-04 pass).
 
 ### P2
 
-- [ ] P2 — Back up and restore contact-to-ringtone assignments
-  Why: ringtone assignments disappear on reset, restore, and device change, and the only existing remedy anywhere is a hand-written Tasker script. Aura already owns the backup format, so this is a differentiator no competitor has.
-  Evidence: https://old.reddit.com/r/tasker/comments/sbz15u/ documents the schema people rebuild by hand (`custom_ringtone, display_name` from `content://com.android.contacts/contacts`) and the trap — "Do not save the actual `_id` of the Contract or of the Ringtone File, because after a device reset… We change device"; `LibraryExporter.kt` and `ImportPayloadValidation.kt` already carry favorites, collections, searches, wallpaper packs, and sound profiles; `docs/data/export-format.json` defines the schema.
-  Touches: `app/src/main/java/com/freevibe/service/LibraryExporter.kt`, `app/src/main/java/com/freevibe/service/ContactRingtoneService.kt`, `app/src/main/java/com/freevibe/service/LibraryImportPlan.kt`, `app/src/main/java/com/freevibe/service/ImportPayloadValidation.kt`, `docs/data/export-format.json`, `tools/export_format_check.py`, tests.
-  Acceptance: an export records each assignment by contact lookup key and display name plus the sound's own identity, never a raw contact `_id` or a MediaStore row id; an import matches contacts by lookup key, falls back to display name, and reports every entry it could not match instead of failing the whole import; the export-format gate covers the new section; tests cover a matched restore, a changed lookup key, a missing contact, and a missing sound.
-  Complexity: M
-
 - [ ] P2 — Pool and preload the video-feed player
   Why: every scroll stop in the video feed constructs, prepares, and releases an ExoPlayer, so the user sees "Preparing preview" on each card instead of a preview that is already warm. Media3 1.11.0 is already pinned and ships the pieces for this exact pattern.
   Evidence: `VideoWallpapersScreen.kt:952` builds `ExoPlayer.Builder(context)…prepare(); play()` inside `remember(item.id, streamUrl)` and releases it in `onDispose`; only one card previews at a time (`VideoWallpapersScreen.kt:569`, `activePreviewId`); Media3 1.11.0 added `PlayerPool` and `rememberPooledPlayer` in `media3-ui-compose` for preloading in a sliding-window UI, plus `DefaultPreloadManager` and `ExoPlayer.Builder.enablePerStreamMediaProgression()` (https://developer.android.com/jetpack/androidx/releases/media3).
@@ -291,6 +284,13 @@ Remainders of items closed in the 2026-09-30 drain whose full acceptance did not
   Complexity: S
 
 ### P3
+
+- [ ] P3 — Carry contact ringtones in the scheduled auto backup and let a remembered one be forgotten
+  Why: the manual library export now carries contact ringtones, but the scheduled auto backup goes through `FavoritesExporter` and leaves them out, so someone who relies on the automatic file loses them anyway. Aura's list of remembered contact ringtones also has no way to drop an entry, so a contact whose ringtone was later changed in the Contacts app keeps exporting the old sound.
+  Evidence: `ContactRingtoneBackupManager.exportEntries()` is called only from `LibraryExporter.exportLibrary`; `FavoritesExporter` has no `contactRingtones` section; the list in `PreferencesManager.contactRingtoneLedgerJson` is written by `ContactRingtoneBackupManager.record` and never trimmed; `ContactRingtoneService.clearContactRingtone` exists but no screen calls it.
+  Touches: `app/src/main/java/com/freevibe/service/FavoritesExporter.kt`, `app/src/main/java/com/freevibe/service/ContactRingtoneBackup.kt`, `app/src/main/java/com/freevibe/ui/screens/sounds/ContactPickerScreen.kt`, `docs/data/export-format.json`, tests.
+  Acceptance: the scheduled backup file carries the same `contactRingtones` section as the manual export and restores through the same path; the contact picker can clear a contact's ringtone and that removes it from the remembered list; a restore on a phone with two same-named contacts is seen changing neither on a real device.
+  Complexity: S
 
 - [ ] P3 — Cover the AV1 branches of the video wallpaper feed and the fragmented-MP4 fallback on device
   Why: `VideoWallpapersViewModelTest` compiles again but never exercises `Av1CodecSupport` returning true or false, and the MediaExtractor duration fallback for fragmented MP4 has only a JVM test. When neither the retriever nor MediaExtractor reports a duration, the too-short check is skipped entirely, so a short clip with no duration metadata gets through. HLS sources are never rewrapped (`RedditRssParser.kt`, `VideoWallpapersViewModel.kt`).
