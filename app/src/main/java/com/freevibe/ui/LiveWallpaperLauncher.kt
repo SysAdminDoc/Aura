@@ -125,6 +125,28 @@ internal fun liveWallpaperBlockedMessage(
     }
 }
 
+/** Opens the picker for [serviceClass] and returns the line to show: how to finish, or why it can't start. */
+internal fun launchLiveWallpaperWithFeedback(
+    context: Context,
+    serviceClass: Class<out WallpaperService>,
+    tag: String,
+    source: LiveWallpaperSource,
+    @StringRes directRes: Int,
+    @StringRes chooserRes: Int,
+): String = when (val launch = launchLiveWallpaperPicker(context, ComponentName(context, serviceClass), tag)) {
+    is LiveWallpaperLaunchResult.Opened ->
+        context.getString(if (launch.mode == LiveWallpaperLaunchMode.DIRECT) directRes else chooserRes)
+    is LiveWallpaperLaunchResult.Blocked -> liveWallpaperBlockedMessage(context, launch.reason, source)
+}
+
+/** Null when the picker can be opened for [serviceClass], else the reason to show instead of starting. */
+internal fun liveWallpaperBlockMessage(
+    context: Context,
+    serviceClass: Class<out WallpaperService>,
+    source: LiveWallpaperSource,
+): String? = liveWallpaperBlock(context, ComponentName(context, serviceClass))
+    ?.let { liveWallpaperBlockedMessage(context, it, source) }
+
 private fun logLaunchFailure(message: String, error: Exception) {
     if (com.freevibe.BuildConfig.DEBUG) {
         Log.w("LiveWallpaper", message, error)

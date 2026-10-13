@@ -1,7 +1,6 @@
 package com.freevibe.ui.screens.settings
 
 import android.Manifest
-import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
@@ -47,13 +46,10 @@ import com.freevibe.service.VideoWallpaperSelectionResult
 import com.freevibe.service.VideoWallpaperService
 import com.freevibe.service.WeatherUpdateWorker
 import com.freevibe.service.videoWallpaperMimeTypes
-import com.freevibe.ui.LiveWallpaperLaunchMode
-import com.freevibe.ui.LiveWallpaperLaunchResult
 import com.freevibe.ui.LiveWallpaperSource
 import com.freevibe.ui.components.AuraSnackbarHost
-import com.freevibe.ui.launchLiveWallpaperPicker
-import com.freevibe.ui.liveWallpaperBlock
-import com.freevibe.ui.liveWallpaperBlockedMessage
+import com.freevibe.ui.launchLiveWallpaperWithFeedback
+import com.freevibe.ui.liveWallpaperBlockMessage
 import com.freevibe.ui.navigation.Screen
 import kotlinx.coroutines.launch
 
@@ -167,23 +163,11 @@ fun SettingsScreen(
     LaunchedEffect(settingsState.parallaxGalleryResult) {
         when (val result = settingsState.parallaxGalleryResult) {
             ParallaxGalleryResult.Ready -> {
-                val launch = launchLiveWallpaperPicker(
-                    context = context,
-                    serviceComponent = ComponentName(context, ParallaxWallpaperService::class.java),
-                    tag = "SettingsParallaxGallery",
-                )
                 showSettingsFeedback(
-                    when (launch) {
-                        is LiveWallpaperLaunchResult.Opened -> resources.getString(
-                            if (launch.mode == LiveWallpaperLaunchMode.DIRECT) {
-                                R.string.settings_feedback_parallax_direct
-                            } else {
-                                R.string.settings_feedback_parallax_chooser
-                            },
-                        )
-                        is LiveWallpaperLaunchResult.Blocked ->
-                            liveWallpaperBlockedMessage(context, launch.reason, LiveWallpaperSource.IMAGE)
-                    },
+                    launchLiveWallpaperWithFeedback(
+                        context, ParallaxWallpaperService::class.java, "SettingsParallaxGallery", LiveWallpaperSource.IMAGE,
+                        R.string.settings_feedback_parallax_direct, R.string.settings_feedback_parallax_chooser,
+                    ),
                 )
                 viewModel.clearParallaxGalleryResult()
             }
@@ -198,23 +182,11 @@ fun SettingsScreen(
     LaunchedEffect(settingsState.videoWallpaperSelectionResult) {
         when (val result = settingsState.videoWallpaperSelectionResult) {
             VideoWallpaperSelectionResult.Ready -> {
-                val launch = launchLiveWallpaperPicker(
-                    context = context,
-                    serviceComponent = ComponentName(context, VideoWallpaperService::class.java),
-                    tag = "SettingsVideoWallpaper",
-                )
                 showSettingsFeedback(
-                    when (launch) {
-                        is LiveWallpaperLaunchResult.Opened -> resources.getString(
-                            if (launch.mode == LiveWallpaperLaunchMode.DIRECT) {
-                                R.string.settings_feedback_video_direct
-                            } else {
-                                R.string.settings_feedback_video_chooser
-                            },
-                        )
-                        is LiveWallpaperLaunchResult.Blocked ->
-                            liveWallpaperBlockedMessage(context, launch.reason, LiveWallpaperSource.VIDEO)
-                    },
+                    launchLiveWallpaperWithFeedback(
+                        context, VideoWallpaperService::class.java, "SettingsVideoWallpaper", LiveWallpaperSource.VIDEO,
+                        R.string.settings_feedback_video_direct, R.string.settings_feedback_video_chooser,
+                    ),
                 )
                 viewModel.clearVideoWallpaperSelectionResult()
             }
@@ -345,22 +317,16 @@ fun SettingsScreen(
                 onManageLocalWallpaperFolders = { showLocalWallpaperCatalog = true },
                 // Both rows check first, so nobody picks a file for a wallpaper the phone can't show.
                 onPickVideoWallpaper = {
-                    val block = liveWallpaperBlock(context, ComponentName(context, VideoWallpaperService::class.java))
-                    if (block == null) {
-                        videoPickerLauncher.launch(videoWallpaperMimeTypes())
-                    } else {
-                        showSettingsFeedback(liveWallpaperBlockedMessage(context, block, LiveWallpaperSource.VIDEO))
-                    }
+                    liveWallpaperBlockMessage(context, VideoWallpaperService::class.java, LiveWallpaperSource.VIDEO)
+                        ?.let(::showSettingsFeedback)
+                        ?: videoPickerLauncher.launch(videoWallpaperMimeTypes())
                 },
                 onPickParallaxImage = {
-                    val block = liveWallpaperBlock(context, ComponentName(context, ParallaxWallpaperService::class.java))
-                    if (block == null) {
-                        parallaxGalleryLauncher.launch(
+                    liveWallpaperBlockMessage(context, ParallaxWallpaperService::class.java, LiveWallpaperSource.IMAGE)
+                        ?.let(::showSettingsFeedback)
+                        ?: parallaxGalleryLauncher.launch(
                             PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly),
                         )
-                    } else {
-                        showSettingsFeedback(liveWallpaperBlockedMessage(context, block, LiveWallpaperSource.IMAGE))
-                    }
                 },
                 onCategoriesClick = navigation.onCategoriesClick,
                 onCollectionsClick = navigation.onCollectionsClick,
