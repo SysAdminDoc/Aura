@@ -115,6 +115,7 @@ class LibraryImportPlanTest {
         coEvery { prefs.updateContactRingtoneLedgerJson(any()) } answers {
             contactLedgerJson.value = firstArg<(String) -> String>().invoke(contactLedgerJson.value)
         }
+        every { prefs.autoWallpaperRequiresWiFiOnly } returns flowOf(false)
         exporter = LibraryExporter(
             context = context,
             database = db,
@@ -130,6 +131,7 @@ class LibraryImportPlanTest {
                 moshi = Moshi.Builder().build(),
                 writer = contactWriter,
                 sounds = contactSounds,
+                networkGate = RotationNetworkGate { RotationNetworkState(connected = true, metered = false) },
             ),
         )
     }
@@ -1027,6 +1029,7 @@ class LibraryImportPlanTest {
         val grace = contactWriter.add("key-from-the-new-phone", "Grace Hopper")
         val firstSam = contactWriter.add("key-sam-one", "Sam Lee")
         val secondSam = contactWriter.add("key-sam-two", "Sam Lee")
+        val bob = contactWriter.add("key-bob", "Bob")
         contactSounds.onPhone["fs_100"] = savedRingtone
         val file = backupFile(
             payload(
@@ -1059,6 +1062,7 @@ class LibraryImportPlanTest {
             assertEquals("the changed lookup key fell back to the name", savedRingtone, grace.ringtone)
             assertNull(firstSam.ringtone)
             assertNull(secondSam.ringtone)
+            assertNull(bob.ringtone)
             assertEquals("the rest of the backup is restored", 1, db.favoriteDao().count().first())
             // favorite(1) + the two contact ringtones that were set
             assertEquals(3, outcome.written)

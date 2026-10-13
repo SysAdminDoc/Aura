@@ -445,6 +445,10 @@ internal class SettingsDiagnosticsDelegate(
                             R.plurals.settings_library_contact_ringtones_ambiguous
                         ContactRingtoneRestoreStatus.MISSING_SOUND ->
                             R.plurals.settings_library_contact_ringtones_missing_sound
+                        ContactRingtoneRestoreStatus.WAITING_FOR_WIFI ->
+                            R.plurals.settings_library_contact_ringtones_waiting_for_wifi
+                        ContactRingtoneRestoreStatus.DOWNLOAD_LIMIT ->
+                            R.plurals.settings_library_contact_ringtones_download_limit
                         ContactRingtoneRestoreStatus.PERMISSION_MISSING ->
                             R.plurals.settings_library_contact_ringtones_no_permission
                         ContactRingtoneRestoreStatus.WRITE_FAILED ->

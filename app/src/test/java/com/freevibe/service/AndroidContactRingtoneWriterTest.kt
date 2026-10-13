@@ -113,6 +113,36 @@ class AndroidContactRingtoneWriterTest {
     }
 
     @Test
+    fun `a probe tells nobody from somebody and changes no contact`() = runTest {
+        val ada = provider.add("key-ada", "Ada Lovelace").apply { ringtone = "content://settings/system/ringtone" }
+        val firstSam = provider.add("key-one", "Sam Lee")
+        val secondSam = provider.add("key-two", "Sam Lee")
+
+        assertEquals(ContactRingtoneProbe.SOMEBODY, writer.probeByLookupKey("key-ada"))
+        assertEquals(ContactRingtoneProbe.SOMEBODY, writer.probeByDisplayName("Ada Lovelace"))
+        assertEquals("a shared name is still somebody", ContactRingtoneProbe.SOMEBODY, writer.probeByDisplayName("Sam Lee"))
+        assertEquals(ContactRingtoneProbe.NOBODY, writer.probeByLookupKey("key-gone"))
+        assertEquals(ContactRingtoneProbe.NOBODY, writer.probeByDisplayName("Grace Hopper"))
+
+        assertEquals("content://settings/system/ringtone", ada.ringtone)
+        assertNull(firstSam.ringtone)
+        assertNull(secondSam.ringtone)
+    }
+
+    @Test
+    fun `a blank probe asks nothing and a refused one is not allowed`() = runTest {
+        val ada = provider.add("key-ada", "Ada Lovelace")
+
+        assertEquals(ContactRingtoneProbe.NOBODY, writer.probeByLookupKey(" "))
+        assertEquals(ContactRingtoneProbe.NOBODY, writer.probeByDisplayName(""))
+        assertEquals(0, provider.batches)
+
+        provider.denyWrites = true
+        assertEquals(ContactRingtoneProbe.NOT_ALLOWED, writer.probeByLookupKey("key-ada"))
+        assertNull(ada.ringtone)
+    }
+
+    @Test
     fun `can write follows the contacts permission`() {
         assertTrue(writer.canWrite())
 

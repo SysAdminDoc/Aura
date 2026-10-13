@@ -12,9 +12,26 @@ internal class FakeContactRingtoneWriter(var allowed: Boolean = true) : ContactR
     var failWrites = false
     var writeAttempts = 0
 
+    /** False for a contacts app that gives a probe no answer. Writes still work. */
+    var probesAnswer = true
+
     fun add(lookupKey: String, name: String): Contact = Contact(lookupKey, name).also { contacts += it }
 
     override fun canWrite(): Boolean = allowed
+
+    override suspend fun probeByLookupKey(lookupKey: String): ContactRingtoneProbe =
+        probe { it.lookupKey == lookupKey }
+
+    override suspend fun probeByDisplayName(displayName: String): ContactRingtoneProbe =
+        probe { it.name == displayName }
+
+    /** A probe is not a write: it leaves [writeAttempts] alone and never changes a contact. */
+    private fun probe(matches: (Contact) -> Boolean): ContactRingtoneProbe = when {
+        !allowed -> ContactRingtoneProbe.NOT_ALLOWED
+        !probesAnswer -> ContactRingtoneProbe.UNKNOWN
+        contacts.any(matches) -> ContactRingtoneProbe.SOMEBODY
+        else -> ContactRingtoneProbe.NOBODY
+    }
 
     override suspend fun setByLookupKey(lookupKey: String, ringtoneUri: String): ContactRingtoneWrite =
         setOnTheOnlyMatch(ringtoneUri) { it.lookupKey == lookupKey }
@@ -51,12 +68,26 @@ internal class FakeContactRingtoneSounds : ContactRingtoneSoundResolver {
     val discarded = mutableListOf<String>()
     var failResolve = false
 
-    override suspend fun resolve(entry: ContactRingtoneExportEntry): ResolvedContactRingtone? {
+    /** How big every downloaded sound is. */
+    var fetchedBytes = 1_000L
+
+    /** The download allowance each lookup came with, in order. */
+    val allowances = mutableListOf<Long>()
+
+    /** Sound ids that were downloaded, in order. */
+    val fetched = mutableListOf<String>()
+
+    override suspend fun resolve(
+        entry: ContactRingtoneExportEntry,
+        downloadAllowance: Long,
+    ): ResolvedContactRingtone? {
         resolved += entry.soundId
+        allowances += downloadAllowance
         if (failResolve) throw IllegalStateException("source is down")
         onPhone[entry.soundId]?.let { return ResolvedContactRingtone(it, savedNow = false) }
-        if (entry.soundId in fetchable) return ResolvedContactRingtone(fetchedUri(entry.soundId), savedNow = true)
-        return null
+        if (entry.soundId !in fetchable || fetchedBytes > downloadAllowance) return null
+        fetched += entry.soundId
+        return ResolvedContactRingtone(fetchedUri(entry.soundId), savedNow = true, bytes = fetchedBytes)
     }
 
     override suspend fun discard(ringtoneUri: String) {

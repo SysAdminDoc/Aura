@@ -2302,6 +2302,14 @@
         <item quantity="one">The sound for %1$d contact isn\'t on this phone and couldn\'t be downloaded again: %2$s.</item>
         <item quantity="other">The sounds for %1$d contacts aren\'t on this phone and couldn\'t be downloaded again: %2$s.</item>
     </plurals>
+    <plurals name="settings_library_contact_ringtones_waiting_for_wifi">
+        <item quantity="one">Wi-Fi only is on, so the sound for %1$d contact wasn\'t downloaded: %2$s. Connect to Wi-Fi and import the backup again.</item>
+        <item quantity="other">Wi-Fi only is on, so the sounds for %1$d contacts weren\'t downloaded: %2$s. Connect to Wi-Fi and import the backup again.</item>
+    </plurals>
+    <plurals name="settings_library_contact_ringtones_download_limit">
+        <item quantity="one">One import only downloads so many sounds, and %1$d contact is still waiting for one: %2$s. Import the backup again to set it.</item>
+        <item quantity="other">One import only downloads so many sounds, and %1$d contacts are still waiting for theirs: %2$s. Import the backup again to set them.</item>
+    </plurals>
     <plurals name="settings_library_contact_ringtones_no_permission">
         <item quantity="one">%1$d contact ringtone wasn\'t set because Aura isn\'t allowed to update contacts: %2$s. Allow Contacts for Aura in Android settings, then import the backup again.</item>
         <item quantity="other">%1$d contact ringtones weren\'t set because Aura isn\'t allowed to update contacts: %2$s. Allow Contacts for Aura in Android settings, then import the backup again.</item>

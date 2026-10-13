@@ -22,6 +22,9 @@ import javax.inject.Singleton
  * A ringtone Aura saved earlier is reused when it is still here under the same file name. Otherwise
  * the sound is fetched again from its source, the same way the contact screen fetches it. A sound
  * that came from the old phone's own storage has no source to fetch from and stays unresolved.
+ *
+ * The restore says how much may be downloaded for each sound. With no allowance nothing is asked of
+ * any source, because finding where a sound lives can use the connection as well.
  */
 @Singleton
 class ContactRingtoneSoundRestorer @Inject constructor(
@@ -31,14 +34,31 @@ class ContactRingtoneSoundRestorer @Inject constructor(
     private val soundApplier: SoundApplier,
 ) : ContactRingtoneSoundResolver {
 
-    override suspend fun resolve(entry: ContactRingtoneExportEntry): ResolvedContactRingtone? {
+    override suspend fun resolve(
+        entry: ContactRingtoneExportEntry,
+        downloadAllowance: Long,
+    ): ResolvedContactRingtone? {
         findSavedRingtone(entry.soundFileName)?.let { return ResolvedContactRingtone(it, savedNow = false) }
+        if (downloadAllowance <= 0) return null
         val sound = soundFor(entry) ?: return null
         // A source Aura no longer applies sounds from isn't applied through a restore either.
         if (!sound.soundLicenseCapabilities().canUse(SoundAction.APPLY)) return null
         val url = soundUrlResolver.resolve(sound)?.takeIf { it.isNotBlank() } ?: return null
-        val saved = soundApplier.downloadOnly(url, sound.name, ContentType.RINGTONE).getOrNull() ?: return null
-        return ResolvedContactRingtone(saved.toString(), savedNow = true)
+        val saved = soundApplier.downloadOnly(url, sound.name, ContentType.RINGTONE, maxBytes = downloadAllowance)
+            .getOrNull() ?: return null
+        return ResolvedContactRingtone(saved.toString(), savedNow = true, bytes = sizeOf(saved))
+    }
+
+    /** Zero when the size can't be read. The count of downloads still bounds the restore then. */
+    private suspend fun sizeOf(ringtone: Uri): Long = withContext(Dispatchers.IO) {
+        try {
+            context.contentResolver.query(ringtone, arrayOf(MediaStore.Audio.Media.SIZE), null, null, null)
+                ?.use { cursor -> if (cursor.moveToFirst()) cursor.getLong(0) else 0L }
+                ?: 0L
+        } catch (e: Exception) {
+            e.rethrowIfCancelled()
+            0L
+        }
     }
 
     override suspend fun discard(ringtoneUri: String) {

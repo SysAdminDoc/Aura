@@ -163,7 +163,7 @@ class ContactRingtoneBackupTest {
     }
 
     @Test
-    fun `a sound fetched for a contact that is gone is removed again`() = runTest {
+    fun `nothing is looked up or downloaded for a contact that isn't on this phone`() = runTest {
         sounds.fetchable += "fs_200"
 
         val result = restoreContactRingtones(
@@ -173,7 +173,169 @@ class ContactRingtoneBackupTest {
         ).single()
 
         assertEquals(ContactRingtoneRestoreStatus.MISSING_CONTACT, result.status)
+        assertTrue("the sound was never asked for", sounds.resolved.isEmpty())
+        assertTrue(sounds.fetched.isEmpty())
+        assertTrue(sounds.discarded.isEmpty())
+        assertEquals(0, writer.writeAttempts)
+    }
+
+    @Test
+    fun `a sound fetched for a name two contacts share is removed again`() = runTest {
+        val first = writer.add("key-one", "Ada Lovelace")
+        val second = writer.add("key-two", "Ada Lovelace")
+        sounds.fetchable += "fs_200"
+
+        val result = restoreContactRingtones(
+            listOf(contactRingtone(soundId = "fs_200")),
+            writer,
+            sounds,
+        ).single()
+
+        assertEquals(ContactRingtoneRestoreStatus.AMBIGUOUS_CONTACT, result.status)
         assertEquals(listOf(FakeContactRingtoneSounds.fetchedUri("fs_200")), sounds.discarded)
+        assertNull(first.ringtone)
+        assertNull(second.ringtone)
+    }
+
+    @Test
+    fun `a contacts app that gives the probe no answer leaves it to the write`() = runTest {
+        val ada = writer.add("key-ada", "Ada Lovelace")
+        writer.probesAnswer = false
+
+        val results = restoreContactRingtones(
+            listOf(contactRingtone(), contactRingtone(lookupKey = "key-gone", name = "Nobody Here")),
+            writer,
+            sounds,
+        )
+
+        assertEquals(
+            listOf(ContactRingtoneRestoreStatus.RESTORED, ContactRingtoneRestoreStatus.MISSING_CONTACT),
+            results.map { it.status },
+        )
+        assertEquals(BELL_URI, ada.ringtone)
+    }
+
+    // -- how much one restore may download --
+
+    @Test
+    fun `one restore downloads only so many sounds and reports the rest`() = runTest {
+        val limit = LibraryTransferContract.MAX_CONTACT_RINGTONE_DOWNLOADS
+        val entries = downloadableEntries(limit + 3)
+
+        val results = restoreContactRingtones(entries, writer, sounds)
+
+        assertEquals(limit, results.count { it.restored })
+        assertEquals(
+            List(3) { ContactRingtoneRestoreStatus.DOWNLOAD_LIMIT },
+            results.drop(limit).map { it.status },
+        )
+        assertEquals(limit, sounds.fetched.size)
+        assertEquals("no contact past the limit was changed", limit, writer.contacts.count { it.ringtone != null })
+    }
+
+    @Test
+    fun `a download that fails still counts toward the limit`() = runTest {
+        val limit = LibraryTransferContract.MAX_CONTACT_RINGTONE_DOWNLOADS
+        val entries = downloadableEntries(limit + 1)
+        sounds.fetchable.clear()
+
+        val results = restoreContactRingtones(entries, writer, sounds)
+
+        assertEquals(
+            List(limit) { ContactRingtoneRestoreStatus.MISSING_SOUND } + ContactRingtoneRestoreStatus.DOWNLOAD_LIMIT,
+            results.map { it.status },
+        )
+        assertEquals("only so many sources were tried", limit, sounds.allowances.count { it > 0 })
+    }
+
+    @Test
+    fun `one restore stops downloading once its bytes are spent`() = runTest {
+        val budget = LibraryTransferContract.MAX_CONTACT_RINGTONE_DOWNLOAD_BYTES
+        sounds.fetchedBytes = budget / 2
+        val entries = downloadableEntries(3)
+
+        val results = restoreContactRingtones(entries, writer, sounds)
+
+        assertEquals(
+            listOf(
+                ContactRingtoneRestoreStatus.RESTORED,
+                ContactRingtoneRestoreStatus.RESTORED,
+                ContactRingtoneRestoreStatus.DOWNLOAD_LIMIT,
+            ),
+            results.map { it.status },
+        )
+        assertEquals("each download may only be as big as what is left", listOf(budget, budget / 2, 0L), sounds.allowances)
+    }
+
+    @Test
+    fun `a sound already on this phone is used after the download limit is reached`() = runTest {
+        val limit = LibraryTransferContract.MAX_CONTACT_RINGTONE_DOWNLOADS
+        val ada = writer.add("key-ada", "Ada Lovelace")
+        val entries = downloadableEntries(limit) + contactRingtone(assignedAt = 9_000)
+
+        val results = restoreContactRingtones(entries, writer, sounds)
+
+        assertTrue(results.all { it.restored })
+        assertEquals(BELL_URI, ada.ringtone)
+    }
+
+    // -- Wi-Fi only --
+
+    @Test
+    fun `while waiting for Wi-Fi a sound is not downloaded but one already here is used`() = runTest {
+        val ada = writer.add("key-ada", "Ada Lovelace")
+        val bob = writer.add("key-bob", "Bob")
+        sounds.fetchable += "fs_200"
+
+        val results = restoreContactRingtones(
+            listOf(
+                contactRingtone(),
+                contactRingtone(lookupKey = "key-bob", name = "Bob", soundId = "fs_200", soundTitle = "Chime", soundFileName = ""),
+            ),
+            writer,
+            sounds,
+            waitingForWifi = { true },
+        )
+
+        assertEquals(
+            listOf(ContactRingtoneRestoreStatus.RESTORED, ContactRingtoneRestoreStatus.WAITING_FOR_WIFI),
+            results.map { it.status },
+        )
+        assertEquals(BELL_URI, ada.ringtone)
+        assertNull(bob.ringtone)
+        assertTrue(sounds.fetched.isEmpty())
+        assertEquals(listOf(0L, 0L), sounds.allowances)
+    }
+
+    @Test
+    fun `Aura's own tones come back while waiting for Wi-Fi because they need no download`() = runTest {
+        val ada = writer.add("key-ada", "Ada Lovelace")
+        sounds.fetchable += "bundled_ringtone_01"
+
+        val result = restoreContactRingtones(
+            listOf(contactRingtone(soundId = "bundled_ringtone_01", soundSource = "BUNDLED", soundFileName = "")),
+            writer,
+            sounds,
+            waitingForWifi = { true },
+        ).single()
+
+        assertEquals(ContactRingtoneRestoreStatus.RESTORED, result.status)
+        assertEquals(FakeContactRingtoneSounds.fetchedUri("bundled_ringtone_01"), ada.ringtone)
+    }
+
+    @Test
+    fun `a sound that only lived on the old phone is a missing sound whatever the connection`() = runTest {
+        writer.add("key-ada", "Ada Lovelace")
+
+        val result = restoreContactRingtones(
+            listOf(contactRingtone(soundId = "", soundSource = "LOCAL", soundTitle = "Voice memo", soundFileName = "Voice_memo.m4a")),
+            writer,
+            sounds,
+            waitingForWifi = { true },
+        ).single()
+
+        assertEquals(ContactRingtoneRestoreStatus.MISSING_SOUND, result.status)
+        assertEquals("there is nothing to download for it", listOf(0L), sounds.allowances)
     }
 
     @Test
@@ -440,6 +602,20 @@ class ContactRingtoneBackupTest {
         assertTrue(parseContactRingtoneLedger(moshi, "").assignments.isEmpty())
         assertTrue(parseContactRingtoneLedger(moshi, "{not json").assignments.isEmpty())
         assertTrue(parseContactRingtoneLedger(moshi, """{"assignments":[{"soundTitle":"orphan"}]}""").assignments.isEmpty())
+    }
+
+    /** [count] contacts that are on this phone, each with a sound of its own that has to be downloaded. */
+    private fun downloadableEntries(count: Int): List<ContactRingtoneExportEntry> = (0 until count).map { index ->
+        writer.add("key-$index", "Contact $index")
+        sounds.fetchable += "fs_new_$index"
+        contactRingtone(
+            lookupKey = "key-$index",
+            name = "Contact $index",
+            soundId = "fs_new_$index",
+            soundTitle = "Sound $index",
+            soundFileName = "",
+            assignedAt = index.toLong(),
+        )
     }
 
     private companion object {

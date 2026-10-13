@@ -15,6 +15,10 @@ internal object LibraryTransferContract {
     const val MAX_WALLPAPER_HISTORY_ITEMS = 100
     const val MAX_CONTACT_RINGTONES = 2_000
 
+    /** What one restore of contact ringtones may download: this many sounds, and this many bytes in all. */
+    const val MAX_CONTACT_RINGTONE_DOWNLOADS = 25
+    const val MAX_CONTACT_RINGTONE_DOWNLOAD_BYTES = 134_217_728L
+
     const val MAX_FAVORITES_DOCUMENT_CHARS = 64_000_000
     const val MAX_COLLECTION_DOCUMENT_BYTES = 4_194_304
     const val MAX_LIBRARY_DOCUMENT_CHARS = 128_000_000

@@ -245,6 +245,26 @@ class AndroidContactRingtoneWriter @Inject constructor(
         ContextCompat.checkSelfPermission(context, Manifest.permission.WRITE_CONTACTS) ==
             PackageManager.PERMISSION_GRANTED
 
+    override suspend fun probeByLookupKey(lookupKey: String): ContactRingtoneProbe =
+        probe(ContactsContract.Contacts.LOOKUP_KEY, lookupKey)
+
+    override suspend fun probeByDisplayName(displayName: String): ContactRingtoneProbe =
+        probe(ContactsContract.Contacts.DISPLAY_NAME_PRIMARY, displayName)
+
+    /**
+     * An update that expects to change nobody. When it would have changed somebody the contacts
+     * provider undoes it, so no contact is touched either way and the outcome says which it was.
+     */
+    private suspend fun probe(column: String, value: String): ContactRingtoneProbe = withContext(Dispatchers.IO) {
+        if (value.isBlank()) return@withContext ContactRingtoneProbe.NOBODY
+        when (updateExpecting(column, value, ringtoneUri = "", expectedCount = 0)) {
+            BatchOutcome.APPLIED -> ContactRingtoneProbe.NOBODY
+            BatchOutcome.COUNT_MISMATCH -> ContactRingtoneProbe.SOMEBODY
+            BatchOutcome.NOT_ALLOWED -> ContactRingtoneProbe.NOT_ALLOWED
+            BatchOutcome.FAILED -> ContactRingtoneProbe.UNKNOWN
+        }
+    }
+
     override suspend fun setByLookupKey(lookupKey: String, ringtoneUri: String): ContactRingtoneWrite =
         setOnTheOnlyMatch(ContactsContract.Contacts.LOOKUP_KEY, lookupKey, ringtoneUri)
 

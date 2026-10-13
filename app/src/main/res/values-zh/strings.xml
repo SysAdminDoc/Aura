@@ -2122,6 +2122,14 @@
         <item quantity="one">%1$d 位联系人的铃声不在这部手机上，也无法重新下载：%2$s。</item>
         <item quantity="other">%1$d 位联系人的铃声不在这部手机上，也无法重新下载：%2$s。</item>
     </plurals>
+    <plurals name="settings_library_contact_ringtones_waiting_for_wifi">
+        <item quantity="one">已开启“仅 Wi-Fi”，因此未下载 %1$d 位联系人的铃声：%2$s。请连接 Wi-Fi 后重新导入备份。</item>
+        <item quantity="other">已开启“仅 Wi-Fi”，因此未下载 %1$d 位联系人的铃声：%2$s。请连接 Wi-Fi 后重新导入备份。</item>
+    </plurals>
+    <plurals name="settings_library_contact_ringtones_download_limit">
+        <item quantity="one">一次导入能下载的铃声数量有限，还有 %1$d 位联系人的铃声尚未下载：%2$s。请再次导入备份以完成设置。</item>
+        <item quantity="other">一次导入能下载的铃声数量有限，还有 %1$d 位联系人的铃声尚未下载：%2$s。请再次导入备份以完成设置。</item>
+    </plurals>
     <plurals name="settings_library_contact_ringtones_no_permission">
         <item quantity="one">Aura 没有修改联系人的权限，%1$d 个联系人铃声未设置：%2$s。请在 Android 设置中允许 Aura 使用“通讯录”权限，然后重新导入备份。</item>
         <item quantity="other">Aura 没有修改联系人的权限，%1$d 个联系人铃声未设置：%2$s。请在 Android 设置中允许 Aura 使用“通讯录”权限，然后重新导入备份。</item>

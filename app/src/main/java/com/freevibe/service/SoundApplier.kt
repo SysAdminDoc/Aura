@@ -124,14 +124,18 @@ class SoundApplier @Inject constructor(
         }.onFailure { it.rethrowIfCancelled() }
     }
 
-    /** Save audio without applying - just download to storage */
+    /**
+     * Save audio without applying - just download to storage. [maxBytes] lowers the size ceiling
+     * for a caller with less than that to spend, and never raises it.
+     */
     suspend fun downloadOnly(
         url: String,
         fileName: String,
         type: ContentType,
+        maxBytes: Long = MAX_APPLY_BYTES,
     ): Result<Uri> = withContext(Dispatchers.IO) {
         runCatching {
-            saveUrlToMediaStore(fileName.replace(SANITIZE_REGEX, "_"), type, url)
+            saveUrlToMediaStore(fileName.replace(SANITIZE_REGEX, "_"), type, url, maxBytes)
                 ?: throw IllegalStateException("Failed to save audio to MediaStore")
         }.onFailure { it.rethrowIfCancelled() }
     }
@@ -286,14 +290,16 @@ class SoundApplier @Inject constructor(
         fileName: String,
         type: ContentType,
         url: String,
+        maxBytes: Long,
     ): Uri? {
+        val limit = maxBytes.coerceIn(1L, MAX_APPLY_BYTES)
         if (isLocalMediaLocator(url)) {
             val tempFile = stageLocalMediaLocator(
                 context = context,
                 locator = url,
                 tempDirectoryName = "audio_apply",
                 prefix = "aura_sound_",
-                maxBytes = MAX_APPLY_BYTES,
+                maxBytes = limit,
             )
             return try {
                 saveLocalFileToMediaStore(fileName, type, tempFile)
@@ -311,7 +317,7 @@ class SoundApplier @Inject constructor(
             // or misresolved URL returning an endless stream would otherwise write into
             // MediaStore until the user's storage fills. Matches DownloadManager's ceiling.
             val advertised = body.contentLength()
-            if (advertised in 1..Long.MAX_VALUE && advertised > MAX_APPLY_BYTES) {
+            if (advertised in 1..Long.MAX_VALUE && advertised > limit) {
                 throw IllegalStateException("Sound file too large (${advertised / (1024 * 1024)} MB)")
             }
             val tempDir = File(context.cacheDir, "audio_apply").apply { mkdirs() }
@@ -319,7 +325,7 @@ class SoundApplier @Inject constructor(
             try {
                 body.byteStream().use { input ->
                     tempFile.outputStream().use { output ->
-                        copyStreamCapped(input, output, MAX_APPLY_BYTES)
+                        copyStreamCapped(input, output, limit)
                     }
                 }
                 saveLocalFileToMediaStore(fileName, type, tempFile)

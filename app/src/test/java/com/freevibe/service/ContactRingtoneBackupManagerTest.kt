@@ -24,6 +24,8 @@ import org.robolectric.annotation.Config
 class ContactRingtoneBackupManagerTest {
 
     private val ledgerJson = MutableStateFlow("")
+    private val wifiOnly = MutableStateFlow(false)
+    private var network = RotationNetworkState(connected = true, metered = false)
     private val prefs = mockk<PreferencesManager>()
     private val writer = FakeContactRingtoneWriter()
     private val sounds = FakeContactRingtoneSounds()
@@ -48,8 +50,15 @@ class ContactRingtoneBackupManagerTest {
         coEvery { prefs.updateContactRingtoneLedgerJson(any()) } answers {
             ledgerJson.value = firstArg<(String) -> String>().invoke(ledgerJson.value)
         }
+        every { prefs.autoWallpaperRequiresWiFiOnly } returns wifiOnly
         sounds.fileNames[SAVED_URI] = "Bell.mp3"
-        manager = ContactRingtoneBackupManager(prefs, Moshi.Builder().build(), writer, sounds)
+        manager = ContactRingtoneBackupManager(
+            prefs,
+            Moshi.Builder().build(),
+            writer,
+            sounds,
+            RotationNetworkGate { network },
+        )
     }
 
     @Test
@@ -140,6 +149,36 @@ class ContactRingtoneBackupManagerTest {
 
         assertEquals(ContactRingtoneRestoreStatus.PERMISSION_MISSING, results.single().status)
         assertTrue(manager.exportEntries().isEmpty())
+    }
+
+    @Test
+    fun `with Wi-Fi only on a restore on mobile data downloads nothing and says so`() = runTest {
+        val contact = writer.add("key-ada", "Ada Lovelace")
+        sounds.fetchable += "fs_100"
+        wifiOnly.value = true
+        network = RotationNetworkState(connected = true, metered = true)
+
+        val results = manager.restore(listOf(contactRingtone()))
+
+        assertEquals(ContactRingtoneRestoreStatus.WAITING_FOR_WIFI, results.single().status)
+        assertTrue(sounds.fetched.isEmpty())
+        assertEquals(null, contact.ringtone)
+        assertTrue("a row that wasn't set stays out of the ledger", manager.exportEntries().isEmpty())
+    }
+
+    @Test
+    fun `mobile data is used when Wi-Fi only is off and Wi-Fi is used when it is on`() = runTest {
+        writer.add("key-ada", "Ada Lovelace")
+        sounds.fetchable += "fs_100"
+        network = RotationNetworkState(connected = true, metered = true)
+
+        assertEquals(ContactRingtoneRestoreStatus.RESTORED, manager.restore(listOf(contactRingtone())).single().status)
+
+        wifiOnly.value = true
+        network = RotationNetworkState(connected = true, metered = false)
+
+        assertEquals(ContactRingtoneRestoreStatus.RESTORED, manager.restore(listOf(contactRingtone())).single().status)
+        assertEquals(listOf("fs_100", "fs_100"), sounds.fetched)
     }
 
     private companion object {
