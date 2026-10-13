@@ -99,6 +99,25 @@ fun syncWallpaperPackSchedule(context: Context, toggleOn: Boolean, packJson: Str
     else WallpaperPackWorker.cancel(context)
 }
 
+/**
+ * Matches the worker to a pack that was just replaced, such as by a restore, and runs it now when
+ * it's needed. A plain sync keeps a running schedule's timing, which would leave the new pack unseen
+ * until the next 15 minute tick.
+ */
+fun restartWallpaperPackSchedule(context: Context, toggleOn: Boolean, packJson: String) {
+    WallpaperPackWorker.cancel(context)
+    if (shouldSchedulePack(toggleOn, packJson)) WallpaperPackWorker.schedule(context)
+}
+
+/**
+ * What the dedup marker holds for a time of day whose picture Aura may no longer open. It stops the
+ * 15 minute retries without claiming the wallpaper was applied.
+ */
+internal fun needsRepickMarker(daypart: Daypart): String = "${daypart.name}:needs-repick"
+
+/** True when an apply failed because Aura no longer has access to the picture. Trying again can't fix that. */
+internal fun isLostAccess(error: Throwable): Boolean = error is SecurityException || error.cause is SecurityException
+
 @HiltWorker
 class WallpaperPackWorker @AssistedInject constructor(
     @Assisted appContext: Context,
@@ -136,6 +155,11 @@ class WallpaperPackWorker @AssistedInject constructor(
                 receiptStore.recordSuccess(WORK_NAME)
                 return Result.success()
             }
+            if (lastAppliedDaypart == needsRepickMarker(slot.daypart)) {
+                // Already reported. Picking the picture again clears the marker, and until then the
+                // receipt keeps saying why nothing changed.
+                return Result.success()
+            }
 
             val target = slotTarget(pack, slot)
 
@@ -154,11 +178,23 @@ class WallpaperPackWorker @AssistedInject constructor(
                     receiptStore.recordSuccess(WORK_NAME)
                 }
                 .onFailure { e ->
-                    receiptStore.recordFailure(
-                        uniqueWorkName = WORK_NAME,
-                        errorClass = e.javaClass.simpleName,
-                        deferralReason = e.message ?: "apply failed",
-                    )
+                    if (isLostAccess(e)) {
+                        // A restored pack, or access the user took away. The grant won't come back by
+                        // itself, so this time of day is left alone until the picture is picked again.
+                        prefs.setWallpaperPackLastAppliedDaypart(needsRepickMarker(slot.daypart))
+                        receiptStore.recordFailure(
+                            uniqueWorkName = WORK_NAME,
+                            errorClass = "SecurityException",
+                            deferralReason = "Aura can no longer open the ${slot.daypart.displayName.lowercase()} " +
+                                "wallpaper. Pick it again in Settings, Edit 24H pack.",
+                        )
+                    } else {
+                        receiptStore.recordFailure(
+                            uniqueWorkName = WORK_NAME,
+                            errorClass = e.javaClass.simpleName,
+                            deferralReason = e.message ?: "apply failed",
+                        )
+                    }
                 }
 
             Result.success()

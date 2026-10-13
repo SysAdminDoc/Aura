@@ -2089,6 +2089,7 @@
     <string name="settings_library_import_more">，以及更多</string>
     <string name="settings_library_import_skipped_invalid">%1$d 个无法读取的条目导入失败（%2$s）。</string>
     <string name="settings_library_import_skipped_non_portable">%1$d 个项目指向仅存在于创建此备份的设备上的文件，因此未恢复（%2$s）。</string>
+    <string name="settings_library_import_skipped_repick">需要在这部手机上重新选择的 24 小时壁纸包壁纸：%1$d 张（%2$s）。恢复后 Aura 无法打开它们，请在设置的“编辑 24 小时壁纸包”中重新选择。</string>
     <string name="settings_library_import_skipped_duplicate">跳过了 %1$d 个已在图库中的项目（%2$s）。</string>
     <string name="settings_library_import_skipped_migration">来自旧版备份格式的 %1$d 个下载未恢复；下载内容保留在创建它们的设备上（%2$s）。</string>
 

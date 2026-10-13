@@ -469,6 +469,7 @@ internal class SettingsDiagnosticsDelegate(
                     when (reason) {
                         LibraryImportSkipReason.INVALID -> R.string.settings_library_import_skipped_invalid
                         LibraryImportSkipReason.NON_PORTABLE -> R.string.settings_library_import_skipped_non_portable
+                        LibraryImportSkipReason.NEEDS_REPICK -> R.string.settings_library_import_skipped_repick
                         LibraryImportSkipReason.DUPLICATE -> R.string.settings_library_import_skipped_duplicate
                         LibraryImportSkipReason.DROPPED_BY_MIGRATION -> R.string.settings_library_import_skipped_migration
                     },

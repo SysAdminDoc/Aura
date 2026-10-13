@@ -1,9 +1,12 @@
 package com.freevibe.service
 
 import android.content.Context
+import android.content.Intent
 import android.net.Uri
 import androidx.room.Room
 import androidx.work.Configuration
+import androidx.work.ExistingPeriodicWorkPolicy
+import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
 import androidx.work.testing.SynchronousExecutor
 import androidx.work.testing.WorkManagerTestInitHelper
@@ -46,6 +49,7 @@ import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
 import org.json.JSONObject
 import java.io.File
+import java.util.concurrent.TimeUnit
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -139,6 +143,15 @@ class LibraryImportPlanTest {
                 Types.newParameterizedType(List::class.java, ContactRingtoneExportEntry::class.java),
             )
             .toJson(entries.toList())
+
+    /** Stands in for a picture the user chose with the document picker on this install. */
+    private fun grantRead(locator: String) =
+        context.contentResolver.takePersistableUriPermission(Uri.parse(locator), Intent.FLAG_GRANT_READ_URI_PERMISSION)
+
+    private fun packBackup(vararg slots: DaypartSlot, extra: String = ""): String {
+        val pack = serializePack(WallpaperPack(id = "main", name = "Mine", slots = slots.toList()))
+        return payload(extra = ""","wallpaperPackJson":${JSONObject.quote(pack)}""" + extra)
+    }
 
     private fun backupFile(json: String): File =
         File(context.cacheDir, "library-contacts-${System.nanoTime()}.json").apply { writeText(json) }
@@ -710,6 +723,8 @@ class LibraryImportPlanTest {
             Configuration.Builder().setExecutor(SynchronousExecutor()).build(),
         )
         every { prefs.wallpaperPackEnabled } returns flowOf(true)
+        coEvery { prefs.setWallpaperPackLastAppliedDaypart(any()) } returns Unit
+        grantRead("content://a")
         val pack = serializePack(
             WallpaperPack(id = "main", name = "Mine", slots = listOf(DaypartSlot(Daypart.NIGHT, "content://a"))),
         )
@@ -721,6 +736,87 @@ class LibraryImportPlanTest {
         assertTrue(
             WorkManager.getInstance(context).getWorkInfosForUniqueWork(WallpaperPackWorker.WORK_NAME).get().isNotEmpty(),
         )
+    }
+
+    @Test
+    fun `a pack picture this install can't open is left out and reported for a re-pick`() = runTest {
+        grantRead("content://picked/night")
+
+        val plan = exporter.buildPlan(
+            packBackup(
+                DaypartSlot(Daypart.MORNING, "content://old-phone/morning", label = "beach.jpg"),
+                DaypartSlot(Daypart.NIGHT, "content://picked/night", label = "stars.jpg"),
+            ),
+        )
+
+        assertEquals(listOf(Daypart.NIGHT), parsePack(plan.wallpaperPackJson)!!.slots.map { it.daypart })
+        assertEquals(
+            listOf(Triple("wallpaperPackSlot", "beach.jpg", LibraryImportSkipReason.NEEDS_REPICK)),
+            plan.skipped.map { Triple(it.section, it.label, it.reason) },
+        )
+        assertEquals("the summary counts it as not restored", 1, plan.failedCount)
+    }
+
+    @Test
+    fun `a pack with no picture this install can open is not restored over the one already here`() = runTest {
+        packJson.value = "the pack on this phone"
+
+        val plan = exporter.buildPlan(packBackup(DaypartSlot(Daypart.DAY, "content://old-phone/day")))
+        exporter.applyPlan(plan)
+
+        assertEquals("", plan.wallpaperPackJson)
+        assertEquals(0, plan.writeCount)
+        assertEquals("the pack on this phone", packJson.value)
+        assertEquals(
+            listOf("Day" to LibraryImportSkipReason.NEEDS_REPICK),
+            plan.skipped.map { it.label to it.reason },
+        )
+    }
+
+    @Test
+    fun `a restore forgets what each worker last applied and starts a run right away`() = runTest {
+        WorkManagerTestInitHelper.initializeTestWorkManager(
+            context,
+            Configuration.Builder().setExecutor(SynchronousExecutor()).build(),
+        )
+        val workManager = WorkManager.getInstance(context)
+        val lastDaypart = MutableStateFlow("NIGHT")
+        val lastProfile = MutableStateFlow("night")
+        every { prefs.wallpaperPackEnabled } returns flowOf(true)
+        every { prefs.soundProfilesEnabled } returns flowOf(true)
+        coEvery { prefs.setWallpaperPackLastAppliedDaypart(any()) } answers { lastDaypart.value = firstArg() }
+        coEvery { prefs.setSoundProfileLastAppliedId(any()) } answers { lastProfile.value = firstArg() }
+        grantRead("content://a")
+        // The schedule on a phone where the pack was already on, part way through its 15 minutes.
+        val waiting = PeriodicWorkRequestBuilder<WallpaperPackWorker>(15L, TimeUnit.MINUTES)
+            .setInitialDelay(1L, TimeUnit.HOURS)
+            .build()
+        workManager.enqueueUniquePeriodicWork(
+            WallpaperPackWorker.WORK_NAME,
+            ExistingPeriodicWorkPolicy.CANCEL_AND_REENQUEUE,
+            waiting,
+        ).result.get()
+        val profiles = serializeProfiles(
+            listOf(SoundProfile(id = "night", name = "Night", ringtoneUri = "content://media/internal/audio/media/11")),
+        )
+
+        val plan = exporter.buildPlan(
+            packBackup(
+                DaypartSlot(Daypart.NIGHT, "content://a"),
+                extra = ""","soundProfilesJson":${JSONObject.quote(profiles)}""",
+            ),
+        )
+        exporter.applyPlan(plan)
+
+        assertEquals("", lastDaypart.value)
+        assertEquals("", lastProfile.value)
+        val packWork = workManager.getWorkInfosForUniqueWork(WallpaperPackWorker.WORK_NAME).get()
+        assertTrue(
+            "the old schedule would have sat out the rest of its 15 minutes",
+            packWork.none { it.id == waiting.id && !it.state.isFinished },
+        )
+        assertTrue("a new schedule starts at once", packWork.any { it.id != waiting.id })
+        assertTrue(workManager.getWorkInfosForUniqueWork("sound_profile_now").get().isNotEmpty())
     }
 
     @Test

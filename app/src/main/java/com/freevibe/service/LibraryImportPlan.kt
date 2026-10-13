@@ -27,6 +27,12 @@ enum class LibraryImportSkipReason {
      */
     NON_PORTABLE,
 
+    /**
+     * A picture chosen with the document picker. This install doesn't hold the grant to open it, so
+     * it has to be picked again here. Grants don't travel in a backup or survive a reinstall.
+     */
+    NEEDS_REPICK,
+
     /** Already present here; the existing row wins. */
     DUPLICATE,
 
@@ -35,7 +41,9 @@ enum class LibraryImportSkipReason {
 }
 
 internal val LibraryImportSkipReason.isFailure: Boolean
-    get() = this == LibraryImportSkipReason.INVALID || this == LibraryImportSkipReason.NON_PORTABLE
+    get() = this == LibraryImportSkipReason.INVALID ||
+        this == LibraryImportSkipReason.NON_PORTABLE ||
+        this == LibraryImportSkipReason.NEEDS_REPICK
 
 /** One row that will not be written, and why. */
 data class LibraryImportSkip(

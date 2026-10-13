@@ -530,7 +530,7 @@ class LibraryExporter @Inject constructor(
             localWallpaperFolders = localWallpaperPlan.first,
             localWallpapers = localWallpaperPlan.second,
             wallpaperHistory = wallpaperHistory,
-            wallpaperPackJson = exportFile.wallpaperPackJson,
+            wallpaperPackJson = planWallpaperPack(exportFile.wallpaperPackJson, skipped),
             soundProfilesJson = exportFile.soundProfilesJson,
             soundShufflePoolsJson = exportFile.soundShufflePoolsJson.takeIf(String::isNotBlank)?.let {
                 val normalized = parseSoundShuffleStoreStrict(moshi, it)
@@ -541,6 +541,45 @@ class LibraryExporter @Inject constructor(
             contactRingtones = contactRingtones,
             skipped = skipped,
         )
+    }
+
+    /**
+     * Keeps the 24H pack slots this install can still open. A picture chosen with the document picker
+     * is readable only while Aura holds the grant for it, and a grant doesn't travel in a backup or
+     * survive a reinstall. Such a slot is left out and reported, so the pack isn't restored as if it
+     * worked. A pack that loses every slot isn't restored at all, which keeps the one already here.
+     */
+    private fun planWallpaperPack(raw: String, skipped: MutableList<LibraryImportSkip>): String {
+        val pack = parsePack(raw) ?: return raw
+        val granted = persistedReadGrants()
+        val kept = pack.slots.filter { slot ->
+            val locator = slot.wallpaperUri.trim()
+            val lostGrant = locator.startsWith("content://", ignoreCase = true) && locator !in granted
+            if (lostGrant) {
+                skipped += LibraryImportSkip(
+                    section = "wallpaperPackSlot",
+                    label = normalizeImportedText(slot.label).ifBlank { slot.daypart.displayName },
+                    reason = LibraryImportSkipReason.NEEDS_REPICK,
+                )
+            }
+            !lostGrant
+        }
+        return when {
+            kept.size == pack.slots.size -> raw
+            kept.isEmpty() -> ""
+            else -> serializePack(pack.copy(slots = kept))
+        }
+    }
+
+    /** The content addresses this install was granted lasting read access to. */
+    private fun persistedReadGrants(): Set<String> = try {
+        context.contentResolver.persistedUriPermissions
+            .filter { it.isReadPermission }
+            .map { it.uri.toString() }
+            .toSet()
+    } catch (e: Exception) {
+        e.rethrowIfCancelled()
+        emptySet()
     }
 
     /**
@@ -899,17 +938,26 @@ class LibraryExporter @Inject constructor(
     /**
      * A restored 24H pack or sound profile list only takes effect once its worker matches it. The
      * import already landed, so a schedule that fails to follow is put right by the next edit in Settings.
+     *
+     * Each worker remembers what it last applied so it doesn't apply it twice. That memory is about
+     * the pack or profiles that were just replaced, so it is cleared, and one run starts right away
+     * instead of at the next 15 minute tick.
      */
     private suspend fun resyncRestoredSchedules(plan: LibraryImportPlan) {
         try {
             if (plan.wallpaperPackJson.isNotBlank()) {
-                syncWallpaperPackSchedule(context, prefs.wallpaperPackEnabled.first(), plan.wallpaperPackJson)
+                val toggleOn = prefs.wallpaperPackEnabled.first()
+                prefs.setWallpaperPackLastAppliedDaypart("")
+                restartWallpaperPackSchedule(context, toggleOn, plan.wallpaperPackJson)
             }
             if (plan.soundProfilesJson.isNotBlank()) {
-                SoundProfileWorker.sync(
-                    context,
-                    soundProfilesNeedWorker(prefs.soundProfilesEnabled.first(), parseProfiles(plan.soundProfilesJson)),
+                val needed = soundProfilesNeedWorker(
+                    prefs.soundProfilesEnabled.first(),
+                    parseProfiles(plan.soundProfilesJson),
                 )
+                prefs.setSoundProfileLastAppliedId("")
+                SoundProfileWorker.sync(context, needed)
+                if (needed) SoundProfileWorker.runNow(context)
             }
         } catch (e: kotlinx.coroutines.CancellationException) {
             throw e
