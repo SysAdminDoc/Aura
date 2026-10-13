@@ -444,7 +444,7 @@ class SoundShufflePoolManager @Inject constructor(
             val resolutions = pool.items.map { resolveCandidate(it, target) }
             resolutions.filterIsInstance<CandidateResolution.Invalid>().forEach { invalid ->
                 skipped += 1
-                appendHistory(
+                appendSkipHistory(
                     SoundShuffleHistoryEntry(
                         poolId = pool.poolId,
                         poolName = pool.name,
@@ -608,6 +608,10 @@ class SoundShufflePoolManager @Inject constructor(
 
     private suspend fun appendHistory(entry: SoundShuffleHistoryEntry) {
         updateStore { current -> current.copy(history = listOf(entry) + current.history) }
+    }
+
+    private suspend fun appendSkipHistory(entry: SoundShuffleHistoryEntry) {
+        updateStore { current -> current.copy(history = withSoundShuffleSkip(current.history, entry)) }
     }
 
     private suspend fun appendAppliedHistory(entry: SoundShuffleHistoryEntry) {
@@ -906,9 +910,10 @@ internal fun normalizeSoundShuffleStore(store: SoundShuffleStore): SoundShuffleS
         }
         .toList()
     val validPoolIds = pools.mapTo(mutableSetOf(), SoundShufflePool::poolId)
-    val history = store.history.asSequence()
-        .filter { it.poolId in validPoolIds && it.historyId.isNotBlank() }
-        .take(MAX_SOUND_SHUFFLE_HISTORY)
+    val history = trimSoundShuffleHistory(
+        store.history.filter { it.poolId in validPoolIds && it.historyId.isNotBlank() },
+        MAX_SOUND_SHUFFLE_HISTORY,
+    ).asSequence()
         .map { entry ->
             entry.copy(
                 historyId = entry.historyId.take(MAX_POOL_ID_CHARS),
@@ -931,6 +936,34 @@ internal fun normalizeSoundShuffleStore(store: SoundShuffleStore): SoundShuffleS
         pools = pools,
         history = history,
     )
+}
+
+/**
+ * A bad item is skipped on every run, so its row replaces the last identical skip instead of
+ * stacking. Otherwise a pool with one missing file fills the history and pushes out the applied
+ * rows that Undo and URI reuse depend on.
+ */
+internal fun withSoundShuffleSkip(
+    history: List<SoundShuffleHistoryEntry>,
+    entry: SoundShuffleHistoryEntry,
+): List<SoundShuffleHistoryEntry> {
+    val repeat = history.firstOrNull {
+        it.status == SoundShuffleHistoryStatus.SKIPPED && it.poolId == entry.poolId &&
+            it.itemId == entry.itemId && it.target == entry.target && it.reason == entry.reason
+    }
+    return listOf(entry) + if (repeat == null) history else history - repeat
+}
+
+/** Keeps the newest [max] rows, giving up skip and failure rows before applied ones. */
+internal fun trimSoundShuffleHistory(
+    history: List<SoundShuffleHistoryEntry>,
+    max: Int,
+): List<SoundShuffleHistoryEntry> {
+    if (history.size <= max) return history
+    val applied = history.filter { it.status == SoundShuffleHistoryStatus.APPLIED }.take(max)
+    val others = history.filter { it.status != SoundShuffleHistoryStatus.APPLIED }.take(max - applied.size)
+    val kept = (applied + others).mapTo(HashSet()) { it.historyId }
+    return history.filter { it.historyId in kept }
 }
 
 private fun normalizePoolName(name: String): String {

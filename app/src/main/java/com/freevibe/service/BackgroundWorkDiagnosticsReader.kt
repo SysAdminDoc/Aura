@@ -90,7 +90,7 @@ class AndroidBackgroundWorkDiagnosticsReader @Inject constructor(
         manager: WorkManager,
         item: BackgroundWorkItem,
     ): BackgroundWorkStatusRow = runCatching {
-        val infos = manager.getWorkInfosForUniqueWork(item.uniqueWorkName)
+        val infos = (item.workTag?.let(manager::getWorkInfosByTag) ?: manager.getWorkInfosForUniqueWork(item.uniqueWorkName))
             .get(WORK_INFO_TIMEOUT_SECONDS, TimeUnit.SECONDS)
         val receipt = receiptStore.read(item.uniqueWorkName)
         BackgroundWorkStatusRow(
@@ -143,7 +143,10 @@ class AndroidBackgroundWorkDiagnosticsReader @Inject constructor(
 
     private data class BackgroundWorkItem(
         val label: String,
+        /** Where the worker writes its receipts. */
         val uniqueWorkName: String,
+        /** Read WorkInfo by tag when one row stands for several unique works, such as one per sound pool. */
+        val workTag: String? = null,
     )
 
     private companion object {
@@ -154,7 +157,8 @@ class AndroidBackgroundWorkDiagnosticsReader @Inject constructor(
             BackgroundWorkItem("Automatic backup", AutoBackupWorker.WORK_NAME),
             BackgroundWorkItem("Daily wallpaper notification", DailyWallpaperWorker.WORK_NAME),
             BackgroundWorkItem("Ringtone restoration", RingtoneRestorationWorker.WORK_NAME),
-            BackgroundWorkItem("Ringtone shuffle", RingtoneShuffleWorker.WORK_NAME),
+            // WorkManager tags every request with its worker class, which covers every pool's periodic and run-now work.
+            BackgroundWorkItem("Sound pools", RingtoneShuffleWorker.WORK_NAME, workTag = RingtoneShuffleWorker::class.java.name),
             BackgroundWorkItem("Sound profile", SoundProfileWorker.WORK_NAME),
             BackgroundWorkItem("Wallpaper pack", WallpaperPackWorker.WORK_NAME),
             BackgroundWorkItem("Theme wallpaper switching", SystemThemeListener.WORK_NAME),

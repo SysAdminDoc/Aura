@@ -1488,7 +1488,10 @@
     <string name="settings_sounds_shuffle_every_hour">Every hour</string>
     <string name="settings_sounds_shuffle_pools_title">Sound shuffle pools</string>
     <string name="settings_sounds_shuffle_pools_empty_subtitle">Build scheduled mixes for ringtones, notifications, and alarms</string>
-    <string name="settings_sounds_shuffle_pools_count_subtitle">%1$d pools, %2$d active</string>
+    <plurals name="settings_sounds_shuffle_pools_count_subtitle">
+        <item quantity="one">%1$d pool, %2$d active</item>
+        <item quantity="other">%1$d pools, %2$d active</item>
+    </plurals>
     <string name="sound_shuffle_dialog_title">Sound shuffle pools</string>
     <string name="sound_shuffle_new_pool_label">New pool name</string>
     <string name="sound_shuffle_new_pool_default">My sounds</string>
@@ -1496,7 +1499,10 @@
     <string name="sound_shuffle_no_pools">Create a pool, choose its system sound targets, then add downloads, local files, or Aura Originals.</string>
     <string name="sound_shuffle_enabled">Scheduled shuffle</string>
     <string name="sound_shuffle_disabled_summary">Off</string>
-    <string name="sound_shuffle_pool_summary">%1$d sounds · %2$s · %3$s</string>
+    <plurals name="sound_shuffle_pool_summary">
+        <item quantity="one">%1$d sound · %2$s · %3$s</item>
+        <item quantity="other">%1$d sounds · %2$s · %3$s</item>
+    </plurals>
     <string name="sound_shuffle_no_target">Choose a target</string>
     <string name="sound_shuffle_target_ringtone">Ringtone</string>
     <string name="sound_shuffle_target_notification">Notification</string>

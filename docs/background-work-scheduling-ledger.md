@@ -21,7 +21,7 @@ release docs, and verify/release workflow wiring.
 | Daily wallpaper notification | `DailyWallpaperWorker` | Periodic | `daily_wallpaper` | `ExistingPeriodicWorkPolicy.KEEP` | 24 hours with 8-hour initial delay | Connected network | No |
 | Ringtone restoration | `RingtoneRestorationWorker` | One-time | `ringtone_restoration` | `ExistingWorkPolicy.REPLACE` | Device boot or package replacement | No explicit constraints | No |
 | Sound shuffle pool | `RingtoneShuffleWorker` | Periodic | `sound_shuffle_pool_$poolId` | `ExistingPeriodicWorkPolicy.UPDATE` | Per pool: 1, 6, 12, 24, or 72 hours | No explicit constraints | No |
-| Sound shuffle pool, Run now | `RingtoneShuffleWorker` | One-time | `sound_shuffle_pool_${poolId}_now` | `ExistingWorkPolicy.REPLACE` | When the person taps Run now | No explicit constraints | No |
+| Sound shuffle pool, Run now | `RingtoneShuffleWorker` | One-time | `sound_shuffle_pool_${poolId}_now` | `ExistingWorkPolicy.KEEP` | When the person taps Run now | No explicit constraints | No |
 | Sound profile | `SoundProfileWorker` | Periodic | `sound_profile` | `ExistingPeriodicWorkPolicy.UPDATE` | 15 minutes | No explicit constraints | No |
 | Wallpaper pack | `WallpaperPackWorker` | Periodic | `wallpaper_pack` | `ExistingPeriodicWorkPolicy.UPDATE` | 15 minutes | No explicit constraints | No |
 | Weather effect refresh | `WeatherUpdateWorker` | Periodic | `weather_update` | `ExistingPeriodicWorkPolicy.KEEP` | 30 minutes | Connected network | No |

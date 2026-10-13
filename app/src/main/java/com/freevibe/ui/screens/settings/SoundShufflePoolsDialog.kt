@@ -51,6 +51,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalResources
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -83,7 +84,9 @@ internal fun SoundShufflePoolsDialog(
 ) {
     val context = LocalContext.current
     val resources = LocalResources.current
-    val store by viewModel.soundShuffleStore.collectAsStateWithLifecycle(initialValue = SoundShuffleStore())
+    // Null until the first read, so a restored selection isn't dropped against the empty placeholder.
+    val loadedStore by viewModel.soundShuffleStore.collectAsStateWithLifecycle<SoundShuffleStore?>(initialValue = null)
+    val store = loadedStore ?: SoundShuffleStore()
     val downloads by viewModel.soundShuffleDownloads.collectAsStateWithLifecycle(initialValue = emptyList())
     var selectedPoolId by rememberSaveable { mutableStateOf<String?>(null) }
     var relinkItemId by rememberSaveable { mutableStateOf<String?>(null) }
@@ -99,8 +102,10 @@ internal fun SoundShufflePoolsDialog(
     }
     val canWriteSettings = remember(permissionRefresh) { Settings.System.canWrite(context) }
 
-    LaunchedEffect(selectedPoolId, store.pools) {
-        if (selectedPoolId != null && selectedPool == null) selectedPoolId = null
+    // Keyed on the pools only: a pool that was just created is selected before the store emits it.
+    LaunchedEffect(store.pools) {
+        val pools = loadedStore?.pools ?: return@LaunchedEffect
+        if (selectedPoolId != null && pools.none { it.poolId == selectedPoolId }) selectedPoolId = null
     }
 
     fun report(result: Result<Unit>, successMessage: Int) {
@@ -361,8 +366,9 @@ private fun SoundShufflePoolList(
                     Column(modifier = Modifier.weight(1f)) {
                         Text(pool.name, style = MaterialTheme.typography.titleMedium)
                         Text(
-                            stringResource(
-                                R.string.sound_shuffle_pool_summary,
+                            pluralStringResource(
+                                R.plurals.sound_shuffle_pool_summary,
+                                pool.items.size,
                                 pool.items.size,
                                 soundShuffleTargetSummary(pool.targets),
                                 soundShuffleIntervalLabel(pool.intervalHours),

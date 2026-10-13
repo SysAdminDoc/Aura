@@ -248,7 +248,7 @@
       ],
       "workKind": "oneTime",
       "enqueueApi": "enqueueUniqueWork",
-      "existingWorkPolicy": "ExistingWorkPolicy.REPLACE",
+      "existingWorkPolicy": "ExistingWorkPolicy.KEEP",
       "interval": "not periodic",
       "initialDelay": "none",
       "constraints": [
@@ -265,7 +265,7 @@
       ],
       "sourceTerms": [
         "OneTimeWorkRequestBuilder<RingtoneShuffleWorker>",
-        "ExistingWorkPolicy.REPLACE",
+        "ExistingWorkPolicy.KEEP",
         "CancellationException"
       ]
     },

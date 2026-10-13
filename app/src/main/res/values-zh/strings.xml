@@ -1338,7 +1338,9 @@
     <string name="settings_sounds_shuffle_every_hour">每小时</string>
     <string name="settings_sounds_shuffle_pools_title">声音随机池</string>
     <string name="settings_sounds_shuffle_pools_empty_subtitle">为铃声、通知和闹钟创建定时混合</string>
-    <string name="settings_sounds_shuffle_pools_count_subtitle">%1$d 个池，%2$d 个已启用</string>
+    <plurals name="settings_sounds_shuffle_pools_count_subtitle">
+        <item quantity="other">%1$d 个池，%2$d 个已启用</item>
+    </plurals>
     <string name="sound_shuffle_dialog_title">声音随机池</string>
     <string name="sound_shuffle_new_pool_label">新池名称</string>
     <string name="sound_shuffle_new_pool_default">我的声音</string>
@@ -1346,7 +1348,9 @@
     <string name="sound_shuffle_no_pools">创建一个池，选择系统声音目标，然后添加下载、设备文件或 Aura 原创声音。</string>
     <string name="sound_shuffle_enabled">定时随机</string>
     <string name="sound_shuffle_disabled_summary">已关闭</string>
-    <string name="sound_shuffle_pool_summary">%1$d 个声音 · %2$s · %3$s</string>
+    <plurals name="sound_shuffle_pool_summary">
+        <item quantity="other">%1$d 个声音 · %2$s · %3$s</item>
+    </plurals>
     <string name="sound_shuffle_no_target">选择目标</string>
     <string name="sound_shuffle_target_ringtone">铃声</string>
     <string name="sound_shuffle_target_notification">通知</string>

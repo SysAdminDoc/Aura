@@ -115,9 +115,10 @@ class RingtoneShuffleWorker @AssistedInject constructor(
                 .setInputData(workDataOf(INPUT_POOL_ID to poolId))
                 .setBackoffCriteria(BackoffPolicy.EXPONENTIAL, 15, TimeUnit.MINUTES)
                 .build()
+            // KEEP: a second tap mustn't cancel a run that's halfway through applying sounds.
             WorkManager.getInstance(context).enqueueUniqueWork(
                 runNowWorkName(poolId),
-                ExistingWorkPolicy.REPLACE,
+                ExistingWorkPolicy.KEEP,
                 request,
             )
         }

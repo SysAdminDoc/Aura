@@ -774,7 +774,14 @@ class LibraryExporter @Inject constructor(
             throw error
         }
         if (plan.soundShufflePoolsJson.isNotBlank()) {
-            runCatching { soundShufflePoolManager.restoreSchedules() }
+            // The import already landed; a schedule that fails to come back is fixed by the next boot or pool edit.
+            try {
+                soundShufflePoolManager.restoreSchedules()
+            } catch (e: kotlinx.coroutines.CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                android.util.Log.w("LibraryExporter", "Sound pool schedules weren't restored: ${e.javaClass.simpleName}")
+            }
         }
     }
 

@@ -43,6 +43,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.freevibe.R
@@ -171,8 +172,9 @@ internal fun SoundSettingsSection(
             subtitle = if (soundShuffleStore.pools.isEmpty()) {
                 stringResource(R.string.settings_sounds_shuffle_pools_empty_subtitle)
             } else {
-                stringResource(
-                    R.string.settings_sounds_shuffle_pools_count_subtitle,
+                pluralStringResource(
+                    R.plurals.settings_sounds_shuffle_pools_count_subtitle,
+                    soundShuffleStore.pools.size,
                     soundShuffleStore.pools.size,
                     soundShuffleStore.pools.count { it.enabled },
                 )
