@@ -12,7 +12,6 @@ import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -25,6 +24,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
+import com.freevibe.ui.theme.AuraShapes
 import kotlinx.coroutines.launch
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
@@ -365,7 +365,7 @@ fun SoundDetailScreen(
             ) {
             // Waveform with integrated play button
             Box(
-                modifier = Modifier.fillMaxWidth().height(156.dp).clip(RoundedCornerShape(8.dp)),
+                modifier = Modifier.fillMaxWidth().height(156.dp).clip(AuraShapes.Medium),
                 contentAlignment = Alignment.Center,
             ) {
                 if (s.duration > 0) {
@@ -380,7 +380,7 @@ fun SoundDetailScreen(
                 }
                 // Play overlay
                 Surface(
-                    shape = RoundedCornerShape(8.dp),
+                    shape = AuraShapes.Medium,
                     color = MaterialTheme.colorScheme.primary,
                     contentColor = MaterialTheme.colorScheme.onPrimary,
                     modifier = Modifier
@@ -469,7 +469,7 @@ fun SoundDetailScreen(
                 Surface(
                     color = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.58f),
                     contentColor = MaterialTheme.colorScheme.onErrorContainer,
-                    shape = RoundedCornerShape(8.dp),
+                    shape = AuraShapes.Medium,
                 ) {
                     Row(
                         Modifier.fillMaxWidth().padding(14.dp),
@@ -595,7 +595,7 @@ fun SoundDetailScreen(
                 OutlinedButton(
                     onClick = { showReportDialog = true },
                     modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp),
-                    shape = RoundedCornerShape(8.dp),
+                    shape = AuraShapes.Medium,
                 ) {
                     Icon(Icons.Default.Report, contentDescription = null, modifier = Modifier.size(18.dp))
                     Spacer(Modifier.width(8.dp))
@@ -606,7 +606,7 @@ fun SoundDetailScreen(
                 OutlinedButton(
                     onClick = { showBlockCreatorDialog = true },
                     modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp),
-                    shape = RoundedCornerShape(8.dp),
+                    shape = AuraShapes.Medium,
                     colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.error),
                 ) {
                     Icon(Icons.Default.Block, contentDescription = null, modifier = Modifier.size(18.dp))
@@ -618,7 +618,7 @@ fun SoundDetailScreen(
                 OutlinedButton(
                     onClick = { showDeleteUploadDialog = true },
                     modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp),
-                    shape = RoundedCornerShape(8.dp),
+                    shape = AuraShapes.Medium,
                     colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.error),
                 ) {
                     Icon(Icons.Default.Delete, contentDescription = null, modifier = Modifier.size(18.dp))
@@ -680,7 +680,7 @@ private fun buildSoundShareBody(sound: Sound, capabilities: SoundLicenseCapabili
 internal fun ApplyButton(text: String, icon: androidx.compose.ui.graphics.vector.ImageVector, enabled: Boolean, isLoading: Boolean, modifier: Modifier, onClick: () -> Unit) {
     Button(
         onClick = onClick, modifier = modifier.heightIn(min = 48.dp), enabled = enabled,
-        shape = RoundedCornerShape(8.dp),
+        shape = AuraShapes.Medium,
         colors = ButtonDefaults.buttonColors(
             containerColor = MaterialTheme.colorScheme.primary,
             contentColor = MaterialTheme.colorScheme.onPrimary,
@@ -713,7 +713,7 @@ private fun SecondarySoundAction(
         onClick = onClick,
         enabled = enabled,
         modifier = modifier.heightIn(min = 48.dp),
-        shape = RoundedCornerShape(8.dp),
+        shape = AuraShapes.Medium,
     ) {
         Icon(icon, contentDescription = label, modifier = Modifier.size(18.dp))
         Spacer(Modifier.width(6.dp))
@@ -759,14 +759,14 @@ private fun SimilarSoundsSection(
                 items(3) {
                     Surface(
                         color = MaterialTheme.colorScheme.surfaceContainerHigh,
-                        shape = RoundedCornerShape(8.dp),
+                        shape = AuraShapes.Medium,
                         modifier = Modifier.width(184.dp),
                     ) {
                         Row(Modifier.padding(10.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                            ShimmerBox(Modifier.size(48.dp), shape = RoundedCornerShape(8.dp))
+                            ShimmerBox(Modifier.size(48.dp), shape = AuraShapes.Medium)
                             Column(verticalArrangement = Arrangement.spacedBy(5.dp)) {
-                                ShimmerBox(Modifier.width(78.dp).height(12.dp), shape = RoundedCornerShape(5.dp))
-                                ShimmerBox(Modifier.width(44.dp).height(10.dp), shape = RoundedCornerShape(5.dp))
+                                ShimmerBox(Modifier.width(78.dp).height(12.dp), shape = AuraShapes.Small)
+                                ShimmerBox(Modifier.width(44.dp).height(10.dp), shape = AuraShapes.Small)
                             }
                         }
                     }
@@ -788,14 +788,14 @@ private fun SimilarSoundsSection(
                     }
                     Surface(
                         onClick = { onSoundClick(similar) }, color = MaterialTheme.colorScheme.surfaceContainerHigh,
-                        shape = RoundedCornerShape(8.dp), modifier = Modifier.width(184.dp),
+                        shape = AuraShapes.Medium, modifier = Modifier.width(184.dp),
                     ) {
                         Row(Modifier.padding(10.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                             IconButton(
                                 onClick = { viewModel.togglePlayback(similar) },
                                 modifier = Modifier
                                     .size(48.dp)
-                                    .clip(RoundedCornerShape(8.dp))
+                                    .clip(AuraShapes.Medium)
                                     .background(if (similarPlaying) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceContainer)
                                     .semantics {
                                         stateDescription = similarState
@@ -820,7 +820,7 @@ private fun SimilarSoundsSection(
         } else if (loaded) {
             Surface(
                 color = MaterialTheme.colorScheme.surfaceContainer,
-                shape = RoundedCornerShape(8.dp),
+                shape = AuraShapes.Medium,
                 border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.22f)),
             ) {
                 Row(

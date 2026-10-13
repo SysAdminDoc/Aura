@@ -19,7 +19,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
@@ -90,6 +89,7 @@ import com.freevibe.ui.navigation.LocalAuraNavigationLayout
 import com.freevibe.ui.navigation.isExpanded
 import com.freevibe.ui.policy.CommunityUploadPolicyKind
 import com.freevibe.ui.policy.communityUploadPolicyCopy
+import com.freevibe.ui.theme.AuraShapes
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flowOf
@@ -517,7 +517,7 @@ fun SoundsScreen(
                                 else -> R.string.sounds_search_generic
                             }),
                             leadingIcon = if (isYouTubeTab) Icons.Default.SmartDisplay else Icons.Default.Search,
-                            leadingTint = if (isYouTubeTab) Color(0xFFFF6A5B) else MaterialTheme.colorScheme.onSurfaceVariant,
+                            leadingTint = if (isYouTubeTab) soundSourceTone(ContentSource.YOUTUBE).colorForSurface() else MaterialTheme.colorScheme.onSurfaceVariant,
                             modifier = Modifier.weight(1f),
                             onClear = {
                                 searchQuery = ""
@@ -584,7 +584,7 @@ fun SoundsScreen(
                         leadingIcon = if (hideAiGeneratedCommunity) {
                             { Icon(Icons.Default.Check, contentDescription = null, modifier = Modifier.size(16.dp)) }
                         } else null,
-                        shape = RoundedCornerShape(8.dp),
+                        shape = AuraShapes.Medium,
                     )
                 }
             }
@@ -826,7 +826,7 @@ private fun SoundModeBar(
             Surface(
                 onClick = { onSelectTab(tab) },
                 color = Color.Transparent,
-                shape = RoundedCornerShape(0.dp),
+                shape = AuraShapes.None,
                 modifier = Modifier.semantics { this.selected = selected; role = androidx.compose.ui.semantics.Role.Tab },
             ) {
                 Box(
@@ -862,7 +862,7 @@ private fun SoundModeBar(
                 Surface(
                     onClick = { showMoreMenu = true },
                     color = Color.Transparent,
-                    shape = RoundedCornerShape(0.dp),
+                    shape = AuraShapes.None,
                 ) {
                     Row(
                         modifier = Modifier.heightIn(min = 44.dp).padding(horizontal = 12.dp),
@@ -1130,7 +1130,7 @@ private fun SoundCard(
     }
     Surface(
         color = if (isPlaying) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.18f) else Color.Transparent,
-        shape = RoundedCornerShape(0.dp),
+        shape = AuraShapes.None,
         modifier = Modifier
             .combinedClickable(
                 onClick = onClick,
@@ -1260,7 +1260,7 @@ private fun SoundCard(
                     onUpvote?.let {
                         OutlinedButton(
                             onClick = it,
-                            shape = RoundedCornerShape(8.dp),
+                            shape = AuraShapes.Medium,
                             contentPadding = PaddingValues(horizontal = 10.dp, vertical = 0.dp),
                             modifier = Modifier
                                 .heightIn(min = 40.dp)
@@ -1280,7 +1280,7 @@ private fun SoundCard(
                     onDownvote?.let {
                         TextButton(
                             onClick = it,
-                            shape = RoundedCornerShape(8.dp),
+                            shape = AuraShapes.Medium,
                             contentPadding = PaddingValues(horizontal = 10.dp, vertical = 0.dp),
                             modifier = Modifier
                                 .heightIn(min = 40.dp)
@@ -1487,7 +1487,7 @@ private fun QuickApplySheet(
             if (!canApply) {
                 Surface(
                     color = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.55f),
-                    shape = RoundedCornerShape(8.dp),
+                    shape = AuraShapes.Medium,
                     border = BorderStroke(1.dp, MaterialTheme.colorScheme.error.copy(alpha = 0.22f)),
                 ) {
                     Row(
@@ -1513,7 +1513,7 @@ private fun QuickApplySheet(
             if (policyMessages.isNotEmpty()) {
                 Surface(
                     color = MaterialTheme.colorScheme.tertiaryContainer.copy(alpha = 0.52f),
-                    shape = RoundedCornerShape(8.dp),
+                    shape = AuraShapes.Medium,
                     border = BorderStroke(1.dp, MaterialTheme.colorScheme.tertiary.copy(alpha = 0.22f)),
                 ) {
                     Row(
@@ -1568,7 +1568,7 @@ private fun QuickApplyRow(label: String, icon: androidx.compose.ui.graphics.vect
     Surface(
         onClick = onClick,
         enabled = enabled,
-        shape = RoundedCornerShape(8.dp),
+        shape = AuraShapes.Medium,
         color = if (enabled) {
             MaterialTheme.colorScheme.surfaceContainer.copy(alpha = 0.58f)
         } else {
@@ -1640,14 +1640,14 @@ private fun RecordingDialog(
             }
         },
         confirmButton = {
-            Button(onClick = onStop, shape = RoundedCornerShape(8.dp), modifier = Modifier.heightIn(min = 48.dp)) {
+            Button(onClick = onStop, shape = AuraShapes.Medium, modifier = Modifier.heightIn(min = 48.dp)) {
                 Icon(Icons.Default.Stop, contentDescription = null, modifier = Modifier.size(16.dp))
                 Spacer(Modifier.width(6.dp))
                 Text(stopLabel)
             }
         },
         dismissButton = {
-            TextButton(onClick = onDiscard, shape = RoundedCornerShape(8.dp), modifier = Modifier.heightIn(min = 48.dp)) {
+            TextButton(onClick = onDiscard, shape = AuraShapes.Medium, modifier = Modifier.heightIn(min = 48.dp)) {
                 Text(discardLabel)
             }
         },
@@ -1731,7 +1731,7 @@ private fun UploadDialog(
                             selected = selectedCategory == key,
                             onClick = { selectedCategory = key },
                             label = { Text(label) },
-                            shape = RoundedCornerShape(8.dp),
+                            shape = AuraShapes.Medium,
                         )
                     }
                 }
@@ -1754,7 +1754,7 @@ private fun UploadDialog(
                             selected = selectedLicense == license,
                             onClick = { selectedLicense = license },
                             label = { Text(license) },
-                            shape = RoundedCornerShape(8.dp),
+                            shape = AuraShapes.Medium,
                         )
                     }
                 }
@@ -1816,7 +1816,7 @@ private fun UploadDialog(
                     )
                 },
                 enabled = !isUploading && name.isNotBlank() && rightsAttested,
-                shape = RoundedCornerShape(8.dp),
+                shape = AuraShapes.Medium,
                 modifier = Modifier.heightIn(min = 48.dp),
             ) { Text(stringResource(R.string.sounds_upload_button)) }
         },
@@ -1824,7 +1824,7 @@ private fun UploadDialog(
             TextButton(
                 onClick = onDismiss,
                 enabled = !isUploading,
-                shape = RoundedCornerShape(8.dp),
+                shape = AuraShapes.Medium,
                 modifier = Modifier.heightIn(min = 48.dp),
             ) { Text(stringResource(R.string.common_cancel)) }
         },

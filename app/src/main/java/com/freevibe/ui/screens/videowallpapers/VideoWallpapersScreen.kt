@@ -20,7 +20,6 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
@@ -98,6 +97,7 @@ import com.freevibe.ui.components.ShimmerBox
 import com.freevibe.ui.LiveWallpaperLaunchMode
 import com.freevibe.ui.launchLiveWallpaperPicker
 import com.freevibe.ui.rotation.RotationExclusionsViewModel
+import com.freevibe.ui.theme.AuraShapes
 import com.freevibe.ui.util.openExternalUrl
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -567,7 +567,7 @@ fun VideoWallpapersScreen(
                         repeat(3) {
                             ShimmerBox(
                                 modifier = Modifier.fillMaxWidth().height(228.dp),
-                                shape = RoundedCornerShape(8.dp),
+                                shape = AuraShapes.Medium,
                             )
                         }
                     }
@@ -856,7 +856,7 @@ fun VideoWallpapersScreen(
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(180.dp)
-                            .clip(RoundedCornerShape(8.dp)),
+                            .clip(AuraShapes.Medium),
                     )
                     Spacer(Modifier.height(12.dp))
                     VideoProvenanceBlock(
@@ -935,8 +935,8 @@ fun VideoWallpapersScreen(
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     if (streamUrl != null && canApplyVideo) {
                         if (needsCrop) {
-                            OutlinedButton(onClick = { viewModel.applyVideoWallpaper(item, selectedScaleMode, selectedCanvasStyle); confirmItem = null }) { Text(stringResource(R.string.video_apply)) }
-                            Button(onClick = {
+                            OutlinedButton(onClick = { viewModel.applyVideoWallpaper(item, selectedScaleMode, selectedCanvasStyle); confirmItem = null }, shape = AuraShapes.Medium) { Text(stringResource(R.string.video_apply)) }
+                            Button(shape = AuraShapes.Medium, onClick = {
                                 confirmItem = null
                                 cropItem = item to streamUrl
                             }) {
@@ -945,7 +945,7 @@ fun VideoWallpapersScreen(
                                 Text(stringResource(R.string.video_crop))
                             }
                         } else {
-                            OutlinedButton(onClick = {
+                            OutlinedButton(shape = AuraShapes.Medium, onClick = {
                                 confirmItem = null
                                 cropItem = item to streamUrl
                             }) {
@@ -953,10 +953,10 @@ fun VideoWallpapersScreen(
                                 Spacer(Modifier.width(4.dp))
                                 Text(stringResource(R.string.video_crop))
                             }
-                            Button(onClick = { viewModel.applyVideoWallpaper(item, selectedScaleMode, selectedCanvasStyle); confirmItem = null }) { Text(stringResource(R.string.video_apply)) }
+                            Button(onClick = { viewModel.applyVideoWallpaper(item, selectedScaleMode, selectedCanvasStyle); confirmItem = null }, shape = AuraShapes.Medium) { Text(stringResource(R.string.video_apply)) }
                         }
                     } else if (canApplyVideo) {
-                        Button(onClick = { viewModel.applyVideoWallpaper(item, selectedScaleMode, selectedCanvasStyle); confirmItem = null }) { Text(stringResource(R.string.video_apply)) }
+                        Button(onClick = { viewModel.applyVideoWallpaper(item, selectedScaleMode, selectedCanvasStyle); confirmItem = null }, shape = AuraShapes.Medium) { Text(stringResource(R.string.video_apply)) }
                     }
                 }
             },
@@ -989,7 +989,7 @@ fun VideoWallpapersScreen(
                 }
             },
             confirmButton = {
-                Button(onClick = {
+                Button(shape = AuraShapes.Medium, onClick = {
                     downloadConfirmItem = null
                     viewModel.downloadVideo(item)
                 }) { Text(stringResource(R.string.video_wp_download)) }
@@ -1135,7 +1135,7 @@ private fun VideoImmersivePager(
                     .statusBarsPadding()
                     .padding(10.dp)
                     .align(Alignment.TopStart)
-                    .background(Color.Black.copy(alpha = 0.48f), RoundedCornerShape(50)),
+                    .background(Color.Black.copy(alpha = 0.48f), AuraShapes.Medium),
             ) {
                 Icon(Icons.Default.Close, contentDescription = stringResource(R.string.common_close), tint = Color.White)
             }
@@ -1313,7 +1313,7 @@ private fun ImmersiveVideoPage(
                 Button(
                     onClick = onApply,
                     enabled = streamUrl != null && item.canUseVideoAction(VideoWallpaperAction.APPLY),
-                    shape = RoundedCornerShape(8.dp),
+                    shape = AuraShapes.Medium,
                     modifier = Modifier.heightIn(min = 48.dp),
                 ) {
                     Icon(Icons.Default.Wallpaper, contentDescription = null, modifier = Modifier.size(18.dp))
@@ -1337,7 +1337,7 @@ private fun VideoPreviewLoadingIndicator(modifier: Modifier = Modifier) {
     Surface(
         modifier = modifier,
         color = Color.Black.copy(alpha = 0.58f),
-        shape = RoundedCornerShape(12.dp),
+        shape = AuraShapes.Large,
     ) {
         Column(
             modifier = Modifier.padding(horizontal = 18.dp, vertical = 14.dp),
@@ -1363,7 +1363,7 @@ private fun VideoPreviewUnavailableIndicator(modifier: Modifier = Modifier) {
     Surface(
         modifier = modifier,
         color = Color.Black.copy(alpha = 0.62f),
-        shape = RoundedCornerShape(12.dp),
+        shape = AuraShapes.Large,
     ) {
         Row(
             modifier = Modifier.padding(horizontal = 18.dp, vertical = 14.dp),
@@ -1435,7 +1435,7 @@ internal fun VideoCard(
             contentDescription = item.title
             stateDescription = videoStateDescription
         },
-        shape = RoundedCornerShape(8.dp),
+        shape = AuraShapes.Medium,
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer),
     ) {
         Box {
@@ -1448,7 +1448,7 @@ internal fun VideoCard(
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(feedPreviewHeight)
-                        .clip(RoundedCornerShape(topStart = 8.dp, topEnd = 8.dp)),
+                        .clip(AuraShapes.CardTop),
                 )
             } else if (streamUrl != null && shouldPreview) {
                 val exoPlayer = remember(streamUrl) {
@@ -1486,7 +1486,7 @@ internal fun VideoCard(
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(feedPreviewHeight)
-                        .clip(RoundedCornerShape(topStart = 8.dp, topEnd = 8.dp)),
+                        .clip(AuraShapes.CardTop),
                 )
             } else {
                 // Static thumbnail for non-focused cards; show spinner only while unresolved
@@ -1506,7 +1506,7 @@ internal fun VideoCard(
                     if (streamUrl == null) {
                         Surface(
                             color = Color.Black.copy(alpha = 0.5f),
-                            shape = RoundedCornerShape(8.dp),
+                            shape = AuraShapes.Medium,
                             modifier = Modifier.size(48.dp),
                         ) {
                             Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
@@ -1516,7 +1516,7 @@ internal fun VideoCard(
                     } else {
                         Surface(
                             color = Color.Black.copy(alpha = 0.45f),
-                            shape = RoundedCornerShape(8.dp),
+                            shape = AuraShapes.Medium,
                             modifier = Modifier.size(44.dp),
                         ) {
                             Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
@@ -1545,7 +1545,7 @@ internal fun VideoCard(
                     modifier = Modifier
                         .align(Alignment.TopEnd)
                         .padding(10.dp)
-                        .background(Color.Black.copy(alpha = 0.46f), RoundedCornerShape(4.dp))
+                        .background(Color.Black.copy(alpha = 0.46f), AuraShapes.Small)
                         .padding(horizontal = 6.dp, vertical = 2.dp),
                     style = MaterialTheme.typography.labelSmall,
                     color = Color.White,
@@ -1656,7 +1656,7 @@ internal fun VideoCard(
             Button(
                 onClick = onApply,
                 enabled = !isApplying && canApplyVideo,
-                shape = RoundedCornerShape(8.dp),
+                shape = AuraShapes.Medium,
                 modifier = Modifier
                     .heightIn(min = 48.dp)
                     .semantics {
@@ -1744,7 +1744,7 @@ private fun VideoPolicyLinkButton(
     OutlinedButton(
         onClick = { onOpenUrl(url) },
         modifier = Modifier.heightIn(min = 40.dp),
-        shape = RoundedCornerShape(8.dp),
+        shape = AuraShapes.Medium,
         contentPadding = PaddingValues(horizontal = 10.dp, vertical = 6.dp),
     ) {
         Icon(icon, contentDescription = null, modifier = Modifier.size(16.dp))
@@ -1836,7 +1836,7 @@ private fun VideoFiltersSheet(
                     selected = focusFilter == filter,
                     onClick = { onSelectFocus(filter) },
                     label = { Text(videoFocusLabel(filter)) },
-                    shape = RoundedCornerShape(8.dp),
+                    shape = AuraShapes.Medium,
                     leadingIcon = if (focusFilter == filter) {
                         { Icon(Icons.Default.Check, null, Modifier.size(16.dp)) }
                     } else null,
@@ -1859,7 +1859,7 @@ private fun VideoFiltersSheet(
                 AssistChip(
                     onClick = { onQuickSearch(query) },
                     label = { Text(label) },
-                    shape = RoundedCornerShape(8.dp),
+                    shape = AuraShapes.Medium,
                 )
             }
         }

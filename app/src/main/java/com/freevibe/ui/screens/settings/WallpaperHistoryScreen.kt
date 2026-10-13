@@ -4,7 +4,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.staggeredgrid.*
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.*
@@ -30,6 +29,7 @@ import com.freevibe.data.model.rotationIdentity
 import com.freevibe.ui.components.AuraSnackbarHost
 import com.freevibe.ui.components.AuraStateCard
 import com.freevibe.ui.rotation.RotationExclusionsViewModel
+import com.freevibe.ui.theme.AuraShapes
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -164,9 +164,9 @@ private fun HistoryCard(
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(8.dp))
+            .clip(AuraShapes.Medium)
             .clickable(onClick = onClick),
-        shape = RoundedCornerShape(8.dp),
+        shape = AuraShapes.Medium,
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer),
     ) {
         Box {
@@ -188,7 +188,7 @@ private fun HistoryCard(
                 modifier = Modifier
                     .align(Alignment.TopEnd)
                     .padding(4.dp)
-                    .background(Color.Black.copy(alpha = 0.58f), RoundedCornerShape(8.dp)),
+                    .background(Color.Black.copy(alpha = 0.58f), AuraShapes.Medium),
             ) {
                 Icon(
                     if (rotationExcluded) Icons.Default.Restore else Icons.Default.PlaylistRemove,

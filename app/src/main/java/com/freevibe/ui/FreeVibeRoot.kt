@@ -7,7 +7,6 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -24,6 +23,7 @@ import androidx.navigation.NavType
 import androidx.navigation.compose.*
 import androidx.navigation.navArgument
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.freevibe.ui.theme.AuraShapes
 import kotlinx.coroutines.launch
 import com.freevibe.R
 import com.freevibe.data.local.PreferencesManager
@@ -1183,7 +1183,7 @@ private fun PrimaryNavigationRail(
                 ),
             )
             .padding(start = 8.dp, top = 10.dp, bottom = 10.dp),
-        shape = RoundedCornerShape(8.dp),
+        shape = AuraShapes.Medium,
         color = MaterialTheme.colorScheme.surface.copy(alpha = 0.96f),
         contentColor = MaterialTheme.colorScheme.onSurface,
         tonalElevation = 0.dp,
@@ -1272,7 +1272,7 @@ private fun BottomNavIcon(
                 .height(2.dp)
                 .background(
                     color = if (selected) MaterialTheme.colorScheme.primary else Color.Transparent,
-                    shape = RoundedCornerShape(1.dp),
+                    shape = AuraShapes.Hairline,
                 ),
         )
     }

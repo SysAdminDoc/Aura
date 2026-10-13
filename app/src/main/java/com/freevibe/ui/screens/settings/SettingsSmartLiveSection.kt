@@ -16,7 +16,6 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.OpenInNew
@@ -51,6 +50,7 @@ import androidx.core.content.ContextCompat
 import com.freevibe.R
 import com.freevibe.data.model.WallpaperHistoryEntity
 import com.freevibe.service.AgslShaderGallery
+import com.freevibe.ui.theme.AuraShapes
 import com.freevibe.ui.util.openExternalUrl
 
 @Composable
@@ -321,7 +321,7 @@ private fun WeatherDataLicenseCard(context: Context) {
         onClick = { openExternalUrl(context, OPEN_METEO_LICENCE_URL) },
         color = MaterialTheme.colorScheme.surfaceContainer,
         contentColor = MaterialTheme.colorScheme.onSurface,
-        shape = RoundedCornerShape(8.dp),
+        shape = AuraShapes.Medium,
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp),
@@ -405,7 +405,7 @@ private fun WallpaperSlotCard(
 ) {
     Column(
         modifier = modifier
-            .clip(RoundedCornerShape(8.dp))
+            .clip(AuraShapes.Medium)
             .background(MaterialTheme.colorScheme.surfaceContainer)
             .clickable(onClick = onClick)
             .padding(12.dp),

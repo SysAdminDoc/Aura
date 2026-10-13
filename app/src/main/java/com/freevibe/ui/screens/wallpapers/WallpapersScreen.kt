@@ -12,7 +12,6 @@ import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.staggeredgrid.*
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
@@ -28,6 +27,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalResources
+import com.freevibe.ui.theme.AuraShapes
 import kotlinx.coroutines.launch
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
@@ -650,7 +650,7 @@ fun WallpapersScreen(
                         leadingIcon = if (hideAiGeneratedCommunity) {
                             { Icon(Icons.Default.Check, contentDescription = null, modifier = Modifier.size(16.dp)) }
                         } else null,
-                        shape = RoundedCornerShape(8.dp),
+                        shape = AuraShapes.Medium,
                     )
                 }
                 if (state.selectedTab == WallpaperTab.REDDIT) {
@@ -678,7 +678,7 @@ fun WallpapersScreen(
                             label = { Text(wallpaperFilterLabel(state.discoverFilter), style = MaterialTheme.typography.labelSmall) },
                             leadingIcon = { Icon(Icons.Default.Tune, null, Modifier.size(12.dp)) },
                             trailingIcon = { Icon(Icons.Default.Close, null, Modifier.size(12.dp)) },
-                            shape = RoundedCornerShape(8.dp),
+                            shape = AuraShapes.Medium,
                         )
                     }
                     state.selectedColor?.let { selectedColor ->
@@ -689,12 +689,12 @@ fun WallpapersScreen(
                                 Box(
                                     modifier = Modifier
                                         .size(12.dp)
-                                        .clip(RoundedCornerShape(4.dp))
+                                        .clip(AuraShapes.Small)
                                         .background(parseHexColor(selectedColor)),
                                 )
                             },
                             trailingIcon = { Icon(Icons.Default.Close, null, Modifier.size(12.dp)) },
-                            shape = RoundedCornerShape(8.dp),
+                            shape = AuraShapes.Medium,
                         )
                     }
                     if (state.selectedTab == WallpaperTab.WALLHAVEN && state.topRange != "1M") {
@@ -703,7 +703,7 @@ fun WallpapersScreen(
                             label = { Text(wallpaperTopRangeLabel(state.topRange), style = MaterialTheme.typography.labelSmall) },
                             leadingIcon = { Icon(Icons.Default.Schedule, null, Modifier.size(12.dp)) },
                             trailingIcon = { Icon(Icons.Default.Close, null, Modifier.size(12.dp)) },
-                            shape = RoundedCornerShape(8.dp),
+                            shape = AuraShapes.Medium,
                         )
                     }
                     }
@@ -988,7 +988,7 @@ private fun ColorPickerRow(
             Box(
                 modifier = Modifier
                     .size(48.dp)
-                    .clip(RoundedCornerShape(8.dp))
+                    .clip(AuraShapes.Medium)
                     .background(MaterialTheme.colorScheme.surfaceContainerHigh)
                     .clickable(onClickLabel = clearWallpaperColorFilterLabel()) { onClear() },
                 contentAlignment = Alignment.Center,
@@ -1006,10 +1006,10 @@ private fun ColorPickerRow(
             Box(
                 modifier = Modifier
                     .size(48.dp)
-                    .clip(RoundedCornerShape(8.dp))
+                    .clip(AuraShapes.Medium)
                     .background(color)
                     .then(
-                        if (selectedColor == hex) Modifier.border(2.dp, MaterialTheme.colorScheme.primary, RoundedCornerShape(8.dp))
+                        if (selectedColor == hex) Modifier.border(2.dp, MaterialTheme.colorScheme.primary, AuraShapes.Medium)
                         else Modifier
                     )
                     .clickable(onClickLabel = colorLabel) { onColorSelected(hex) }
@@ -1066,7 +1066,7 @@ private fun WallpaperFiltersSheet(
                         selected = discoverFilter == filter,
                         onClick = { onSelectDiscoverFilter(filter) },
                         label = { Text(wallpaperFilterLabel(filter)) },
-                        shape = RoundedCornerShape(8.dp),
+                        shape = AuraShapes.Medium,
                         leadingIcon = if (discoverFilter == filter) {
                             { Icon(Icons.Default.Check, null, Modifier.size(16.dp)) }
                         } else null,
@@ -1109,7 +1109,7 @@ private fun WallpaperFiltersSheet(
                         selected = topRange == range,
                         onClick = { onSelectTopRange(range) },
                         label = { Text(label) },
-                        shape = RoundedCornerShape(8.dp),
+                        shape = AuraShapes.Medium,
                         leadingIcon = if (topRange == range) {
                             { Icon(Icons.Default.Check, null, Modifier.size(16.dp)) }
                         } else null,
@@ -1257,7 +1257,7 @@ private fun WallpaperCard(
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(8.dp))
+            .clip(AuraShapes.Medium)
             .combinedClickable(
                 onClick = onClick,
                 onClickLabel = openWallpaperLabel,
@@ -1273,7 +1273,7 @@ private fun WallpaperCard(
                 )
                 customActions = cardActions
             },
-        shape = RoundedCornerShape(8.dp),
+        shape = AuraShapes.Medium,
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
     ) {
@@ -1290,7 +1290,7 @@ private fun WallpaperCard(
                     is AsyncImagePainter.State.Loading -> {
                         ShimmerBox(
                             modifier = Modifier.fillMaxSize(),
-                            shape = RoundedCornerShape(0.dp),
+                            shape = AuraShapes.None,
                         )
                     }
                     is AsyncImagePainter.State.Error -> {
@@ -1318,7 +1318,7 @@ private fun WallpaperCard(
                         .align(Alignment.TopEnd)
                         .padding(4.dp)
                         .size(48.dp)
-                        .clip(RoundedCornerShape(24.dp)),
+                        .clip(AuraShapes.Medium),
                 ) {
                     Icon(
                         if (isFavorite) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
@@ -1336,7 +1336,7 @@ private fun WallpaperCard(
                     modifier = Modifier
                         .align(Alignment.TopStart)
                         .padding(8.dp),
-                    shape = RoundedCornerShape(8.dp),
+                    shape = AuraShapes.Medium,
                     color = MaterialTheme.colorScheme.tertiaryContainer.copy(alpha = 0.94f),
                     contentColor = MaterialTheme.colorScheme.onTertiaryContainer,
                 ) {
@@ -1373,7 +1373,7 @@ internal fun WallpaperStateCard(
         shadowElevation = 2.dp,
     ) {
         Surface(
-            shape = RoundedCornerShape(8.dp),
+            shape = AuraShapes.Medium,
             color = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f),
             border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.18f)),
         ) {
@@ -1403,7 +1403,7 @@ internal fun WallpaperStateCard(
                 primaryAction?.let { action ->
                     Button(
                         onClick = action.onClick,
-                        shape = RoundedCornerShape(8.dp),
+                        shape = AuraShapes.Medium,
                         modifier = Modifier.heightIn(min = 48.dp),
                     ) {
                         Icon(action.icon, contentDescription = null, modifier = Modifier.size(16.dp))
@@ -1414,7 +1414,7 @@ internal fun WallpaperStateCard(
                 secondaryAction?.let { action ->
                     OutlinedButton(
                         onClick = action.onClick,
-                        shape = RoundedCornerShape(8.dp),
+                        shape = AuraShapes.Medium,
                         modifier = Modifier.heightIn(min = 48.dp),
                     ) {
                         Icon(action.icon, contentDescription = null, modifier = Modifier.size(16.dp))
@@ -1509,7 +1509,7 @@ private fun WallpaperUploadDialog(
                             selected = selectedCategory == key,
                             onClick = { selectedCategory = key },
                             label = { Text(label) },
-                            shape = RoundedCornerShape(8.dp),
+                            shape = AuraShapes.Medium,
                         )
                     }
                 }
@@ -1532,7 +1532,7 @@ private fun WallpaperUploadDialog(
                             selected = selectedLicense == license,
                             onClick = { selectedLicense = license },
                             label = { Text(license) },
-                            shape = RoundedCornerShape(8.dp),
+                            shape = AuraShapes.Medium,
                         )
                     }
                 }
@@ -1594,7 +1594,7 @@ private fun WallpaperUploadDialog(
                     )
                 },
                 enabled = !isUploading && name.isNotBlank() && rightsAttested,
-                shape = RoundedCornerShape(8.dp),
+                shape = AuraShapes.Medium,
                 modifier = Modifier.heightIn(min = 48.dp),
             ) { Text(stringResource(R.string.feed_upload_button)) }
         },
@@ -1602,7 +1602,7 @@ private fun WallpaperUploadDialog(
             TextButton(
                 onClick = onDismiss,
                 enabled = !isUploading,
-                shape = RoundedCornerShape(8.dp),
+                shape = AuraShapes.Medium,
                 modifier = Modifier.heightIn(min = 48.dp),
             ) { Text(stringResource(R.string.common_cancel)) }
         },
@@ -1671,7 +1671,7 @@ private fun FloatingActionRow(
 ) {
     Surface(
         onClick = onClick,
-        shape = RoundedCornerShape(8.dp),
+        shape = AuraShapes.Medium,
         color = MaterialTheme.colorScheme.surface.copy(alpha = 0.92f),
         border = BorderStroke(1.dp, tint.copy(alpha = 0.16f)),
         shadowElevation = 6.dp,

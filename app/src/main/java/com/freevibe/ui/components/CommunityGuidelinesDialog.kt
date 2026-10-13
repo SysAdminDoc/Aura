@@ -8,7 +8,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
@@ -24,6 +23,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.freevibe.R
 import com.freevibe.data.model.CommunityGuidelinesPolicy
+import com.freevibe.ui.theme.AuraShapes
 
 @Composable
 fun CommunityGuidelinesDialog(
@@ -72,9 +72,9 @@ fun CommunityGuidelinesDialog(
                 )
             }
         },
-        shape = RoundedCornerShape(8.dp),
+        shape = AuraShapes.Medium,
         confirmButton = {
-            Button(onClick = onAccept) {
+            Button(onClick = onAccept, shape = AuraShapes.Medium) {
                 Text(stringResource(R.string.community_guidelines_accept))
             }
         },

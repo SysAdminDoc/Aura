@@ -35,6 +35,7 @@ import com.freevibe.data.model.VideoWallpaperAction
 import com.freevibe.data.model.normalizeVideoWallpaperLicense
 import com.freevibe.data.model.videoWallpaperLicenseCapabilities
 import com.freevibe.ui.screens.wallpapers.reportSourceUrl
+import com.freevibe.ui.theme.AuraShapes
 import com.freevibe.util.tryStartActivity
 
 /** What a video offers besides Apply, read from the same license policy Apply uses. */
@@ -143,6 +144,7 @@ private fun ImmersiveActionButton(
             disabledContainerColor = Color.Black.copy(alpha = 0.48f),
             disabledContentColor = Color.White.copy(alpha = 0.72f),
         ),
+        shape = AuraShapes.Medium,
     ) {
         if (busy) {
             CircularProgressIndicator(Modifier.size(16.dp), strokeWidth = 2.dp, color = Color.White)

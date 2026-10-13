@@ -10,7 +10,6 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.*
@@ -48,6 +47,7 @@ import com.freevibe.service.LocalMediaRelinkOutcome
 import com.freevibe.ui.components.AuraSnackbarHost
 import com.freevibe.ui.components.AuraStateCard
 import com.freevibe.ui.rotation.RotationExclusionsViewModel
+import com.freevibe.ui.theme.AuraShapes
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -319,7 +319,7 @@ internal fun ActiveDownloadCard(dl: DownloadProgress, onDismiss: () -> Unit, onR
             stateDescription = statusLabel
         },
         color = MaterialTheme.colorScheme.surfaceContainer,
-        shape = RoundedCornerShape(8.dp),
+        shape = AuraShapes.Medium,
         border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.26f)),
     ) {
         Column(Modifier.fillMaxWidth().padding(12.dp)) {
@@ -440,7 +440,7 @@ internal fun DownloadHistoryCard(
             onClick(label = openLabel, action = null)
         },
         color = MaterialTheme.colorScheme.surfaceContainer,
-        shape = RoundedCornerShape(8.dp),
+        shape = AuraShapes.Medium,
         border = if (highlighted) {
             BorderStroke(2.dp, MaterialTheme.colorScheme.primary)
         } else {

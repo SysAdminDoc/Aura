@@ -14,7 +14,6 @@ import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
@@ -50,6 +49,7 @@ import com.freevibe.service.LocalMediaRelinkOutcome
 import com.freevibe.ui.components.AuraSnackbarHost
 import com.freevibe.ui.components.AuraStateAction
 import com.freevibe.ui.components.AuraStateCard
+import com.freevibe.ui.theme.AuraShapes
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class, androidx.compose.foundation.ExperimentalFoundationApi::class)
@@ -328,7 +328,7 @@ fun FavoritesScreen(
                             stateDescription = batchProgressText
                         },
                     color = MaterialTheme.colorScheme.surfaceContainer.copy(alpha = 0.86f),
-                    shape = RoundedCornerShape(8.dp),
+                    shape = AuraShapes.Medium,
                     border = BorderStroke(
                         1.dp,
                         MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.28f),
@@ -340,7 +340,7 @@ fun FavoritesScreen(
                         horizontalArrangement = Arrangement.spacedBy(12.dp),
                     ) {
                         Surface(
-                            shape = RoundedCornerShape(8.dp),
+                            shape = AuraShapes.Medium,
                             color = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f),
                         ) {
                             Icon(
@@ -381,7 +381,7 @@ fun FavoritesScreen(
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .height(4.dp)
-                                    .clip(RoundedCornerShape(2.dp))
+                                    .clip(AuraShapes.Hairline)
                                     .semantics {
                                         progressBarRangeInfo = ProgressBarRangeInfo(
                                             batchState.progress.coerceIn(0f, 1f),
@@ -438,13 +438,13 @@ fun FavoritesScreen(
                                 Card(
                                     modifier = Modifier
                                         .fillMaxWidth()
-                                        .clip(RoundedCornerShape(8.dp))
+                                        .clip(AuraShapes.Medium)
                                         .then(
                                             if (isSelected) {
                                                 Modifier.border(
                                                     width = 3.dp,
                                                     color = MaterialTheme.colorScheme.primary,
-                                                    shape = RoundedCornerShape(8.dp),
+                                                    shape = AuraShapes.Medium,
                                                 )
                                             } else Modifier,
                                         )
@@ -486,7 +486,7 @@ fun FavoritesScreen(
                                                 },
                                             )
                                         },
-                                    shape = RoundedCornerShape(8.dp),
+                                    shape = AuraShapes.Medium,
                                 ) {
                                     Box {
                                         AsyncImage(
@@ -519,6 +519,7 @@ fun FavoritesScreen(
                                                 modifier = Modifier
                                                     .align(Alignment.BottomEnd)
                                                     .padding(8.dp),
+                                                shape = AuraShapes.Medium,
                                             ) {
                                                 Icon(Icons.Default.FindReplace, contentDescription = null)
                                                 Text(stringResource(R.string.media_relink_action))
@@ -539,7 +540,7 @@ fun FavoritesScreen(
                                                     .align(Alignment.TopEnd)
                                                     .padding(8.dp)
                                                     .size(26.dp)
-                                                    .clip(RoundedCornerShape(8.dp))
+                                                    .clip(AuraShapes.Medium)
                                                     .background(
                                                         if (isSelected) MaterialTheme.colorScheme.primary
                                                         else MaterialTheme.colorScheme.surface.copy(alpha = 0.7f),
@@ -612,7 +613,7 @@ fun FavoritesScreen(
                                         Box(
                                             Modifier
                                                 .fillMaxSize()
-                                                .clip(RoundedCornerShape(8.dp))
+                                                .clip(AuraShapes.Medium)
                                                 .background(MaterialTheme.colorScheme.errorContainer)
                                                 .padding(horizontal = 20.dp),
                                             contentAlignment = Alignment.CenterEnd,
@@ -642,7 +643,7 @@ fun FavoritesScreen(
                                             }
                                             onClick(label = openLabel, action = null)
                                         },
-                                        shape = RoundedCornerShape(8.dp),
+                                        shape = AuraShapes.Medium,
                                         color = MaterialTheme.colorScheme.surfaceContainer,
                                         border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.24f)),
                                     ) {
@@ -710,7 +711,7 @@ private fun SourceUnavailableBadge(modifier: Modifier = Modifier) {
     Surface(
         color = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.92f),
         contentColor = MaterialTheme.colorScheme.onErrorContainer,
-        shape = RoundedCornerShape(8.dp),
+        shape = AuraShapes.Medium,
         modifier = modifier,
     ) {
         Row(
@@ -729,7 +730,7 @@ private fun LocalMediaIssueBadge(status: String, modifier: Modifier = Modifier) 
     Surface(
         color = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.94f),
         contentColor = MaterialTheme.colorScheme.onErrorContainer,
-        shape = RoundedCornerShape(8.dp),
+        shape = AuraShapes.Medium,
         modifier = modifier,
     ) {
         Row(

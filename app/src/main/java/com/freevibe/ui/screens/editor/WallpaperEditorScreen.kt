@@ -5,7 +5,6 @@ import androidx.annotation.StringRes
 import androidx.compose.foundation.*
 import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
@@ -56,6 +55,7 @@ import com.freevibe.ui.components.AuraStatusBanner
 import com.freevibe.ui.components.AuraStateAction
 import com.freevibe.ui.components.AuraStateCard
 import com.freevibe.ui.launchLiveWallpaperPicker
+import com.freevibe.ui.theme.AuraShapes
 import kotlin.math.min
 import kotlin.math.roundToInt
 
@@ -188,7 +188,7 @@ fun WallpaperEditorScreen(
             dismissButton = {
                 TextButton(onClick = { showDiscardConfirm = false }) { Text(stringResource(R.string.common_keep_editing)) }
             },
-            shape = RoundedCornerShape(8.dp),
+            shape = AuraShapes.Medium,
         )
     }
 
@@ -331,7 +331,7 @@ fun WallpaperEditorScreen(
                             viewModel.applyPreset(preset.b, preset.c, preset.s, preset.bl, preset.v, preset.g, preset.a, preset.w)
                         },
                         label = { Text(stringResource(preset.nameRes), style = MaterialTheme.typography.labelSmall) },
-                        shape = RoundedCornerShape(8.dp),
+                        shape = AuraShapes.Medium,
                         border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.22f)),
                         colors = SuggestionChipDefaults.suggestionChipColors(
                             containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
@@ -356,7 +356,7 @@ fun WallpaperEditorScreen(
                         leadingIcon = {
                             Icon(filter.icon, null, modifier = Modifier.size(14.dp))
                         },
-                        shape = RoundedCornerShape(8.dp),
+                        shape = AuraShapes.Medium,
                     )
                 }
                 FilterChip(
@@ -371,7 +371,7 @@ fun WallpaperEditorScreen(
                     leadingIcon = {
                         Icon(Icons.Default.Layers, null, modifier = Modifier.size(14.dp))
                     },
-                    shape = RoundedCornerShape(8.dp),
+                    shape = AuraShapes.Medium,
                 )
                 FilterChip(
                     selected = selectedFilter == R.string.editor_wallpaper_layers_chip,
@@ -385,7 +385,7 @@ fun WallpaperEditorScreen(
                     leadingIcon = {
                         Icon(Icons.Default.Layers, null, modifier = Modifier.size(14.dp))
                     },
-                    shape = RoundedCornerShape(8.dp),
+                    shape = AuraShapes.Medium,
                 )
             }
 
@@ -433,19 +433,19 @@ fun WallpaperEditorScreen(
                     onClick = { viewModel.apply(WallpaperTarget.HOME) },
                     modifier = Modifier.weight(1f).heightIn(min = 48.dp),
                     enabled = canApply,
-                    shape = RoundedCornerShape(8.dp),
+                    shape = AuraShapes.Medium,
                 ) { Text(stringResource(R.string.common_home)) }
                 OutlinedButton(
                     onClick = { viewModel.apply(WallpaperTarget.LOCK) },
                     modifier = Modifier.weight(1f).heightIn(min = 48.dp),
                     enabled = canApply,
-                    shape = RoundedCornerShape(8.dp),
+                    shape = AuraShapes.Medium,
                 ) { Text(stringResource(R.string.common_lock)) }
                 Button(
                     onClick = { viewModel.apply(WallpaperTarget.BOTH) },
                     modifier = Modifier.weight(1f).heightIn(min = 48.dp),
                     enabled = canApply,
-                    shape = RoundedCornerShape(8.dp),
+                    shape = AuraShapes.Medium,
                 ) {
                     if (state.isApplying) CircularProgressIndicator(Modifier.size(18.dp), strokeWidth = 2.dp)
                     else Text(stringResource(R.string.common_both))
@@ -591,7 +591,7 @@ private fun OverlayLayerPreview(
                             Modifier.border(
                                 width = 1.dp,
                                 color = MaterialTheme.colorScheme.primary,
-                                shape = RoundedCornerShape(8.dp),
+                                shape = AuraShapes.Medium,
                             )
                         } else {
                             Modifier
@@ -715,7 +715,7 @@ private fun WallpaperLayerControls(
                 onClick = viewModel::addTextOverlay,
                 enabled = enabled,
                 modifier = Modifier.widthIn(min = 96.dp).heightIn(min = 58.dp),
-                shape = RoundedCornerShape(8.dp),
+                shape = AuraShapes.Medium,
             ) {
                 EditorActionButtonContent(Icons.Default.TextFields, stringResource(R.string.editor_wallpaper_layers_add_text))
             }
@@ -723,7 +723,7 @@ private fun WallpaperLayerControls(
                 onClick = { viewModel.addStickerOverlay(WallpaperSticker.STAR) },
                 enabled = enabled,
                 modifier = Modifier.widthIn(min = 104.dp).heightIn(min = 58.dp),
-                shape = RoundedCornerShape(8.dp),
+                shape = AuraShapes.Medium,
             ) {
                 EditorActionButtonContent(Icons.Default.Star, stringResource(R.string.editor_wallpaper_layers_add_sticker))
             }
@@ -731,7 +731,7 @@ private fun WallpaperLayerControls(
                 onClick = viewModel::undoOverlayEdit,
                 enabled = state.canUndoOverlay,
                 modifier = Modifier.widthIn(min = 88.dp).heightIn(min = 58.dp),
-                shape = RoundedCornerShape(8.dp),
+                shape = AuraShapes.Medium,
             ) {
                 EditorActionButtonContent(Icons.AutoMirrored.Filled.Undo, stringResource(R.string.editor_wallpaper_layers_undo))
             }
@@ -739,7 +739,7 @@ private fun WallpaperLayerControls(
                 onClick = viewModel::deleteSelectedOverlay,
                 enabled = selectedLayer != null,
                 modifier = Modifier.widthIn(min = 88.dp).heightIn(min = 58.dp),
-                shape = RoundedCornerShape(8.dp),
+                shape = AuraShapes.Medium,
             ) {
                 EditorActionButtonContent(Icons.Default.Delete, stringResource(R.string.common_delete))
             }
@@ -747,7 +747,7 @@ private fun WallpaperLayerControls(
                 onClick = viewModel::exportEditedWallpaper,
                 enabled = enabled,
                 modifier = Modifier.widthIn(min = 92.dp).heightIn(min = 58.dp),
-                shape = RoundedCornerShape(8.dp),
+                shape = AuraShapes.Medium,
             ) {
                 if (state.isExporting) {
                     CircularProgressIndicator(Modifier.size(18.dp), strokeWidth = 2.dp)
@@ -773,7 +773,7 @@ private fun WallpaperLayerControls(
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true,
                 label = { Text(stringResource(R.string.editor_wallpaper_layers_text_label)) },
-                shape = RoundedCornerShape(8.dp),
+                shape = AuraShapes.Medium,
             )
         } else {
             Row(
@@ -802,7 +802,7 @@ private fun WallpaperLayerControls(
                                 modifier = Modifier.size(14.dp),
                             )
                         },
-                        shape = RoundedCornerShape(8.dp),
+                        shape = AuraShapes.Medium,
                     )
                 }
             }
@@ -829,16 +829,16 @@ private fun WallpaperLayerControls(
                         Box(
                             Modifier
                                 .size(22.dp)
-                                .clip(RoundedCornerShape(6.dp))
+                                .clip(AuraShapes.Compact)
                                 .background(Color(color))
                                 .border(
                                     width = 1.dp,
                                     color = MaterialTheme.colorScheme.outlineVariant,
-                                    shape = RoundedCornerShape(6.dp),
+                                    shape = AuraShapes.Compact,
                                 ),
                         )
                     },
-                    shape = RoundedCornerShape(8.dp),
+                    shape = AuraShapes.Medium,
                 )
             }
         }
@@ -989,7 +989,7 @@ private fun DepthPortraitControls(
                         }
                         Icon(icon, null, modifier = Modifier.size(14.dp))
                     },
-                    shape = RoundedCornerShape(8.dp),
+                    shape = AuraShapes.Medium,
                 )
             }
         }
@@ -1018,7 +1018,7 @@ private fun DepthPortraitControls(
                         }
                         Icon(icon, null, modifier = Modifier.size(14.dp))
                     },
-                    shape = RoundedCornerShape(8.dp),
+                    shape = AuraShapes.Medium,
                 )
             }
         }
@@ -1057,7 +1057,7 @@ private fun DepthPortraitControls(
                 onClick = viewModel::composeDepthPortrait,
                 modifier = Modifier.weight(1f).heightIn(min = 64.dp),
                 enabled = enabled,
-                shape = RoundedCornerShape(8.dp),
+                shape = AuraShapes.Medium,
             ) {
                 if (state.isDepthProcessing) {
                     CircularProgressIndicator(Modifier.size(18.dp), strokeWidth = 2.dp)
@@ -1072,7 +1072,7 @@ private fun DepthPortraitControls(
                 onClick = viewModel::prepareDepthParallax,
                 modifier = Modifier.weight(1f).heightIn(min = 64.dp),
                 enabled = enabled,
-                shape = RoundedCornerShape(8.dp),
+                shape = AuraShapes.Medium,
             ) {
                 if (state.isPreparingParallax) {
                     CircularProgressIndicator(Modifier.size(18.dp), strokeWidth = 2.dp)
@@ -1087,7 +1087,7 @@ private fun DepthPortraitControls(
                 onClick = viewModel::exportDepthPortrait,
                 modifier = Modifier.weight(1f).heightIn(min = 64.dp),
                 enabled = enabled,
-                shape = RoundedCornerShape(8.dp),
+                shape = AuraShapes.Medium,
             ) {
                 if (state.isExporting) {
                     CircularProgressIndicator(Modifier.size(18.dp), strokeWidth = 2.dp)

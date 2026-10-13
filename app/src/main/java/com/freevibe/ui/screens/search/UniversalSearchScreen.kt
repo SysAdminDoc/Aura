@@ -23,7 +23,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
@@ -101,6 +100,7 @@ import com.freevibe.data.repository.SearchHistoryRepository
 import com.freevibe.ui.components.AuraStateCard
 import com.freevibe.ui.components.CompactSearchField
 import com.freevibe.ui.components.SearchHistoryDropdown
+import com.freevibe.ui.theme.AuraShapes
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.channels.awaitClose
@@ -317,7 +317,7 @@ fun UniversalSearchScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 12.dp, vertical = 8.dp),
-                shape = RoundedCornerShape(8.dp),
+                shape = AuraShapes.Medium,
                 color = MaterialTheme.colorScheme.surfaceContainer,
                 border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.32f)),
             ) {
@@ -483,7 +483,7 @@ private fun UniversalSearchResultCard(
                     .joinToString(". ")
                 onClick(label = actionLabel, action = null)
             },
-        shape = RoundedCornerShape(8.dp),
+        shape = AuraShapes.Medium,
         color = MaterialTheme.colorScheme.surfaceContainer,
         border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.28f)),
     ) {
@@ -541,7 +541,7 @@ private fun UniversalProviderActionCard(
                     }
                 },
             ),
-        shape = RoundedCornerShape(8.dp),
+        shape = AuraShapes.Medium,
         color = if (action.enabled) enabledColor else MaterialTheme.colorScheme.surfaceContainerLow,
         border = BorderStroke(
             1.dp,
@@ -614,7 +614,7 @@ private fun ProviderIcon(section: UniversalProviderSection, enabled: Boolean) {
 private fun IconShell(icon: ImageVector, tint: Color) {
     Surface(
         modifier = Modifier.size(48.dp),
-        shape = RoundedCornerShape(8.dp),
+        shape = AuraShapes.Medium,
         color = tint.copy(alpha = 0.12f),
         border = BorderStroke(1.dp, tint.copy(alpha = 0.22f)),
     ) {

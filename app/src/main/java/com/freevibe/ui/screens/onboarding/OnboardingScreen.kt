@@ -12,7 +12,6 @@ import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
@@ -36,6 +35,7 @@ import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.freevibe.R
 import com.freevibe.data.local.PreferencesManager
+import com.freevibe.ui.theme.AuraShapes
 import dagger.hilt.android.lifecycle.HiltViewModel
 import com.freevibe.ui.components.GlassCard
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -140,7 +140,7 @@ fun OnboardingScreen(
                             .padding(horizontal = 4.dp)
                             .width(width)
                             .height(7.dp)
-                            .clip(RoundedCornerShape(2.dp))
+                            .clip(AuraShapes.Hairline)
                             .background(
                                 if (pagerState.currentPage == i) MaterialTheme.colorScheme.primary
                                 else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.3f)
@@ -163,7 +163,7 @@ fun OnboardingScreen(
                         modifier = Modifier
                             .weight(1f)
                             .height(54.dp),
-                        shape = RoundedCornerShape(8.dp),
+                        shape = AuraShapes.Medium,
                     ) { Text(stringResource(R.string.common_back)) }
                 }
 
@@ -178,7 +178,7 @@ fun OnboardingScreen(
                     modifier = Modifier
                         .weight(1f)
                         .height(54.dp),
-                    shape = RoundedCornerShape(8.dp),
+                    shape = AuraShapes.Medium,
                 ) {
                     Text(
                         if (pagerState.currentPage == 3) {
@@ -229,7 +229,7 @@ private fun OnboardingLabel(
 ) {
     Surface(
         modifier = modifier,
-        shape = RoundedCornerShape(6.dp),
+        shape = AuraShapes.Compact,
         color = tint.copy(alpha = 0.13f),
         border = BorderStroke(1.dp, tint.copy(alpha = 0.24f)),
     ) {
@@ -312,7 +312,7 @@ private fun FeatureRow(icon: ImageVector, title: String, subtitle: String) {
     ) {
         Surface(
             color = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f),
-            shape = RoundedCornerShape(8.dp),
+            shape = AuraShapes.Medium,
         ) {
             Icon(
                 icon,
@@ -392,7 +392,7 @@ private fun StylePickerPage(selectedStyles: Set<String>, onToggle: (String) -> U
                                 .weight(1f)
                                 .heightIn(min = 148.dp)
                                 .semantics { this.selected = selected },
-                            shape = RoundedCornerShape(8.dp),
+                            shape = AuraShapes.Medium,
                             color = if (selected) option.tint.copy(alpha = 0.18f)
                             else MaterialTheme.colorScheme.surface.copy(alpha = 0.58f),
                             border = BorderStroke(
@@ -413,7 +413,7 @@ private fun StylePickerPage(selectedStyles: Set<String>, onToggle: (String) -> U
                                     verticalAlignment = Alignment.CenterVertically,
                                 ) {
                                     Surface(
-                                        shape = RoundedCornerShape(8.dp),
+                                        shape = AuraShapes.Medium,
                                         color = option.tint.copy(alpha = 0.14f),
                                     ) {
                                         Icon(
@@ -528,7 +528,7 @@ private fun PageLayout(
             Box(
                 modifier = Modifier
                     .size(if (hasSupportingContent) 68.dp else 96.dp)
-                    .clip(RoundedCornerShape(8.dp))
+                    .clip(AuraShapes.Medium)
                     .background(iconColor.copy(alpha = 0.14f)),
                 contentAlignment = Alignment.Center,
             ) {

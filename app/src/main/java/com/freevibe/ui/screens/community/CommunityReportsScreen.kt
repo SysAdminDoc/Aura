@@ -14,7 +14,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Block
@@ -65,6 +64,7 @@ import com.freevibe.data.repository.CommunityReportRepository
 import com.freevibe.data.repository.VoteRepository
 import com.freevibe.ui.components.AuraStateAction
 import com.freevibe.ui.components.AuraStateCard
+import com.freevibe.ui.theme.AuraShapes
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -520,6 +520,7 @@ private fun ReportCard(
                         onDeleteUpload()
                     },
                     enabled = !busy,
+                    shape = AuraShapes.Medium,
                 ) {
                     Text(stringResource(R.string.reports_delete_confirm))
                 }
@@ -543,6 +544,7 @@ private fun ReportCard(
                         onBlockUploader()
                     },
                     enabled = !busy,
+                    shape = AuraShapes.Medium,
                 ) {
                     Text(stringResource(R.string.reports_block_confirm))
                 }
@@ -555,7 +557,7 @@ private fun ReportCard(
         )
     }
     Card(
-        shape = RoundedCornerShape(8.dp),
+        shape = AuraShapes.Medium,
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer),
     ) {
         Column(
@@ -590,12 +592,12 @@ private fun ReportCard(
             ReportFact(stringResource(R.string.reports_fact_reporter), report.reporterUid.take(12))
             Spacer(Modifier.height(2.dp))
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                Button(onClick = onHide, enabled = !busy) {
+                Button(onClick = onHide, enabled = !busy, shape = AuraShapes.Medium) {
                     Icon(Icons.Default.Block, contentDescription = null, modifier = Modifier.size(16.dp))
                     Spacer(Modifier.size(6.dp))
                     Text(stringResource(R.string.reports_action_hide))
                 }
-                OutlinedButton(onClick = onDismiss, enabled = !busy) {
+                OutlinedButton(onClick = onDismiss, enabled = !busy, shape = AuraShapes.Medium) {
                     Text(stringResource(R.string.reports_action_dismiss))
                 }
                 TextButton(onClick = onRestore, enabled = !busy) {
@@ -609,6 +611,7 @@ private fun ReportCard(
                     onClick = { showDeleteConfirm = true },
                     enabled = !busy,
                     modifier = Modifier.fillMaxWidth(),
+                    shape = AuraShapes.Medium,
                 ) {
                     Icon(Icons.Default.Delete, contentDescription = null, modifier = Modifier.size(16.dp))
                     Spacer(Modifier.size(6.dp))
@@ -620,6 +623,7 @@ private fun ReportCard(
                     onClick = { showBlockConfirm = true },
                     enabled = !busy,
                     modifier = Modifier.fillMaxWidth(),
+                    shape = AuraShapes.Medium,
                 ) {
                     Icon(Icons.Default.Block, contentDescription = null, modifier = Modifier.size(16.dp))
                     Spacer(Modifier.size(6.dp))

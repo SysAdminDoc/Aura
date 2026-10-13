@@ -9,7 +9,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.gestures.detectTransformGestures
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.*
@@ -35,6 +34,7 @@ import androidx.compose.ui.viewinterop.AndroidView
 import androidx.media3.common.MediaItem
 import androidx.media3.common.Player
 import androidx.media3.exoplayer.ExoPlayer
+import com.freevibe.ui.theme.AuraShapes
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -208,7 +208,7 @@ fun VideoCropScreen(
             dismissButton = {
                 TextButton(onClick = { showCropDiscardConfirm = false }) { Text(stringResource(R.string.common_keep_editing)) }
             },
-            shape = RoundedCornerShape(8.dp),
+            shape = AuraShapes.Medium,
         )
     }
 
@@ -527,7 +527,7 @@ fun VideoCropScreen(
                 },
                 modifier = Modifier.fillMaxWidth().padding(16.dp).height(52.dp),
                 enabled = !isCropping && dimensionsReady && previewReady,
-                shape = RoundedCornerShape(8.dp),
+                shape = AuraShapes.Medium,
             ) {
                 if (isCropping) {
                     CircularProgressIndicator(Modifier.size(20.dp), strokeWidth = 2.dp, color = Color.White)
@@ -585,7 +585,7 @@ private fun LoopTrimControls(
                 Row(
                     modifier = Modifier
                         .fillMaxSize()
-                        .clip(RoundedCornerShape(8.dp))
+                        .clip(AuraShapes.Medium)
                         .clipToBounds(),
                     horizontalArrangement = Arrangement.spacedBy(2.dp),
                 ) {

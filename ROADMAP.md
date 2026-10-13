@@ -6,13 +6,6 @@ Actionable work only. Historical and completed roadmap material is archived in C
 
 ### P2
 
-- [ ] P2 — Codify the design system as tokens and gate it
-  Why: the "rectangular 4–12 dp radii, no pill / oval / fully-rounded backdrops" rule is written in ARCHITECTURE.md and CLAUDE.md and enforced by nothing — corner radii are literal numbers at 250+ call sites, and the rule is already broken in shipped code. It is the only major documented project rule with no gate behind it, in a repo with 82 gates.
-  Evidence: `VideoWallpapersScreen.kt:884` uses `RoundedCornerShape(50)`, a full pill; `WallpapersScreen.kt:1268` uses 24 dp; 225 uses of `RoundedCornerShape(8)` plus strays at 1, 2, 4, 5, 6, 10, 12; `ui/theme/` contains only `Theme.kt` with colour tokens and no shape or spacing source; 102 hardcoded `Color(0x…)` literals across seven UI files; `SharedComponents.kt:519-548` and `WallpaperDetailScreen.kt:408` also derive provider-badge foreground/background combinations without a contrast token or assertion; `test/tools/` has no design gate.
-  Touches: `ui/theme/` (new shape and spacing token files), the seven UI files with colour literals, the two shape violations, a new `tools/design_token_check.py` and its test.
-  Acceptance: shape and spacing tokens live in `ui/theme/` and the two violations are corrected or explicitly waived with a recorded reason; a gate rejects literal `RoundedCornerShape(n)` outside the token file and any radius above the documented ceiling; colour literals outside `Theme.kt` and the source-tone tables are rejected or registered; provider badges meet 4.5:1 text and 3:1 UI contrast in AMOLED, dark, and light themes; the gate fails when a pill radius or low-contrast badge is reintroduced.
-  Complexity: M
-
 - [ ] P2 — Browse the device's own sounds and offer a way back to the stock ringtone
   Why: Aura writes ringtones but never reads them — it cannot show what is currently set, cannot let the user pick from sounds already on the device, and captures only its *own* last-applied URI, so there is no path back to the OEM default from inside the app. Applying a ringtone is effectively irreversible, and the category's only maintained editor was abandoned for six years, so this shelf is uncontested.
   Evidence: `RingtoneManager.TYPE_*` appears only in `SoundApplier.kt:65-67`, `RingtoneShuffleWorker.kt:65,87`, and `RingtoneRestorationReceiver.kt:53-55` — all write or restore-Aura's-own-value paths; no `RingtoneManager.getCursor()` anywhere; no revert string in `strings.xml`; UltimateRingtonePicker; ringdroid #16, open since 2015-12-10.
@@ -93,6 +86,13 @@ Actionable work only. Historical and completed roadmap material is archived in C
   Complexity: M
 
 ### P3
+
+- [ ] P3 — Put spacing on tokens and give text buttons a rectangular press shape
+  Why: the design-token pass moved every corner shape and colour literal onto tokens behind `tools/design_token_check.py`, but spacing is still literal dp values, and text buttons still clip their press ripple to Material's pill.
+  Evidence: `Arrangement.spacedBy` uses 2, 3, 4, 5, 6, 7, 8, 10, 12, 14 and 16 dp, and padding and spacer values add 9, 18, 20 and 24 dp (census 2026-10-13: 146 `spacedBy(8.dp)`, 64 at 12, 34 at 10, the rest scattered); 156 `TextButton(` calls take the default shape.
+  Touches: a new `ui/theme/Spacing.kt`, the screens that use off-scale values, `tools/design_token_check.py` and its test, Roborazzi baselines.
+  Acceptance: an `AuraSpacing` scale lives in `ui/theme/`; off-scale values move to the nearest step with screenshots compared before and after; the gate rejects new literal spacing in `spacedBy` and padding outside the scale; every `TextButton` passes an `AuraShapes` token and the gate checks it like the container buttons.
+  Complexity: M
 
 - [ ] P3 — Expand external automation with safe, stable parameters
   Why: Aura already exposes limited widget, tile, and broadcast entry points, but automators cannot select a named feed, collection, wallpaper target, or controlled action. A small versioned contract can improve Tasker and launcher integration without exposing arbitrary URLs, paths, or privileged operations.

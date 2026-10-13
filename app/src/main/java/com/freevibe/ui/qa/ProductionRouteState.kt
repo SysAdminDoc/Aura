@@ -15,7 +15,6 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.BatteryChargingFull
@@ -88,6 +87,7 @@ import com.freevibe.ui.screens.videowallpapers.VideoWallpaperItem
 import com.freevibe.ui.screens.wallpapers.WallpaperGrid
 import com.freevibe.ui.screens.wallpapers.WallpaperStateAction
 import com.freevibe.ui.screens.wallpapers.WallpaperStateCard
+import com.freevibe.ui.theme.AuraShapes
 
 /**
  * Release-build route scenarios used by screenshot and accessibility checks.
@@ -238,7 +238,7 @@ private fun SoundDetailState() {
                 modifier = Modifier.weight(1f),
                 onClick = {},
             )
-            OutlinedButton(onClick = {}, modifier = Modifier.weight(1f).heightIn(min = 48.dp)) {
+            OutlinedButton(onClick = {}, modifier = Modifier.weight(1f).heightIn(min = 48.dp), shape = AuraShapes.Medium) {
                 Text(stringResource(R.string.sound_detail_edit_sound_title))
             }
         }
@@ -382,7 +382,7 @@ private fun WallpaperEditorState() {
             modifier = Modifier
                 .fillMaxWidth()
                 .height(420.dp)
-                .background(Color.Black, RoundedCornerShape(8.dp)),
+                .background(Color.Black, AuraShapes.Medium),
             contentAlignment = Alignment.Center,
         ) {
             WallpaperEditorPreview(
@@ -400,7 +400,7 @@ private fun WallpaperEditorState() {
             )
             Surface(
                 color = Color.Black.copy(alpha = 0.62f),
-                shape = RoundedCornerShape(8.dp),
+                shape = AuraShapes.Medium,
             ) {
                 Column(
                     modifier = Modifier.padding(horizontal = 18.dp, vertical = 14.dp),
@@ -446,8 +446,8 @@ private fun FitCanvasPreviewState() {
             modifier = Modifier
                 .fillMaxWidth()
                 .height(610.dp)
-                .clip(RoundedCornerShape(8.dp))
-                .background(Color.Black, RoundedCornerShape(8.dp)),
+                .clip(AuraShapes.Medium)
+                .background(Color.Black, AuraShapes.Medium),
         )
         Text(
             stringResource(R.string.fit_canvas_fit_help),

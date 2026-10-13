@@ -23,7 +23,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -86,6 +85,7 @@ import com.freevibe.ui.components.CommunityReportDialog
 import com.freevibe.ui.components.GlassCard
 import com.freevibe.ui.components.HighlightPill
 import com.freevibe.ui.components.ShimmerBox
+import com.freevibe.ui.theme.AuraShapes
 
 @Composable
 fun GeneratedWallpaperDisclosureDialog(
@@ -118,7 +118,7 @@ fun GeneratedWallpaperDisclosureDialog(
                 )
             }
         },
-        shape = RoundedCornerShape(8.dp),
+        shape = AuraShapes.Medium,
         confirmButton = {
             TextButton(onClick = {
                 if (!accepted) onAccept()
@@ -242,7 +242,7 @@ fun AiWallpaperScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 10.dp),
-                shape = RoundedCornerShape(8.dp),
+                shape = AuraShapes.Medium,
                 contentPadding = PaddingValues(horizontal = 10.dp, vertical = 10.dp),
                 highlightHeight = 76.dp,
                 shadowElevation = 2.dp,
@@ -304,7 +304,7 @@ fun AiWallpaperScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 10.dp),
-                    shape = RoundedCornerShape(8.dp),
+                    shape = AuraShapes.Medium,
                     contentPadding = PaddingValues(horizontal = 14.dp, vertical = 12.dp),
                 ) {
                     Text(
@@ -364,7 +364,7 @@ fun AiWallpaperScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 10.dp),
-                shape = RoundedCornerShape(8.dp),
+                shape = AuraShapes.Medium,
                 contentPadding = PaddingValues(horizontal = 14.dp, vertical = 12.dp),
             ) {
                 Text(
@@ -402,7 +402,7 @@ fun AiWallpaperScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 10.dp),
-                shape = RoundedCornerShape(8.dp),
+                shape = AuraShapes.Medium,
                 contentPadding = PaddingValues(horizontal = 14.dp, vertical = 12.dp),
             ) {
                 Text(
@@ -424,7 +424,7 @@ fun AiWallpaperScreen(
                             label = {
                                 Text(stringResource(style.labelRes()), style = MaterialTheme.typography.labelSmall)
                             },
-                            shape = RoundedCornerShape(8.dp),
+                            shape = AuraShapes.Medium,
                         )
                     }
                 }
@@ -452,6 +452,7 @@ fun AiWallpaperScreen(
                     .padding(horizontal = 10.dp)
                     .height(52.dp),
                 enabled = generatedContentProviderEnabled && !state.isGenerating && !state.isApplying,
+                shape = AuraShapes.Medium,
             ) {
                 if (!generatedContentProviderEnabled) {
                     Icon(
@@ -555,8 +556,8 @@ fun AiWallpaperScreen(
                         .fillMaxWidth()
                         .padding(horizontal = 10.dp)
                         .aspectRatio(9f / 16f)
-                        .clip(RoundedCornerShape(8.dp)),
-                    shape = RoundedCornerShape(8.dp),
+                        .clip(AuraShapes.Medium),
+                    shape = AuraShapes.Medium,
                 )
             }
 
@@ -579,14 +580,14 @@ fun AiWallpaperScreen(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .aspectRatio(9f / 16f)
-                                .clip(RoundedCornerShape(8.dp)),
+                                .clip(AuraShapes.Medium),
                             contentScale = ContentScale.Crop,
                         ) {
                             when (painter.state.collectAsState().value) {
                                 is AsyncImagePainter.State.Loading -> {
                                     ShimmerBox(
                                         modifier = Modifier.fillMaxSize(),
-                                        shape = RoundedCornerShape(8.dp),
+                                        shape = AuraShapes.Medium,
                                     )
                                 }
                                 is AsyncImagePainter.State.Error -> {
@@ -614,7 +615,7 @@ fun AiWallpaperScreen(
                             OutlinedButton(
                                 onClick = { viewModel.saveToFavorites() },
                                 modifier = Modifier.weight(1f).heightIn(min = 48.dp),
-                                shape = RoundedCornerShape(8.dp),
+                                shape = AuraShapes.Medium,
                                 enabled = !state.isSaved && !state.isApplying,
                             ) {
                                 Icon(
@@ -630,7 +631,7 @@ fun AiWallpaperScreen(
                                 Button(
                                     onClick = { showTargetMenu = true },
                                     modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp),
-                                    shape = RoundedCornerShape(8.dp),
+                                    shape = AuraShapes.Medium,
                                     enabled = !state.isApplying,
                                 ) {
                                     if (state.isApplying) {
@@ -685,6 +686,7 @@ fun AiWallpaperScreen(
                                 communityGuidelinesAccepted &&
                                 !state.isApplying &&
                                 !state.isUploadingToCommunity,
+                            shape = AuraShapes.Medium,
                         ) {
                             if (state.isUploadingToCommunity) {
                                 CircularProgressIndicator(
@@ -713,6 +715,7 @@ fun AiWallpaperScreen(
                             onClick = { showGeneratedReportDialog = true },
                             modifier = Modifier.fillMaxWidth(),
                             enabled = !state.isApplying,
+                            shape = AuraShapes.Medium,
                         ) {
                             Icon(
                                 Icons.Default.Report,

@@ -6,7 +6,6 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.OpenInNew
@@ -24,6 +23,7 @@ import com.freevibe.data.legal.disclosureStatus
 import com.freevibe.data.legal.providerCatalogCapabilities
 import com.freevibe.data.legal.providerDisclosuresBySource
 import com.freevibe.ui.components.CompactSearchField
+import com.freevibe.ui.theme.AuraShapes
 import com.freevibe.ui.util.openExternalUrl
 
 data class OssLicense(
@@ -278,7 +278,7 @@ private fun LicenseCard(lic: OssLicense) {
     Surface(
         onClick = { openExternalUrl(context, lic.url) },
         color = MaterialTheme.colorScheme.surfaceContainer,
-        shape = RoundedCornerShape(8.dp),
+        shape = AuraShapes.Medium,
     ) {
         Row(
             Modifier.fillMaxWidth().padding(14.dp),
@@ -302,7 +302,7 @@ private fun GeneratedNoticeCard(
     Surface(
         onClick = onClick,
         color = MaterialTheme.colorScheme.surfaceContainer,
-        shape = RoundedCornerShape(8.dp),
+        shape = AuraShapes.Medium,
     ) {
         Column(
             Modifier.fillMaxWidth().padding(14.dp),
@@ -326,7 +326,7 @@ private fun ReviewLabel(label: String) {
     Surface(
         color = MaterialTheme.colorScheme.tertiaryContainer,
         contentColor = MaterialTheme.colorScheme.onTertiaryContainer,
-        shape = RoundedCornerShape(6.dp),
+        shape = AuraShapes.Compact,
     ) {
         Text(
             text = label,

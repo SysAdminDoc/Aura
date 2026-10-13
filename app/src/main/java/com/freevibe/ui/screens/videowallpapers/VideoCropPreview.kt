@@ -35,6 +35,7 @@ import androidx.media3.common.PlaybackException
 import androidx.media3.common.Player
 import androidx.media3.common.Tracks
 import com.freevibe.R
+import com.freevibe.ui.theme.AuraShapes
 import kotlinx.coroutines.delay
 
 /** What the crop surface shows, so a video that's still loading doesn't look like a broken one. */
@@ -148,11 +149,11 @@ internal fun VideoCropPreviewOverlay(
                     textAlign = TextAlign.Center,
                 )
                 if (!unsupported) {
-                    OutlinedButton(onClick = onRetry) {
+                    OutlinedButton(onClick = onRetry, shape = AuraShapes.Medium) {
                         Text(stringResource(R.string.common_retry), color = Color.White)
                     }
                 }
-                Button(onClick = onChooseAnother) {
+                Button(onClick = onChooseAnother, shape = AuraShapes.Medium) {
                     Text(stringResource(R.string.video_crop_choose_another))
                 }
             }

@@ -2,7 +2,6 @@ package com.freevibe.ui.screens.reddit
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.Check
@@ -32,6 +31,7 @@ import com.freevibe.data.model.RedditFeedPreset
 import com.freevibe.data.model.activePreset
 import com.freevibe.data.model.feedSignature
 import com.freevibe.data.model.presetsOf
+import com.freevibe.ui.theme.AuraShapes
 
 /**
  * Names the Reddit feed a tab is showing and switches to another. It hides itself while Reddit is
@@ -83,7 +83,7 @@ internal fun RedditFeedPresetSwitcher(
             },
             leadingIcon = { Icon(Icons.Default.Forum, contentDescription = null, modifier = Modifier.size(16.dp)) },
             trailingIcon = { Icon(Icons.Default.ArrowDropDown, contentDescription = null, modifier = Modifier.size(18.dp)) },
-            shape = RoundedCornerShape(8.dp),
+            shape = AuraShapes.Medium,
         )
         DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
             presets.forEach { preset ->

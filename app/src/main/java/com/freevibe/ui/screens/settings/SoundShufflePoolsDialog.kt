@@ -17,7 +17,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
@@ -75,6 +74,7 @@ import com.freevibe.service.SoundShuffleReason
 import com.freevibe.service.SoundShuffleSourceKind
 import com.freevibe.service.SoundShuffleStore
 import com.freevibe.service.SoundShuffleTarget
+import com.freevibe.ui.theme.AuraShapes
 
 @Composable
 internal fun SoundShufflePoolsDialog(
@@ -142,7 +142,7 @@ internal fun SoundShufflePoolsDialog(
             modifier = Modifier
                 .fillMaxWidth()
                 .heightIn(max = 760.dp),
-            shape = RoundedCornerShape(12.dp),
+            shape = AuraShapes.Large,
             color = MaterialTheme.colorScheme.surface,
             tonalElevation = 6.dp,
         ) {
@@ -330,7 +330,7 @@ private fun SoundShufflePoolList(
                     onCreate(newPoolName.ifBlank { defaultPoolName })
                     newPoolName = ""
                 },
-                shape = RoundedCornerShape(8.dp),
+                shape = AuraShapes.Medium,
                 modifier = Modifier.fillMaxWidth(),
             ) {
                 Icon(Icons.Default.Add, contentDescription = null)
@@ -354,7 +354,7 @@ private fun SoundShufflePoolList(
                 modifier = Modifier
                     .fillMaxWidth()
                     .clickable { onOpen(pool.poolId) },
-                shape = RoundedCornerShape(8.dp),
+                shape = AuraShapes.Medium,
                 color = MaterialTheme.colorScheme.surfaceContainer,
                 border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
             ) {
@@ -422,7 +422,7 @@ internal fun SoundShufflePoolEditorPanel(
             item {
                 Surface(
                     color = MaterialTheme.colorScheme.errorContainer,
-                    shape = RoundedCornerShape(8.dp),
+                    shape = AuraShapes.Medium,
                 ) {
                     Column(
                         modifier = Modifier.padding(12.dp),
@@ -502,7 +502,7 @@ internal fun SoundShufflePoolEditorPanel(
                 Box {
                     OutlinedButton(
                         onClick = { scheduleMenuOpen = true },
-                        shape = RoundedCornerShape(8.dp),
+                        shape = AuraShapes.Medium,
                     ) { Text(soundShuffleIntervalLabel(pool.intervalHours)) }
                     DropdownMenu(
                         expanded = scheduleMenuOpen,
@@ -525,7 +525,7 @@ internal fun SoundShufflePoolEditorPanel(
             Button(
                 onClick = onRunNow,
                 enabled = canWriteSettings && pool.enabled && pool.targets.isNotEmpty() && pool.items.isNotEmpty(),
-                shape = RoundedCornerShape(8.dp),
+                shape = AuraShapes.Medium,
                 modifier = Modifier.fillMaxWidth(),
             ) {
                 Icon(Icons.Default.PlayArrow, contentDescription = null)
@@ -549,7 +549,7 @@ internal fun SoundShufflePoolEditorPanel(
         item {
             OutlinedButton(
                 onClick = onAddLocal,
-                shape = RoundedCornerShape(8.dp),
+                shape = AuraShapes.Medium,
                 modifier = Modifier.fillMaxWidth(),
             ) {
                 Icon(Icons.Default.FolderOpen, contentDescription = null)
@@ -643,7 +643,7 @@ private fun PoolMemberRow(
                 currentDownload.localPath.isBlank()
     }
     Surface(
-        shape = RoundedCornerShape(8.dp),
+        shape = AuraShapes.Medium,
         color = MaterialTheme.colorScheme.surfaceContainer,
         border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
     ) {

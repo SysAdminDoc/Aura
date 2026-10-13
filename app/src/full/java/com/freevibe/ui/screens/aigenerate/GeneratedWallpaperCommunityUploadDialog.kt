@@ -11,7 +11,6 @@ import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material3.AlertDialog
@@ -39,6 +38,7 @@ import com.freevibe.data.model.CommunityUploadRights
 import com.freevibe.ui.components.CommunityPolicyNotice
 import com.freevibe.ui.policy.CommunityUploadPolicyKind
 import com.freevibe.ui.policy.communityUploadPolicyCopy
+import com.freevibe.ui.theme.AuraShapes
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
@@ -117,7 +117,7 @@ internal fun GeneratedWallpaperCommunityUploadDialog(
                             onClick = { selectedCategory = key },
                             enabled = !isUploading,
                             label = { Text(label) },
-                            shape = RoundedCornerShape(8.dp),
+                            shape = AuraShapes.Medium,
                         )
                     }
                 }
@@ -141,7 +141,7 @@ internal fun GeneratedWallpaperCommunityUploadDialog(
                             onClick = { selectedLicense = license },
                             enabled = !isUploading,
                             label = { Text(license) },
-                            shape = RoundedCornerShape(8.dp),
+                            shape = AuraShapes.Medium,
                         )
                     }
                 }
@@ -201,7 +201,7 @@ internal fun GeneratedWallpaperCommunityUploadDialog(
                     )
                 },
                 enabled = !isUploading && name.isNotBlank() && rightsAttested,
-                shape = RoundedCornerShape(8.dp),
+                shape = AuraShapes.Medium,
                 modifier = Modifier.heightIn(min = 48.dp),
             ) {
                 Text(stringResource(R.string.ai_share_community))
@@ -211,7 +211,7 @@ internal fun GeneratedWallpaperCommunityUploadDialog(
             TextButton(
                 onClick = onDismiss,
                 enabled = !isUploading,
-                shape = RoundedCornerShape(8.dp),
+                shape = AuraShapes.Medium,
                 modifier = Modifier.heightIn(min = 48.dp),
             ) {
                 Text(stringResource(R.string.common_cancel))

@@ -14,7 +14,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Block
 import androidx.compose.material.icons.filled.CheckCircle
@@ -50,6 +49,7 @@ import com.freevibe.service.SourceMetrics
 import com.freevibe.service.YtDlpUpdateStatus
 import com.freevibe.service.communityDeletionRequestBody
 import com.freevibe.ui.components.HighlightPill
+import com.freevibe.ui.theme.AuraShapes
 import java.text.DateFormat
 import java.util.Date
 import java.util.Locale
@@ -393,7 +393,7 @@ internal fun BackgroundWorkDiagnosticRow(row: BackgroundWorkStatusRow) {
     }
     Surface(
         color = MaterialTheme.colorScheme.surfaceContainer.copy(alpha = 0.84f),
-        shape = RoundedCornerShape(8.dp),
+        shape = AuraShapes.Medium,
         border = BorderStroke(1.dp, tint.copy(alpha = 0.24f)),
     ) {
         Column(
@@ -499,7 +499,7 @@ internal fun BackgroundWorkDiagnosticRow(row: BackgroundWorkStatusRow) {
 internal fun SourceDiagnosticsEmptyState() {
     Surface(
         color = MaterialTheme.colorScheme.surfaceContainer.copy(alpha = 0.76f),
-        shape = RoundedCornerShape(8.dp),
+        shape = AuraShapes.Medium,
         border = BorderStroke(
             1.dp,
             MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.36f),
@@ -562,7 +562,7 @@ internal fun DiagnosticMetricPill(
     tint: Color,
 ) {
     Surface(
-        shape = RoundedCornerShape(8.dp),
+        shape = AuraShapes.Medium,
         color = tint.copy(alpha = 0.12f),
         border = BorderStroke(1.dp, tint.copy(alpha = 0.16f)),
     ) {
@@ -599,7 +599,7 @@ internal fun SourceDiagnosticRow(
 
     Surface(
         color = MaterialTheme.colorScheme.surfaceContainer.copy(alpha = 0.84f),
-        shape = RoundedCornerShape(8.dp),
+        shape = AuraShapes.Medium,
         border = BorderStroke(1.dp, tint.copy(alpha = 0.24f)),
     ) {
         Column(
@@ -633,7 +633,7 @@ internal fun SourceDiagnosticRow(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(8.dp)
-                    .clip(RoundedCornerShape(4.dp)),
+                    .clip(AuraShapes.Small),
                 color = tint,
                 trackColor = MaterialTheme.colorScheme.surfaceContainerHigh,
             )

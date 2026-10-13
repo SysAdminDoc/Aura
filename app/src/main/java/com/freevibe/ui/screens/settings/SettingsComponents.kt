@@ -14,7 +14,6 @@ import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.selection.selectable
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -43,6 +42,7 @@ import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.freevibe.R
+import com.freevibe.ui.theme.AuraShapes
 
 /**
  * Shared UI primitives for Settings sections.
@@ -121,7 +121,7 @@ internal fun SettingsItem(
         onClick = onClick,
         enabled = enabled,
         color = Color.Transparent,
-        shape = RoundedCornerShape(0.dp),
+        shape = AuraShapes.None,
         shadowElevation = 0.dp,
     ) {
         Column {
@@ -192,7 +192,7 @@ internal fun SettingsToggle(
             },
         onClick = { onCheckedChange(!checked) },
         color = Color.Transparent,
-        shape = RoundedCornerShape(0.dp),
+        shape = AuraShapes.None,
         shadowElevation = 0.dp,
     ) {
         Column {
@@ -257,7 +257,7 @@ internal fun SettingsValueSlider(
                 contentDescription = description
             },
         color = Color.Transparent,
-        shape = RoundedCornerShape(0.dp),
+        shape = AuraShapes.None,
         shadowElevation = 0.dp,
     ) {
         Row(
@@ -355,7 +355,7 @@ internal fun SettingsMetric(
             contentDescription = metricDescription
         },
         color = tint.copy(alpha = 0.12f),
-        shape = RoundedCornerShape(8.dp),
+        shape = AuraShapes.Medium,
         border = BorderStroke(1.dp, tint.copy(alpha = 0.16f)),
     ) {
         Column(
@@ -363,7 +363,7 @@ internal fun SettingsMetric(
             verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             Surface(
-                shape = RoundedCornerShape(8.dp),
+                shape = AuraShapes.Medium,
                 color = tint.copy(alpha = 0.14f),
             ) {
                 Icon(
@@ -413,7 +413,7 @@ internal fun PermissionTransparencyRow(
                 contentDescription = rowDescription
             },
         color = MaterialTheme.colorScheme.surfaceContainer.copy(alpha = 0.74f),
-        shape = RoundedCornerShape(8.dp),
+        shape = AuraShapes.Medium,
         border = BorderStroke(
             1.dp,
             MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.28f),
@@ -428,7 +428,7 @@ internal fun PermissionTransparencyRow(
             horizontalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             Surface(
-                shape = RoundedCornerShape(8.dp),
+                shape = AuraShapes.Medium,
                 color = MaterialTheme.colorScheme.secondary.copy(alpha = 0.12f),
             ) {
                 Icon(
@@ -447,7 +447,7 @@ internal fun PermissionTransparencyRow(
                 ) {
                     Text(permission, style = MaterialTheme.typography.titleMedium)
                     Surface(
-                        shape = RoundedCornerShape(4.dp),
+                        shape = AuraShapes.Small,
                         color = if (isLocal) {
                             MaterialTheme.colorScheme.tertiary.copy(alpha = 0.14f)
                         } else {
@@ -467,7 +467,7 @@ internal fun PermissionTransparencyRow(
                     }
                     if (granted != null && grantedLabel != null) {
                         Surface(
-                            shape = RoundedCornerShape(4.dp),
+                            shape = AuraShapes.Small,
                             color = if (granted) {
                                 MaterialTheme.colorScheme.tertiary.copy(alpha = 0.14f)
                             } else {

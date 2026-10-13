@@ -433,15 +433,15 @@ class ReleasePolishContractTest {
 
         assertTrue(!browseRailSource.contains("FilterChip("))
         assertTrue(browseRailSource.contains("heightIn(min = 48.dp)"))
-        assertTrue(browseRailSource.contains("shape = RoundedCornerShape(0.dp)"))
-        assertTrue(wallpaperRefineSheet.contains("shape = RoundedCornerShape(8.dp)"))
+        assertTrue(browseRailSource.contains("shape = AuraShapes.None"))
+        assertTrue(wallpaperRefineSheet.contains("shape = AuraShapes.Medium"))
         assertTrue(!videoToolbar.contains("heightIn(min = 34.dp)"))
         assertTrue(videoToolbar.contains("heightIn(min = 48.dp)"))
         assertTrue(videoToolbar.contains("IconButton(onClick = { searchExpanded = !searchExpanded })"))
-        assertTrue(videoRefineSheet.contains("shape = RoundedCornerShape(8.dp)"))
+        assertTrue(videoRefineSheet.contains("shape = AuraShapes.Medium"))
         assertTrue(soundModeBar.contains("heightIn(min = 44.dp)"))
-        assertTrue(soundModeBar.contains("shape = RoundedCornerShape(0.dp)"))
-        assertTrue(aiStylePicker.contains("shape = RoundedCornerShape(8.dp)"))
+        assertTrue(soundModeBar.contains("shape = AuraShapes.None"))
+        assertTrue(aiStylePicker.contains("shape = AuraShapes.Medium"))
     }
 
     @Test
@@ -453,9 +453,9 @@ class ReleasePolishContractTest {
             .substringBefore("@OptIn(")
 
         assertTrue(guidelines.contains("verticalScroll(rememberScrollState())"))
-        assertTrue(guidelines.contains("shape = RoundedCornerShape(8.dp)"))
+        assertTrue(guidelines.contains("shape = AuraShapes.Medium"))
         assertTrue(aiDisclosure.contains("verticalScroll(rememberScrollState())"))
-        assertTrue(aiDisclosure.contains("shape = RoundedCornerShape(8.dp)"))
+        assertTrue(aiDisclosure.contains("shape = AuraShapes.Medium"))
     }
 
     @Test
@@ -469,7 +469,7 @@ class ReleasePolishContractTest {
         assertTrue(importSheet.contains(".verticalScroll(rememberScrollState())"))
         assertTrue(importSheet.contains(".imePadding()"))
         assertTrue(qrDialog.contains("verticalScroll(rememberScrollState())"))
-        assertTrue(qrDialog.contains("shape = RoundedCornerShape(8.dp)"))
+        assertTrue(qrDialog.contains("shape = AuraShapes.Medium"))
         assertTrue("QR is drawn off the main thread", collections.contains("produceState<CollectionQrImage>(CollectionQrImage.Loading, state.shareLink)"))
         assertTrue(qrDialog.contains("CollectionQrImage.Loading -> CircularProgressIndicator()"))
         assertFalse(collections.contains("remember(state.shareLink) { viewModel.buildQrBitmap"))

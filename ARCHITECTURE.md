@@ -210,7 +210,9 @@ Every live wallpaper must:
 ## Design system
 
 - AMOLED-first dark theme; neutral surfaces; brass / mist / coral accents.
-- Rectangular 4-12dp radii. **No pill / oval / fully-rounded backdrops.** See CLAUDE.md and the v6.16.0 changelog for the rule.
+- Rectangular radii, 12 dp at most, all taken from `AuraShapes` in `ui/theme/Shapes.kt`. **No pill / oval / fully-rounded backdrops.** Material buttons get an explicit shape because their default is a pill, and nav items hide their pill indicator. See the v6.16.0 changelog for the rule.
+- Colour literals live in `ui/theme/` or in a table registered in `tools/design_token_check.py` with a reason. Provider badge colours go through `sourceBadgeTone`, which keeps the text at 4.5:1 on the glass card over any wallpaper.
+- `tools/design_token_check.py` fails when a literal corner shape, a radius above the ceiling, a pill default, an unregistered colour literal or a badge that skips the contrast tone comes back.
 - Zero letter-spacing; calmer elevation; status differentiated by colour / border / font weight, not shape.
 - Shared components: `GlassCard`, `HighlightPill`, `CountBadge`, `AuraStateCard`, `CompactSearchField`.
 

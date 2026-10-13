@@ -4,7 +4,6 @@ import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectTransformGestures
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.*
@@ -46,6 +45,7 @@ import com.freevibe.ui.components.AuraStateAction
 import com.freevibe.ui.components.AuraStateCard
 import com.freevibe.ui.components.FitCanvasControls
 import com.freevibe.ui.components.FitCanvasMedia
+import com.freevibe.ui.theme.AuraShapes
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -300,7 +300,7 @@ fun WallpaperCropScreen(
                             style = MaterialTheme.typography.labelSmall,
                         )
                     },
-                    shape = RoundedCornerShape(8.dp),
+                    shape = AuraShapes.Medium,
                     modifier = Modifier.heightIn(min = 40.dp),
                 )
                 CropAspectChips(
@@ -328,7 +328,7 @@ fun WallpaperCropScreen(
                     },
                     modifier = Modifier.weight(1f).heightIn(min = 48.dp),
                     enabled = !state.isApplying && state.bitmap != null,
-                    shape = RoundedCornerShape(8.dp),
+                    shape = AuraShapes.Medium,
                 ) { Text(stringResource(R.string.common_home)) }
                 OutlinedButton(
                     onClick = {
@@ -341,7 +341,7 @@ fun WallpaperCropScreen(
                     },
                     modifier = Modifier.weight(1f).heightIn(min = 48.dp),
                     enabled = !state.isApplying && state.bitmap != null,
-                    shape = RoundedCornerShape(8.dp),
+                    shape = AuraShapes.Medium,
                 ) { Text(stringResource(R.string.common_lock)) }
                 Button(
                     onClick = {
@@ -354,7 +354,7 @@ fun WallpaperCropScreen(
                     },
                     modifier = Modifier.weight(1f).heightIn(min = 48.dp),
                     enabled = !state.isApplying && state.bitmap != null,
-                    shape = RoundedCornerShape(8.dp),
+                    shape = AuraShapes.Medium,
                 ) {
                     if (state.isApplying) CircularProgressIndicator(Modifier.size(18.dp), strokeWidth = 2.dp)
                     else Text(stringResource(R.string.common_both))
@@ -391,7 +391,7 @@ internal fun CropAspectChips(selected: CropAspect, enabled: Boolean, onSelect: (
             enabled = enabled,
             onClick = { onSelect(aspect) },
             label = { Text(cropAspectLabel(aspect), style = MaterialTheme.typography.labelSmall) },
-            shape = RoundedCornerShape(8.dp),
+            shape = AuraShapes.Medium,
             modifier = Modifier.heightIn(min = 40.dp),
         )
     }

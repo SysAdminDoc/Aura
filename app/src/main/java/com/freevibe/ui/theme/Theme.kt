@@ -10,7 +10,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.view.WindowCompat
 
@@ -37,7 +36,7 @@ val OnSurfaceVariant = Color(0xFFADB7C1)
 val OnPrimary = Color(0xFF2A1D00)
 val OnSecondary = Color(0xFF05141C)
 
-private val DarkColorScheme = darkColorScheme(
+internal val DarkColorScheme = darkColorScheme(
     primary = Primary,
     onPrimary = OnPrimary,
     primaryContainer = PrimaryContainer,
@@ -62,7 +61,7 @@ private val DarkColorScheme = darkColorScheme(
     outlineVariant = OutlineVariant,
 )
 
-private val LightColorScheme = lightColorScheme(
+internal val LightColorScheme = lightColorScheme(
     primary = Color(0xFF7A5811),
     onPrimary = Color.White,
     primaryContainer = Color(0xFFFFE6AE),
@@ -120,11 +119,11 @@ fun FreeVibeTheme(
     MaterialTheme(
         colorScheme = colorScheme,
         shapes = Shapes(
-            extraSmall = androidx.compose.foundation.shape.RoundedCornerShape(4.dp),
-            small = androidx.compose.foundation.shape.RoundedCornerShape(6.dp),
-            medium = androidx.compose.foundation.shape.RoundedCornerShape(8.dp),
-            large = androidx.compose.foundation.shape.RoundedCornerShape(8.dp),
-            extraLarge = androidx.compose.foundation.shape.RoundedCornerShape(8.dp),
+            extraSmall = AuraShapes.Small,
+            small = AuraShapes.Compact,
+            medium = AuraShapes.Medium,
+            large = AuraShapes.Medium,
+            extraLarge = AuraShapes.Medium,
         ),
         typography = Typography(
             headlineLarge = TextStyle(

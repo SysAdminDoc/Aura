@@ -43,10 +43,13 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.freevibe.R
 import com.freevibe.service.DownloadProgress
+import com.freevibe.ui.theme.AuraShapes
+import com.freevibe.ui.theme.GLASS_CARD_ALPHA
+import com.freevibe.ui.theme.sourceBadgeTone
 
-private val AuraCardShape = RoundedCornerShape(8.dp)
-private val AuraControlShape = RoundedCornerShape(8.dp)
-private val AuraIconTileShape = RoundedCornerShape(8.dp)
+private val AuraCardShape = AuraShapes.Medium
+private val AuraControlShape = AuraShapes.Medium
+private val AuraIconTileShape = AuraShapes.Medium
 private val AuraMinimumTouchTarget = 48.dp
 
 /**
@@ -219,7 +222,7 @@ private fun DownloadItem(
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(4.dp)
-                        .clip(RoundedCornerShape(2.dp))
+                        .clip(AuraShapes.Hairline)
                         .semantics {
                             progressBarRangeInfo = ProgressBarRangeInfo(download.progress, 0f..1f)
                         },
@@ -337,7 +340,7 @@ fun GlassCard(
 ) {
     Surface(
         modifier = modifier,
-        color = MaterialTheme.colorScheme.surfaceContainer.copy(alpha = 0.72f),
+        color = MaterialTheme.colorScheme.surfaceContainer.copy(alpha = GLASS_CARD_ALPHA),
         shape = shape,
         tonalElevation = 0.dp,
         shadowElevation = 0.dp,
@@ -517,28 +520,30 @@ fun AuraScreenHeader(
 
 @Composable
 fun SourceBadge(source: String, modifier: Modifier = Modifier) {
-    val (color, label) = when (source.uppercase(java.util.Locale.ROOT)) {
-        "WALLHAVEN" -> MaterialTheme.colorScheme.primary to "Wallhaven"
-        "PICSUM" -> MaterialTheme.colorScheme.outline to "Legacy"
-        "BING" -> Color(0xFF00809D) to "Bing"
-        "WIKIMEDIA" -> Color(0xFF006699) to "Wikimedia"
-        "INTERNET_ARCHIVE" -> Color(0xFFFF8C00) to "Archive.org"
-        "REDDIT" -> Color(0xFFFF4500) to "Reddit"
-        "NASA" -> Color(0xFF0B3D91) to "NASA"
-        "FREESOUND" -> Color(0xFF3DB2CE) to "Freesound" // Legacy favorites only
-        "JAMENDO" -> Color(0xFF7E57C2) to "Jamendo"
-        "AUDIUS" -> Color(0xFF00C2A8) to "Audius"
-        "CCMIXTER" -> Color(0xFF8E24AA) to "ccMixter"
-        "YOUTUBE" -> Color(0xFFFF0000) to "YouTube"
-        "TIKTOK" -> Color(0xFF00A3AD) to "TikTok"
-        "PEXELS" -> Color(0xFF05A081) to "Pexels"
-        "PIXABAY" -> Color(0xFF00AB6C) to "Pixabay"
-        "KLIPY" -> Color(0xFFE040FB) to "Klipy"
-        "SOUNDCLOUD" -> Color(0xFFFF5500) to "SoundCloud"
-        "COMMUNITY" -> Color(0xFF4CAF50) to "Community"
-        "BUNDLED" -> Color(0xFFFFB300) to "Aura Originals"
-        else -> MaterialTheme.colorScheme.onSurfaceVariant to source
+    val label = when (source.uppercase(java.util.Locale.ROOT)) {
+        "WALLHAVEN" -> "Wallhaven"
+        "PICSUM" -> "Legacy"
+        "BING" -> "Bing"
+        "WIKIMEDIA" -> "Wikimedia"
+        "INTERNET_ARCHIVE" -> "Archive.org"
+        "REDDIT" -> "Reddit"
+        "NASA" -> "NASA"
+        "FREESOUND" -> "Freesound" // Legacy favorites only
+        "JAMENDO" -> "Jamendo"
+        "AUDIUS" -> "Audius"
+        "CCMIXTER" -> "ccMixter"
+        "YOUTUBE" -> "YouTube"
+        "TIKTOK" -> "TikTok"
+        "PEXELS" -> "Pexels"
+        "PIXABAY" -> "Pixabay"
+        "KLIPY" -> "Klipy"
+        "SOUNDCLOUD" -> "SoundCloud"
+        "COMMUNITY" -> "Community"
+        "BUNDLED" -> "Aura Originals"
+        else -> source
     }
+    val colorScheme = MaterialTheme.colorScheme
+    val color = remember(source, colorScheme) { sourceBadgeTone(source, colorScheme) }
 
     Text(
         text = label,
@@ -747,7 +752,7 @@ fun CountBadge(
         modifier = modifier.semantics {
             contentDescription = countDescription
         },
-        shape = RoundedCornerShape(6.dp),
+        shape = AuraShapes.Compact,
         color = tone,
         contentColor = MaterialTheme.colorScheme.onPrimary,
         shadowElevation = 1.dp,

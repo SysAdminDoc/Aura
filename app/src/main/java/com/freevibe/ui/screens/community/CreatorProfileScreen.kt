@@ -7,7 +7,6 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Block
@@ -38,6 +37,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.res.stringResource
 import com.freevibe.R
+import com.freevibe.ui.theme.AuraShapes
 import java.util.Locale
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.ViewModel
@@ -277,7 +277,7 @@ fun CreatorProfileScreen(
                                             modifier = Modifier.size(16.dp),
                                         )
                                     },
-                                    shape = RoundedCornerShape(8.dp),
+                                    shape = AuraShapes.Medium,
                                 )
                             }
                         }
@@ -393,7 +393,7 @@ private fun CreatorSummaryCard(
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Surface(
-                shape = RoundedCornerShape(8.dp),
+                shape = AuraShapes.Medium,
                 color = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f),
                 border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.18f)),
             ) {
@@ -530,7 +530,7 @@ private fun CreatorProfileEditDialog(
             Button(
                 onClick = { onSave(displayName, bio, websiteUrl, avatarUrl) },
                 enabled = !isSaving && displayName.trim().length >= 2,
-                shape = RoundedCornerShape(8.dp),
+                shape = AuraShapes.Medium,
                 modifier = Modifier.heightIn(min = 48.dp),
             ) {
                 if (isSaving) {
@@ -541,7 +541,7 @@ private fun CreatorProfileEditDialog(
             }
         },
         dismissButton = {
-            TextButton(onClick = onDismiss, enabled = !isSaving, shape = RoundedCornerShape(8.dp), modifier = Modifier.heightIn(min = 48.dp)) {
+            TextButton(onClick = onDismiss, enabled = !isSaving, shape = AuraShapes.Medium, modifier = Modifier.heightIn(min = 48.dp)) {
                 Text(stringResource(R.string.common_cancel))
             }
         },
@@ -552,7 +552,7 @@ private fun CreatorProfileEditDialog(
 private fun CreatorMetric(label: String, value: String, modifier: Modifier = Modifier) {
     Surface(
         modifier = modifier,
-        shape = RoundedCornerShape(8.dp),
+        shape = AuraShapes.Medium,
         color = MaterialTheme.colorScheme.surfaceContainer.copy(alpha = 0.62f),
         border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.18f)),
     ) {
@@ -593,6 +593,7 @@ private fun CreatorRow(
                         onBlock()
                     },
                     enabled = !actionInFlight,
+                    shape = AuraShapes.Medium,
                 ) {
                     Text(stringResource(R.string.reports_block_confirm))
                 }
@@ -605,7 +606,7 @@ private fun CreatorRow(
         )
     }
     Surface(
-        shape = RoundedCornerShape(8.dp),
+        shape = AuraShapes.Medium,
         color = MaterialTheme.colorScheme.surfaceContainer.copy(alpha = 0.7f),
         border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.24f)),
     ) {
@@ -627,7 +628,7 @@ private fun CreatorRow(
                     TextButton(
                         onClick = if (creator.isFollowed) onUnfollow else onFollow,
                         enabled = !actionInFlight,
-                        shape = RoundedCornerShape(8.dp),
+                        shape = AuraShapes.Medium,
                         modifier = Modifier.heightIn(min = 48.dp),
                     ) {
                         if (actionInFlight) {
@@ -653,7 +654,7 @@ private fun CreatorRow(
 @Composable
 private fun UploadRow(upload: CreatorUploadRef) {
     Surface(
-        shape = RoundedCornerShape(8.dp),
+        shape = AuraShapes.Medium,
         color = MaterialTheme.colorScheme.surfaceContainer.copy(alpha = 0.52f),
         border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.24f)),
     ) {
@@ -663,7 +664,7 @@ private fun UploadRow(upload: CreatorUploadRef) {
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Surface(
-                shape = RoundedCornerShape(8.dp),
+                shape = AuraShapes.Medium,
                 color = MaterialTheme.colorScheme.primary.copy(alpha = 0.10f),
             ) {
                 Text(
@@ -689,7 +690,7 @@ private fun UploadRow(upload: CreatorUploadRef) {
 private fun EmptyCreatorSection(text: String) {
     Surface(
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(8.dp),
+        shape = AuraShapes.Medium,
         color = MaterialTheme.colorScheme.surfaceContainer.copy(alpha = 0.42f),
         border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.14f)),
     ) {

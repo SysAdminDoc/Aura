@@ -16,7 +16,6 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -61,6 +60,7 @@ import com.freevibe.ui.components.AuraSnackbarHost
 import com.freevibe.ui.components.AuraStateAction
 import com.freevibe.ui.components.AuraStateCard
 import com.freevibe.ui.components.EmbeddedImagePickerSheet
+import com.freevibe.ui.theme.AuraShapes
 import com.freevibe.util.rethrowIfCancelled
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -517,7 +517,7 @@ fun CollectionsScreen(
                         Card(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .clip(RoundedCornerShape(8.dp))
+                                .clip(AuraShapes.Medium)
                                 .semantics(mergeDescendants = true) {
                                     contentDescription = itemLabel
                                     customActions = listOf(
@@ -559,7 +559,7 @@ fun CollectionsScreen(
                                         }
                                     },
                                 ),
-                            shape = RoundedCornerShape(8.dp),
+                            shape = AuraShapes.Medium,
                         ) {
                             AsyncImage(
                                 model = item.thumbnailUrl,
@@ -627,7 +627,7 @@ private fun CreateCollectionDialog(
                 modifier = Modifier.fillMaxWidth(),
                 label = { Text(stringResource(R.string.detail_collection_name_placeholder)) },
                 singleLine = true,
-                shape = RoundedCornerShape(8.dp),
+                shape = AuraShapes.Medium,
             )
         },
         confirmButton = {
@@ -643,7 +643,7 @@ private fun CreateCollectionDialog(
                 Text(stringResource(R.string.common_cancel))
             }
         },
-        shape = RoundedCornerShape(8.dp),
+        shape = AuraShapes.Medium,
     )
 }
 
@@ -666,7 +666,7 @@ private fun RenameCollectionDialog(
                 modifier = Modifier.fillMaxWidth(),
                 label = { Text(stringResource(R.string.detail_collection_name_placeholder)) },
                 singleLine = true,
-                shape = RoundedCornerShape(8.dp),
+                shape = AuraShapes.Medium,
             )
         },
         confirmButton = {
@@ -682,7 +682,7 @@ private fun RenameCollectionDialog(
                 Text(stringResource(R.string.common_cancel))
             }
         },
-        shape = RoundedCornerShape(8.dp),
+        shape = AuraShapes.Medium,
     )
 }
 
@@ -697,7 +697,7 @@ private fun ImportCollectionSheet(
     var link by remember { mutableStateOf("") }
     ModalBottomSheet(
         onDismissRequest = onDismiss,
-        shape = RoundedCornerShape(topStart = 18.dp, topEnd = 18.dp),
+        shape = AuraShapes.SheetTop,
     ) {
         Column(
             modifier = Modifier
@@ -719,13 +719,13 @@ private fun ImportCollectionSheet(
                 modifier = Modifier.fillMaxWidth(),
                 label = { Text(stringResource(R.string.collections_import_link_label)) },
                 singleLine = true,
-                shape = RoundedCornerShape(8.dp),
+                shape = AuraShapes.Medium,
             )
             Button(
                 onClick = { onImportLink(link) },
                 enabled = link.isNotBlank(),
                 modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp),
-                shape = RoundedCornerShape(8.dp),
+                shape = AuraShapes.Medium,
             ) {
                 Icon(Icons.Default.Link, contentDescription = null)
                 Spacer(Modifier.width(8.dp))
@@ -738,7 +738,7 @@ private fun ImportCollectionSheet(
                 OutlinedButton(
                     onClick = onOpenFile,
                     modifier = Modifier.weight(1f).heightIn(min = 48.dp),
-                    shape = RoundedCornerShape(8.dp),
+                    shape = AuraShapes.Medium,
                 ) {
                     Icon(Icons.Default.FileOpen, contentDescription = null)
                     Spacer(Modifier.width(8.dp))
@@ -747,7 +747,7 @@ private fun ImportCollectionSheet(
                 OutlinedButton(
                     onClick = onOpenQrImage,
                     modifier = Modifier.weight(1f).heightIn(min = 48.dp),
-                    shape = RoundedCornerShape(8.dp),
+                    shape = AuraShapes.Medium,
                 ) {
                     Icon(Icons.Default.QrCodeScanner, contentDescription = null)
                     Spacer(Modifier.width(8.dp))
@@ -783,7 +783,7 @@ private fun CollectionQrDialog(
                 verticalArrangement = Arrangement.spacedBy(12.dp),
             ) {
                 Surface(
-                    shape = RoundedCornerShape(8.dp),
+                    shape = AuraShapes.Medium,
                     color = androidx.compose.ui.graphics.Color.White,
                     contentColor = androidx.compose.ui.graphics.Color.Black,
                     tonalElevation = 0.dp,
@@ -824,16 +824,16 @@ private fun CollectionQrDialog(
             }
         },
         confirmButton = {
-            TextButton(onClick = onCopyLink, shape = RoundedCornerShape(8.dp)) {
+            TextButton(onClick = onCopyLink, shape = AuraShapes.Medium) {
                 Text(stringResource(R.string.collections_qr_copy))
             }
         },
         dismissButton = {
-            TextButton(onClick = onDismiss, shape = RoundedCornerShape(8.dp)) {
+            TextButton(onClick = onDismiss, shape = AuraShapes.Medium) {
                 Text(stringResource(R.string.common_done))
             }
         },
-        shape = RoundedCornerShape(8.dp),
+        shape = AuraShapes.Medium,
     )
 }
 
@@ -859,7 +859,7 @@ private fun CollectionCard(
 
     Card(
         onClick = onClick,
-        shape = RoundedCornerShape(8.dp),
+        shape = AuraShapes.Medium,
         border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.24f)),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer),
     ) {
@@ -874,7 +874,7 @@ private fun CollectionCard(
             Box(
                 modifier = Modifier
                     .size(72.dp)
-                    .clip(RoundedCornerShape(8.dp))
+                    .clip(AuraShapes.Medium)
                     .background(MaterialTheme.colorScheme.surfaceContainerHigh),
             ) {
                 if (covers.isNotEmpty()) {

@@ -12,7 +12,6 @@ import androidx.compose.foundation.gestures.calculateZoom
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.Undo
@@ -53,6 +52,7 @@ import com.freevibe.service.AudioFadeCurve
 import com.freevibe.ui.components.AuraSnackbarHost
 import com.freevibe.ui.components.AuraStateAction
 import com.freevibe.ui.components.AuraStateCard
+import com.freevibe.ui.theme.AuraShapes
 import kotlinx.coroutines.launch
 import kotlin.math.abs
 import kotlin.math.max
@@ -186,7 +186,7 @@ fun SoundEditorScreen(
             dismissButton = {
                 TextButton(onClick = { showSoundDiscardConfirm = false }) { Text(stringResource(R.string.common_keep_editing)) }
             },
-            shape = RoundedCornerShape(8.dp),
+            shape = AuraShapes.Medium,
         )
     }
 
@@ -267,7 +267,7 @@ fun SoundEditorScreen(
                 Box(Modifier.fillMaxWidth().height(200.dp), contentAlignment = Alignment.Center) {
                     Surface(
                         color = MaterialTheme.colorScheme.surfaceContainer,
-                        shape = RoundedCornerShape(8.dp),
+                        shape = AuraShapes.Medium,
                         modifier = Modifier.fillMaxWidth(),
                     ) {
                         Column(
@@ -401,7 +401,7 @@ fun SoundEditorScreen(
                         onClick = { viewModel.togglePlayback() },
                         modifier = Modifier
                             .size(64.dp)
-                            .clip(RoundedCornerShape(8.dp))
+                            .clip(AuraShapes.Medium)
                             .background(MaterialTheme.colorScheme.primaryContainer)
                             .semantics {
                                 contentDescription = if (state.isPlaying) pausePreviewLabel else playPreviewLabel
@@ -593,7 +593,7 @@ fun SoundEditorScreen(
                     onClick = viewModel::exportTrimmed,
                     enabled = !state.isApplying,
                     modifier = Modifier.fillMaxWidth().height(48.dp),
-                    shape = RoundedCornerShape(8.dp),
+                    shape = AuraShapes.Medium,
                 ) {
                     if (state.isApplying) {
                         CircularProgressIndicator(Modifier.size(16.dp), strokeWidth = 2.dp)
@@ -610,7 +610,7 @@ fun SoundEditorScreen(
                     Surface(
                         color = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.55f),
                         contentColor = MaterialTheme.colorScheme.onErrorContainer,
-                        shape = RoundedCornerShape(8.dp),
+                        shape = AuraShapes.Medium,
                         border = BorderStroke(1.dp, MaterialTheme.colorScheme.error.copy(alpha = 0.22f)),
                     ) {
                         Row(
@@ -717,7 +717,7 @@ private fun TrimGuidance(trimDurationMs: Long) {
         modifier = Modifier.fillMaxWidth(),
         color = containerColor,
         contentColor = contentColor,
-        shape = RoundedCornerShape(8.dp),
+        shape = AuraShapes.Medium,
     ) {
         Row(
             modifier = Modifier.padding(horizontal = 14.dp, vertical = 12.dp),
@@ -752,7 +752,7 @@ private fun ApplyBtn(text: String, modifier: Modifier, isLoading: Boolean, enabl
                 onClick(label = applyLabel, action = null)
             },
         enabled = enabled && !isLoading,
-        shape = RoundedCornerShape(8.dp),
+        shape = AuraShapes.Medium,
         colors = ButtonDefaults.buttonColors(
             containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
             contentColor = MaterialTheme.colorScheme.onSurface,
@@ -808,7 +808,7 @@ private fun WaveformView(
 
     Box(
         modifier = modifier
-            .clip(RoundedCornerShape(8.dp))
+            .clip(AuraShapes.Medium)
             .background(MaterialTheme.colorScheme.surfaceContainer)
             .semantics {
                 contentDescription = trimDescription

@@ -17,7 +17,6 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.OpenInNew
@@ -47,6 +46,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import com.freevibe.R
 import com.freevibe.service.PhotoPickerCustomization
+import com.freevibe.ui.theme.AuraShapes
 import kotlin.math.roundToInt
 
 /** The embedded picker never grows past this; it was a fixed height before it learned to shrink. */
@@ -84,7 +84,7 @@ fun EmbeddedImagePickerSheet(
         onDismissRequest = onDismiss,
         // Half-open, a tall phone would show the picker with its button below the fold.
         sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
-        shape = RoundedCornerShape(topStart = 12.dp, topEnd = 12.dp),
+        shape = AuraShapes.SheetTop,
     ) {
         EmbeddedImagePickerSheetContent(
             title = title,
@@ -165,7 +165,7 @@ internal fun EmbeddedImagePickerSheetContent(
         }
         if (pickerMaxHeightDp != null) {
             Surface(
-                shape = RoundedCornerShape(8.dp),
+                shape = AuraShapes.Medium,
                 color = MaterialTheme.colorScheme.surface,
                 border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.45f)),
                 modifier = Modifier
@@ -186,14 +186,14 @@ internal fun EmbeddedImagePickerSheetContent(
             Button(
                 onClick = onFallback,
                 modifier = buttonModifier,
-                shape = RoundedCornerShape(8.dp),
+                shape = AuraShapes.Medium,
                 contentPadding = PaddingValues(horizontal = 14.dp, vertical = 0.dp),
             ) { buttonContent() }
         } else {
             OutlinedButton(
                 onClick = onFallback,
                 modifier = buttonModifier,
-                shape = RoundedCornerShape(8.dp),
+                shape = AuraShapes.Medium,
                 contentPadding = PaddingValues(horizontal = 14.dp, vertical = 0.dp),
                 colors = ButtonDefaults.outlinedButtonColors(
                     contentColor = MaterialTheme.colorScheme.onSurface,

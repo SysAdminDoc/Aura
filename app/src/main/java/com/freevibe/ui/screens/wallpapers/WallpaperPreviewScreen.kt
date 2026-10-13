@@ -2,7 +2,6 @@ package com.freevibe.ui.screens.wallpapers
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Check
@@ -35,6 +34,7 @@ import com.freevibe.data.model.FitCanvasStyle
 import com.freevibe.data.model.WALLPAPER_PRESENTATION_FIT
 import com.freevibe.ui.components.FitCanvasControls
 import com.freevibe.ui.components.FitCanvasMedia
+import com.freevibe.ui.theme.AuraShapes
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Date
@@ -101,7 +101,7 @@ fun WallpaperPreviewScreen(
                     Row(
                         modifier = Modifier
                             .padding(end = 8.dp)
-                            .clip(RoundedCornerShape(8.dp))
+                            .clip(AuraShapes.Medium)
                             .background(MaterialTheme.colorScheme.surfaceVariant)
                             .padding(2.dp)
                             .semantics { selectableGroup() },
@@ -182,7 +182,7 @@ private enum class PreviewMode { LOCK, HOME }
 private fun PreviewModeChip(label: String, active: Boolean, onClick: () -> Unit) {
     Surface(
         onClick = onClick,
-        shape = RoundedCornerShape(8.dp),
+        shape = AuraShapes.Medium,
         color = if (active) MaterialTheme.colorScheme.primary else Color.Transparent,
         modifier = Modifier.semantics { selected = active; role = androidx.compose.ui.semantics.Role.Tab },
     ) {
@@ -307,7 +307,7 @@ private fun HomeMock(overlayTint: Color) {
                     modifier = Modifier
                         .padding(horizontal = 3.dp)
                         .size(if (i == 1) 8.dp else 6.dp)
-                        .clip(RoundedCornerShape(2.dp))
+                        .clip(AuraShapes.Hairline)
                         .background(overlayTint.copy(alpha = if (i == 1) 0.8f else 0.4f)),
                 )
             }
@@ -335,7 +335,7 @@ private fun HomeMock(overlayTint: Color) {
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 8.dp, vertical = 10.dp)
-                .clip(RoundedCornerShape(8.dp))
+                .clip(AuraShapes.Medium)
                 .background(Color.Black.copy(alpha = 0.28f))
                 .padding(horizontal = 10.dp, vertical = 10.dp),
         ) {
@@ -357,14 +357,14 @@ private fun MockIcon(tint: Color, label: String?) {
         Box(
             modifier = Modifier
                 .size(44.dp)
-                .clip(RoundedCornerShape(8.dp))
+                .clip(AuraShapes.Medium)
                 .background(tint.copy(alpha = 0.28f))
                 .padding(8.dp),
         ) {
             Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .clip(RoundedCornerShape(8.dp))
+                    .clip(AuraShapes.Medium)
                     .background(tint.copy(alpha = 0.55f)),
             )
         }
@@ -467,7 +467,7 @@ private fun ApplyActionButton(
             onClick = onClick,
             enabled = enabled,
             modifier = modifier.heightIn(min = 48.dp),
-            shape = RoundedCornerShape(8.dp),
+            shape = AuraShapes.Medium,
         ) {
             Text(label, style = MaterialTheme.typography.labelLarge)
         }
@@ -476,7 +476,7 @@ private fun ApplyActionButton(
             onClick = onClick,
             enabled = enabled,
             modifier = modifier.heightIn(min = 48.dp),
-            shape = RoundedCornerShape(8.dp),
+            shape = AuraShapes.Medium,
         ) {
             Icon(Icons.Default.Check, contentDescription = null, modifier = Modifier.size(18.dp))
             Spacer(Modifier.width(6.dp))

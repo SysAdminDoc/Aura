@@ -161,7 +161,7 @@ private fun WidgetContent(
         modifier = GlanceModifier
             .fillMaxSize()
             .background(WidgetBg)
-            .cornerRadius(16.dp),
+            .cornerRadius(12.dp),
     ) {
         // Current wallpaper as the widget background (with a dark scrim for text legibility).
         // Tap the image area to jump into the detail screen for that wallpaper.
@@ -172,7 +172,7 @@ private fun WidgetContent(
                 contentScale = ContentScale.Crop,
                 modifier = GlanceModifier
                     .fillMaxSize()
-                    .cornerRadius(16.dp)
+                    .cornerRadius(12.dp)
                     .clickable(actionRunCallback<OpenCurrentWallpaperAction>()),
             )
             // Dark scrim so the buttons + text remain readable on bright wallpapers.
@@ -180,7 +180,7 @@ private fun WidgetContent(
                 modifier = GlanceModifier
                     .fillMaxSize()
                     .background(Scrim)
-                    .cornerRadius(16.dp),
+                    .cornerRadius(12.dp),
             ) {}
         }
         Box(modifier = GlanceModifier.fillMaxSize().padding(12.dp)) {

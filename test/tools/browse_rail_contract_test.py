@@ -20,7 +20,7 @@ def test_shared_browse_rail_uses_flat_touch_safe_tabs() -> None:
         "fun BrowseRail(",
         "horizontalScroll(rememberScrollState())",
         "heightIn(min = 48.dp)",
-        "shape = RoundedCornerShape(0.dp)",
+        "shape = AuraShapes.None",
         "MaterialTheme.colorScheme.primary",
     ):
         assert_contains(source, expected, "BrowseRail")

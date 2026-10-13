@@ -11,7 +11,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -22,6 +21,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import com.freevibe.ui.theme.AuraShapes
 
 data class BrowseRailItem(
     val label: String,
@@ -48,7 +48,7 @@ fun BrowseRail(
                 onClick = item.onClick,
                 enabled = item.enabled,
                 modifier = Modifier.heightIn(min = 48.dp),
-                shape = RoundedCornerShape(0.dp),
+                shape = AuraShapes.None,
                 color = Color.Transparent,
             ) {
                 Column(
@@ -74,7 +74,7 @@ fun BrowseRail(
                             .height(2.dp)
                             .background(
                                 if (item.selected) MaterialTheme.colorScheme.primary else Color.Transparent,
-                                RoundedCornerShape(1.dp),
+                                AuraShapes.Hairline,
                             ),
                     )
                 }

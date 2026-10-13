@@ -13,7 +13,6 @@ import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.pager.VerticalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -25,6 +24,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.graphicsLayer
+import com.freevibe.ui.theme.AuraShapes
 import kotlin.math.absoluteValue
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
@@ -151,7 +151,7 @@ fun WallpaperDetailScreen(
                     contentPadding = PaddingValues(24.dp),
                 ) {
                     Surface(
-                        shape = RoundedCornerShape(8.dp),
+                        shape = AuraShapes.Medium,
                         color = MaterialTheme.colorScheme.secondary.copy(alpha = 0.12f),
                     ) {
                         Icon(
@@ -172,7 +172,7 @@ fun WallpaperDetailScreen(
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                     Spacer(Modifier.height(16.dp))
-                    FilledTonalButton(onClick = onBack) { Text(stringResource(R.string.detail_unavailable_action)) }
+                    FilledTonalButton(onClick = onBack, shape = AuraShapes.Medium) { Text(stringResource(R.string.detail_unavailable_action)) }
                 }
             }
         }
@@ -413,7 +413,7 @@ fun WallpaperDetailScreen(
                     if (showDetailsPanel) {
                     GlassCard(
                         modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(8.dp),
+                        shape = AuraShapes.Medium,
                         contentPadding = PaddingValues(18.dp),
                         highlightHeight = 84.dp,
                         shadowElevation = 2.dp,
@@ -445,7 +445,7 @@ fun WallpaperDetailScreen(
                             }
                             TextButton(
                                 onClick = { showDetailsPanel = false },
-                                shape = RoundedCornerShape(8.dp),
+                                shape = AuraShapes.Medium,
                             ) {
                                 Text(stringResource(R.string.detail_show_image))
                             }
@@ -488,7 +488,7 @@ fun WallpaperDetailScreen(
                                     .weight(1f)
                                     .heightIn(min = 48.dp),
                                 enabled = canApply && !state.isApplying,
-                                shape = RoundedCornerShape(8.dp),
+                                shape = AuraShapes.Medium,
                             ) {
                                 if (state.isApplying) {
                                     CircularProgressIndicator(
@@ -507,7 +507,7 @@ fun WallpaperDetailScreen(
                                 modifier = Modifier
                                     .weight(0.72f)
                                     .heightIn(min = 48.dp),
-                                shape = RoundedCornerShape(8.dp),
+                                shape = AuraShapes.Medium,
                             ) {
                                 Icon(Icons.Default.Visibility, null, Modifier.size(18.dp))
                                 Spacer(Modifier.width(8.dp))
@@ -528,7 +528,7 @@ fun WallpaperDetailScreen(
                                     Surface(
                                         onClick = { onSearchColor(hex.removePrefix("#")) },
                                         color = Color(colorInt),
-                                        shape = RoundedCornerShape(6.dp),
+                                        shape = AuraShapes.Compact,
                                         modifier = Modifier
                                             .size(24.dp)
                                             .semantics { contentDescription = colorContentDescription },
@@ -561,7 +561,7 @@ fun WallpaperDetailScreen(
                                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                                         Surface(
                                             color = Color(colorInt),
-                                            shape = RoundedCornerShape(8.dp),
+                                            shape = AuraShapes.Medium,
                                             border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f)),
                                             modifier = Modifier.size(64.dp),
                                         ) {}
@@ -588,7 +588,7 @@ fun WallpaperDetailScreen(
                                     .height(120.dp)
                                     .background(
                                         MaterialTheme.colorScheme.surfaceContainer.copy(alpha = 0.5f),
-                                        RoundedCornerShape(8.dp),
+                                        AuraShapes.Medium,
                                     ),
                             )
                         }
@@ -939,7 +939,7 @@ private fun CompactWallpaperOverlayCard(
                 .widthIn(min = 104.dp)
                 .height(44.dp),
             enabled = canApply && !isApplying,
-            shape = RoundedCornerShape(10.dp),
+            shape = AuraShapes.Medium,
         ) {
             if (isApplying) {
                 CircularProgressIndicator(
@@ -966,7 +966,7 @@ private fun DetailTopIconButton(
         onClick = onClick,
         modifier = Modifier
             .size(44.dp)
-            .clip(RoundedCornerShape(8.dp))
+            .clip(AuraShapes.Medium)
             .background(Color.Black.copy(alpha = 0.28f)),
     ) {
         Icon(icon, contentDescription, tint = Color.White, modifier = Modifier.size(20.dp))
@@ -980,7 +980,7 @@ private fun DetailOverlayPill(
 ) {
     Surface(
         color = Color.Black.copy(alpha = 0.34f),
-        shape = RoundedCornerShape(8.dp),
+        shape = AuraShapes.Medium,
     ) {
         Row(
             modifier = Modifier.padding(horizontal = 10.dp, vertical = 7.dp),
@@ -1003,7 +1003,7 @@ private fun DetailOverlayPill(
 private fun DetailInfoChip(label: String) {
     Surface(
         color = MaterialTheme.colorScheme.surface.copy(alpha = 0.6f),
-        shape = RoundedCornerShape(8.dp),
+        shape = AuraShapes.Medium,
         border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f)),
     ) {
         Text(
@@ -1036,7 +1036,7 @@ private fun DetailActionPill(
         modifier = Modifier.semantics(mergeDescendants = true) {
             contentDescription = label
         },
-        shape = RoundedCornerShape(8.dp),
+        shape = AuraShapes.Medium,
         color = tint.copy(alpha = 0.12f),
         border = BorderStroke(1.dp, tint.copy(alpha = 0.12f)),
     ) {
@@ -1190,7 +1190,7 @@ private fun SheetOption(
     Surface(
         onClick = onClick,
         color = MaterialTheme.colorScheme.surface.copy(alpha = 0.5f),
-        shape = RoundedCornerShape(8.dp),
+        shape = AuraShapes.Medium,
     ) {
         Row(
             modifier = Modifier
@@ -1200,7 +1200,7 @@ private fun SheetOption(
             horizontalArrangement = Arrangement.spacedBy(16.dp),
         ) {
             Surface(
-                shape = RoundedCornerShape(8.dp),
+                shape = AuraShapes.Medium,
                 color = tint.copy(alpha = 0.12f),
             ) {
                 Icon(
@@ -1275,13 +1275,13 @@ private fun CollectionPickerSheet(
                         modifier = Modifier.weight(1f),
                         placeholder = { Text(stringResource(R.string.detail_collection_name_placeholder)) },
                         singleLine = true,
-                        shape = RoundedCornerShape(8.dp),
+                        shape = AuraShapes.Medium,
                     )
                     FilledTonalButton(
                         onClick = { if (newName.isNotBlank()) onCreateNew(newName.trim()) },
                         enabled = newName.isNotBlank(),
                         modifier = Modifier.heightIn(min = 48.dp),
-                        shape = RoundedCornerShape(8.dp),
+                        shape = AuraShapes.Medium,
                     ) { Text(stringResource(R.string.detail_create)) }
                 }
             } else {

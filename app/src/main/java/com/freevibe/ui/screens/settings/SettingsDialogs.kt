@@ -23,7 +23,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
@@ -59,6 +58,7 @@ import com.freevibe.service.shouldPauseVideoMotionForPowerSave
 import com.freevibe.service.videoBatteryImpactSummary
 import com.freevibe.ui.components.GlassCard
 import com.freevibe.ui.components.HighlightPill
+import com.freevibe.ui.theme.AuraShapes
 import kotlinx.coroutines.delay
 import java.text.DateFormat
 import java.util.Date
@@ -179,7 +179,7 @@ internal fun BlockedCreatorsDialog(
                     blockedCreators.forEach { blocked ->
                         Surface(
                             color = MaterialTheme.colorScheme.surfaceContainerHighest.copy(alpha = 0.55f),
-                            shape = RoundedCornerShape(8.dp),
+                            shape = AuraShapes.Medium,
                         ) {
                             Row(
                                 modifier = Modifier
@@ -582,7 +582,7 @@ internal fun VideoBatteryDashboardCard(
     Surface(
         modifier = modifier,
         color = MaterialTheme.colorScheme.surfaceContainer.copy(alpha = 0.82f),
-        shape = RoundedCornerShape(8.dp),
+        shape = AuraShapes.Medium,
         border = BorderStroke(
             1.dp,
             MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.36f),
@@ -599,7 +599,7 @@ internal fun VideoBatteryDashboardCard(
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Surface(
-                    shape = RoundedCornerShape(8.dp),
+                    shape = AuraShapes.Medium,
                     color = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f),
                 ) {
                     Icon(
@@ -630,7 +630,7 @@ internal fun VideoBatteryDashboardCard(
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(8.dp)
-                        .clip(RoundedCornerShape(4.dp)),
+                        .clip(AuraShapes.Small),
                     color = if (state.lowBatterySaverActive || state.motionPausedForPowerSave) {
                         MaterialTheme.colorScheme.error
                     } else {
@@ -683,7 +683,7 @@ private fun VideoDashboardMetric(
     detail: String,
 ) {
     Surface(
-        shape = RoundedCornerShape(8.dp),
+        shape = AuraShapes.Medium,
         color = MaterialTheme.colorScheme.surfaceContainer.copy(alpha = 0.82f),
         border = BorderStroke(
             1.dp,

@@ -11,7 +11,6 @@ import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
@@ -52,6 +51,7 @@ import com.freevibe.data.model.ContentSource
 import com.freevibe.service.normalizeYouTubePoTokenProviderUrl
 import com.freevibe.service.YtDlpUpdateConsent
 import com.freevibe.service.SoundShuffleStore
+import com.freevibe.ui.theme.AuraShapes
 
 @Composable
 internal fun SoundSettingsSection(
@@ -341,7 +341,7 @@ private fun PreviewVolumeSlider(
 ) {
     Surface(
         color = MaterialTheme.colorScheme.surfaceContainer.copy(alpha = 0.82f),
-        shape = RoundedCornerShape(8.dp),
+        shape = AuraShapes.Medium,
         border = BorderStroke(
             1.dp,
             MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.36f),
@@ -356,7 +356,7 @@ private fun PreviewVolumeSlider(
             horizontalArrangement = Arrangement.spacedBy(16.dp),
         ) {
             Surface(
-                shape = RoundedCornerShape(8.dp),
+                shape = AuraShapes.Medium,
                 color = MaterialTheme.colorScheme.secondary.copy(alpha = 0.12f),
             ) {
                 Icon(

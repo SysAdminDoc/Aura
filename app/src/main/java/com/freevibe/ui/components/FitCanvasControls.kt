@@ -13,7 +13,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.BlurOn
 import androidx.compose.material.icons.filled.ColorLens
@@ -60,6 +59,7 @@ import com.freevibe.data.model.WALLPAPER_PRESENTATION_FIT
 import com.freevibe.data.model.normalizeWallpaperPresentation
 import com.freevibe.data.model.resolveFitCanvas
 import com.freevibe.service.FitCanvasRenderer
+import com.freevibe.ui.theme.AuraShapes
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
@@ -167,7 +167,7 @@ private fun FitCanvasChoiceChip(
                 Box(
                     Modifier
                         .size(18.dp)
-                        .background(Color(swatch), CircleShape),
+                        .background(Color(swatch), AuraShapes.Small),
                 )
             } else {
                 Icon(icon, contentDescription = null, modifier = Modifier.size(18.dp))
@@ -203,7 +203,7 @@ private fun FitCanvasColorDialog(
                     Box(
                         Modifier
                             .size(24.dp)
-                            .background(Color(parsed ?: initialColor), CircleShape),
+                            .background(Color(parsed ?: initialColor), AuraShapes.Small),
                     )
                 },
             )

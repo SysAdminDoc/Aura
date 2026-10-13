@@ -16,7 +16,6 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.*
@@ -49,6 +48,7 @@ import com.freevibe.service.ContactRingtoneService
 import com.freevibe.service.contactEditorUri
 import com.freevibe.service.SoundApplier
 import com.freevibe.service.SoundUrlResolver
+import com.freevibe.ui.theme.AuraShapes
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -558,7 +558,7 @@ fun ContactPickerScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(horizontal = 16.dp, vertical = 8.dp),
-                    shape = RoundedCornerShape(8.dp),
+                    shape = AuraShapes.Medium,
                     color = MaterialTheme.colorScheme.surfaceContainerHigh,
                     border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.28f)),
                 ) {
@@ -570,7 +570,7 @@ fun ContactPickerScreen(
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
                         Surface(
-                            shape = RoundedCornerShape(8.dp),
+                            shape = AuraShapes.Medium,
                             color = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f),
                         ) {
                             Icon(
@@ -664,7 +664,7 @@ private fun ContactAssignmentCard(
     onVipOnlyRinging: () -> Unit,
 ) {
     Surface(
-        shape = RoundedCornerShape(8.dp),
+        shape = AuraShapes.Medium,
         color = MaterialTheme.colorScheme.surfaceContainer,
         border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f)),
     ) {
@@ -681,7 +681,7 @@ private fun ContactAssignmentCard(
             ) {
                 Surface(
                     modifier = Modifier.size(48.dp),
-                    shape = RoundedCornerShape(8.dp),
+                    shape = AuraShapes.Medium,
                     color = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f),
                     border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.14f)),
                 ) {
@@ -732,7 +732,7 @@ private fun ContactAssignmentCard(
                 OutlinedButton(
                     onClick = onChangeContact,
                     enabled = !isApplying,
-                    shape = RoundedCornerShape(8.dp),
+                    shape = AuraShapes.Medium,
                     modifier = Modifier.heightIn(min = 48.dp),
                 ) {
                     Icon(Icons.Default.PersonSearch, contentDescription = null, modifier = Modifier.size(18.dp))
@@ -742,7 +742,7 @@ private fun ContactAssignmentCard(
                 OutlinedButton(
                     onClick = onVipOnlyRinging,
                     enabled = enabled && !isApplying,
-                    shape = RoundedCornerShape(8.dp),
+                    shape = AuraShapes.Medium,
                     modifier = Modifier.heightIn(min = 48.dp),
                 ) {
                     Icon(Icons.Default.Star, contentDescription = null, modifier = Modifier.size(18.dp))
@@ -753,7 +753,7 @@ private fun ContactAssignmentCard(
                     Button(
                         onClick = onOpenSettings,
                         enabled = !isApplying,
-                        shape = RoundedCornerShape(8.dp),
+                        shape = AuraShapes.Medium,
                         modifier = Modifier.heightIn(min = 48.dp),
                     ) {
                         Icon(Icons.Default.Settings, contentDescription = null, modifier = Modifier.size(18.dp))
@@ -764,7 +764,7 @@ private fun ContactAssignmentCard(
                     Button(
                         onClick = onApply,
                         enabled = enabled,
-                        shape = RoundedCornerShape(8.dp),
+                        shape = AuraShapes.Medium,
                         modifier = Modifier.heightIn(min = 48.dp),
                     ) {
                         if (isApplying) {

@@ -15,7 +15,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.MusicNote
@@ -64,6 +63,7 @@ import com.freevibe.data.repository.HiddenItemKind
 import com.freevibe.data.repository.VoteRepository
 import com.freevibe.ui.components.AuraSnackbarHost
 import com.freevibe.ui.components.AuraStateCard
+import com.freevibe.ui.theme.AuraShapes
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.coroutines.flow.SharingStarted
@@ -207,7 +207,7 @@ private fun HiddenItemRow(item: HiddenItem, onRestore: () -> Unit) {
     val restoreDescription = stringResource(R.string.hidden_items_restore_cd, title)
     Surface(
         color = MaterialTheme.colorScheme.surfaceContainer,
-        shape = RoundedCornerShape(12.dp),
+        shape = AuraShapes.Large,
         modifier = Modifier.fillMaxWidth(),
     ) {
         Row(
@@ -218,7 +218,7 @@ private fun HiddenItemRow(item: HiddenItem, onRestore: () -> Unit) {
             Box(
                 modifier = Modifier
                     .size(56.dp)
-                    .clip(RoundedCornerShape(8.dp))
+                    .clip(AuraShapes.Medium)
                     .background(MaterialTheme.colorScheme.surfaceContainerHighest),
                 contentAlignment = Alignment.Center,
             ) {

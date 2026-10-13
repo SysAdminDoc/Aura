@@ -11,7 +11,6 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.relocation.BringIntoViewRequester
 import androidx.compose.foundation.relocation.bringIntoViewRequester
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
@@ -33,6 +32,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.freevibe.R
+import com.freevibe.ui.theme.AuraShapes
 import kotlinx.coroutines.delay
 import java.util.Locale
 
@@ -134,7 +134,7 @@ internal fun rememberSettingsSearchRow(
                 if (highlight) {
                     Modifier.border(
                         BorderStroke(1.dp, MaterialTheme.colorScheme.primary),
-                        RoundedCornerShape(8.dp),
+                        AuraShapes.Medium,
                     )
                 } else {
                     Modifier
@@ -234,7 +234,7 @@ internal fun SettingsSearchBar(
                     onClick = { onRowSelected(row.key) },
                     modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp),
                     color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.42f),
-                    shape = RoundedCornerShape(8.dp),
+                    shape = AuraShapes.Medium,
                 ) {
                     Row(
                         modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 8.dp),
