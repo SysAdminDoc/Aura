@@ -167,15 +167,6 @@ Evidence for every item below is in RESEARCH.md (2026-09-04 pass).
 ### P2
 
 
-- [ ] P2 — Stop clipping helper text at large font sizes
-  Category: a11y
-  Where: `SettingsComponents.kt:82-88,141-148,212-219`; `SharedComponents.kt:401-417,503-509`; `LibraryScreen.kt:239,290-305`; `WallpapersScreen.kt:519-561`; `SoundsScreen.kt:495-554`; `app/src/test/screenshots/settings_provider_disabled_light_font2_0.png`
-  Problem: Section and switch summaries are capped to a line count and end in an ellipsis at 200 percent text, the diagnostics cards break titles mid-word, and the feed history dropdown can overlap the search controls. The accessibility gate's Settings/light cell records `noClippedText: fail` from this baseline.
-  Fix: Let helper text wrap when the font scale is large (drop the caps or make them scale-aware), give the diagnostics cards a one-column layout when their titles don't fit, and reuse the measured layout from `UniversalSearchScreen.kt:346-385` for the history dropdown.
-  Acceptance: The 200 percent Settings baseline is re-recorded with no ellipsis or mid-word break, a Library and a feed baseline at 200 percent join it, and the Settings/light cell in `docs/qa/accessibility-release-gate.json` moves to `noClippedText: pass`.
-  Confidence: Verified
-  Effort: M
-
 
 - [ ] P2 — Let people favorite motion wallpapers and add them to collections
   Category: feature
@@ -260,6 +251,13 @@ Remainders of items closed in the 2026-09-30 drain whose full acceptance did not
   Complexity: S
 
 ### P3
+
+- [ ] P3 — Carry the large-text pass to the rest of the feeds
+  Why: helper text in Settings, Library and the wallpaper search now wraps at 200 percent, but the pass stopped at the surfaces the audit named. Short labels were left on one line on purpose, and some of them won't fit either.
+  Evidence: `CountBadge`, the browse rail labels and the feed header title still cap at one line; line caps in the other settings section files weren't touched; there are no 200 percent scenarios for the Sounds or Videos feeds in `ProductionRouteState.kt`; `docs/qa/accessibility-release-gate.json` records only `noClippedText` for the three large-text cells and leaves the other four checks and most of the matrix empty.
+  Touches: `ui/components/LargeTextLayout.kt` callers, the remaining settings sections, `ProductionRouteState.kt`, `ProductionRouteStateScreenshotTest.kt`, the accessibility gate JSON and its check.
+  Acceptance: a Sounds and a Videos feed baseline at 200 percent are recorded with no ellipsis; the feed header and browse rail either fit or drop to a layout that does; every settings section uses the scale-aware line cap; the gate's large-text cells carry all five checks.
+  Complexity: S
 
 - [ ] P3 — Tie off the sound profile and 24H pack loose ends
   Why: the review fixes left a handful of smaller gaps that need either a design choice or a phone to settle.
