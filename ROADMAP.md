@@ -15,13 +15,6 @@ Actionable work only. Historical and completed roadmap material is archived in C
 
   Note 2026-08-23: compileSdk 36 and Media3 1.11.0 are already shipped, so the old dependency gate is gone. Keep this sequenced after the existing video-cache and main-thread encode reliability work; use Media3 preload first and retain the custom engine only if a measured black-frame test still fails.
 
-- [ ] P2 — Give TalkBack announcements and a controlled reading order
-  Why: the interactive-element audit recorded clean labels on 2026-08-11; the missing layer is *announcements*. Three `liveRegion` usages cover an app whose primary surfaces are async grids, a download queue, and audio playback, so a screen-reader user gets no notification when results arrive, a download finishes, or playback state changes. Reading order is entirely unmanaged.
-  Evidence: `liveRegion` 3 occurrences, `heading` 7, `traversalIndex` 0, `isTraversalGroup` 0 across `app/src/main/java`; 48 `AuraStateCard` usages across 16 of 79 screen files show where async state transitions already exist and go unannounced.
-  Touches: `SharedComponents.kt` (`AuraStateCard`), `DownloadsScreen.kt`, `SoundDetailScreen.kt`, the three feed screens, `app/src/androidTest/.../AccessibilityReleaseGateTest.kt`, `tools/accessibility_release_gate_check.py`.
-  Acceptance: loading→ready, loading→error, and empty transitions announce politely once and do not re-announce on recomposition; download completion and playback state changes announce; feed sections are traversal groups with a defined order; the accessibility gate asserts a live region exists on each async surface it already covers.
-  Complexity: M
-
 - [ ] P2 — Make direct media downloads validator-aware and resumable
   Why: `DownloadManager.downloadFile()` always issues an unconditional GET, starts a new temp file at byte zero, and deletes it after interruption; `DownloadProgress` is process-local and `DownloadEntity` stores only completed MediaStore rows. Size caps prevent oversized writes but do not prevent a mobile user from paying for the same interrupted 64 MiB transfer repeatedly. This complements, rather than duplicates, the existing BatchDownloadService item: that item fixes job lifetime, while this one fixes per-file transport.
   Evidence: `app/src/main/java/com/freevibe/service/DownloadManager.kt:114-185`, `app/src/main/java/com/freevibe/data/model/Models.kt:150-159`; RFC 9111 sections on incomplete/partial responses and validation; OkHttp’s cache/client API; cssnr/remote-wallpaper-android issue #26 requesting HTTP caching.
@@ -247,11 +240,11 @@ Remainders of items closed in the 2026-09-30 drain whose full acceptance did not
 
 ### P2
 
-- [ ] P2 — Let a saved wallpaper rotate with no network at all
-  Why: the prefetch cache applies the next wallpaper without calling the source, but the rotation work still carries a WorkManager network constraint, so the worker never fires while the phone is offline and the saved wallpaper sits unused until the connection returns.
-  Evidence: `RotationPrefetchCache.kt`, `AutoWallpaperWorker.applyPrefetched`; the rotation enqueue sites still set `NetworkType.CONNECTED` or `UNMETERED` for every remote source; `DailyWallpaperWorker.kt` has no saved-ahead path.
-  Touches: rotation enqueue constraints (periodic, one-shot and catch-up), `AutoWallpaperWorker.kt` (Wi-Fi-only choice enforced in the worker once the constraint is relaxed), `DailyWallpaperWorker.kt`, constraint tests, a device check in airplane mode.
-  Acceptance: with a wallpaper saved ahead, a rotation fires and applies it in airplane mode; with nothing saved, an offline run ends quietly and the next connected run fetches; the Wi-Fi-only setting still stops every source fetch and download on mobile data; no extra retries or battery use while offline; Daily Wallpaper either gains the same path or its reason for not having one is written down.
+- [ ] P2 — Prove offline rotation on a phone and finish its follow-ups
+  Why: rotation work no longer carries a network constraint and the check moved into the worker (`RotationNetworkGate`), but nothing has run on a device. Favorites and collection sources still wait for a network even when their pictures are already on the phone, and the catch-up one-shot writes its receipts under the caller's work name.
+  Evidence: `RotationNetworkGate.kt`, `AutoWallpaperWorker.kt` (`auto_wallpaper_catch_up`, `relaxStoredNetworkConstraint`), `RotationTriggerService.kt`; `readRotationNetworkState` has no JVM test; `docs/distribution/play-app-content.json` `deferredImpact` still describes rotation as waiting on network constraints; `docs/background-work-device-evidence.md` says "All 10 unique work names" and there are 13.
+  Touches: `AutoWallpaperWorker.kt`, `RotationNetworkGate.kt`, `BackgroundWorkDiagnosticsReader.kt`, the two docs above, a device session.
+  Acceptance: in airplane mode with a wallpaper saved, a periodic tick and an unlock trigger both apply it; with nothing saved, Settings shows no error, one `auto_wallpaper_catch_up` waits in `dumpsys jobscheduler` and fires on reconnect; with Wi-Fi only on mobile data nothing is fetched and the saved wallpaper still applies; a tile tap offline shows the toast; an upgrade from the published build keeps its next fire time and loses the constraint; scheduling with the idle option no longer crashes; favorites and collection rotation applies an on-device picture offline; the catch-up has its own diagnostics row; both docs match the code.
   Complexity: M
 
 - [ ] P2 — Dim the MP4 path of the video live wallpaper and name the dimmed engines
@@ -267,6 +260,13 @@ Remainders of items closed in the 2026-09-30 drain whose full acceptance did not
   Complexity: S
 
 ### P3
+
+- [ ] P3 — Finish the TalkBack announcements and hear them on a phone
+  Why: feeds, downloads and sound previews now announce through polite live regions, but nobody has listened to them. Playback announcements cover the Sounds feed and sound detail only, and the gate checks that some live region exists on each async surface, which the older status banners already satisfied.
+  Evidence: `ui/components/LiveAnnouncements.kt` (`AuraFeedStatus`, `PreviewPlaybackStatus`, `AuraFeedSection`); `SoundEditorScreen.kt` and `DeviceSoundsScreen.kt` still rely on the play button's state description; `docs/qa/accessibility-release-gate.json` carries a boolean `liveRegion` per surface; there is no Sounds feed scenario in `ProductionRouteState.kt`.
+  Touches: `LiveAnnouncements.kt`, `SoundEditorScreen.kt`, `DeviceSoundsScreen.kt`, `ProductionRouteState.kt`, `AccessibilityReleaseGateTest.kt`, `tools/accessibility_release_gate_check.py`, a device session with TalkBack.
+  Acceptance: the Sound Editor and Device Sounds screens announce a preview starting and stopping; the gate names the live node it expects per scenario by tag and a Sounds feed scenario exists; on a phone each of loading, ready, error and empty is spoken once per feed, a focused play button doesn't say "Playing" twice, a finished download isn't read again when a row above it is dismissed, and swipe order is header, notices, list in both the bar and rail layouts; the "loaded" line either clears after a few seconds or the reason it stays is written down.
+  Complexity: S
 
 - [ ] P3 — Make the wallpaper grid screenshots independent of image load timing
   Why: the grid screenshot tiles point at images that never load in a JVM test. One verify run in three caught the tiles before the load had failed, so unchanged code produced two different pictures and the run failed with nothing wrong.
