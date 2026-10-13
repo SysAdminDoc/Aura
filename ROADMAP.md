@@ -6,15 +6,6 @@ Actionable work only. Historical and completed roadmap material is archived in C
 
 ### P2
 
-- [ ] P2 — Remove the bundled FFmpeg module without losing advertised media workflows
-  Why: every FFmpeg run maps three 4 KB-aligned libwebp objects, so on a phone with 16 KB memory pages FFmpeg is expected not to start at all (see the libwebp entry in `Roadmap_Blocked.md`), and nobody ships an aligned build. The arm64 FFmpeg archive is also 35,624,931 bytes of a roughly 63.8 MB APK that every sideloader downloads.
-  Evidence: `docs/distribution/native-alignment.json`; `app/build.gradle.kts`; `AudioTrimmer.kt`; `VideoCropScreen.kt`; `VideoWallpapersViewModel.kt`; Android Media3 Transformer documentation; youtubedl-android issue #248; the maintained Ringdroid F-Droid package.
-  Touches: `app/build.gradle.kts`, `AudioTrimmer.kt`, `VideoCropScreen.kt`, `VideoWallpapersViewModel.kt`, `YouTubeRepository.kt`, Reddit/video acquisition paths, codec and release-size fixtures.
-  Acceptance: video crop uses Media3 Transformer; YouTube and Reddit acquisition avoid yt-dlp merge/remux or perform it through Media3; every advertised sound export and verified lossless-cut case still passes through Media3 or a smaller audited codec path; `youtubedl-android:ffmpeg` is removed, no release APK contains `libffmpeg.zip.so`, the libwebp exceptions leave `docs/distribution/native-alignment.json`, and the native gate records whether legacy JNI packaging is still required.
-  Complexity: L
-
-  Note 2026-09-04: this is now a security item as well as a size item. `docs/legal/native-compliance.lock.json:364,428,492` records the bundled build as FFmpeg 7.1.1 on every ABI, and CVE-2026-8461 ("PixelSmash", heap out-of-bounds write in the MagicYUV decoder, reachable from a crafted AVI/MKV/MOV) is fixed only in 8.1.2. The version arrives inside `ffmpeg-0.18.1.aar` and cannot be upgraded independently, so removal is the only complete fix. See the separate P1 item that bounds FFmpeg's input in the meantime.
-
 - [ ] P2 — Codify the design system as tokens and gate it
   Why: the "rectangular 4–12 dp radii, no pill / oval / fully-rounded backdrops" rule is written in ARCHITECTURE.md and CLAUDE.md and enforced by nothing — corner radii are literal numbers at 250+ call sites, and the rule is already broken in shipped code. It is the only major documented project rule with no gate behind it, in a repo with 82 gates.
   Evidence: `VideoWallpapersScreen.kt:884` uses `RoundedCornerShape(50)`, a full pill; `WallpapersScreen.kt:1268` uses 24 dp; 225 uses of `RoundedCornerShape(8)` plus strays at 1, 2, 4, 5, 6, 10, 12; `ui/theme/` contains only `Theme.kt` with colour tokens and no shape or spacing source; 102 hardcoded `Color(0x…)` literals across seven UI files; `SharedComponents.kt:519-548` and `WallpaperDetailScreen.kt:408` also derive provider-badge foreground/background combinations without a contrast token or assertion; `test/tools/` has no design gate.
