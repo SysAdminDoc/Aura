@@ -131,6 +131,7 @@ class SettingsViewModel @Inject constructor(
     val rotateOnUnlock get() = rotation.rotateOnUnlock
     val rotateOnScreenOff get() = rotation.rotateOnScreenOff
     val avoidRecentRepeats get() = rotation.avoidRecentRepeats
+    val restartRotationOnManualApply get() = rotation.restartRotationOnManualApply
     val schedulerEnabled get() = rotation.schedulerEnabled
     val schedulerInterval get() = rotation.schedulerInterval
     val schedulerSource get() = rotation.schedulerSource
@@ -264,6 +265,7 @@ class SettingsViewModel @Inject constructor(
     fun setRotateOnUnlock(value: Boolean) = rotation.setRotateOnUnlock(value)
     fun setRotateOnScreenOff(value: Boolean) = rotation.setRotateOnScreenOff(value)
     fun setAvoidRecentRepeats(value: Boolean) = rotation.setAvoidRecentRepeats(value)
+    fun setRestartRotationOnManualApply(value: Boolean) = rotation.setRestartRotationOnManualApply(value)
     fun setAutoWallpaperRequiresIdle(value: Boolean) = rotation.setAutoWallpaperRequiresIdle(value)
     fun setAutoWallpaperDarkenPercent(percent: Int) = rotation.setAutoWallpaperDarkenPercent(percent)
     fun setAutoWallpaperNightVariantEnabled(enabled: Boolean) = rotation.setAutoWallpaperNightVariantEnabled(enabled)

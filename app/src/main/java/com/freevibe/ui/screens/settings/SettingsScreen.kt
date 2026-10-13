@@ -305,6 +305,7 @@ fun SettingsScreen(
                 rotateOnUnlock = rotateOnUnlock,
                 rotateOnScreenOff = rotateOnScreenOff,
                 avoidRecentRepeats = avoidRecentRepeats,
+                restartRotationOnManualApply = restartRotationOnManualApply,
                 wallpaperPackEnabled = wallpaperPackEnabled,
                 wallpaperPackJson = wallpaperPackJson,
                 externalAutomationDiagnostics = externalAutomationDiagnostics,

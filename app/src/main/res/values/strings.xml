@@ -1306,6 +1306,8 @@
     <string name="rotation_trigger_recovery_body">Open Aura to resume wallpaper changes on unlock or screen off.</string>
     <string name="settings_wp_avoid_repeats_title">Avoid recent repeats</string>
     <string name="settings_wp_avoid_repeats_subtitle">Track applied wallpapers and skip recently shown ones until the full pool has cycled</string>
+    <string name="settings_wp_restart_on_manual_title">Restart the timer when I change it</string>
+    <string name="settings_wp_restart_on_manual_subtitle">Setting a wallpaper yourself starts the wait for the next automatic change over</string>
     <string name="settings_wp_grid_columns_title">Grid columns</string>
     <string name="settings_wp_grid_columns_subtitle">%1$d columns</string>
     <string name="settings_wp_video_gif_title">Video or GIF wallpaper</string>

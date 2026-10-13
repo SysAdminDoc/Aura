@@ -27,6 +27,7 @@ import androidx.compose.material.icons.filled.PhotoLibrary
 import androidx.compose.material.icons.filled.PhotoSizeSelectLarge
 import androidx.compose.material.icons.filled.PowerSettingsNew
 import androidx.compose.material.icons.filled.PlaylistRemove
+import androidx.compose.material.icons.filled.RestartAlt
 import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material.icons.filled.Shuffle
 import androidx.compose.material.icons.filled.Source
@@ -80,6 +81,7 @@ internal fun WallpaperRotationSettingsSection(
     rotateOnUnlock: Boolean,
     rotateOnScreenOff: Boolean,
     avoidRecentRepeats: Boolean,
+    restartRotationOnManualApply: Boolean,
     wallpaperPackEnabled: Boolean,
     wallpaperPackJson: String,
     externalAutomationDiagnostics: ExternalAutomationDiagnostics,
@@ -306,6 +308,14 @@ internal fun WallpaperRotationSettingsSection(
             subtitle = stringResource(R.string.settings_wp_avoid_repeats_subtitle),
             checked = avoidRecentRepeats,
             onCheckedChange = viewModel::setAvoidRecentRepeats,
+        )
+        SettingsToggle(
+            icon = Icons.Default.RestartAlt,
+            title = stringResource(R.string.settings_wp_restart_on_manual_title),
+            subtitle = stringResource(R.string.settings_wp_restart_on_manual_subtitle),
+            checked = restartRotationOnManualApply,
+            onCheckedChange = viewModel::setRestartRotationOnManualApply,
+            searchAliases = setOf("countdown", "timer", "interval"),
         )
         SettingsItem(
             icon = Icons.Default.PlaylistRemove,

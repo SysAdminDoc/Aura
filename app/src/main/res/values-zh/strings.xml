@@ -1160,6 +1160,8 @@
     <string name="rotation_trigger_recovery_body">打开 Aura 以在解锁或屏幕关闭时恢复壁纸更换。</string>
     <string name="settings_wp_avoid_repeats_title">避免近期重复</string>
     <string name="settings_wp_avoid_repeats_subtitle">跟踪已应用的壁纸并跳过最近显示过的，直到整个壁纸池循环完毕</string>
+    <string name="settings_wp_restart_on_manual_title">手动更换时重新计时</string>
+    <string name="settings_wp_restart_on_manual_subtitle">自己设置壁纸后，下一次自动更换会重新开始等待</string>
     <string name="settings_wp_grid_columns_title">网格列数</string>
     <string name="settings_wp_grid_columns_subtitle">%1$d 列</string>
     <string name="settings_wp_video_gif_title">视频或 GIF 壁纸</string>

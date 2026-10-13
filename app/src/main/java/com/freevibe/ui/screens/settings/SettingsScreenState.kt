@@ -71,6 +71,7 @@ internal data class SettingsScreenState(
     val rotateOnUnlock: Boolean,
     val rotateOnScreenOff: Boolean,
     val avoidRecentRepeats: Boolean,
+    val restartRotationOnManualApply: Boolean,
     val autoPreview: Boolean,
     val wallpaperHistory: List<WallpaperHistoryEntity>,
     val gridColumns: Int,
@@ -194,6 +195,7 @@ internal fun rememberSettingsScreenState(
     val rotateOnUnlock by viewModel.rotateOnUnlock.collectAsStateWithLifecycle()
     val rotateOnScreenOff by viewModel.rotateOnScreenOff.collectAsStateWithLifecycle()
     val avoidRecentRepeats by viewModel.avoidRecentRepeats.collectAsStateWithLifecycle()
+    val restartRotationOnManualApply by viewModel.restartRotationOnManualApply.collectAsStateWithLifecycle()
     val autoPreview by viewModel.autoPreview.collectAsStateWithLifecycle()
     val wallpaperHistory by viewModel.wallpaperHistory.collectAsStateWithLifecycle()
     val gridColumns by viewModel.gridColumns.collectAsStateWithLifecycle()
@@ -320,6 +322,7 @@ internal fun rememberSettingsScreenState(
         rotateOnUnlock = rotateOnUnlock,
         rotateOnScreenOff = rotateOnScreenOff,
         avoidRecentRepeats = avoidRecentRepeats,
+        restartRotationOnManualApply = restartRotationOnManualApply,
         autoPreview = autoPreview,
         wallpaperHistory = wallpaperHistory,
         gridColumns = gridColumns,

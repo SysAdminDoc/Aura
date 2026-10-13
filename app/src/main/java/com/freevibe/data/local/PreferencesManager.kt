@@ -388,6 +388,7 @@ class PreferencesManager @Inject constructor(
     /** NX-6: pre-stage a new wallpaper on screen-off so unlock shows the new one. */
     val rotateOnScreenOff: Flow<Boolean> = get(Keys.ROTATE_ON_SCREEN_OFF, false)
     val autoWallpaperRestartOnManual: Flow<Boolean> = get(Keys.AUTO_WP_RESTART_ON_MANUAL, true)
+    suspend fun setAutoWallpaperRestartOnManual(v: Boolean) = set(Keys.AUTO_WP_RESTART_ON_MANUAL, v)
 
     suspend fun setAutoWallpaperEnabled(enabled: Boolean) = set(Keys.AUTO_WP_ENABLED, enabled)
     suspend fun setAutoWallpaperInterval(hours: Long) = set(Keys.AUTO_WP_INTERVAL, hours)

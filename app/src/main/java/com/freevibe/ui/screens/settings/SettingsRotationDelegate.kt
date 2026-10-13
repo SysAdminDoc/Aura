@@ -48,6 +48,7 @@ internal class SettingsRotationDelegate(
     val rotateOnUnlock = prefs.rotateOnUnlock.stateIn(scope, sharing, false)
     val rotateOnScreenOff = prefs.rotateOnScreenOff.stateIn(scope, sharing, false)
     val avoidRecentRepeats = prefs.avoidRecentRepeats.stateIn(scope, sharing, false)
+    val restartRotationOnManualApply = prefs.autoWallpaperRestartOnManual.stateIn(scope, sharing, true)
     val schedulerEnabled = prefs.schedulerEnabled.stateIn(scope, sharing, false)
     val schedulerInterval = prefs.schedulerIntervalMinutes.stateIn(scope, sharing, 360L)
     val schedulerSource = prefs.schedulerSource.stateIn(scope, sharing, "discover")
@@ -167,6 +168,10 @@ internal class SettingsRotationDelegate(
     fun setAvoidRecentRepeats(value: Boolean) = scope.launch {
         prefs.setAvoidRecentRepeats(value)
         if (!value) prefs.clearRecentRotationIds()
+    }
+
+    fun setRestartRotationOnManualApply(value: Boolean) = scope.launch {
+        prefs.setAutoWallpaperRestartOnManual(value)
     }
 
     fun setAutoWallpaperRequiresIdle(value: Boolean) = scope.launch {

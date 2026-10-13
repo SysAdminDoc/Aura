@@ -320,12 +320,6 @@ Remainders of items closed in the 2026-09-30 drain whose full acceptance did not
 
 ### P2
 
-- [ ] P2 — Give restart-on-manual-apply a Settings switch and a diagnostics line
-  Why: a manual apply now restarts the rotation interval (CANCEL_AND_REENQUEUE, scheduler-aware), but `AUTO_WP_RESTART_ON_MANUAL` defaults on with no setter and no UI, so nobody can turn it off, and Diagnostics can't show when the next rotation is due.
-  Touches: `PreferencesManager.kt` (setter), `SettingsRotationDelegate.kt`, rotation settings UI, Diagnostics export, strings (en + zh), tests.
-  Acceptance: a switch under rotation settings toggles the pref; Diagnostics shows the next scheduled rotation time from `WorkInfo.nextScheduleTimeMillis`; a test covers the off path leaving the countdown untouched.
-  Complexity: S
-
 - [ ] P2 — Dim the MP4 path of the video live wallpaper and name the dimmed engines
   Why: dimming now reaches the GIF path of `VideoWallpaperService` and the parallax engine, but MP4 playback renders straight to the surface through ExoPlayer, so the dim overlay never draws over it. The toggle copy doesn't say which live wallpapers honor it.
   Touches: `VideoWallpaperService.kt` (render MP4 through a GL or TextureView-style composition pass, or apply the dim in the player's video effect chain), `LiveWallpaperDimming.kt`, settings strings, a soak run on device.

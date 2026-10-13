@@ -419,6 +419,20 @@ class SettingsViewModelTest {
     }
 
     @Test
+    fun `the restart timer switch writes the preference the rotation worker reads`() = runTest(dispatcher) {
+        val prefs = mockPreferences()
+        val viewModel = createViewModel(
+            cacheDir = createTempDirectory("settings-restart-on-manual").toFile().also(tempDirs::add),
+            prefsOverride = prefs,
+        )
+
+        viewModel.setRestartRotationOnManualApply(false)
+        advanceUntilIdle()
+
+        coVerify(exactly = 1) { prefs.setAutoWallpaperRestartOnManual(false) }
+    }
+
+    @Test
     fun `retryProviderCredentials requests a fresh encrypted store read`() = runTest(dispatcher) {
         val prefs = mockPreferences()
         val viewModel = createViewModel(
@@ -624,6 +638,8 @@ class SettingsViewModelTest {
             every { prefs.rotateOnUnlock } returns flowOf(false)
             every { prefs.rotateOnScreenOff } returns flowOf(false)
             every { prefs.avoidRecentRepeats } returns flowOf(false)
+            every { prefs.autoWallpaperRestartOnManual } returns flowOf(true)
+            coEvery { prefs.setAutoWallpaperRestartOnManual(any()) } returns Unit
             every { prefs.alarmShuffleEnabled } returns flowOf(false)
             every { prefs.soundProfilesEnabled } returns flowOf(false)
             every { prefs.liveWallpaperDimEnabled } returns flowOf(false)
