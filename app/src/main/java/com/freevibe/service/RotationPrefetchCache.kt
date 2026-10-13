@@ -7,10 +7,12 @@ import com.squareup.moshi.JsonClass
 import com.squareup.moshi.Moshi
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import java.io.File
+import java.util.concurrent.ConcurrentHashMap
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -86,7 +88,9 @@ internal data class RotationPrefetchIndex(
  * unreadable is treated as nothing saved, and the rotation falls back to fetching.
  *
  * A slot names one setup (source plus screens). Each slot keeps one wallpaper. The whole cache is
- * held to [maxEntries] files and [maxBytes] bytes, oldest out first.
+ * held to [maxEntries] files and [maxBytes] bytes, oldest out first. A file the index doesn't name
+ * is swept when a download ends and once when the folder is first read, so a run cancelled or
+ * killed in the middle of a download can't leave its picture behind.
  */
 @Singleton
 class RotationPrefetchCache internal constructor(
@@ -111,6 +115,12 @@ class RotationPrefetchCache internal constructor(
     private val lock = Mutex()
     private val adapter = moshi.adapter(RotationPrefetchIndex::class.java)
     private val indexFile get() = File(directory, INDEX_FILE)
+
+    /** Files a download is still filling. They aren't in the index yet, and a sweep must leave them. */
+    private val downloading: MutableSet<String> = ConcurrentHashMap.newKeySet()
+
+    /** False until this process has swept the folder once. Only touched under [lock]. */
+    private var sweptOnce = false
 
     /** The wallpaper saved for [slot], or null. A record whose file is gone counts as nothing saved. */
     suspend fun peek(slot: String): PrefetchedWallpaper? = locked {
@@ -158,33 +168,40 @@ class RotationPrefetchCache internal constructor(
         if (network.metered) return RotationPrefetchOutcome.DEFERRED_METERED
 
         val fileName = "${slot.hashCode().toUInt().toString(16)}-${now()}.${wallpaper.prefetchExtension()}"
-        val file = withContext(Dispatchers.IO) {
-            directory.mkdirs()
-            File(directory, fileName)
-        }
-        val bytes = download(file).getOrNull()
-        return locked {
-            when {
-                bytes == null || bytes <= 0L || !file.isFile -> {
-                    file.delete()
-                    RotationPrefetchOutcome.FAILED
-                }
-                bytes > maxBytes -> {
-                    file.delete()
-                    RotationPrefetchOutcome.OVER_BUDGET
-                }
-                else -> {
-                    val index = readIndex()
-                    index.records.filter { it.slot == slot }.forEach { File(directory, it.fileName).delete() }
-                    val kept = index.records.filterNot { it.slot == slot }.sortedBy { it.savedAt }.toMutableList()
-                    // Oldest out first until the new file fits under both limits.
-                    while (kept.isNotEmpty() &&
-                        (kept.size + 1 > maxEntries || kept.sumOf { it.bytes } + bytes > maxBytes)
-                    ) {
-                        File(directory, kept.removeAt(0).fileName).delete()
+        // Named before the first byte lands, so a sweep that runs meanwhile leaves this download alone.
+        downloading += fileName
+        try {
+            val file = withContext(Dispatchers.IO) {
+                directory.mkdirs()
+                File(directory, fileName)
+            }
+            val bytes = download(file).getOrNull()
+            return locked {
+                when {
+                    bytes == null || bytes <= 0L || !file.isFile -> RotationPrefetchOutcome.FAILED
+                    bytes > maxBytes -> RotationPrefetchOutcome.OVER_BUDGET
+                    else -> {
+                        val index = readIndex()
+                        index.records.filter { it.slot == slot }.forEach { File(directory, it.fileName).delete() }
+                        val kept = index.records.filterNot { it.slot == slot }.sortedBy { it.savedAt }.toMutableList()
+                        // Oldest out first until the new file fits under both limits.
+                        while (kept.isNotEmpty() &&
+                            (kept.size + 1 > maxEntries || kept.sumOf { it.bytes } + bytes > maxBytes)
+                        ) {
+                            File(directory, kept.removeAt(0).fileName).delete()
+                        }
+                        writeIndex(index.copy(records = kept + wallpaper.toRecord(slot, fileName, bytes, now())))
+                        RotationPrefetchOutcome.STORED
                     }
-                    writeIndex(index.copy(records = kept + wallpaper.toRecord(slot, fileName, bytes, now())))
-                    RotationPrefetchOutcome.STORED
+                }
+            }
+        } finally {
+            // A cancelled run ends up here too. Its blocking write still finishes, and then nothing
+            // records the file. Whatever the index didn't take goes, along with the .tmp beside it.
+            withContext(NonCancellable) {
+                locked {
+                    downloading -= fileName
+                    sweepUnindexed(readIndex())
                 }
             }
         }
@@ -227,7 +244,31 @@ class RotationPrefetchCache internal constructor(
         writeIndex(index.copy(records = emptyList()))
     }
 
-    private suspend fun <T> locked(block: suspend () -> T): T = lock.withLock { withContext(Dispatchers.IO) { block() } }
+    private suspend fun <T> locked(block: suspend () -> T): T = lock.withLock {
+        withContext(Dispatchers.IO) {
+            if (!sweptOnce) {
+                // A process killed in the middle of a download left its file with nothing pointing at it.
+                sweptOnce = true
+                sweepUnindexed(readIndex())
+            }
+            block()
+        }
+    }
+
+    /**
+     * Deletes every file the index doesn't name. File names carry a timestamp, so a picture that was
+     * never recorded, or the `.tmp` a killed download was writing, is never overwritten or found
+     * again. A download still running is left alone, and so is anything a slot's record points at.
+     */
+    private fun sweepUnindexed(index: RotationPrefetchIndex) {
+        val keep = hashSetOf(INDEX_FILE)
+        index.records.mapTo(keep) { it.fileName }
+        downloading.forEach { name ->
+            keep += name
+            keep += "$name.tmp"
+        }
+        directory.listFiles()?.forEach { file -> if (file.isFile && file.name !in keep) file.delete() }
+    }
 
     private fun readIndex(): RotationPrefetchIndex {
         val text = runCatching { indexFile.takeIf(File::isFile)?.readText() }.getOrNull()

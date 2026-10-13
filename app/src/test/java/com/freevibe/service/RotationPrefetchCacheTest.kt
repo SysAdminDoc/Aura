@@ -3,7 +3,11 @@ package com.freevibe.service
 import com.freevibe.data.model.ContentSource
 import com.freevibe.data.model.Wallpaper
 import com.squareup.moshi.Moshi
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withContext
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
@@ -12,6 +16,8 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
 import java.io.File
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.TimeUnit
 
 class RotationPrefetchCacheTest {
 
@@ -191,6 +197,93 @@ class RotationPrefetchCacheTest {
     }
 
     @Test
+    fun `a download that finishes after its run was cancelled leaves nothing behind`() = runBlocking {
+        val cache = cache()
+        cache.store("pixabay|BOTH", wallpaper("kept"), download(10))
+        val kept = cache.peek("pixabay|BOTH")!!.file
+        val writing = CountDownLatch(1)
+        val finish = CountDownLatch(1)
+
+        val run = launch(Dispatchers.Default) {
+            cache.store("wallhaven|BOTH", wallpaper("a")) { file ->
+                // Like the real download: a blocking write a cancel can't interrupt. It finishes, the
+                // file is whole on disk, and only then does the cancel reach the coroutine.
+                withContext(Dispatchers.IO) {
+                    writing.countDown()
+                    finish.await()
+                    file.writeBytes(ByteArray(40))
+                    Result.success(40L)
+                }
+            }
+        }
+        assertTrue(writing.await(10, TimeUnit.SECONDS))
+        run.cancel()
+        finish.countDown()
+        run.join()
+
+        assertTrue(run.isCancelled)
+        assertNull(cache.peek("wallhaven|BOTH"))
+        assertEquals(setOf("index.json", kept.name), prefetchFiles())
+        assertEquals("another setup's wallpaper is untouched", "kept", cache.peek("pixabay|BOTH")?.wallpaper?.id)
+    }
+
+    @Test
+    fun `what a killed run left behind is swept the first time the cache is read`() = runBlocking {
+        cache().store("wallhaven|BOTH", wallpaper("a"), download(40))
+        val saved = cache().peek("wallhaven|BOTH")!!.file
+        // A process killed mid-download leaves the part it had written. One killed between the
+        // write and the index leaves a whole picture nothing points at.
+        File(saved.parentFile, "1a2b3c-900.jpg.tmp").writeBytes(ByteArray(7))
+        File(saved.parentFile, "1a2b3c-901.jpg").writeBytes(ByteArray(9))
+
+        val reopened = cache()
+
+        assertEquals("a", reopened.peek("wallhaven|BOTH")?.wallpaper?.id)
+        assertEquals(setOf("index.json", saved.name), prefetchFiles())
+    }
+
+    @Test
+    fun `saving sweeps strays and leaves what other setups saved`() = runBlocking {
+        val cache = cache()
+        cache.store("pixabay|BOTH", wallpaper("b"), download(10))
+        val other = cache.peek("pixabay|BOTH")!!.file
+        val stray = File(other.parentFile, "1a2b3c-902.png").apply { writeBytes(ByteArray(9)) }
+
+        cache.store("wallhaven|BOTH", wallpaper("a"), download(10))
+
+        assertFalse(stray.exists())
+        assertTrue("a file another setup's record points at is never swept", other.exists())
+        assertEquals("b", cache.peek("pixabay|BOTH")?.wallpaper?.id)
+        assertEquals(setOf("index.json", other.name, cache.peek("wallhaven|BOTH")!!.file.name), prefetchFiles())
+    }
+
+    @Test
+    fun `a download still running is not swept from under itself`() = runBlocking {
+        val cache = cache()
+        val writing = CountDownLatch(1)
+        val finish = CountDownLatch(1)
+
+        val outcome = async(Dispatchers.Default) {
+            cache.store("wallhaven|BOTH", wallpaper("a")) { file ->
+                withContext(Dispatchers.IO) {
+                    val partial = File(file.parentFile, "${file.name}.tmp")
+                    partial.writeBytes(ByteArray(40))
+                    writing.countDown()
+                    finish.await()
+                    if (partial.renameTo(file)) Result.success(40L) else Result.failure<Long>(java.io.IOException("swept"))
+                }
+            }
+        }
+        assertTrue(writing.await(10, TimeUnit.SECONDS))
+        // The first read of this cache sweeps the folder while the download is half done.
+        assertEquals(0, cache.diagnostics().savedCount)
+        finish.countDown()
+
+        assertEquals(RotationPrefetchOutcome.STORED, outcome.await())
+        assertEquals(40L, cache.peek("wallhaven|BOTH")?.file?.length())
+    }
+
+    @Test
     fun `discarding removes the record and the file`() = runBlocking {
         val cache = cache()
         cache.store("wallhaven|BOTH", wallpaper("a"), download(10))
@@ -237,6 +330,8 @@ class RotationPrefetchCacheTest {
         assertEquals(0, diagnostics.savedCount)
         assertEquals(RotationPrefetchOutcome.STORED, diagnostics.lastOutcome)
     }
+
+    private fun prefetchFiles(): Set<String> = File(temp.root, "prefetch").list()!!.toSet()
 
     @Test
     fun `only a remote picture is worth saving ahead`() {
