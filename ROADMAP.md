@@ -138,13 +138,6 @@ Evidence for every item below is in RESEARCH.md (2026-09-04 pass).
   Acceptance: a pooled player is reused across cards instead of being rebuilt per item, and the next item in scroll order is preloaded through `DefaultPreloadManager`; the pool is bounded and every player is released when the feed leaves composition, verified with the same retention assertion style the live-wallpaper soak already uses; time from scroll-stop to first frame is measured before and after and recorded; the existing preview-unavailable and playback-error states still render.
   Complexity: M
 
-- [ ] P2 — Take Glance 1.2.0 stable, Coil 3.6.2, and OkHttp 5.5.0
-  Why: the Glance pin carries a written upgrade trigger that has now fired, and the app is shipping a release-candidate widget stack to users. The other two are post-refresh drift and are small enough to take in the same pass. The Kotlin, AGP, Compose, and Room lines stay out of scope; they are blocked behind the N-1 toolchain triad.
-  Evidence: `gradle/libs.versions.toml:22-25` pins `glance = "1.2.0-rc01"` with the comment "A 1.2.0 stable has not shipped… Revisit when the generated-preview API reaches stable"; Glance 1.2.0 stable published 2026-08-26 (https://developer.android.com/jetpack/androidx/releases/glance); Coil 3.6.2 published 2026-09-04, with `allowPartialImage` added in 3.6.0 (https://coil-kt.github.io/coil/changelog/); OkHttp 5.5.0 supersedes the pinned 5.4.0.
-  Touches: `gradle/libs.versions.toml`, `gradle/verification-metadata.xml`, `app/src/main/java/com/freevibe/widget/`, widget tests, Roborazzi baselines.
-  Acceptance: all three versions move, dependency verification entries are built from the upstream-published `.sha256` rather than the local cache, the widget's generated preview still publishes, `:app:testFullDebugUnitTest` and `:app:testFossDebugUnitTest` are green, the Roborazzi gate passes, and the prerelease-pin comment is replaced with the stable pin.
-  Complexity: S
-
 
 - [ ] P2 — Run the API 35 half of the device-blocked backlog
   Why: two items sit in `Roadmap_Blocked.md` under "Blocker: Physical Device / Emulator" purely for want of an instrumentation target, and an emulator that can run both was available on this machine.

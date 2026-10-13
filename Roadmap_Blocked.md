@@ -76,6 +76,11 @@ N-1 itself is the largest single gate. Until it lands, these items cannot procee
   - Scope notes 2026-08-20: AGP 9.x ships built-in Kotlin — the standalone `org.jetbrains.kotlin.android` plugin must be removed or the build fails; Gradle 9.1+ is the floor; use Hilt **2.59.2**, not 2.59 (2.59 shipped a broken Gradle plugin, dagger#5099); Kotlin stable is now 2.4.x with the K1 frontend removed; AGP 9.3 adds an `analyzeReleaseR8Config` keep-rule analyzer useful for the queued R8 item.
   - Audit evidence 2026-09-25: the runtime graph now resolves `kotlin-stdlib:2.4.0` through Coil 3.5.0 while the Kotlin plugins remain at 2.1.0, and `app/build.gradle.kts:174-181` suppresses metadata-version validation. Serial Full and FOSS packaging emitted repeated R8 “Unexpected error during rewriting of Kotlin metadata” warnings; both attempts were stopped when free memory reached about 1.7 GB, so no current artifact was proven. N-1 acceptance must remove the metadata bypass, align compiler/library/R8 metadata support, and package both flavors locally with the documented bounded-worker settings and no metadata-rewrite warning storm.
 
+- **P2 — Take Coil 3.6.2 and OkHttp 5.5.0** (split from the 2026-10-13 dependency pass, where Glance 1.2.0 landed)
+  - Coil 3.6.2 resolves `androidx.compose.ui:1.12.0-beta01`, `androidx.lifecycle:2.11.0`, JetBrains Compose 1.12.0 and `kotlin-stdlib:2.4.10`. The Compose line is capped at 1.11.4 until N-1, so Coil stays at 3.5.0.
+  - OkHttp 5.5.0 fails `checkFullDebugAarMetadata` and `checkFossDebugAarMetadata`: its `okhttp-android` AAR requires compileSdk 37, and AGP 8.9.3 stops at 36. OkHttp stays at 5.4.0.
+  - Unblocks when: N-1 and the API 37 toolchain gate land. Then move both, add artifact and `.pom` hashes checked against the upstream checksum files, and regenerate `docs/legal/dependency-notices.lock.json`.
+
 - **P0 — API 37 toolchain and target-SDK release gate** (Cycle 10)
   - Needs compileSdk 37, which needs an AGP beyond the 8.9.3 the project now pins.
     Blocked until N-1 completes.
