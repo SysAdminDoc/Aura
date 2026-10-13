@@ -85,6 +85,17 @@ See [`ARCHITECTURE.md`](ARCHITECTURE.md) for the layered overview, package map, 
 - Release policy is enforced by Python gates in `tools/`, each mirrored by a test in `test/tools/`. Run `python -m pytest test/tools` before pushing; a gate that changes behavior needs its mirror test updated in the same commit.
 - Bumping the version touches more than `app/build.gradle.kts`. `docs/distribution/release-metadata-consistency.json` carries its own `versionName`/`versionCode` pair, and `fastlane/metadata/android/en-US/changelogs/<versionCode>.txt` has to exist, name the versionName, and contain the literal `Recent highlights:`. `docs/qa/accessibility-release-gate.json` stamps every manual scenario with the version it was executed or waived for, and those stamps deliberately expire on a bump, so each one needs re-running or re-waiving. Run the gate suite after any bump; several gates pin the literal version and fail by design until every file agrees.
 
+## Translations
+
+English is the source. Simplified Chinese (`zh`) is complete, and a new language is welcome.
+
+- **Where the files are.** Strings live in `app/src/main/res/values/strings.xml`, with one translation per language in `app/src/main/res/values-<code>/strings.xml`. The Full flavor has a small pair of its own under `app/src/full/res/`.
+- **Adding a language.** Copy the English file into `values-<code>` (`values-de`, `values-pt-rBR`), translate it, and add `<locale android:name="<code>" />` to `app/src/main/res/xml/locales_config.xml`. That list feeds the per-app language picker on Android 13 and later. Do the same for the Full flavor file.
+- **Placeholders.** Keep `%1$s`, `%2$d` and `%1$.1f` exactly as written. You can reorder them to fit your grammar, but every one has to stay. Write a literal percent sign as `%%`.
+- **Apostrophes and quotes.** An apostrophe or double quote in a string needs a backslash: `Couldn\'t`, `\"Aura\"`. Android's resource compiler rejects a bare one, or quietly drops it. A `\n` stays a `\n`.
+- **Plurals and arrays.** Give every `<plurals>` the quantities your language uses (Chinese only needs `other`). A `<string-array>` needs the same number of items as English. Leave `translatable="false"` strings alone, and keep product names such as Aura, YouTube and Wallhaven in Latin script.
+- **Check your work.** Run `python tools/locale_parity_check.py` (or `python -m pytest test/tools/locale_parity_check_test.py`). It lists missing keys, keys with no English source, placeholder mismatches and unescaped quotes. If a string has to stay in English on purpose, add the key and the reason to `docs/localization/locale-fallbacks.json`. The gate fails once a listed key gets translated, so the list can't go stale.
+
 ## Commits
 
 - One commit per logical change. No `wip:` or `chore: bump` commits — squash them locally before opening the PR.
