@@ -268,6 +268,13 @@ Remainders of items closed in the 2026-09-30 drain whose full acceptance did not
 
 ### P3
 
+- [ ] P3 — Make the wallpaper grid screenshots independent of image load timing
+  Why: the grid screenshot tiles point at images that never load in a JVM test. One verify run in three caught the tiles before the load had failed, so unchanged code produced two different pictures and the run failed with nothing wrong.
+  Evidence: three runs on 2026-10-13 at `9730be42`. A verify run failed on `wallpapers_grid_success_amoled_1280x800.png` with empty dark tiles, then a record run and a second verify both matched the committed broken-image baseline. `ProductionRouteState.kt` `WallpapersGridState()` feeds both grid baselines.
+  Touches: `app/src/main/java/com/freevibe/ui/qa/ProductionRouteState.kt`, `app/src/test/java/com/freevibe/ui/qa/ProductionRouteStateScreenshotTest.kt`, the grid baselines under `app/src/test/screenshots/`.
+  Acceptance: the grid scenarios render through a test image loader that settles before capture (a fixed bitmap or a fixed error), ten verify runs in a row pass, and the baselines show the state the scenario is named for.
+  Complexity: S
+
 - [ ] P3 — Carry contact ringtones in the scheduled auto backup and let a remembered one be forgotten
   Why: the manual library export now carries contact ringtones, but the scheduled auto backup goes through `FavoritesExporter` and leaves them out, so someone who relies on the automatic file loses them anyway. Aura's list of remembered contact ringtones also has no way to drop an entry, so a contact whose ringtone was later changed in the Contacts app keeps exporting the old sound.
   Evidence: `ContactRingtoneBackupManager.exportEntries()` is called only from `LibraryExporter.exportLibrary`; `FavoritesExporter` has no `contactRingtones` section; the list in `PreferencesManager.contactRingtoneLedgerJson` is written by `ContactRingtoneBackupManager.record` and never trimmed; `ContactRingtoneService.clearContactRingtone` exists but no screen calls it.
