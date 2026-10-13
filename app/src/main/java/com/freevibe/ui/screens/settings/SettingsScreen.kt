@@ -48,8 +48,12 @@ import com.freevibe.service.VideoWallpaperService
 import com.freevibe.service.WeatherUpdateWorker
 import com.freevibe.service.videoWallpaperMimeTypes
 import com.freevibe.ui.LiveWallpaperLaunchMode
+import com.freevibe.ui.LiveWallpaperLaunchResult
+import com.freevibe.ui.LiveWallpaperSource
 import com.freevibe.ui.components.AuraSnackbarHost
 import com.freevibe.ui.launchLiveWallpaperPicker
+import com.freevibe.ui.liveWallpaperBlock
+import com.freevibe.ui.liveWallpaperBlockedMessage
 import com.freevibe.ui.navigation.Screen
 import kotlinx.coroutines.launch
 
@@ -163,17 +167,24 @@ fun SettingsScreen(
     LaunchedEffect(settingsState.parallaxGalleryResult) {
         when (val result = settingsState.parallaxGalleryResult) {
             ParallaxGalleryResult.Ready -> {
-                when (
-                    launchLiveWallpaperPicker(
-                        context = context,
-                        serviceComponent = ComponentName(context, ParallaxWallpaperService::class.java),
-                        tag = "SettingsParallaxGallery",
-                    )
-                ) {
-                    LiveWallpaperLaunchMode.DIRECT -> showSettingsFeedback(resources.getString(R.string.settings_feedback_parallax_direct))
-                    LiveWallpaperLaunchMode.CHOOSER -> showSettingsFeedback(resources.getString(R.string.settings_feedback_parallax_chooser))
-                    null -> showSettingsFeedback(resources.getString(R.string.settings_feedback_parallax_manual))
-                }
+                val launch = launchLiveWallpaperPicker(
+                    context = context,
+                    serviceComponent = ComponentName(context, ParallaxWallpaperService::class.java),
+                    tag = "SettingsParallaxGallery",
+                )
+                showSettingsFeedback(
+                    when (launch) {
+                        is LiveWallpaperLaunchResult.Opened -> resources.getString(
+                            if (launch.mode == LiveWallpaperLaunchMode.DIRECT) {
+                                R.string.settings_feedback_parallax_direct
+                            } else {
+                                R.string.settings_feedback_parallax_chooser
+                            },
+                        )
+                        is LiveWallpaperLaunchResult.Blocked ->
+                            liveWallpaperBlockedMessage(context, launch.reason, LiveWallpaperSource.IMAGE)
+                    },
+                )
                 viewModel.clearParallaxGalleryResult()
             }
             is ParallaxGalleryResult.Failure -> {
@@ -187,17 +198,24 @@ fun SettingsScreen(
     LaunchedEffect(settingsState.videoWallpaperSelectionResult) {
         when (val result = settingsState.videoWallpaperSelectionResult) {
             VideoWallpaperSelectionResult.Ready -> {
-                when (
-                    launchLiveWallpaperPicker(
-                        context = context,
-                        serviceComponent = ComponentName(context, VideoWallpaperService::class.java),
-                        tag = "SettingsVideoWallpaper",
-                    )
-                ) {
-                    LiveWallpaperLaunchMode.DIRECT -> showSettingsFeedback(resources.getString(R.string.settings_feedback_video_direct))
-                    LiveWallpaperLaunchMode.CHOOSER -> showSettingsFeedback(resources.getString(R.string.settings_feedback_video_chooser))
-                    null -> showSettingsFeedback(resources.getString(R.string.settings_feedback_video_manual))
-                }
+                val launch = launchLiveWallpaperPicker(
+                    context = context,
+                    serviceComponent = ComponentName(context, VideoWallpaperService::class.java),
+                    tag = "SettingsVideoWallpaper",
+                )
+                showSettingsFeedback(
+                    when (launch) {
+                        is LiveWallpaperLaunchResult.Opened -> resources.getString(
+                            if (launch.mode == LiveWallpaperLaunchMode.DIRECT) {
+                                R.string.settings_feedback_video_direct
+                            } else {
+                                R.string.settings_feedback_video_chooser
+                            },
+                        )
+                        is LiveWallpaperLaunchResult.Blocked ->
+                            liveWallpaperBlockedMessage(context, launch.reason, LiveWallpaperSource.VIDEO)
+                    },
+                )
                 viewModel.clearVideoWallpaperSelectionResult()
             }
             is VideoWallpaperSelectionResult.Failure -> {
@@ -325,11 +343,24 @@ fun SettingsScreen(
                 wallpaperClockOverlayPosition = wallpaperClockOverlayPosition,
                 onChooseLocalWallpaperFolder = chooseLocalWallpaperFolder,
                 onManageLocalWallpaperFolders = { showLocalWallpaperCatalog = true },
-                onPickVideoWallpaper = { videoPickerLauncher.launch(videoWallpaperMimeTypes()) },
+                // Both rows check first, so nobody picks a file for a wallpaper the phone can't show.
+                onPickVideoWallpaper = {
+                    val block = liveWallpaperBlock(context, ComponentName(context, VideoWallpaperService::class.java))
+                    if (block == null) {
+                        videoPickerLauncher.launch(videoWallpaperMimeTypes())
+                    } else {
+                        showSettingsFeedback(liveWallpaperBlockedMessage(context, block, LiveWallpaperSource.VIDEO))
+                    }
+                },
                 onPickParallaxImage = {
-                    parallaxGalleryLauncher.launch(
-                        PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly),
-                    )
+                    val block = liveWallpaperBlock(context, ComponentName(context, ParallaxWallpaperService::class.java))
+                    if (block == null) {
+                        parallaxGalleryLauncher.launch(
+                            PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly),
+                        )
+                    } else {
+                        showSettingsFeedback(liveWallpaperBlockedMessage(context, block, LiveWallpaperSource.IMAGE))
+                    }
                 },
                 onCategoriesClick = navigation.onCategoriesClick,
                 onCollectionsClick = navigation.onCollectionsClick,

@@ -48,6 +48,13 @@
         <package android:name="com.miui.powerkeeper" />
         <package android:name="com.huawei.systemmanager" />
         <package android:name="com.asus.mobilemanager" />
+        <!-- LiveWallpaperLauncher resolves both picker actions before it starts either one. -->
+        <intent>
+            <action android:name="android.service.wallpaper.CHANGE_LIVE_WALLPAPER" />
+        </intent>
+        <intent>
+            <action android:name="android.service.wallpaper.LIVE_WALLPAPER_CHOOSER" />
+        </intent>
     </queries>
 
     <application

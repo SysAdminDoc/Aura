@@ -49,12 +49,17 @@ import com.freevibe.data.model.WallpaperTarget
 import com.freevibe.service.DepthBackgroundStyle
 import com.freevibe.service.DepthFrameStyle
 import com.freevibe.service.ParallaxWallpaperService
+import com.freevibe.ui.LiveWallpaperBlock
 import com.freevibe.ui.LiveWallpaperLaunchMode
+import com.freevibe.ui.LiveWallpaperLaunchResult
+import com.freevibe.ui.LiveWallpaperSource
 import com.freevibe.ui.components.AuraSnackbarHost
 import com.freevibe.ui.components.AuraStatusBanner
 import com.freevibe.ui.components.AuraStateAction
 import com.freevibe.ui.components.AuraStateCard
 import com.freevibe.ui.launchLiveWallpaperPicker
+import com.freevibe.ui.liveWallpaperBlock
+import com.freevibe.ui.liveWallpaperBlockedMessage
 import com.freevibe.ui.theme.AuraShapes
 import kotlin.math.min
 import kotlin.math.roundToInt
@@ -108,23 +113,35 @@ fun WallpaperEditorScreen(
     }
     val parallaxDirectMessage = stringResource(R.string.settings_feedback_parallax_direct)
     val parallaxChooserMessage = stringResource(R.string.settings_feedback_parallax_chooser)
-    val parallaxManualMessage = stringResource(R.string.settings_feedback_parallax_manual)
+    val staticApplyLabel = stringResource(R.string.live_wallpaper_static_action)
+    val parallaxComponent = remember(context) { ComponentName(context, ParallaxWallpaperService::class.java) }
+    var parallaxBlock by remember { mutableStateOf<LiveWallpaperBlock?>(null) }
     LaunchedEffect(state.pendingParallaxLaunch) {
         if (state.pendingParallaxLaunch) {
-            val message = when (
-                launchLiveWallpaperPicker(
-                    context = context,
-                    serviceComponent = ComponentName(context, ParallaxWallpaperService::class.java),
-                    tag = "WallpaperEditorDepth",
+            val launch = launchLiveWallpaperPicker(
+                context = context,
+                serviceComponent = parallaxComponent,
+                tag = "WallpaperEditorDepth",
+            )
+            when (launch) {
+                is LiveWallpaperLaunchResult.Opened -> snackbarHostState.showSnackbar(
+                    if (launch.mode == LiveWallpaperLaunchMode.DIRECT) parallaxDirectMessage else parallaxChooserMessage,
                 )
-            ) {
-                LiveWallpaperLaunchMode.DIRECT -> parallaxDirectMessage
-                LiveWallpaperLaunchMode.CHOOSER -> parallaxChooserMessage
-                null -> parallaxManualMessage
+                is LiveWallpaperLaunchResult.Blocked -> parallaxBlock = launch.reason
             }
-            snackbarHostState.showSnackbar(message)
             viewModel.clearPendingParallaxLaunch()
         }
+    }
+    // The edited picture can still be an ordinary wallpaper when it can't be a live one.
+    LaunchedEffect(parallaxBlock) {
+        val block = parallaxBlock ?: return@LaunchedEffect
+        val result = snackbarHostState.showSnackbar(
+            message = liveWallpaperBlockedMessage(context, block, LiveWallpaperSource.IMAGE),
+            actionLabel = staticApplyLabel,
+            duration = SnackbarDuration.Long,
+        )
+        parallaxBlock = null
+        if (result == SnackbarResult.ActionPerformed) viewModel.apply(WallpaperTarget.BOTH)
     }
 
     data class EditorPreset(@StringRes val nameRes: Int, val b: Float, val c: Float, val s: Float, val bl: Float,
@@ -390,7 +407,15 @@ fun WallpaperEditorScreen(
             }
 
             when (selectedFilter) {
-                R.string.editor_wallpaper_depth_chip -> DepthPortraitControls(state = state, viewModel = viewModel)
+                R.string.editor_wallpaper_depth_chip -> DepthPortraitControls(
+                    state = state,
+                    viewModel = viewModel,
+                    onParallax = {
+                        // Checked before the render so the work isn't done for a phone that can't show it.
+                        val block = liveWallpaperBlock(context, parallaxComponent)
+                        if (block == null) viewModel.prepareDepthParallax() else parallaxBlock = block
+                    },
+                )
                 R.string.editor_wallpaper_layers_chip -> WallpaperLayerControls(state = state, viewModel = viewModel)
                 else -> {
                     // Active slider
@@ -933,6 +958,7 @@ private fun OverlaySlider(
 private fun DepthPortraitControls(
     state: EditorState,
     viewModel: WallpaperEditorViewModel,
+    onParallax: () -> Unit,
 ) {
     val enabled = state.isSourceReady &&
         !state.isDepthProcessing &&
@@ -1069,7 +1095,7 @@ private fun DepthPortraitControls(
                 }
             }
             OutlinedButton(
-                onClick = viewModel::prepareDepthParallax,
+                onClick = onParallax,
                 modifier = Modifier.weight(1f).heightIn(min = 64.dp),
                 enabled = enabled,
                 shape = AuraShapes.Medium,

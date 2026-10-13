@@ -51,7 +51,10 @@ import com.freevibe.data.model.stableKey
 import com.freevibe.data.model.rotationIdentity
 import com.freevibe.data.model.wallpaperLicenseCapabilities
 import com.freevibe.service.ParallaxWallpaperService
+import com.freevibe.ui.LiveWallpaperBlock
 import com.freevibe.ui.LiveWallpaperLaunchMode
+import com.freevibe.ui.LiveWallpaperLaunchResult
+import com.freevibe.ui.LiveWallpaperSource
 import com.freevibe.ui.components.AuraSnackbarHost
 import com.freevibe.ui.components.CommunityReportDialog
 import com.freevibe.ui.components.GlassCard
@@ -63,6 +66,8 @@ import com.freevibe.ui.policy.COMMUNITY_REPORT_TAKEDOWN_COPY
 import com.freevibe.ui.policy.communityBlockConfirmationCopy
 import com.freevibe.ui.policy.communityOwnerDeleteConfirmationCopy
 import com.freevibe.ui.launchLiveWallpaperPicker
+import com.freevibe.ui.liveWallpaperBlock
+import com.freevibe.ui.liveWallpaperBlockedMessage
 import com.freevibe.ui.util.openExternalUrl
 import com.freevibe.util.tryStartActivity
 import coil3.compose.AsyncImagePainter
@@ -287,24 +292,34 @@ fun WallpaperDetailScreen(
 
     val parallaxDirectMessage = stringResource(R.string.settings_feedback_parallax_direct)
     val parallaxChooserMessage = stringResource(R.string.settings_feedback_parallax_chooser)
-    val parallaxManualMessage = stringResource(R.string.settings_feedback_parallax_manual)
+    val staticApplyLabel = stringResource(R.string.live_wallpaper_static_action)
     val shareWallpaperTitle = stringResource(R.string.detail_share_wallpaper_title)
     val shareFailedMessage = stringResource(R.string.common_share_failed)
     val snackbarHostState = remember { SnackbarHostState() }
+    val parallaxComponent = remember(context) { ComponentName(context, ParallaxWallpaperService::class.java) }
+    // A picture that can't be a live wallpaper can still be an ordinary one, so the notice offers that.
+    suspend fun offerStaticApply(block: LiveWallpaperBlock, wallpaper: Wallpaper) {
+        val result = snackbarHostState.showSnackbar(
+            message = liveWallpaperBlockedMessage(context, block, LiveWallpaperSource.IMAGE),
+            actionLabel = staticApplyLabel,
+            duration = SnackbarDuration.Long,
+        )
+        if (result == SnackbarResult.ActionPerformed) viewModel.applyWallpaper(wallpaper, WallpaperTarget.BOTH)
+    }
     LaunchedEffect(state.pendingLiveWallpaperLaunch) {
         if (state.pendingLiveWallpaperLaunch) {
-            val message = when (
-                launchLiveWallpaperPicker(
-                    context = context,
-                    serviceComponent = ComponentName(context, ParallaxWallpaperService::class.java),
-                    tag = "ParallaxWallpaper",
+            val launch = launchLiveWallpaperPicker(
+                context = context,
+                serviceComponent = parallaxComponent,
+                tag = "ParallaxWallpaper",
+            )
+            when (launch) {
+                is LiveWallpaperLaunchResult.Opened -> snackbarHostState.showSnackbar(
+                    if (launch.mode == LiveWallpaperLaunchMode.DIRECT) parallaxDirectMessage else parallaxChooserMessage,
                 )
-            ) {
-                LiveWallpaperLaunchMode.DIRECT -> parallaxDirectMessage
-                LiveWallpaperLaunchMode.CHOOSER -> parallaxChooserMessage
-                null -> parallaxManualMessage
+                is LiveWallpaperLaunchResult.Blocked -> offerStaticApply(launch.reason, wp)
             }
-            snackbarHostState.showSnackbar(message)
+            // Cleared last: the flag is this effect's key, so clearing it earlier would cancel the notice.
             viewModel.clearPendingLaunch()
         }
     }
@@ -733,7 +748,13 @@ fun WallpaperDetailScreen(
                     },
                     onParallax = {
                         showApplyOptions = false
-                        viewModel.applyParallax(wp)
+                        // Checked before the download so nobody waits on a wallpaper the phone can't show.
+                        val block = liveWallpaperBlock(context, parallaxComponent)
+                        if (block == null) {
+                            viewModel.applyParallax(wp)
+                        } else {
+                            scope.launch { offerStaticApply(block, wp) }
+                        }
                     },
                     allowTransforms = canEdit,
                 )

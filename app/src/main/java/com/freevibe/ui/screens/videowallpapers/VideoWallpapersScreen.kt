@@ -94,8 +94,14 @@ import com.freevibe.ui.components.CountBadge
 import com.freevibe.ui.components.FitCanvasControls
 import com.freevibe.ui.components.FitCanvasMedia
 import com.freevibe.ui.components.ShimmerBox
+import com.freevibe.ui.LiveWallpaperBlock
 import com.freevibe.ui.LiveWallpaperLaunchMode
+import com.freevibe.ui.LiveWallpaperLaunchResult
+import com.freevibe.ui.LiveWallpaperSource
 import com.freevibe.ui.launchLiveWallpaperPicker
+import com.freevibe.ui.liveWallpaperBlock
+import com.freevibe.ui.liveWallpaperBlockedMessage
+import com.freevibe.ui.liveWallpaperFallback
 import com.freevibe.ui.rotation.RotationExclusionsViewModel
 import com.freevibe.ui.theme.AuraShapes
 import com.freevibe.ui.util.openExternalUrl
@@ -213,6 +219,31 @@ internal suspend fun exportVideoToGallery(context: Context, file: File): Uri? = 
     }
 }
 
+/**
+ * After a refusal the picker is still on the phone, so the manual route is worth describing. With
+ * no live wallpaper support or no picker there is nothing to finish by hand, and the copy says so.
+ */
+internal fun videoWallpaperBlockedMessage(
+    context: Context,
+    block: LiveWallpaperBlock,
+    saved: Boolean,
+    isCropped: Boolean,
+): String = when {
+    block == LiveWallpaperBlock.DENIED -> context.getString(
+        when {
+            saved && isCropped -> R.string.video_wp_cropped_saved_manual
+            saved -> R.string.video_wp_saved_manual
+            isCropped -> R.string.video_wp_cropped_ready_manual
+            else -> R.string.settings_feedback_video_manual
+        },
+    )
+    saved -> context.getString(
+        R.string.live_wallpaper_video_saved,
+        context.getString(liveWallpaperFallback(block, LiveWallpaperSource.VIDEO).messageRes),
+    )
+    else -> liveWallpaperBlockedMessage(context, block, LiveWallpaperSource.VIDEO)
+}
+
 internal suspend fun launchOrExportVideoWallpaper(
     context: Context,
     file: File,
@@ -224,37 +255,34 @@ internal suspend fun launchOrExportVideoWallpaper(
     if (!selectionAlreadyPersisted) {
         persistSelectedVideoWallpaper(context, file, scaleMode, canvasStyle)
     }
-    when (
-        withContext(Dispatchers.Main) {
-            launchLiveWallpaperPicker(
-                context = context,
-                serviceComponent = android.content.ComponentName(context, VideoWallpaperService::class.java),
-                tag = "VideoWallpaper",
-            )
-        }
-    ) {
-        LiveWallpaperLaunchMode.DIRECT -> {
+    val launch = withContext(Dispatchers.Main) {
+        launchLiveWallpaperPicker(
+            context = context,
+            serviceComponent = android.content.ComponentName(context, VideoWallpaperService::class.java),
+            tag = "VideoWallpaper",
+        )
+    }
+    when (launch) {
+        is LiveWallpaperLaunchResult.Opened -> {
             withContext(Dispatchers.Main) {
-                Toast.makeText(context, context.getString(R.string.settings_feedback_video_direct), Toast.LENGTH_LONG).show()
+                val message = if (launch.mode == LiveWallpaperLaunchMode.DIRECT) {
+                    R.string.settings_feedback_video_direct
+                } else {
+                    R.string.settings_feedback_video_chooser
+                }
+                Toast.makeText(context, context.getString(message), Toast.LENGTH_LONG).show()
             }
         }
-        LiveWallpaperLaunchMode.CHOOSER -> {
-            withContext(Dispatchers.Main) {
-                Toast.makeText(context, context.getString(R.string.settings_feedback_video_chooser), Toast.LENGTH_LONG).show()
-            }
-        }
-        null -> {
+        is LiveWallpaperLaunchResult.Blocked -> {
+            // The video is kept either way, so a crop isn't lost when the picker can't be opened.
             val savedUri = exportVideoToGallery(context, file)
             withContext(Dispatchers.Main) {
-                val message = if (savedUri != null) {
-                    context.getString(
-                        if (isCropped) R.string.video_wp_cropped_saved_manual else R.string.video_wp_saved_manual,
-                    )
-                } else {
-                    context.getString(
-                        if (isCropped) R.string.video_wp_cropped_ready_manual else R.string.settings_feedback_video_manual,
-                    )
-                }
+                val message = videoWallpaperBlockedMessage(
+                    context = context,
+                    block = launch.reason,
+                    saved = savedUri != null,
+                    isCropped = isCropped,
+                )
                 Toast.makeText(context, message, Toast.LENGTH_LONG).show()
             }
         }
@@ -321,6 +349,19 @@ fun VideoWallpapersScreen(
     ) { uri: Uri? ->
         uri?.let { viewModel.prepareGalleryVideoWallpaper(it) }
     }
+    // Checked before the file picker opens, so nobody picks a video the phone can't show.
+    val pickGalleryVideo = {
+        val block = liveWallpaperBlock(context, android.content.ComponentName(context, VideoWallpaperService::class.java))
+        if (block == null) {
+            galleryLauncher.launch(videoWallpaperMimeTypes())
+        } else {
+            Toast.makeText(
+                context,
+                liveWallpaperBlockedMessage(context, block, LiveWallpaperSource.VIDEO),
+                Toast.LENGTH_LONG,
+            ).show()
+        }
+    }
 
     // Video crop editor
     cropItem?.let { (item, streamUrl) ->
@@ -371,23 +412,23 @@ fun VideoWallpapersScreen(
     LaunchedEffect(gallerySelectionResult) {
         when (val result = gallerySelectionResult) {
             VideoWallpaperSelectionResult.Ready -> {
-                when (
-                    launchLiveWallpaperPicker(
-                        context = context,
-                        serviceComponent = android.content.ComponentName(context, VideoWallpaperService::class.java),
-                        tag = "VideoWallpaperGallery",
+                val launch = launchLiveWallpaperPicker(
+                    context = context,
+                    serviceComponent = android.content.ComponentName(context, VideoWallpaperService::class.java),
+                    tag = "VideoWallpaperGallery",
+                )
+                val message = when (launch) {
+                    is LiveWallpaperLaunchResult.Opened -> resources.getString(
+                        if (launch.mode == LiveWallpaperLaunchMode.DIRECT) {
+                            R.string.video_wp_toast_direct
+                        } else {
+                            R.string.video_wp_toast_chooser
+                        },
                     )
-                ) {
-                    LiveWallpaperLaunchMode.DIRECT -> {
-                        Toast.makeText(context, resources.getString(R.string.video_wp_toast_direct), Toast.LENGTH_LONG).show()
-                    }
-                    LiveWallpaperLaunchMode.CHOOSER -> {
-                        Toast.makeText(context, resources.getString(R.string.video_wp_toast_chooser), Toast.LENGTH_LONG).show()
-                    }
-                    null -> {
-                        Toast.makeText(context, resources.getString(R.string.video_wp_toast_fallback), Toast.LENGTH_LONG).show()
-                    }
+                    is LiveWallpaperLaunchResult.Blocked ->
+                        liveWallpaperBlockedMessage(context, launch.reason, LiveWallpaperSource.VIDEO)
                 }
+                Toast.makeText(context, message, Toast.LENGTH_LONG).show()
                 viewModel.clearGallerySelectionResult()
             }
             is VideoWallpaperSelectionResult.Failure -> {
@@ -495,7 +536,7 @@ fun VideoWallpapersScreen(
                             leadingIcon = { Icon(Icons.Default.FolderOpen, contentDescription = null) },
                             onClick = {
                                 showQuickMenu = false
-                                galleryLauncher.launch(videoWallpaperMimeTypes())
+                                pickGalleryVideo()
                             },
                         )
                     }
@@ -539,7 +580,7 @@ fun VideoWallpapersScreen(
                 secondaryAction = AuraStatusAction(
                     label = stringResource(R.string.video_wp_degraded_gallery),
                     icon = Icons.Default.FolderOpen,
-                    onClick = { galleryLauncher.launch(videoWallpaperMimeTypes()) },
+                    onClick = pickGalleryVideo,
                 ),
                 modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp),
             )
@@ -580,7 +621,7 @@ fun VideoWallpapersScreen(
                             description = state.error ?: stringResource(R.string.video_wp_error_description),
                             tone = MaterialTheme.colorScheme.error,
                             primaryAction = AuraStateAction(stringResource(R.string.video_wp_error_retry), Icons.Default.Refresh) { viewModel.refresh() },
-                            secondaryAction = AuraStateAction(stringResource(R.string.video_wp_error_gallery), Icons.Default.FolderOpen) { galleryLauncher.launch(videoWallpaperMimeTypes()) },
+                            secondaryAction = AuraStateAction(stringResource(R.string.video_wp_error_gallery), Icons.Default.FolderOpen) { pickGalleryVideo() },
                             modifier = Modifier.padding(24.dp),
                         )
                     }
@@ -597,7 +638,7 @@ fun VideoWallpapersScreen(
                             title = title,
                             description = detail,
                             primaryAction = AuraStateAction(stringResource(R.string.video_wp_empty_retry), Icons.Default.Refresh) { viewModel.refresh() },
-                            secondaryAction = AuraStateAction(stringResource(R.string.video_wp_error_gallery), Icons.Default.FolderOpen) { galleryLauncher.launch(videoWallpaperMimeTypes()) },
+                            secondaryAction = AuraStateAction(stringResource(R.string.video_wp_error_gallery), Icons.Default.FolderOpen) { pickGalleryVideo() },
                             modifier = Modifier.padding(24.dp),
                         )
                     }

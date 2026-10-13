@@ -1,5 +1,6 @@
 package com.freevibe.ui.screens.videowallpapers
 
+import android.content.ComponentName
 import android.content.Context
 import android.util.Log
 import android.widget.Toast
@@ -27,6 +28,9 @@ import com.freevibe.data.model.activePreset
 import com.freevibe.data.model.canUseVideoAction
 import com.freevibe.data.model.feedSignature
 import com.freevibe.data.model.videoActionMessage
+import com.freevibe.ui.LiveWallpaperSource
+import com.freevibe.ui.liveWallpaperBlock
+import com.freevibe.ui.liveWallpaperBlockedMessage
 import com.freevibe.util.rethrowIfCancelled
 import com.freevibe.data.remote.pexels.PexelsApi
 import com.freevibe.data.remote.pixabay.PixabayVideo
@@ -42,6 +46,7 @@ import com.freevibe.service.MAX_VIDEO_WALLPAPER_BYTES
 import com.freevibe.service.SourceMetrics
 import com.freevibe.service.VIDEO_WALLPAPER_SCALE_MODE_ZOOM
 import com.freevibe.service.VideoWallpaperSelectionResult
+import com.freevibe.service.VideoWallpaperService
 import com.freevibe.service.VideoWallpaperStorage
 import com.freevibe.service.VideoPreviewCache
 import com.freevibe.service.shouldPrebufferVideoPreview
@@ -775,6 +780,15 @@ class VideoWallpapersViewModel @Inject constructor(
                 context,
                 item.videoActionMessage(VideoWallpaperAction.APPLY),
                 Toast.LENGTH_SHORT,
+            ).show()
+            return
+        }
+        // Checked before the download: a video can only ever be a live wallpaper.
+        liveWallpaperBlock(context, ComponentName(context, VideoWallpaperService::class.java))?.let { block ->
+            Toast.makeText(
+                context,
+                liveWallpaperBlockedMessage(context, block, LiveWallpaperSource.VIDEO),
+                Toast.LENGTH_LONG,
             ).show()
             return
         }

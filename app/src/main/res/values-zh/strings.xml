@@ -1016,7 +1016,6 @@
     <string name="video_wp_empty_refresh">刷新</string>
     <string name="video_wp_toast_direct">已打开 Aura 视频壁纸。设置壁纸以完成。</string>
     <string name="video_wp_toast_chooser">在选择器中选择“Aura Video Wallpaper”，然后点击设置壁纸。</string>
-    <string name="video_wp_toast_fallback">已选择动态壁纸。打开设置 > 壁纸 > 动态壁纸以完成设置。</string>
     <string name="video_wp_saved_manual">视频已保存到 Movies/Aura 以便手动设置。</string>
     <string name="video_wp_cropped_saved_manual">裁剪后的视频已保存到 Movies/Aura 以便手动设置。</string>
     <string name="video_wp_cropped_ready_manual">裁剪后的视频已就绪。打开设置 &gt; 壁纸 &gt; 动态壁纸以完成设置。</string>
@@ -1079,11 +1078,16 @@
     <string name="settings_feedback_backup_folder_no_persist">已选择文件夹。如果备份无法写入该位置，请重新选择该文件夹。</string>
     <string name="settings_feedback_parallax_direct">已打开 Aura 视差。设置壁纸以完成。</string>
     <string name="settings_feedback_parallax_chooser">在选择器中选择“Aura Parallax”，然后点击设置壁纸。</string>
-    <string name="settings_feedback_parallax_manual">照片已就绪。打开设置 > 壁纸 > 动态壁纸以完成。</string>
     <string name="settings_feedback_parallax_failed">无法使用该照片：%1$s</string>
     <string name="settings_feedback_video_direct">已打开 Aura 视频壁纸。设置壁纸以完成。</string>
     <string name="settings_feedback_video_chooser">在选择器中选择“Aura Video Wallpaper”，然后点击设置壁纸。</string>
     <string name="settings_feedback_video_manual">已选择动态壁纸。打开设置 > 壁纸 > 动态壁纸以完成设置。</string>
+    <string name="live_wallpaper_blocked_unsupported">此设备不支持动态壁纸。</string>
+    <string name="live_wallpaper_blocked_unavailable">此设备上没有 Aura 可以打开的动态壁纸选择器。</string>
+    <string name="live_wallpaper_blocked_denied">此设备阻止了 Aura 打开动态壁纸选择器。打开设置 > 壁纸 > 动态壁纸以完成设置。</string>
+    <string name="live_wallpaper_video_limit">%1$s视频只能设为动态壁纸。</string>
+    <string name="live_wallpaper_video_saved">%1$s视频已保存到 Movies/Aura。</string>
+    <string name="live_wallpaper_static_action">设为静态壁纸</string>
     <string name="settings_feedback_settings_unavailable">无法在此设备上打开 Android 设置。</string>
     <string name="settings_feedback_oem_battery_open_failed">无法在此设备上打开 %1$s 电池设置。</string>
     <string name="settings_feedback_oem_battery_not_found">无法在此设备上找到 %1$s 电池设置。</string>

@@ -1110,7 +1110,6 @@
     <string name="video_wp_empty_refresh">Refresh</string>
     <string name="video_wp_toast_direct">Aura Video Wallpaper opened. Set wallpaper to finish.</string>
     <string name="video_wp_toast_chooser">Choose \'Aura Video Wallpaper\' in the picker, then tap Set wallpaper.</string>
-    <string name="video_wp_toast_fallback">Motion wallpaper selected. Open Settings > Wallpaper > Live Wallpapers to finish setup.</string>
     <string name="video_wp_saved_manual">Video saved to Movies/Aura for manual setup.</string>
     <string name="video_wp_cropped_saved_manual">Cropped video saved to Movies/Aura for manual setup.</string>
     <string name="video_wp_cropped_ready_manual">Cropped video ready. Open Settings &gt; Wallpaper &gt; Live Wallpapers to finish setup.</string>
@@ -1173,11 +1172,16 @@
     <string name="settings_feedback_backup_folder_no_persist">Folder selected. If backups cannot write there, choose the folder again.</string>
     <string name="settings_feedback_parallax_direct">Aura Parallax opened. Set wallpaper to finish.</string>
     <string name="settings_feedback_parallax_chooser">Choose \'Aura Parallax\' in the picker, then tap Set wallpaper.</string>
-    <string name="settings_feedback_parallax_manual">Photo ready. Open Settings > Wallpaper > Live Wallpapers to finish.</string>
     <string name="settings_feedback_parallax_failed">Couldn\'t use that photo: %1$s</string>
     <string name="settings_feedback_video_direct">Aura Video Wallpaper opened. Set wallpaper to finish.</string>
     <string name="settings_feedback_video_chooser">Choose \'Aura Video Wallpaper\' in the picker, then tap Set wallpaper.</string>
     <string name="settings_feedback_video_manual">Motion wallpaper selected. Open Settings > Wallpaper > Live Wallpapers to finish setup.</string>
+    <string name="live_wallpaper_blocked_unsupported">This device doesn\'t support live wallpapers.</string>
+    <string name="live_wallpaper_blocked_unavailable">This device has no live wallpaper picker Aura can open.</string>
+    <string name="live_wallpaper_blocked_denied">This device stopped Aura from opening the live wallpaper picker. Open Settings &gt; Wallpaper &gt; Live Wallpapers to finish.</string>
+    <string name="live_wallpaper_video_limit">%1$s A video can only be set as a live wallpaper.</string>
+    <string name="live_wallpaper_video_saved">%1$s The video was saved to Movies/Aura.</string>
+    <string name="live_wallpaper_static_action">Set as still wallpaper</string>
     <string name="settings_feedback_settings_unavailable">Android settings could not be opened on this device.</string>
     <string name="settings_feedback_oem_battery_open_failed">Could not open %1$s battery settings on this device.</string>
     <string name="settings_feedback_oem_battery_not_found">Could not find %1$s battery settings on this device.</string>
