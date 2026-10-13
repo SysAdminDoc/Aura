@@ -357,6 +357,8 @@ class SettingsViewModel @Inject constructor(
         soundShuffle.undo(historyId, onResult)
     fun setWallpaperPackEnabled(enabled: Boolean) = media.setWallpaperPackEnabled(enabled)
     fun setWallpaperPackJson(json: String) = media.setWallpaperPackJson(json)
+    fun setWallpaperPackSlot(daypart: Daypart, uri: Uri, unnamedLabel: String) =
+        media.setWallpaperPackSlot(daypart, uri, unnamedLabel)
     fun setRedditProviderEnabled(enabled: Boolean) = media.setRedditProviderEnabled(enabled)
     fun setPreferredRes(resolution: String) = media.setPreferredRes(resolution)
     fun setUserStyles(styles: String) = media.setUserStyles(styles)

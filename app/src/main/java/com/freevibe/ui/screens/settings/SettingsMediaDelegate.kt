@@ -1,10 +1,13 @@
 package com.freevibe.ui.screens.settings
 
 import android.content.Context
+import android.net.Uri
+import android.provider.OpenableColumns
 import com.freevibe.data.legal.ProviderSetup
 import com.freevibe.data.legal.isProviderAvailableInCurrentArtifact
 import com.freevibe.data.local.PreferencesManager
 import com.freevibe.data.model.ContentSource
+import com.freevibe.service.Daypart
 import com.freevibe.service.SoundProfileWorker
 import com.freevibe.service.parseProfiles
 import com.freevibe.service.soundProfilesNeedWorker
@@ -14,11 +17,20 @@ import com.freevibe.service.WallpaperStyleLearningProfile
 import com.freevibe.service.WallpaperClockOverlayMode
 import com.freevibe.service.WallpaperClockOverlayPosition
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+
+/** The name the document picker shows for a file, or null when its provider doesn't give one. */
+private fun displayNameOf(context: Context, uri: Uri): String? = runCatching {
+    context.contentResolver.query(uri, arrayOf(OpenableColumns.DISPLAY_NAME), null, null, null)?.use { cursor ->
+        if (cursor.moveToFirst()) cursor.getString(0) else null
+    }
+}.getOrNull()?.takeIf { it.isNotBlank() }
 
 /** Owns sound, video, provider, and generated-content settings. */
 internal class SettingsMediaDelegate(
@@ -153,7 +165,21 @@ internal class SettingsMediaDelegate(
         applyPackSchedule(enabled, prefs.wallpaperPackJson.first())
     }
 
-    fun setWallpaperPackJson(json: String) = scope.launch {
+    fun setWallpaperPackJson(json: String) = scope.launch { savePack(json) }
+
+    /**
+     * Puts a picked wallpaper in the pack. This runs here and not in the editor, so closing the
+     * editor right after a pick can't drop the wallpaper while its name is still being read. The
+     * pack is read after the name for the same reason: the editor's copy may be an edit behind.
+     */
+    fun setWallpaperPackSlot(daypart: Daypart, uri: Uri, unnamedLabel: String) = scope.launch {
+        val label = withContext(Dispatchers.IO) { displayNameOf(context, uri) } ?: unnamedLabel
+        val pack = editablePack(prefs.wallpaperPackJson.first())
+        savePack(pack.withSlot(daypart, uri.toString(), label).toEditorJson())
+    }
+
+    /** Saves the pack, forgets what was last applied so the change shows now, and fits the schedule to it. */
+    private suspend fun savePack(json: String) {
         prefs.setWallpaperPackJson(json)
         prefs.setWallpaperPackLastAppliedDaypart("")
         applyPackSchedule(prefs.wallpaperPackEnabled.first(), json)

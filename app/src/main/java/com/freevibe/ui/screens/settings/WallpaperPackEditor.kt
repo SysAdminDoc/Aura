@@ -1,9 +1,6 @@
 package com.freevibe.ui.screens.settings
 
-import android.content.Context
 import android.content.Intent
-import android.net.Uri
-import android.provider.OpenableColumns
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
@@ -29,7 +26,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -42,9 +38,6 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.freevibe.R
 import com.freevibe.service.Daypart
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 
 private fun daypartLabelRes(daypart: Daypart): Int = when (daypart) {
     Daypart.MORNING -> R.string.settings_wp_pack_morning
@@ -52,12 +45,6 @@ private fun daypartLabelRes(daypart: Daypart): Int = when (daypart) {
     Daypart.EVENING -> R.string.settings_wp_pack_evening
     Daypart.NIGHT -> R.string.settings_wp_pack_night
 }
-
-private fun displayNameOf(context: Context, uri: Uri): String? = runCatching {
-    context.contentResolver.query(uri, arrayOf(OpenableColumns.DISPLAY_NAME), null, null, null)?.use { cursor ->
-        if (cursor.moveToFirst()) cursor.getString(0) else null
-    }
-}.getOrNull()?.takeIf { it.isNotBlank() }
 
 /**
  * Edits the single 24H pack: one wallpaper per time of day, each with its own target.
@@ -76,7 +63,6 @@ internal fun WallpaperPackEditorDialog(
     var name by rememberSaveable { mutableStateOf(pack.name) }
     var status by remember { mutableStateOf("") }
     var pendingDaypart by rememberSaveable { mutableStateOf<Daypart?>(null) }
-    val scope = rememberCoroutineScope()
     val unnamedWallpaper = stringResource(R.string.settings_wp_pack_unnamed_wallpaper)
     val accessFailed = stringResource(R.string.settings_wp_pack_access_failed)
     val savedMessage = stringResource(R.string.settings_wp_pack_saved)
@@ -94,11 +80,10 @@ internal fun WallpaperPackEditorDialog(
             status = accessFailed
             return@rememberLauncherForActivityResult
         }
-        scope.launch {
-            val label = withContext(Dispatchers.IO) { displayNameOf(context, uri) } ?: unnamedWallpaper
-            viewModel.setWallpaperPackJson(pack.withSlot(daypart, uri.toString(), label).toEditorJson())
-            status = savedMessage
-        }
+        // The view model finishes the pick. Work started here would stop the moment this editor
+        // closes, and reading a file's name can take a while.
+        viewModel.setWallpaperPackSlot(daypart, uri, unnamedWallpaper)
+        status = savedMessage
     }
 
     fun dismiss() {

@@ -46,6 +46,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -115,7 +116,8 @@ internal fun WallpaperRotationSettingsSection(
     var showSourcePicker by remember { mutableStateOf(false) }
     var showTargetPicker by remember { mutableStateOf(false) }
     var showColumnsPicker by remember { mutableStateOf(false) }
-    var showPackEditor by remember { mutableStateOf(false) }
+    // Saved, so the editor is still open after a rotation or a trip to the document picker.
+    var showPackEditor by rememberSaveable { mutableStateOf(false) }
     var showResPicker by remember { mutableStateOf(false) }
     var showStylePicker by remember { mutableStateOf(false) }
     var showClockModePicker by remember { mutableStateOf(false) }

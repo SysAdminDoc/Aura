@@ -36,6 +36,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.ui.Alignment
@@ -77,7 +78,8 @@ internal fun SoundSettingsSection(
     var showPoTokenProviderEditor by remember { mutableStateOf(false) }
     var showYtDlpConsent by remember { mutableStateOf(false) }
     var showSoundShufflePools by remember { mutableStateOf(false) }
-    var showSoundProfiles by remember { mutableStateOf(false) }
+    // Saved, so the editor is still open after a rotation or a trip to the system sound picker.
+    var showSoundProfiles by rememberSaveable { mutableStateOf(false) }
     val soundShuffleStore by viewModel.soundShuffleStore.collectAsStateWithLifecycle(
         initialValue = SoundShuffleStore(),
     )
