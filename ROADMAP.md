@@ -15,17 +15,6 @@ Actionable work only. Historical and completed roadmap material is archived in C
 
   Note 2026-08-23: compileSdk 36 and Media3 1.11.0 are already shipped, so the old dependency gate is gone. Keep this sequenced after the existing video-cache and main-thread encode reliability work; use Media3 preload first and retain the custom engine only if a measured black-frame test still fails.
 
-- [ ] P2 — Finish Simplified Chinese coverage and document translation contributions
-  Category: ux
-  Where: app/src/main/res/values/strings.xml; app/src/main/res/values-zh/strings.xml; app/src/full/res/values-zh/strings.xml; app/src/main/res/xml/locales_config.xml; CONTRIBUTING.md
-  Problem: Simplified Chinese now ships, but 182 main-resource keys fall back to English and contributors still have no documented translation workflow.
-  Evidence: PR #48 merged and locales_config registers en/zh. Current key comparison finds 1,806 default keys versus 1,624 main Chinese keys; the missing clean subset clusters in contact_picker_dnd_* plus action_back. The Full-only Chinese set is complete at 66 of 66. No Weblate/Crowdin/Transifex config or CONTRIBUTING translation instructions exist.
-  Fix: Translate/review the 182 missing keys with placeholder/plural validation, document folder naming and review steps, and add a locale parity gate that allows deliberate fallbacks only with a reason.
-  Acceptance: Chinese resources cover every required key with matching placeholders/plurals; Android 13+ language picker exposes Chinese; a native-speaker screenshot pass covers browse, apply, contact picker, and errors; contributor instructions reproduce the validation commands.
-  Confidence: Verified
-  Effort: M
-  Reported: #47 — Reporter opened the translation umbrella with “Aura is English only right now”; PR #48 supplied Simplified Chinese, leaving the current residual coverage and contribution-path work.
-
 - [ ] P2 — Give TalkBack announcements and a controlled reading order
   Why: the interactive-element audit recorded clean labels on 2026-08-11; the missing layer is *announcements*. Three `liveRegion` usages cover an app whose primary surfaces are async grids, a download queue, and audio playback, so a screen-reader user gets no notification when results arrive, a download finishes, or playback state changes. Reading order is entirely unmanaged.
   Evidence: `liveRegion` 3 occurrences, `heading` 7, `traversalIndex` 0, `isTraversalGroup` 0 across `app/src/main/java`; 48 `AuraStateCard` usages across 16 of 79 screen files show where async state transitions already exist and go unannounced.

@@ -50,6 +50,13 @@
 
 ---
 
+## Blocker: Needs a Native Chinese Reader
+
+- **P3 — Native-speaker pass on the Simplified Chinese screens** (Reported: #47)
+  - Current state: every key is translated and `tools/locale_parity_check.py` holds keys, placeholders, plurals and quote escaping in step with English. Nobody who reads Chinese natively has looked at the strings on a phone.
+  - Judgment calls to check first: `editor_preset_moody` (氛围感), `editor_preset_noir` (黑色电影), "repository" as 仓库 in `settings_ytdlp_consent_*`, Do Not Disturb as 勿扰模式 in `contact_picker_dnd_*` and `settings_perm_dnd*`, `rotation_health_row_boot_receiver`, and 叠加 in `settings_wp_clock_overlay_*`.
+  - Unblocks when: a native speaker reviews Chinese screenshots of browse, apply, the contact picker and the error states, and the Android 13+ language picker is seen offering Chinese on a device.
+
 ## Blocker: N-1 Toolchain Upgrade (AGP 9 / Gradle 9 / Kotlin 2.3)
 
 N-1 itself is the largest single gate. Until it lands, these items cannot proceed:
