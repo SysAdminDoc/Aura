@@ -19,6 +19,7 @@ import androidx.work.testing.WorkManagerTestInitHelper
 import com.freevibe.data.local.PreferencesManager
 import io.mockk.coEvery
 import io.mockk.coVerify
+import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
@@ -60,14 +61,18 @@ class SoundProfileWorkerGateTest {
         val json = prefs.soundProfilesJson.first()
         val lastApplied = prefs.soundProfileLastAppliedId.first()
         val lastRingtone = prefs.lastAppliedRingtoneUri.first()
+        val replaced = prefs.soundProfilePreviousSoundsJson.first()
         restore = {
             prefs.setSoundProfilesEnabled(enabled)
             prefs.setSoundProfilesJson(json)
             prefs.setSoundProfileLastAppliedId(lastApplied)
             prefs.setLastAppliedRingtoneUri(lastRingtone)
+            prefs.setSoundProfilePreviousSoundsJson(replaced)
         }
         prefs.setSoundProfileLastAppliedId("")
+        prefs.setSoundProfilePreviousSoundsJson("")
         coEvery { systemSounds.write(any(), any()) } returns Unit
+        every { systemSounds.current(any()) } returns null
         allowSystemWrites(AppOpsManager.MODE_ALLOWED)
     }
 

@@ -126,13 +126,21 @@ internal class SettingsMediaDelegate(
         if (syncSoundProfileWork()) SoundProfileWorker.runNow(context)
     }
 
-    /** The worker runs only while the switch is on and a profile can change a sound. */
+    /**
+     * The worker runs only while the switch is on and a profile can change a sound. When it stops,
+     * one last run puts back the sounds a profile had changed.
+     */
     private suspend fun syncSoundProfileWork(): Boolean {
         val needed = soundProfilesNeedWorker(
             prefs.soundProfilesEnabled.first(),
             parseProfiles(prefs.soundProfilesJson.first()),
         )
-        if (needed) SoundProfileWorker.schedule(context) else SoundProfileWorker.cancel(context)
+        if (needed) {
+            SoundProfileWorker.schedule(context)
+        } else {
+            SoundProfileWorker.cancel(context)
+            SoundProfileWorker.runNow(context)
+        }
         return needed
     }
 

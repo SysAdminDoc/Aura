@@ -439,6 +439,10 @@ class PreferencesManager @Inject constructor(
     suspend fun setSoundProfilesJson(json: String) = set(Keys.SOUND_PROFILES_JSON, json)
     val soundProfileLastAppliedId: Flow<String> = get(Keys.SOUND_PROFILE_LAST_APPLIED_ID, "")
     suspend fun setSoundProfileLastAppliedId(id: String) = set(Keys.SOUND_PROFILE_LAST_APPLIED_ID, id)
+
+    /** The sounds a profile replaced, kept so it can give them back; see PreProfileSound. Blank when none is replaced. */
+    val soundProfilePreviousSoundsJson: Flow<String> = get(Keys.SOUND_PROFILE_PREVIOUS_SOUNDS_JSON, "")
+    suspend fun setSoundProfilePreviousSoundsJson(json: String) = set(Keys.SOUND_PROFILE_PREVIOUS_SOUNDS_JSON, json)
     val soundShufflePoolsJson: Flow<String> = get(Keys.SOUND_SHUFFLE_POOLS_JSON, "")
     suspend fun setSoundShufflePoolsJson(json: String) = set(Keys.SOUND_SHUFFLE_POOLS_JSON, json)
 
@@ -1210,6 +1214,7 @@ class PreferencesManager @Inject constructor(
         val SOUND_PROFILES_ENABLED = booleanPreferencesKey("sound_profiles_enabled")
         val SOUND_PROFILES_JSON = stringPreferencesKey("sound_profiles_json")
         val SOUND_PROFILE_LAST_APPLIED_ID = stringPreferencesKey("sound_profile_last_applied_id")
+        val SOUND_PROFILE_PREVIOUS_SOUNDS_JSON = stringPreferencesKey("sound_profile_previous_sounds_json")
         val SOUND_SHUFFLE_POOLS_JSON = stringPreferencesKey("sound_shuffle_pools_json")
         val CONTACT_RINGTONE_LEDGER_JSON = stringPreferencesKey("contact_ringtone_ledger_json")
         val BATCH_DOWNLOAD_JSON = stringPreferencesKey("batch_download_json")
