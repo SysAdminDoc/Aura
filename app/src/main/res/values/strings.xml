@@ -758,9 +758,9 @@
     <string name="video_crop_full_clip">Full clip</string>
     <string name="video_crop_loading">Loading video…</string>
     <string name="video_crop_loading_slow">Still loading. A slow connection can take a while.</string>
-    <string name="video_crop_unsupported_title">This video can't play here</string>
-    <string name="video_crop_unsupported_body">Your phone can't decode this video's format, or the file is damaged.</string>
-    <string name="video_crop_load_failed_title">The video didn't load</string>
+    <string name="video_crop_unsupported_title">This video can\'t play here</string>
+    <string name="video_crop_unsupported_body">Your phone can\'t decode this video\'s format, or the file is damaged.</string>
+    <string name="video_crop_load_failed_title">The video didn\'t load</string>
     <string name="video_crop_load_failed_body">Check your connection and try again.</string>
     <string name="video_crop_choose_another">Choose another video</string>
 
