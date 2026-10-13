@@ -31,10 +31,12 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
+import org.robolectric.annotation.GraphicsMode
 
 /** Drives the editor's layers through semantics only, the way TalkBack or Switch Access would. */
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [35])
+@GraphicsMode(GraphicsMode.Mode.NATIVE)
 class WallpaperEditorOverlayAccessibilityUiTest {
 
     @get:Rule
