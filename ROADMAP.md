@@ -254,6 +254,13 @@ Remainders of items closed in the 2026-09-30 drain whose full acceptance did not
 
 ### P3
 
+- [ ] P3 — Tie off the rotation loose ends the saved-ahead review found
+  Why: fixing the saved-ahead cache turned up five smaller faults next to it. None of them loses a wallpaper, but each one is a wrong answer waiting for the right timing.
+  Evidence: the `"reddit"` rotation source normalizes to `"discover"`, so its own fetch branch and provider check in `AutoWallpaperWorker.kt` never run; with `discover`, a picture saved ahead from a provider that was switched off afterwards still applies once; a corrupt index in `RotationPrefetchCache.kt` deletes every file in the folder, including one still downloading; `setAutoWallpaper(false)` in `SettingsRotationDelegate.kt` cancels the shared periodic work even when the scheduler is on; `WallpaperApplier.downloadToFile` isn't cancelled with its coroutine, so a stopped run keeps writing until the transfer ends.
+  Touches: `AutoWallpaperWorker.kt`, `RotationPrefetchCache.kt`, `SettingsRotationDelegate.kt`, `WallpaperApplier.kt`, their tests.
+  Acceptance: the Reddit source either has a live branch with a test or the dead one is removed; a saved picture from a disabled provider is dropped; a corrupt index keeps an in-flight download; turning auto wallpaper off leaves the scheduler's work alone; cancelling a run closes its download at once.
+  Complexity: S
+
 - [ ] P3 — Finish resumable downloads and prove a resume on a phone
   Why: interrupted downloads now resume from a kept partial file, but only on paper and in JVM tests. A download started from a detail screen still dies with that screen, signed links never resume, and a cancelled transfer waits for the next read before it lets go of the socket.
   Evidence: `ResumableDownloadTransport.kt` resumes only when the URL matches exactly and the server sent a strong ETag (a weak one blocks it even with a usable Last-Modified); `DownloadManager.kt` restores interrupted cards when Hilt first builds the manager, not at app start; a file that arrived whole but failed to publish is reused on retry without revalidating; cancellation is checked between reads and the OkHttp `Call` isn't cancelled.
