@@ -330,11 +330,13 @@ These items require adb-connected device or Android 17 emulator testing:
     `WallpapersScreen.kt:519-561`, and `SoundsScreen.kt:495-554`.
     `UniversalSearchScreen.kt:346-385` already has the measured layout pattern
     to reuse.
-  - The accessibility gate itself is tracked in ROADMAP.md because it currently
-    passes with the primary scenarios waived. Remaining blocker after that fix:
-    capture every required route and nested dialog in AMOLED/dark/light at 200
-    percent, then run Accessibility Scanner contrast and touch-target checks on
-    a disposable device profile.
+  - The code defects above are now a ROADMAP.md P2 ("Stop clipping helper text
+    at large font sizes"). The gate's `primaryMatrix` in
+    `docs/qa/accessibility-release-gate.json` takes no waiver and stays red
+    until every cell has evidence. Remaining blocker: capture every required
+    route and nested dialog in AMOLED/dark/light at 200 percent, run
+    Accessibility Scanner contrast and touch-target checks on a disposable
+    device profile, and record each cell there.
 
 - **P2 — Widget and live-wallpaper accessibility/localization coverage** (Cycle 5)
   - Needs widget actions TalkBack pass, keyguard placement, launcher picker inspection.

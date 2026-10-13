@@ -290,17 +290,14 @@ Evidence for every item below is in RESEARCH.md (2026-09-04 pass).
 ### P2
 
 
-- [ ] P2 — Make the accessibility release gate fail when primary scenarios are waived away
-  Category: testing
-  Where: docs/qa/accessibility-release-gate.json; tools/accessibility_release_gate_check.py; app/src/test/java/com/freevibe/ui/screens/ReleasePolishContractTest.kt
-  Problem: The gate can pass with zero executed primary scenarios because six are waived and only secondary surfaces are counted. It cannot support its claim that primary flows work at 200 percent.
-  Evidence: Current JSON records zero scenarios in the claimed primary set, six waivers, five executed surfaces, and 20 excused checks. One baseline visibly truncates text, yet the checker returns ok because it validates bookkeeping.
-  Fix: Define a non-waivable matrix for onboarding, each feed, detail/apply, Downloads, Library, and Settings in both themes at 200 percent. Require semantic and contrast/touch-target evidence.
-  Acceptance: Removing any required scenario fails; the current truncated fixture fails; complete both-theme evidence is required before release.
+- [ ] P2 — Stop clipping helper text at large font sizes
+  Category: a11y
+  Where: `SettingsComponents.kt:82-88,141-148,212-219`; `SharedComponents.kt:401-417,503-509`; `LibraryScreen.kt:239,290-305`; `WallpapersScreen.kt:519-561`; `SoundsScreen.kt:495-554`; `app/src/test/screenshots/settings_provider_disabled_light_font2_0.png`
+  Problem: Section and switch summaries are capped to a line count and end in an ellipsis at 200 percent text, the diagnostics cards break titles mid-word, and the feed history dropdown can overlap the search controls. The accessibility gate's Settings/light cell records `noClippedText: fail` from this baseline.
+  Fix: Let helper text wrap when the font scale is large (drop the caps or make them scale-aware), give the diagnostics cards a one-column layout when their titles don't fit, and reuse the measured layout from `UniversalSearchScreen.kt:346-385` for the history dropdown.
+  Acceptance: The 200 percent Settings baseline is re-recorded with no ellipsis or mid-word break, a Library and a feed baseline at 200 percent join it, and the Settings/light cell in `docs/qa/accessibility-release-gate.json` moves to `noClippedText: pass`.
   Confidence: Verified
   Effort: M
-
-
 
 
 - [ ] P2 — Make wallpaper-editor overlays operable and announced

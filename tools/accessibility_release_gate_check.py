@@ -3,6 +3,7 @@ from __future__ import annotations
 import argparse
 import json
 import re
+import sys
 
 # The Compose BOM that first carried the UI-test artifacts this gate relies on.
 # A floor, not a pin: newer BOMs are the expected state.
@@ -20,9 +21,25 @@ REQUIRED_SCENARIOS = {
     "video-wallpapers",
     "sounds-editor",
     "settings-diagnostics",
-    "adaptive-access",
     "widget-entrypoints",
 }
+
+# What a release claims works at 200 percent text. Unlike the manual scenarios,
+# these cells take no waiver: for 6.46.1 every manual scenario was waived, so
+# the gate passed with no primary flow exercised at all.
+REQUIRED_PRIMARY_DESTINATIONS = {
+    "Onboarding",
+    "Wallpapers",
+    "VideoWallpapers",
+    "Sounds",
+    "WallpaperDetail",
+    "Downloads",
+    "Library",
+    "Settings",
+}
+REQUIRED_THEMES = {"dark", "light"}
+REQUIRED_PRIMARY_CHECKS = {"semantics", "contrast", "touchTargets", "noClippedText"}
+MINIMUM_FONT_SCALE = 2.0
 
 REQUIRED_EXECUTED_SURFACES = {
     "wallpapers-grid",
@@ -190,6 +207,110 @@ def validate_scenario_currency(
     return {"scenariosExecuted": executed, "scenariosWaived": waived}
 
 
+def validate_primary_matrix(
+    repo_root: Path,
+    policy: dict[str, Any],
+    version_name: str,
+    destinations: list[str],
+) -> dict[str, int]:
+    """Every primary destination, in both themes at 200 percent text, with evidence.
+
+    The checks before this one validate bookkeeping, so a policy made entirely
+    of waivers passed, and so did a baseline that visibly clips its text. A cell
+    here passes only on evidence stamped with the version being released, a
+    file that exists, and every required check recorded as "pass".
+    """
+    matrix = require_object(policy.get("primaryMatrix"), "primaryMatrix")
+    if "waiver" in matrix or "waivers" in matrix:
+        raise AccessibilityReleaseGateError(
+            "primaryMatrix cells can't be waived; record evidence for them instead"
+        )
+    font_scale = matrix.get("fontScale")
+    if not isinstance(font_scale, (int, float)) or font_scale < MINIMUM_FONT_SCALE:
+        raise AccessibilityReleaseGateError(
+            f"primaryMatrix.fontScale must be at least {MINIMUM_FONT_SCALE}, got {font_scale!r}"
+        )
+
+    declared = {
+        require_string(item, "primaryMatrix.destinations[]")
+        for item in require_list(matrix.get("destinations"), "primaryMatrix.destinations")
+    }
+    missing = sorted(REQUIRED_PRIMARY_DESTINATIONS - declared)
+    if missing:
+        raise AccessibilityReleaseGateError(
+            "primaryMatrix.destinations is missing required primary destinations: " + ", ".join(missing)
+        )
+    unknown = sorted(declared - set(destinations))
+    if unknown:
+        raise AccessibilityReleaseGateError(
+            "primaryMatrix.destinations names destinations Screen.kt doesn't declare: " + ", ".join(unknown)
+        )
+    themes = {
+        require_string(item, "primaryMatrix.themes[]")
+        for item in require_list(matrix.get("themes"), "primaryMatrix.themes")
+    }
+    missing_themes = sorted(REQUIRED_THEMES - themes)
+    if missing_themes:
+        raise AccessibilityReleaseGateError("primaryMatrix.themes is missing: " + ", ".join(missing_themes))
+    checks = {
+        require_string(item, "primaryMatrix.checks[]")
+        for item in require_list(matrix.get("checks"), "primaryMatrix.checks")
+    }
+    missing_checks = sorted(REQUIRED_PRIMARY_CHECKS - checks)
+    if missing_checks:
+        raise AccessibilityReleaseGateError("primaryMatrix.checks is missing: " + ", ".join(missing_checks))
+
+    evidence = matrix.get("evidence", [])
+    if not isinstance(evidence, list):
+        raise AccessibilityReleaseGateError("primaryMatrix.evidence must be a list")
+    problems: list[str] = []
+    recorded: set[str] = set()
+    for item in evidence:
+        row = require_object(item, "primaryMatrix.evidence[]")
+        destination = require_string(row.get("destination"), "primaryMatrix.evidence[].destination")
+        theme = require_string(row.get("theme"), "primaryMatrix.evidence[].theme")
+        cell = f"{destination}/{theme}"
+        if "waiver" in row:
+            raise AccessibilityReleaseGateError(
+                f"primaryMatrix evidence for {cell} carries a waiver; primary cells can't be waived"
+            )
+        if destination not in declared or theme not in themes:
+            raise AccessibilityReleaseGateError(f"primaryMatrix evidence names a cell outside the matrix: {cell}")
+        if cell in recorded:
+            raise AccessibilityReleaseGateError(f"primaryMatrix records {cell} twice")
+        recorded.add(cell)
+
+        stamped = require_string(row.get("version"), f"primaryMatrix.evidence[{cell}].version")
+        require_string(row.get("date"), f"primaryMatrix.evidence[{cell}].date")
+        source = require_string(row.get("source"), f"primaryMatrix.evidence[{cell}].source")
+        if stamped != version_name:
+            problems.append(f"{cell}: evidence is for {stamped}, but the build declares {version_name}")
+        if not (repo_root / source).is_file():
+            problems.append(f"{cell}: evidence file {source} doesn't exist")
+        row_scale = row.get("fontScale")
+        if not isinstance(row_scale, (int, float)) or row_scale < font_scale:
+            problems.append(f"{cell}: recorded at font scale {row_scale!r}, below {font_scale}")
+        results = require_object(row.get("results"), f"primaryMatrix.evidence[{cell}].results")
+        for check in sorted(checks):
+            outcome = results.get(check)
+            if outcome != "pass":
+                problems.append(f"{cell}: {check} is {outcome if outcome else 'not recorded'}")
+
+    absent = [
+        f"{destination}/{theme}"
+        for destination in sorted(declared)
+        for theme in sorted(themes)
+        if f"{destination}/{theme}" not in recorded
+    ]
+    if absent:
+        problems.append("no evidence for " + ", ".join(absent))
+    if problems:
+        raise AccessibilityReleaseGateError(
+            "primaryMatrix at 200 percent text isn't release-ready:\n  " + "\n  ".join(problems)
+        )
+    return {"primaryCells": len(declared) * len(themes)}
+
+
 def read_text(path: Path) -> str:
     if not path.is_file():
         raise AccessibilityReleaseGateError(f"missing file: {path}")
@@ -342,6 +463,9 @@ def validate_accessibility_release_gate(repo_root: Path, policy_path: str) -> di
     version_name = declared_version_name(repo_root)
     coverage = validate_destination_coverage(repo_root, policy, executed_ids)
     currency = validate_scenario_currency(policy, scenario_rows, version_name)
+    # Last on purpose: it fails until a release's evidence exists, and the
+    # structural checks above should still report their own errors first.
+    primary = validate_primary_matrix(repo_root, policy, version_name, screen_destinations(repo_root))
 
     return {
         "status": "ok",
@@ -352,16 +476,23 @@ def validate_accessibility_release_gate(repo_root: Path, policy_path: str) -> di
         "versionName": version_name,
         **coverage,
         **currency,
+        **primary,
     }
 
 
-def main() -> None:
+def main() -> int:
     parser = argparse.ArgumentParser(description="Validate Aura accessibility release gate.")
     parser.add_argument("--repo-root", default=".", type=Path)
     parser.add_argument("--policy", default="docs/qa/accessibility-release-gate.json")
     args = parser.parse_args()
-    print(json.dumps(validate_accessibility_release_gate(args.repo_root.resolve(), args.policy), indent=2, sort_keys=True))
+    try:
+        result = validate_accessibility_release_gate(args.repo_root.resolve(), args.policy)
+    except (AccessibilityReleaseGateError, json.JSONDecodeError) as exc:
+        print(f"error: {exc}", file=sys.stderr)
+        return 1
+    print(json.dumps(result, indent=2, sort_keys=True))
+    return 0
 
 
 if __name__ == "__main__":
-    main()
+    raise SystemExit(main())

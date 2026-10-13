@@ -111,21 +111,6 @@
       }
     },
     {
-      "id": "adaptive-access",
-      "surface": "Primary app flows at 200 percent font, high contrast, dark/light themes",
-      "checks": [
-        "no clipped text",
-        "48dp touch targets",
-        "contrast",
-        "scroll reachability"
-      ],
-      "waiver": {
-        "version": "6.46.1",
-        "owner": "SysAdminDoc",
-        "reason": "Not run on a phone for 6.46.1. The release session could not change the active display's font size or contrast, so this scenario rests on the reviewed phone, 200 percent font, pseudolocale, Arabic RTL and tablet baselines for both app flavors."
-      }
-    },
-    {
       "id": "widget-entrypoints",
       "surface": "Home widget and live-wallpaper picker metadata",
       "checks": [
@@ -140,7 +125,48 @@
       }
     }
   ],
-  "releaseRequirement": "Run the automated accessibility test and complete every manual scenario, or record an explicit release waiver with reason and owner.",
+  "primaryMatrix": {
+    "description": "Primary flows at 200 percent text in dark and light themes. Each destination and theme needs evidence for the version being released, from a device run or a reviewed baseline, with every check recorded as pass. There is no waiver; the gate stays red until the evidence exists.",
+    "fontScale": 2.0,
+    "themes": [
+      "dark",
+      "light"
+    ],
+    "checks": [
+      "semantics",
+      "contrast",
+      "touchTargets",
+      "noClippedText"
+    ],
+    "destinations": [
+      "Onboarding",
+      "Wallpapers",
+      "VideoWallpapers",
+      "Sounds",
+      "WallpaperDetail",
+      "Downloads",
+      "Library",
+      "Settings"
+    ],
+    "evidence": [
+      {
+        "destination": "Settings",
+        "theme": "light",
+        "fontScale": 2.0,
+        "version": "6.46.1",
+        "date": "2026-10-13",
+        "source": "app/src/test/screenshots/settings_provider_disabled_light_font2_0.png",
+        "results": {
+          "semantics": "not checked",
+          "contrast": "not checked",
+          "touchTargets": "not checked",
+          "noClippedText": "fail"
+        },
+        "notes": "Reviewed baseline from ProductionRouteStateScreenshotTest. The section and switch summaries end in an ellipsis, and the diagnostics card titles break mid-word (troublesho / oting)."
+      }
+    ]
+  },
+  "releaseRequirement": "Run the automated accessibility test and record passing evidence for every primaryMatrix cell, which can't be waived. Then complete every manual scenario, or record an explicit release waiver with reason and owner.",
   "sourceUrls": [
     "https://developer.android.com/develop/ui/compose/accessibility/testing",
     "https://developer.android.com/guide/topics/ui/accessibility/testing",

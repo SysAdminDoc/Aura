@@ -8,22 +8,152 @@ import unittest
 from pathlib import Path
 
 from tools.accessibility_release_gate_check import (
+    REQUIRED_PRIMARY_DESTINATIONS,
     AccessibilityReleaseGateError,
     validate_accessibility_release_gate,
 )
 
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
+POLICY = "docs/qa/accessibility-release-gate.json"
+TRUNCATED_BASELINE = "app/src/test/screenshots/settings_provider_disabled_light_font2_0.png"
 
 
 class AccessibilityReleaseGateCheckTest(unittest.TestCase):
-    def test_live_accessibility_release_gate_passes(self) -> None:
-        result = validate_accessibility_release_gate(REPO_ROOT, "docs/qa/accessibility-release-gate.json")
+    def test_live_gate_blocks_release_until_primary_evidence_exists(self) -> None:
+        # The live policy is honest about the state of 6.46.1: one reviewed
+        # 200 percent baseline, and it clips. The gate has to say so.
+        with self.assertRaises(AccessibilityReleaseGateError) as ctx:
+            validate_accessibility_release_gate(REPO_ROOT, POLICY)
+
+        message = str(ctx.exception)
+        self.assertIn("Settings/light: noClippedText is fail", message)
+        self.assertIn("no evidence for", message)
+        self.assertIn("Onboarding/dark", message)
+
+    def test_passes_with_complete_primary_evidence(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            repo = copy_required_tree(Path(tmpdir))
+            complete_primary_matrix(repo)
+
+            result = validate_accessibility_release_gate(repo, POLICY)
 
         self.assertEqual("ok", result["status"])
         self.assertEqual("accessibilityReleaseGate", result["policyKind"])
-        self.assertGreaterEqual(result["scenarioCount"], 6)
+        self.assertGreaterEqual(result["scenarioCount"], 5)
         self.assertGreaterEqual(result["executedSurfaceCount"], 6)
+        self.assertEqual(len(REQUIRED_PRIMARY_DESTINATIONS) * 2, result["primaryCells"])
+
+    def test_the_reviewed_truncated_baseline_fails(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            repo = copy_required_tree(Path(tmpdir))
+            copy_file(TRUNCATED_BASELINE, repo)
+            complete_primary_matrix(repo, keep_live_rows=True)
+
+            with self.assertRaises(AccessibilityReleaseGateError) as ctx:
+                validate_accessibility_release_gate(repo, POLICY)
+
+        message = str(ctx.exception)
+        self.assertIn("Settings/light: noClippedText is fail", message)
+        self.assertNotIn("no evidence for", message)
+        self.assertNotIn("doesn't exist", message)
+
+    def test_removing_any_required_primary_destination_fails(self) -> None:
+        for destination in sorted(REQUIRED_PRIMARY_DESTINATIONS):
+            with self.subTest(destination=destination), tempfile.TemporaryDirectory() as tmpdir:
+                repo = copy_required_tree(Path(tmpdir))
+                complete_primary_matrix(repo)
+                policy = self._policy(repo)
+                matrix = policy["primaryMatrix"]
+                matrix["destinations"].remove(destination)
+                matrix["evidence"] = [row for row in matrix["evidence"] if row["destination"] != destination]
+                self._write_policy(repo, policy)
+
+                with self.assertRaises(AccessibilityReleaseGateError) as ctx:
+                    validate_accessibility_release_gate(repo, POLICY)
+
+                self.assertIn(destination, str(ctx.exception))
+
+    def test_dropping_a_theme_fails(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            repo = copy_required_tree(Path(tmpdir))
+            complete_primary_matrix(repo)
+            policy = self._policy(repo)
+            matrix = policy["primaryMatrix"]
+            matrix["themes"] = ["dark"]
+            matrix["evidence"] = [row for row in matrix["evidence"] if row["theme"] == "dark"]
+            self._write_policy(repo, policy)
+
+            with self.assertRaises(AccessibilityReleaseGateError) as ctx:
+                validate_accessibility_release_gate(repo, POLICY)
+
+            self.assertIn("themes is missing: light", str(ctx.exception))
+
+    def test_a_primary_cell_cannot_be_waived(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            repo = copy_required_tree(Path(tmpdir))
+            complete_primary_matrix(repo)
+            policy = self._policy(repo)
+            policy["primaryMatrix"]["evidence"][0]["waiver"] = {
+                "owner": "SysAdminDoc",
+                "reason": "could not reach a phone this time",
+            }
+            self._write_policy(repo, policy)
+
+            with self.assertRaises(AccessibilityReleaseGateError) as ctx:
+                validate_accessibility_release_gate(repo, POLICY)
+
+            self.assertIn("can't be waived", str(ctx.exception))
+
+    def test_a_missing_cell_fails(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            repo = copy_required_tree(Path(tmpdir))
+            complete_primary_matrix(repo)
+            policy = self._policy(repo)
+            policy["primaryMatrix"]["evidence"] = [
+                row
+                for row in policy["primaryMatrix"]["evidence"]
+                if (row["destination"], row["theme"]) != ("Downloads", "light")
+            ]
+            self._write_policy(repo, policy)
+
+            with self.assertRaises(AccessibilityReleaseGateError) as ctx:
+                validate_accessibility_release_gate(repo, POLICY)
+
+            self.assertIn("no evidence for Downloads/light", str(ctx.exception))
+
+    def test_stale_low_scale_or_unbacked_evidence_fails(self) -> None:
+        cases = {
+            "version": ("0.0.1", "evidence is for 0.0.1"),
+            "fontScale": (1.3, "below 2.0"),
+            "source": ("docs/qa/evidence/never-written.png", "doesn't exist"),
+        }
+        for field, (value, expected) in cases.items():
+            with self.subTest(field=field), tempfile.TemporaryDirectory() as tmpdir:
+                repo = copy_required_tree(Path(tmpdir))
+                complete_primary_matrix(repo)
+                policy = self._policy(repo)
+                policy["primaryMatrix"]["evidence"][0][field] = value
+                self._write_policy(repo, policy)
+
+                with self.assertRaises(AccessibilityReleaseGateError) as ctx:
+                    validate_accessibility_release_gate(repo, POLICY)
+
+                self.assertIn(expected, str(ctx.exception))
+
+    def test_every_required_check_must_pass(self) -> None:
+        for check in ("semantics", "contrast", "touchTargets", "noClippedText"):
+            with self.subTest(check=check), tempfile.TemporaryDirectory() as tmpdir:
+                repo = copy_required_tree(Path(tmpdir))
+                complete_primary_matrix(repo)
+                policy = self._policy(repo)
+                del policy["primaryMatrix"]["evidence"][0]["results"][check]
+                self._write_policy(repo, policy)
+
+                with self.assertRaises(AccessibilityReleaseGateError) as ctx:
+                    validate_accessibility_release_gate(repo, POLICY)
+
+                self.assertIn(f"{check} is not recorded", str(ctx.exception))
 
     def test_rejects_missing_automated_api(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -80,6 +210,7 @@ class AccessibilityReleaseGateCheckTest(unittest.TestCase):
                 encoding="utf-8",
             )
 
+            complete_primary_matrix(repo)
             result = validate_accessibility_release_gate(
                 repo, "docs/qa/accessibility-release-gate.json"
             )
@@ -125,9 +256,10 @@ class AccessibilityReleaseGateCheckTest(unittest.TestCase):
         )
 
     def test_every_screen_destination_is_covered_or_excused(self) -> None:
-        result = validate_accessibility_release_gate(
-            REPO_ROOT, "docs/qa/accessibility-release-gate.json"
-        )
+        with tempfile.TemporaryDirectory() as tmpdir:
+            repo = copy_required_tree(Path(tmpdir))
+            complete_primary_matrix(repo)
+            result = validate_accessibility_release_gate(repo, POLICY)
 
         # Derived, not restated: the point is that the count tracks Screen.kt.
         screen_source = (
@@ -265,13 +397,14 @@ class AccessibilityReleaseGateCheckTest(unittest.TestCase):
                 "date": "2026-09-05",
             }
             self._write_policy(repo, policy)
+            complete_primary_matrix(repo)
 
             result = validate_accessibility_release_gate(
                 repo, "docs/qa/accessibility-release-gate.json"
             )
 
             self.assertEqual(1, result["scenariosExecuted"])
-            self.assertEqual(5, result["scenariosWaived"])
+            self.assertEqual(len(policy["manualScenarios"]) - 1, result["scenariosWaived"])
 
     def test_rejects_direct_primitive_only_test(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -284,6 +417,51 @@ class AccessibilityReleaseGateCheckTest(unittest.TestCase):
 
             with self.assertRaises(AccessibilityReleaseGateError):
                 validate_accessibility_release_gate(repo, "docs/qa/accessibility-release-gate.json")
+
+
+def copy_file(relative_path: str, destination: Path) -> None:
+    target = destination / relative_path
+    target.parent.mkdir(parents=True, exist_ok=True)
+    shutil.copyfile(REPO_ROOT / relative_path, target)
+
+
+def complete_primary_matrix(repo: Path, keep_live_rows: bool = False) -> None:
+    """Fill every primary cell with passing evidence for the declared version.
+
+    With keep_live_rows, cells the live policy already records keep their real
+    results, so a test can show that real evidence fails on its own merits.
+    """
+    policy_path = repo / POLICY
+    policy = json.loads(policy_path.read_text(encoding="utf-8"))
+    version = re.search(
+        r'versionName\s*=\s*"([^"]+)"',
+        (repo / "app/build.gradle.kts").read_text(encoding="utf-8"),
+    ).group(1)
+    evidence_file = repo / "docs/qa/evidence/primary-matrix-fixture.txt"
+    evidence_file.parent.mkdir(parents=True, exist_ok=True)
+    evidence_file.write_text("fixture evidence\n", encoding="utf-8")
+
+    matrix = policy["primaryMatrix"]
+    live = {(row["destination"], row["theme"]): row for row in matrix["evidence"]} if keep_live_rows else {}
+    rows = []
+    for destination in matrix["destinations"]:
+        for theme in matrix["themes"]:
+            if (destination, theme) in live:
+                rows.append(live[(destination, theme)])
+                continue
+            rows.append(
+                {
+                    "destination": destination,
+                    "theme": theme,
+                    "fontScale": matrix["fontScale"],
+                    "version": version,
+                    "date": "2026-10-13",
+                    "source": "docs/qa/evidence/primary-matrix-fixture.txt",
+                    "results": {check: "pass" for check in matrix["checks"]},
+                }
+            )
+    matrix["evidence"] = rows
+    policy_path.write_text(json.dumps(policy, indent=2) + "\n", encoding="utf-8")
 
 
 def copy_required_tree(destination: Path) -> Path:
