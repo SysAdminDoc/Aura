@@ -707,6 +707,13 @@
     <string name="video_crop_loop_title">循环</string>
     <string name="video_crop_loop_selected">已选择 %1$s</string>
     <string name="video_crop_full_clip">完整片段</string>
+    <string name="video_crop_loading">正在加载视频…</string>
+    <string name="video_crop_loading_slow">仍在加载。网络较慢时可能需要一些时间。</string>
+    <string name="video_crop_unsupported_title">此视频无法在这里播放</string>
+    <string name="video_crop_unsupported_body">你的手机无法解码此视频的格式，或者文件已损坏。</string>
+    <string name="video_crop_load_failed_title">视频未能加载</string>
+    <string name="video_crop_load_failed_body">请检查网络连接后重试。</string>
+    <string name="video_crop_choose_another">选择其他视频</string>
 
     <!-- Downloads -->
     <string name="downloads_title">下载</string>

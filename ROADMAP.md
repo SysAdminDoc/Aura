@@ -300,16 +300,6 @@ Evidence for every item below is in RESEARCH.md (2026-09-04 pass).
   Effort: M
 
 
-- [ ] P2 — Add loading, first-frame, and decode-failure states to video crop
-  Category: ux
-  Where: app/src/main/java/com/freevibe/ui/screens/videowallpapers/VideoCropScreen.kt:139-147,185-236,403-490
-  Problem: The crop surface can be blank while playback prepares and has no first-frame or decode-error state. Users cannot distinguish loading from broken media.
-  Evidence: The screen prepares playback and renders the surface, but no Player.Listener first-frame/error result drives user-facing state. The issue did not reproduce with the two valid Reddit fixtures.
-  Fix: Track preparing, first frame, ready, and decode failure; render bounded progress and an error with Back/Choose another video.
-  Acceptance: A delayed fake player shows progress until first frame; an unsupported codec fixture shows an error rather than blank canvas; valid crop stays unchanged.
-  Confidence: Needs-repro
-  Effort: M
-
 - [ ] P2 — Give an all-hidden video feed a durable recovery path
   Category: ux
   Where: app/src/main/java/com/freevibe/ui/screens/videowallpapers/VideoWallpapersScreen.kt:243-258,307-317,585-599; app/src/main/java/com/freevibe/ui/screens/videowallpapers/VideoWallpapersViewModel.kt:541-555; app/src/main/java/com/freevibe/data/repository/VoteRepository.kt:325,380

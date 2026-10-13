@@ -146,6 +146,15 @@ fun VideoCropScreen(
         }
     }
     DisposableEffect(Unit) { onDispose { exoPlayer.release() } }
+    // Declared after the release effect, so it's disposed first and the listener goes before the player.
+    val previewTracker = remember { VideoCropPreviewTracker() }
+    DisposableEffect(exoPlayer) {
+        exoPlayer.addListener(previewTracker)
+        exoPlayer.playerError?.let(previewTracker::onPlayerError)
+        onDispose { exoPlayer.removeListener(previewTracker) }
+    }
+    val preview = previewTracker.state
+    val previewReady = preview == VideoCropPreview.Ready
 
     var viewSize by remember { mutableStateOf(IntSize.Zero) }
     var videoWidth by remember { mutableIntStateOf(0) }
@@ -334,7 +343,7 @@ fun VideoCropScreen(
                     // segmentation, pans the video so the detected subject lands at the
                     // viewport centre. Doesn't change zoom; user keeps manual scale control.
                     TextButton(
-                        enabled = !smartCropInFlight && dimensionsReady,
+                        enabled = !smartCropInFlight && dimensionsReady && previewReady,
                         onClick = {
                             scope.launch {
                                 smartCropInFlight = true
@@ -467,6 +476,15 @@ fun VideoCropScreen(
 
                 // Viewport border
                 Box(Modifier.fillMaxSize().border(2.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.5f)))
+
+                VideoCropPreviewOverlay(
+                    preview = preview,
+                    onRetry = {
+                        previewTracker.retry()
+                        exoPlayer.prepare()
+                    },
+                    onChooseAnother = { requestExit() },
+                )
                 }
             }
 
@@ -479,7 +497,7 @@ fun VideoCropScreen(
             }
 
             LoopTrimControls(
-                enabled = durationMs > MIN_VIDEO_LOOP_MS,
+                enabled = durationMs > MIN_VIDEO_LOOP_MS && preview !is VideoCropPreview.Failed,
                 durationMs = durationMs,
                 loopRange = loopRange,
                 timelineFrames = timelineFrames,
@@ -511,7 +529,7 @@ fun VideoCropScreen(
                     }
                 },
                 modifier = Modifier.fillMaxWidth().padding(16.dp).height(52.dp),
-                enabled = !isCropping && dimensionsReady,
+                enabled = !isCropping && dimensionsReady && previewReady,
                 shape = RoundedCornerShape(8.dp),
             ) {
                 if (isCropping) {
