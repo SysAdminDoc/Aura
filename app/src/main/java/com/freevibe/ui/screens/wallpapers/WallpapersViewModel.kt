@@ -438,16 +438,22 @@ class WallpapersViewModel @Inject constructor(
     private val _colorPalette = MutableStateFlow<ColorExtractor.WallpaperPalette?>(null)
     val colorPalette = _colorPalette.asStateFlow()
     private var colorExtractionJob: Job? = null
+    private var paletteUrl: String? = null
 
+    /** Palette for the wallpaper on screen, read from Coil's cache of the image already being shown. */
     fun extractColors(wallpaperUrl: String) {
-        // Cancel any stale extraction so back-to-back swipes don't leak results
-        // and don't race with a later call's reset-to-null.
+        if (wallpaperUrl == paletteUrl) return
+        paletteUrl = wallpaperUrl
+        // Cancel a stale extraction so a swipe can't land the previous wallpaper's colors.
         colorExtractionJob?.cancel()
         _colorPalette.value = null
-        colorExtractionJob = viewModelScope.launch {
-            val palette = colorExtractor.extractFromUrl(wallpaperUrl)
-            _colorPalette.value = palette
-        }
+        colorExtractionJob = viewModelScope.launch { _colorPalette.value = colorExtractor.extractFromUrl(wallpaperUrl, allowNetwork = false) }
+    }
+
+    /** The shown image reached the cache, so a palette that asked before it landed can read it now. */
+    fun onWallpaperImageLoaded(url: String) {
+        if (url != paletteUrl || _colorPalette.value != null || colorExtractionJob?.isActive == true) return
+        colorExtractionJob = viewModelScope.launch { _colorPalette.value = colorExtractor.extractFromUrl(url, allowNetwork = false) }
     }
 
     fun setStaticFitCanvasPreferences(presentation: String, style: FitCanvasStyle) = viewModelScope.launch { prefs.setStaticFitCanvasPreferences(presentation, style) }

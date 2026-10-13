@@ -300,17 +300,6 @@ Evidence for every item below is in RESEARCH.md (2026-09-04 pass).
   Effort: M
 
 
-- [ ] P2 — Reuse one bounded image request for wallpaper detail and palette extraction
-  Category: perf
-  Where: app/src/main/java/com/freevibe/ui/screens/wallpapers/WallpaperDetailScreen.kt:109-110,221-234,312-333,829-852; app/src/main/java/com/freevibe/ui/screens/wallpapers/WallpapersViewModel.kt:455-467; app/src/main/java/com/freevibe/service/ColorExtractor.kt:46-62,106-109; app/src/main/java/com/freevibe/di/AppModule.kt:65-90
-  Problem: Settling a page starts uncancelled original-size lookahead requests while the current image is independently fetched/buffered again for palette extraction. Large Reddit originals can overlap transfers and decodes.
-  Evidence: Pager already composes one adjacent page; the effect also enqueues current, next, and next-plus-one without target size and ignores Disposable handles. ColorExtractor uses a separate no-cache OkHttp path with a 32 MiB cap. Tests check only that enqueue text exists.
-  Fix: collectLatest settled page, skip current/already-composed items, use cancellable disk-oriented bounded prefetch, and derive palette from Coil's cached small result or displayed drawable.
-  Acceptance: At most one network request per URL; rapid 20-page sweep leaves no stale jobs and only declared lookahead; decode stays display-bounded; next-page latency does not regress.
-  Confidence: Verified
-  Effort: M
-
-
 - [ ] P2 — Add save, download, share, and in-app report actions to video items
   Category: ux
   Where: app/src/main/java/com/freevibe/ui/screens/videowallpapers/VideoWallpapersScreen.kt:605-634,883-949,1168-1402

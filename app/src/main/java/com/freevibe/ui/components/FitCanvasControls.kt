@@ -235,6 +235,8 @@ fun FitCanvasMedia(
     dominantColor: Int?,
     contentDescription: String?,
     modifier: Modifier = Modifier,
+    /** Called when the main image has loaded, so a caller can read it back from Coil's cache. */
+    onLoaded: () -> Unit = {},
 ) {
     val context = LocalContext.current
     var extractedDominant by remember(model) { mutableStateOf<Int?>(null) }
@@ -278,6 +280,7 @@ fun FitCanvasMedia(
                 contentDescription = contentDescription,
                 contentScale = ContentScale.Crop,
                 modifier = Modifier.fillMaxSize(),
+                onLoaded = onLoaded,
             )
             return@Box
         }
@@ -308,6 +311,7 @@ fun FitCanvasMedia(
             contentDescription = contentDescription,
             contentScale = ContentScale.Fit,
             modifier = Modifier.fillMaxSize(),
+            onLoaded = onLoaded,
         )
     }
 }
@@ -318,6 +322,7 @@ private fun FitCanvasImage(
     contentDescription: String?,
     contentScale: ContentScale,
     modifier: Modifier,
+    onLoaded: () -> Unit = {},
 ) {
     if (model is android.graphics.Bitmap) {
         Image(
@@ -332,6 +337,7 @@ private fun FitCanvasImage(
             contentDescription = contentDescription,
             contentScale = contentScale,
             modifier = modifier,
+            onSuccess = { onLoaded() },
         )
     }
 }

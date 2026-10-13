@@ -4,6 +4,7 @@ All notable changes to Aura will be documented in this file.
 
 ## Unreleased
 
+- **Wallpaper detail downloads each image once**: swiping through wallpapers used to start extra full-size downloads of the pages around you on top of the ones on screen, and the theme colors fetched the same image a second time. Now each wallpaper is fetched once at screen size, the colors come from that copy, and they follow you as you swipe instead of staying on the first wallpaper you opened.
 - **The built-in photo picker fits short screens**: it used to be a fixed size that could push its button off a small phone, a landscape screen or a split-screen window, especially with large text. It now shrinks to the space it has, the button always stays on screen, and when there's no room at all the sheet offers the full picker instead.
 - **Hidden things can come back**: a new Hidden items page in Library lists the videos, wallpapers and sounds you've hidden, with a name and thumbnail for anything hidden from now on, and restores one or all of them (with Undo). When every video in the feed is hidden, the empty state says why, restores that batch in one tap, and links to the list. Hides still last through a refresh or a restart.
 - **Video crop says when a video is loading or won't play**: the crop screen shows progress until the first frame instead of a black box, and a video your phone can't decode, or one that stops loading, gets a plain explanation with a way to pick another (and Retry when it's a connection problem). Cropping waits until there's a frame to crop.

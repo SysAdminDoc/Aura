@@ -26,6 +26,7 @@ import com.freevibe.data.repository.SearchHistoryRepository
 import com.freevibe.data.repository.VoteRepository
 import com.freevibe.data.repository.WallpaperRepository
 import com.freevibe.data.repository.WallpaperUploadRepository
+import com.freevibe.service.ColorExtractor
 import com.freevibe.service.DownloadManager
 import com.freevibe.service.DualWallpaperService
 import com.freevibe.service.OfflineFavoritesManager
@@ -359,6 +360,33 @@ class WallpapersViewModelTest {
         advanceUntilIdle()
         assertEquals(WallpaperTab.DISCOVER, viewModel.state.value.selectedTab)
         coVerify(exactly = 0) { wallpaperRepo.getPixabay(any(), any()) }
+    }
+
+    @Test
+    fun `the palette reads the shown image from cache once and retries when it lands`() = runTest(dispatcher) {
+        val wallpaperRepo = mockk<WallpaperRepository>()
+        val redditRepo = mockk<RedditRepository>()
+        stubCommonDependencies(wallpaperRepo = wallpaperRepo, redditRepo = redditRepo)
+        val url = "https://w.wallhaven.cc/full/ab/wallhaven-ab.jpg"
+        val palette = ColorExtractor.WallpaperPalette(dominantColor = 0x112233)
+        val extractor = mockk<ColorExtractor>()
+        // The first read comes before the image is cached; the second after it lands.
+        coEvery { extractor.extractFromUrl(url, false) } returnsMany listOf(null, palette)
+        val viewModel = createViewModel(wallpaperRepo = wallpaperRepo, redditRepo = redditRepo, colorExtractorOverride = extractor)
+
+        viewModel.extractColors(url)
+        advanceUntilIdle()
+        viewModel.extractColors(url)
+        viewModel.onWallpaperImageLoaded("https://w.wallhaven.cc/full/cd/other.jpg")
+        advanceUntilIdle()
+        assertNull(viewModel.colorPalette.value)
+
+        viewModel.onWallpaperImageLoaded(url)
+        advanceUntilIdle()
+
+        assertEquals(palette, viewModel.colorPalette.value)
+        coVerify(exactly = 2) { extractor.extractFromUrl(url, false) }
+        coVerify(exactly = 0) { extractor.extractFromUrl(any(), true) }
     }
 
     @Test
@@ -898,6 +926,7 @@ class WallpapersViewModelTest {
         communityBlockRepoOverride: CommunityBlockRepository? = null,
         wallpaperUploadRepoOverride: WallpaperUploadRepository? = null,
         aiWallpaperRepoOverride: AiWallpaperRepository? = null,
+        colorExtractorOverride: ColorExtractor? = null,
         wallhavenProviderEnabled: Boolean = true,
         bingProviderEnabled: Boolean = true,
         redditProviderEnabled: Boolean = true,
@@ -986,7 +1015,7 @@ class WallpapersViewModelTest {
             aiWallpaperRepository = aiWallpaperRepoOverride ?: mockk<AiWallpaperRepository>(relaxed = true),
             searchHistoryRepo = searchHistoryRepo,
             prefs = prefs,
-            colorExtractor = mockk(relaxed = true),
+            colorExtractor = colorExtractorOverride ?: mockk(relaxed = true),
             cacheManager = cacheManager,
             applyFeedbackBus = mockk(relaxed = true),
             applyCoordinator = mockk(relaxed = true),

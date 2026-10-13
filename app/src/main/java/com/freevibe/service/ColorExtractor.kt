@@ -1,14 +1,38 @@
 package com.freevibe.service
 
+import android.content.Context
 import android.graphics.Bitmap
 import androidx.core.graphics.ColorUtils
 import androidx.palette.graphics.Palette
+import coil3.imageLoader
+import coil3.request.CachePolicy
+import coil3.request.ImageRequest
+import coil3.request.SuccessResult
+import coil3.request.allowHardware
+import coil3.toBitmap
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import okhttp3.OkHttpClient
-import okhttp3.Request
 import javax.inject.Inject
 import javax.inject.Singleton
+
+/** Palette only needs a small sample, and Coil decodes straight to it. */
+internal const val PALETTE_DECODE_EDGE = 200
+
+/**
+ * The palette's image request. It goes through the app's shared Coil loader so it reads the same
+ * disk cache as the displayed image, and with [allowNetwork] off it never downloads anything.
+ */
+internal fun paletteRequest(context: Context, url: String, allowNetwork: Boolean): ImageRequest =
+    ImageRequest.Builder(context)
+        .data(url)
+        .size(PALETTE_DECODE_EDGE)
+        // Palette reads pixels, which a hardware bitmap can't hand back.
+        .allowHardware(false)
+        // A 200 px copy shouldn't push display-sized bitmaps out of the memory cache.
+        .memoryCachePolicy(CachePolicy.DISABLED)
+        .networkCachePolicy(if (allowNetwork) CachePolicy.ENABLED else CachePolicy.DISABLED)
+        .build()
 
 /**
  * Extracts Material You-style color palette from wallpaper images.
@@ -17,7 +41,7 @@ import javax.inject.Singleton
  */
 @Singleton
 class ColorExtractor @Inject constructor(
-    private val okHttpClient: OkHttpClient,
+    @ApplicationContext private val context: Context,
 ) {
     data class WallpaperPalette(
         val dominantColor: Int = 0,
@@ -42,30 +66,21 @@ class ColorExtractor @Inject constructor(
         val bestAccentColor: Int = 0,
     )
 
-    /** Extract color palette from a wallpaper URL */
-    suspend fun extractFromUrl(url: String): WallpaperPalette? = withContext(Dispatchers.IO) {
-        try {
-            val request = Request.Builder().url(url).build()
-            val response = okHttpClient.newCall(request).execute()
-            response.use { resp ->
-                if (!resp.isSuccessful) return@use null
-                val body = resp.body ?: return@withContext null
-                // Palette only needs a ~200x200 downsample; cap the buffered payload at 32 MB
-                // so a hostile redirect to a giant image can't explode heap just for tinting.
-                val advertised = body.contentLength()
-                if (advertisedLengthExceeds(advertised, MAX_COLOR_EXTRACT_BYTES)) {
-                    return@withContext null
-                }
-                val bytes = readStreamCapped(body.byteStream(), MAX_COLOR_EXTRACT_BYTES)
-                val bitmap = decodeImageBytes(bytes, maxLongEdge = PALETTE_DECODE_LONG_EDGE)
-                    ?: return@withContext null
-                extractFromBitmap(bitmap).also { bitmap.recycle() }
-            }
+    /**
+     * Palette for the image at [url], decoded at [PALETTE_DECODE_EDGE] px. With [allowNetwork] off it
+     * only reads what Coil already cached, so a screen showing the same image never downloads it twice;
+     * null means it isn't cached yet.
+     */
+    suspend fun extractFromUrl(url: String, allowNetwork: Boolean = true): WallpaperPalette? {
+        val result = try {
+            context.imageLoader.execute(paletteRequest(context, url, allowNetwork))
         } catch (e: Exception) {
             if (e is kotlinx.coroutines.CancellationException) throw e
-            android.util.Log.w("ColorExtractor", "Palette fetch failed: ${e.javaClass.simpleName}")
-            null
+            android.util.Log.w("ColorExtractor", "Palette image failed: ${e.javaClass.simpleName}")
+            return null
         }
+        val image = (result as? SuccessResult)?.image ?: return null
+        return withContext(Dispatchers.Default) { extractFromBitmap(image.toBitmap()) }
     }
 
     /** Extract color palette from a bitmap */
@@ -104,9 +119,4 @@ class ColorExtractor @Inject constructor(
         )
     }
 
-    private companion object {
-        /** Palette extraction only downsamples to 200x200; 32 MB is plenty for 4K originals. */
-        private const val MAX_COLOR_EXTRACT_BYTES = 32L * 1024 * 1024
-        private const val PALETTE_DECODE_LONG_EDGE = 200
-    }
 }

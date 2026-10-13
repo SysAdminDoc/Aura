@@ -145,6 +145,7 @@ fun WallpaperPreviewScreen(
                 // the mock system UI below.
                 dominantColor = null,
                 modifier = Modifier.fillMaxSize(),
+                onLoaded = { viewModel.onWallpaperImageLoaded(wallpaper.fullUrl) },
             )
             // Light vignette so the mock text stays readable.
             Box(

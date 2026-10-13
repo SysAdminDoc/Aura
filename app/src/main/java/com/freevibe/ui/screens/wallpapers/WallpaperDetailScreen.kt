@@ -67,8 +67,6 @@ import com.freevibe.util.tryStartActivity
 import coil3.compose.AsyncImagePainter
 import coil3.compose.SubcomposeAsyncImage
 import coil3.compose.SubcomposeAsyncImageContent
-import coil3.imageLoader
-import coil3.request.ImageRequest
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.launch
 import com.freevibe.data.repository.hiddenItemLabel
@@ -116,10 +114,6 @@ fun WallpaperDetailScreen(
             fullUrl = targetFullUrl,
         ) ?: fallbackWallpaper
         restoreResolved = true
-    }
-
-    LaunchedEffect(resolvedWallpaper?.fullUrl) {
-        resolvedWallpaper?.fullUrl?.let { viewModel.extractColors(it) }
     }
 
     val initialWp = resolvedWallpaper
@@ -232,20 +226,18 @@ fun WallpaperDetailScreen(
 
     val currentWp = wallpapers.getOrNull(pagerState.currentPage) ?: wallpapers.firstOrNull() ?: return
 
+    // The pager composes one page each side (beyondViewportPageCount), and each page's image request is
+    // display-sized and cancelled when the page leaves composition. That's the whole lookahead: the
+    // original-size prefetches this used to enqueue fetched the same URLs again and outlived fast swipes.
     LaunchedEffect(pagerState.settledPage) {
         wallpapers.getOrNull(pagerState.settledPage)?.let {
             viewModel.selectWallpaperOnly(it)
         }
-        (pagerState.settledPage..minOf(pagerState.settledPage + 2, wallpapers.lastIndex))
-            .mapNotNull(wallpapers::getOrNull)
-            .forEach { wallpaper ->
-                context.imageLoader.enqueue(
-                    ImageRequest.Builder(context)
-                        .data(wallpaper.fullUrl.ifBlank { wallpaper.thumbnailUrl })
-                        .build(),
-                )
-            }
         if (pagerState.settledPage >= wallpapers.size - 3) viewModel.loadMore()
+    }
+    val settledUrl = wallpapers.getOrNull(pagerState.settledPage)?.fullUrl
+    LaunchedEffect(settledUrl) {
+        settledUrl?.let(viewModel::extractColors)
     }
 
     // Use pager's current wallpaper for UI (not the reactive wp which causes reorder)
@@ -342,6 +334,7 @@ fun WallpaperDetailScreen(
                     val pageUrl = wallpapers.getOrNull(page)?.fullUrl ?: wp.fullUrl
                     WallpaperImage(
                         url = pageUrl,
+                        onLoaded = { viewModel.onWallpaperImageLoaded(pageUrl) },
                         modifier = Modifier
                             .fillMaxSize()
                             .graphicsLayer {
@@ -354,7 +347,11 @@ fun WallpaperDetailScreen(
                     )
                 }
             } else {
-                WallpaperImage(url = wp.fullUrl, modifier = Modifier.fillMaxSize())
+                WallpaperImage(
+                    url = wp.fullUrl,
+                    onLoaded = { viewModel.onWallpaperImageLoaded(wp.fullUrl) },
+                    modifier = Modifier.fillMaxSize(),
+                )
             }
 
             Box(
@@ -879,12 +876,13 @@ fun WallpaperDetailScreen(
 }
 
 @Composable
-private fun WallpaperImage(url: String, modifier: Modifier = Modifier) {
+private fun WallpaperImage(url: String, onLoaded: () -> Unit, modifier: Modifier = Modifier) {
     SubcomposeAsyncImage(
         model = url,
         contentDescription = stringResource(R.string.detail_image_cd),
         contentScale = ContentScale.Crop,
         modifier = modifier,
+        onState = { state -> if (state is AsyncImagePainter.State.Success) onLoaded() },
     ) {
         when (painter.state.collectAsState().value) {
             is AsyncImagePainter.State.Loading -> {
