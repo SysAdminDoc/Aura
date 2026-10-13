@@ -6,18 +6,11 @@ Actionable work only. Historical and completed roadmap material is archived in C
 
 ### P2
 
-- [ ] P2 — Add the fastlane store images IzzyOnDroid requires
-  Why: `fastlane/metadata/android/en-US/` has no `images/` directory, so there is no icon, phone screenshot, or feature graphic for a store listing to consume. (Changelogs are current — an earlier claim that they stopped at versionCode 8 was a lexical-sort artifact; 22 exist, through 141.)
-  Evidence: `ls fastlane/metadata/android/en-US/` returns only `changelogs/`, `full_description.txt`, `short_description.txt`, `title.txt`; IzzyOnDroid App Inclusion Policy requires in-repo Fastlane metadata with icon and screenshots. Screenshot capture itself stays blocked in `Roadmap_Blocked.md`.
-  Touches: `fastlane/metadata/android/en-US/images/**`, `tools/store_metadata_preflight.py`.
-  Acceptance: `images/icon.png` and at least four `images/phoneScreenshots/` entries exist at the required dimensions, and the preflight fails when the icon or screenshot set is absent.
-  Complexity: S
-
 - [ ] P2 — Remove the bundled FFmpeg module without losing advertised media workflows
-  Why: the arm64 FFmpeg archive contributes 35,624,931 bytes to a roughly 63.8 MB APK, and the dependency is a separate module whose removal can bring arm64 below IzzyOnDroid's 30 MB review threshold.
+  Why: every FFmpeg run maps three 4 KB-aligned libwebp objects, so on a phone with 16 KB memory pages FFmpeg is expected not to start at all (see the libwebp entry in `Roadmap_Blocked.md`), and nobody ships an aligned build. The arm64 FFmpeg archive is also 35,624,931 bytes of a roughly 63.8 MB APK that every sideloader downloads.
   Evidence: `docs/distribution/native-alignment.json`; `app/build.gradle.kts`; `AudioTrimmer.kt`; `VideoCropScreen.kt`; `VideoWallpapersViewModel.kt`; Android Media3 Transformer documentation; youtubedl-android issue #248; the maintained Ringdroid F-Droid package.
   Touches: `app/build.gradle.kts`, `AudioTrimmer.kt`, `VideoCropScreen.kt`, `VideoWallpapersViewModel.kt`, `YouTubeRepository.kt`, Reddit/video acquisition paths, codec and release-size fixtures.
-  Acceptance: video crop uses Media3 Transformer; YouTube and Reddit acquisition avoid yt-dlp merge/remux or perform it through Media3; every advertised sound export and verified lossless-cut case still passes through Media3 or a smaller audited codec path; `youtubedl-android:ffmpeg` is removed, no release APK contains `libffmpeg.zip.so`, full and FOSS arm64 APKs are below 30 MiB, and the native gate records whether legacy JNI packaging is still required.
+  Acceptance: video crop uses Media3 Transformer; YouTube and Reddit acquisition avoid yt-dlp merge/remux or perform it through Media3; every advertised sound export and verified lossless-cut case still passes through Media3 or a smaller audited codec path; `youtubedl-android:ffmpeg` is removed, no release APK contains `libffmpeg.zip.so`, the libwebp exceptions leave `docs/distribution/native-alignment.json`, and the native gate records whether legacy JNI packaging is still required.
   Complexity: L
 
   Note 2026-09-04: this is now a security item as well as a size item. `docs/legal/native-compliance.lock.json:364,428,492` records the bundled build as FFmpeg 7.1.1 on every ABI, and CVE-2026-8461 ("PixelSmash", heap out-of-bounds write in the MagicYUV decoder, reachable from a crafted AVI/MKV/MOV) is fixed only in 8.1.2. The version arrives inside `ffmpeg-0.18.1.aar` and cannot be upgraded independently, so removal is the only complete fix. See the separate P1 item that bounds FFmpeg's input in the meantime.
@@ -169,10 +162,10 @@ Actionable work only. Historical and completed roadmap material is archived in C
   Complexity: M
 
 - [ ] P3 — Claim the distribution and discovery surfaces that are currently empty
-  Why: Aura is the highest-starred FOSS Android ringtone project under GitHub `topic:ringtone`, a topic that is nearly empty, and the F-Droid ringtone shelf holds one abandoned fork. It is on no awesome-list, and `offa/android-foss` has a one-entry wallpaper section and no live-wallpaper or ringtone section at all. This is the cheapest reach available and it needs no code.
-  Evidence: `offa/android-foss` wallpaper section lists one app; `vvolas/Awesome-Live-Wallpaper` is Android-specific and dead since 2016; `w3teal/awesome-ringtone` does not list Aura; F-Droid's RFP queue shows live unserved wallpaper demand.
+  Why: Aura is the highest-starred FOSS Android ringtone project under GitHub `topic:ringtone`, a topic that is nearly empty. It is on no awesome-list, and `offa/android-foss` has a one-entry wallpaper section and no live-wallpaper or ringtone section at all. This is the cheapest reach available and it needs no code.
+  Evidence: `offa/android-foss` wallpaper section lists one app; `vvolas/Awesome-Live-Wallpaper` is Android-specific and dead since 2016; `w3teal/awesome-ringtone` does not list Aura.
   Touches: no app code; README topics, external PRs, `docs/distribution/channel-strategy.md`.
-  Acceptance: `docs/distribution/channel-strategy.md` records which lists were submitted to and when, with links; GitHub topics are set; submissions happen only after the Fastlane-image, signing-transparency, and reproducibility prerequisites in this roadmap are complete; an IzzyOnDroid inclusion request waits for the owner decision recorded in `Roadmap_Blocked.md`.
+  Acceptance: `docs/distribution/channel-strategy.md` records which lists were submitted to and when, with links; GitHub topics are set. Topics and external PRs are GitHub writes, so each one waits for Matt's go-ahead.
   Complexity: S
 
 

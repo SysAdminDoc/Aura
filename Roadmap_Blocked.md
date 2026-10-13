@@ -118,29 +118,6 @@ These items have code shipped but require Firebase Console access, production RT
   - Acceptance: a vote from a phone raises its `/vote_counts` row; a real community sound upload finalizes; a collection link made on one phone imports on the other; the prune job shows a successful run in the Functions log.
   - Moved from ROADMAP.md 2026-10-13: needs Blaze billing with a card on Matt's account.
 
-- **P3 (residual) — Register the reproducible FOSS lane with rbtlog**
-  - Shipped in the signing-transparency work: the release certificate SHA-256 is
-    published in `README.md`, the Fastlane `full_description.txt`, and
-    `docs/distribution/release-signing.md`, recorded machine-readably in
-    `docs/distribution/signing-certificate.json`, and held there by
-    `tools/signing_certificate_check.py`, which also compares it against the real
-    keystore on a machine that holds one and reports unknown rather than failing
-    on one that does not.
-  - Remaining: submit the reproducible FOSS recipe to
-    codeberg.org/IzzyOnDroid/rbtlog so the reproducible-build badge can be
-    awarded. `tools/foss_reproducibility_check.py` is the recipe.
-  - Blocker: this follows the IzzyOnDroid submission decision, which is itself
-    gated on the ~30 MB per-APK ceiling that the FFmpeg and Python payload still
-    exceeds, and registration is an owner action against an external tracker.
-
-- **P1 — Register Aura for Android developer verification**
-  - Install guidance and the register-vs-abstain decision record are complete in
-    `docs/distribution/developer-verification.md`.
-  - Remaining: the release owner must complete identity verification in Android
-    Developer Console, register `com.freevibe`, prove ownership with the existing
-    release signing key, and confirm the package/key status before changing release
-    notes from `owner-confirmation-required`.
-
 - **N-2 (remaining)** — Firebase BoM 34 + Custom Claims admin path
   - Code + rules shipped. Remaining: deploy `database.rules.json` + grant Custom Claims to existing admins in Firebase Console.
 
@@ -357,12 +334,6 @@ These items require adb-connected device or Android 17 emulator testing:
 
 - **P2 — Widget and live-wallpaper accessibility/localization coverage** (Cycle 5)
   - Needs widget actions TalkBack pass, keyguard placement, launcher picker inspection.
-
-- **P0 — Store listing metadata preflight** (Cycle 8) (remaining)
-  - Text validation shipped. Remaining: screenshot/feature-graphic asset requirement.
-
-- **P1 — Screenshot and feature-graphic pipeline** (Cycle 8)
-  - Framework shipped. Remaining: actual 4+ phone screenshots and feature graphic capture.
 
 - **P1 — Android 17 large-screen/adaptive-layout smoke** (Cycle 10)
   - Needs tablet/foldable/landscape emulator screenshots.
