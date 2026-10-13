@@ -303,16 +303,6 @@ Evidence for every item below is in RESEARCH.md (2026-09-04 pass).
 
 
 
-- [ ] P2 — Derive search and source menus from live provider capabilities
-  Category: correctness
-  Where: app/src/main/java/com/freevibe/ui/screens/search/UniversalSearchScreen.kt:210-231; app/src/main/java/com/freevibe/ui/screens/wallpapers/WallpapersScreen.kt:367-384; app/src/main/java/com/freevibe/ui/screens/videowallpapers/VideoWallpapersViewModel.kt:855-911; app/src/main/java/com/freevibe/ui/screens/sounds/SoundBrowseQueries.kt:45-65
-  Problem: Universal Search and wallpaper menus advertise a static provider set that can disagree with enabled keys, flavor availability, and the providers each feed actually queries.
-  Evidence: Menu entries are declared separately from provider-enabled flows and credentials. Current-run testing confirmed different live sets for wallpapers, videos, and sounds, while Universal Search does not derive from those capabilities.
-  Fix: Build filters from the provider capability/configuration model, scoped by media type and current availability. Disable unavailable entries with the setup reason and keep Reddit first, with YouTube available for sound and video.
-  Acceptance: Toggling a provider or removing its key updates every menu immediately; selecting each enabled source queries only it; a Full/FOSS media matrix passes.
-  Confidence: Verified
-  Effort: M
-
 - [ ] P2 — Make wallpaper-editor overlays operable and announced
   Category: a11y
   Where: app/src/main/java/com/freevibe/ui/screens/editor/WallpaperEditorScreen.kt:520-590,735-765,809-839

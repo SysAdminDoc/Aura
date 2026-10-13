@@ -58,6 +58,13 @@ import coil3.compose.AsyncImagePainter
 import coil3.compose.SubcomposeAsyncImage
 import coil3.compose.SubcomposeAsyncImageContent
 import com.freevibe.R
+import com.freevibe.data.legal.ProviderBlock
+import com.freevibe.data.legal.ProviderBuild
+import com.freevibe.data.legal.ProviderChannel
+import com.freevibe.data.legal.ProviderSetup
+import com.freevibe.data.legal.blockFor
+import com.freevibe.data.legal.currentProviderBuild
+import com.freevibe.data.legal.currentProviderChannel
 import com.freevibe.data.model.COMMUNITY_UPLOAD_LICENSES
 import com.freevibe.data.model.CommunityUploadRights
 import com.freevibe.data.model.FavoriteIdentity
@@ -135,6 +142,8 @@ fun WallpapersScreen(
     val redditProviderEnabled by viewModel.redditProviderEnabled.collectAsStateWithLifecycle()
     val pexelsProviderEnabled by viewModel.pexelsProviderEnabled.collectAsStateWithLifecycle()
     val pixabayProviderEnabled by viewModel.pixabayProviderEnabled.collectAsStateWithLifecycle()
+    val providerSetup by viewModel.providerSetup.collectAsStateWithLifecycle()
+    val pixabayNeedsKey = providerSetup.blockFor(ContentSource.PIXABAY) == ProviderBlock.NEEDS_KEY
     val communityProviderEnabled by viewModel.communityProviderEnabled.collectAsStateWithLifecycle()
     val communityGuidelinesAccepted by viewModel.communityGuidelinesAccepted.collectAsStateWithLifecycle()
     val generatedContentProviderEnabled by viewModel.generatedContentProviderEnabled
@@ -376,23 +385,8 @@ fun WallpapersScreen(
 
     Box(modifier = Modifier.fillMaxSize()) {
         Column(modifier = Modifier.fillMaxSize()) {
-            val visibleTabs = remember(state.selectedTab, pexelsProviderEnabled, pixabayProviderEnabled, communityProviderEnabled) {
-                WallpaperTab.entries.filter {
-                    it != WallpaperTab.SEARCH || state.selectedTab == WallpaperTab.SEARCH
-                }.filter {
-                    // Newest is a rail tab, not a source; keep it out of the source dropdown.
-                    it != WallpaperTab.NEWEST
-                }.filter {
-                    it != WallpaperTab.COLOR || state.selectedTab == WallpaperTab.COLOR
-                }.filter {
-                    it != WallpaperTab.WALLHAVEN || wallhavenProviderEnabled || state.selectedTab == WallpaperTab.WALLHAVEN
-                }.filter {
-                    it != WallpaperTab.PEXELS || pexelsProviderEnabled || state.selectedTab == WallpaperTab.PEXELS
-                }.filter {
-                    it != WallpaperTab.PIXABAY || pixabayProviderEnabled || state.selectedTab == WallpaperTab.PIXABAY
-                }.filter {
-                    it != WallpaperTab.COMMUNITY || communityProviderEnabled || state.selectedTab == WallpaperTab.COMMUNITY
-                }
+            val sourceMenu = remember(state.selectedTab, providerSetup) {
+                wallpaperSourceMenu(state.selectedTab, providerSetup)
             }
             Column(
                 modifier = Modifier
@@ -430,9 +424,22 @@ fun WallpapersScreen(
                             expanded = showSourceMenu,
                             onDismissRequest = { showSourceMenu = false },
                         ) {
-                            visibleTabs.forEach { tab ->
+                            sourceMenu.forEach { entry ->
+                                val tab = entry.tab
                                 DropdownMenuItem(
-                                    text = { Text(wallpaperTabLabel(tab)) },
+                                    text = {
+                                        Column {
+                                            Text(wallpaperTabLabel(tab))
+                                            if (entry.needsKey) {
+                                                Text(
+                                                    stringResource(R.string.wallpapers_source_needs_key),
+                                                    style = MaterialTheme.typography.bodySmall,
+                                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                                )
+                                            }
+                                        }
+                                    },
+                                    enabled = !entry.needsKey,
                                     onClick = {
                                         showSourceMenu = false
                                         if (tab == WallpaperTab.COMMUNITY && communityProviderEnabled && !communityGuidelinesAccepted) {
@@ -774,7 +781,7 @@ fun WallpapersScreen(
                                     state.selectedTab == WallpaperTab.SEARCH -> stringResource(R.string.wallpapers_empty_search_title, state.query)
                                     state.selectedTab == WallpaperTab.COLOR -> stringResource(R.string.wallpapers_empty_color_title)
                                     state.selectedTab == WallpaperTab.COMMUNITY -> stringResource(R.string.wallpapers_empty_community_title)
-                                    state.selectedTab == WallpaperTab.PIXABAY -> stringResource(R.string.wallpapers_empty_pixabay_title)
+                                    state.selectedTab == WallpaperTab.PIXABAY && pixabayNeedsKey -> stringResource(R.string.wallpapers_empty_pixabay_title)
                                     else -> stringResource(R.string.wallpapers_empty_default_title)
                                 },
                                 description = when {
@@ -784,7 +791,7 @@ fun WallpapersScreen(
                                         stringResource(R.string.wallpapers_empty_color_description)
                                     state.selectedTab == WallpaperTab.COMMUNITY ->
                                         stringResource(R.string.wallpapers_empty_community_description)
-                                    state.selectedTab == WallpaperTab.PIXABAY ->
+                                    state.selectedTab == WallpaperTab.PIXABAY && pixabayNeedsKey ->
                                         stringResource(R.string.wallpapers_empty_pixabay_description)
                                     else ->
                                         stringResource(R.string.wallpapers_empty_default_description)
@@ -1795,6 +1802,39 @@ internal fun shouldRequestNextWallpaperPage(
         !isLoadingMore &&
         laidOutItemCount >= visibleItemCount &&
         lastRequestedItemCount != visibleItemCount
+
+internal data class WallpaperSourceEntry(val tab: WallpaperTab, val needsKey: Boolean)
+
+/**
+ * The source dropdown, read from the provider registry and the live switches and keys. A source
+ * that's off or not in this build is left out; one that's on but missing a required key is listed
+ * disabled with the reason, so the setup step shows. The selected tab always stays listed, and
+ * Newest is a rail tab, not a source.
+ */
+internal fun wallpaperSourceMenu(
+    selectedTab: WallpaperTab,
+    setup: ProviderSetup,
+    build: ProviderBuild = currentProviderBuild,
+    channel: ProviderChannel = currentProviderChannel,
+): List<WallpaperSourceEntry> = WallpaperTab.entries.mapNotNull { tab ->
+    val selected = tab == selectedTab
+    val source = when (tab) {
+        WallpaperTab.DISCOVER -> return@mapNotNull WallpaperSourceEntry(tab, needsKey = false)
+        WallpaperTab.NEWEST -> return@mapNotNull null
+        WallpaperTab.SEARCH, WallpaperTab.COLOR ->
+            return@mapNotNull if (selected) WallpaperSourceEntry(tab, needsKey = false) else null
+        WallpaperTab.REDDIT -> ContentSource.REDDIT
+        WallpaperTab.WALLHAVEN -> ContentSource.WALLHAVEN
+        WallpaperTab.PEXELS -> ContentSource.PEXELS
+        WallpaperTab.PIXABAY -> ContentSource.PIXABAY
+        WallpaperTab.COMMUNITY -> ContentSource.COMMUNITY
+    }
+    when (setup.blockFor(source, build, channel)) {
+        null -> WallpaperSourceEntry(tab, needsKey = false)
+        ProviderBlock.NEEDS_KEY -> WallpaperSourceEntry(tab, needsKey = true)
+        else -> if (selected) WallpaperSourceEntry(tab, needsKey = false) else null
+    }
+}
 
 internal data class WallpaperPagerItems(
     val wallpapers: List<Wallpaper>,

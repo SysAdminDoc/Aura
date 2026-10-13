@@ -281,9 +281,11 @@ class WallpaperRepository @Inject constructor(
     }
 
     /** Search across all sources simultaneously */
+    /** Every wallpaper provider the registry lets search (see `searchSourcesFor`); each one checks its own switch and key. */
     suspend fun searchAll(query: String, page: Int = 1): SearchResult<Wallpaper> = supervisorScope {
         val sources = listOf(
             async { loadSourceSafely { getWallhaven(query = query, page = page) } },
+            async { loadSourceSafely { getPexels(page = page, query = query) } },
             async { loadSourceSafely { getPixabay(query = query, page = page) } },
         )
         val results = sources.awaitAll()

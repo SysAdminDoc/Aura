@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import android.content.Context
 import android.net.Uri
+import com.freevibe.data.legal.ProviderSetup
 import com.freevibe.data.local.PreferencesManager
 import com.freevibe.data.model.CommunityReportReason
 import com.freevibe.data.model.CommunityUploadRights
@@ -99,6 +100,7 @@ class WallpapersViewModel @Inject constructor(
     val pixabayProviderEnabled = prefs.pixabayProviderEnabled.stateIn(viewModelScope, SharingStarted.Eagerly, true)
     val communityProviderEnabled = prefs.communityProviderEnabled.stateIn(viewModelScope, SharingStarted.Eagerly, PreferencesManager.DEFAULT_COMMUNITY_PROVIDER_ENABLED)
     val communityGuidelinesAccepted = prefs.communityGuidelinesAccepted.stateIn(viewModelScope, SharingStarted.Eagerly, false)
+    val providerSetup = prefs.providerSetup.stateIn(viewModelScope, SharingStarted.Eagerly, ProviderSetup())
     val generatedContentProviderEnabled = prefs.generatedContentProviderEnabled.stateIn(viewModelScope, SharingStarted.Eagerly, PreferencesManager.DEFAULT_GENERATED_CONTENT_PROVIDER_ENABLED)
 
     val recentSearches = searchHistoryRepo.getRecentWallpaperSearches(8)

@@ -1,5 +1,9 @@
 package com.freevibe.ui.screens.search
 
+import com.freevibe.data.legal.ProviderBuild
+import com.freevibe.data.legal.ProviderChannel
+import com.freevibe.data.legal.ProviderSetup
+import com.freevibe.data.model.ContentSource
 import com.freevibe.data.model.DownloadEntity
 import com.freevibe.data.model.FavoriteEntity
 import com.freevibe.data.model.WallpaperCollectionEntity
@@ -8,6 +12,37 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class UniversalSearchIndexTest {
+    @Test
+    fun `provider cards list what each search queries and why one can't run`() {
+        val setup = ProviderSetup(
+            enabled = mapOf(
+                ContentSource.WALLHAVEN to false,
+                ContentSource.PEXELS to true,
+                ContentSource.PIXABAY to true,
+                ContentSource.REDDIT to true,
+                ContentSource.YOUTUBE to false,
+                ContentSource.COMMUNITY to true,
+            ),
+            keyed = emptySet(),
+        )
+        fun cards(online: Boolean) =
+            buildProviderActions("neon", online, setup, ProviderBuild.FULL, ProviderChannel.GITHUB).associateBy { it.section }
+
+        val online = cards(online = true)
+        assertEquals(UniversalProviderDisabledReason.NEEDS_KEY, online.getValue(UniversalProviderSection.WALLPAPERS).disabledReason)
+        assertEquals(listOf(ContentSource.REDDIT), online.getValue(UniversalProviderSection.VIDEOS).sources)
+        assertEquals(listOf(ContentSource.BUNDLED), online.getValue(UniversalProviderSection.SOUNDS).sources)
+
+        val offline = cards(online = false)
+        assertEquals(UniversalProviderDisabledReason.OFFLINE, offline.getValue(UniversalProviderSection.VIDEOS).disabledReason)
+        assertTrue("Aura Originals search without a connection", offline.getValue(UniversalProviderSection.SOUNDS).enabled)
+        assertTrue(offline.getValue(UniversalProviderSection.SOUNDS).worksOffline)
+        assertEquals(
+            UniversalProviderDisabledReason.NEED_QUERY,
+            buildProviderActions(" ", true, setup, ProviderBuild.FULL, ProviderChannel.GITHUB).first().disabledReason,
+        )
+    }
+
     @Test
     fun `blank query returns no local results`() {
         assertTrue(

@@ -6,6 +6,7 @@ import android.widget.Toast
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.freevibe.data.local.PixabayVideoCacheStore
+import com.freevibe.data.legal.searchReach
 import com.freevibe.data.local.PreferencesManager
 import com.freevibe.data.legal.ProviderAction
 import com.freevibe.data.legal.ProviderBuild
@@ -980,6 +981,20 @@ class VideoWallpapersViewModel @Inject constructor(
             val redditEnabled = prefs.redditProviderEnabled.first()
             val pexelsEnabled = prefs.pexelsProviderEnabled.first()
             val pixabayEnabled = prefs.pixabayProviderEnabled.first()
+            // Same rule Universal Search uses: Pexels alone can't fill the feed, and keyless
+            // providers are skipped, so say so instead of showing an empty feed with no reason.
+            val videoReach = com.freevibe.data.legal.ProviderSetup(
+                enabled = mapOf(
+                    com.freevibe.data.model.ContentSource.REDDIT to redditEnabled,
+                    com.freevibe.data.model.ContentSource.YOUTUBE to youtubeEnabled,
+                    com.freevibe.data.model.ContentSource.PEXELS to pexelsEnabled,
+                    com.freevibe.data.model.ContentSource.PIXABAY to pixabayEnabled,
+                ),
+                keyed = buildSet {
+                    if (prefs.pexelsApiKey.first().isNotBlank()) add(com.freevibe.data.model.ContentSource.PEXELS)
+                    if (prefs.pixabayApiKey.first().isNotBlank()) add(com.freevibe.data.model.ContentSource.PIXABAY)
+                },
+            ).searchReach(com.freevibe.data.legal.ProviderMediaType.VIDEO)
             val redditFeedGroups = resolveRedditMotionFeedGroups(
                 configuredSubreddits = if (redditEnabled) prefs.redditVideoSubreddits.first() else "",
             )
@@ -1196,6 +1211,8 @@ class VideoWallpapersViewModel @Inject constructor(
                     isLoadingMore = false,
                     isRefreshing = false,
                     error = when {
+                        videoReach.block != null && mixed.isEmpty() && !loadMore && !preserveCurrentFeed ->
+                            context.getString(com.freevibe.R.string.video_wp_no_sources)
                         allAttemptedFailed && preserveCurrentFeed -> "Video sources are unavailable right now. Showing your last good results."
                         allAttemptedFailed -> "Video sources are unavailable right now."
                         sourceFailures.isNotEmpty() && mixed.isEmpty() && !preserveCurrentFeed -> "Limited source availability right now."

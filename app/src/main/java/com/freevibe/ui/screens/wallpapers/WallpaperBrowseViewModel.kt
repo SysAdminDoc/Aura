@@ -1,5 +1,6 @@
 package com.freevibe.ui.screens.wallpapers
 
+import com.freevibe.data.legal.blockFor
 import com.freevibe.data.local.PreferencesManager
 import com.freevibe.data.local.WallpaperCacheManager
 import com.freevibe.data.model.COMMUNITY_GUIDELINES_REQUIRED_MESSAGE
@@ -18,8 +19,9 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.supervisorScope
@@ -84,14 +86,15 @@ internal class WallpaperBrowseViewModel(
             }
         }
         scope.launch {
-            // The Newest/Categories rail tabs are backed by searchAll(), which only queries
-            // Wallhaven + Pixabay. Bing (single daily image) and Pexels (curated-only) can enrich
-            // Discover but cannot serve those tabs, so gate the extra tabs on a searchable provider
-            // — otherwise enabling Bing alone shows tabs that return nothing.
-            combine(
-                wallhavenProviderEnabled,
-                pixabayProviderEnabled,
-            ) { wallhaven, pixabay -> wallhaven || pixabay }
+            // The Newest rail tab is backed by getNewest(), which only queries Wallhaven and
+            // Pixabay. Bing (single daily image) can enrich Discover but can't serve it, so gate
+            // the extra tabs on one of those two being usable, key included. Otherwise enabling
+            // Bing alone, or Pixabay without a key, shows tabs that return nothing.
+            prefs.providerSetup
+                .map { setup ->
+                    setup.blockFor(ContentSource.WALLHAVEN) == null || setup.blockFor(ContentSource.PIXABAY) == null
+                }
+                .distinctUntilChanged()
                 .collect { searchableEnabled ->
                     state.update { s -> s.copy(extendedBrowseSourcesEnabled = searchableEnabled) }
                 }

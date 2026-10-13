@@ -5,6 +5,7 @@ import android.content.Intent
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.*
 import androidx.datastore.preferences.preferencesDataStore
+import com.freevibe.data.legal.ProviderSetup
 import com.freevibe.data.legal.isProviderAvailableInCurrentArtifact
 import com.freevibe.data.legal.providerCapability
 import com.freevibe.data.model.COMMUNITY_GUIDELINES_VERSION
@@ -53,6 +54,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flowOf
@@ -645,6 +647,34 @@ class PreferencesManager @Inject constructor(
         flowOf(false)
     }
     val youtubePoTokenProviderUrl: Flow<String> = get(Keys.YOUTUBE_PO_TOKEN_PROVIDER_URL, "")
+
+    /** Provider switches and saved keys as one value, for the search and source menus. */
+    val providerSetup: Flow<ProviderSetup> = combine(
+        combine(
+            wallhavenProviderEnabled,
+            bingProviderEnabled,
+            redditProviderEnabled,
+            youtubeProviderEnabled,
+            communityProviderEnabled,
+        ) { wallhaven, bing, reddit, youtube, community ->
+            mapOf(
+                ContentSource.WALLHAVEN to wallhaven,
+                ContentSource.BING to bing,
+                ContentSource.REDDIT to reddit,
+                ContentSource.YOUTUBE to youtube,
+                ContentSource.COMMUNITY to community,
+            )
+        },
+        combine(pexelsProviderEnabled, pixabayProviderEnabled, pexelsApiKey, pixabayApiKey) { pexels, pixabay, pexelsKey, pixabayKey ->
+            ProviderSetup(
+                enabled = mapOf(ContentSource.PEXELS to pexels, ContentSource.PIXABAY to pixabay),
+                keyed = buildSet {
+                    if (pexelsKey.isNotBlank()) add(ContentSource.PEXELS)
+                    if (pixabayKey.isNotBlank()) add(ContentSource.PIXABAY)
+                },
+            )
+        },
+    ) { switches, keyedSources -> keyedSources.copy(enabled = switches + keyedSources.enabled) }.distinctUntilChanged()
 
     suspend fun setYtSoundQueryRingtones(q: String) = set(Keys.YT_SOUND_RINGTONES, q)
     suspend fun setYtSoundQueryNotifications(q: String) = set(Keys.YT_SOUND_NOTIFICATIONS, q)

@@ -1,5 +1,8 @@
 package com.freevibe.ui.screens.wallpapers
 
+import com.freevibe.data.legal.ProviderBuild
+import com.freevibe.data.legal.ProviderChannel
+import com.freevibe.data.legal.ProviderSetup
 import com.freevibe.data.model.ContentSource
 import com.freevibe.data.model.Wallpaper
 import com.freevibe.data.model.stableKey
@@ -11,6 +14,40 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class WallpapersScreenSectionsTest {
+
+    @Test
+    fun `source menu follows switches and keys and keeps the selected tab`() {
+        val setup = ProviderSetup(
+            enabled = mapOf(
+                ContentSource.REDDIT to false,
+                ContentSource.WALLHAVEN to true,
+                ContentSource.PEXELS to true,
+                ContentSource.PIXABAY to false,
+                ContentSource.COMMUNITY to true,
+            ),
+            keyed = emptySet(),
+        )
+        fun menu(selected: WallpaperTab, build: ProviderBuild = ProviderBuild.FULL) =
+            wallpaperSourceMenu(selected, setup, build, ProviderChannel.GITHUB)
+
+        assertEquals(
+            listOf(
+                WallpaperSourceEntry(WallpaperTab.DISCOVER, needsKey = false),
+                WallpaperSourceEntry(WallpaperTab.WALLHAVEN, needsKey = false),
+                WallpaperSourceEntry(WallpaperTab.PEXELS, needsKey = true),
+                WallpaperSourceEntry(WallpaperTab.COMMUNITY, needsKey = false),
+            ),
+            menu(WallpaperTab.DISCOVER),
+        )
+        assertTrue("Reddit stays listed while it's the open tab", WallpaperTab.REDDIT in menu(WallpaperTab.REDDIT).map { it.tab })
+        assertTrue(WallpaperTab.SEARCH in menu(WallpaperTab.SEARCH).map { it.tab })
+        assertFalse("FOSS has no community feed", WallpaperTab.COMMUNITY in menu(WallpaperTab.DISCOVER, ProviderBuild.FOSS).map { it.tab })
+        assertEquals(
+            false,
+            wallpaperSourceMenu(WallpaperTab.DISCOVER, setup.copy(keyed = setOf(ContentSource.PEXELS)), ProviderBuild.FULL, ProviderChannel.GITHUB)
+                .single { it.tab == WallpaperTab.PEXELS }.needsKey,
+        )
+    }
 
     @Test
     fun `paging waits for appended inventory to be laid out and latches empty pages`() {

@@ -905,6 +905,18 @@ class WallpapersViewModelTest {
         every { prefs.communityProviderEnabled } returns flowOf(communityProviderEnabled)
         every { prefs.generatedContentProviderEnabled } returns flowOf(generatedContentProviderEnabled)
         every { prefs.communityGuidelinesAccepted } returns flowOf(true)
+        every { prefs.providerSetup } returns flowOf(
+            com.freevibe.data.legal.ProviderSetup(
+                enabled = mapOf(
+                    com.freevibe.data.model.ContentSource.WALLHAVEN to wallhavenProviderEnabled,
+                    com.freevibe.data.model.ContentSource.REDDIT to redditProviderEnabled,
+                    com.freevibe.data.model.ContentSource.PEXELS to pexelsProviderEnabled,
+                    com.freevibe.data.model.ContentSource.PIXABAY to pixabayProviderEnabled,
+                    com.freevibe.data.model.ContentSource.COMMUNITY to communityProviderEnabled,
+                ),
+                keyed = setOf(com.freevibe.data.model.ContentSource.PEXELS, com.freevibe.data.model.ContentSource.PIXABAY),
+            ),
+        )
         every { prefs.preferredResolution } returns flowOf("1080x1920")
         every { prefs.userStyles } returns flowOf("minimal,nature")
         every { prefs.wallpaperStyleLearningJson } returns flowOf("")

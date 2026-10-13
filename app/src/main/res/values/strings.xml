@@ -183,14 +183,14 @@
     <string name="search_provider_online">Online</string>
     <string name="search_provider_disabled">Disabled</string>
     <string name="search_provider_wallpapers_title">Search wallpaper providers</string>
-    <string name="search_provider_wallpapers_subtitle">Wallhaven, Pexels, Pixabay, and community sources</string>
     <string name="search_provider_videos_title">Search video wallpaper providers</string>
-    <string name="search_provider_videos_subtitle">YouTube, Pexels, and Pixabay motion results</string>
     <string name="search_provider_sounds_title">Search sound providers</string>
-    <string name="search_provider_sounds_subtitle">YouTube and community sound sources</string>
     <string name="search_provider_need_query">Enter a query to search online providers</string>
     <string name="search_provider_offline">Offline; local results remain available</string>
     <string name="search_provider_disabled_reason">Provider disabled in Settings</string>
+    <string name="search_provider_reaches">Searches %1$s</string>
+    <string name="search_provider_on_device">On device</string>
+    <string name="search_provider_needs_key">Add this provider\'s API key in Settings to search it</string>
     <string name="settings_weather_effects_title">Weather effects</string>
     <string name="settings_weather_effects_subtitle">Uses approximate location with Open-Meteo; Aura stores rounded two-decimal coordinates and clears them when disabled.</string>
     <string name="settings_external_automation_title">External automation</string>
@@ -1107,6 +1107,7 @@
     <string name="video_wp_technical_dimensions">%1$d × %2$d · %3$s</string>
     <string name="video_wp_youtube_disabled">YouTube features are disabled in Settings</string>
     <string name="video_wp_apply_failed">Failed: %1$s</string>
+    <string name="video_wp_no_sources">No video source can load. Turn on Reddit in Settings, or add a Pixabay API key.</string>
     <string name="video_wp_by_creator">by %1$s</string>
     <string name="video_wp_confirm_presentation">Presentation</string>
     <string name="video_wp_confirm_fit_landscape_letterbox">Fit preserves the full landscape frame and fills the canvas with your selected style. Crop creates a portrait version.</string>
@@ -1880,6 +1881,7 @@
     <string name="wallpapers_empty_color_description">Try another tone or return to Discover for a wider mix.</string>
     <string name="wallpapers_empty_community_description">Upload a gallery image to seed the community feed.</string>
     <string name="wallpapers_empty_pixabay_description">Add your Pixabay API key in Settings to unlock this source.</string>
+    <string name="wallpapers_source_needs_key">Add a key in Settings</string>
     <string name="wallpapers_empty_default_description">Refresh the feed or switch sources to keep browsing.</string>
     <string name="wallpapers_empty_upload_action">Upload wallpaper</string>
     <string name="wallpapers_empty_back_to_discover_action">Back to Discover</string>

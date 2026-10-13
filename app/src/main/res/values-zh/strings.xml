@@ -178,14 +178,14 @@
     <string name="search_provider_online">在线</string>
     <string name="search_provider_disabled">已禁用</string>
     <string name="search_provider_wallpapers_title">搜索壁纸提供商</string>
-    <string name="search_provider_wallpapers_subtitle">Wallhaven、Pexels、Pixabay 和社区来源</string>
     <string name="search_provider_videos_title">搜索视频壁纸提供商</string>
-    <string name="search_provider_videos_subtitle">YouTube、Pexels 和 Pixabay 动态结果</string>
     <string name="search_provider_sounds_title">搜索声音提供商</string>
-    <string name="search_provider_sounds_subtitle">YouTube 和社区声音来源</string>
     <string name="search_provider_need_query">输入查询词以搜索在线提供商</string>
     <string name="search_provider_offline">离线；本地结果仍可用</string>
     <string name="search_provider_disabled_reason">提供商已在设置中禁用</string>
+    <string name="search_provider_reaches">搜索 %1$s</string>
+    <string name="search_provider_on_device">本机</string>
+    <string name="search_provider_needs_key">在设置中添加该提供方的 API 密钥后即可搜索</string>
     <string name="settings_weather_effects_title">天气效果</string>
     <string name="settings_weather_effects_subtitle">使用 Open-Meteo 获取大致位置；Aura 会存储四舍五入到两位小数的坐标，并在禁用时清除它们。</string>
     <string name="settings_external_automation_title">外部自动化</string>
@@ -1013,6 +1013,7 @@
     <string name="video_wp_technical_dimensions">%1$d × %2$d · %3$s</string>
     <string name="video_wp_youtube_disabled">YouTube 功能已在设置中禁用</string>
     <string name="video_wp_apply_failed">失败：%1$s</string>
+    <string name="video_wp_no_sources">没有可加载的视频来源。请在设置中开启 Reddit，或添加 Pixabay API 密钥。</string>
     <string name="video_wp_by_creator">由 %1$s 提供</string>
     <string name="video_wp_confirm_presentation">呈现方式</string>
     <string name="video_wp_confirm_fit_landscape_letterbox">适应会保留完整的横向画面，并用所选样式填充画布。裁剪会创建竖屏版本。</string>
@@ -1715,6 +1716,7 @@
     <string name="wallpapers_empty_color_description">尝试其他色调，或返回发现以查看更多混合内容。</string>
     <string name="wallpapers_empty_community_description">上传一张图库图片来为社区信息流注入内容。</string>
     <string name="wallpapers_empty_pixabay_description">在设置中添加你的 Pixabay API 密钥以解锁此数据源。</string>
+    <string name="wallpapers_source_needs_key">请在设置中添加密钥</string>
     <string name="wallpapers_empty_default_description">刷新信息流或切换数据源以继续浏览。</string>
     <string name="wallpapers_empty_upload_action">上传壁纸</string>
     <string name="wallpapers_empty_back_to_discover_action">返回发现</string>

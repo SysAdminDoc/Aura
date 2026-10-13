@@ -79,7 +79,17 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewModelScope
 import com.freevibe.R
 import com.freevibe.data.local.DownloadDao
+import com.freevibe.data.legal.ProviderBlock
+import com.freevibe.data.legal.ProviderBuild
+import com.freevibe.data.legal.ProviderChannel
+import com.freevibe.data.legal.ProviderMediaType
+import com.freevibe.data.legal.ProviderSetup
+import com.freevibe.data.legal.currentProviderBuild
+import com.freevibe.data.legal.currentProviderChannel
+import com.freevibe.data.legal.providerDisplayName
+import com.freevibe.data.legal.searchReach
 import com.freevibe.data.local.PreferencesManager
+import com.freevibe.data.model.ContentSource
 import com.freevibe.data.model.DownloadEntity
 import com.freevibe.data.model.FavoriteEntity
 import com.freevibe.data.model.WallpaperCollectionEntity
@@ -132,6 +142,10 @@ data class UniversalProviderAction(
     val section: UniversalProviderSection,
     val enabled: Boolean,
     val disabledReason: UniversalProviderDisabledReason?,
+    /** What the handoff will query right now, in feed order. */
+    val sources: List<ContentSource> = emptyList(),
+    /** True when every source in [sources] works without a connection. */
+    val worksOffline: Boolean = false,
 )
 
 enum class UniversalSearchSection {
@@ -160,6 +174,7 @@ enum class UniversalProviderDisabledReason {
     NEED_QUERY,
     OFFLINE,
     PROVIDER_DISABLED,
+    NEEDS_KEY,
 }
 
 sealed interface UniversalSearchTarget {
@@ -178,9 +193,7 @@ private data class LocalSearchIndex(
 
 private data class ProviderAvailability(
     val online: Boolean,
-    val wallpaperProvidersEnabled: Boolean,
-    val videoProvidersEnabled: Boolean,
-    val soundProvidersEnabled: Boolean,
+    val setup: ProviderSetup,
 )
 
 @HiltViewModel
@@ -206,43 +219,10 @@ class UniversalSearchViewModel @Inject constructor(
         )
     }
 
-    private val wallpaperProvidersEnabled = combine(
-        preferencesManager.wallhavenProviderEnabled,
-        preferencesManager.pexelsProviderEnabled,
-        preferencesManager.pixabayProviderEnabled,
-        preferencesManager.communityProviderEnabled,
-    ) { wallhaven, pexels, pixabay, community ->
-        wallhaven || pexels || pixabay || community
-    }
-
-    private val videoProvidersEnabled = combine(
-        preferencesManager.youtubeProviderEnabled,
-        preferencesManager.pexelsProviderEnabled,
-        preferencesManager.pixabayProviderEnabled,
-    ) { youtube, pexels, pixabay ->
-        youtube || pexels || pixabay
-    }
-
-    private val soundProvidersEnabled = combine(
-        preferencesManager.youtubeProviderEnabled,
-        preferencesManager.communityProviderEnabled,
-    ) { youtube, community ->
-        youtube || community
-    }
-
     private val providerAvailability = combine(
         networkAvailableFlow(context),
-        wallpaperProvidersEnabled,
-        videoProvidersEnabled,
-        soundProvidersEnabled,
-    ) { online, wallpaperProvidersEnabled, videoProvidersEnabled, soundProvidersEnabled ->
-        ProviderAvailability(
-            online = online,
-            wallpaperProvidersEnabled = wallpaperProvidersEnabled,
-            videoProvidersEnabled = videoProvidersEnabled,
-            soundProvidersEnabled = soundProvidersEnabled,
-        )
-    }
+        preferencesManager.providerSetup,
+    ) { online, setup -> ProviderAvailability(online = online, setup = setup) }
 
     val state = combine(
         query,
@@ -254,7 +234,7 @@ class UniversalSearchViewModel @Inject constructor(
             query = currentQuery,
             recentQueries = recentQueries,
             localResults = buildUniversalSearchResults(currentQuery, index.favorites, index.downloads, index.collections),
-            providerActions = buildProviderActions(currentQuery, availability),
+            providerActions = buildProviderActions(currentQuery, availability.online, availability.setup),
         )
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), UniversalSearchState())
 
@@ -533,7 +513,10 @@ private fun UniversalProviderActionCard(
     onClick: () -> Unit,
 ) {
     val title = providerActionTitle(action.section)
-    val subtitle = providerActionSubtitle(action.section)
+    val subtitle = stringResource(
+        R.string.search_provider_reaches,
+        action.sources.joinToString(", ") { it.providerDisplayName() },
+    )
     val disabledReason = action.disabledReason?.let { providerDisabledReasonLabel(it) }.orEmpty()
     val actionLabel = stringResource(R.string.search_open_result, title)
     val enabledDescription = stringResource(R.string.a11y_title_subtitle, title, subtitle)
@@ -586,7 +569,13 @@ private fun UniversalProviderActionCard(
                 )
             }
             Text(
-                stringResource(if (action.enabled) R.string.search_provider_online else R.string.search_provider_disabled),
+                stringResource(
+                    when {
+                        !action.enabled -> R.string.search_provider_disabled
+                        action.worksOffline -> R.string.search_provider_on_device
+                        else -> R.string.search_provider_online
+                    },
+                ),
                 style = MaterialTheme.typography.labelSmall,
                 color = if (action.enabled) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
             )
@@ -661,17 +650,11 @@ private fun providerActionTitle(section: UniversalProviderSection): String = whe
 }
 
 @Composable
-private fun providerActionSubtitle(section: UniversalProviderSection): String = when (section) {
-    UniversalProviderSection.WALLPAPERS -> stringResource(R.string.search_provider_wallpapers_subtitle)
-    UniversalProviderSection.VIDEOS -> stringResource(R.string.search_provider_videos_subtitle)
-    UniversalProviderSection.SOUNDS -> stringResource(R.string.search_provider_sounds_subtitle)
-}
-
-@Composable
 private fun providerDisabledReasonLabel(reason: UniversalProviderDisabledReason): String = when (reason) {
     UniversalProviderDisabledReason.NEED_QUERY -> stringResource(R.string.search_provider_need_query)
     UniversalProviderDisabledReason.OFFLINE -> stringResource(R.string.search_provider_offline)
     UniversalProviderDisabledReason.PROVIDER_DISABLED -> stringResource(R.string.search_provider_disabled_reason)
+    UniversalProviderDisabledReason.NEEDS_KEY -> stringResource(R.string.search_provider_needs_key)
 }
 
 internal fun buildUniversalSearchResults(
@@ -817,43 +800,42 @@ internal fun buildUniversalSearchResults(
     return wallpaperResults + videoResults + soundResults + collectionResults + downloadResults + favoriteResults + localFiles
 }
 
-private fun buildProviderActions(
+/**
+ * One card per media type, built from what that handoff's search really queries with the current
+ * switches, keys and build. Sound search still works offline, because Aura Originals are on device.
+ */
+internal fun buildProviderActions(
     query: String,
-    availability: ProviderAvailability,
+    online: Boolean,
+    setup: ProviderSetup,
+    build: ProviderBuild = currentProviderBuild,
+    channel: ProviderChannel = currentProviderChannel,
 ): List<UniversalProviderAction> {
     val hasQuery = query.isNotBlank()
     return listOf(
+        Triple("provider_wallpapers", UniversalProviderSection.WALLPAPERS, ProviderMediaType.WALLPAPER),
+        Triple("provider_videos", UniversalProviderSection.VIDEOS, ProviderMediaType.VIDEO),
+        Triple("provider_sounds", UniversalProviderSection.SOUNDS, ProviderMediaType.SOUND),
+    ).map { (id, section, mediaType) ->
+        val reach = setup.searchReach(mediaType, online, build, channel)
+        val reachableOnline = online || setup.searchReach(mediaType, online = true, build = build, channel = channel).block == null
         UniversalProviderAction(
-            id = "provider_wallpapers",
-            section = UniversalProviderSection.WALLPAPERS,
-            enabled = hasQuery && availability.online && availability.wallpaperProvidersEnabled,
-            disabledReason = providerDisabledReason(hasQuery, availability.online, availability.wallpaperProvidersEnabled),
-        ),
-        UniversalProviderAction(
-            id = "provider_videos",
-            section = UniversalProviderSection.VIDEOS,
-            enabled = hasQuery && availability.online && availability.videoProvidersEnabled,
-            disabledReason = providerDisabledReason(hasQuery, availability.online, availability.videoProvidersEnabled),
-        ),
-        UniversalProviderAction(
-            id = "provider_sounds",
-            section = UniversalProviderSection.SOUNDS,
-            enabled = hasQuery && availability.online && availability.soundProvidersEnabled,
-            disabledReason = providerDisabledReason(hasQuery, availability.online, availability.soundProvidersEnabled),
-        ),
-    )
+            id = id,
+            section = section,
+            enabled = hasQuery && reach.block == null,
+            disabledReason = when {
+                !hasQuery -> UniversalProviderDisabledReason.NEED_QUERY
+                reach.block == null -> null
+                !online && reachableOnline -> UniversalProviderDisabledReason.OFFLINE
+                reach.block == ProviderBlock.NEEDS_KEY -> UniversalProviderDisabledReason.NEEDS_KEY
+                else -> UniversalProviderDisabledReason.PROVIDER_DISABLED
+            },
+            sources = reach.sources,
+            worksOffline = reach.worksOffline,
+        )
+    }
 }
 
-private fun providerDisabledReason(
-    hasQuery: Boolean,
-    online: Boolean,
-    providerEnabled: Boolean,
-): UniversalProviderDisabledReason? = when {
-    !hasQuery -> UniversalProviderDisabledReason.NEED_QUERY
-    !online -> UniversalProviderDisabledReason.OFFLINE
-    !providerEnabled -> UniversalProviderDisabledReason.PROVIDER_DISABLED
-    else -> null
-}
 
 // URL and raw-path fields are deliberately excluded from matching: queries like
 // "http", "com", or "storage" would otherwise match essentially every item.
