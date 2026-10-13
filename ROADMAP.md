@@ -237,16 +237,6 @@ Evidence for every item below is in RESEARCH.md (2026-09-04 pass).
 
 ### P2
 
-- [ ] P2 — Keep every primary destination usable at 200 percent text
-  Category: a11y
-  Where: `app/src/main/java/com/freevibe/ui/FreeVibeRoot.kt:241-301,1156-1224`
-  Problem: The fixed bottom bar and navigation rail cannot contain five always-visible text labels at the platform's 200 percent font setting. Portrait labels are cut mid-word, while the landscape rail truncates Wallpapers and pushes Settings completely off-screen.
-  Evidence: Current-run API 35 emulator captures at `font_scale=2.0` show `Wallpa`, `Sound`, and `Settin` in the 64 dp portrait bar. At 2400 by 1080 landscape, the 86 dp rail shows only four destinations and clips the selected label. The code fixes bar height to 64 dp, rail width to 86 dp, labels to one line, and gives the full-height rail no scroll or compact mode. This concrete defect is actionable independently of the remaining scanner matrix in `Roadmap_Blocked.md`.
-  Fix: Introduce a large-text navigation presentation that preserves all five targets, such as semantic icon-only compact navigation or a scroll-safe rail, and size it from the actual container and insets. Keep full accessible names even when visible labels are shortened or hidden.
-  Acceptance: At 200 percent text in portrait and landscape, all five destinations are simultaneously reachable with no clipped text or target; TalkBack announces their full localized names and selected state; normal text, RTL, gesture navigation, and three-button navigation retain at least 48 dp targets; screenshot tests cover both navigation forms.
-  Confidence: Verified
-  Effort: M
-
 ### P3
 
 - [ ] P3 — Keep a hidden duplicate's attribution on the wallpaper card that stays

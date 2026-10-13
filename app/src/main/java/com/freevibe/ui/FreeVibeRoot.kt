@@ -7,6 +7,8 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Description
@@ -39,9 +41,16 @@ import com.freevibe.data.model.wallpaperActionMessage
 import com.freevibe.data.remote.toSound
 import com.freevibe.data.remote.toWallpaper
 import com.freevibe.ui.navigation.LocalAuraNavigationLayout
+import com.freevibe.ui.navigation.PrimaryNavigationBarHeight
+import com.freevibe.ui.navigation.PrimaryNavigationBarSidePadding
+import com.freevibe.ui.navigation.PrimaryNavigationRailTopSpace
+import com.freevibe.ui.navigation.PrimaryNavigationRailWidth
 import com.freevibe.ui.navigation.Screen
 import com.freevibe.ui.navigation.auraNavigationLayoutForWidth
+import com.freevibe.ui.navigation.bottomBarLabelsFit
 import com.freevibe.ui.navigation.isExpanded
+import com.freevibe.ui.navigation.railLabelsFit
+import com.freevibe.ui.navigation.rememberWidestNavigationLabel
 import com.freevibe.ui.screens.community.CommunityReportsScreen
 import com.freevibe.ui.screens.categories.CategoriesScreen
 import com.freevibe.ui.screens.collections.CollectionsScreen
@@ -221,6 +230,18 @@ fun FreeVibeRoot(
     ) {
         val navigationLayout = auraNavigationLayoutForWidth(maxWidth)
         val useNavigationRail = showBottomBar && navigationLayout.isExpanded
+        val selectedPrimaryScreen = Screen.bottomNavItems.firstOrNull { screen ->
+            isBottomNavDestination(screen = screen, destination = currentDestination)
+        }
+        val navigateToPrimary: (Screen) -> Unit = { screen ->
+            navController.navigate(screen.route) {
+                popUpTo(navigationRootRoute) {
+                    saveState = true
+                }
+                launchSingleTop = true
+                restoreState = true
+            }
+        }
 
         CompositionLocalProvider(LocalAuraNavigationLayout provides navigationLayout) {
         downgradeReceipt?.let { receipt ->
@@ -258,71 +279,11 @@ fun FreeVibeRoot(
             },
             bottomBar = {
                 if (showBottomBar && !useNavigationRail) {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .windowInsetsPadding(
-                                androidx.compose.foundation.layout.WindowInsets.navigationBars.only(
-                                    androidx.compose.foundation.layout.WindowInsetsSides.Bottom,
-                                ),
-                            )
-                            .background(MaterialTheme.colorScheme.surface),
-                        contentAlignment = Alignment.Center,
-                    ) {
-                        NavigationBar(
-                            containerColor = MaterialTheme.colorScheme.surface,
-                            contentColor = MaterialTheme.colorScheme.onSurface,
-                            tonalElevation = 0.dp,
-                            windowInsets = WindowInsets(0, 0, 0, 0),
-                            modifier = Modifier
-                                .height(64.dp)
-                                .padding(horizontal = 4.dp),
-                        ) {
-                            Screen.bottomNavItems.forEach { screen ->
-                                    val selected = isBottomNavDestination(
-                                        screen = screen,
-                                        destination = currentDestination,
-                                    )
-                                    val screenTitle = stringResource(screen.titleRes)
-
-                                    NavigationBarItem(
-                                        selected = selected,
-                                        onClick = {
-                                            navController.navigate(screen.route) {
-                                                popUpTo(navigationRootRoute) {
-                                                    saveState = true
-                                                }
-                                                launchSingleTop = true
-                                                restoreState = true
-                                            }
-                                        },
-                                        icon = {
-                                            BottomNavIcon(
-                                                screen = screen,
-                                                selected = selected,
-                                                screenTitle = screenTitle,
-                                                favoritesCount = favoritesCount,
-                                            )
-                                        },
-                                        label = {
-                                            Text(
-                                                screenTitle,
-                                                style = MaterialTheme.typography.labelSmall,
-                                                maxLines = 1,
-                                            )
-                                        },
-                                        alwaysShowLabel = true,
-                                        colors = NavigationBarItemDefaults.colors(
-                                            selectedIconColor = MaterialTheme.colorScheme.primary,
-                                            selectedTextColor = MaterialTheme.colorScheme.primary,
-                                            unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                                            unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                                            indicatorColor = Color.Transparent,
-                                        ),
-                                    )
-                            }
-                        }
-                    }
+                    PrimaryNavigationBar(
+                        selected = selectedPrimaryScreen,
+                        favoritesCount = favoritesCount,
+                        onNavigate = navigateToPrimary,
+                    )
                 }
             },
         ) { padding ->
@@ -359,17 +320,9 @@ fun FreeVibeRoot(
             Row(modifier = Modifier.weight(1f).fillMaxWidth()) {
                 if (useNavigationRail) {
                     PrimaryNavigationRail(
-                        currentDestination = currentDestination,
+                        selected = selectedPrimaryScreen,
                         favoritesCount = favoritesCount,
-                        onNavigate = { screen ->
-                            navController.navigate(screen.route) {
-                                popUpTo(navigationRootRoute) {
-                                    saveState = true
-                                }
-                                launchSingleTop = true
-                                restoreState = true
-                            }
-                        },
+                        onNavigate = navigateToPrimary,
                     )
                 }
             NavHost(
@@ -1214,12 +1167,89 @@ private fun isBottomNavDestination(
     }
 }
 
+/**
+ * The bottom bar for compact windows. Labels show while every one of them fits whole. At large
+ * text they don't, so the bar keeps all five destinations as icons and each icon carries the
+ * destination's full name for screen readers.
+ */
 @Composable
-private fun PrimaryNavigationRail(
-    currentDestination: androidx.navigation.NavDestination?,
+internal fun PrimaryNavigationBar(
+    selected: Screen?,
     favoritesCount: Int,
     onNavigate: (Screen) -> Unit,
 ) {
+    val titles = Screen.bottomNavItems.map { stringResource(it.titleRes) }
+    val labelStyle = MaterialTheme.typography.labelSmall
+    val widestLabel = rememberWidestNavigationLabel(titles, labelStyle)
+    BoxWithConstraints(
+        modifier = Modifier
+            .fillMaxWidth()
+            .windowInsetsPadding(WindowInsets.navigationBars.only(WindowInsetsSides.Bottom))
+            .background(MaterialTheme.colorScheme.surface),
+        contentAlignment = Alignment.Center,
+    ) {
+        val showLabels = bottomBarLabelsFit(
+            barWidth = maxWidth - PrimaryNavigationBarSidePadding * 2,
+            barHeight = PrimaryNavigationBarHeight,
+            itemCount = titles.size,
+            label = widestLabel,
+        )
+        NavigationBar(
+            containerColor = MaterialTheme.colorScheme.surface,
+            contentColor = MaterialTheme.colorScheme.onSurface,
+            tonalElevation = 0.dp,
+            windowInsets = WindowInsets(0, 0, 0, 0),
+            modifier = Modifier
+                .height(PrimaryNavigationBarHeight)
+                .padding(horizontal = PrimaryNavigationBarSidePadding),
+        ) {
+            Screen.bottomNavItems.forEachIndexed { index, screen ->
+                val isSelected = screen == selected
+                val screenTitle = titles[index]
+
+                NavigationBarItem(
+                    selected = isSelected,
+                    onClick = { onNavigate(screen) },
+                    icon = {
+                        BottomNavIcon(
+                            screen = screen,
+                            selected = isSelected,
+                            screenTitle = screenTitle,
+                            favoritesCount = favoritesCount,
+                        )
+                    },
+                    label = if (showLabels) {
+                        { Text(screenTitle, style = labelStyle, maxLines = 1) }
+                    } else {
+                        null
+                    },
+                    alwaysShowLabel = showLabels,
+                    colors = NavigationBarItemDefaults.colors(
+                        selectedIconColor = MaterialTheme.colorScheme.primary,
+                        selectedTextColor = MaterialTheme.colorScheme.primary,
+                        unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                        unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                        indicatorColor = Color.Transparent,
+                    ),
+                )
+            }
+        }
+    }
+}
+
+/**
+ * The side rail for expanded windows. It drops its labels on the same rule as the bar, and it
+ * scrolls, so a short landscape window can never leave a destination out of reach.
+ */
+@Composable
+internal fun PrimaryNavigationRail(
+    selected: Screen?,
+    favoritesCount: Int,
+    onNavigate: (Screen) -> Unit,
+) {
+    val titles = Screen.bottomNavItems.map { stringResource(it.titleRes) }
+    val labelStyle = MaterialTheme.typography.labelSmall
+    val widestLabel = rememberWidestNavigationLabel(titles, labelStyle)
     Surface(
         modifier = Modifier
             .fillMaxHeight()
@@ -1239,48 +1269,52 @@ private fun PrimaryNavigationRail(
             MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.42f),
         ),
     ) {
-        NavigationRail(
-            modifier = Modifier
-                .fillMaxHeight()
-                .width(86.dp),
-            containerColor = Color.Transparent,
-            contentColor = MaterialTheme.colorScheme.onSurface,
-        ) {
-            Spacer(Modifier.height(12.dp))
-            Screen.bottomNavItems.forEach { screen ->
-                val selected = isBottomNavDestination(
-                    screen = screen,
-                    destination = currentDestination,
-                )
-                val screenTitle = stringResource(screen.titleRes)
+        BoxWithConstraints(modifier = Modifier.fillMaxHeight()) {
+            val showLabels = railLabelsFit(
+                railWidth = PrimaryNavigationRailWidth,
+                railHeight = maxHeight,
+                itemCount = titles.size,
+                label = widestLabel,
+            )
+            NavigationRail(
+                modifier = Modifier
+                    .fillMaxHeight()
+                    .verticalScroll(rememberScrollState())
+                    .width(PrimaryNavigationRailWidth),
+                containerColor = Color.Transparent,
+                contentColor = MaterialTheme.colorScheme.onSurface,
+            ) {
+                Spacer(Modifier.height(PrimaryNavigationRailTopSpace))
+                Screen.bottomNavItems.forEachIndexed { index, screen ->
+                    val isSelected = screen == selected
+                    val screenTitle = titles[index]
 
-                NavigationRailItem(
-                    selected = selected,
-                    onClick = { onNavigate(screen) },
-                    icon = {
-                        BottomNavIcon(
-                            screen = screen,
-                            selected = selected,
-                            screenTitle = screenTitle,
-                            favoritesCount = favoritesCount,
-                        )
-                    },
-                    label = {
-                        Text(
-                            screenTitle,
-                            style = MaterialTheme.typography.labelSmall,
-                            maxLines = 1,
-                        )
-                    },
-                    alwaysShowLabel = true,
-                    colors = NavigationRailItemDefaults.colors(
-                        selectedIconColor = MaterialTheme.colorScheme.primary,
-                        selectedTextColor = MaterialTheme.colorScheme.primary,
-                        unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                        unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                        indicatorColor = Color.Transparent,
-                    ),
-                )
+                    NavigationRailItem(
+                        selected = isSelected,
+                        onClick = { onNavigate(screen) },
+                        icon = {
+                            BottomNavIcon(
+                                screen = screen,
+                                selected = isSelected,
+                                screenTitle = screenTitle,
+                                favoritesCount = favoritesCount,
+                            )
+                        },
+                        label = if (showLabels) {
+                            { Text(screenTitle, style = labelStyle, maxLines = 1) }
+                        } else {
+                            null
+                        },
+                        alwaysShowLabel = showLabels,
+                        colors = NavigationRailItemDefaults.colors(
+                            selectedIconColor = MaterialTheme.colorScheme.primary,
+                            selectedTextColor = MaterialTheme.colorScheme.primary,
+                            unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                            unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                            indicatorColor = Color.Transparent,
+                        ),
+                    )
+                }
             }
         }
     }
