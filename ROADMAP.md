@@ -325,12 +325,6 @@ Remainders of items closed in the 2026-09-30 drain whose full acceptance did not
   Acceptance: opening Ringtones logs no more than about eight resolutions before any tap; scrolling adds only the newly visible rows; time from tapping a top-row preview to audio is no worse than the previous release on the same phone.
   Complexity: S
 
-- [ ] P2 — Prove display-context rendering on a second density
-  Why: Video, Weather and Parallax now draw with `displayContext` on API 29+, but no test runs two engines on displays of different density.
-  Touches: Robolectric or instrumented test for `resolveDecodeTarget()` and `resolveScreenSize()` with a secondary display.
-  Acceptance: a test with two display configurations shows each engine sizing its decode target from its own display.
-  Complexity: S
-
 ### P3
 
 - [ ] P3 — Cover the AV1 branches of the video wallpaper feed and the fragmented-MP4 fallback on device
