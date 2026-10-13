@@ -20,6 +20,7 @@ import com.freevibe.service.LiveWallpaperLivenessMonitor
 import com.freevibe.service.OfflineFavoritesManager
 import com.freevibe.service.SourceMetrics
 import com.freevibe.service.ThemePackRecipeManager
+import com.freevibe.service.UpdateChecker
 import com.freevibe.service.VideoWallpaperSelectionResult
 import com.freevibe.service.VideoWallpaperService
 import com.freevibe.service.VideoWallpaperStorage
@@ -58,6 +59,7 @@ internal class SettingsDiagnosticsDelegate(
     private val themePackRecipeManager: ThemePackRecipeManager,
     private val libraryExporter: LibraryExporter,
     private val aiWallpaperRepository: AiWallpaperRepository,
+    private val updateChecker: UpdateChecker,
     private val ioDispatcher: CoroutineDispatcher,
     private val scope: CoroutineScope,
 ) {
@@ -214,6 +216,19 @@ internal class SettingsDiagnosticsDelegate(
 
     fun clearYtDlpUpdateNotice() {
         _ytDlpUpdate.update { it.copy(completedStatus = null, error = null) }
+    }
+
+    val updateCheckOffered get() = updateChecker.offered
+    val availableUpdate get() = updateChecker.available
+    val updateCheckRunning get() = updateChecker.checking
+    val updateCheckResult get() = updateChecker.lastResult
+
+    fun setUpdateCheckEnabled(enabled: Boolean) {
+        scope.launch { updateChecker.setEnabled(enabled) }
+    }
+
+    fun checkForUpdateNow() {
+        scope.launch { updateChecker.checkNow() }
     }
 
     fun exportThemePack(uri: Uri) {
