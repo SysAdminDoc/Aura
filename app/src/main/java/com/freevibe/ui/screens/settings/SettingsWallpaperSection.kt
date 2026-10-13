@@ -115,6 +115,7 @@ internal fun WallpaperRotationSettingsSection(
     var showSourcePicker by remember { mutableStateOf(false) }
     var showTargetPicker by remember { mutableStateOf(false) }
     var showColumnsPicker by remember { mutableStateOf(false) }
+    var showPackEditor by remember { mutableStateOf(false) }
     var showResPicker by remember { mutableStateOf(false) }
     var showStylePicker by remember { mutableStateOf(false) }
     var showClockModePicker by remember { mutableStateOf(false) }
@@ -329,18 +330,30 @@ internal fun WallpaperRotationSettingsSection(
             searchAliases = setOf("exclude", "skip", "rotation", "restore"),
         )
         val packSlotCount = remember(wallpaperPackJson) {
-            com.freevibe.service.parsePack(wallpaperPackJson)?.slots?.size ?: 0
+            com.freevibe.service.usableSlots(com.freevibe.service.parsePack(wallpaperPackJson)).size
         }
         SettingsToggle(
             icon = Icons.Default.WbTwilight,
             title = stringResource(R.string.settings_wp_pack_title),
-            subtitle = if (wallpaperPackEnabled) {
-                stringResource(R.string.settings_wp_pack_on_subtitle, packSlotCount)
-            } else {
-                stringResource(R.string.settings_wp_pack_off_subtitle)
+            subtitle = when {
+                packSlotCount == 0 -> stringResource(R.string.settings_wp_pack_empty_subtitle)
+                wallpaperPackEnabled -> stringResource(R.string.settings_wp_pack_on_subtitle, packSlotCount)
+                else -> stringResource(R.string.settings_wp_pack_off_subtitle)
             },
             checked = wallpaperPackEnabled,
-            onCheckedChange = viewModel::setWallpaperPackEnabled,
+            onCheckedChange = { on ->
+                viewModel.setWallpaperPackEnabled(on)
+                if (on && packSlotCount == 0) {
+                    onFeedback(context.getString(R.string.settings_wp_pack_needs_slot_feedback))
+                }
+            },
+        )
+        SettingsItem(
+            icon = Icons.Default.WbTwilight,
+            title = stringResource(R.string.settings_wp_pack_edit_title),
+            subtitle = stringResource(R.string.settings_wp_pack_edit_subtitle, packSlotCount),
+            onClick = { showPackEditor = true },
+            searchAliases = setOf("morning", "evening", "night", "daypart", "time of day"),
         )
         SettingsToggle(
             icon = Icons.Default.Schedule,
@@ -488,6 +501,14 @@ internal fun WallpaperRotationSettingsSection(
                 viewModel.setAutoWpSource(source)
                 showSourcePicker = false
             },
+        )
+    }
+
+    if (showPackEditor) {
+        WallpaperPackEditorDialog(
+            viewModel = viewModel,
+            packJson = wallpaperPackJson,
+            onDismiss = { showPackEditor = false },
         )
     }
 

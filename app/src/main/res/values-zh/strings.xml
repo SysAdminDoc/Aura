@@ -2033,6 +2033,28 @@
     <string name="settings_wp_pack_title">24 小时壁纸包</string>
     <string name="settings_wp_pack_on_subtitle">%1$d 个时段槽位生效中。壁纸按一天中的时间变化。</string>
     <string name="settings_wp_pack_off_subtitle">将不同的壁纸映射到早晨、白天、傍晚和夜间</string>
+    <string name="settings_wp_pack_empty_subtitle">还没有壁纸。请先打开下方的编辑器添加一张。</string>
+    <string name="settings_wp_pack_needs_slot_feedback">请先在壁纸包编辑器中添加壁纸。添加之前不会运行。</string>
+    <string name="settings_wp_pack_edit_title">编辑 24 小时壁纸包</string>
+    <string name="settings_wp_pack_edit_subtitle">已设置 4 个时段中的 %1$d 个</string>
+    <string name="settings_wp_pack_dialog_title">24 小时壁纸包</string>
+    <string name="settings_wp_pack_name_label">壁纸包名称</string>
+    <string name="settings_wp_pack_active_label">启用壁纸包</string>
+    <string name="settings_wp_pack_morning">早晨（上午 6 点到中午）</string>
+    <string name="settings_wp_pack_day">白天（中午到下午 5 点）</string>
+    <string name="settings_wp_pack_evening">傍晚（下午 5 点到晚上 9 点）</string>
+    <string name="settings_wp_pack_night">夜间（晚上 9 点到早上 6 点）</string>
+    <string name="settings_wp_pack_not_set">尚未选择</string>
+    <string name="settings_wp_pack_choose">选择</string>
+    <string name="settings_wp_pack_change">更换</string>
+    <string name="settings_wp_pack_choose_for">为%1$s选择壁纸</string>
+    <string name="settings_wp_pack_remove_slot">移除%1$s壁纸</string>
+    <string name="settings_wp_pack_unnamed_wallpaper">已选壁纸</string>
+    <string name="settings_wp_pack_saved">已保存。到该时段会自动切换。</string>
+    <string name="settings_wp_pack_slot_removed">已移除。</string>
+    <string name="settings_wp_pack_deleted">壁纸包已删除。</string>
+    <string name="settings_wp_pack_delete">删除壁纸包</string>
+    <string name="settings_wp_pack_access_failed">无法保留对该图片的访问权限。请换一张试试。</string>
 
     <!-- Sound detail: similar sounds -->
     <string name="sound_detail_similar_load_failed">无法加载相似声音。请检查你的网络连接。</string>

@@ -2213,6 +2213,28 @@
     <string name="settings_wp_pack_title">24H wallpaper pack</string>
     <string name="settings_wp_pack_on_subtitle">%1$d daypart slot(s) active. Wallpaper changes by time of day.</string>
     <string name="settings_wp_pack_off_subtitle">Map different wallpapers to morning, day, evening, and night</string>
+    <string name="settings_wp_pack_empty_subtitle">No wallpapers yet. Open the editor below to add one first.</string>
+    <string name="settings_wp_pack_needs_slot_feedback">Add a wallpaper in the pack editor first. Nothing runs until you do.</string>
+    <string name="settings_wp_pack_edit_title">Edit 24H pack</string>
+    <string name="settings_wp_pack_edit_subtitle">%1$d of 4 times of day set</string>
+    <string name="settings_wp_pack_dialog_title">24H wallpaper pack</string>
+    <string name="settings_wp_pack_name_label">Pack name</string>
+    <string name="settings_wp_pack_active_label">Pack active</string>
+    <string name="settings_wp_pack_morning">Morning (6 AM to noon)</string>
+    <string name="settings_wp_pack_day">Day (noon to 5 PM)</string>
+    <string name="settings_wp_pack_evening">Evening (5 PM to 9 PM)</string>
+    <string name="settings_wp_pack_night">Night (9 PM to 6 AM)</string>
+    <string name="settings_wp_pack_not_set">Nothing chosen</string>
+    <string name="settings_wp_pack_choose">Choose</string>
+    <string name="settings_wp_pack_change">Change</string>
+    <string name="settings_wp_pack_choose_for">Choose a wallpaper for %1$s</string>
+    <string name="settings_wp_pack_remove_slot">Remove the %1$s wallpaper</string>
+    <string name="settings_wp_pack_unnamed_wallpaper">Chosen wallpaper</string>
+    <string name="settings_wp_pack_saved">Saved. It switches at that time of day.</string>
+    <string name="settings_wp_pack_slot_removed">Removed.</string>
+    <string name="settings_wp_pack_deleted">Pack deleted.</string>
+    <string name="settings_wp_pack_delete">Delete pack</string>
+    <string name="settings_wp_pack_access_failed">Couldn't keep access to that picture. Try another one.</string>
 
     <!-- Sound detail: similar sounds -->
     <string name="sound_detail_similar_load_failed">Couldn\'t load similar sounds. Check your connection.</string>

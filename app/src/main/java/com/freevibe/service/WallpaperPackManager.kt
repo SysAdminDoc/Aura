@@ -32,6 +32,7 @@ data class WallpaperPack(
     val name: String,
     val target: String = "BOTH",
     val slots: List<DaypartSlot> = emptyList(),
+    val enabled: Boolean = true,
 )
 
 @Serializable
@@ -39,6 +40,8 @@ data class DaypartSlot(
     val daypart: Daypart,
     val wallpaperUri: String,
     val label: String = "",
+    /** HOME, LOCK or BOTH. Blank means the pack's own target. */
+    val target: String = "",
 )
 
 @Serializable
@@ -74,6 +77,28 @@ internal fun activeSlotForHour(pack: WallpaperPack, hour: Int): DaypartSlot? {
     return pack.slots.firstOrNull { it.daypart == daypart }
 }
 
+/** Slots that point at a wallpaper. A blank locator can never be applied. */
+internal fun usableSlots(pack: WallpaperPack?): List<DaypartSlot> =
+    pack?.slots.orEmpty().filter { it.wallpaperUri.isNotBlank() }
+
+/** The one rule for whether the 15 minute worker should exist. */
+internal fun shouldSchedulePack(toggleOn: Boolean, packJson: String): Boolean {
+    if (!toggleOn) return false
+    val pack = parsePack(packJson) ?: return false
+    return pack.enabled && usableSlots(pack).isNotEmpty()
+}
+
+internal fun slotTarget(pack: WallpaperPack, slot: DaypartSlot): WallpaperTarget =
+    WallpaperTarget.entries.firstOrNull { it.name == slot.target }
+        ?: WallpaperTarget.entries.firstOrNull { it.name == pack.target }
+        ?: WallpaperTarget.BOTH
+
+/** Enqueues or cancels the worker to match [shouldSchedulePack]. Call after any toggle or pack change. */
+fun syncWallpaperPackSchedule(context: Context, toggleOn: Boolean, packJson: String) {
+    if (shouldSchedulePack(toggleOn, packJson)) WallpaperPackWorker.schedule(context)
+    else WallpaperPackWorker.cancel(context)
+}
+
 @HiltWorker
 class WallpaperPackWorker @AssistedInject constructor(
     @Assisted appContext: Context,
@@ -91,7 +116,7 @@ class WallpaperPackWorker @AssistedInject constructor(
             }
 
             val pack = parsePack(prefs.wallpaperPackJson.first())
-            if (pack == null || pack.slots.isEmpty()) {
+            if (pack == null || !pack.enabled || usableSlots(pack).isEmpty()) {
                 receiptStore.recordFailure(
                     uniqueWorkName = WORK_NAME,
                     errorClass = "NoPack",
@@ -118,8 +143,7 @@ class WallpaperPackWorker @AssistedInject constructor(
                 return Result.success()
             }
 
-            val target = runCatching { WallpaperTarget.valueOf(pack.target) }
-                .getOrDefault(WallpaperTarget.BOTH)
+            val target = slotTarget(pack, slot)
 
             if (rotationExclusions.isExcluded(rotationIdentityForLocator(slot.wallpaperUri, slot.label))) {
                 receiptStore.recordFailure(

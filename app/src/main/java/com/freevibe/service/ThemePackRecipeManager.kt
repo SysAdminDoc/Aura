@@ -484,6 +484,9 @@ class ThemePackRecipeManager @Inject constructor(
                 notificationUri = plan.notificationUri,
                 alarmUri = plan.alarmUri,
             )
+            plan.wallpaperPackJson?.let { packJson ->
+                runCatching { syncWallpaperPackSchedule(context, prefs.wallpaperPackEnabled.first(), packJson) }
+            }
         } catch (e: Throwable) {
             videoPrefs.restoreKeys(VIDEO_IMPORT_KEYS, videoBefore)
             widgetPrefs.restoreKeys(WIDGET_IMPORT_KEYS, widgetBefore)

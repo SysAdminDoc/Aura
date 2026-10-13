@@ -9,6 +9,7 @@ import com.freevibe.service.SoundProfileWorker
 import com.freevibe.service.parseProfiles
 import com.freevibe.service.soundProfilesNeedWorker
 import com.freevibe.service.WallpaperPackWorker
+import com.freevibe.service.shouldSchedulePack
 import com.freevibe.service.WallpaperStyleLearningProfile
 import com.freevibe.service.WallpaperClockOverlayMode
 import com.freevibe.service.WallpaperClockOverlayPosition
@@ -135,14 +136,19 @@ internal class SettingsMediaDelegate(
         return needed
     }
 
+    private fun applyPackSchedule(toggleOn: Boolean, packJson: String) {
+        if (shouldSchedulePack(toggleOn, packJson)) WallpaperPackWorker.schedule(context) else WallpaperPackWorker.cancel(context)
+    }
+
     fun setWallpaperPackEnabled(enabled: Boolean) = scope.launch {
         prefs.setWallpaperPackEnabled(enabled)
-        if (enabled) WallpaperPackWorker.schedule(context) else WallpaperPackWorker.cancel(context)
+        applyPackSchedule(enabled, prefs.wallpaperPackJson.first())
     }
 
     fun setWallpaperPackJson(json: String) = scope.launch {
         prefs.setWallpaperPackJson(json)
         prefs.setWallpaperPackLastAppliedDaypart("")
+        applyPackSchedule(prefs.wallpaperPackEnabled.first(), json)
     }
 
     fun setRedditProviderEnabled(enabled: Boolean) = scope.launch { prefs.setRedditProviderEnabled(enabled) }
