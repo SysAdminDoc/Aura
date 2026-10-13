@@ -510,6 +510,7 @@
     <string name="collections_qr_cd">QR code for %1$s</string>
     <string name="collections_qr_info">%1$s · %2$d wallpapers</string>
     <string name="collections_qr_copy">Copy link</string>
+    <string name="collections_qr_failed">Couldn\'t draw the QR code. Copy the link instead.</string>
     <string name="collections_share_chooser">Share &quot;%1$s&quot;</string>
     <string name="collections_no_share_target">No app to share to</string>
     <string name="collections_share_prepare_failed">Couldn\'t prepare this collection for sharing.</string>

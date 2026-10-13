@@ -7,6 +7,7 @@ import com.google.zxing.BarcodeFormat
 import com.google.zxing.BinaryBitmap
 import com.google.zxing.MultiFormatReader
 import com.google.zxing.RGBLuminanceSource
+import com.google.zxing.common.BitMatrix
 import com.google.zxing.common.HybridBinarizer
 import com.google.zxing.qrcode.QRCodeWriter
 import com.squareup.moshi.Moshi
@@ -36,6 +37,70 @@ class CollectionExporterTest {
         )
 
         assertEquals(shareLink, decoded.text)
+    }
+
+    @Test
+    fun `exported QR pixels decode back through the import reader`() {
+        val shareLink = "aura://collection/import/abc123_DEF-456"
+        val matrix = encodeCollectionQr(shareLink, 768)
+        val pixels = qrPixels(matrix)
+        assertEquals(matrix.width * matrix.height, pixels.size)
+
+        val luma = qrLuminance(matrix.width, matrix.height) { y, row ->
+            System.arraycopy(pixels, y * matrix.width, row, 0, matrix.width)
+        }
+
+        assertEquals(shareLink, decodeCollectionQr(luma, matrix.width, matrix.height))
+    }
+
+    @Test
+    fun `QR pixels fill one array row by row`() {
+        val matrix = BitMatrix(3, 2).apply {
+            set(2, 0)
+            set(0, 1)
+        }
+        val dark = 0xFF000000.toInt()
+        val light = 0xFFFFFFFF.toInt()
+
+        assertEquals(listOf(light, light, dark, dark, light, light), qrPixels(matrix).toList())
+    }
+
+    @Test
+    fun `largest allowed QR import is sampled down before it is decoded`() {
+        val edge = LibraryTransferContract.MAX_QR_IMAGE_DIMENSION
+        // The widest image the pixel cap allows at the maximum edge.
+        val height = (LibraryTransferContract.MAX_QR_IMAGE_PIXELS / edge).toInt()
+        val sample = qrDecodeSampleSize(edge, height)
+        val decodedPixels = (edge / sample).toLong() * (height / sample)
+        // Decoded ARGB bitmap, one byte of luma a pixel, and the capped compressed file.
+        val peakBytes = decodedPixels * 5 + LibraryTransferContract.MAX_QR_IMAGE_BYTES
+
+        assertEquals(4, sample)
+        assertTrue("peak $peakBytes", peakBytes < 16L * 1024 * 1024)
+        assertEquals(1, qrDecodeSampleSize(768, 768))
+        assertEquals(1, qrDecodeSampleSize(2_047, 1_000))
+        assertEquals(2, qrDecodeSampleSize(1_000, 2_048))
+    }
+
+    @Test
+    fun `an exported QR inside the largest allowed photo still decodes after sampling`() {
+        val shareLink = "aura://collection/import/abc123_DEF-456"
+        val edge = LibraryTransferContract.MAX_QR_IMAGE_DIMENSION
+        val height = (LibraryTransferContract.MAX_QR_IMAGE_PIXELS / edge).toInt()
+        val sample = qrDecodeSampleSize(edge, height)
+        // The 768 px export, shrunk by the same sample, sitting off-center in the photo.
+        val qr = encodeCollectionQr(shareLink, 768 / sample)
+        val qrArgb = qrPixels(qr)
+        val width = edge / sample
+        val sampledHeight = height / sample
+
+        val luma = qrLuminance(width, sampledHeight) { y, row ->
+            row.fill(0xFFFFFFFF.toInt())
+            val qrRow = y - 120
+            if (qrRow in 0 until qr.height) System.arraycopy(qrArgb, qrRow * qr.width, row, 300, qr.width)
+        }
+
+        assertEquals(shareLink, decodeCollectionQr(luma, width, sampledHeight))
     }
 
     @Test
@@ -111,6 +176,9 @@ class CollectionExporterTest {
             )
         )
         assertTrue(exporter.contains("inJustDecodeBounds = true"))
+        assertTrue(exporter.contains("inSampleSize = qrDecodeSampleSize(width, height)"))
+        assertFalse("QR pixels are set in one call", exporter.contains("setPixel("))
+        assertFalse("imports don't copy the whole image into an IntArray", exporter.contains("IntArray(w * h)"))
         assertTrue(exporter.contains("LibraryTransferContract.MAX_QR_IMAGE_PIXELS"))
         assertFalse(exporter.contains("items.take(LibraryTransferContract.MAX_COLLECTION_ITEMS)"))
         assertTrue(exporter.contains("normalizeImportedContentSource(item.source, blankDefault = \"REDDIT\")"))

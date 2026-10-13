@@ -36,6 +36,7 @@ import androidx.compose.ui.semantics.customActions
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -60,6 +61,7 @@ import com.freevibe.ui.components.AuraSnackbarHost
 import com.freevibe.ui.components.AuraStateAction
 import com.freevibe.ui.components.AuraStateCard
 import com.freevibe.ui.components.EmbeddedImagePickerSheet
+import com.freevibe.util.rethrowIfCancelled
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -151,7 +153,13 @@ class CollectionsViewModel @Inject constructor(
         }
     }
 
-    fun buildQrBitmap(link: String) = collectionExporter.buildQrBitmap(link)
+    /** Drawn off the main thread; null when the link can't be encoded, so the dialog can say so. */
+    suspend fun buildQrBitmap(link: String): ImageBitmap? = try {
+        collectionExporter.buildQrBitmap(link).asImageBitmap()
+    } catch (e: Exception) {
+        e.rethrowIfCancelled()
+        null
+    }
 
     private fun Result<CollectionImportResult>.handleImportResult() {
         onSuccess { result ->
@@ -380,9 +388,12 @@ fun CollectionsScreen(
     }
 
     qrState?.let { state ->
+        val qrImage by produceState<CollectionQrImage>(CollectionQrImage.Loading, state.shareLink) {
+            value = viewModel.buildQrBitmap(state.shareLink)?.let(CollectionQrImage::Ready) ?: CollectionQrImage.Failed
+        }
         CollectionQrDialog(
             state = state,
-            qrBitmap = remember(state.shareLink) { viewModel.buildQrBitmap(state.shareLink).asImageBitmap() },
+            qrImage = qrImage,
             onCopyLink = {
                 clipboard.setText(AnnotatedString(state.shareLink))
                 scope.launch { snackbarHostState.showSnackbar(resources.getString(R.string.collections_link_copied)) }
@@ -748,10 +759,16 @@ private fun ImportCollectionSheet(
     }
 }
 
+private sealed interface CollectionQrImage {
+    data object Loading : CollectionQrImage
+    data class Ready(val bitmap: ImageBitmap) : CollectionQrImage
+    data object Failed : CollectionQrImage
+}
+
 @Composable
 private fun CollectionQrDialog(
     state: CollectionQrState,
-    qrBitmap: ImageBitmap,
+    qrImage: CollectionQrImage,
     onCopyLink: () -> Unit,
     onDismiss: () -> Unit,
 ) {
@@ -768,15 +785,29 @@ private fun CollectionQrDialog(
                 Surface(
                     shape = RoundedCornerShape(8.dp),
                     color = androidx.compose.ui.graphics.Color.White,
+                    contentColor = androidx.compose.ui.graphics.Color.Black,
                     tonalElevation = 0.dp,
                 ) {
-                    Image(
-                        bitmap = qrBitmap,
-                        contentDescription = stringResource(R.string.collections_qr_cd, state.collectionName),
+                    Box(
                         modifier = Modifier
                             .padding(12.dp)
                             .size(220.dp),
-                    )
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        when (qrImage) {
+                            CollectionQrImage.Loading -> CircularProgressIndicator()
+                            is CollectionQrImage.Ready -> Image(
+                                bitmap = qrImage.bitmap,
+                                contentDescription = stringResource(R.string.collections_qr_cd, state.collectionName),
+                                modifier = Modifier.fillMaxSize(),
+                            )
+                            CollectionQrImage.Failed -> Text(
+                                stringResource(R.string.collections_qr_failed),
+                                style = MaterialTheme.typography.bodyMedium,
+                                textAlign = TextAlign.Center,
+                            )
+                        }
+                    }
                 }
                 Text(
                     stringResource(R.string.collections_qr_info, state.collectionName, state.itemCount),

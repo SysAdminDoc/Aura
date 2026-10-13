@@ -22,8 +22,9 @@ import com.google.zxing.BinaryBitmap
 import com.google.zxing.DecodeHintType
 import com.google.zxing.EncodeHintType
 import com.google.zxing.MultiFormatReader
-import com.google.zxing.RGBLuminanceSource
+import com.google.zxing.PlanarYUVLuminanceSource
 import com.google.zxing.qrcode.QRCodeWriter
+import com.google.zxing.common.BitMatrix
 import com.google.zxing.common.HybridBinarizer
 import com.squareup.moshi.JsonClass
 import com.squareup.moshi.Moshi
@@ -187,25 +188,11 @@ class CollectionExporter @Inject constructor(
             addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
         }
 
-    fun buildQrBitmap(text: String, sizePx: Int = 768): Bitmap {
-        requireWithinTransferLimit(
-            "Collection QR dimensions",
-            sizePx,
-            LibraryTransferContract.MAX_QR_IMAGE_DIMENSION,
-        )
-        val matrix = QRCodeWriter().encode(
-            text,
-            BarcodeFormat.QR_CODE,
-            sizePx,
-            sizePx,
-            mapOf(EncodeHintType.MARGIN to 1),
-        )
-        return Bitmap.createBitmap(sizePx, sizePx, Bitmap.Config.ARGB_8888).apply {
-            for (x in 0 until sizePx) {
-                for (y in 0 until sizePx) {
-                    setPixel(x, y, if (matrix[x, y]) android.graphics.Color.BLACK else android.graphics.Color.WHITE)
-                }
-            }
+    /** Draws the QR on a background thread and fills the bitmap in one call, so the dialog never waits on it. */
+    suspend fun buildQrBitmap(text: String, sizePx: Int = 768): Bitmap = withContext(Dispatchers.Default) {
+        val matrix = encodeCollectionQr(text, sizePx)
+        Bitmap.createBitmap(matrix.width, matrix.height, Bitmap.Config.ARGB_8888).apply {
+            setPixels(qrPixels(matrix), 0, matrix.width, 0, 0, matrix.width, matrix.height)
         }
     }
 
@@ -368,23 +355,92 @@ class CollectionExporter @Inject constructor(
         ) {
             throw IllegalArgumentException("QR image is too large to import safely.")
         }
-        val bitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
+        // Shrink before allocating: a 12 MP photo decodes at a quarter edge, and ZXing reads one
+        // byte of luma per pixel instead of a full ARGB copy.
+        val decodeOptions = BitmapFactory.Options().apply { inSampleSize = qrDecodeSampleSize(width, height) }
+        val bitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.size, decodeOptions)
             ?: throw IllegalArgumentException("Could not decode the selected QR image.")
         return try {
             val w = bitmap.width
             val h = bitmap.height
-            val pixels = IntArray(w * h)
-            bitmap.getPixels(pixels, 0, w, 0, 0, w, h)
-            val source = RGBLuminanceSource(w, h, pixels)
-            val binaryBitmap = BinaryBitmap(HybridBinarizer(source))
-            MultiFormatReader().decode(
-                binaryBitmap,
-                mapOf(DecodeHintType.POSSIBLE_FORMATS to listOf(BarcodeFormat.QR_CODE)),
-            ).text
-        } finally {
+            val luma = qrLuminance(w, h) { y, row -> bitmap.getPixels(row, 0, w, 0, y, w, 1) }
             bitmap.recycle()
+            decodeCollectionQr(luma, w, h)
+        } finally {
+            if (!bitmap.isRecycled) bitmap.recycle()
         }
     }
+}
+
+/** Imports are sampled down until the longer edge is under twice this; a 768 px export stays readable. */
+internal const val QR_DECODE_EDGE = 1_024
+private const val QR_DARK = 0xFF000000.toInt()
+private const val QR_LIGHT = 0xFFFFFFFF.toInt()
+
+internal fun encodeCollectionQr(text: String, sizePx: Int): BitMatrix {
+    requireWithinTransferLimit(
+        "Collection QR dimensions",
+        sizePx,
+        LibraryTransferContract.MAX_QR_IMAGE_DIMENSION,
+    )
+    return QRCodeWriter().encode(
+        text,
+        BarcodeFormat.QR_CODE,
+        sizePx,
+        sizePx,
+        mapOf(EncodeHintType.MARGIN to 1),
+    )
+}
+
+/** Black and white ARGB pixels for [matrix], row by row, ready for a single `Bitmap.setPixels`. */
+internal fun qrPixels(matrix: BitMatrix): IntArray {
+    val width = matrix.width
+    val pixels = IntArray(width * matrix.height)
+    for (y in 0 until matrix.height) {
+        val offset = y * width
+        for (x in 0 until width) {
+            pixels[offset + x] = if (matrix[x, y]) QR_DARK else QR_LIGHT
+        }
+    }
+    return pixels
+}
+
+/**
+ * Power-of-two `inSampleSize` that brings the longer edge down to between [targetEdge] and twice
+ * that, so the largest import allowed (4096 px, 12 MP) decodes at about 1024 px.
+ */
+internal fun qrDecodeSampleSize(width: Int, height: Int, targetEdge: Int = QR_DECODE_EDGE): Int {
+    val longest = maxOf(width, height)
+    var sample = 1
+    while (longest / (sample * 2) >= targetEdge) sample *= 2
+    return sample
+}
+
+/** One byte of luma per pixel, read a row at a time so the image is never copied whole. */
+internal fun qrLuminance(width: Int, height: Int, readRow: (y: Int, row: IntArray) -> Unit): ByteArray {
+    val luma = ByteArray(width * height)
+    val row = IntArray(width)
+    for (y in 0 until height) {
+        readRow(y, row)
+        val offset = y * width
+        for (x in 0 until width) {
+            val argb = row[x]
+            val r = (argb shr 16) and 0xFF
+            val g = (argb shr 8) and 0xFF
+            val b = argb and 0xFF
+            // Same weighting ZXing's RGBLuminanceSource uses.
+            luma[offset + x] = ((r + 2 * g + b) / 4).toByte()
+        }
+    }
+    return luma
+}
+
+internal fun decodeCollectionQr(luma: ByteArray, width: Int, height: Int): String {
+    val source = PlanarYUVLuminanceSource(luma, width, height, 0, 0, width, height, false)
+    return MultiFormatReader().decode(
+        BinaryBitmap(HybridBinarizer(source)),
+        mapOf(DecodeHintType.POSSIBLE_FORMATS to listOf(BarcodeFormat.QR_CODE)),
+    ).text
 }
 
 data class CollectionShareBundle(

@@ -471,6 +471,9 @@ class ReleasePolishContractTest {
         assertTrue(importSheet.contains(".imePadding()"))
         assertTrue(qrDialog.contains("verticalScroll(rememberScrollState())"))
         assertTrue(qrDialog.contains("shape = RoundedCornerShape(8.dp)"))
+        assertTrue("QR is drawn off the main thread", collections.contains("produceState<CollectionQrImage>(CollectionQrImage.Loading, state.shareLink)"))
+        assertTrue(qrDialog.contains("CollectionQrImage.Loading -> CircularProgressIndicator()"))
+        assertFalse(collections.contains("remember(state.shareLink) { viewModel.buildQrBitmap"))
         assertTrue(pickerSheet.contains(".verticalScroll(rememberScrollState())"))
         assertTrue(pickerSheet.contains(".imePadding()"))
     }

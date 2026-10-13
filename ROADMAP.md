@@ -355,17 +355,6 @@ Evidence for every item below is in RESEARCH.md (2026-09-04 pass).
   Effort: M
 
 
-- [ ] P2 — Move collection QR work off the main thread and bound decode memory
-  Category: perf
-  Where: app/src/main/java/com/freevibe/service/CollectionExporter.kt:43-46,141-155,261-297; app/src/main/java/com/freevibe/ui/screens/collections/CollectionsScreen.kt:144-150,366-370; app/src/test/java/com/freevibe/service/CollectionExporterTest.kt:89-104
-  Problem: QR generation performs about 590,000 setPixel calls during composition, while maximum import can hold compressed bytes, a roughly 48 MB bitmap, another 48 MB IntArray, and decoder buffers.
-  Evidence: remember invokes 768x768 bitmap generation synchronously. Import permits 12 million pixels and copies pixels for ZXing. The safety test only searches source constants.
-  Fix: Generate a bulk pixel array off the main thread with loading state, set pixels once, and downsample imports to a QR-appropriate edge before allocation.
-  Acceptance: QR dialog has no frame over the agreed threshold; maximum fixture decodes under a 128 MiB heap; exported QR round-trips.
-  Confidence: Verified
-  Effort: M
-
-
 - [ ] P2 — Add save, download, share, and in-app report actions to video items
   Category: ux
   Where: app/src/main/java/com/freevibe/ui/screens/videowallpapers/VideoWallpapersScreen.kt:605-634,883-949,1168-1402

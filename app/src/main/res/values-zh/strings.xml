@@ -462,6 +462,7 @@
     <string name="collections_qr_cd">%1$s 的二维码</string>
     <string name="collections_qr_info">%1$s · %2$d 张壁纸</string>
     <string name="collections_qr_copy">复制链接</string>
+    <string name="collections_qr_failed">无法生成二维码，请改为复制链接。</string>
     <string name="collections_share_chooser">分享 &quot;%1$s&quot;</string>
     <string name="collections_no_share_target">没有可分享的应用</string>
     <string name="collections_share_prepare_failed">无法准备此收藏集以供分享。</string>
