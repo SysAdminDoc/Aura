@@ -100,6 +100,17 @@ class DownloadsScreenPolishTest {
             ),
         )
         assertEquals(
+            "下载失败：网络超时",
+            downloadProgressStatusLabel(
+                resources,
+                DownloadProgress(id = "s", fileName = "a.mp3", progress = 0.1f, totalBytes = 1000L, downloadedBytes = 100L, error = "网络超时"),
+            ),
+        )
+        assertEquals(
+            "正在下载",
+            downloadProgressStatusLabel(resources, DownloadProgress(id = "s", fileName = "a.mp3", progress = 0f, totalBytes = 0L, downloadedBytes = 0L)),
+        )
+        assertEquals(
             "夜景。文件缺失。下载于 6月12日。",
             downloadHistorySummary(resources, download, broken = true, sourceUnavailable = false, downloadedAtLabel = "6月12日"),
         )

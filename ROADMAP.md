@@ -416,12 +416,6 @@ Remainders of items closed in the 2026-09-30 drain whose full acceptance did not
   Acceptance: a gate fails if `leakcanary` classes appear in a release APK; the violations seen during a device session are recorded and each has a fix or an open item; the URI-grant check is enabled once compileSdk reaches 37.
   Complexity: S
 
-- [ ] P3 — Localize the Active download status that TalkBack reads
-  Why: `downloadProgressStatusLabel` in `DownloadsScreen.kt` builds "Download failed: <reason>" and the percent label in English, so a Chinese TalkBack user hears an English prefix around a Chinese reason.
-  Touches: `DownloadsScreen.kt`, `values/strings.xml`, `values-zh/strings.xml`, `DownloadsScreenPolishTest.kt`.
-  Acceptance: the status label comes from string resources in both locales; a test under the zh locale reads the failed and in-progress labels without English text.
-  Complexity: S
-
 
 ## Issue Intake (2026-09-26)
 
