@@ -217,10 +217,10 @@ class ReleaseMetadataConsistencyCheckTest(unittest.TestCase):
         self.assertEqual(read_manifest(REPO_ROOT)["roomSchemaVersion"], result["roomSchemaVersion"])
 
     def test_rejects_a_stale_room_schema_claim(self) -> None:
+        # README no longer states a schema version, so the stale claim is
+        # appended; the gate still has to read README for one.
         current = int(read_manifest(REPO_ROOT)["roomSchemaVersion"])
-        message = self._drifted(
-            lambda text: text.replace(f"Room DB v{current}", "Room DB v14")
-        )
+        message = self._drifted(lambda text: text + "\nThe library lives in Room DB v14.\n")
 
         self.assertIn("Room v14", message)
         self.assertIn(f"v{current}", message)

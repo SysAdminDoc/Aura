@@ -5,6 +5,7 @@ All notable changes to Aura will be documented in this file.
 ## Unreleased
 
 - **Sound rotation now uses named pools**: a pool mixes downloaded sounds, local files and Aura Originals, then changes the ringtone, the notification sound, the alarm, or any mix of them on its own schedule. It won't pick the same sound twice in a row when it has another choice, and a clip that's too long or too short for a target is skipped for that target only. Schedules come back after a reboot. Missing files can be relinked from the pool, and the activity list (now in your language) lets you undo a change as long as nothing else has changed that sound since. Your old ringtone and alarm shuffle settings turn into a pool called "My downloads" after the update. Library backups (format 4) carry pool names, targets and schedules, but never audio, file paths or history.
+- **Shorter README**: it now covers installing, checking and building Aura and leaves the architecture tour to ARCHITECTURE.md.
 
 ## v6.46.1 (2026-09-30)
 
