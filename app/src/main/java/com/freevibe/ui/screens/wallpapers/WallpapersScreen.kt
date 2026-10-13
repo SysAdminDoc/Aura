@@ -92,11 +92,16 @@ import com.freevibe.ui.components.SearchHistoryDropdown
 import com.freevibe.ui.components.ShimmerBox
 import com.freevibe.ui.components.ShimmerWallpaperGrid
 import com.freevibe.ui.components.SourceBadge
+import com.freevibe.ui.components.AuraFeedSection
+import com.freevibe.ui.components.AuraFeedStatus
 import com.freevibe.ui.components.AuraSnackbarHost
+import com.freevibe.ui.components.AuraStateMessage
 import com.freevibe.ui.components.AuraStatusAction
 import com.freevibe.ui.components.AuraStatusBanner
 import com.freevibe.ui.components.BrowseRail
 import com.freevibe.ui.components.BrowseRailItem
+import com.freevibe.ui.components.feedSection
+import com.freevibe.ui.components.feedTraversalRoot
 import com.freevibe.ui.navigation.LocalAuraNavigationLayout
 import com.freevibe.ui.navigation.isExpanded
 import com.freevibe.ui.policy.CommunityUploadPolicyKind
@@ -389,13 +394,14 @@ fun WallpapersScreen(
         )
     }
 
-    Box(modifier = Modifier.fillMaxSize()) {
+    Box(modifier = Modifier.fillMaxSize().feedTraversalRoot()) {
         Column(modifier = Modifier.fillMaxSize()) {
             val sourceMenu = remember(state.selectedTab, providerSetup) {
                 wallpaperSourceMenu(state.selectedTab, providerSetup)
             }
             Column(
                 modifier = Modifier
+                    .feedSection(AuraFeedSection.Header)
                     .fillMaxWidth()
                     .padding(horizontal = 12.dp, vertical = 4.dp),
             ) {
@@ -714,6 +720,7 @@ fun WallpapersScreen(
             DownloadProgressBar(
                 downloads = downloads,
                 onDismiss = { viewModel.dismissDownload(it) },
+                modifier = Modifier.feedSection(AuraFeedSection.Status),
             )
 
             nonBlockingWarning?.let { warning ->
@@ -737,12 +744,14 @@ fun WallpapersScreen(
                             nonBlockingWarningSource = null
                         },
                     ),
-                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp),
+                    modifier = Modifier
+                        .padding(horizontal = 12.dp, vertical = 4.dp)
+                        .feedSection(AuraFeedSection.Status),
                 )
             }
 
             // Content with pull-to-refresh (#4)
-            Box(modifier = Modifier.fillMaxSize()) {
+            Box(modifier = Modifier.fillMaxSize().feedSection(AuraFeedSection.Content)) {
                 when {
                     state.isLoading && state.wallpapers.isEmpty() -> {
                         Column(
@@ -901,6 +910,14 @@ fun WallpapersScreen(
                         }
                     }
                 }
+                // Last, so the grid isn't drawn over it.
+                AuraFeedStatus(
+                    isLoading = state.isLoading || state.isRefreshing,
+                    hasContent = visibleSections.hasRenderableContent &&
+                        !(state.wallpapers.isEmpty() && (state.isLoading || state.error != null)),
+                    loading = stringResource(R.string.wallpapers_loading_title),
+                    ready = stringResource(R.string.a11y_wallpapers_loaded),
+                )
             }
         }
 
@@ -1387,13 +1404,15 @@ internal fun WallpaperStateCard(
             )
         }
         Spacer(Modifier.height(14.dp))
-        Text(title, style = MaterialTheme.typography.titleLarge)
-        Spacer(Modifier.height(6.dp))
-        Text(
-            text = description,
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
+        AuraStateMessage {
+            Text(title, style = MaterialTheme.typography.titleLarge)
+            Spacer(Modifier.height(6.dp))
+            Text(
+                text = description,
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
         if (primaryAction != null || secondaryAction != null) {
             Spacer(Modifier.height(16.dp))
             Row(

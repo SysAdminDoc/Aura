@@ -8,6 +8,8 @@ import unittest
 from pathlib import Path
 
 from tools.accessibility_release_gate_check import (
+    LIVE_REGION_TEST_TERMS,
+    REQUIRED_LIVE_REGION_SURFACES,
     REQUIRED_PRIMARY_DESTINATIONS,
     AccessibilityReleaseGateError,
     validate_accessibility_release_gate,
@@ -16,6 +18,7 @@ from tools.accessibility_release_gate_check import (
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 POLICY = "docs/qa/accessibility-release-gate.json"
+GATE_TEST = "app/src/androidTest/java/com/freevibe/ui/accessibility/AccessibilityReleaseGateTest.kt"
 TRUNCATED_BASELINE = "app/src/test/screenshots/settings_provider_disabled_light_font2_0.png"
 
 
@@ -516,6 +519,100 @@ class AccessibilityReleaseGateCheckTest(unittest.TestCase):
                 validate_accessibility_release_gate(repo, POLICY)
 
             self.assertIn('must render production route states, not SettingsToggle(', str(ctx.exception))
+
+    def test_reports_the_async_surfaces_checked_for_a_live_region(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            repo = copy_required_tree(Path(tmpdir))
+            complete_primary_matrix(repo)
+
+            result = validate_accessibility_release_gate(repo, POLICY)
+
+        self.assertEqual(len(REQUIRED_LIVE_REGION_SURFACES), result["liveRegionSurfaceCount"])
+
+    def test_rejects_an_async_surface_recorded_without_a_live_region(self) -> None:
+        for surface_id in sorted(REQUIRED_LIVE_REGION_SURFACES):
+            with self.subTest(surface=surface_id), tempfile.TemporaryDirectory() as tmpdir:
+                repo = copy_required_tree(Path(tmpdir))
+                # A complete matrix, so only the check under test can be what fails.
+                complete_primary_matrix(repo)
+                policy = self._policy(repo)
+                for row in policy["automatedGate"]["executedSurfaces"]:
+                    if row["id"] == surface_id:
+                        row["liveRegion"] = False
+                self._write_policy(repo, policy)
+
+                with self.assertRaises(AccessibilityReleaseGateError) as ctx:
+                    validate_accessibility_release_gate(repo, POLICY)
+
+                self.assertIn(f"async surfaces must set liveRegion to true: {surface_id}", str(ctx.exception))
+
+    def test_rejects_a_surface_that_does_not_say_whether_it_is_async(self) -> None:
+        for label, value in (("missing", None), ("a string", "true"), ("a number", 1)):
+            with self.subTest(live_region=label), tempfile.TemporaryDirectory() as tmpdir:
+                repo = copy_required_tree(Path(tmpdir))
+                complete_primary_matrix(repo)
+                policy = self._policy(repo)
+                for row in policy["automatedGate"]["executedSurfaces"]:
+                    if row["id"] == "settings-diagnostics":
+                        if value is None:
+                            del row["liveRegion"]
+                        else:
+                            row["liveRegion"] = value
+                self._write_policy(repo, policy)
+
+                with self.assertRaises(AccessibilityReleaseGateError) as ctx:
+                    validate_accessibility_release_gate(repo, POLICY)
+
+                self.assertIn("settings-diagnostics.liveRegion must be true or false", str(ctx.exception))
+
+    def test_rejects_an_async_surface_the_test_never_asserts(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            repo = copy_required_tree(Path(tmpdir))
+            complete_primary_matrix(repo)
+            test_path = repo / GATE_TEST
+            original = test_path.read_text(encoding="utf-8")
+            # The trailing comma picks the set entry and leaves the test that renders the scenario.
+            edited = original.replace("ProductionRouteScenario.SoundDetailReady,", "")
+            self.assertNotEqual(original, edited)
+            test_path.write_text(edited, encoding="utf-8")
+
+            with self.assertRaises(AccessibilityReleaseGateError) as ctx:
+                validate_accessibility_release_gate(repo, POLICY)
+
+            self.assertIn(
+                "doesn't assert a live region for sounds-detail: SoundDetailReady is missing from asyncScenarios",
+                str(ctx.exception),
+            )
+
+    def test_rejects_a_test_that_stops_asserting_live_regions(self) -> None:
+        for term in LIVE_REGION_TEST_TERMS:
+            with self.subTest(term=term), tempfile.TemporaryDirectory() as tmpdir:
+                repo = copy_required_tree(Path(tmpdir))
+                complete_primary_matrix(repo)
+                test_path = repo / GATE_TEST
+                original = test_path.read_text(encoding="utf-8")
+                self.assertIn(term, original)
+                test_path.write_text(original.replace(term, ""), encoding="utf-8")
+
+                with self.assertRaises(AccessibilityReleaseGateError) as ctx:
+                    validate_accessibility_release_gate(repo, POLICY)
+
+                self.assertIn(f"missing live region assertion term: {term}", str(ctx.exception))
+
+    def test_rejects_a_test_with_no_async_scenario_set(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            repo = copy_required_tree(Path(tmpdir))
+            complete_primary_matrix(repo)
+            test_path = repo / GATE_TEST
+            original = test_path.read_text(encoding="utf-8")
+            edited = original.replace("asyncScenarios = setOf(", "asyncScenarios = listOf(")
+            self.assertNotEqual(original, edited)
+            test_path.write_text(edited, encoding="utf-8")
+
+            with self.assertRaises(AccessibilityReleaseGateError) as ctx:
+                validate_accessibility_release_gate(repo, POLICY)
+
+            self.assertIn("declares no asyncScenarios set", str(ctx.exception))
 
 
 def copy_file(relative_path: str, destination: Path) -> None:

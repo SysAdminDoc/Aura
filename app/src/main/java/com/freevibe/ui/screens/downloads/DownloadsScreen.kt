@@ -46,6 +46,7 @@ import com.freevibe.service.DownloadProgress
 import com.freevibe.service.LocalMediaRelinkOutcome
 import com.freevibe.ui.components.AuraSnackbarHost
 import com.freevibe.ui.components.AuraStateCard
+import com.freevibe.ui.components.announceOnceSettled
 import com.freevibe.ui.rotation.RotationExclusionsViewModel
 import com.freevibe.ui.theme.AuraShapes
 import kotlinx.coroutines.launch
@@ -317,6 +318,7 @@ internal fun ActiveDownloadCard(dl: DownloadProgress, onDismiss: () -> Unit, onR
         modifier = Modifier.semantics(mergeDescendants = true) {
             contentDescription = summary
             stateDescription = statusLabel
+            announceOnceSettled(dl.isComplete || dl.error != null)
         },
         color = MaterialTheme.colorScheme.surfaceContainer,
         shape = AuraShapes.Medium,

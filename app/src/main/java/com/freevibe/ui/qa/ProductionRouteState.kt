@@ -57,12 +57,14 @@ import com.freevibe.data.model.ROTATION_MEDIA_VIDEO
 import com.freevibe.data.model.ROTATION_MEDIA_WALLPAPER
 import com.freevibe.data.model.RotationExclusionEntity
 import com.freevibe.data.model.WALLPAPER_PRESENTATION_FIT
+import com.freevibe.ui.components.AuraLiveStatus
 import com.freevibe.ui.components.AuraStatusAction
 import com.freevibe.ui.components.AuraStatusBanner
 import com.freevibe.ui.components.CompactSearchField
 import com.freevibe.ui.components.FitCanvasControls
 import com.freevibe.ui.components.FitCanvasMedia
 import com.freevibe.ui.components.ShimmerWallpaperGrid
+import com.freevibe.ui.components.politeAnnouncement
 import com.freevibe.ui.preview.PREVIEW_SOUNDS
 import com.freevibe.ui.preview.PREVIEW_WALLPAPERS
 import com.freevibe.ui.screens.editor.WallpaperEditorPreview
@@ -82,6 +84,7 @@ import com.freevibe.service.SoundShuffleSourceKind
 import com.freevibe.service.SoundShuffleTarget
 import com.freevibe.ui.screens.sounds.ApplyButton
 import com.freevibe.ui.screens.sounds.DetailWaveform
+import com.freevibe.ui.screens.sounds.PreviewPlaybackStatus
 import com.freevibe.ui.screens.videowallpapers.VideoCard
 import com.freevibe.ui.screens.videowallpapers.VideoWallpaperItem
 import com.freevibe.ui.screens.wallpapers.WallpaperGrid
@@ -181,6 +184,7 @@ private fun WallpapersGridState() {
                 favoriteIdentities = emptySet(),
                 onLoadMore = {},
             )
+            AuraLiveStatus(stringResource(R.string.a11y_wallpapers_loaded))
         }
     }
 }
@@ -223,12 +227,15 @@ private fun SoundDetailState() {
             stringResource(R.string.sound_detail_by_creator, sound.uploaderName),
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
-        DetailWaveform(
-            duration = sound.duration,
-            isPlaying = true,
-            progress = 0.42f,
-            modifier = Modifier.fillMaxWidth().height(156.dp),
-        )
+        Box {
+            DetailWaveform(
+                duration = sound.duration,
+                isPlaying = true,
+                progress = 0.42f,
+                modifier = Modifier.fillMaxWidth().height(156.dp),
+            )
+            PreviewPlaybackStatus(isPreparing = false, isPlaying = true, soundName = sound.name)
+        }
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             ApplyButton(
                 text = stringResource(R.string.editor_sound_apply_ringtone),
@@ -408,7 +415,11 @@ private fun WallpaperEditorState() {
                     verticalArrangement = Arrangement.spacedBy(8.dp),
                 ) {
                     CircularProgressIndicator(modifier = Modifier.size(28.dp), strokeWidth = 2.dp)
-                    Text(stringResource(R.string.editor_wallpaper_loading_image), color = Color.White)
+                    Text(
+                        stringResource(R.string.editor_wallpaper_loading_image),
+                        modifier = Modifier.politeAnnouncement(),
+                        color = Color.White,
+                    )
                 }
             }
         }

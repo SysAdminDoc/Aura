@@ -1,12 +1,18 @@
 package com.freevibe.ui.screens.downloads
 
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.SemanticsActions
+import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.semantics.getOrNull
 import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.assert
 import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.hasClickAction
+import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onAllNodesWithText
@@ -69,5 +75,29 @@ class ActiveDownloadCardUiTest {
         }
 
         composeRule.onAllNodesWithText("Retry", useUnmergedTree = true).assertCountEquals(0)
+    }
+
+    @Test
+    fun `a card stays out of the live region while it counts up and joins it when it finishes or fails`() {
+        var dl by mutableStateOf(DownloadProgress("d1", "night.png", 0.4f, 1000, 400))
+        composeRule.mainClock.autoAdvance = false
+        composeRule.setContent {
+            FreeVibeTheme(darkTheme = true) {
+                ActiveDownloadCard(dl = dl, onDismiss = {}, onRetry = {})
+            }
+        }
+        composeRule.mainClock.advanceTimeByFrame()
+        // The dismiss button names the file too, so the card is the match that can't be clicked.
+        val card = hasContentDescription("night.png", substring = true) and !hasClickAction()
+        val polite = SemanticsMatcher.expectValue(SemanticsProperties.LiveRegion, LiveRegionMode.Polite)
+        composeRule.onNode(card).assert(SemanticsMatcher.keyNotDefined(SemanticsProperties.LiveRegion))
+
+        dl = DownloadProgress("d1", "night.png", 1f, 1000, 1000, isComplete = true)
+        composeRule.mainClock.advanceTimeByFrame()
+        composeRule.onNode(card).assert(polite)
+
+        dl = DownloadProgress("d1", "night.png", 0f, 0, 0, error = "No connection")
+        composeRule.mainClock.advanceTimeByFrame()
+        composeRule.onNode(card).assert(polite)
     }
 }

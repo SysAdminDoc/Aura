@@ -73,6 +73,23 @@ REQUIRED_EXECUTED_SURFACES = {
     "wallpaper-editor",
 }
 
+# Surfaces whose content loads, fails or changes while they're open. TalkBack only
+# hears that through a live region, so these can't be recorded as not needing one.
+REQUIRED_LIVE_REGION_SURFACES = {
+    "wallpapers-grid",
+    "wallpapers-offline",
+    "sounds-detail",
+    "video-wallpapers",
+    "wallpaper-editor",
+}
+LIVE_REGION_TEST_TERMS = (
+    "SemanticsProperties.LiveRegion",
+    "LiveRegionMode.Polite",
+    "in asyncScenarios",
+)
+ASYNC_SCENARIOS_RE = re.compile(r"asyncScenarios\s*=\s*setOf\((.*?)\)", re.DOTALL)
+SCENARIO_NAME_RE = re.compile(r"ProductionRouteScenario\.(\w+)")
+
 PRODUCTION_ROUTE_SOURCE = "app/src/main/java/com/freevibe/ui/qa/ProductionRouteState.kt"
 SCREEN_SOURCE = "app/src/main/java/com/freevibe/ui/navigation/Screen.kt"
 SCREEN_OBJECT = re.compile(r"data object (\w+)\s*:\s*Screen\b")
@@ -171,6 +188,53 @@ def validate_destination_coverage(
         excused += 1
 
     return {"destinationCount": len(destinations), "executed": executed, "excused": excused}
+
+
+def validate_live_region_coverage(
+    test_path: str,
+    test_text: str,
+    executed_rows: list[dict[str, Any]],
+) -> dict[str, int]:
+    """Every async surface the gate renders is also checked for a live region.
+
+    The accessibility checks pass a surface that loads, fails and refreshes in
+    silence, because nothing they look at notices a change that's never
+    announced. So each executed surface says whether it's async, and the
+    instrumented test has to assert a polite live region on every one that is.
+    """
+    flagged: dict[str, bool] = {}
+    for row in executed_rows:
+        surface_id = require_string(row.get("id"), "automatedGate.executedSurfaces[].id")
+        live_region = row.get("liveRegion")
+        if not isinstance(live_region, bool):
+            raise AccessibilityReleaseGateError(
+                f"{surface_id}.liveRegion must be true or false, so an async surface can't go unmarked"
+            )
+        flagged[surface_id] = live_region
+    unmarked = sorted(surface_id for surface_id in REQUIRED_LIVE_REGION_SURFACES if not flagged.get(surface_id))
+    if unmarked:
+        raise AccessibilityReleaseGateError(
+            "async surfaces must set liveRegion to true: " + ", ".join(unmarked)
+        )
+
+    for term in LIVE_REGION_TEST_TERMS:
+        if term not in test_text:
+            raise AccessibilityReleaseGateError(f"{test_path} missing live region assertion term: {term}")
+    declared = ASYNC_SCENARIOS_RE.search(test_text)
+    if not declared:
+        raise AccessibilityReleaseGateError(f"{test_path} declares no asyncScenarios set")
+    asserted = set(SCENARIO_NAME_RE.findall(declared.group(1)))
+    for row in executed_rows:
+        if not row["liveRegion"]:
+            continue
+        scenario_name = require_string(row.get("scenario"), f"{row.get('id')}.scenario").rsplit(".", 1)[-1]
+        if scenario_name not in asserted:
+            raise AccessibilityReleaseGateError(
+                f"{test_path} doesn't assert a live region for {row.get('id')}: "
+                f"{scenario_name} is missing from asyncScenarios"
+            )
+
+    return {"liveRegionSurfaceCount": sum(1 for live_region in flagged.values() if live_region)}
 
 
 def validate_scenario_currency(
@@ -441,6 +505,7 @@ def validate_accessibility_release_gate(repo_root: Path, policy_path: str) -> di
             )
         if scenario_name not in production_route_text:
             raise AccessibilityReleaseGateError(f"production route source missing scenario: {scenario_name}")
+    live_regions = validate_live_region_coverage(test_path, test_text, executed_rows)
 
     version_catalog = read_text(repo_root / "gradle/libs.versions.toml")
     app_gradle = read_text(repo_root / "app/build.gradle.kts")
@@ -517,6 +582,7 @@ def validate_accessibility_release_gate(repo_root: Path, policy_path: str) -> di
         "executedSurfaceCount": len(executed_rows),
         "sourceUrlCount": len(source_urls),
         "versionName": version_name,
+        **live_regions,
         **coverage,
         **currency,
         **primary,

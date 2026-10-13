@@ -46,10 +46,12 @@ import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.freevibe.R
+import com.freevibe.ui.components.AuraLiveStatus
 import com.freevibe.ui.components.AuraSnackbarHost
 import com.freevibe.ui.components.AuraStateAction
 import com.freevibe.ui.components.AuraStateCard
 import com.freevibe.ui.components.ShimmerBox
+import com.freevibe.ui.components.politeAnnouncement
 import com.freevibe.data.model.ContentSource
 import com.freevibe.data.model.ContentType
 import com.freevibe.data.model.Sound
@@ -122,6 +124,7 @@ fun SoundDetailScreen(
                     Spacer(Modifier.height(12.dp))
                     Text(
                         stringResource(R.string.sound_detail_opening),
+                        modifier = Modifier.politeAnnouncement(),
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
@@ -401,6 +404,13 @@ fun SoundDetailScreen(
                         )
                     }
                 }
+                // Last, so the waveform and the play button aren't drawn over it.
+                PreviewPlaybackStatus(
+                    isPreparing = state.resolvingId != null,
+                    isPlaying = state.playingId != null,
+                    soundName = s.name.takeIf { isPlaying },
+                    modifier = Modifier.align(Alignment.TopStart),
+                )
             }
 
             // Sound name
@@ -847,6 +857,31 @@ private fun SimilarSoundsSection(
             }
         }
     }
+}
+
+/**
+ * Says when a preview is being fetched, starts or stops, for anyone who can't see the play button
+ * change. It stays quiet until something has played, so opening a screen says nothing. The waveform
+ * can't do this job, because its state carries a percent that moves many times a second.
+ */
+@Composable
+internal fun PreviewPlaybackStatus(
+    isPreparing: Boolean,
+    isPlaying: Boolean,
+    soundName: String?,
+    modifier: Modifier = Modifier,
+) {
+    var hasPlayed by remember { mutableStateOf(false) }
+    SideEffect { if (isPreparing || isPlaying) hasPlayed = true }
+    val name = soundName?.takeIf { it.isNotBlank() }
+    val status = when {
+        isPreparing -> stringResource(R.string.a11y_preview_preparing)
+        isPlaying && name != null -> stringResource(R.string.a11y_preview_playing_named, name)
+        isPlaying -> stringResource(R.string.a11y_preview_playing)
+        hasPlayed -> stringResource(R.string.a11y_preview_stopped)
+        else -> ""
+    }
+    AuraLiveStatus(status = status, modifier = modifier)
 }
 
 @Composable

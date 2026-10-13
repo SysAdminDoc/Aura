@@ -145,6 +145,7 @@ private fun DownloadItem(
         modifier = Modifier.semantics {
             contentDescription = download.fileName
             stateDescription = downloadStateDescription
+            announceOnceSettled(download.isComplete || download.error != null)
         },
         color = MaterialTheme.colorScheme.surfaceContainer,
         shape = AuraCardShape,
@@ -683,19 +684,20 @@ fun AuraStateCard(
                 modifier = Modifier.size(22.dp),
             )
             Spacer(Modifier.height(10.dp))
-            Text(
-                title,
-                modifier = Modifier.semantics { heading() },
-                style = MaterialTheme.typography.titleLarge,
-                color = MaterialTheme.colorScheme.onSurface,
-            )
-            Spacer(Modifier.height(4.dp))
-            Text(
-                text = description,
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                textAlign = TextAlign.Start,
-            )
+            AuraStateMessage {
+                Text(
+                    title,
+                    style = MaterialTheme.typography.titleLarge,
+                    color = MaterialTheme.colorScheme.onSurface,
+                )
+                Spacer(Modifier.height(4.dp))
+                Text(
+                    text = description,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    textAlign = TextAlign.Start,
+                )
+            }
             if (primaryAction != null || secondaryAction != null) {
                 Spacer(Modifier.height(12.dp))
                 FlowRow(

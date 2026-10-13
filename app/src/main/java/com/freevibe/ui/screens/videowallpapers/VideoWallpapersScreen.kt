@@ -82,6 +82,8 @@ import com.freevibe.service.copyStreamCapped
 import com.freevibe.service.normalizeVideoWallpaperScaleMode
 import com.freevibe.service.persistVideoWallpaperSelection
 import com.freevibe.service.videoWallpaperMimeTypes
+import com.freevibe.ui.components.AuraFeedSection
+import com.freevibe.ui.components.AuraFeedStatus
 import com.freevibe.ui.components.AuraStateAction
 import com.freevibe.ui.components.LoadMoreIndicator
 import com.freevibe.ui.components.AuraStateCard
@@ -94,6 +96,9 @@ import com.freevibe.ui.components.CountBadge
 import com.freevibe.ui.components.FitCanvasControls
 import com.freevibe.ui.components.FitCanvasMedia
 import com.freevibe.ui.components.ShimmerBox
+import com.freevibe.ui.components.feedSection
+import com.freevibe.ui.components.feedTraversalRoot
+import com.freevibe.ui.components.politeAnnouncement
 import com.freevibe.ui.LiveWallpaperBlock
 import com.freevibe.ui.LiveWallpaperLaunchMode
 import com.freevibe.ui.LiveWallpaperLaunchResult
@@ -443,9 +448,10 @@ fun VideoWallpapersScreen(
         contentWindowInsets = WindowInsets(0, 0, 0, 0),
         snackbarHost = { AuraSnackbarHost(snackbarHostState) },
     ) { scaffoldPadding ->
-    Column(Modifier.fillMaxSize().padding(scaffoldPadding)) {
+    Column(Modifier.fillMaxSize().padding(scaffoldPadding).feedTraversalRoot()) {
         Column(
             modifier = Modifier
+                .feedSection(AuraFeedSection.Header)
                 .fillMaxWidth()
                 .padding(horizontal = 12.dp, vertical = 4.dp),
         ) {
@@ -582,11 +588,13 @@ fun VideoWallpapersScreen(
                     icon = Icons.Default.FolderOpen,
                     onClick = pickGalleryVideo,
                 ),
-                modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp),
+                modifier = Modifier
+                    .padding(horizontal = 12.dp, vertical = 4.dp)
+                    .feedSection(AuraFeedSection.Status),
             )
         }
 
-        Box(Modifier.fillMaxSize()) {
+        Box(Modifier.fillMaxSize().feedSection(AuraFeedSection.Content)) {
             when {
                 (state.isLoading || state.isRefreshing) && state.items.isEmpty() -> {
                     Column(
@@ -601,6 +609,7 @@ fun VideoWallpapersScreen(
                             CircularProgressIndicator(Modifier.size(20.dp), strokeWidth = 2.dp)
                             Text(
                                 stringResource(R.string.video_wp_loading_title),
+                                modifier = Modifier.politeAnnouncement(),
                                 style = MaterialTheme.typography.labelLarge,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                             )
@@ -778,6 +787,13 @@ fun VideoWallpapersScreen(
                     }
                 }
             }
+            // Last, so the list isn't drawn over it.
+            AuraFeedStatus(
+                isLoading = state.isLoading || state.isRefreshing,
+                hasContent = visibleItems.isNotEmpty(),
+                loading = stringResource(R.string.video_wp_loading_title),
+                ready = stringResource(R.string.a11y_videos_loaded),
+            )
         }
     }
 

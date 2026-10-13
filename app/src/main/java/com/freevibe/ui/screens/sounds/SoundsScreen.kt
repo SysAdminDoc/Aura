@@ -73,6 +73,8 @@ import com.freevibe.data.model.shouldShowCommunityContent
 import com.freevibe.data.repository.matchesHiddenIds
 import com.freevibe.data.repository.YouTubeExtractionMode
 import com.freevibe.data.repository.displayName
+import com.freevibe.ui.components.AuraFeedSection
+import com.freevibe.ui.components.AuraFeedStatus
 import com.freevibe.ui.components.AuraStateAction
 import com.freevibe.ui.components.LoadMoreIndicator
 import com.freevibe.ui.components.AuraStateCard
@@ -85,6 +87,9 @@ import com.freevibe.ui.components.SearchHistoryDropdown
 import com.freevibe.ui.components.ShimmerSoundList
 import com.freevibe.ui.components.AuraStatusAction
 import com.freevibe.ui.components.AuraStatusBanner
+import com.freevibe.ui.components.feedSection
+import com.freevibe.ui.components.feedTraversalRoot
+import com.freevibe.ui.components.politeAnnouncement
 import com.freevibe.ui.navigation.LocalAuraNavigationLayout
 import com.freevibe.ui.navigation.isExpanded
 import com.freevibe.ui.policy.CommunityUploadPolicyKind
@@ -408,7 +413,8 @@ fun SoundsScreen(
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(scaffoldPadding),
+                .padding(scaffoldPadding)
+                .feedTraversalRoot(),
         ) {
         Column(
             modifier = if (isExpandedLayout) {
@@ -422,6 +428,7 @@ fun SoundsScreen(
         ) {
             Column(
                 modifier = Modifier
+                    .feedSection(AuraFeedSection.Header)
                     .fillMaxWidth()
                     .padding(horizontal = 12.dp, vertical = 4.dp),
             ) {
@@ -633,7 +640,9 @@ fun SoundsScreen(
                         icon = Icons.Default.Refresh,
                         onClick = { viewModel.refresh() },
                     ),
-                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp),
+                    modifier = Modifier
+                        .padding(horizontal = 12.dp, vertical = 4.dp)
+                        .feedSection(AuraFeedSection.Status),
                 )
             }
 
@@ -653,12 +662,14 @@ fun SoundsScreen(
                         icon = Icons.Default.Close,
                         onClick = { nonBlockingWarning = null },
                     ),
-                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp),
+                    modifier = Modifier
+                        .padding(horizontal = 12.dp, vertical = 4.dp)
+                        .feedSection(AuraFeedSection.Status),
                 )
             }
 
             // Content
-            Box(modifier = Modifier.fillMaxSize()) {
+            Box(modifier = Modifier.fillMaxSize().feedSection(AuraFeedSection.Content)) {
                 if (state.error != null && displaySounds.isEmpty() && !state.isLoading && !state.isRefreshing) {
                     AuraStateCard(
                         icon = Icons.Default.CloudOff,
@@ -729,6 +740,25 @@ fun SoundsScreen(
                         )
                     }
                 }
+                // Both last, so the list isn't drawn over them, and in different corners so
+                // neither covers the other.
+                AuraFeedStatus(
+                    isLoading = state.isLoading || state.isRefreshing,
+                    hasContent = contentSounds.isNotEmpty(),
+                    loading = stringResource(R.string.sounds_loading_title),
+                    ready = stringResource(R.string.a11y_sounds_loaded),
+                )
+                val playingSoundName = remember(state.playingId, contentSounds) {
+                    state.playingId?.let { playingId ->
+                        contentSounds.firstOrNull { it.stableKey() == playingId }?.name
+                    }
+                }
+                PreviewPlaybackStatus(
+                    isPreparing = state.resolvingId != null,
+                    isPlaying = state.playingId != null,
+                    soundName = playingSoundName,
+                    modifier = Modifier.align(Alignment.TopEnd),
+                )
             }
         }
         }
@@ -1011,6 +1041,7 @@ private fun SoundsList(
                         CircularProgressIndicator(Modifier.size(20.dp), strokeWidth = 2.dp)
                         Text(
                             stringResource(R.string.sounds_loading_title),
+                            modifier = Modifier.politeAnnouncement(),
                             style = MaterialTheme.typography.labelLarge,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )

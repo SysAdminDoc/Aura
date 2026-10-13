@@ -14,37 +14,43 @@
         "id": "wallpapers-grid",
         "surface": "Wallpapers feed success state with search, local cache status, and wallpaper cards",
         "scenario": "ProductionRouteScenario.WallpapersGridSuccess",
-        "assertionResource": "R.string.nav_wallpapers"
+        "assertionResource": "R.string.nav_wallpapers",
+        "liveRegion": true
       },
       {
         "id": "wallpapers-offline",
         "surface": "Wallpapers offline/local empty state with provider failure messaging",
         "scenario": "ProductionRouteScenario.WallpapersOfflineEmpty",
-        "assertionResource": "R.string.wallpapers_empty_default_title"
+        "assertionResource": "R.string.wallpapers_empty_default_title",
+        "liveRegion": true
       },
       {
         "id": "sounds-detail",
         "surface": "Sound detail state with waveform, playback controls, metadata, and cache status",
         "scenario": "ProductionRouteScenario.SoundDetailReady",
-        "assertionResource": "R.string.nav_sounds"
+        "assertionResource": "R.string.nav_sounds",
+        "liveRegion": true
       },
       {
         "id": "settings-diagnostics",
         "surface": "Settings diagnostics/provider-disabled state at large font scale",
         "scenario": "ProductionRouteScenario.SettingsProviderDisabled",
-        "assertionResource": "R.string.nav_settings"
+        "assertionResource": "R.string.nav_settings",
+        "liveRegion": false
       },
       {
         "id": "video-wallpapers",
         "surface": "Video wallpapers degraded-provider state with preview metadata",
         "scenario": "ProductionRouteScenario.VideoWallpapersError",
-        "assertionResource": "R.string.nav_videos"
+        "assertionResource": "R.string.nav_videos",
+        "liveRegion": true
       },
       {
         "id": "wallpaper-editor",
         "surface": "Wallpaper editor loading/recovery state with tool controls",
         "scenario": "ProductionRouteScenario.WallpaperEditorLoading",
-        "assertionResource": "R.string.editor_wallpaper_title"
+        "assertionResource": "R.string.editor_wallpaper_title",
+        "liveRegion": true
       }
     ],
     "verifyCommand": "./gradlew :app:connectedDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.class=com.freevibe.ui.accessibility.AccessibilityReleaseGateTest"

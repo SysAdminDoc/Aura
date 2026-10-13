@@ -57,6 +57,7 @@ import com.freevibe.ui.components.AuraSnackbarHost
 import com.freevibe.ui.components.AuraStatusBanner
 import com.freevibe.ui.components.AuraStateAction
 import com.freevibe.ui.components.AuraStateCard
+import com.freevibe.ui.components.politeAnnouncement
 import com.freevibe.ui.launchLiveWallpaperPicker
 import com.freevibe.ui.liveWallpaperBlock
 import com.freevibe.ui.liveWallpaperBlockedMessage
@@ -286,6 +287,7 @@ fun WallpaperEditorScreen(
                             )
                             Spacer(Modifier.height(8.dp))
                             Text(stringResource(R.string.editor_wallpaper_loading_image), color = Color.White.copy(alpha = 0.6f),
+                                modifier = Modifier.politeAnnouncement(),
                                 style = MaterialTheme.typography.labelSmall)
                         }
                     }

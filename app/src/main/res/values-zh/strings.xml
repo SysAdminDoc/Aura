@@ -88,6 +88,11 @@
     <string name="a11y_preparing_audio">正在准备音频</string>
     <string name="a11y_preview_preparing">正在准备预览</string>
     <string name="a11y_preview_playing">正在播放</string>
+    <string name="a11y_preview_playing_named">正在播放 %1$s</string>
+    <string name="a11y_preview_stopped">预览已停止</string>
+    <string name="a11y_wallpapers_loaded">壁纸已加载</string>
+    <string name="a11y_videos_loaded">视频壁纸已加载</string>
+    <string name="a11y_sounds_loaded">声音已加载</string>
     <string name="a11y_preview_ready">预览已就绪</string>
     <string name="a11y_preview_not_loaded">预览未加载</string>
     <string name="a11y_upvote_sound">为声音点赞</string>

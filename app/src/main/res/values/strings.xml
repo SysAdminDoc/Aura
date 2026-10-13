@@ -93,6 +93,11 @@
     <string name="a11y_preparing_audio">Preparing audio</string>
     <string name="a11y_preview_preparing">Preparing preview</string>
     <string name="a11y_preview_playing">Playing</string>
+    <string name="a11y_preview_playing_named">Playing %1$s</string>
+    <string name="a11y_preview_stopped">Preview stopped</string>
+    <string name="a11y_wallpapers_loaded">Wallpapers loaded</string>
+    <string name="a11y_videos_loaded">Video wallpapers loaded</string>
+    <string name="a11y_sounds_loaded">Sounds loaded</string>
     <string name="a11y_preview_ready">Preview ready</string>
     <string name="a11y_preview_not_loaded">Preview not loaded</string>
     <string name="a11y_upvote_sound">Upvote sound</string>

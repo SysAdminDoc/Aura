@@ -3,8 +3,12 @@ package com.freevibe.ui.accessibility
 import androidx.activity.ComponentActivity
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.semantics.LiveRegionMode
+import androidx.compose.ui.semantics.SemanticsProperties
+import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.junit4.accessibility.enableAccessibilityChecks
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
+import androidx.compose.ui.test.onFirst
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.tryPerformAccessibilityChecks
@@ -31,6 +35,20 @@ class AccessibilityReleaseGateTest {
 
     @get:Rule
     val composeRule = createAndroidComposeRule<ComponentActivity>()
+
+    /**
+     * Surfaces whose content loads, fails or changes while they're open. Each one has to carry a
+     * polite live region, or TalkBack has nothing to read when that happens.
+     */
+    private val asyncScenarios = setOf(
+        ProductionRouteScenario.WallpapersGridSuccess,
+        ProductionRouteScenario.WallpapersOfflineEmpty,
+        ProductionRouteScenario.SoundDetailReady,
+        ProductionRouteScenario.VideoWallpapersError,
+        ProductionRouteScenario.WallpaperEditorLoading,
+        ProductionRouteScenario.DownloadsMediaCopies,
+        ProductionRouteScenario.DownloadsMissingMedia,
+    )
 
     @Before
     fun enableComposeAccessibilityChecks() {
@@ -110,7 +128,20 @@ class AccessibilityReleaseGateTest {
         }
 
         composeRule.waitForIdle()
+        // State cards wait a moment before they become live regions, and the test clock only moves
+        // when it's told to.
+        composeRule.mainClock.advanceTimeBy(LIVE_REGION_SETTLE_MS)
         composeRule.onNodeWithText(composeRule.activity.getString(scenario.assertionResource)).assertExists()
+        if (scenario in asyncScenarios) {
+            composeRule
+                .onAllNodes(SemanticsMatcher.expectValue(SemanticsProperties.LiveRegion, LiveRegionMode.Polite))
+                .onFirst()
+                .assertExists()
+        }
         composeRule.onRoot().tryPerformAccessibilityChecks()
+    }
+
+    private companion object {
+        const val LIVE_REGION_SETTLE_MS = 1_000L
     }
 }
