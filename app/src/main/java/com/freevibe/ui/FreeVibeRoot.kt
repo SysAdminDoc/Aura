@@ -1128,6 +1128,7 @@ private fun isBottomNavDestination(
             Screen.Library.route,
             Screen.Favorites.route,
             Screen.Downloads.route,
+            Screen.Downloads.destinationPattern,
             Screen.Collections.route,
             Screen.Collections.destinationPattern,
             Screen.WallpaperHistory.route,

@@ -42,6 +42,7 @@ class LibraryHubContractTest {
         assertTrue(root.contains("Screen.UniversalSearch.route"))
         assertTrue(root.contains("Screen.Favorites.route"))
         assertTrue(root.contains("Screen.Downloads.route"))
+        assertTrue("Downloads keeps the Library tab selected", root.contains("Screen.Downloads.destinationPattern,"))
         assertTrue(root.contains("Screen.Collections.route"))
         assertTrue(root.contains("Screen.WallpaperHistory.route"))
         assertTrue(root.contains("screen == Screen.Library && favoritesCount > 0"))

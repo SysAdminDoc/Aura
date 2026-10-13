@@ -99,9 +99,10 @@ fun DownloadsScreen(
     }
     // A row opened from Universal Search: scroll to it once, keep it highlighted while here.
     val listState = rememberLazyListState()
-    var focusHandled by rememberSaveable { mutableStateOf(false) }
-    var focusedId by rememberSaveable { mutableStateOf<String?>(null) }
-    var focusScrolled by rememberSaveable { mutableStateOf(false) }
+    // Keyed on the target, so a second search result opened into this same entry is handled too.
+    var focusHandled by rememberSaveable(focusDownloadId) { mutableStateOf(false) }
+    var focusedId by rememberSaveable(focusDownloadId) { mutableStateOf<String?>(null) }
+    var focusScrolled by rememberSaveable(focusDownloadId) { mutableStateOf(false) }
     LaunchedEffect(focusDownloadId) {
         if (focusHandled || focusDownloadId == null) return@LaunchedEffect
         focusHandled = true
