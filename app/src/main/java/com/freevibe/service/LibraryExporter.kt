@@ -531,7 +531,7 @@ class LibraryExporter @Inject constructor(
             localWallpapers = localWallpaperPlan.second,
             wallpaperHistory = wallpaperHistory,
             wallpaperPackJson = planWallpaperPack(exportFile.wallpaperPackJson, skipped),
-            soundProfilesJson = exportFile.soundProfilesJson,
+            soundProfilesJson = planSoundProfiles(exportFile.soundProfilesJson, skipped),
             soundShufflePoolsJson = exportFile.soundShufflePoolsJson.takeIf(String::isNotBlank)?.let {
                 val normalized = parseSoundShuffleStoreStrict(moshi, it)
                 encodeSoundShuffleStore(moshi, normalized)
@@ -544,30 +544,69 @@ class LibraryExporter @Inject constructor(
     }
 
     /**
-     * Keeps the 24H pack slots this install can still open. A picture chosen with the document picker
-     * is readable only while Aura holds the grant for it, and a grant doesn't travel in a backup or
-     * survive a reinstall. Such a slot is left out and reported, so the pack isn't restored as if it
-     * worked. A pack that loses every slot isn't restored at all, which keeps the one already here.
+     * Keeps the 24H pack slots this install can open and should. A picture chosen with the document
+     * picker is readable only while Aura holds the grant for it, and a grant doesn't travel in a
+     * backup or survive a reinstall. A web address is kept only on a provider's own host, because the
+     * worker fetches it unattended. Any other slot is left out and reported, so the pack isn't
+     * restored as if it worked. A pack that loses every slot isn't restored at all, which keeps the
+     * one already here.
      */
     private fun planWallpaperPack(raw: String, skipped: MutableList<LibraryImportSkip>): String {
         val pack = parsePack(raw) ?: return raw
         val granted = persistedReadGrants()
         val kept = pack.slots.filter { slot ->
             val locator = slot.wallpaperUri.trim()
-            val lostGrant = locator.startsWith("content://", ignoreCase = true) && locator !in granted
-            if (lostGrant) {
+            val usable = when {
+                locator.isBlank() -> true
+                locator.startsWith("content://", ignoreCase = true) -> locator in granted
+                // The worker fetches a web address by itself at each time of day. Only a provider's
+                // own host is allowed to be that address, never one a backup happens to name.
+                else -> isImportedProviderMediaUrl(locator)
+            }
+            if (!usable) {
                 skipped += LibraryImportSkip(
                     section = "wallpaperPackSlot",
                     label = normalizeImportedText(slot.label).ifBlank { slot.daypart.displayName },
                     reason = LibraryImportSkipReason.NEEDS_REPICK,
                 )
             }
-            !lostGrant
+            usable
         }
         return when {
             kept.size == pack.slots.size -> raw
             kept.isEmpty() -> ""
             else -> serializePack(pack.copy(slots = kept))
+        }
+    }
+
+    /**
+     * The sound profiles as this install may run them. A profile's sound is handed straight to the
+     * system as the default ringtone, notification or alarm, so it has to be an address the phone's
+     * own media library gives out. A profile that names anything else, such as a web address the
+     * phone would then contact when it rings, is left out and reported. When none is left the
+     * profiles already here are kept.
+     */
+    private fun planSoundProfiles(raw: String, skipped: MutableList<LibraryImportSkip>): String {
+        if (raw.isBlank()) return raw
+        val profiles = runCatching { soundProfileJson.decodeFromString<List<SoundProfile>>(raw) }.getOrNull()
+            ?: return raw
+        val kept = profiles.filter { profile ->
+            val usable = listOf(profile.ringtoneUri, profile.notificationUri, profile.alarmUri).all { uri ->
+                uri.isBlank() || uri.trim().startsWith("content://", ignoreCase = true)
+            }
+            if (!usable) {
+                skipped += LibraryImportSkip(
+                    section = "soundProfile",
+                    label = normalizeImportedText(profile.name).ifBlank { normalizeImportedText(profile.id) },
+                    reason = LibraryImportSkipReason.INVALID,
+                )
+            }
+            usable
+        }
+        return when {
+            kept.size == profiles.size -> raw
+            kept.isEmpty() -> ""
+            else -> serializeProfiles(kept)
         }
     }
 

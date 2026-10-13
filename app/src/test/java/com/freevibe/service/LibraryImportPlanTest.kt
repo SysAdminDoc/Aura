@@ -10,6 +10,7 @@ import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
 import androidx.work.testing.SynchronousExecutor
 import androidx.work.testing.WorkManagerTestInitHelper
+import com.freevibe.data.legal.isProviderAvailableInCurrentArtifact
 import com.freevibe.data.local.FreeVibeDatabase
 import com.freevibe.data.local.PreferencesManager
 import com.freevibe.data.model.FitCanvasMode
@@ -34,6 +35,7 @@ import com.freevibe.data.model.bindRotation
 import com.freevibe.data.model.decodeRedditFeedPresetStore
 import com.freevibe.data.model.defaultRedditFeedPresetStore
 import com.freevibe.data.model.normalized
+import com.freevibe.data.model.providerNetworkPolicies
 import com.freevibe.data.model.rotationIdentity
 import com.freevibe.data.model.toRotationExclusion
 import com.freevibe.data.model.upsert
@@ -757,6 +759,72 @@ class LibraryImportPlanTest {
             plan.skipped.map { Triple(it.section, it.label, it.reason) },
         )
         assertEquals("the summary counts it as not restored", 1, plan.failedCount)
+    }
+
+    @Test
+    fun `a pack slot at an address that isn't one of Aura's providers is left out`() = runTest {
+        grantRead("content://picked/night")
+
+        val plan = exporter.buildPlan(
+            packBackup(
+                DaypartSlot(Daypart.MORNING, "https://tracker.example/pixel.jpg", label = "Morning pic"),
+                DaypartSlot(Daypart.DAY, "http://w.wallhaven.cc/full/ab/one.jpg"),
+                DaypartSlot(Daypart.EVENING, "file:///sdcard/Pictures/dusk.jpg", label = "dusk.jpg"),
+                DaypartSlot(Daypart.NIGHT, "content://picked/night", label = "stars.jpg"),
+            ),
+        )
+
+        assertEquals(listOf(Daypart.NIGHT), parsePack(plan.wallpaperPackJson)!!.slots.map { it.daypart })
+        assertEquals(
+            listOf("Morning pic", "Day", "dusk.jpg").map { it to LibraryImportSkipReason.NEEDS_REPICK },
+            plan.skipped.map { it.label to it.reason },
+        )
+    }
+
+    @Test
+    fun `a pack slot on a provider's own host is kept`() = runTest {
+        val provider = providerNetworkPolicies.first {
+            it.hostSuffixes.isNotEmpty() && isProviderAvailableInCurrentArtifact(it.source)
+        }
+        val locator = "https://media.${provider.hostSuffixes.first()}/a.jpg"
+
+        val plan = exporter.buildPlan(packBackup(DaypartSlot(Daypart.DAY, locator)))
+
+        assertEquals(listOf(locator), parsePack(plan.wallpaperPackJson)!!.slots.map { it.wallpaperUri })
+        assertTrue(plan.skipped.isEmpty())
+    }
+
+    @Test
+    fun `a sound profile that points outside the phone's media library is not restored`() = runTest {
+        val profiles = serializeProfiles(
+            listOf(
+                SoundProfile(id = "night", name = "Night", ringtoneUri = "content://media/internal/audio/media/11"),
+                SoundProfile(id = "work", name = "Work", notificationUri = "https://tracker.example/ping.mp3"),
+                SoundProfile(id = "gym", name = "Gym", alarmUri = "file:///sdcard/alarm.mp3"),
+            ),
+        )
+
+        val plan = exporter.buildPlan(payload(extra = ""","soundProfilesJson":${JSONObject.quote(profiles)}"""))
+
+        assertEquals(listOf("night"), parseProfiles(plan.soundProfilesJson).map { it.id })
+        assertEquals(
+            listOf("Work", "Gym").map { Triple("soundProfile", it, LibraryImportSkipReason.INVALID) },
+            plan.skipped.map { Triple(it.section, it.label, it.reason) },
+        )
+    }
+
+    @Test
+    fun `sound profiles with nothing this phone may use are not restored over the ones already here`() = runTest {
+        profilesJson.value = "the profiles on this phone"
+        val profiles = serializeProfiles(
+            listOf(SoundProfile(id = "work", name = "Work", ringtoneUri = "https://tracker.example/ring.mp3")),
+        )
+
+        val plan = exporter.buildPlan(payload(extra = ""","soundProfilesJson":${JSONObject.quote(profiles)}"""))
+        exporter.applyPlan(plan)
+
+        assertEquals("", plan.soundProfilesJson)
+        assertEquals("the profiles on this phone", profilesJson.value)
     }
 
     @Test

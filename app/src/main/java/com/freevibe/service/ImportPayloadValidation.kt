@@ -1,6 +1,9 @@
 package com.freevibe.service
 
+import com.freevibe.data.legal.isProviderAvailableInCurrentArtifact
 import com.freevibe.data.model.ContentSource
+import com.freevibe.data.remote.providerSourceForHost
+import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
 import java.net.URI
 import java.util.Locale
 
@@ -31,6 +34,24 @@ internal fun isAllowedImportedHttpsUrl(
         ?.lowercase(Locale.ROOT)
         ?: return false
     return scheme == "https"
+}
+
+/**
+ * True for an https address on a host that belongs to one of Aura's providers, and only while this
+ * build can use that provider. The hosts come from the provider registry, the same list the network
+ * layer checks requests against.
+ *
+ * Imported data that a background job fetches with nobody looking is held to this, so a backup
+ * can't point the phone at a host of its author's choosing. The host is read the way the HTTP
+ * client reads it, which is what decides where a request really goes.
+ */
+internal fun isImportedProviderMediaUrl(
+    url: String?,
+    isAvailable: (ContentSource) -> Boolean = ::isProviderAvailableInCurrentArtifact,
+): Boolean {
+    if (!isAllowedImportedHttpsUrl(url)) return false
+    val host = url.orEmpty().trim().toHttpUrlOrNull()?.takeIf { it.isHttps }?.host ?: return false
+    return providerSourceForHost(host)?.let(isAvailable) ?: false
 }
 
 internal fun normalizeImportedHttpsUrl(

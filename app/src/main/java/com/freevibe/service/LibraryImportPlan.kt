@@ -28,8 +28,9 @@ enum class LibraryImportSkipReason {
     NON_PORTABLE,
 
     /**
-     * A picture chosen with the document picker. This install doesn't hold the grant to open it, so
-     * it has to be picked again here. Grants don't travel in a backup or survive a reinstall.
+     * A 24H pack picture this install won't open, so it has to be picked again here. Either it was
+     * chosen with the document picker and the grant to open it stayed behind (grants don't travel in
+     * a backup or survive a reinstall), or it sits at an address that isn't one of Aura's providers.
      */
     NEEDS_REPICK,
 
