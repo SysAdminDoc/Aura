@@ -452,8 +452,13 @@ class WallpapersViewModel @Inject constructor(
 
     /** The shown image reached the cache, so a palette that asked before it landed can read it now. */
     fun onWallpaperImageLoaded(url: String) {
-        if (url != paletteUrl || _colorPalette.value != null || colorExtractionJob?.isActive == true) return
-        colorExtractionJob = viewModelScope.launch { _colorPalette.value = colorExtractor.extractFromUrl(url, allowNetwork = false) }
+        if (url != paletteUrl || _colorPalette.value != null) return
+        // A read still running may have looked before this commit, so read again once it ends empty.
+        val pending = colorExtractionJob
+        colorExtractionJob = viewModelScope.launch {
+            pending?.join()
+            if (_colorPalette.value == null) _colorPalette.value = colorExtractor.extractFromUrl(url, allowNetwork = false)
+        }
     }
 
     fun setStaticFitCanvasPreferences(presentation: String, style: FitCanvasStyle) = viewModelScope.launch { prefs.setStaticFitCanvasPreferences(presentation, style) }

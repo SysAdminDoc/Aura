@@ -43,6 +43,7 @@ import io.mockk.mockk
 import io.mockk.mockkStatic
 import io.mockk.runs
 import io.mockk.unmockkStatic
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -387,6 +388,31 @@ class WallpapersViewModelTest {
         assertEquals(palette, viewModel.colorPalette.value)
         coVerify(exactly = 2) { extractor.extractFromUrl(url, false) }
         coVerify(exactly = 0) { extractor.extractFromUrl(any(), true) }
+    }
+
+    @Test
+    fun `an image that lands while the first palette read runs still gets a palette`() = runTest(dispatcher) {
+        val wallpaperRepo = mockk<WallpaperRepository>()
+        val redditRepo = mockk<RedditRepository>()
+        stubCommonDependencies(wallpaperRepo = wallpaperRepo, redditRepo = redditRepo)
+        val url = "https://w.wallhaven.cc/full/ab/wallhaven-ab.jpg"
+        val palette = ColorExtractor.WallpaperPalette(dominantColor = 0x445566)
+        val firstRead = CompletableDeferred<ColorExtractor.WallpaperPalette?>()
+        var reads = 0
+        val extractor = mockk<ColorExtractor>()
+        coEvery { extractor.extractFromUrl(url, false) } coAnswers {
+            reads++
+            if (reads == 1) firstRead.await() else palette
+        }
+        val viewModel = createViewModel(wallpaperRepo = wallpaperRepo, redditRepo = redditRepo, colorExtractorOverride = extractor)
+
+        viewModel.extractColors(url)
+        viewModel.onWallpaperImageLoaded(url)
+        firstRead.complete(null)
+        advanceUntilIdle()
+
+        assertEquals(palette, viewModel.colorPalette.value)
+        assertEquals(2, reads)
     }
 
     @Test
