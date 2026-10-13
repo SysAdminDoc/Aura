@@ -265,6 +265,9 @@ android {
     testOptions {
         unitTests {
             isIncludeAndroidResources = true
+            // Robolectric keeps a sandbox per SDK level alive in the worker. The suite outgrew
+            // Gradle's 512 MB default and died with OutOfMemoryError partway through.
+            all { it.maxHeapSize = "2g" }
         }
     }
 
