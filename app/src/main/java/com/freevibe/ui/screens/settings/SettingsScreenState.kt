@@ -6,6 +6,11 @@ import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.freevibe.data.legal.ProviderMediaType
+import com.freevibe.data.legal.ProviderSetup
+import com.freevibe.data.legal.blockFor
+import com.freevibe.data.legal.searchReach
+import com.freevibe.data.model.ContentSource
 import com.freevibe.data.model.LocalWallpaperEntity
 import com.freevibe.data.model.LocalWallpaperFolderEntity
 import com.freevibe.data.model.LocalWallpaperFolderScanStatus
@@ -125,6 +130,7 @@ internal data class SettingsScreenState(
     val redditVideoSubreddits: String,
     val pexelsProviderEnabled: Boolean,
     val pixabayProviderEnabled: Boolean,
+    val providerSetup: ProviderSetup,
     val communityProviderEnabled: Boolean,
     val communityGuidelinesAccepted: Boolean,
     val communityGuidelinesAcceptedVersion: Int,
@@ -150,7 +156,14 @@ internal data class SettingsScreenState(
     val videoBatteryDashboard: VideoBatteryDashboardState,
     val selectedStyleCount: Int,
     val configuredApiKeys: Int,
-)
+) {
+    /** Pixabay can be queried right now: in this build, switched on and keyed. */
+    val pixabayUsable: Boolean get() = providerSetup.blockFor(ContentSource.PIXABAY) == null
+
+    /** A wallpaper search reaches at least one source, which the category browser runs on. */
+    val wallpaperSearchReachable: Boolean
+        get() = providerSetup.searchReach(ProviderMediaType.WALLPAPER).block == null
+}
 
 @Composable
 internal fun rememberSettingsScreenState(
@@ -242,6 +255,7 @@ internal fun rememberSettingsScreenState(
     val redditVideoSubreddits by viewModel.redditVideoSubs.collectAsStateWithLifecycle()
     val pexelsProviderEnabled by viewModel.pexelsProviderEnabled.collectAsStateWithLifecycle()
     val pixabayProviderEnabled by viewModel.pixabayProviderEnabled.collectAsStateWithLifecycle()
+    val providerSetup by viewModel.providerSetup.collectAsStateWithLifecycle()
     val communityProviderEnabled by viewModel.communityProviderEnabled.collectAsStateWithLifecycle()
     val communityGuidelinesAccepted by viewModel.communityGuidelinesAccepted.collectAsStateWithLifecycle()
     val communityGuidelinesAcceptedVersion by viewModel.communityGuidelinesAcceptedVersion.collectAsStateWithLifecycle()
@@ -369,6 +383,7 @@ internal fun rememberSettingsScreenState(
         redditVideoSubreddits = redditVideoSubreddits,
         pexelsProviderEnabled = pexelsProviderEnabled,
         pixabayProviderEnabled = pixabayProviderEnabled,
+        providerSetup = providerSetup,
         communityProviderEnabled = communityProviderEnabled,
         communityGuidelinesAccepted = communityGuidelinesAccepted,
         communityGuidelinesAcceptedVersion = communityGuidelinesAcceptedVersion,

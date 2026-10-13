@@ -196,6 +196,7 @@ class SettingsViewModel @Inject constructor(
     val bingProviderEnabled get() = media.bingProviderEnabled
     val pexelsProviderEnabled get() = media.pexelsProviderEnabled
     val pixabayProviderEnabled get() = media.pixabayProviderEnabled
+    val providerSetup get() = media.providerSetup
     val communityProviderEnabled get() = community.communityProviderEnabled
     val communityGuidelinesAccepted get() = community.communityGuidelinesAccepted
     val communityGuidelinesAcceptedVersion get() = community.communityGuidelinesAcceptedVersion

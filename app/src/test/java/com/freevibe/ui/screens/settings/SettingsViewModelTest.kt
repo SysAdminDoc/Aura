@@ -41,6 +41,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flowOf
+import com.freevibe.data.legal.ProviderSetup
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
@@ -602,6 +603,7 @@ class SettingsViewModelTest {
             every { prefs.bingProviderEnabled } returns flowOf(true)
             every { prefs.pexelsProviderEnabled } returns flowOf(true)
             every { prefs.pixabayProviderEnabled } returns flowOf(true)
+            every { prefs.providerSetup } returns flowOf(ProviderSetup())
             every { prefs.communityProviderEnabled } returns flowOf(true)
             every { prefs.communityGuidelinesAccepted } returns flowOf(false)
             every { prefs.communityGuidelinesAcceptedVersion } returns flowOf(0)

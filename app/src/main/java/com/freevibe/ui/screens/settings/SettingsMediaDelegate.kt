@@ -1,6 +1,7 @@
 package com.freevibe.ui.screens.settings
 
 import android.content.Context
+import com.freevibe.data.legal.ProviderSetup
 import com.freevibe.data.legal.isProviderAvailableInCurrentArtifact
 import com.freevibe.data.local.DEFAULT_REDDIT_VIDEO_SUBREDDITS
 import com.freevibe.data.local.DEFAULT_REDDIT_WALLPAPER_SUBREDDITS
@@ -100,6 +101,7 @@ internal class SettingsMediaDelegate(
     val bingProviderEnabled = prefs.bingProviderEnabled.stateIn(scope, sharing, true)
     val pexelsProviderEnabled = prefs.pexelsProviderEnabled.stateIn(scope, sharing, true)
     val pixabayProviderEnabled = prefs.pixabayProviderEnabled.stateIn(scope, sharing, true)
+    val providerSetup = prefs.providerSetup.stateIn(scope, sharing, ProviderSetup())
 
     fun setYtRingtonesQuery(query: String) = scope.launch { prefs.setYtSoundQueryRingtones(query) }
     fun setYtNotificationsQuery(query: String) = scope.launch { prefs.setYtSoundQueryNotifications(query) }

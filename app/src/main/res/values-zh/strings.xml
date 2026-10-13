@@ -1180,8 +1180,8 @@
     <string name="settings_wp_bing_off_subtitle">跳过 Bing 每日图片请求，并将其从轮换选择器中隐藏</string>
     <string name="settings_wp_categories_title">浏览类别</string>
     <string name="settings_wp_categories_subtitle">自然、太空、动漫、深色、霓虹及另外 12 个</string>
-    <string name="settings_wp_categories_unavailable_subtitle">启用 Wallhaven 或 Pixabay 以浏览可搜索类别</string>
-    <string name="settings_wp_categories_unavailable_feedback">请先在高级外部服务中启用 Wallhaven 或 Pixabay。</string>
+    <string name="settings_wp_categories_unavailable_subtitle">启用 Wallhaven，或启用已填写密钥的 Pexels 或 Pixabay，以浏览类别</string>
+    <string name="settings_wp_categories_unavailable_feedback">请先在高级外部服务中启用 Wallhaven，或启用 Pexels 或 Pixabay 并填写密钥。</string>
     <string name="settings_wp_collections_title">收藏集</string>
     <string name="settings_wp_collections_subtitle">将壁纸整理到文件夹中</string>
     <string name="settings_wp_history_title">壁纸历史</string>

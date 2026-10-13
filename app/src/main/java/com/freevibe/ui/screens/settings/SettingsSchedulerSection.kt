@@ -50,7 +50,7 @@ internal fun SchedulerSettingsSection(
     localFolderPermissionActive: Boolean,
     localCatalogReady: Boolean,
     wallhavenProviderEnabled: Boolean,
-    pixabayProviderEnabled: Boolean,
+    pixabayUsable: Boolean,
     bingProviderEnabled: Boolean,
     onChooseLocalWallpaperFolder: (String?) -> Unit,
 ) {
@@ -239,7 +239,7 @@ internal fun SchedulerSettingsSection(
         }.filter { (key, _) ->
             when (key) {
                 "wallhaven" -> wallhavenProviderEnabled || selectedSource == "wallhaven"
-                "pixabay" -> pixabayProviderEnabled || selectedSource == "pixabay"
+                "pixabay" -> pixabayUsable || selectedSource == "pixabay"
                 "bing" -> bingProviderEnabled || selectedSource == "bing"
                 else -> true
             }

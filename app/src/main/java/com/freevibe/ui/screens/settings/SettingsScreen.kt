@@ -316,7 +316,8 @@ fun SettingsScreen(
                 redditProviderEnabled = redditProviderEnabled,
                 redditSubreddits = redditSubreddits,
                 wallhavenProviderEnabled = wallhavenProviderEnabled,
-                pixabayProviderEnabled = pixabayProviderEnabled,
+                pixabayUsable = pixabayUsable,
+                wallpaperSearchReachable = wallpaperSearchReachable,
                 wallpaperHistoryCount = wallpaperHistory.size,
                 rotationExclusionCount = rotationExclusionControls.exclusionCount,
                 wallpaperClockOverlayEnabled = wallpaperClockOverlayEnabled,
@@ -354,7 +355,7 @@ fun SettingsScreen(
                 localFolderPermissionActive = localFolderPermissionActive,
                 localCatalogReady = localWallpaperCatalogReady,
                 wallhavenProviderEnabled = wallhavenProviderEnabled,
-                pixabayProviderEnabled = pixabayProviderEnabled,
+                pixabayUsable = pixabayUsable,
                 bingProviderEnabled = bingProviderEnabled,
                 onChooseLocalWallpaperFolder = chooseLocalWallpaperFolder,
             )

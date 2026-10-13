@@ -378,7 +378,7 @@ internal fun SourcePickerDialog(
     currentSource: String,
     wallhavenProviderEnabled: Boolean,
     bingProviderEnabled: Boolean,
-    pixabayProviderEnabled: Boolean,
+    pixabayUsable: Boolean,
     localFolderUri: String,
     localFolderPermissionActive: Boolean,
     localCatalogReady: Boolean = false,
@@ -397,7 +397,7 @@ internal fun SourcePickerDialog(
     ).filter { (key, _) ->
         when (key) {
             "wallhaven" -> wallhavenProviderEnabled || currentSource == "wallhaven"
-            "pixabay" -> pixabayProviderEnabled || currentSource == "pixabay"
+            "pixabay" -> pixabayUsable || currentSource == "pixabay"
             "bing" -> bingProviderEnabled || currentSource == "bing"
             else -> true
         }

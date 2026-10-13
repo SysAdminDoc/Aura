@@ -53,6 +53,7 @@ import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
@@ -358,6 +359,34 @@ class WallpapersViewModelTest {
         advanceUntilIdle()
         assertEquals(WallpaperTab.DISCOVER, viewModel.state.value.selectedTab)
         coVerify(exactly = 0) { wallpaperRepo.getPixabay(any(), any()) }
+    }
+
+    @Test
+    fun `newest and the search tabs count keys, not just switches`() = runTest(dispatcher) {
+        val wallpaperRepo = mockk<WallpaperRepository>()
+        val redditRepo = mockk<RedditRepository>()
+
+        stubCommonDependencies(
+            wallpaperRepo = wallpaperRepo,
+            redditRepo = redditRepo,
+        )
+
+        // Pixabay is switched on but has no key, and Pexels has one.
+        val viewModel = createViewModel(
+            wallpaperRepo = wallpaperRepo,
+            redditRepo = redditRepo,
+            wallhavenProviderEnabled = false,
+            keyed = setOf(ContentSource.PEXELS),
+        )
+
+        advanceUntilIdle()
+
+        assertFalse(viewModel.state.value.newestAvailable)
+        assertTrue(viewModel.state.value.extendedBrowseSourcesEnabled)
+        viewModel.selectTab(WallpaperTab.NEWEST)
+        advanceUntilIdle()
+        assertEquals(WallpaperTab.DISCOVER, viewModel.state.value.selectedTab)
+        coVerify(exactly = 0) { wallpaperRepo.getNewest(any()) }
     }
 
     @Test
@@ -876,6 +905,7 @@ class WallpapersViewModelTest {
         pixabayProviderEnabled: Boolean = true,
         communityProviderEnabled: Boolean = true,
         generatedContentProviderEnabled: Boolean = true,
+        keyed: Set<ContentSource> = setOf(ContentSource.PEXELS, ContentSource.PIXABAY),
     ): WallpapersViewModel {
         val favoritesRepo = favoritesRepoOverride ?: mockk<FavoritesRepository>()
         every { favoritesRepo.allIdentities() } returns flowOf(emptySet<FavoriteIdentity>())
@@ -914,7 +944,7 @@ class WallpapersViewModelTest {
                     com.freevibe.data.model.ContentSource.PIXABAY to pixabayProviderEnabled,
                     com.freevibe.data.model.ContentSource.COMMUNITY to communityProviderEnabled,
                 ),
-                keyed = setOf(com.freevibe.data.model.ContentSource.PEXELS, com.freevibe.data.model.ContentSource.PIXABAY),
+                keyed = keyed,
             ),
         )
         every { prefs.preferredResolution } returns flowOf("1080x1920")

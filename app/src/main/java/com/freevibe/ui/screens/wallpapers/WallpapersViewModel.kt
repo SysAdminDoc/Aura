@@ -126,6 +126,7 @@ class WallpapersViewModel @Inject constructor(
         redditProviderEnabled = redditProviderEnabled,
         pexelsProviderEnabled = pexelsProviderEnabled,
         pixabayProviderEnabled = pixabayProviderEnabled,
+        providerSetup = providerSetup,
         communityProviderEnabled = communityProviderEnabled,
         communityGuidelinesAccepted = communityGuidelinesAccepted,
         state = _state,

@@ -1326,8 +1326,8 @@
     <string name="settings_wp_bing_off_subtitle">Skips Bing daily-image calls and hides it from rotation pickers</string>
     <string name="settings_wp_categories_title">Browse categories</string>
     <string name="settings_wp_categories_subtitle">Nature, Space, Anime, Dark, Neon + 12 more</string>
-    <string name="settings_wp_categories_unavailable_subtitle">Turn on Wallhaven or Pixabay to browse searchable categories</string>
-    <string name="settings_wp_categories_unavailable_feedback">Turn on Wallhaven or Pixabay in Advanced external services first.</string>
+    <string name="settings_wp_categories_unavailable_subtitle">Turn on Wallhaven, or Pexels or Pixabay with a key, to browse categories</string>
+    <string name="settings_wp_categories_unavailable_feedback">Turn on Wallhaven, or Pexels or Pixabay with its key, in Advanced external services first.</string>
     <string name="settings_wp_collections_title">Collections</string>
     <string name="settings_wp_collections_subtitle">Organize wallpapers into folders</string>
     <string name="settings_wp_history_title">Wallpaper history</string>

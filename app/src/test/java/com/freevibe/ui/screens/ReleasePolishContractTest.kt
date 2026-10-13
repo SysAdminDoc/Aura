@@ -518,7 +518,9 @@ class ReleasePolishContractTest {
 
         assertTrue(categories.contains("val nameRes: Int"))
         assertTrue(categories.contains("stringResource(category.nameRes)"))
-        assertTrue(settings.contains("val categoriesAvailable = wallhavenProviderEnabled || pixabayProviderEnabled"))
+        assertTrue(settings.contains("val categoriesAvailable = wallpaperSearchReachable"))
+        val state = File("src/main/java/com/freevibe/ui/screens/settings/SettingsScreenState.kt").readText()
+        assertTrue(state.contains("providerSetup.searchReach(ProviderMediaType.WALLPAPER).block == null"))
         assertTrue(settings.contains("settings_wp_categories_unavailable_feedback"))
     }
 

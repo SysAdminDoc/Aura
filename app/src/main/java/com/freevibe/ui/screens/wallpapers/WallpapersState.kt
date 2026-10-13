@@ -25,10 +25,12 @@ data class WallpapersUiState(
     val wallpaperUploadComplete: Boolean = false,
     val wallpaperUploadProgress: Float = 0f,
     val degradedSources: Set<String> = emptySet(),
-    // True when a searchable non-Reddit source (Wallhaven or Pixabay) is enabled. The Newest and
-    // Categories tabs are backed by search, so they only work with those providers; in the default
-    // Reddit-only mode this is false and the Newest/Categories/Collections tabs are hidden.
+    // True when a wallpaper search reaches a usable source (Wallhaven, or Pexels or Pixabay with a
+    // key). Categories run on search; in the default Reddit-only mode this is false and the
+    // Categories/Collections rail tabs are hidden.
     val extendedBrowseSourcesEnabled: Boolean = false,
+    // True when Wallhaven or a keyed Pixabay is usable, the only sources getNewest() queries.
+    val newestAvailable: Boolean = false,
 )
 
 enum class WallpaperTab {

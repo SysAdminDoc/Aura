@@ -61,10 +61,12 @@ import com.freevibe.R
 import com.freevibe.data.legal.ProviderBlock
 import com.freevibe.data.legal.ProviderBuild
 import com.freevibe.data.legal.ProviderChannel
+import com.freevibe.data.legal.ProviderMediaType
 import com.freevibe.data.legal.ProviderSetup
 import com.freevibe.data.legal.blockFor
 import com.freevibe.data.legal.currentProviderBuild
 import com.freevibe.data.legal.currentProviderChannel
+import com.freevibe.data.legal.searchReach
 import com.freevibe.data.model.COMMUNITY_UPLOAD_LICENSES
 import com.freevibe.data.model.CommunityUploadRights
 import com.freevibe.data.model.FavoriteIdentity
@@ -213,9 +215,9 @@ fun WallpapersScreen(
     val hasQuickActionsMenu = showGeneratedContentEntry ||
         wallhavenProviderEnabled ||
         (communityProviderEnabled && state.selectedTab == WallpaperTab.COMMUNITY)
-    LaunchedEffect(wallhavenProviderEnabled, redditProviderEnabled, pexelsProviderEnabled, pixabayProviderEnabled, communityProviderEnabled, state.selectedTab) {
+    LaunchedEffect(wallhavenProviderEnabled, redditProviderEnabled, pexelsProviderEnabled, pixabayProviderEnabled, communityProviderEnabled, providerSetup, state.selectedTab) {
         val disabledTab = when (state.selectedTab) {
-            WallpaperTab.NEWEST -> !wallhavenProviderEnabled && !pixabayProviderEnabled
+            WallpaperTab.NEWEST -> !wallpaperRailReach(providerSetup).newest
             WallpaperTab.WALLHAVEN -> !wallhavenProviderEnabled
             WallpaperTab.REDDIT -> !redditProviderEnabled
             WallpaperTab.PEXELS -> !pexelsProviderEnabled
@@ -583,8 +585,8 @@ fun WallpapersScreen(
 
                 Spacer(Modifier.height(8.dp))
                 // Newest/Categories/Collections only apply to the non-Reddit catalog, so in the
-                // default Reddit-only mode the rail collapses to Popular. Enabling any other source
-                // in Settings restores them (state.extendedBrowseSourcesEnabled flips reactively).
+                // default Reddit-only mode the rail collapses to Popular. Newest needs Wallhaven or a
+                // keyed Pixabay; Categories and Collections need any wallpaper search (wallpaperRailReach).
                 val popularLabel = stringResource(R.string.browse_rail_popular)
                 val newestLabel = stringResource(R.string.browse_rail_newest)
                 val categoriesLabel = stringResource(R.string.browse_rail_categories)
@@ -605,7 +607,7 @@ fun WallpapersScreen(
                                 },
                             ),
                         )
-                        if (state.extendedBrowseSourcesEnabled) {
+                        if (state.newestAvailable) {
                             add(
                                 BrowseRailItem(
                                     label = newestLabel,
@@ -617,6 +619,8 @@ fun WallpapersScreen(
                                     },
                                 ),
                             )
+                        }
+                        if (state.extendedBrowseSourcesEnabled) {
                             add(
                                 BrowseRailItem(
                                     label = categoriesLabel,
@@ -1802,6 +1806,24 @@ internal fun shouldRequestNextWallpaperPage(
         !isLoadingMore &&
         laidOutItemCount >= visibleItemCount &&
         lastRequestedItemCount != visibleItemCount
+
+/** Which extra rail tabs have a source behind them. */
+internal data class WallpaperRailReach(
+    /** Newest runs getNewest(), which only queries Wallhaven and Pixabay. */
+    val newest: Boolean,
+    /** Categories run a wallpaper search, so any searchable source counts; Collections sit beside them. */
+    val search: Boolean,
+)
+
+internal fun wallpaperRailReach(
+    setup: ProviderSetup,
+    build: ProviderBuild = currentProviderBuild,
+    channel: ProviderChannel = currentProviderChannel,
+) = WallpaperRailReach(
+    newest = setup.blockFor(ContentSource.WALLHAVEN, build, channel) == null ||
+        setup.blockFor(ContentSource.PIXABAY, build, channel) == null,
+    search = setup.searchReach(ProviderMediaType.WALLPAPER, build = build, channel = channel).block == null,
+)
 
 internal data class WallpaperSourceEntry(val tab: WallpaperTab, val needsKey: Boolean)
 

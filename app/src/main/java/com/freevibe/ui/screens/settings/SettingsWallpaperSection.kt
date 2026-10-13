@@ -90,7 +90,10 @@ internal fun WallpaperRotationSettingsSection(
     redditProviderEnabled: Boolean,
     redditSubreddits: String,
     wallhavenProviderEnabled: Boolean,
-    pixabayProviderEnabled: Boolean,
+    /** Switched on and keyed; a switched-on Pixabay without a key loads nothing. */
+    pixabayUsable: Boolean,
+    /** Categories run a wallpaper search, which Pexels with a key can also answer. */
+    wallpaperSearchReachable: Boolean,
     wallpaperHistoryCount: Int,
     rotationExclusionCount: Int,
     wallpaperClockOverlayEnabled: Boolean,
@@ -403,7 +406,7 @@ internal fun WallpaperRotationSettingsSection(
             checked = bingProviderEnabled,
             onCheckedChange = viewModel::setBingProviderEnabled,
         )
-        val categoriesAvailable = wallhavenProviderEnabled || pixabayProviderEnabled
+        val categoriesAvailable = wallpaperSearchReachable
         SettingsItem(
             icon = Icons.Default.Category,
             title = stringResource(R.string.settings_wp_categories_title),
@@ -465,7 +468,7 @@ internal fun WallpaperRotationSettingsSection(
             currentSource = autoWpSource,
             wallhavenProviderEnabled = wallhavenProviderEnabled,
             bingProviderEnabled = bingProviderEnabled,
-            pixabayProviderEnabled = pixabayProviderEnabled,
+            pixabayUsable = pixabayUsable,
             localFolderUri = localWallpaperFolderUri,
             localFolderPermissionActive = localFolderPermissionActive,
             localCatalogReady = localCatalogReady,

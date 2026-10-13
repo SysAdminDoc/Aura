@@ -1,6 +1,6 @@
 package com.freevibe.ui.screens.wallpapers
 
-import com.freevibe.data.legal.blockFor
+import com.freevibe.data.legal.ProviderSetup
 import com.freevibe.data.local.PreferencesManager
 import com.freevibe.data.local.WallpaperCacheManager
 import com.freevibe.data.model.COMMUNITY_GUIDELINES_REQUIRED_MESSAGE
@@ -60,6 +60,7 @@ internal class WallpaperBrowseViewModel(
     private val redditProviderEnabled: StateFlow<Boolean>,
     private val pexelsProviderEnabled: StateFlow<Boolean>,
     private val pixabayProviderEnabled: StateFlow<Boolean>,
+    private val providerSetup: StateFlow<ProviderSetup>,
     private val communityProviderEnabled: StateFlow<Boolean>,
     private val communityGuidelinesAccepted: StateFlow<Boolean>,
     private val state: MutableStateFlow<WallpapersUiState>,
@@ -86,17 +87,17 @@ internal class WallpaperBrowseViewModel(
             }
         }
         scope.launch {
-            // The Newest rail tab is backed by getNewest(), which only queries Wallhaven and
-            // Pixabay. Bing (single daily image) can enrich Discover but can't serve it, so gate
-            // the extra tabs on one of those two being usable, key included. Otherwise enabling
-            // Bing alone, or Pixabay without a key, shows tabs that return nothing.
-            prefs.providerSetup
-                .map { setup ->
-                    setup.blockFor(ContentSource.WALLHAVEN) == null || setup.blockFor(ContentSource.PIXABAY) == null
-                }
+            // Newest is backed by getNewest(), which only queries Wallhaven and Pixabay; Categories
+            // run a wallpaper search, which a keyed Pexels can also answer. Bing (single daily
+            // image) can enrich Discover but serves neither, and keys count, so Bing alone or
+            // Pixabay without a key doesn't show tabs that return nothing.
+            providerSetup
+                .map { setup -> wallpaperRailReach(setup) }
                 .distinctUntilChanged()
-                .collect { searchableEnabled ->
-                    state.update { s -> s.copy(extendedBrowseSourcesEnabled = searchableEnabled) }
+                .collect { reach ->
+                    state.update { s ->
+                        s.copy(newestAvailable = reach.newest, extendedBrowseSourcesEnabled = reach.search)
+                    }
                 }
         }
     }
@@ -375,7 +376,7 @@ internal class WallpaperBrowseViewModel(
     }
 
     fun isProviderDisabledTab(tab: WallpaperTab): Boolean = when (tab) {
-        WallpaperTab.NEWEST -> !wallhavenProviderEnabled.value && !pixabayProviderEnabled.value
+        WallpaperTab.NEWEST -> !wallpaperRailReach(providerSetup.value).newest
         WallpaperTab.WALLHAVEN -> !wallhavenProviderEnabled.value
         WallpaperTab.REDDIT -> !redditProviderEnabled.value
         WallpaperTab.PEXELS -> !pexelsProviderEnabled.value

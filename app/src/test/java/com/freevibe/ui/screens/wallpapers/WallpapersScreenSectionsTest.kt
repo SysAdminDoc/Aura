@@ -2,7 +2,10 @@ package com.freevibe.ui.screens.wallpapers
 
 import com.freevibe.data.legal.ProviderBuild
 import com.freevibe.data.legal.ProviderChannel
+import com.freevibe.data.legal.ProviderMediaType
 import com.freevibe.data.legal.ProviderSetup
+import com.freevibe.data.legal.blockFor
+import com.freevibe.data.legal.searchSourcesFor
 import com.freevibe.data.model.ContentSource
 import com.freevibe.data.model.Wallpaper
 import com.freevibe.data.model.stableKey
@@ -14,6 +17,41 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class WallpapersScreenSectionsTest {
+
+    @Test
+    fun `rail tabs count keys and gate Newest apart from search`() {
+        fun only(on: Set<ContentSource>, keyed: Set<ContentSource> = emptySet()) = ProviderSetup(
+            enabled = listOf(ContentSource.WALLHAVEN, ContentSource.PEXELS, ContentSource.PIXABAY).associateWith { it in on },
+            keyed = keyed,
+        )
+        fun reach(setup: ProviderSetup) = wallpaperRailReach(setup, ProviderBuild.FULL, ProviderChannel.GITHUB)
+
+        assertEquals(
+            "Pexels with a key can search, but Newest never queries it",
+            WallpaperRailReach(newest = false, search = true),
+            reach(only(setOf(ContentSource.PEXELS), keyed = setOf(ContentSource.PEXELS))),
+        )
+        assertEquals(
+            "Pixabay without a key reaches nothing",
+            WallpaperRailReach(newest = false, search = false),
+            reach(only(setOf(ContentSource.PIXABAY))),
+        )
+        assertEquals(
+            WallpaperRailReach(newest = true, search = true),
+            reach(only(setOf(ContentSource.PIXABAY), keyed = setOf(ContentSource.PIXABAY))),
+        )
+        assertEquals(WallpaperRailReach(newest = false, search = false), reach(only(emptySet())))
+
+        val wallhaven = only(setOf(ContentSource.WALLHAVEN))
+        for (build in ProviderBuild.entries) for (channel in ProviderChannel.entries) {
+            val ships = wallhaven.blockFor(ContentSource.WALLHAVEN, build, channel) == null
+            assertEquals(
+                "$build/$channel",
+                WallpaperRailReach(newest = ships, search = ships && ContentSource.WALLHAVEN in searchSourcesFor(ProviderMediaType.WALLPAPER, build, channel)),
+                wallpaperRailReach(wallhaven, build, channel),
+            )
+        }
+    }
 
     @Test
     fun `source menu follows switches and keys and keeps the selected tab`() {

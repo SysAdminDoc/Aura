@@ -76,6 +76,33 @@ class ProviderSearchReachTest {
     }
 
     @Test
+    fun `every build and channel reaches only sources it ships, switched on and keyed`() {
+        val everything = setup(on = SWITCHED, keyed = ContentSource.entries.toSet())
+        val keyless = setup(on = SWITCHED)
+        for (build in ProviderBuild.entries) for (channel in ProviderChannel.entries) for (type in ProviderMediaType.entries) {
+            val cell = "$build/$channel/$type"
+            val candidates = searchSourcesFor(type, build, channel)
+            val all = everything.searchReach(type, true, build, channel)
+            all.sources.forEach { source ->
+                assertTrue("$cell: $source isn't a search source", source in candidates)
+                assertNull("$cell: $source", everything.blockFor(source, build, channel))
+            }
+            val usable = candidates.filter { everything.blockFor(it, build, channel) == null }
+            // A feed that's left with only enhancement sources reaches nothing at all.
+            assertEquals(cell, if (all.block == null) usable else emptyList(), all.sources)
+            keyless.searchReach(type, true, build, channel).sources.forEach { source ->
+                assertTrue(
+                    "$cell: $source needs a key",
+                    providerCapability(source).configuration != ProviderConfiguration.REQUIRED_KEY,
+                )
+            }
+            setup().searchReach(type, true, build, channel).sources.forEach { source ->
+                assertTrue("$cell: $source has a switch that's off", source !in SWITCHED)
+            }
+        }
+    }
+
+    @Test
     fun `display names come from the disclosures`() {
         assertEquals("Aura Originals", ContentSource.BUNDLED.providerDisplayName())
         assertEquals("Pixabay", ContentSource.PIXABAY.providerDisplayName())
