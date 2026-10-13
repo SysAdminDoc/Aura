@@ -776,14 +776,17 @@ internal fun secondarySoundTabs(
     if (selectedTab == SoundTab.SEARCH) add(SoundTab.SEARCH)
 }
 
-private fun soundTabLabel(tab: SoundTab): String = when (tab) {
-    SoundTab.RINGTONES -> "Ringtones"
-    SoundTab.NOTIFICATIONS -> "Notifications"
-    SoundTab.ALARMS -> "Alarms"
-    SoundTab.YOUTUBE -> "YouTube"
-    SoundTab.COMMUNITY -> "Community"
-    SoundTab.SEARCH -> "Search"
-}
+@Composable
+private fun soundTabLabel(tab: SoundTab): String = stringResource(
+    when (tab) {
+        SoundTab.RINGTONES -> R.string.sounds_tab_ringtones
+        SoundTab.NOTIFICATIONS -> R.string.sounds_tab_notifications
+        SoundTab.ALARMS -> R.string.sounds_tab_alarms
+        SoundTab.YOUTUBE -> R.string.sounds_tab_youtube
+        SoundTab.COMMUNITY -> R.string.sounds_tab_community
+        SoundTab.SEARCH -> R.string.sounds_tab_search
+    },
+)
 
 private fun soundTabIcon(tab: SoundTab): androidx.compose.ui.graphics.vector.ImageVector = when (tab) {
     SoundTab.RINGTONES -> Icons.Default.Call
@@ -1338,13 +1341,16 @@ private fun MiniWaveform(duration: Double, isPlaying: Boolean, progress: Float, 
     }
 }
 
-private fun soundFilterLabel(filter: SoundQualityFilter): String = when (filter) {
-    SoundQualityFilter.BEST -> "Best"
-    SoundQualityFilter.CLEAN -> "Clean"
-    SoundQualityFilter.SHORT -> "Short"
-    SoundQualityFilter.CALM -> "Calm"
-    SoundQualityFilter.PUNCHY -> "Punchy"
-}
+@Composable
+private fun soundFilterLabel(filter: SoundQualityFilter): String = stringResource(
+    when (filter) {
+        SoundQualityFilter.BEST -> R.string.sounds_quality_best
+        SoundQualityFilter.CLEAN -> R.string.sounds_quality_clean
+        SoundQualityFilter.SHORT -> R.string.sounds_quality_short
+        SoundQualityFilter.CALM -> R.string.sounds_quality_calm
+        SoundQualityFilter.PUNCHY -> R.string.sounds_quality_punchy
+    },
+)
 
 @Composable
 private fun SoundFiltersSheet(

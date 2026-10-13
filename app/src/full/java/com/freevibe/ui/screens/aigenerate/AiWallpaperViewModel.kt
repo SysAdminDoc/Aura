@@ -53,7 +53,7 @@ data class GeneratedWallpaperRequestSignature(
 
 data class DuplicateGenerationConfirmation(
     val promptPreview: String,
-    val styleLabel: String,
+    @androidx.annotation.StringRes val styleLabelRes: Int,
 )
 
 fun generatedWallpaperRequestSignature(
@@ -75,7 +75,7 @@ fun duplicateGenerationConfirmation(
     val preview = prompt.trim().replace(GENERATED_PROMPT_WHITESPACE_RE, " ").take(80)
     return DuplicateGenerationConfirmation(
         promptPreview = preview.ifBlank { "Generated wallpaper" },
-        styleLabel = style.label,
+        styleLabelRes = style.labelRes,
     )
 }
 

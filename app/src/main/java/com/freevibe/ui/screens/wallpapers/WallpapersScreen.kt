@@ -27,6 +27,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalResources
 import kotlinx.coroutines.launch
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
@@ -1228,6 +1229,7 @@ private fun WallpaperCard(
     } else 0.67f
     val hints = wallpaper.qualityHints()
     val openWallpaperLabel = stringResource(R.string.wallpapers_card_open_details)
+    val resources = LocalResources.current
     val applyWallpaperLabel = stringResource(R.string.wallpapers_card_show_actions)
     val favoriteWallpaperLabel = if (isFavorite) stringResource(R.string.wallpapers_card_remove_favorite) else stringResource(R.string.wallpapers_card_add_favorite)
     val cardActions = buildList {
@@ -1255,6 +1257,7 @@ private fun WallpaperCard(
             )
             .semantics(mergeDescendants = true) {
                 contentDescription = wallpaper.cardAccessibilitySummary(
+                    resources = resources,
                     hints = hints,
                     isFavorite = isFavorite,
                     voteCount = voteCount,

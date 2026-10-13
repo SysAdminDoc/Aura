@@ -2206,4 +2206,98 @@
     <string name="video_wp_share_text_no_creator">%1$s on %2$s: %3$s</string>
     <string name="video_wp_report">Report video</string>
     <string name="video_wp_report_guidelines">Accept the Community Guidelines in Settings to send reports</string>
+
+    <!-- Spoken summaries and labels moved out of Kotlin -->
+    <string name="downloads_history_summary">%1$s. %2$s. Downloaded %3$s.</string>
+    <string name="downloads_copy_summary">%1$s: %2$s.</string>
+    <string name="downloads_review_missing">Review missing file</string>
+    <string name="downloads_open_file">Open %1$s</string>
+    <string name="downloads_progress_failed">Download failed: %1$s</string>
+    <string name="downloads_progress_percent">%1$d percent downloaded</string>
+    <string name="downloads_progress_running">Download in progress</string>
+    <string name="favorites_state_saved_wallpaper">Saved wallpaper</string>
+    <string name="favorites_dimensions">%1$d by %2$d</string>
+    <plurals name="favorites_duration_spoken">
+        <item quantity="one">%1$d second</item>
+        <item quantity="other">%1$d seconds</item>
+    </plurals>
+    <string name="favorites_local_file_missing">Local file missing</string>
+    <string name="favorites_local_file_revoked">Local file permission revoked</string>
+    <string name="favorites_local_file_corrupt">Local file corrupt</string>
+    <string name="favorites_batch_progress">Downloading favorites %1$d of %2$d</string>
+    <string name="favorites_batch_failed_count">%1$d failed</string>
+    <string name="favorites_batch_blocked_count">%1$d blocked</string>
+    <string name="favorites_batch_current_item">Current item: %1$s</string>
+    <string name="history_clear_cd">Clear history</string>
+    <string name="sounds_tab_ringtones">Ringtones</string>
+    <string name="sounds_tab_notifications">Notifications</string>
+    <string name="sounds_tab_alarms">Alarms</string>
+    <string name="sounds_tab_youtube" translatable="false">YouTube</string>
+    <string name="sounds_tab_community">Community</string>
+    <string name="sounds_tab_search">Search</string>
+    <string name="sounds_quality_best">Best</string>
+    <string name="sounds_quality_clean">Clean</string>
+    <string name="sounds_quality_short">Short</string>
+    <string name="sounds_quality_calm">Calm</string>
+    <string name="sounds_quality_punchy">Punchy</string>
+    <string name="wallpaper_card_source">%1$s wallpaper</string>
+    <string name="wallpaper_card_amoled">AMOLED friendly</string>
+    <string name="wallpaper_card_icon_safe">icon-safe</string>
+    <string name="wallpaper_card_ai_generated">AI-generated</string>
+    <plurals name="wallpaper_card_upvotes">
+        <item quantity="one">%1$d upvote</item>
+        <item quantity="other">%1$d upvotes</item>
+    </plurals>
+    <string name="wallpaper_card_saved">saved to favorites</string>
+    <string name="wallpaper_card_not_saved">not saved</string>
+    <string name="wallpaper_orientation_phone">Phone</string>
+    <string name="wallpaper_orientation_portrait">Portrait</string>
+    <string name="wallpaper_orientation_wide">Wide</string>
+    <string name="wallpaper_quality_ready">Ready</string>
+    <string name="wallpaper_source_local">Local</string>
+    <string name="wallpaper_source_ai">AI generated</string>
+    <string name="wallpaper_detail_subtitle_unavailable">Saved from %1$s. The source is unavailable.</string>
+    <string name="wallpaper_detail_subtitle_unavailable_reason">Saved from %1$s. The source is unavailable: %2$s</string>
+    <string name="wallpaper_detail_subtitle_by">By %1$s on %2$s</string>
+    <string name="wallpaper_detail_subtitle_source_page">Sourced from %1$s with a direct source page available</string>
+    <string name="wallpaper_detail_subtitle_source">Sourced from %1$s</string>
+    <string name="video_wp_orientation_all">All</string>
+    <string name="video_wp_focus_best">Best</string>
+    <string name="video_wp_focus_loop_safe">Loop-safe</string>
+    <string name="video_wp_focus_low_battery">Low battery</string>
+    <string name="video_wp_empty_search_title">No matches for “%1$s”</string>
+    <string name="video_wp_empty_search_body">Try fewer words, a broader mood, or switch the %1$s filter.</string>
+    <string name="video_wp_empty_title">No video wallpapers found</string>
+    <string name="video_wp_empty_body">Try another focus filter or switch the %1$s view.</string>
+    <string name="video_wp_degraded_message">Limited source health right now: %1$s</string>
+    <string name="ai_style_photo">Photo</string>
+    <string name="ai_style_anime">Anime</string>
+    <string name="ai_style_digital_art">Digital Art</string>
+    <string name="ai_style_cinematic">Cinematic</string>
+    <string name="ai_style_fantasy">Fantasy</string>
+    <string name="ai_style_neon">Neon</string>
+    <string name="ai_style_pixel_art">Pixel Art</string>
+    <string name="ai_style_none">No Style</string>
+    <string-array name="wallpaper_preview_mock_apps">
+        <item>App</item>
+        <item>Mail</item>
+        <item>Photos</item>
+        <item>Clock</item>
+        <item>Maps</item>
+        <item>Music</item>
+        <item>Chat</item>
+        <item>Notes</item>
+        <item>Files</item>
+        <item>Calendar</item>
+        <item>Weather</item>
+        <item>Camera</item>
+        <item>Store</item>
+        <item>News</item>
+        <item>Health</item>
+        <item>Wallet</item>
+        <item>Voice</item>
+        <item>Calc</item>
+        <item>Tools</item>
+        <item>Browse</item>
+    </string-array>
 </resources>

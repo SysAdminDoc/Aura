@@ -1,5 +1,6 @@
 package com.freevibe.ui.screens.aigenerate
 
+import com.freevibe.R
 import com.freevibe.data.model.CommunityReportReason
 import com.freevibe.data.model.ContentSource
 import com.freevibe.data.model.Wallpaper
@@ -101,7 +102,7 @@ class AiWallpaperRequestGateTest {
         )
 
         assertEquals("misty canyon at dawn", confirmation?.promptPreview)
-        assertEquals("Photo", confirmation?.styleLabel)
+        assertEquals(R.string.ai_style_photo, confirmation?.styleLabelRes)
     }
 
     @Test

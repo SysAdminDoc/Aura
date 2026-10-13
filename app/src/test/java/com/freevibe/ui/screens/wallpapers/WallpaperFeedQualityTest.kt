@@ -1,5 +1,7 @@
 package com.freevibe.ui.screens.wallpapers
 
+import android.content.Context
+import androidx.test.core.app.ApplicationProvider
 import com.freevibe.data.model.ContentSource
 import com.freevibe.data.model.SearchResult
 import com.freevibe.data.model.Wallpaper
@@ -10,8 +12,16 @@ import com.freevibe.service.WallpaperStyleLearningSignal
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
+import org.junit.runner.RunWith
+import org.robolectric.RobolectricTestRunner
+import org.robolectric.annotation.Config
 
+@RunWith(RobolectricTestRunner::class)
+@Config(sdk = [35])
 class WallpaperFeedQualityTest {
+
+    private val resources
+        get() = ApplicationProvider.getApplicationContext<Context>().resources
 
     @Test
     fun `Bing images named in the query string stay separate`() {
@@ -166,6 +176,7 @@ class WallpaperFeedQualityTest {
         val hints = wallpaper.qualityHints()
 
         assertEquals("4K+", hints.resolutionLabel)
+        assertEquals(WallpaperOrientationHint.PORTRAIT, hints.orientation)
         assertTrue(hints.isIconSafe)
     }
 
@@ -182,6 +193,7 @@ class WallpaperFeedQualityTest {
         ).copy(category = "Minimal")
 
         val summary = wallpaper.cardAccessibilitySummary(
+            resources = resources,
             isFavorite = true,
             voteCount = 12,
         )
@@ -190,6 +202,36 @@ class WallpaperFeedQualityTest {
             "Community wallpaper, Minimal, QHD, Portrait, AMOLED friendly, icon-safe, 12 upvotes, saved to favorites",
             summary,
         )
+        assertEquals(
+            "one vote reads in the singular and an unknown size still says something",
+            "Community wallpaper, Ready, Phone, not saved",
+            wallpaper.copy(width = 0, height = 0, tags = emptyList(), colors = emptyList(), category = "")
+                .cardAccessibilitySummary(resources = resources, isFavorite = false, voteCount = 0),
+        )
+        assertTrue(
+            wallpaper.cardAccessibilitySummary(resources = resources, isFavorite = true, voteCount = 1)
+                .contains(", 1 upvote, "),
+        )
+    }
+
+    @Test
+    @Config(qualifiers = "zh")
+    fun `wallpaper card summary reads in chinese with counted votes`() {
+        val wallpaper = wallpaper(
+            id = "community_pick",
+            source = ContentSource.COMMUNITY,
+            url = "https://example.com/community.jpg",
+            width = 1440,
+            height = 3200,
+            tags = listOf("amoled", "minimal"),
+            colors = listOf("#000000"),
+        ).copy(category = "Minimal")
+
+        val summary = wallpaper.cardAccessibilitySummary(resources = resources, isFavorite = true, voteCount = 12)
+
+        assertTrue(summary, summary.startsWith("社区 壁纸, Minimal, QHD, 竖屏, 适合 AMOLED, 图标清晰"))
+        assertTrue(summary, summary.contains("12 个赞"))
+        assertTrue(summary, summary.endsWith("已收藏"))
     }
 
     // Color filter label test removed: clearWallpaperColorFilterLabel() and

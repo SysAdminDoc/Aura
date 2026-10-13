@@ -1,12 +1,22 @@
 package com.freevibe.ui.screens.wallpapers
 
+import android.content.Context
+import androidx.test.core.app.ApplicationProvider
 import com.freevibe.data.model.ContentSource
 import com.freevibe.data.model.Wallpaper
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Test
+import org.junit.runner.RunWith
+import org.robolectric.RobolectricTestRunner
+import org.robolectric.annotation.Config
 
+@RunWith(RobolectricTestRunner::class)
+@Config(sdk = [35])
 class WallpaperDetailFormattingTest {
+
+    private val resources
+        get() = ApplicationProvider.getApplicationContext<Context>().resources
 
     @Test
     fun `detail title prefers category over tags and source`() {
@@ -15,7 +25,8 @@ class WallpaperDetailFormattingTest {
             tags = listOf("space", "amoled"),
         )
 
-        assertEquals("Neon city", wallpaperDetailTitle(wallpaper))
+        assertEquals("Neon city", wallpaperDetailTitle(resources, wallpaper))
+        assertEquals("Community wallpaper", wallpaperDetailTitle(resources, wallpaper(source = ContentSource.COMMUNITY)))
     }
 
     @Test
@@ -25,7 +36,8 @@ class WallpaperDetailFormattingTest {
             uploaderName = "Alex",
         )
 
-        assertEquals("By Alex on Pexels", wallpaperDetailSubtitle(wallpaper))
+        assertEquals("By Alex on Pexels", wallpaperDetailSubtitle(resources, wallpaper))
+        assertEquals("Sourced from Wallhaven", wallpaperDetailSubtitle(resources, wallpaper(source = ContentSource.WALLHAVEN)))
     }
 
     @Test

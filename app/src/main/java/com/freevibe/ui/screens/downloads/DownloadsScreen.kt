@@ -1,6 +1,7 @@
 package com.freevibe.ui.screens.downloads
 
 import android.content.Intent
+import android.content.res.Resources
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -307,7 +308,8 @@ fun DownloadsScreen(
 
 @Composable
 internal fun ActiveDownloadCard(dl: DownloadProgress, onDismiss: () -> Unit, onRetry: () -> Unit) {
-    val statusLabel = downloadProgressStatusLabel(dl)
+    val resources = LocalResources.current
+    val statusLabel = downloadProgressStatusLabel(resources, dl)
     val dismissLabel = stringResource(R.string.downloads_dismiss_file, dl.fileName)
     val retryLabel = stringResource(R.string.downloads_retry_file, dl.fileName)
     val summary = stringResource(R.string.downloads_active_summary, dl.fileName, statusLabel)
@@ -401,7 +403,8 @@ internal fun DownloadHistoryCard(
 ) {
     val dateFormat = remember { SimpleDateFormat("MMM d, h:mm a", Locale.getDefault()) }
     val dateLabel = remember(download.downloadedAt) { dateFormat.format(Date(download.downloadedAt)) }
-    val healthLabel = downloadHealthLabel(download, broken, sourceUnavailable)
+    val resources = LocalResources.current
+    val healthLabel = downloadHealthLabel(resources, download, broken, sourceUnavailable)
     val originalLabel = stringResource(R.string.downloads_original)
     val optimizedLabel = stringResource(R.string.downloads_optimized_copy)
     val unavailableDetails = stringResource(R.string.downloads_details_unavailable)
@@ -414,6 +417,7 @@ internal fun DownloadHistoryCard(
         unavailableDetails,
     )
     val itemSummary = downloadHistorySummary(
+        resources,
         download,
         broken,
         sourceUnavailable,
@@ -423,7 +427,7 @@ internal fun DownloadHistoryCard(
             if (download.optimizedPath.isNotBlank()) add(optimizedLabel to optimizedDetails)
         },
     )
-    val openLabel = downloadOpenActionLabel(download, broken)
+    val openLabel = downloadOpenActionLabel(resources, download, broken)
     val deleteLabel = stringResource(R.string.downloads_delete_file, download.name.ifEmpty { download.id })
     val deleteOptimizedLabel = stringResource(R.string.downloads_delete_optimized)
     val relinkLabel = stringResource(R.string.media_relink_action)
@@ -602,19 +606,20 @@ private fun downloadTypeLabel(type: String): Int = when (type) {
 }
 
 internal fun downloadHealthLabel(
+    resources: Resources,
     download: DownloadEntity,
     broken: Boolean,
     sourceUnavailable: Boolean,
-): String = when {
-    download.localMediaStatus == LocalMediaStatus.PERMISSION_REVOKED -> "Permission revoked"
-    download.localMediaStatus == LocalMediaStatus.CORRUPT -> "File corrupt"
-    download.localMediaStatus == LocalMediaStatus.MISSING -> "File missing"
-    broken -> "File missing"
-    sourceUnavailable -> "Source unavailable"
-    download.type == "WALLPAPER" -> "Wallpaper"
-    download.type == "VIDEO" -> "Video"
-    else -> "Sound"
-}
+): String = resources.getString(
+    when {
+        download.localMediaStatus == LocalMediaStatus.PERMISSION_REVOKED -> R.string.media_status_permission_revoked
+        download.localMediaStatus == LocalMediaStatus.CORRUPT -> R.string.media_status_corrupt
+        download.localMediaStatus == LocalMediaStatus.MISSING -> R.string.media_status_missing
+        broken -> R.string.downloads_file_missing
+        sourceUnavailable -> R.string.downloads_source_unavailable
+        else -> downloadTypeLabel(download.type)
+    },
+)
 
 internal fun downloadFocusIndex(downloads: List<DownloadEntity>, focusId: String?): Int? =
     focusId?.let { id -> downloads.indexOfFirst { it.id == id }.takeIf { it >= 0 } }
@@ -660,7 +665,7 @@ private fun downloadOpenUri(
 
 internal fun formatMediaTechnicalMetadata(
     metadata: MediaTechnicalMetadata,
-    unavailableLabel: String = "Details unavailable",
+    unavailableLabel: String,
 ): String {
     val facts = buildList {
         if (metadata.width > 0 && metadata.height > 0) add("${metadata.width}×${metadata.height}")
@@ -692,6 +697,7 @@ private fun formatMediaSize(bytes: Long): String {
 }
 
 internal fun downloadHistorySummary(
+    resources: Resources,
     download: DownloadEntity,
     broken: Boolean,
     sourceUnavailable: Boolean,
@@ -699,25 +705,26 @@ internal fun downloadHistorySummary(
     copyDetails: List<Pair<String, String>> = emptyList(),
 ): String {
     val name = download.name.ifEmpty { download.id }
-    return buildString {
-        append("$name. ${downloadHealthLabel(download, broken, sourceUnavailable)}. Downloaded $downloadedAtLabel.")
-        copyDetails.forEach { (label, details) -> append(" $label: $details.") }
-    }
+    val health = downloadHealthLabel(resources, download, broken, sourceUnavailable)
+    val summary = resources.getString(R.string.downloads_history_summary, name, health, downloadedAtLabel)
+    return (listOf(summary) + copyDetails.map { (label, details) ->
+        resources.getString(R.string.downloads_copy_summary, label, details)
+    }).joinToString(" ")
 }
 
-internal fun downloadOpenActionLabel(download: DownloadEntity, broken: Boolean): String =
+internal fun downloadOpenActionLabel(resources: Resources, download: DownloadEntity, broken: Boolean): String =
     if (broken) {
-        "Review missing file"
+        resources.getString(R.string.downloads_review_missing)
     } else {
-        "Open ${download.name.ifEmpty { download.id }}"
+        resources.getString(R.string.downloads_open_file, download.name.ifEmpty { download.id })
     }
 
-internal fun downloadProgressStatusLabel(download: DownloadProgress): String = when {
-    download.isComplete -> "Download complete"
-    download.error != null -> "Download failed: ${download.error}"
+internal fun downloadProgressStatusLabel(resources: Resources, download: DownloadProgress): String = when {
+    download.isComplete -> resources.getString(R.string.a11y_download_complete)
+    download.error != null -> resources.getString(R.string.downloads_progress_failed, download.error)
     download.totalBytes > 0 -> {
         val percent = (download.progress * 100).toInt().coerceIn(0, 100)
-        "$percent percent downloaded"
+        resources.getString(R.string.downloads_progress_percent, percent)
     }
-    else -> "Download in progress"
+    else -> resources.getString(R.string.downloads_progress_running)
 }

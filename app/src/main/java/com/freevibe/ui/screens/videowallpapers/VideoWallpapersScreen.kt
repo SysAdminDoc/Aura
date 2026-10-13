@@ -1,11 +1,13 @@
 package com.freevibe.ui.screens.videowallpapers
 
 import android.content.Context
+import android.content.res.Resources
 import android.net.Uri
 import android.util.Log
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.annotation.StringRes
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
@@ -522,7 +524,7 @@ fun VideoWallpapersScreen(
             AuraStatusBanner(
                 icon = Icons.Default.CloudOff,
                 title = stringResource(R.string.video_wp_degraded_title),
-                message = videoSourceHealthSummary(state.degradedSources),
+                message = videoSourceHealthSummary(resources, state.degradedSources),
                 tone = MaterialTheme.colorScheme.tertiary,
                 primaryAction = AuraStatusAction(
                     label = stringResource(R.string.video_wp_degraded_refresh),
@@ -580,6 +582,7 @@ fun VideoWallpapersScreen(
                 }
                 state.items.isEmpty() -> {
                     val (icon, title, detail) = videoEmptyState(
+                        resources = resources,
                         query = state.searchQuery,
                         orientation = state.orientation,
                     )
@@ -1740,35 +1743,44 @@ private fun VideoPolicyLinkButton(
 }
 
 private fun videoEmptyState(
+    resources: Resources,
     query: String,
     orientation: OrientationFilter,
-): Triple<androidx.compose.ui.graphics.vector.ImageVector, String, String> = when {
-    query.isNotBlank() -> Triple(
-        Icons.Default.SearchOff,
-        "No matches for \"$query\"",
-        "Try fewer words, a broader mood, or switch the ${orientation.label()} filter.",
-    )
-    else -> Triple(
-        Icons.Default.VideoLibrary,
-        "No video wallpapers found",
-        "Try another focus filter or switch the ${orientation.label()} view.",
-    )
+): Triple<androidx.compose.ui.graphics.vector.ImageVector, String, String> {
+    val orientationName = resources.getString(orientation.labelRes())
+    return when {
+        query.isNotBlank() -> Triple(
+            Icons.Default.SearchOff,
+            resources.getString(R.string.video_wp_empty_search_title, query),
+            resources.getString(R.string.video_wp_empty_search_body, orientationName),
+        )
+        else -> Triple(
+            Icons.Default.VideoLibrary,
+            resources.getString(R.string.video_wp_empty_title),
+            resources.getString(R.string.video_wp_empty_body, orientationName),
+        )
+    }
 }
 
-private fun OrientationFilter.label(): String = when (this) {
-    OrientationFilter.ALL -> "All"
-    OrientationFilter.PORTRAIT -> "Portrait"
-    OrientationFilter.LANDSCAPE -> "Landscape"
+@StringRes
+private fun OrientationFilter.labelRes(): Int = when (this) {
+    OrientationFilter.ALL -> R.string.video_wp_orientation_all
+    OrientationFilter.PORTRAIT -> R.string.video_wp_badge_portrait
+    OrientationFilter.LANDSCAPE -> R.string.video_wp_badge_landscape
 }
 
-private fun orientationLabel(filter: OrientationFilter): String = filter.label()
+@Composable
+private fun orientationLabel(filter: OrientationFilter): String = stringResource(filter.labelRes())
 
-private fun videoFocusLabel(filter: VideoFocusFilter): String = when (filter) {
-    VideoFocusFilter.BEST -> "Best"
-    VideoFocusFilter.LOOP_SAFE -> "Loop-safe"
-    VideoFocusFilter.LOW_BATTERY -> "Low battery"
-    VideoFocusFilter.PHONE_FIT -> "Phone fit"
-}
+@Composable
+private fun videoFocusLabel(filter: VideoFocusFilter): String = stringResource(
+    when (filter) {
+        VideoFocusFilter.BEST -> R.string.video_wp_focus_best
+        VideoFocusFilter.LOOP_SAFE -> R.string.video_wp_focus_loop_safe
+        VideoFocusFilter.LOW_BATTERY -> R.string.video_wp_focus_low_battery
+        VideoFocusFilter.PHONE_FIT -> R.string.video_wp_badge_phone_fit
+    },
+)
 
 @Composable
 private fun VideoFiltersSheet(
@@ -1851,10 +1863,8 @@ private fun VideoFiltersSheet(
     }
 }
 
-private fun videoSourceHealthSummary(degradedSources: List<String>): String {
-    val labels = degradedSources.sorted().joinToString(", ")
-    return "Limited source health right now: $labels"
-}
+private fun videoSourceHealthSummary(resources: Resources, degradedSources: List<String>): String =
+    resources.getString(R.string.video_wp_degraded_message, degradedSources.sorted().joinToString(", "))
 
 internal fun isVideoWallpaperHidden(
     item: VideoWallpaperItem,

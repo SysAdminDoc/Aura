@@ -1994,4 +1994,95 @@
     <string name="video_wp_share_text_no_creator">%1$s，来自 %2$s：%3$s</string>
     <string name="video_wp_report">举报视频</string>
     <string name="video_wp_report_guidelines">请先在设置中接受社区准则，然后再举报</string>
+
+    <!-- Spoken summaries and labels moved out of Kotlin -->
+    <string name="downloads_history_summary">%1$s。%2$s。下载于 %3$s。</string>
+    <string name="downloads_copy_summary">%1$s：%2$s。</string>
+    <string name="downloads_review_missing">查看缺失的文件</string>
+    <string name="downloads_open_file">打开 %1$s</string>
+    <string name="downloads_progress_failed">下载失败：%1$s</string>
+    <string name="downloads_progress_percent">已下载 %1$d%%</string>
+    <string name="downloads_progress_running">正在下载</string>
+    <string name="favorites_state_saved_wallpaper">已保存的壁纸</string>
+    <string name="favorites_dimensions">%1$d × %2$d</string>
+    <plurals name="favorites_duration_spoken">
+        <item quantity="other">%1$d 秒</item>
+    </plurals>
+    <string name="favorites_local_file_missing">本地文件缺失</string>
+    <string name="favorites_local_file_revoked">本地文件权限已撤销</string>
+    <string name="favorites_local_file_corrupt">本地文件已损坏</string>
+    <string name="favorites_batch_progress">正在下载收藏：第 %1$d 个，共 %2$d 个</string>
+    <string name="favorites_batch_failed_count">%1$d 个失败</string>
+    <string name="favorites_batch_blocked_count">%1$d 个被阻止</string>
+    <string name="favorites_batch_current_item">当前项目：%1$s</string>
+    <string name="history_clear_cd">清除历史记录</string>
+    <string name="sounds_tab_ringtones">铃声</string>
+    <string name="sounds_tab_notifications">通知</string>
+    <string name="sounds_tab_alarms">闹钟</string>
+    <string name="sounds_tab_community">社区</string>
+    <string name="sounds_tab_search">搜索</string>
+    <string name="sounds_quality_best">最佳</string>
+    <string name="sounds_quality_clean">纯净</string>
+    <string name="sounds_quality_short">简短</string>
+    <string name="sounds_quality_calm">舒缓</string>
+    <string name="sounds_quality_punchy">有力</string>
+    <string name="wallpaper_card_source">%1$s 壁纸</string>
+    <string name="wallpaper_card_amoled">适合 AMOLED</string>
+    <string name="wallpaper_card_icon_safe">图标清晰</string>
+    <string name="wallpaper_card_ai_generated">AI 生成</string>
+    <plurals name="wallpaper_card_upvotes">
+        <item quantity="other">%1$d 个赞</item>
+    </plurals>
+    <string name="wallpaper_card_saved">已收藏</string>
+    <string name="wallpaper_card_not_saved">未收藏</string>
+    <string name="wallpaper_orientation_phone">手机</string>
+    <string name="wallpaper_orientation_portrait">竖屏</string>
+    <string name="wallpaper_orientation_wide">横屏</string>
+    <string name="wallpaper_quality_ready">可用</string>
+    <string name="wallpaper_source_local">本地</string>
+    <string name="wallpaper_source_ai">AI 生成</string>
+    <string name="wallpaper_detail_subtitle_unavailable">保存自 %1$s。来源已不可用。</string>
+    <string name="wallpaper_detail_subtitle_unavailable_reason">保存自 %1$s。来源已不可用：%2$s</string>
+    <string name="wallpaper_detail_subtitle_by">%1$s 发布于 %2$s</string>
+    <string name="wallpaper_detail_subtitle_source_page">来自 %1$s，可打开原始页面</string>
+    <string name="wallpaper_detail_subtitle_source">来自 %1$s</string>
+    <string name="video_wp_orientation_all">全部</string>
+    <string name="video_wp_focus_best">最佳</string>
+    <string name="video_wp_focus_loop_safe">循环流畅</string>
+    <string name="video_wp_focus_low_battery">低耗电</string>
+    <string name="video_wp_empty_search_title">没有与“%1$s”匹配的结果</string>
+    <string name="video_wp_empty_search_body">试试更少的关键词、更宽泛的氛围，或切换“%1$s”筛选。</string>
+    <string name="video_wp_empty_title">未找到视频壁纸</string>
+    <string name="video_wp_empty_body">试试其他重点筛选，或切换“%1$s”视图。</string>
+    <string name="video_wp_degraded_message">以下来源目前可用性有限：%1$s</string>
+    <string name="ai_style_photo">照片</string>
+    <string name="ai_style_anime">动漫</string>
+    <string name="ai_style_digital_art">数字艺术</string>
+    <string name="ai_style_cinematic">电影感</string>
+    <string name="ai_style_fantasy">奇幻</string>
+    <string name="ai_style_neon">霓虹</string>
+    <string name="ai_style_pixel_art">像素艺术</string>
+    <string name="ai_style_none">无风格</string>
+    <string-array name="wallpaper_preview_mock_apps">
+        <item>应用</item>
+        <item>邮件</item>
+        <item>照片</item>
+        <item>时钟</item>
+        <item>地图</item>
+        <item>音乐</item>
+        <item>聊天</item>
+        <item>笔记</item>
+        <item>文件</item>
+        <item>日历</item>
+        <item>天气</item>
+        <item>相机</item>
+        <item>商店</item>
+        <item>新闻</item>
+        <item>健康</item>
+        <item>钱包</item>
+        <item>语音</item>
+        <item>计算器</item>
+        <item>工具</item>
+        <item>浏览</item>
+    </string-array>
 </resources>

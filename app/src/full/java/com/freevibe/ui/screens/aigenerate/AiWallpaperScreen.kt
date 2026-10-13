@@ -422,7 +422,7 @@ fun AiWallpaperScreen(
                             selected = state.selectedStyle == style,
                             onClick = { viewModel.setStyle(style) },
                             label = {
-                                Text(style.label, style = MaterialTheme.typography.labelSmall)
+                                Text(stringResource(style.labelRes), style = MaterialTheme.typography.labelSmall)
                             },
                             shape = RoundedCornerShape(8.dp),
                         )
@@ -516,7 +516,7 @@ fun AiWallpaperScreen(
                     text = {
                         Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                             Text(
-                                stringResource(R.string.ai_duplicate_body, duplicate.styleLabel),
+                                stringResource(R.string.ai_duplicate_body, stringResource(duplicate.styleLabelRes)),
                                 style = MaterialTheme.typography.bodySmall,
                             )
                             Text(

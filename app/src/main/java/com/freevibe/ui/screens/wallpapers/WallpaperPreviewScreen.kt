@@ -13,6 +13,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringArrayResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.res.stringResource
@@ -312,6 +313,7 @@ private fun HomeMock(overlayTint: Color) {
             }
         }
         // Icon grid (4 rows × 5 columns). Each cell is a silhouette dot + a short label.
+        val mockLabels = stringArrayResource(R.array.wallpaper_preview_mock_apps)
         repeat(4) { row ->
             Row(
                 modifier = Modifier
@@ -322,7 +324,7 @@ private fun HomeMock(overlayTint: Color) {
                 repeat(5) { col ->
                     MockIcon(
                         tint = overlayTint.copy(alpha = 0.88f),
-                        label = mockLabel(row, col),
+                        label = mockLabels[(row * 5 + col) % mockLabels.size],
                     )
                 }
             }
@@ -376,18 +378,6 @@ private fun MockIcon(tint: Color, label: String?) {
             )
         }
     }
-}
-
-private fun mockLabel(row: Int, col: Int): String {
-    // Generic placeholders — intentionally abstract, no real app names.
-    val labels = listOf(
-        "App", "Mail", "Photos", "Clock", "Maps",
-        "Music", "Chat", "Notes", "Files", "Calendar",
-        "Weather", "Camera", "Store", "News", "Health",
-        "Wallet", "Voice", "Calc", "Tools", "Browse",
-    )
-    val idx = (row * 5 + col) % labels.size
-    return labels[idx]
 }
 
 @Composable

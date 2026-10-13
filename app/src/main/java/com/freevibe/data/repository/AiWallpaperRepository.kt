@@ -1,6 +1,8 @@
 package com.freevibe.data.repository
 
 import android.content.Context
+import androidx.annotation.StringRes
+import com.freevibe.R
 import com.freevibe.data.model.ContentSource
 import com.freevibe.data.model.Wallpaper
 import com.freevibe.service.advertisedLengthExceeds
@@ -16,15 +18,15 @@ import kotlinx.coroutines.withContext
 import javax.inject.Inject
 import javax.inject.Singleton
 
-enum class AiStyle(val label: String, val preset: String) {
-    PHOTOGRAPHIC("Photo", "photographic"),
-    ANIME("Anime", "anime"),
-    DIGITAL_ART("Digital Art", "digital-art"),
-    CINEMATIC("Cinematic", "cinematic"),
-    FANTASY("Fantasy", "fantasy-art"),
-    NEON_PUNK("Neon", "neon-punk"),
-    PIXEL_ART("Pixel Art", "pixel-art"),
-    NONE("No Style", ""),
+enum class AiStyle(@StringRes val labelRes: Int, val preset: String) {
+    PHOTOGRAPHIC(R.string.ai_style_photo, "photographic"),
+    ANIME(R.string.ai_style_anime, "anime"),
+    DIGITAL_ART(R.string.ai_style_digital_art, "digital-art"),
+    CINEMATIC(R.string.ai_style_cinematic, "cinematic"),
+    FANTASY(R.string.ai_style_fantasy, "fantasy-art"),
+    NEON_PUNK(R.string.ai_style_neon, "neon-punk"),
+    PIXEL_ART(R.string.ai_style_pixel_art, "pixel-art"),
+    NONE(R.string.ai_style_none, ""),
 }
 
 @Singleton

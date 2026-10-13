@@ -3,6 +3,7 @@ package com.freevibe.ui.screens.wallpapers
 import android.app.WallpaperManager
 import android.content.ComponentName
 import android.content.Intent
+import android.content.res.Resources
 import androidx.compose.animation.*
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
@@ -451,12 +452,12 @@ fun WallpaperDetailScreen(
                         }
                         Spacer(Modifier.height(14.dp))
                         Text(
-                            text = wallpaperDetailTitle(wp),
+                            text = wallpaperDetailTitle(resources, wp),
                             style = MaterialTheme.typography.headlineSmall,
                         )
                         Spacer(Modifier.height(6.dp))
                         Text(
-                            text = wallpaperDetailSubtitle(wp),
+                            text = wallpaperDetailSubtitle(resources, wp),
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
@@ -465,8 +466,8 @@ fun WallpaperDetailScreen(
                             horizontalArrangement = Arrangement.spacedBy(8.dp),
                             verticalArrangement = Arrangement.spacedBy(8.dp),
                         ) {
-                            DetailInfoChip(hints.resolutionLabel)
-                            DetailInfoChip(hints.orientationLabel)
+                            DetailInfoChip(resources.wallpaperResolutionLabel(hints))
+                            DetailInfoChip(stringResource(hints.orientation.labelRes))
                             if (wp.isAiGenerated == true) DetailInfoChip(stringResource(R.string.community_ai_generated_badge))
                             if (wp.license.isNotBlank()) DetailInfoChip(wp.license)
                             if (hints.isAmoled) DetailInfoChip(stringResource(R.string.detail_chip_amoled_friendly))
@@ -753,12 +754,12 @@ fun WallpaperDetailScreen(
                             if (rotationExclusion != null) {
                                 rotationExclusionsViewModel.restoreNow(rotationExclusion.stableId)
                                 snackbarHostState.showSnackbar(
-                                    resources.getString(R.string.rotation_restored_message, wallpaperDetailTitle(wp)),
+                                    resources.getString(R.string.rotation_restored_message, wallpaperDetailTitle(resources, wp)),
                                 )
                             } else {
                                 val exclusion = rotationExclusionsViewModel.exclude(rotationIdentity)
                                 val result = snackbarHostState.showSnackbar(
-                                    message = resources.getString(R.string.rotation_excluded_message, wallpaperDetailTitle(wp)),
+                                    message = resources.getString(R.string.rotation_excluded_message, wallpaperDetailTitle(resources, wp)),
                                     actionLabel = resources.getString(R.string.common_undo),
                                     duration = SnackbarDuration.Short,
                                 )
@@ -1292,7 +1293,7 @@ private fun CollectionPickerSheet(
     }
 }
 
-internal fun wallpaperDetailTitle(wallpaper: Wallpaper): String =
+internal fun wallpaperDetailTitle(resources: Resources, wallpaper: Wallpaper): String =
     when {
         wallpaper.category.isNotBlank() -> wallpaper.category.replaceFirstChar {
             if (it.isLowerCase()) it.titlecase() else it.toString()
@@ -1300,23 +1301,26 @@ internal fun wallpaperDetailTitle(wallpaper: Wallpaper): String =
         wallpaper.tags.isNotEmpty() -> wallpaper.tags.first().replaceFirstChar {
             if (it.isLowerCase()) it.titlecase() else it.toString()
         }
-        else -> "${sourceDisplayName(wallpaper.source)} wallpaper"
+        else -> resources.getString(R.string.wallpaper_card_source, resources.wallpaperSourceName(wallpaper.source))
     }
 
-internal fun wallpaperDetailSubtitle(wallpaper: Wallpaper): String {
-    val sourceLabel = sourceDisplayName(wallpaper.source)
+internal fun wallpaperDetailSubtitle(resources: Resources, wallpaper: Wallpaper): String {
+    val sourceLabel = resources.wallpaperSourceName(wallpaper.source)
     return when {
+        wallpaper.isSourceUnavailable() && wallpaper.sourceAvailabilityReason.isNotBlank() ->
+            resources.getString(
+                R.string.wallpaper_detail_subtitle_unavailable_reason,
+                sourceLabel,
+                wallpaper.sourceAvailabilityReason,
+            )
         wallpaper.isSourceUnavailable() ->
-            listOfNotNull(
-                "Saved from $sourceLabel; source is unavailable",
-                wallpaper.sourceAvailabilityReason.takeIf { it.isNotBlank() },
-            ).joinToString(": ")
+            resources.getString(R.string.wallpaper_detail_subtitle_unavailable, sourceLabel)
         wallpaper.uploaderName.isNotBlank() ->
-            "By ${wallpaper.uploaderName} on $sourceLabel"
+            resources.getString(R.string.wallpaper_detail_subtitle_by, wallpaper.uploaderName, sourceLabel)
         wallpaper.sourcePageUrl.isNotBlank() ->
-            "Sourced from $sourceLabel with a direct source page available"
+            resources.getString(R.string.wallpaper_detail_subtitle_source_page, sourceLabel)
         else ->
-            "Sourced from $sourceLabel"
+            resources.getString(R.string.wallpaper_detail_subtitle_source, sourceLabel)
     }
 }
 

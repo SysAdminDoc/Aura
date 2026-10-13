@@ -1,5 +1,8 @@
 package com.freevibe.ui.screens.wallpapers
 
+import android.content.res.Resources
+import androidx.annotation.StringRes
+import com.freevibe.R
 import com.freevibe.data.model.ContentSource
 import com.freevibe.data.model.Wallpaper
 import com.freevibe.data.model.stableKey
@@ -10,10 +13,17 @@ import kotlin.math.max
 
 enum class WallpaperDiscoverFilter { FOR_YOU, AMOLED, HIGH_RES, PORTRAIT, ICON_SAFE }
 
+internal enum class WallpaperOrientationHint(@StringRes val labelRes: Int) {
+    PHONE(R.string.wallpaper_orientation_phone),
+    PORTRAIT(R.string.wallpaper_orientation_portrait),
+    WIDE(R.string.wallpaper_orientation_wide),
+}
+
 @androidx.compose.runtime.Immutable
 internal data class WallpaperQualityHints(
+    /** A resolution class like QHD, or blank when the size isn't known. */
     val resolutionLabel: String,
-    val orientationLabel: String,
+    val orientation: WallpaperOrientationHint,
     val isAmoled: Boolean,
     val isIconSafe: Boolean,
 )
@@ -94,35 +104,48 @@ internal fun Wallpaper.qualityHints(): WallpaperQualityHints {
         pixels >= 3_400_000L || max(width, height) >= 2500 -> "QHD"
         pixels >= 1_900_000L || max(width, height) >= 1900 -> "FHD"
         pixels > 0L -> "HD"
-        else -> "Ready"
+        else -> ""
     }
-    val orientationLabel = when {
-        width <= 0 || height <= 0 -> "Phone"
-        height >= width -> "Portrait"
-        else -> "Wide"
+    val orientation = when {
+        width <= 0 || height <= 0 -> WallpaperOrientationHint.PHONE
+        height >= width -> WallpaperOrientationHint.PORTRAIT
+        else -> WallpaperOrientationHint.WIDE
     }
     return WallpaperQualityHints(
         resolutionLabel = resolutionLabel,
-        orientationLabel = orientationLabel,
+        orientation = orientation,
         isAmoled = isAmoledFriendly(),
         isIconSafe = isIconSafe(),
     )
 }
 
+internal fun Resources.wallpaperResolutionLabel(hints: WallpaperQualityHints): String =
+    hints.resolutionLabel.ifBlank { getString(R.string.wallpaper_quality_ready) }
+
+/** Provider brands keep their own spelling; Aura's own sources read in the user's language. */
+internal fun Resources.wallpaperSourceName(source: ContentSource): String = when (source) {
+    ContentSource.COMMUNITY -> getString(R.string.wallpapers_tab_community)
+    ContentSource.LOCAL -> getString(R.string.wallpaper_source_local)
+    ContentSource.AI_GENERATED -> getString(R.string.wallpaper_source_ai)
+    ContentSource.BUNDLED -> getString(R.string.sound_shuffle_originals_title)
+    else -> sourceDisplayName(source)
+}
+
 internal fun Wallpaper.cardAccessibilitySummary(
+    resources: Resources,
     hints: WallpaperQualityHints = qualityHints(),
     isFavorite: Boolean,
     voteCount: Int,
 ): String = buildList {
-    add("${source.readableLabel()} wallpaper")
+    add(resources.getString(R.string.wallpaper_card_source, resources.wallpaperSourceName(source)))
     if (category.isNotBlank()) add(category)
-    add(hints.resolutionLabel)
-    add(hints.orientationLabel)
-    if (hints.isAmoled) add("AMOLED friendly")
-    if (hints.isIconSafe) add("icon-safe")
-    if (isAiGenerated == true) add("AI-generated")
-    if (voteCount > 0) add("$voteCount upvotes")
-    add(if (isFavorite) "saved to favorites" else "not saved")
+    add(resources.wallpaperResolutionLabel(hints))
+    add(resources.getString(hints.orientation.labelRes))
+    if (hints.isAmoled) add(resources.getString(R.string.wallpaper_card_amoled))
+    if (hints.isIconSafe) add(resources.getString(R.string.wallpaper_card_icon_safe))
+    if (isAiGenerated == true) add(resources.getString(R.string.wallpaper_card_ai_generated))
+    if (voteCount > 0) add(resources.getQuantityString(R.plurals.wallpaper_card_upvotes, voteCount, voteCount))
+    add(resources.getString(if (isFavorite) R.string.wallpaper_card_saved else R.string.wallpaper_card_not_saved))
 }.joinToString(", ")
 
 internal fun Wallpaper.matchesDiscoverFilter(filter: WallpaperDiscoverFilter): Boolean = when (filter) {
@@ -313,11 +336,6 @@ private fun String.toPixelHint(): Long {
 }
 
 private fun String.normalizeFeedTerm(): String = lowercase(Locale.ROOT).trim()
-
-private fun ContentSource.readableLabel(): String =
-    name.split("_").joinToString(" ") { part ->
-        part.lowercase(Locale.ROOT).replaceFirstChar { char -> char.uppercase(Locale.ROOT) }
-    }
 
 private val AMOLED_TERMS = setOf(
     "amoled", "oled", "black", "dark", "night", "midnight", "shadow", "space", "neon",

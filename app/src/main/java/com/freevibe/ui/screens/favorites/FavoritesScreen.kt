@@ -1,5 +1,6 @@
 package com.freevibe.ui.screens.favorites
 
+import android.content.res.Resources
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -296,6 +297,7 @@ fun FavoritesScreen(
             // batch's WorkManager job is queued or running, including after process death.
             if (batchState.isRunning || (batchState.totalCount > 0 && !batchState.isComplete)) {
                 val batchProgressDescription = favoritesBatchProgressSummary(
+                    resources = resources,
                     processed = batchState.processedCount,
                     total = batchState.totalCount,
                     failed = batchState.failedCount,
@@ -464,6 +466,7 @@ fun FavoritesScreen(
                                         )
                                         .semantics(mergeDescendants = true) {
                                             contentDescription = favoriteWallpaperSummary(
+                                                resources = resources,
                                                 favorite = fav,
                                                 isSelected = isSelected,
                                                 sourceUnavailable = sourceUnavailable,
@@ -579,7 +582,7 @@ fun FavoritesScreen(
                             items(sortedSounds, key = { it.stableKey() }, contentType = { "favorite_card" }) { fav ->
                                 val sourceUnavailable = fav.isSourceUnavailable()
                                 val needsRelink = fav.needsLocalMediaRelink()
-                                val soundSummary = favoriteSoundSummary(fav, sourceUnavailable)
+                                val soundSummary = favoriteSoundSummary(resources, fav, sourceUnavailable)
                                 val soundDisplayName = favoriteDisplayName(fav)
                                 val openLabel = stringResource(R.string.favorites_open_item, soundDisplayName)
                                 val removeLabel = stringResource(R.string.favorites_remove_item, soundDisplayName)
@@ -768,20 +771,23 @@ internal fun favoriteDisplayName(favorite: FavoriteEntity): String =
     favorite.name.ifBlank { favorite.id }
 
 internal fun favoriteWallpaperSummary(
+    resources: Resources,
     favorite: FavoriteEntity,
     isSelected: Boolean,
     sourceUnavailable: Boolean,
 ): String {
     val status = when {
-        favorite.needsLocalMediaRelink() -> favoriteLocalMediaHealthLabel(favorite.localMediaStatus)
-        sourceUnavailable -> "source unavailable"
-        isSelected -> "selected"
-        else -> "saved wallpaper"
+        favorite.needsLocalMediaRelink() -> favoriteLocalMediaHealthLabel(resources, favorite.localMediaStatus)
+        sourceUnavailable -> resources.getString(R.string.favorites_state_source_unavailable)
+        isSelected -> resources.getString(R.string.a11y_selected)
+        else -> resources.getString(R.string.favorites_state_saved_wallpaper)
     }
     val details = buildList {
         favorite.category?.takeIf { it.isNotBlank() }?.let(::add)
-        if (favorite.width > 0 && favorite.height > 0) add("${favorite.width} by ${favorite.height}")
-        favorite.source.takeIf { it.isNotBlank() }?.let { add(sourceDisplayLabel(it)) }
+        if (favorite.width > 0 && favorite.height > 0) {
+            add(resources.getString(R.string.favorites_dimensions, favorite.width, favorite.height))
+        }
+        favorite.source.takeIf { it.isNotBlank() }?.let { add(sourceDisplayLabel(resources, it)) }
     }.joinToString(", ")
     return listOf(favoriteDisplayName(favorite), status, details)
         .filter { it.isNotBlank() }
@@ -789,27 +795,36 @@ internal fun favoriteWallpaperSummary(
 }
 
 internal fun favoriteSoundSummary(
+    resources: Resources,
     favorite: FavoriteEntity,
     sourceUnavailable: Boolean,
 ): String {
     val status = when {
-        favorite.needsLocalMediaRelink() -> favoriteLocalMediaHealthLabel(favorite.localMediaStatus)
-        sourceUnavailable -> "source unavailable"
-        else -> "saved sound"
+        favorite.needsLocalMediaRelink() -> favoriteLocalMediaHealthLabel(resources, favorite.localMediaStatus)
+        sourceUnavailable -> resources.getString(R.string.favorites_state_source_unavailable)
+        else -> resources.getString(R.string.favorites_state_saved_sound)
     }
-    val duration = if (favorite.duration > 0) "${favorite.duration.toInt()} seconds" else ""
-    return listOf(favoriteDisplayName(favorite), status, duration, sourceDisplayLabel(favorite.source))
+    val seconds = favorite.duration.toInt()
+    val duration = if (favorite.duration > 0) {
+        resources.getQuantityString(R.plurals.favorites_duration_spoken, seconds, seconds)
+    } else {
+        ""
+    }
+    return listOf(favoriteDisplayName(favorite), status, duration, sourceDisplayLabel(resources, favorite.source))
         .filter { it.isNotBlank() }
         .joinToString(". ")
 }
 
-internal fun favoriteLocalMediaHealthLabel(status: String): String = when (status) {
-    LocalMediaStatus.PERMISSION_REVOKED -> "local file permission revoked"
-    LocalMediaStatus.CORRUPT -> "local file corrupt"
-    else -> "local file missing"
-}
+internal fun favoriteLocalMediaHealthLabel(resources: Resources, status: String): String = resources.getString(
+    when (status) {
+        LocalMediaStatus.PERMISSION_REVOKED -> R.string.favorites_local_file_revoked
+        LocalMediaStatus.CORRUPT -> R.string.favorites_local_file_corrupt
+        else -> R.string.favorites_local_file_missing
+    },
+)
 
 internal fun favoritesBatchProgressSummary(
+    resources: Resources,
     processed: Int,
     total: Int,
     failed: Int,
@@ -817,24 +832,27 @@ internal fun favoritesBatchProgressSummary(
     currentItem: String,
 ): String {
     val outcomes = buildList {
-        if (failed > 0) add("$failed failed")
-        if (blocked > 0) add("$blocked blocked")
+        if (failed > 0) add(resources.getString(R.string.favorites_batch_failed_count, failed))
+        if (blocked > 0) add(resources.getString(R.string.favorites_batch_blocked_count, blocked))
     }.joinToString(", ")
-    val current = currentItem.takeIf { it.isNotBlank() }?.let { "Current item: $it" }.orEmpty()
+    val current = currentItem.takeIf { it.isNotBlank() }
+        ?.let { resources.getString(R.string.favorites_batch_current_item, it) }
+        .orEmpty()
     return listOf(
-        "Downloading favorites $processed of $total",
+        resources.getString(R.string.favorites_batch_progress, processed, total),
         outcomes,
         current,
     ).filter { it.isNotBlank() }.joinToString(". ")
 }
 
-private fun sourceDisplayLabel(source: String): String =
+/** Provider brands keep their own spelling; Aura's bundled pack reads in the user's language. */
+private fun sourceDisplayLabel(resources: Resources, source: String): String =
     when (source.uppercase(java.util.Locale.ROOT)) {
         "YOUTUBE" -> "YouTube"
         "TIKTOK" -> "TikTok"
         "CCMIXTER" -> "ccMixter"
         "SOUNDCLOUD" -> "SoundCloud"
-        "BUNDLED" -> "Aura Originals"
+        "BUNDLED" -> resources.getString(R.string.sound_shuffle_originals_title)
         else -> source.split('_', '-')
             .filter { it.isNotBlank() }
             .joinToString(" ") { part ->
