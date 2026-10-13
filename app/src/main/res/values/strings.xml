@@ -2270,14 +2270,6 @@
     <string name="video_wp_empty_title">No video wallpapers found</string>
     <string name="video_wp_empty_body">Try another focus filter or switch the %1$s view.</string>
     <string name="video_wp_degraded_message">Limited source health right now: %1$s</string>
-    <string name="ai_style_photo">Photo</string>
-    <string name="ai_style_anime">Anime</string>
-    <string name="ai_style_digital_art">Digital Art</string>
-    <string name="ai_style_cinematic">Cinematic</string>
-    <string name="ai_style_fantasy">Fantasy</string>
-    <string name="ai_style_neon">Neon</string>
-    <string name="ai_style_pixel_art">Pixel Art</string>
-    <string name="ai_style_none">No Style</string>
     <string-array name="wallpaper_preview_mock_apps">
         <item>App</item>
         <item>Mail</item>

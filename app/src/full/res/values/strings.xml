@@ -69,4 +69,12 @@
     <string name="ai_share_community_default_name">Generated wallpaper</string>
     <string name="ai_share_community_complete">Generated wallpaper shared to Community</string>
     <string name="ai_share_community_failed">Community upload failed: %1$s</string>
+    <string name="ai_style_photo">Photo</string>
+    <string name="ai_style_anime">Anime</string>
+    <string name="ai_style_digital_art">Digital Art</string>
+    <string name="ai_style_cinematic">Cinematic</string>
+    <string name="ai_style_fantasy">Fantasy</string>
+    <string name="ai_style_neon">Neon</string>
+    <string name="ai_style_pixel_art">Pixel Art</string>
+    <string name="ai_style_none">No Style</string>
 </resources>

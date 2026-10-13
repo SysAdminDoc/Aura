@@ -422,7 +422,7 @@ fun AiWallpaperScreen(
                             selected = state.selectedStyle == style,
                             onClick = { viewModel.setStyle(style) },
                             label = {
-                                Text(stringResource(style.labelRes), style = MaterialTheme.typography.labelSmall)
+                                Text(stringResource(style.labelRes()), style = MaterialTheme.typography.labelSmall)
                             },
                             shape = RoundedCornerShape(8.dp),
                         )

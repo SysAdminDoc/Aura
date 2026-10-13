@@ -66,4 +66,12 @@
     <string name="ai_share_community_default_name">生成的壁纸</string>
     <string name="ai_share_community_complete">生成的壁纸已分享到社区</string>
     <string name="ai_share_community_failed">社区上传失败：%1$s</string>
+    <string name="ai_style_photo">照片</string>
+    <string name="ai_style_anime">动漫</string>
+    <string name="ai_style_digital_art">数字艺术</string>
+    <string name="ai_style_cinematic">电影感</string>
+    <string name="ai_style_fantasy">奇幻</string>
+    <string name="ai_style_neon">霓虹</string>
+    <string name="ai_style_pixel_art">像素艺术</string>
+    <string name="ai_style_none">无风格</string>
 </resources>

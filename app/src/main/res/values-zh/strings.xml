@@ -2055,14 +2055,6 @@
     <string name="video_wp_empty_title">未找到视频壁纸</string>
     <string name="video_wp_empty_body">试试其他重点筛选，或切换“%1$s”视图。</string>
     <string name="video_wp_degraded_message">以下来源目前可用性有限：%1$s</string>
-    <string name="ai_style_photo">照片</string>
-    <string name="ai_style_anime">动漫</string>
-    <string name="ai_style_digital_art">数字艺术</string>
-    <string name="ai_style_cinematic">电影感</string>
-    <string name="ai_style_fantasy">奇幻</string>
-    <string name="ai_style_neon">霓虹</string>
-    <string name="ai_style_pixel_art">像素艺术</string>
-    <string name="ai_style_none">无风格</string>
     <string-array name="wallpaper_preview_mock_apps">
         <item>应用</item>
         <item>邮件</item>

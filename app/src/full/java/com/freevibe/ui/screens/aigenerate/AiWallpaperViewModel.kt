@@ -51,6 +51,18 @@ data class GeneratedWallpaperRequestSignature(
     val style: AiStyle,
 )
 
+@androidx.annotation.StringRes
+internal fun AiStyle.labelRes(): Int = when (this) {
+    AiStyle.PHOTOGRAPHIC -> R.string.ai_style_photo
+    AiStyle.ANIME -> R.string.ai_style_anime
+    AiStyle.DIGITAL_ART -> R.string.ai_style_digital_art
+    AiStyle.CINEMATIC -> R.string.ai_style_cinematic
+    AiStyle.FANTASY -> R.string.ai_style_fantasy
+    AiStyle.NEON_PUNK -> R.string.ai_style_neon
+    AiStyle.PIXEL_ART -> R.string.ai_style_pixel_art
+    AiStyle.NONE -> R.string.ai_style_none
+}
+
 data class DuplicateGenerationConfirmation(
     val promptPreview: String,
     @androidx.annotation.StringRes val styleLabelRes: Int,
@@ -75,7 +87,7 @@ fun duplicateGenerationConfirmation(
     val preview = prompt.trim().replace(GENERATED_PROMPT_WHITESPACE_RE, " ").take(80)
     return DuplicateGenerationConfirmation(
         promptPreview = preview.ifBlank { "Generated wallpaper" },
-        styleLabelRes = style.labelRes,
+        styleLabelRes = style.labelRes(),
     )
 }
 
