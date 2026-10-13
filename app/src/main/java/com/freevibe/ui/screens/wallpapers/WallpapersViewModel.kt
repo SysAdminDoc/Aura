@@ -78,12 +78,8 @@ class WallpapersViewModel @Inject constructor(
     /** Non-null only when a seasonal theme is currently active (holiday, summer, etc.). */
     val seasonalTheme = seasonalContentManager.currentTheme()
 
-    private var lastRouteQuery: String? = null
-    private var lastRouteColor: String? = null
-    private var lastRouteSimilarId: String? = null
-    private var lastRouteSimilarSource: String? = null
-    private var lastRouteSimilarFullUrl: String? = null
-    private var hasInitiallyLoaded = false
+    // Null until the first route call, so the first one always loads.
+    private var lastRouteFilters: WallpaperRouteFilters? = null
 
     val selectedWallpaper = selectedContent.selectedWallpaper
     val sharedWallpaperList = selectedContent.wallpaperList
@@ -217,48 +213,26 @@ class WallpapersViewModel @Inject constructor(
         similarSource: String? = null,
         similarFullUrl: String? = null,
     ) {
-        val normalizedQuery = query?.ifBlank { null }
-        val normalizedColor = color?.ifBlank { null }
-        val normalizedSimilarId = similarId?.ifBlank { null }
-        val normalizedSimilarSource = similarSource?.ifBlank { null }
-        val normalizedSimilarFullUrl = similarFullUrl?.ifBlank { null }
-
+        val filters = WallpaperRouteFilters.of(query, color, similarId, similarSource, similarFullUrl)
         // Skip dedup only for non-initial calls with identical filters
-        if (
-            hasInitiallyLoaded &&
-            normalizedQuery == lastRouteQuery &&
-            normalizedColor == lastRouteColor &&
-            normalizedSimilarId == lastRouteSimilarId &&
-            normalizedSimilarSource == lastRouteSimilarSource &&
-            normalizedSimilarFullUrl == lastRouteSimilarFullUrl
-        ) return
-
-        lastRouteQuery = normalizedQuery
-        lastRouteColor = normalizedColor
-        lastRouteSimilarId = normalizedSimilarId
-        lastRouteSimilarSource = normalizedSimilarSource
-        lastRouteSimilarFullUrl = normalizedSimilarFullUrl
-        hasInitiallyLoaded = true
-
-        val resolvedSimilarSource = normalizedSimilarSource?.let { sourceName ->
-            runCatching { ContentSource.valueOf(sourceName) }.getOrNull()
-        }
+        if (filters == lastRouteFilters) return
+        lastRouteFilters = filters
 
         when {
-            normalizedQuery != null -> {
-                if (_state.value.selectedTab != WallpaperTab.SEARCH || _state.value.query != normalizedQuery) {
-                    search(normalizedQuery)
+            filters.query != null -> {
+                if (_state.value.selectedTab != WallpaperTab.SEARCH || _state.value.query != filters.query) {
+                    search(filters.query)
                 }
             }
-            normalizedColor != null -> {
-                if (_state.value.selectedTab != WallpaperTab.COLOR || _state.value.selectedColor != normalizedColor) {
-                    searchByColor(normalizedColor)
+            filters.color != null -> {
+                if (_state.value.selectedTab != WallpaperTab.COLOR || _state.value.selectedColor != filters.color) {
+                    searchByColor(filters.color)
                 }
             }
-            normalizedSimilarId != null -> findSimilarById(
-                wallpaperId = normalizedSimilarId,
-                source = resolvedSimilarSource,
-                fullUrl = normalizedSimilarFullUrl,
+            filters.similarId != null -> findSimilarById(
+                wallpaperId = filters.similarId,
+                source = filters.resolvedSimilarSource,
+                fullUrl = filters.similarFullUrl,
             )
             _state.value.wallpapers.isEmpty() && !_state.value.isLoading -> browse.loadWallpapers()
         }
