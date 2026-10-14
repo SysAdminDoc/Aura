@@ -17,6 +17,7 @@ import com.freevibe.data.model.RedditFeedPresetStore
 import com.freevibe.data.model.mergeImported
 import com.freevibe.data.model.parseRedditFeedPresetStoreStrict
 import com.freevibe.data.model.LocalMediaStatus
+import com.freevibe.data.model.MEDIA_TYPE_VIDEO
 import com.freevibe.data.model.LocalWallpaperEntity
 import com.freevibe.data.model.LocalWallpaperFolderEntity
 import com.freevibe.data.model.LocalWallpaperFolderScanStatus
@@ -1259,12 +1260,18 @@ private fun FavoriteExportEntry.toEntity(): FavoriteEntity? {
     val normalizedType = type.trim().uppercase(java.util.Locale.ROOT)
     if (normalizedId.isBlank()) return null
     if (localMedia && !isSafePortableLocalMediaId(normalizedId)) return null
-    if (normalizedType !in setOf("WALLPAPER", "SOUND")) return null
+    if (normalizedType !in IMPORTED_FAVORITE_TYPES) return null
+    val isVideo = normalizedType == MEDIA_TYPE_VIDEO
+    // A saved video is always a provider's, so it never travels as a file to pick again.
+    if (isVideo && localMedia) return null
     val normalizedThumbnailUrl = normalizeImportedHttpsUrl(
         thumbnailUrl,
-        allowBlank = localMedia || normalizedType == "SOUND",
+        allowBlank = localMedia || normalizedType == "SOUND" || isVideo,
     ) ?: return null
-    val normalizedFullUrl = normalizeImportedHttpsUrl(fullUrl, allowBlank = localMedia) ?: return null
+    val normalizedFullUrl = when {
+        isVideo -> normalizeImportedVideoFavoriteUrl(normalizedSource, normalizedId, fullUrl)
+        else -> normalizeImportedHttpsUrl(fullUrl, allowBlank = localMedia)
+    } ?: return null
     if (!localMedia && normalizedFullUrl.isBlank()) return null
     if (!localMedia && normalizedType == "WALLPAPER" && normalizedThumbnailUrl.isBlank()) return null
     val normalizedHash = localMediaSha256.trim().lowercase(java.util.Locale.ROOT)

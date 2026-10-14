@@ -38,6 +38,7 @@ import com.freevibe.data.model.normalized
 import com.freevibe.data.model.providerNetworkPolicies
 import com.freevibe.data.model.rotationIdentity
 import com.freevibe.data.model.toRotationExclusion
+import com.freevibe.data.model.toVideoWallpaperItem
 import com.freevibe.data.model.upsert
 import com.freevibe.data.repository.CollectionRepository
 import com.squareup.moshi.Moshi
@@ -186,6 +187,20 @@ class LibraryImportPlanTest {
         {"id":"ai-1","source":"AI_GENERATED","type":"WALLPAPER",
          "thumbnailUrl":"file:/data/user/0/com.freevibe/files/ai_wallpapers/ai-1.png",
          "fullUrl":"file:/data/user/0/com.freevibe/files/ai_wallpapers/ai-1.png","name":"Dream"}
+    """.trimIndent()
+
+    private val youtubeVideoFavorite = """
+        {"id":"yt_dQw4w9WgXcQ","source":"YOUTUBE","type":"VIDEO",
+         "thumbnailUrl":"https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg",
+         "fullUrl":"https://youtu.be/dQw4w9WgXcQ","name":"Neon rain loop",
+         "width":1080,"height":1920,"duration":42.0,"uploaderName":"Loop Studio",
+         "sourcePageUrl":"https://www.youtube.com/watch?v=dQw4w9WgXcQ","license":"YouTube"}
+    """.trimIndent()
+
+    private val redditVideoFavorite = """
+        {"id":"rd_1abc2de","source":"REDDIT","type":"VIDEO","thumbnailUrl":"",
+         "fullUrl":"https://v.redd.it/abc123xyz","name":"Rain on glass","uploaderName":"u/maker",
+         "sourcePageUrl":"https://www.reddit.com/r/LiveWallpapers/comments/1abc2de/rain_on_glass/"}
     """.trimIndent()
 
     // -- version gating --
@@ -642,6 +657,139 @@ class LibraryImportPlanTest {
             listOf(LibraryImportSkipReason.DUPLICATE),
             plan.skipped.map { it.reason },
         )
+    }
+
+    @Test
+    fun `video favorites in a backup are checked and kept the way the app writes them`() = runTest {
+        val plan = exporter.buildPlan(
+            payload(
+                version = "4",
+                favorites = "[$portableFavorite,$youtubeVideoFavorite,$redditVideoFavorite]",
+            ),
+        )
+
+        assertEquals(listOf("wp-1", "yt_dQw4w9WgXcQ", "rd_1abc2de"), plan.favorites.map { it.id })
+        val videos = plan.favorites.filter { it.type == "VIDEO" }.associateBy { it.id }
+        // A short link is kept as the video's page, and a bare clip address as the playlist the preview plays.
+        assertEquals("https://www.youtube.com/watch?v=dQw4w9WgXcQ", videos.getValue("yt_dQw4w9WgXcQ").fullUrl)
+        assertEquals("https://v.redd.it/abc123xyz/HLSPlaylist.m3u8", videos.getValue("rd_1abc2de").fullUrl)
+        assertEquals("", videos.getValue("rd_1abc2de").thumbnailUrl)
+        assertEquals(42.0, videos.getValue("yt_dQw4w9WgXcQ").duration, 0.0)
+        assertEquals("YouTube", videos.getValue("yt_dQw4w9WgXcQ").license)
+        assertTrue(videos.values.all { it.toVideoWallpaperItem() != null })
+        assertTrue(plan.skipped.none { it.section == "favorite" })
+    }
+
+    @Test
+    fun `a video favorite that points somewhere else is reported and the rest restore`() = runTest {
+        val strayPlaylist = redditVideoFavorite
+            .replace("https://v.redd.it/abc123xyz", "https://media.example/abc123xyz/HLSPlaylist.m3u8")
+            .replace("Rain on glass", "Stray playlist")
+        val otherPage = youtubeVideoFavorite
+            .replace("https://youtu.be/dQw4w9WgXcQ", "https://www.youtube.com/watch?v=AAAAAAAAAAA")
+            .replace("Neon rain loop", "Other page")
+        val phoneFile = redditVideoFavorite
+            .replace("https://v.redd.it/abc123xyz", "file:/storage/emulated/0/Movies/rain.mp4")
+            .replace("Rain on glass", "Phone file")
+
+        val plan = exporter.buildPlan(
+            payload(
+                version = "4",
+                favorites = "[$strayPlaylist,$otherPage,$phoneFile,$youtubeVideoFavorite,$portableFavorite]",
+            ),
+        )
+
+        assertEquals(listOf("yt_dQw4w9WgXcQ", "wp-1"), plan.favorites.map { it.id })
+        assertEquals(
+            listOf(
+                "Stray playlist" to LibraryImportSkipReason.INVALID,
+                "Other page" to LibraryImportSkipReason.INVALID,
+                "Phone file" to LibraryImportSkipReason.NON_PORTABLE,
+            ),
+            plan.skipped.filter { it.section == "favorite" }.map { it.label to it.reason },
+        )
+    }
+
+    @Test
+    fun `a favorite of a type this build doesn't know is reported and the rest restore`() = runTest {
+        // The path a build from before saved videos takes for a VIDEO row: one line in the report,
+        // and every other row is restored.
+        val unknown = portableFavorite
+            .replace("\"type\":\"WALLPAPER\"", "\"type\":\"HOLOGRAM\"")
+            .replace("\"name\":\"Blue\"", "\"name\":\"From a newer Aura\"")
+            .replace("wp-1", "holo-1")
+
+        val plan = exporter.buildPlan(payload(version = "4", favorites = "[$unknown,$portableFavorite]"))
+
+        assertEquals(listOf("wp-1"), plan.favorites.map { it.id })
+        assertEquals(
+            listOf("From a newer Aura" to LibraryImportSkipReason.INVALID),
+            plan.skipped.filter { it.section == "favorite" }.map { it.label to it.reason },
+        )
+    }
+
+    @Test
+    fun `saved videos come back after a backup round trip`() = runTest {
+        val youtube = FavoriteEntity(
+            id = "yt_dQw4w9WgXcQ",
+            source = "YOUTUBE",
+            type = "VIDEO",
+            thumbnailUrl = "https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg",
+            fullUrl = "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+            name = "Neon rain loop",
+            width = 1080,
+            height = 1920,
+            duration = 42.0,
+            addedAt = 10L,
+            uploaderName = "Loop Studio",
+            sourcePageUrl = "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+            license = "YouTube",
+            fileType = "video/mp4",
+        )
+        val reddit = FavoriteEntity(
+            id = "rd_1abc2de",
+            source = "REDDIT",
+            type = "VIDEO",
+            thumbnailUrl = "https://b.thumbs.redditmedia.com/rain.jpg",
+            fullUrl = "https://v.redd.it/abc123xyz/HLSPlaylist.m3u8",
+            name = "Rain on glass",
+            width = 1080,
+            height = 1920,
+            duration = 9.0,
+            addedAt = 11L,
+            uploaderName = "u/maker",
+            sourcePageUrl = "https://www.reddit.com/r/LiveWallpapers/comments/1abc2de/rain_on_glass/",
+            fileType = "application/x-mpegURL",
+        )
+        val saved = listOf(youtube, reddit)
+        saved.forEach { db.favoriteDao().insert(it) }
+        val destination = File(context.cacheDir, "library-videos-${System.nanoTime()}.json")
+
+        try {
+            assertTrue(exporter.exportLibrary(Uri.fromFile(destination)).isSuccess)
+            val json = destination.readText()
+            val parsed = Moshi.Builder().build().adapter(LibraryExportFile::class.java).fromJson(json)!!
+            // Videos travel in the favorites section the format already has, so the version stays where it was.
+            assertEquals(4, parsed.version)
+            assertEquals(listOf("VIDEO", "VIDEO"), parsed.favorites.map { it.type })
+            assertTrue(parsed.favorites.none { it.localMedia })
+            saved.forEach { db.favoriteDao().deleteByIdentity(it.id, it.source, it.type) }
+            assertEquals(0, db.favoriteDao().count().first())
+
+            val plan = exporter.buildPlan(json)
+            exporter.applyPlan(plan)
+
+            assertTrue(plan.skipped.none { it.section == "favorite" })
+            val restored = db.favoriteDao().getByType("VIDEO").first()
+            assertEquals(saved.toSet(), restored.toSet())
+            assertEquals(
+                setOf("YouTube", "Reddit"),
+                restored.mapNotNull { it.toVideoWallpaperItem()?.source }.toSet(),
+            )
+            assertTrue(db.favoriteDao().getByType("WALLPAPER").first().isEmpty())
+        } finally {
+            destination.delete()
+        }
     }
 
     @Test

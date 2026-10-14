@@ -7,6 +7,7 @@ import com.freevibe.data.model.ContentSource
 import com.freevibe.data.model.FavoriteEntity
 import com.freevibe.data.model.FavoriteIdentity
 import com.freevibe.data.model.LocalMediaStatus
+import com.freevibe.data.model.MEDIA_TYPE_VIDEO
 import com.freevibe.data.model.favoriteIdentity
 import com.freevibe.data.model.normalizeSourceAvailability
 import com.freevibe.util.rethrowIfCancelled
@@ -254,14 +255,20 @@ internal fun FavoriteExportItem.toValidatedEntity(): FavoriteEntity? {
     if (normalizedId.isBlank()) return null
     if (localMedia && !isSafePortableLocalMediaId(normalizedId)) return null
     if (normalizedSource == null) return null
-    if (normalizedType !in setOf("WALLPAPER", "SOUND")) return null
+    if (normalizedType !in IMPORTED_FAVORITE_TYPES) return null
+    val isVideo = normalizedType == MEDIA_TYPE_VIDEO
+    // A saved video is always a provider's, so it never travels as a file to pick again.
+    if (isVideo && localMedia) return null
 
     val normalizedName = normalizeImportedText(name)
     val normalizedThumbnailUrl = normalizeImportedHttpsUrl(
         thumbnailUrl,
-        allowBlank = localMedia || normalizedType == "SOUND",
+        allowBlank = localMedia || normalizedType == "SOUND" || isVideo,
     ) ?: return null
-    val normalizedFullUrl = normalizeImportedHttpsUrl(fullUrl, allowBlank = localMedia) ?: return null
+    val normalizedFullUrl = when {
+        isVideo -> normalizeImportedVideoFavoriteUrl(normalizedSource, normalizedId, fullUrl)
+        else -> normalizeImportedHttpsUrl(fullUrl, allowBlank = localMedia)
+    } ?: return null
     val normalizedSourcePageUrl =
         normalizeImportedHttpsUrl(sourcePageUrl, allowBlank = true)?.takeIf { it.isNotBlank() }
     val normalizedLicense = normalizeImportedOptionalText(license)

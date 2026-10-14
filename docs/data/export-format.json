@@ -47,13 +47,13 @@
       "itemFields": {
         "id": { "type": "String", "required": true, "since": 1, "description": "Provider item ID. Sanitized on import." },
         "source": { "type": "String", "required": true, "since": 1, "description": "ContentSource enum name. Validated against known sources on import." },
-        "type": { "type": "String", "required": true, "since": 1, "description": "WALLPAPER or SOUND." },
-        "thumbnailUrl": { "type": "String", "required": true, "since": 1, "description": "HTTPS thumbnail URL. May be blank for SOUND or locator-free local media." },
-        "fullUrl": { "type": "String", "required": true, "since": 1, "description": "HTTPS full-resolution URL. Blank only for locator-free local media." },
+        "type": { "type": "String", "required": true, "since": 1, "description": "WALLPAPER, SOUND or VIDEO. VIDEO is a saved motion wallpaper and was added to version 2 without a version bump." },
+        "thumbnailUrl": { "type": "String", "required": true, "since": 1, "description": "HTTPS thumbnail URL. May be blank for SOUND, VIDEO or locator-free local media." },
+        "fullUrl": { "type": "String", "required": true, "since": 1, "description": "HTTPS full-resolution URL. Blank only for locator-free local media. For VIDEO it is the address the stream is found from again: the video's YouTube page, a Reddit-hosted clip's playlist, or a provider's file. A YouTube stream address expires within hours and is never stored." },
         "name": { "type": "String", "default": "", "since": 1, "description": "Display name." },
-        "width": { "type": "Int", "default": 0, "since": 1, "description": "Image width in pixels." },
-        "height": { "type": "Int", "default": 0, "since": 1, "description": "Image height in pixels." },
-        "duration": { "type": "Double", "default": 0.0, "since": 1, "description": "Audio duration in seconds." },
+        "width": { "type": "Int", "default": 0, "since": 1, "description": "Image or video width in pixels." },
+        "height": { "type": "Int", "default": 0, "since": 1, "description": "Image or video height in pixels." },
+        "duration": { "type": "Double", "default": 0.0, "since": 1, "description": "Audio or video duration in seconds." },
         "tags": { "type": "String?", "since": 1, "description": "Comma-separated tags." },
         "colors": { "type": "String?", "since": 1, "description": "Comma-separated hex colors." },
         "category": { "type": "String?", "since": 1, "description": "Provider-assigned category." },
@@ -73,10 +73,12 @@
       "importValidation": [
         "id must be non-blank after trim",
         "source must match a known ContentSource enum value",
-        "type must be WALLPAPER or SOUND",
-        "thumbnailUrl must be HTTPS (may be blank for SOUND type)",
+        "type must be WALLPAPER, SOUND or VIDEO",
+        "thumbnailUrl must be HTTPS (may be blank for SOUND and VIDEO types)",
         "fullUrl must be non-blank HTTPS unless localMedia is true",
         "Version 2 localMedia rows use a portable ID, blank locators, and an optional SHA-256 digest",
+        "A VIDEO row must name YouTube, Reddit, Pexels or Pixabay as its source, carry that provider's ID prefix (yt_, rd_, px_ or pbv_), and leave localMedia false",
+        "A VIDEO fullUrl must be the YouTube page of the video its ID names, a v.redd.it clip, or an HTTPS file address. A clip's playlist address is rebuilt from the clip ID, and a playlist on any other host is refused",
         "sourcePageUrl, if present, must be HTTPS",
         "sourceAvailability is normalized to AVAILABLE if null or blank",
         "An item count or document size above the shared contract limit refuses the whole import before any database write",
@@ -84,8 +86,8 @@
       ],
       "versionPolicy": {
         "bumpRule": "Increment version when adding required fields or changing field semantics. Optional nullable fields may be added without a version bump.",
-        "forwardCompat": "Unknown fields are silently ignored by Moshi. Future versions with higher version numbers are rejected with user-visible copy.",
-        "backwardCompat": "Version 1 files remain importable. Version 2 adds locator-free local media metadata.",
+        "forwardCompat": "Unknown fields are silently ignored by Moshi. Future versions with higher version numbers are rejected with user-visible copy. An Aura build from before VIDEO favorites counts those rows as failed and imports the rest.",
+        "backwardCompat": "Version 1 files remain importable. Version 2 adds locator-free local media metadata. A file with no VIDEO rows imports as before.",
         "unsupportedVersionCopy": "This file was exported by a newer version of Aura. Please update the app to import it."
       },
       "privacyExclusions": [
@@ -179,7 +181,7 @@
       },
       "portableDataSections": {
         "rotationExclusions": "Optional persistent wallpaper and video rotation exclusions. Provider IDs, local content hashes, and one-way locator fingerprints preserve choices without exporting device paths.",
-        "favoritesAndCollections": "Local entries use one portable identity across favorites and collection membership. Their original locators are blank after restore until Relink succeeds.",
+        "favoritesAndCollections": "Local entries use one portable identity across favorites and collection membership. Their original locators are blank after restore until Relink succeeds. Favorites may be of type VIDEO (a saved motion wallpaper), held to the rules the favorites file gives for VIDEO rows. Collections hold wallpapers only.",
         "localWallpapers": "Locator-free identity, dimensions, content hash, tags, and target for local wallpapers. Restored entries remain visible and ask the user to relink a file or folder.",
         "wallpaperHistory": "Recent wallpaper history. Device-local entries keep portable identity and metadata while their private locators are omitted.",
         "contactRingtones": "Optional. One row for each contact ringtone set through Aura, described under contactRingtones below."
@@ -243,9 +245,9 @@
         "Legacy device-local download rows are reported but not restored"
       ],
       "versionPolicy": {
-        "current": "Version 4 adds locator-free named sound shuffle pools and their target schedules. The optional contactRingtones section was added to version 4 without a version bump.",
+        "current": "Version 4 adds locator-free named sound shuffle pools and their target schedules. The optional contactRingtones section and VIDEO favorites were added to version 4 without a version bump.",
         "backwardCompat": "Versions 1, 2, and 3 remain importable. Version 1 download rows are reported as device-only instead of being silently discarded. A backup without contactRingtones imports as before.",
-        "forwardCompat": "A version newer than 4 is rejected before any database or preference write. An older Aura build ignores the contactRingtones section and restores the rest."
+        "forwardCompat": "A version newer than 4 is rejected before any database or preference write. An older Aura build ignores the contactRingtones section and restores the rest. A build from before VIDEO favorites reports those rows as invalid and restores the rest."
       }
     }
   }

@@ -2,6 +2,10 @@ package com.freevibe.service
 
 import com.freevibe.data.legal.isProviderAvailableInCurrentArtifact
 import com.freevibe.data.model.ContentSource
+import com.freevibe.data.model.MEDIA_TYPE_SOUND
+import com.freevibe.data.model.MEDIA_TYPE_VIDEO
+import com.freevibe.data.model.MEDIA_TYPE_WALLPAPER
+import com.freevibe.data.model.normalizedVideoFavoriteLocator
 import com.freevibe.data.remote.providerSourceForHost
 import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
 import java.net.URI
@@ -72,6 +76,25 @@ internal fun normalizeImportedContentSource(
         .ifBlank { blankDefault.orEmpty() }
         .uppercase(Locale.ROOT)
     return normalized.takeIf { it in IMPORT_CONTENT_SOURCES }
+}
+
+/** The favorite types a backup may carry. A build older than a type counts its rows as failed. */
+internal val IMPORTED_FAVORITE_TYPES: Set<String> = setOf(MEDIA_TYPE_WALLPAPER, MEDIA_TYPE_SOUND, MEDIA_TYPE_VIDEO)
+
+/**
+ * The address an imported VIDEO favorite keeps, or null when the row has to be refused.
+ *
+ * It first passes the https check every imported favorite gets. Then it has to be an address the
+ * video preview can find a stream from again: the video's own YouTube page, a Reddit-hosted clip,
+ * or a file. A backup can't hand the downloader a playlist on a host of its author's choosing.
+ */
+internal fun normalizeImportedVideoFavoriteUrl(
+    source: String,
+    id: String,
+    fullUrl: String?,
+): String? {
+    val httpsUrl = normalizeImportedHttpsUrl(fullUrl) ?: return null
+    return normalizedVideoFavoriteLocator(source, id, httpsUrl)
 }
 
 private const val IMPORT_MAX_FILE_NAME_LENGTH = 255
