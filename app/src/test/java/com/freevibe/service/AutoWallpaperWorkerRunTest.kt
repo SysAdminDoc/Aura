@@ -182,7 +182,6 @@ class AutoWallpaperWorkerRunTest {
                         appContext,
                         workerParameters,
                         wallpaperRepo = mockk(relaxed = true),
-                        redditRepo = mockk(relaxed = true),
                         favoritesRepo = mockk(relaxed = true),
                         collectionRepo = mockk(relaxed = true),
                         rotationExclusions = exclusions,

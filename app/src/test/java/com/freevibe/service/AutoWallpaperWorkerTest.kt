@@ -12,6 +12,7 @@ import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
+import java.io.File
 
 class AutoWallpaperWorkerTest {
 
@@ -148,6 +149,19 @@ class AutoWallpaperWorkerTest {
         assertEquals("discover", "".normalizeWallpaperRotationSource())
         assertEquals("wallhaven", "wallhaven".normalizeWallpaperRotationSource())
         assertEquals(WALLPAPER_SOURCE_LOCAL_FOLDER, WALLPAPER_SOURCE_LOCAL_FOLDER.normalizeWallpaperRotationSource())
+    }
+
+    @Test
+    fun `a stored reddit source is Discover by the time the worker reads it`() {
+        listOf("reddit", "Reddit", "REDDIT").forEach {
+            assertEquals(it, "discover", it.normalizeWallpaperRotationSource())
+        }
+        // Both rotations normalize the source first, so a check or a fetch written for "reddit"
+        // could never run. The worker keeps neither, and holds no Reddit repository to call.
+        val worker = File("src/main/java/com/freevibe/service/AutoWallpaperWorker.kt").readText()
+        assertFalse(worker.contains("source == \"reddit\""))
+        assertFalse(worker.contains("\"reddit\" -> redditRepo"))
+        assertFalse(worker.contains("RedditRepository"))
     }
 
     @Test

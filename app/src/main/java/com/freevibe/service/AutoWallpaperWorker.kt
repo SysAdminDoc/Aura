@@ -17,12 +17,10 @@ import com.freevibe.data.model.ContentSource
 import com.freevibe.data.model.WALLPAPER_SOURCE_LOCAL_FOLDER
 import com.freevibe.data.model.Wallpaper
 import com.freevibe.data.model.WallpaperTarget
-import com.freevibe.data.model.rotationPreset
 import com.freevibe.data.model.stableKey
 import com.freevibe.data.remote.toWallpaper
 import com.freevibe.data.repository.CollectionRepository
 import com.freevibe.data.repository.FavoritesRepository
-import com.freevibe.data.repository.RedditRepository
 import com.freevibe.data.repository.RotationExclusionRepository
 import com.freevibe.data.repository.WallpaperRepository
 import dagger.assisted.Assisted
@@ -42,7 +40,6 @@ class AutoWallpaperWorker @AssistedInject constructor(
     @Assisted appContext: Context,
     @Assisted workerParams: WorkerParameters,
     private val wallpaperRepo: WallpaperRepository,
-    private val redditRepo: RedditRepository,
     private val favoritesRepo: FavoritesRepository,
     private val collectionRepo: CollectionRepository,
     private val rotationExclusions: RotationExclusionRepository,
@@ -164,7 +161,6 @@ class AutoWallpaperWorker @AssistedInject constructor(
                 Configuration.UI_MODE_NIGHT_MASK == Configuration.UI_MODE_NIGHT_YES,
         ).normalizeWallpaperRotationSource()
 
-        if (source == "reddit" && !prefs.redditProviderEnabled.first()) return Result.success()
         if (source == "wallhaven" && !prefs.wallhavenProviderEnabled.first()) return Result.success()
         if (source == "pixabay" && !prefs.pixabayProviderEnabled.first()) return Result.success()
         if (source == "bing" && !prefs.bingProviderEnabled.first()) return Result.success()
@@ -235,7 +231,6 @@ class AutoWallpaperWorker @AssistedInject constructor(
         val targetStr = prefs.autoWallpaperTarget.first()
         val target = WallpaperTarget.entries.find { it.name == targetStr } ?: WallpaperTarget.BOTH
 
-        if (source == "reddit" && !prefs.redditProviderEnabled.first()) return Result.success()
         if (source == "wallhaven" && !prefs.wallhavenProviderEnabled.first()) return Result.success()
         if (source == "pixabay" && !prefs.pixabayProviderEnabled.first()) return Result.success()
         if (source == "bing" && !prefs.bingProviderEnabled.first()) return Result.success()
@@ -502,7 +497,6 @@ class AutoWallpaperWorker @AssistedInject constructor(
             "favorites" -> favoritesRepo.getWallpapers().first().map { it.toWallpaper() }
             "wallhaven" -> wallpaperRepo.getWallhaven(page = (1..5).random()).items
             "bing" -> wallpaperRepo.getBingDaily(page = 1).items
-            "reddit" -> redditRepo.getMultiSubreddit(preset = prefs.redditFeedPresets.first().rotationPreset()).items
             "pixabay" -> wallpaperRepo.getPixabay(page = (1..5).random()).items
             WALLPAPER_SOURCE_LOCAL_FOLDER -> {
                 localWallpaperCatalog.migrateLegacyFolder(prefs.localWallpaperFolderUri.first())
@@ -866,6 +860,8 @@ internal fun buildAutoWallpaperConstraints(
 internal fun String.normalizeWallpaperRotationSource(): String = when (lowercase(java.util.Locale.ROOT)) {
     // Locale.ROOT: Turkish locale turns "i" into dotless 'ı', which would desync this
     // comparison from the hardcoded keys used by the scheduler.
+    // "reddit" is what older installs stored, and still the stored default. No picker offers it,
+    // and it has rotated through Discover since Reddit's public feeds were retired.
     "", "unsplash", "reddit" -> "discover"
     else -> this
 }

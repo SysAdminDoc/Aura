@@ -556,6 +556,24 @@ class AutoWallpaperWorkerPrefetchTest {
         assertEquals(0, cache.diagnostics().hits)
     }
 
+    @Test
+    fun `a source stored as reddit rotates through Discover`() = runBlocking {
+        val discover = listOf("d1", "d2", "d3").map { wallpaper(it) }
+        coEvery { repo.getDiscover(any(), any()) } returns
+            SearchResult(discover, totalCount = 3, currentPage = 1, hasMore = false)
+        prefs.setSchedulerSource("reddit")
+
+        assertEquals(ListenableWorker.Result.success(), runWorker())
+
+        coVerify(exactly = 1) {
+            applier.applyByLocator(
+                discover[0].fullUrl, WallpaperTarget.BOTH, any(), any(), any(), any(), any(), any(), any(), any(),
+            )
+        }
+        // Saved ahead under Discover's name, the one the next run looks under.
+        assertEquals("d2", cache.peek(rotationPrefetchSlot("discover", WallpaperTarget.BOTH))?.wallpaper?.id)
+    }
+
     private fun collectionSlot(contents: String) =
         rotationPrefetchSlot("collection", WallpaperTarget.BOTH, contents)
 
@@ -598,7 +616,6 @@ class AutoWallpaperWorkerPrefetchTest {
                         appContext,
                         workerParameters,
                         wallpaperRepo = repo,
-                        redditRepo = mockk(relaxed = true),
                         favoritesRepo = favorites,
                         collectionRepo = collections,
                         rotationExclusions = exclusions,
