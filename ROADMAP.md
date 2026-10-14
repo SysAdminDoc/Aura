@@ -168,15 +168,6 @@ Evidence for every item below is in RESEARCH.md (2026-09-04 pass).
 
 
 
-- [ ] P2 — Let people favorite motion wallpapers and add them to collections
-  Category: feature
-  Where: app/src/main/java/com/freevibe/ui/screens/favorites/FavoritesScreen.kt, FavoritesViewModel.kt, data/repository/FavoritesRepository.kt, ui/screens/videowallpapers/VideoWallpapersScreen.kt
-  Problem: Videos can now be downloaded, shared and reported, but not favorited or collected. Favorites only has Wallpapers and Sounds tabs, FavoritesRepository reads only WALLPAPER and SOUND types, and nothing can rebuild a VideoWallpaperItem from a saved row to apply it later.
-  Fix: Store VIDEO favorites with the fields Apply needs (source, video ID, page URL, creator, license, size, duration), add a Videos tab that opens the item in the video preview with Apply and Download, and carry them through favorites backup export/import and collections.
-  Acceptance: A Reddit and a YouTube video favorited from the card and the full-screen preview appear under Favorites > Videos after a restart and a backup round trip, apply from there, and respect the same license checks as the feed.
-  Confidence: Verified
-  Effort: M
-
 - [ ] P2 — Move ViewModel and repository messages to string resources
   Category: ux
   Where: docs/localization/hardcoded-string-baseline.json (each entry whose reason names this item); app/src/main/java/com/freevibe/ui/screens/**/*ViewModel.kt; ui/screens/wallpapers/WallpaperCommunityActions.kt, WallpaperSearchActions.kt; ui/screens/sounds/SoundApplyActions.kt, SoundIdentity.kt, SoundQuality.kt; ui/screens/settings/SettingsDialogs.kt (communityIdentitySuffixLabel); app/src/main/java/com/freevibe/service/MediaIngestion.kt (imageFormatSupportForFlow, toHumanList, sniff errors); wallpapers/WallpaperDetailScreen.kt sourceDisplayName; sounds/SoundUiTokens.kt soundSourceTone; settings/DiagnosticsComponents.kt sourceDisplayName
@@ -223,6 +214,13 @@ Evidence for every item below is in RESEARCH.md (2026-09-04 pass).
 Remainders of items closed in the 2026-09-30 drain whose full acceptance did not land.
 
 ### P2
+
+- [ ] P2 — Let motion wallpapers join collections, and prove saved videos on a phone
+  Why: videos can be favorited now and open from Favorites > Videos, but a collection still takes pictures only, and none of the new paths has run on a device.
+  Evidence: `wallpaper_collection_items` has no type column and no video fields, so collecting a video needs a Room migration to version 21; `library_favorites_body` doesn't mention videos; Pexels and Pixabay favorites keep their stored file address with no re-resolve by ID; codec and rotation aren't stored, and the library backup entry has no `views` field; the untyped `getLatestById` in the favorites DAO has no callers left.
+  Touches: the collections entity, DAO and a `MIGRATION_20_21` with its schema file, `CollectionRepository`, the add-to-collection sheet, `VideoFavorite.kt`, `FavoritesScreen.kt`, both exporters and the export format docs, string resources, a device session.
+  Acceptance: a video can be added to a collection from its card and from Favorites > Videos, shows there with the rest and applies from it, and survives a backup round trip; the migration runs from 20 with a test; on a phone a Reddit and a YouTube video favorited from the card and the preview are under Videos after a restart, apply and download from there with the same license prompts as the feed, and TalkBack reads the tab.
+  Complexity: M
 
 - [ ] P2 — Hold theme pack import and the 24H pack worker to the restore address rules
   Why: a library restore now keeps only pack pictures and profile sounds that are on the phone or on one of Aura's provider hosts, but a theme pack import still takes any web address, and the pack worker fetches whatever it was given on any network.

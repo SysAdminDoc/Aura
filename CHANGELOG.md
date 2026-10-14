@@ -4,6 +4,7 @@ All notable changes to Aura will be documented in this file.
 
 ## Unreleased
 
+- **Motion wallpapers can be favorites**: you can now favorite a motion wallpaper from its card menu or from the full-screen preview. Saved videos show up under Favorites > Videos, where you can apply, crop or download them, and they travel with your favorites and library backups. Rotation and Download all still use pictures only, so a saved video never ends up as a still wallpaper.
 - **Helper text shows in full at large text sizes**: with your text size above the default, summaries in Settings and Library used to end in an ellipsis or break in the middle of a word. They wrap in full now. Cards that don't fit side by side stack instead, and recent searches sit below the search field rather than over it.
 - **The Battery Saver setting no longer shows "15%%"**: the summary under Settings > Video wallpapers printed two percent signs, in English and in Chinese. It shows one now.
 - **Sound profiles hand your sounds back**: a profile set for part of the day used to leave its sounds in place after its hours ended, so a quiet night ringtone stayed all day. Aura now remembers what was set before and puts it back when the hours end. The same happens when you switch profiles off or delete the last one, and a sound you changed yourself in the meantime is left alone.
