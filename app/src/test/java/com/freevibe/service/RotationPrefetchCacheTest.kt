@@ -312,6 +312,34 @@ class RotationPrefetchCacheTest {
 
         assertNull(cache.peek("wallhaven|BOTH"))
         assertEquals(RotationPrefetchDiagnostics(), cache.diagnostics())
+        assertEquals(emptySet<String>(), prefetchFiles())
+    }
+
+    @Test
+    fun `an index that won't parse leaves a download that is still running`() = runBlocking {
+        val cache = cache()
+        cache.store("wallhaven|BOTH", wallpaper("old"), download(10))
+        val oldFile = cache.peek("wallhaven|BOTH")!!.file
+        var leftAlone = false
+
+        val outcome = cache.store("pixabay|BOTH", wallpaper("new")) { file ->
+            // Written and closed, with the .tmp a download keeps beside its file.
+            file.writeBytes(ByteArray(20))
+            val partial = File(file.parentFile, "${file.name}.tmp").apply { writeBytes(ByteArray(5)) }
+            File(temp.root, "prefetch/index.json").writeText("{ not json")
+
+            // Another read of the cache finds the index broken while this download is still going.
+            assertNull(cache.peek("wallhaven|BOTH"))
+
+            leftAlone = file.isFile && partial.isFile
+            partial.delete()
+            Result.success(20L)
+        }
+
+        assertTrue("the running download and its .tmp were left alone", leftAlone)
+        assertFalse("what the broken index had saved is gone", oldFile.exists())
+        assertEquals(RotationPrefetchOutcome.STORED, outcome)
+        assertEquals("new", cache.peek("pixabay|BOTH")?.wallpaper?.id)
     }
 
     @Test

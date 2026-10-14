@@ -274,9 +274,12 @@ class RotationPrefetchCache internal constructor(
     private fun readIndex(): RotationPrefetchIndex {
         val text = runCatching { indexFile.takeIf(File::isFile)?.readText() }.getOrNull()
             ?: return RotationPrefetchIndex()
-        // An index that won't parse is thrown away with its files, never trusted in part.
-        return runCatching { adapter.fromJson(text) }.getOrNull() ?: RotationPrefetchIndex().also {
-            directory.listFiles()?.forEach(File::delete)
+        // An index that won't parse is thrown away with its files, never trusted in part. A download
+        // still running isn't one of its files. The index never named it, and the run that started
+        // it records it when it lands, so it is left where it is.
+        return runCatching { adapter.fromJson(text) }.getOrNull() ?: RotationPrefetchIndex().also { empty ->
+            indexFile.delete()
+            sweepUnindexed(empty)
         }
     }
 
