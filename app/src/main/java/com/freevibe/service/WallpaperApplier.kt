@@ -19,8 +19,15 @@ import com.freevibe.util.rethrowIfCancelled
 import dagger.hilt.android.qualifiers.ApplicationContext
 import java.io.FilterInputStream
 import java.io.InputStream
+import java.util.concurrent.atomic.AtomicBoolean
+import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.ensureActive
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
+import okhttp3.Call
 import okhttp3.HttpUrl
 import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
 import okhttp3.OkHttpClient
@@ -350,11 +357,12 @@ class WallpaperApplier @Inject constructor(
     /**
      * Saves the image at [url] to [destination] without applying it, under the same size cap as an
      * apply. Rotation uses it to fetch the next wallpaper ahead of time. Returns the bytes written.
+     * Cancelling the caller closes the transfer at once and leaves no file behind.
      */
     suspend fun downloadToFile(url: String, destination: java.io.File): Result<Long> = withContext(Dispatchers.IO) {
         runCatching {
-            val request = Request.Builder().url(url).build()
-            okHttpClient.newCall(request).execute().use { resp -> saveBody(resp, destination) }
+            val call = okHttpClient.newCall(Request.Builder().url(url).build())
+            cancelCallWithCoroutine(call) { call.execute().use { resp -> saveBody(resp, destination) } }
         }.onFailure { it.rethrowIfCancelled() }
     }
 
@@ -373,19 +381,22 @@ class WallpaperApplier @Inject constructor(
     }
 
     /** Walks the redirects itself, one request for each, so every address is asked about first. */
-    private fun saveChecked(url: String, destination: java.io.File, mayFetch: (String) -> Boolean): Long {
+    private suspend fun saveChecked(url: String, destination: java.io.File, mayFetch: (String) -> Boolean): Long {
         var address = url.trim().toHttpUrlOrNull() ?: throw java.io.IOException("Not a web address")
         var redirects = 0
         while (true) {
             if (!mayFetch(address.toString())) throw WallpaperAddressRefusedException(address.host)
             val from = address
-            val hop = redirectCheckedClient.newCall(Request.Builder().url(from).build()).execute().use { resp ->
-                if (resp.isRedirect) {
-                    val target = resp.header("Location")?.let(from::resolve)
-                        ?: throw java.io.IOException("Redirect without an address to follow")
-                    CheckedHop(redirectTo = target, savedBytes = 0L)
-                } else {
-                    CheckedHop(redirectTo = null, savedBytes = saveBody(resp, destination))
+            val call = redirectCheckedClient.newCall(Request.Builder().url(from).build())
+            val hop = cancelCallWithCoroutine(call) {
+                call.execute().use { resp ->
+                    if (resp.isRedirect) {
+                        val target = resp.header("Location")?.let(from::resolve)
+                            ?: throw java.io.IOException("Redirect without an address to follow")
+                        CheckedHop(redirectTo = target, savedBytes = 0L)
+                    } else {
+                        CheckedHop(redirectTo = null, savedBytes = saveBody(resp, destination))
+                    }
                 }
             }
             val next = hop.redirectTo ?: return hop.savedBytes
@@ -691,6 +702,31 @@ class WallpaperApplier @Inject constructor(
 
         /** A real provider gets a picture to its file host in a hop or two. More than this is a loop. */
         private const val MAX_CHECKED_REDIRECTS = 5
+    }
+}
+
+/**
+ * Runs [transfer], a blocking exchange on [call], and cancels [call] the moment the coroutine that
+ * asked for it is cancelled. A blocking read doesn't notice a cancellation by itself, so without
+ * this a stopped download goes on writing until the server has sent everything.
+ */
+internal suspend fun <T> cancelCallWithCoroutine(call: Call, transfer: () -> T): T = coroutineScope {
+    val finished = AtomicBoolean(false)
+    // Started in place, so it is already listening for the cancellation when the transfer begins.
+    val watcher = launch(start = CoroutineStart.UNDISPATCHED) {
+        suspendCancellableCoroutine<Unit> { waiting ->
+            waiting.invokeOnCancellation { if (!finished.get()) call.cancel() }
+        }
+    }
+    try {
+        transfer()
+    } catch (e: java.io.IOException) {
+        // A cancelled call fails its read. What happened is the cancellation, not the read.
+        ensureActive()
+        throw e
+    } finally {
+        finished.set(true)
+        watcher.cancel()
     }
 }
 
