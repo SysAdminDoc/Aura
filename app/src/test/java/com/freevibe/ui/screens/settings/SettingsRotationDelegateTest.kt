@@ -3,6 +3,10 @@ package com.freevibe.ui.screens.settings
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
 import androidx.work.Configuration
+import androidx.work.ExistingPeriodicWorkPolicy
+import androidx.work.PeriodicWorkRequestBuilder
+import androidx.work.WorkInfo
+import androidx.work.WorkManager
 import androidx.work.testing.SynchronousExecutor
 import androidx.work.testing.WorkManagerTestInitHelper
 import com.freevibe.data.local.PreferencesManager
@@ -10,6 +14,7 @@ import com.freevibe.data.model.ContentSource
 import com.freevibe.data.model.Wallpaper
 import com.freevibe.data.model.WallpaperTarget
 import com.freevibe.data.repository.CollectionRepository
+import com.freevibe.service.AutoWallpaperWorker
 import com.freevibe.service.LocalWallpaperCatalog
 import com.freevibe.service.NetworkPosture
 import com.freevibe.service.RotationPrefetchCache
@@ -36,6 +41,8 @@ import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 import java.io.File
+import java.util.UUID
+import java.util.concurrent.TimeUnit
 
 /**
  * The wallpaper saved ahead belongs to the rotation setup it was picked for. Settings empties the
@@ -74,6 +81,7 @@ class SettingsRotationDelegateTest {
         val schedulerShuffle = prefs.schedulerShuffle.first()
         val autoEnabled = prefs.autoWallpaperEnabled.first()
         val autoSource = prefs.autoWallpaperSource.first()
+        val autoInterval = prefs.autoWallpaperInterval.first()
         restore = {
             prefs.setSchedulerEnabled(schedulerEnabled)
             prefs.setSchedulerSource(schedulerSource)
@@ -83,6 +91,7 @@ class SettingsRotationDelegateTest {
             prefs.setSchedulerShuffle(schedulerShuffle)
             prefs.setAutoWallpaperEnabled(autoEnabled)
             prefs.setAutoWallpaperSource(autoSource)
+            prefs.setAutoWallpaperInterval(autoInterval)
         }
         // Off, so a setter that re-arms the schedule when rotation is on has nothing to re-arm.
         prefs.setSchedulerEnabled(false)
@@ -140,6 +149,63 @@ class SettingsRotationDelegateTest {
         assertNothingSaved()
     }
 
+    // -- the one periodic work auto wallpaper and the scheduler share --
+
+    @Test
+    fun `turning auto wallpaper off leaves the scheduler's work and what it saved ahead`(): Unit = runBlocking {
+        prefs.setSchedulerEnabled(true)
+        prefs.setAutoWallpaperEnabled(true)
+        val schedulerWork = enqueueWaitingRotation()
+
+        delegate.setAutoWallpaper(false).join()
+
+        assertEquals(false, prefs.autoWallpaperEnabled.first())
+        assertEquals(listOf(schedulerWork to WorkInfo.State.ENQUEUED), rotationWork().map { it.id to it.state })
+        assertEquals("saved", cache.peek(slot)?.wallpaper?.id)
+    }
+
+    @Test
+    fun `turning auto wallpaper off with the scheduler off stops the work`(): Unit = runBlocking {
+        prefs.setAutoWallpaperEnabled(true)
+        val work = enqueueWaitingRotation()
+
+        delegate.setAutoWallpaper(false).join()
+
+        assertEquals(listOf(work to WorkInfo.State.CANCELLED), rotationWork().map { it.id to it.state })
+        assertNothingSaved()
+    }
+
+    @Test
+    fun `turning the scheduler off hands the work to auto wallpaper when that is still on`(): Unit = runBlocking {
+        prefs.setSchedulerEnabled(true)
+        prefs.setAutoWallpaperEnabled(true)
+        prefs.setAutoWallpaperInterval(2L)
+        val shared = enqueueWaitingRotation()
+
+        delegate.setSchedulerEnabled(false).join()
+
+        val work = rotationWork().single()
+        assertEquals("the same work goes on, it isn't cancelled and started over", shared, work.id)
+        assertEquals(WorkInfo.State.ENQUEUED, work.state)
+        assertEquals(
+            "at the auto wallpaper interval",
+            TimeUnit.HOURS.toMillis(2L),
+            work.periodicityInfo?.repeatIntervalMillis,
+        )
+        // What was saved ahead was picked for the scheduler's setup.
+        assertNothingSaved()
+    }
+
+    @Test
+    fun `turning the scheduler off with auto wallpaper off stops the work`(): Unit = runBlocking {
+        prefs.setSchedulerEnabled(true)
+        val work = enqueueWaitingRotation()
+
+        delegate.setSchedulerEnabled(false).join()
+
+        assertEquals(listOf(work to WorkInfo.State.CANCELLED), rotationWork().map { it.id to it.state })
+    }
+
     @Test
     fun `choosing another scheduler source empties what was saved ahead`(): Unit = runBlocking {
         delegate.setSchedulerSource("pixabay").join()
@@ -181,6 +247,25 @@ class SettingsRotationDelegateTest {
         assertEquals(120L, prefs.schedulerIntervalMinutes.first())
         assertEquals("saved", cache.peek(slot)?.wallpaper?.id)
         assertEquals(64L, cache.peek(slot)?.file?.length())
+    }
+
+    private fun rotationWork(): List<WorkInfo> =
+        WorkManager.getInstance(context).getWorkInfosForUniqueWork(AutoWallpaperWorker.WORK_NAME).get()
+
+    /** Stands in for the schedule with a first run an hour away, so a run doesn't start by itself. */
+    private fun enqueueWaitingRotation(): UUID {
+        val request = PeriodicWorkRequestBuilder<AutoWallpaperWorker>(6L, TimeUnit.HOURS)
+            .setInitialDelay(1L, TimeUnit.HOURS)
+            .build()
+        WorkManager.getInstance(context)
+            .enqueueUniquePeriodicWork(
+                AutoWallpaperWorker.WORK_NAME,
+                ExistingPeriodicWorkPolicy.CANCEL_AND_REENQUEUE,
+                request,
+            )
+            .result
+            .get()
+        return request.id
     }
 
     private suspend fun assertNothingSaved() {

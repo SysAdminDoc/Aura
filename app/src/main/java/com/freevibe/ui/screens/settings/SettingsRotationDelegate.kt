@@ -86,10 +86,12 @@ internal class SettingsRotationDelegate(
         prefs.setAutoWallpaperEnabled(enabled)
         if (enabled) {
             AutoWallpaperWorker.schedule(context, autoWpInterval.value * 60)
-        } else {
+        } else if (!prefs.schedulerEnabled.first()) {
             AutoWallpaperWorker.cancel(context)
             rotationPrefetch.clear()
         }
+        // Auto wallpaper and the scheduler run on the one periodic work. With the scheduler on, the
+        // work and what was saved ahead are the scheduler's, and this switch leaves both alone.
     }
 
     fun setAutoWpInterval(hours: Long) = scope.launch {
@@ -239,7 +241,12 @@ internal class SettingsRotationDelegate(
         if (enabled) {
             AutoWallpaperWorker.schedule(context, schedulerInterval.value)
         } else {
-            AutoWallpaperWorker.cancel(context)
+            if (prefs.autoWallpaperEnabled.first()) {
+                // Auto wallpaper runs on the same work and takes over from here, at its own interval.
+                AutoWallpaperWorker.schedule(context, prefs.autoWallpaperInterval.first() * 60)
+            } else {
+                AutoWallpaperWorker.cancel(context)
+            }
             rotationPrefetch.clear()
         }
     }

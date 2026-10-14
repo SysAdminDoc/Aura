@@ -68,7 +68,7 @@
       "expedited": false,
       "enabledSurface": "Settings auto wallpaper and enhanced scheduler toggles",
       "scheduleTrigger": "Enable auto wallpaper or scheduler; changing interval or constraint preferences reschedules the unique work; a manual apply, widget shuffle, tile tap, automation broadcast, or Run now re-enqueues it with CANCEL_AND_REENQUEUE and an initial delay of one interval, so the next automatic rotation is a full interval away; app start re-arms work that an older build scheduled with a network constraint, keeping its countdown",
-      "cancelTrigger": "Disable auto wallpaper or scheduler",
+      "cancelTrigger": "Turn off auto wallpaper or the scheduler while the other is already off. The two share this work, so with the other still on it stays: turning auto wallpaper off leaves it to the scheduler, and turning the scheduler off re-arms it at the auto wallpaper interval",
       "deferralReasons": [
         "no connection and nothing saved ahead (the run ends and a catch-up waits for the network)",
         "metered network when Wi-Fi-only is enabled and nothing is saved ahead (same hand-off)",
@@ -123,7 +123,7 @@
       "expedited": false,
       "enabledSurface": "No setting of its own; follows auto wallpaper, the enhanced scheduler, and the rotation triggers",
       "scheduleTrigger": "A rotation run with nothing saved ahead and no connection it may use (offline, or metered with Wi-Fi-only enabled) ends with success and hands the rotation to this one-shot",
-      "cancelTrigger": "Disable auto wallpaper or scheduler; any other rotation that changes the wallpaper; a manual apply that restarts the countdown; a newer hand-off replaces a waiting one. A catch-up that is held again ends without queuing another",
+      "cancelTrigger": "Turn off auto wallpaper or the scheduler while the other is already off; any other rotation that changes the wallpaper; a manual apply that restarts the countdown; a newer hand-off replaces a waiting one. A catch-up that is held again ends without queuing another",
       "deferralReasons": [
         "network unavailable",
         "metered network when Wi-Fi-only is enabled",
