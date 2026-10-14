@@ -96,6 +96,7 @@ class AutoWallpaperWorkerPrefetchTest {
         val lock = prefs.schedulerLockEnabled.first()
         val avoid = prefs.avoidRecentRepeats.first()
         val wallhaven = prefs.wallhavenProviderEnabled.first()
+        val pexels = prefs.pexelsProviderEnabled.first()
         val wifiOnly = prefs.autoWallpaperRequiresWiFiOnly.first()
         restore = {
             prefs.setSchedulerEnabled(enabled)
@@ -106,6 +107,7 @@ class AutoWallpaperWorkerPrefetchTest {
             prefs.setSchedulerLock(lock)
             prefs.setAvoidRecentRepeats(avoid)
             prefs.setWallhavenProviderEnabled(wallhaven)
+            prefs.setPexelsProviderEnabled(pexels)
             prefs.setAutoWallpaperRequiresWiFiOnly(wifiOnly)
             prefs.clearRecentRotationIds()
         }
@@ -119,6 +121,7 @@ class AutoWallpaperWorkerPrefetchTest {
         prefs.setSchedulerHome(true)
         prefs.setSchedulerLock(true)
         prefs.setWallhavenProviderEnabled(true)
+        prefs.setPexelsProviderEnabled(true)
         prefs.setAutoWallpaperRequiresWiFiOnly(false)
 
         cache = RotationPrefetchCache(
@@ -554,6 +557,78 @@ class AutoWallpaperWorkerPrefetchTest {
             )
         }
         assertEquals(0, cache.diagnostics().hits)
+    }
+
+    @Test
+    fun `a saved Discover picture from a provider switched off since is not applied`() = runBlocking {
+        val shown = wallpaper("w1")
+        val fromPexels = wallpaper("p1").copy(source = ContentSource.PEXELS)
+        val next = wallpaper("w2")
+        coEvery { repo.getDiscover(any(), any()) } returns
+            SearchResult(listOf(shown, fromPexels, next), totalCount = 3, currentPage = 1, hasMore = false)
+        prefs.setSchedulerSource("discover")
+        runWorker()
+        val saved = cache.peek(rotationPrefetchSlot("discover", WallpaperTarget.BOTH))!!
+        assertEquals("p1", saved.wallpaper.id)
+
+        // Pexels is switched off. Discover stops returning its pictures, and the saved one goes too.
+        prefs.setPexelsProviderEnabled(false)
+        coEvery { repo.getDiscover(any(), any()) } returns
+            SearchResult(listOf(shown, next), totalCount = 2, currentPage = 1, hasMore = false)
+        assertEquals(ListenableWorker.Result.success(), runWorker())
+
+        coVerify(exactly = 0) {
+            applier.applyByLocator(
+                saved.file.absolutePath, any(), any(), any(), any(), any(), any(), any(), any(), any(),
+            )
+        }
+        coVerify(exactly = 0) { history.record(match { it.id == "p1" }, any()) }
+        coVerify(exactly = 1) {
+            applier.applyByLocator(
+                next.fullUrl, WallpaperTarget.BOTH, any(), any(), any(), any(), any(), any(), any(), any(),
+            )
+        }
+        assertEquals(0, cache.diagnostics().hits)
+    }
+
+    @Test
+    fun `a saved Discover picture from a provider still on applies from its file`() = runBlocking {
+        val shown = wallpaper("w1")
+        val fromPexels = wallpaper("p1").copy(source = ContentSource.PEXELS)
+        coEvery { repo.getDiscover(any(), any()) } returns
+            SearchResult(listOf(shown, fromPexels, wallpaper("w2")), totalCount = 3, currentPage = 1, hasMore = false)
+        prefs.setSchedulerSource("discover")
+        runWorker()
+        val saved = cache.peek(rotationPrefetchSlot("discover", WallpaperTarget.BOTH))!!
+        // Another provider going off is nothing to a Pexels picture.
+        prefs.setWallhavenProviderEnabled(false)
+
+        assertEquals(ListenableWorker.Result.success(), runWorker())
+
+        coVerify(exactly = 1) {
+            applier.applyByLocator(
+                saved.file.absolutePath, WallpaperTarget.BOTH, any(), any(), any(), any(), any(), any(), any(), any(),
+            )
+        }
+        assertEquals(1, cache.diagnostics().hits)
+    }
+
+    @Test
+    fun `a favorite saved ahead applies whatever its provider's switch says`() = runBlocking {
+        val pictures = listOf("f1", "f2", "f3").map { wallpaper(it).copy(source = ContentSource.PEXELS) }
+        every { favorites.getWallpapers() } returns flowOf(pictures.map { it.asFavorite() })
+        prefs.setSchedulerSource("favorites")
+        runWorker()
+        val saved = cache.peek(rotationPrefetchSlot("favorites", WallpaperTarget.BOTH))!!
+        prefs.setPexelsProviderEnabled(false)
+
+        assertEquals(ListenableWorker.Result.success(), runWorker())
+
+        coVerify(exactly = 1) {
+            applier.applyByLocator(
+                saved.file.absolutePath, WallpaperTarget.BOTH, any(), any(), any(), any(), any(), any(), any(), any(),
+            )
+        }
     }
 
     @Test

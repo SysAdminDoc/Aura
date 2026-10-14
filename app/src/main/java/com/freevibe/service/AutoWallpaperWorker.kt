@@ -285,8 +285,9 @@ class AutoWallpaperWorker @AssistedInject constructor(
     }
 
     /**
-     * A saved wallpaper is skipped when it has since been excluded, already shown, or taken out of
-     * the favorites or the collection it was saved from.
+     * A saved wallpaper is skipped when it has since been excluded, already shown, taken out of
+     * the favorites or the collection it was saved from, or when it came out of a feed from a
+     * provider that has been switched off since.
      */
     private suspend fun isStillWanted(source: String, wallpaper: Wallpaper): Boolean {
         if (rotationExclusions.filter(listOf(wallpaper)).candidates.isEmpty()) return false
@@ -294,7 +295,11 @@ class AutoWallpaperWorker @AssistedInject constructor(
         return !prefs.avoidRecentRepeats.first() || wallpaper.stableKey() !in prefs.getRecentRotationIds()
     }
 
-    /** Favorites and collections are sets a person edits. Every other source is whatever it returns. */
+    /**
+     * Favorites and collections are sets a person edits, and a picture in one stays wanted whatever
+     * provider it came from. Every other source is a feed, and a feed returns nothing from a
+     * provider that is switched off, so a picture saved from one before the switch isn't in it now.
+     */
     private suspend fun isStillInSource(source: String, wallpaper: Wallpaper): Boolean {
         val key = wallpaper.stableKey()
         return when (source) {
@@ -302,10 +307,19 @@ class AutoWallpaperWorker @AssistedInject constructor(
             "collection" -> {
                 val items = collectionWallpapers()
                 // With nothing in the collection the slot is the Discover one, and there is no set to be in.
-                items.isEmpty() || items.any { it.stableKey() == key }
+                if (items.isEmpty()) isProviderSwitchedOn(wallpaper.source) else items.any { it.stableKey() == key }
             }
-            else -> true
+            else -> isProviderSwitchedOn(wallpaper.source)
         }
+    }
+
+    /** The switches a feed checks before it asks a provider. A provider with no switch is always on. */
+    private suspend fun isProviderSwitchedOn(provider: ContentSource): Boolean = when (provider) {
+        ContentSource.WALLHAVEN -> prefs.wallhavenProviderEnabled.first()
+        ContentSource.BING -> prefs.bingProviderEnabled.first()
+        ContentSource.PIXABAY -> prefs.pixabayProviderEnabled.first()
+        ContentSource.PEXELS -> prefs.pexelsProviderEnabled.first()
+        else -> true
     }
 
     /**
