@@ -21,8 +21,11 @@ import java.io.FilterInputStream
 import java.io.InputStream
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import okhttp3.HttpUrl
+import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
 import okhttp3.OkHttpClient
 import okhttp3.Request
+import okhttp3.Response
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -40,6 +43,14 @@ class WallpaperApplier @Inject constructor(
     private val mediaCopyStore: MediaCopyStore,
 ) {
     private val wallpaperManager = WallpaperManager.getInstance(context)
+
+    /**
+     * The shared client with its own redirect following switched off. [downloadCheckedToFile] gets
+     * each redirect back as an answer, and asks about the next address before going there.
+     */
+    internal val redirectCheckedClient: OkHttpClient by lazy {
+        okHttpClient.newBuilder().followRedirects(false).followSslRedirects(false).build()
+    }
 
     /** Download image from URL and apply as wallpaper */
     suspend fun applyFromUrl(
@@ -343,32 +354,72 @@ class WallpaperApplier @Inject constructor(
     suspend fun downloadToFile(url: String, destination: java.io.File): Result<Long> = withContext(Dispatchers.IO) {
         runCatching {
             val request = Request.Builder().url(url).build()
-            okHttpClient.newCall(request).execute().use { resp ->
-                if (!resp.isSuccessful) throw java.io.IOException("Download failed: ${resp.code}")
-                val body = resp.body ?: throw java.io.IOException("Empty response body")
-                val advertised = body.contentLength()
-                if (advertised > MAX_WALLPAPER_BYTES) {
-                    throw java.io.IOException("Wallpaper too large: $advertised > $MAX_WALLPAPER_BYTES bytes")
-                }
-                val tempFile = java.io.File(destination.parentFile, "${destination.name}.tmp")
-                try {
-                    body.byteStream().use { input ->
-                        tempFile.outputStream().use { output ->
-                            copyCapped(input, output, MAX_WALLPAPER_BYTES)
-                        }
-                    }
-                    if (tempFile.length() == 0L) throw java.io.IOException("Empty response body")
-                    if (!tempFile.renameTo(destination)) {
-                        tempFile.copyTo(destination, overwrite = true)
-                        tempFile.delete()
-                    }
-                } catch (e: Exception) {
-                    try { tempFile.delete() } catch (_: Exception) {}
-                    throw e
-                }
-                destination.length()
-            }
+            okHttpClient.newCall(request).execute().use { resp -> saveBody(resp, destination) }
         }.onFailure { it.rethrowIfCancelled() }
+    }
+
+    /**
+     * [downloadToFile] for an address that is fetched with nobody looking. [mayFetch] is asked about
+     * [url], and then about every address a redirect names, each time before anything is sent
+     * there. A no ends the download with [WallpaperAddressRefusedException]. The 24H pack uses it
+     * so an address on a provider's host can't hand the phone on to a host that isn't the provider's.
+     */
+    suspend fun downloadCheckedToFile(
+        url: String,
+        destination: java.io.File,
+        mayFetch: (String) -> Boolean,
+    ): Result<Long> = withContext(Dispatchers.IO) {
+        runCatching { saveChecked(url, destination, mayFetch) }.onFailure { it.rethrowIfCancelled() }
+    }
+
+    /** Walks the redirects itself, one request for each, so every address is asked about first. */
+    private fun saveChecked(url: String, destination: java.io.File, mayFetch: (String) -> Boolean): Long {
+        var address = url.trim().toHttpUrlOrNull() ?: throw java.io.IOException("Not a web address")
+        var redirects = 0
+        while (true) {
+            if (!mayFetch(address.toString())) throw WallpaperAddressRefusedException(address.host)
+            val from = address
+            val hop = redirectCheckedClient.newCall(Request.Builder().url(from).build()).execute().use { resp ->
+                if (resp.isRedirect) {
+                    val target = resp.header("Location")?.let(from::resolve)
+                        ?: throw java.io.IOException("Redirect without an address to follow")
+                    CheckedHop(redirectTo = target, savedBytes = 0L)
+                } else {
+                    CheckedHop(redirectTo = null, savedBytes = saveBody(resp, destination))
+                }
+            }
+            val next = hop.redirectTo ?: return hop.savedBytes
+            redirects++
+            if (redirects > MAX_CHECKED_REDIRECTS) throw java.io.IOException("Too many redirects")
+            address = next
+        }
+    }
+
+    /** Writes a successful response to [destination] through a temp file beside it. Returns the bytes written. */
+    private fun saveBody(resp: Response, destination: java.io.File): Long {
+        if (!resp.isSuccessful) throw java.io.IOException("Download failed: ${resp.code}")
+        val body = resp.body ?: throw java.io.IOException("Empty response body")
+        val advertised = body.contentLength()
+        if (advertised > MAX_WALLPAPER_BYTES) {
+            throw java.io.IOException("Wallpaper too large: $advertised > $MAX_WALLPAPER_BYTES bytes")
+        }
+        val tempFile = java.io.File(destination.parentFile, "${destination.name}.tmp")
+        try {
+            body.byteStream().use { input ->
+                tempFile.outputStream().use { output ->
+                    copyCapped(input, output, MAX_WALLPAPER_BYTES)
+                }
+            }
+            if (tempFile.length() == 0L) throw java.io.IOException("Empty response body")
+            if (!tempFile.renameTo(destination)) {
+                tempFile.copyTo(destination, overwrite = true)
+                tempFile.delete()
+            }
+        } catch (e: Exception) {
+            try { tempFile.delete() } catch (_: Exception) {}
+            throw e
+        }
+        return destination.length()
     }
 
     /**
@@ -637,8 +688,18 @@ class WallpaperApplier @Inject constructor(
     private companion object {
         /** Hard cap on single-wallpaper downloads — mirrors DownloadManager's ceiling. */
         private const val MAX_WALLPAPER_BYTES = 64L * 1024 * 1024
+
+        /** A real provider gets a picture to its file host in a hop or two. More than this is a loop. */
+        private const val MAX_CHECKED_REDIRECTS = 5
     }
 }
+
+/** What one request of a checked download came to: the address a redirect named, or the bytes saved. */
+private class CheckedHop(val redirectTo: HttpUrl?, val savedBytes: Long)
+
+/** A checked download was told not to contact [host]. Nothing was sent to it. */
+class WallpaperAddressRefusedException(val host: String) :
+    java.io.IOException("The wallpaper's address leads to $host, which Aura doesn't fetch from by itself")
 
 /** InputStream guard used by WallpaperManager.setStream, including chunked HTTP responses. */
 internal class WallpaperByteLimitInputStream(

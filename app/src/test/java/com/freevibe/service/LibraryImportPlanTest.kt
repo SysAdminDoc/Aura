@@ -943,6 +943,25 @@ class LibraryImportPlanTest {
     }
 
     @Test
+    fun `a Reddit picture in a pack slot is kept`() = runTest {
+        // Reddit serves a post's picture from i.redd.it, not from reddit.com.
+        val locator = "https://i.redd.it/abc123.jpg"
+
+        val plan = exporter.buildPlan(
+            packBackup(
+                DaypartSlot(Daypart.DAY, locator, label = "From Reddit"),
+                DaypartSlot(Daypart.NIGHT, "https://evilredd.it/abc123.jpg", label = "Lookalike"),
+            ),
+        )
+
+        assertEquals(listOf(locator), parsePack(plan.wallpaperPackJson)!!.slots.map { it.wallpaperUri })
+        assertEquals(
+            listOf("Lookalike" to LibraryImportSkipReason.NEEDS_REPICK),
+            plan.skipped.map { it.label to it.reason },
+        )
+    }
+
+    @Test
     fun `a sound profile that points outside the phone's media library is not restored`() = runTest {
         val profiles = serializeProfiles(
             listOf(

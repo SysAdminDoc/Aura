@@ -370,6 +370,7 @@
       "cancelTrigger": "Disable the wallpaper pack",
       "deferralReasons": [
         "no active pack or no slot for the current daypart",
+        "a slot at a web address with no connection, or a metered one while Wi-Fi-only is enabled",
         "Android job quota or Doze/App Standby delay"
       ],
       "sourceTerms": [

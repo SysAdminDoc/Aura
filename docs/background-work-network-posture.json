@@ -181,16 +181,20 @@
       "requiredSourceTerms": [
         "PeriodicWorkRequestBuilder<WallpaperPackWorker>",
         "parsePack",
-        "wallpaperApplier.applyByLocator"
+        "wallpaperApplier.applyByLocator",
+        "if (!isImportedProviderMediaUrl(slot.wallpaperUri))",
+        "network.access(wifiOnly = prefs.autoWallpaperRequiresWiFiOnly.first())",
+        "wallpaperApplier.downloadCheckedToFile(slot.wallpaperUri, staged)",
+        "isSameImportedProviderMediaUrl(origin = slot.wallpaperUri, hop = hop)"
       ],
       "settingsSourcePath": "app/src/main/java/com/freevibe/ui/screens/settings/SettingsMediaDelegate.kt",
       "requiredSettingsTerms": [
         "WallpaperPackWorker.schedule",
         "WallpaperPackWorker.cancel"
       ],
-      "meteredPolicy": "No scheduler network constraint is declared because packs may contain local URIs; a user-selected remote locator can use the active metered network during apply.",
-      "dataSaverPolicy": "Local pack slots are unaffected; remote locators inherit platform Data Saver behavior and the next periodic run can recover after connectivity returns.",
-      "privacySurface": "The worker reads the local pack definition; only a user-selected remote wallpaper locator can contact its original host.",
+      "meteredPolicy": "No scheduler network constraint is declared, so a slot on the phone applies on any network or none. A slot at a web address asks RotationNetworkGate first, and on a metered network with Wi-Fi-only rotation enabled it fetches nothing and waits for the next run.",
+      "dataSaverPolicy": "Local pack slots are unaffected. A web slot that Data Saver or a missing network leaves without a usable connection writes a deferred receipt, and the next periodic run asks again.",
+      "privacySurface": "The worker reads the local pack definition. A web slot is fetched only from a host that belongs to one of Aura's providers, and a redirect is followed only while it stays on that provider's hosts. Any other web address is never contacted and is reported for a new pick.",
       "releaseRisk": "Medium"
     },
     {

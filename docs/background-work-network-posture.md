@@ -27,6 +27,8 @@ nothing saved and no connection it may use ends with success, writes a
 does carry the network constraint. The worker never retries or polls while the
 phone is offline.
 
+The 24-hour wallpaper pack follows the same rule for a slot that has to be fetched. `wallpaper_pack` starts on any network or none, so a picture on the phone applies offline. A slot at a web address is held to three checks before anything is sent. It has to be an https address on a host that belongs to one of Aura's providers, which is the check a library restore runs on the same slot. `WallpaperPackWorker` then asks `RotationNetworkGate`, so the Wi-Fi-only setting covers the pack too. The download walks redirects itself and follows one only while it stays on that provider's hosts. A web address anywhere else is never contacted. It is reported once and waits for a new pick in the pack editor.
+
 ## Network posture matrix
 
 | Work | Unique work | Network posture | Metered behavior | Data Saver posture |
@@ -39,7 +41,7 @@ phone is offline.
 | Sound shuffle pool | `sound_shuffle_pool_$poolId` | Not required | No network used | Local pool members are unaffected by Data Saver |
 | Sound shuffle pool, Run now | `sound_shuffle_pool_${poolId}_now` | Not required | No network used | Local pool members are unaffected by Data Saver |
 | Sound profile | `sound_profile` | Not required | No network used | Local profile application is unaffected by Data Saver |
-| Wallpaper pack | `wallpaper_pack` | Not required at scheduling time | Local slots use no network; remote locators may use the active metered network | Remote locators inherit platform Data Saver behavior and retry on the next periodic run |
+| Wallpaper pack | `wallpaper_pack` | Not required by WorkManager; the worker checks before it fetches | Local slots use no network; a slot at a web address is blocked on metered when Wi-Fi-only is enabled | A web slot with no usable connection writes a deferred receipt and the next periodic run asks again |
 | Weather effect refresh | `weather_update` | Connected | Allowed for lightweight Open-Meteo refresh | Settings reads active metered/Data Saver state |
 | Aura Originals download | `aura_originals_download` | Unmetered | Blocked | Current larger-transfer-safe posture; Settings reads active metered/Data Saver state |
 | Rotation trigger one-shot | `rotation_trigger_oneshot` | Not required by WorkManager; the worker checks before it fetches; battery-not-low for unlock and screen-off | Same as auto wallpaper rotation, so Wi-Fi-only now covers tile, automation, unlock and screen-off rotations too | Settings reads active metered/Data Saver state; expedited-quota labeling remains open |
@@ -57,6 +59,7 @@ is:
 - larger first-run Aura Originals downloads require unmetered network;
 - automatic backup, ringtone restoration, sound shuffle pools, sound profiles, and local
   wallpaper-pack slots perform no remote request;
+- a wallpaper-pack slot at a web address is fetched only from a provider's own host, and the Wi-Fi-only setting holds it back on a metered network;
 - every wallpaper rotation, scheduled or triggered, can be user-tightened to
   unmetered network through the existing Wi-Fi-only setting. The worker
   enforces it before each fetch and download, and the catch-up one-shot waits

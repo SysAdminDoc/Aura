@@ -1,5 +1,7 @@
 package com.freevibe.service
 
+import com.freevibe.data.legal.isProviderAvailableInCurrentArtifact
+import com.freevibe.data.model.ContentSource
 import com.freevibe.data.model.WallpaperTarget
 import java.util.Locale
 
@@ -40,10 +42,17 @@ internal data class ThemePackImportPlan(
  * Validates the whole [recipe] against the files the archive actually held, then
  * returns what the import would store. Throws [ThemePackValidationException] on the
  * first problem, so a pack is either taken whole or not at all.
+ *
+ * A 24H pack slot and a profile sound are opened later by a worker, with nobody looking, so a web
+ * address there is held to what a library restore keeps. A slot may name one only on a provider's
+ * own host ([isImportedProviderMediaUrl]). A profile sound may not name one at all, because it is
+ * handed to the system as a default sound and the phone would contact that host when it rings.
+ * A file the pack carries, or one already on the phone, isn't a web address and passes.
  */
 internal fun planThemePackImport(
     recipe: ThemePackRecipe,
     assetsByKey: Map<String, String>,
+    isProviderAvailable: (ContentSource) -> Boolean = ::isProviderAvailableInCurrentArtifact,
 ): ThemePackImportPlan {
     if (recipe.version > THEME_PACK_VERSION) invalidThemePack("Theme pack version ${recipe.version} is not supported yet")
     if (recipe.version < 1) invalidThemePack("Theme pack version ${recipe.version} is not valid")
@@ -71,7 +80,13 @@ internal fun planThemePackImport(
             if (!dayparts.add(slot.daypart)) {
                 invalidThemePack("Theme pack 24H wallpaper recipe has two ${slot.daypart.displayName} slots")
             }
-            requireThemePackLocator(slot.wallpaperUri, "${slot.daypart.displayName} wallpaper")
+            val name = "${slot.daypart.displayName} wallpaper"
+            requireThemePackLocator(slot.wallpaperUri, name)
+            // What the worker will be given: the file the pack carried when there is one.
+            val stored = remappedLocator(slot.wallpaperUri, references, assetsByKey)
+            if (isWebLocator(stored) && !isImportedProviderMediaUrl(stored, isProviderAvailable)) {
+                invalidThemePack("Theme pack has a web address for $name that isn't on one of Aura's sources")
+            }
         }
         remapWallpaperPackAssetLocators(raw, references, assetsByKey)
     }
@@ -88,7 +103,15 @@ internal fun planThemePackImport(
             }
             listOf(profile.ringtoneUri, profile.notificationUri, profile.alarmUri)
                 .filter { it.isNotBlank() }
-                .forEach { requireThemePackLocator(it, "${profile.name} sound") }
+                .forEach { locator ->
+                    val name = "${profile.name} sound"
+                    requireThemePackLocator(locator, name)
+                    if (isWebLocator(remappedLocator(locator, references, assetsByKey))) {
+                        invalidThemePack(
+                            "Theme pack has a web address for $name. A profile sound has to be on the phone or in the pack",
+                        )
+                    }
+                }
         }
         remapSoundProfileAssetLocators(raw, references, assetsByKey)
     }
@@ -138,6 +161,12 @@ internal fun isAcceptableThemePackLocator(locator: String): Boolean {
     return scheme in THEME_PACK_URI_SCHEMES &&
         locator.startsWith("$scheme://", ignoreCase = true) &&
         locator.length > scheme.length + 3
+}
+
+/** True for an address the phone would have to go online to open. */
+internal fun isWebLocator(locator: String): Boolean {
+    val trimmed = locator.trim()
+    return trimmed.startsWith("https://", ignoreCase = true) || trimmed.startsWith("http://", ignoreCase = true)
 }
 
 private fun requireThemePackLocator(locator: String, name: String) {

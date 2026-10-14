@@ -1,5 +1,6 @@
 package com.freevibe.service
 
+import com.freevibe.data.model.ContentSource
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
@@ -11,6 +12,9 @@ class ThemePackImportPlanTest {
     private val morningAsset = "assets/wallpaper-pack-morning-abc.jpg"
     private val ringtoneAsset = "assets/sound-ringtone-def.mp3"
     private val videoAsset = "assets/video-wallpaper-123.mp4"
+
+    /** A web address the pack worker may fetch by itself: https, on a provider's own host. */
+    private val providerPicture = "https://w.wallhaven.cc/full/ab/wallhaven-night.jpg"
     private val assets = mapOf(
         morningAsset to "/data/user/0/com.freevibe/files/theme_packs/import-1/a_morning.jpg",
         ringtoneAsset to "/data/user/0/com.freevibe/files/theme_packs/import-1/b_ringtone.mp3",
@@ -23,7 +27,7 @@ class ThemePackImportPlanTest {
 
         val pack = parsePack(plan.wallpaperPackJson!!)!!
         assertEquals(assets[morningAsset], pack.slots.first { it.daypart == Daypart.MORNING }.wallpaperUri)
-        assertEquals("https://example.com/night.jpg", pack.slots.first { it.daypart == Daypart.NIGHT }.wallpaperUri)
+        assertEquals(providerPicture, pack.slots.first { it.daypart == Daypart.NIGHT }.wallpaperUri)
         assertEquals(assets[ringtoneAsset], parseProfiles(plan.soundProfilesJson!!).single().ringtoneUri)
         assertEquals(assets[ringtoneAsset], plan.ringtoneUri)
         assertEquals("content://media/internal/audio/media/7", plan.notificationUri)
@@ -51,8 +55,8 @@ class ThemePackImportPlanTest {
                     id = "dayparts",
                     name = "Dayparts",
                     slots = listOf(
-                        DaypartSlot(Daypart.MORNING, "https://example.com/a.jpg"),
-                        DaypartSlot(Daypart.MORNING, "https://example.com/b.jpg"),
+                        DaypartSlot(Daypart.MORNING, "content://media/external/images/media/31"),
+                        DaypartSlot(Daypart.MORNING, "content://media/external/images/media/32"),
                     ),
                 ),
             ),
@@ -162,6 +166,108 @@ class ThemePackImportPlanTest {
         listOf("file:/", "file:/data/../etc/x", "FILE://host/x").forEach { assertFalse(it, isAcceptableThemePackLocator(it)) }
     }
 
+    @Test
+    fun `a pack slot at a web address off Aura's sources rejects the pack`() {
+        listOf(
+            "https://tracker.example/pixel.jpg",
+            "https://w.wallhaven.cc.tracker.example/night.jpg",
+            "https://evilredd.it/night.jpg",
+            "http://w.wallhaven.cc/full/ab/wallhaven-night.jpg",
+            "HTTPS://tracker.example/pixel.jpg",
+        ).forEach { hostile ->
+            assertRejected(withNightSlot(hostile), "web address for Night wallpaper")
+        }
+    }
+
+    @Test
+    fun `a pack slot on a provider's own host is taken as it is`() {
+        listOf(providerPicture, "https://i.redd.it/abc123.jpg").forEach { picture ->
+            val plan = planThemePackImport(withNightSlot(picture), assets)
+
+            assertEquals(picture, parsePack(plan.wallpaperPackJson!!)!!.slots.single().wallpaperUri)
+        }
+    }
+
+    @Test
+    fun `a pack slot on a provider this build can't use rejects the pack`() {
+        val recipe = withNightSlot(providerPicture)
+
+        val error = runCatching {
+            planThemePackImport(recipe, assets) { it != ContentSource.WALLHAVEN }
+        }.exceptionOrNull()
+
+        assertTrue("$error", error is ThemePackValidationException)
+        // The same pack is fine where Wallhaven can be used, so the provider was what decided it.
+        assertEquals(providerPicture, parsePack(planThemePackImport(recipe, assets) { true }.wallpaperPackJson!!)!!.slots.single().wallpaperUri)
+    }
+
+    @Test
+    fun `a slot the pack carries a file for is checked as that file, not as the address it had`() {
+        // The address the picture had on the phone that made the pack. The import stores the file.
+        val was = "https://tracker.example/was-here.jpg"
+        val recipe = validRecipe().copy(
+            media = validRecipe().media.map { if (it.assetKey == morningAsset) it.copy(locator = was) else it },
+            wallpaperPackJson = serializePack(
+                WallpaperPack(id = "dayparts", name = "Dayparts", slots = listOf(DaypartSlot(Daypart.MORNING, was))),
+            ),
+        )
+
+        val plan = planThemePackImport(recipe, assets)
+
+        assertEquals(assets[morningAsset], parsePack(plan.wallpaperPackJson!!)!!.slots.single().wallpaperUri)
+    }
+
+    @Test
+    fun `a profile sound at any web address rejects the pack`() {
+        listOf(
+            "https://tracker.example/ring.mp3",
+            "http://tracker.example/ring.mp3",
+            // A provider's host too: the system plays a profile sound, and it would go online to do it.
+            "https://cdn.pixabay.com/audio/ring.mp3",
+        ).forEach { hostile ->
+            listOf(
+                SoundProfile(id = "night", name = "Night", ringtoneUri = hostile),
+                SoundProfile(id = "night", name = "Night", notificationUri = hostile),
+                SoundProfile(id = "night", name = "Night", alarmUri = hostile),
+            ).forEach { profile ->
+                assertRejected(
+                    validRecipe().copy(soundProfilesJson = serializeProfiles(listOf(profile))),
+                    "web address for Night sound",
+                )
+            }
+        }
+    }
+
+    @Test
+    fun `a profile sound on the phone or in the pack is taken`() {
+        val recipe = validRecipe().copy(
+            soundProfilesJson = serializeProfiles(
+                listOf(
+                    SoundProfile(
+                        id = "night",
+                        name = "Night",
+                        // The pack carries a file for this one.
+                        ringtoneUri = "content://media/external/audio/media/2",
+                        notificationUri = "content://media/internal/audio/media/7",
+                        alarmUri = "/storage/emulated/0/Alarms/soft.ogg",
+                    ),
+                ),
+            ),
+        )
+
+        val profile = parseProfiles(planThemePackImport(recipe, assets).soundProfilesJson!!).single()
+
+        assertEquals(assets[ringtoneAsset], profile.ringtoneUri)
+        assertEquals("content://media/internal/audio/media/7", profile.notificationUri)
+        assertEquals("/storage/emulated/0/Alarms/soft.ogg", profile.alarmUri)
+    }
+
+    private fun withNightSlot(locator: String): ThemePackRecipe = validRecipe().copy(
+        wallpaperPackJson = serializePack(
+            WallpaperPack(id = "dayparts", name = "Dayparts", slots = listOf(DaypartSlot(Daypart.NIGHT, locator))),
+        ),
+    )
+
     private fun planFor(recipe: ThemePackRecipe, assetsByKey: Map<String, String>): () -> ThemePackImportPlan =
         { planThemePackImport(recipe, assetsByKey) }
 
@@ -208,7 +314,7 @@ class ThemePackImportPlanTest {
                 name = "Dayparts",
                 slots = listOf(
                     DaypartSlot(Daypart.MORNING, "content://media/external/images/media/1"),
-                    DaypartSlot(Daypart.NIGHT, "https://example.com/night.jpg"),
+                    DaypartSlot(Daypart.NIGHT, providerPicture),
                 ),
             ),
         ),

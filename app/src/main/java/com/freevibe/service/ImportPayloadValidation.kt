@@ -174,3 +174,21 @@ internal fun normalizeImportedContactRingtone(entry: ContactRingtoneExportEntry)
         assignedAt = entry.assignedAt.coerceAtLeast(0),
     )
 }
+
+/**
+ * True when a download that began at [origin] may go on to [hop]. Both have to pass
+ * [isImportedProviderMediaUrl], and they have to belong to the same provider, so a redirect can
+ * move between one provider's hosts and can't hand the phone to anyone else. Asking about [origin]
+ * itself answers whether the download may start.
+ */
+internal fun isSameImportedProviderMediaUrl(
+    origin: String?,
+    hop: String?,
+    isAvailable: (ContentSource) -> Boolean = ::isProviderAvailableInCurrentArtifact,
+): Boolean {
+    if (!isImportedProviderMediaUrl(origin, isAvailable) || !isImportedProviderMediaUrl(hop, isAvailable)) return false
+    fun provider(url: String?): ContentSource? =
+        url.orEmpty().trim().toHttpUrlOrNull()?.host?.let(::providerSourceForHost)
+    val source = provider(origin)
+    return source != null && source == provider(hop)
+}

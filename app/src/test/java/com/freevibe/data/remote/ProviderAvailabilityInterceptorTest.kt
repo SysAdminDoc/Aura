@@ -68,6 +68,15 @@ class ProviderAvailabilityInterceptorTest {
         assertEquals(null, providerSourceForHost("freesound.org.example.com"))
     }
 
+    @Test
+    fun `Reddit's picture hosts belong to Reddit and a lookalike belongs to nobody`() {
+        assertEquals(ContentSource.REDDIT, providerSourceForHost("i.redd.it"))
+        assertEquals(ContentSource.REDDIT, providerSourceForHost("preview.redd.it"))
+        assertEquals(ContentSource.REDDIT, providerSourceForHost("www.reddit.com"))
+        assertEquals(null, providerSourceForHost("evilredd.it"))
+        assertEquals(null, providerSourceForHost("redd.it.example.com"))
+    }
+
     private fun request(host: String): Request = Request.Builder()
         .url("https://$host/media".toHttpUrl())
         .build()

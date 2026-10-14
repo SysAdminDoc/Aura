@@ -208,6 +208,7 @@ class WorkerSelfCancelTest {
                         wallpaperApplier = mockk(),
                         rotationExclusions = mockk(),
                         receiptStore = receipts,
+                        network = mockk(),
                     )
                 },
             )

@@ -69,10 +69,27 @@ class ThemePackImportTest {
                         id = "dup",
                         name = "Dup",
                         slots = listOf(
-                            DaypartSlot(Daypart.NIGHT, "https://example.com/a.jpg"),
-                            DaypartSlot(Daypart.NIGHT, "https://example.com/b.jpg"),
+                            DaypartSlot(Daypart.NIGHT, "content://media/external/images/media/31"),
+                            DaypartSlot(Daypart.NIGHT, "content://media/external/images/media/32"),
                         ),
                     ),
+                ),
+            ),
+            "slot at a web address off Aura's sources" to validRecipe().copy(
+                wallpaperPackJson = serializePack(
+                    WallpaperPack(
+                        id = "hostile",
+                        name = "Hostile",
+                        slots = listOf(
+                            DaypartSlot(Daypart.MORNING, "content://media/external/images/media/5"),
+                            DaypartSlot(Daypart.NIGHT, "https://tracker.example/pixel.jpg"),
+                        ),
+                    ),
+                ),
+            ),
+            "profile sound at a web address" to validRecipe().copy(
+                soundProfilesJson = serializeProfiles(
+                    listOf(SoundProfile(id = "night", name = "Night", ringtoneUri = "https://tracker.example/ring.mp3")),
                 ),
             ),
             "invalid locator" to validRecipe().copy(sounds = ThemePackSoundState(alarmUri = "intent://alarm#Intent;end")),

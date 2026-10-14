@@ -20,6 +20,7 @@ import kotlinx.coroutines.withContext
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
+import java.io.File
 import java.util.Calendar
 import java.util.concurrent.TimeUnit
 
@@ -131,6 +132,14 @@ internal fun needsRepickMarker(daypart: Daypart): String = "${daypart.name}:need
 /** True when an apply failed because Aura no longer has access to the picture. Trying again can't fix that. */
 internal fun isLostAccess(error: Throwable): Boolean = error is SecurityException || error.cause is SecurityException
 
+/** What diagnostics show for a pack picture that waited on a connection instead of failing. */
+internal fun packHoldReason(daypart: Daypart, hold: RotationNetworkAccess): String =
+    if (hold == RotationNetworkAccess.WAITING_FOR_WIFI) {
+        "Wi-Fi only is on and this connection is metered. The ${daypart.displayName.lowercase()} wallpaper loads on Wi-Fi."
+    } else {
+        "No connection. The ${daypart.displayName.lowercase()} wallpaper loads when the phone is back online."
+    }
+
 @HiltWorker
 class WallpaperPackWorker @AssistedInject constructor(
     @Assisted appContext: Context,
@@ -139,6 +148,7 @@ class WallpaperPackWorker @AssistedInject constructor(
     private val wallpaperApplier: WallpaperApplier,
     private val rotationExclusions: RotationExclusionRepository,
     private val receiptStore: BackgroundWorkReceiptStore,
+    private val network: RotationNetworkGate,
 ) : CoroutineWorker(appContext, workerParams) {
 
     override suspend fun doWork(): Result {
@@ -185,7 +195,31 @@ class WallpaperPackWorker @AssistedInject constructor(
                 return Result.success()
             }
 
-            wallpaperApplier.applyByLocator(slot.wallpaperUri, target)
+            if (isWebLocator(slot.wallpaperUri)) {
+                if (!isImportedProviderMediaUrl(slot.wallpaperUri)) {
+                    // A web address is fetched with nobody looking, so it has to be on a provider's own
+                    // host. Asking again can't change where this one points, so this time of day is
+                    // left alone until the picture is picked again, the way a lost grant is.
+                    prefs.setWallpaperPackLastAppliedDaypart(needsRepickMarker(slot.daypart))
+                    receiptStore.recordFailure(
+                        uniqueWorkName = WORK_NAME,
+                        errorClass = "WallpaperAddressRefused",
+                        deferralReason = "The ${slot.daypart.displayName.lowercase()} wallpaper is at a web address " +
+                            "that isn't one of Aura's sources. Pick it again in Settings, Edit 24H pack.",
+                    )
+                    return Result.success()
+                }
+                // The work carries no network constraint, so a picture on the phone applies offline.
+                // A picture that has to be fetched asks here first, which is also where Wi-Fi only holds.
+                val access = network.access(wifiOnly = prefs.autoWallpaperRequiresWiFiOnly.first())
+                if (access != RotationNetworkAccess.ALLOWED) {
+                    // Neither a failure nor an apply. The marker stays as it is, so the next run asks again.
+                    receiptStore.recordDeferred(WORK_NAME, packHoldReason(slot.daypart, access))
+                    return Result.success()
+                }
+            }
+
+            applySlot(slot, target)
                 .onSuccess {
                     prefs.setWallpaperPackLastAppliedDaypart(slot.daypart.name)
                     receiptStore.recordSuccess(WORK_NAME)
@@ -229,6 +263,28 @@ class WallpaperPackWorker @AssistedInject constructor(
         }
     }
 
+    /**
+     * Applies the slot's picture. One on the phone is applied where it is. A web address is saved to
+     * a file first, by a download that asks about every address before contacting it, so a redirect
+     * can't take it off the provider the slot names. The file goes when the run is done with it.
+     */
+    private suspend fun applySlot(slot: DaypartSlot, target: WallpaperTarget): kotlin.Result<Unit> {
+        if (!isWebLocator(slot.wallpaperUri)) return wallpaperApplier.applyByLocator(slot.wallpaperUri, target)
+        val staged = File(applicationContext.cacheDir, STAGED_SLOT_FILE)
+        return try {
+            val failed = wallpaperApplier.downloadCheckedToFile(slot.wallpaperUri, staged) { hop ->
+                isSameImportedProviderMediaUrl(origin = slot.wallpaperUri, hop = hop)
+            }.exceptionOrNull()
+            if (failed != null) {
+                kotlin.Result.failure<Unit>(failed)
+            } else {
+                wallpaperApplier.applyByLocator(staged.absolutePath, target)
+            }
+        } finally {
+            staged.delete()
+        }
+    }
+
     /** True while the stored pack still names this picture for this time of day. */
     private suspend fun stillInPack(slot: DaypartSlot): Boolean =
         parsePack(prefs.wallpaperPackJson.first())?.slots.orEmpty()
@@ -249,6 +305,9 @@ class WallpaperPackWorker @AssistedInject constructor(
 
     companion object {
         const val WORK_NAME = "wallpaper_pack"
+
+        /** Where a slot fetched from a provider is held between the download and the apply. */
+        internal const val STAGED_SLOT_FILE = "wallpaper_pack_slot.img"
 
         fun schedule(context: Context) {
             val request = PeriodicWorkRequestBuilder<WallpaperPackWorker>(

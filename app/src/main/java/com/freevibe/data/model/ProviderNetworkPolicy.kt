@@ -161,7 +161,8 @@ val providerNetworkPolicies = listOf(
     ProviderNetworkPolicy(
         source = ContentSource.REDDIT,
         requestCacheTtlMs = PROVIDER_CACHE_TTL_REDDIT_MS,
-        hostSuffixes = setOf("reddit.com"),
+        // Reddit serves post pictures and video from redd.it, not from reddit.com.
+        hostSuffixes = setOf("reddit.com", "redd.it"),
         maxBatchDownloadPerUserAction = 10,
         timeoutPolicy = "OkHttp connect/read/write timeouts",
         backoffPolicy = "one cursor-paged combined RSS request at a time with a 60-second process cooldown",
