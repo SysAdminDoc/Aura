@@ -3,6 +3,7 @@ package com.freevibe.service
 import android.content.Context
 import com.freevibe.data.local.FavoriteDao
 import com.freevibe.data.model.FavoriteEntity
+import com.freevibe.data.model.isVideoFavorite
 import com.freevibe.data.model.stableKey
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
@@ -40,6 +41,9 @@ class OfflineFavoritesManager @Inject constructor(
     /** Cache a favorite's content locally. Returns local file path or null. */
     suspend fun cacheOffline(favorite: FavoriteEntity, url: String): String? =
         withContext(Dispatchers.IO) {
+            // A saved video's original belongs to the video downloader. Cached here, its page or
+            // playlist address would be filed as a picture.
+            if (favorite.isVideoFavorite()) return@withContext null
             try {
                 val ext = when {
                     favorite.type == "SOUND" -> url.substringBefore("?").substringAfterLast(".", "mp3")

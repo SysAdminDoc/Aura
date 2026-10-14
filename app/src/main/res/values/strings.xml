@@ -2005,6 +2005,7 @@
     <!-- Favorites screen -->
     <string name="favorites_tab_wallpapers">Wallpapers (%1$d)</string>
     <string name="favorites_tab_sounds">Sounds (%1$d)</string>
+    <string name="favorites_tab_videos">Videos (%1$d)</string>
     <string name="favorites_selection_count">%1$d selected</string>
     <string name="favorites_exit_selection">Exit selection</string>
     <string name="favorites_deselect_all">Deselect all</string>
@@ -2024,10 +2025,13 @@
     <string name="favorites_select_item">Select %1$s</string>
     <string name="favorites_empty_sounds_title">No favorite sounds yet</string>
     <string name="favorites_empty_sounds_description">Save ringtones, notifications, and alarms here, or restore an Aura backup when moving devices.</string>
+    <string name="favorites_empty_videos_title">No favorite videos yet</string>
+    <string name="favorites_empty_videos_description">Save motion wallpapers from the Videos tab, or restore an Aura backup when moving devices.</string>
     <string name="favorites_remove_item">Remove %1$s</string>
     <string name="favorites_removed_item">Removed %1$s</string>
     <string name="favorites_state_source_unavailable">Source unavailable</string>
     <string name="favorites_state_saved_sound">Saved sound</string>
+    <string name="favorites_state_saved_video">Saved video</string>
     <string name="favorites_duration_seconds">%1$ds</string>
 
     <!-- Wallpapers screen -->
@@ -2433,6 +2437,9 @@
     <string name="video_wp_download_failed">Download failed: %1$s</string>
     <string name="video_wp_download_in_progress">This video is still downloading. Try again when it\'s done.</string>
     <string name="video_wp_download_while_applying">Apply is saving this video now. It\'ll be in Downloads when it\'s done.</string>
+    <string name="video_wp_favorite_add">Add to favorites</string>
+    <string name="video_wp_favorite_remove">Remove from favorites</string>
+    <string name="video_wp_favorite_unavailable">This video can\'t be saved yet. Try again once its preview has loaded.</string>
     <string name="video_wp_share_source">Share source</string>
     <string name="video_wp_share_title">Share video source</string>
     <string name="video_wp_share_text">%1$s by %2$s on %3$s: %4$s</string>

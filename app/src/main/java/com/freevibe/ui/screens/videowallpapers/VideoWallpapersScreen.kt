@@ -57,6 +57,7 @@ import androidx.media3.exoplayer.source.MediaSource
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil3.compose.SubcomposeAsyncImageContent
 import com.freevibe.R
+import com.freevibe.data.model.FavoriteEntity
 import com.freevibe.data.model.RedditFeedMediaType
 import com.freevibe.ui.screens.reddit.RedditFeedPresetChip
 import com.freevibe.data.model.VideoProviderPolicyLinks
@@ -67,8 +68,10 @@ import com.freevibe.data.model.WALLPAPER_PRESENTATION_FIT
 import com.freevibe.data.model.ROTATION_MEDIA_VIDEO
 import com.freevibe.data.model.RotationExclusionIndex
 import com.freevibe.data.model.VideoWallpaperAction
+import com.freevibe.data.model.canBeVideoFavorite
 import com.freevibe.data.model.canUseVideoAction
 import com.freevibe.data.model.requiresVideoActionConfirmation
+import com.freevibe.data.model.toVideoWallpaperItem
 import com.freevibe.data.model.videoActionMessage
 import com.freevibe.data.model.videoWallpaperLicenseCapabilities
 import com.freevibe.data.model.rotationIdentity
@@ -110,6 +113,7 @@ import com.freevibe.ui.liveWallpaperFallback
 import com.freevibe.ui.rotation.RotationExclusionsViewModel
 import com.freevibe.ui.theme.AuraShapes
 import com.freevibe.ui.util.openExternalUrl
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -304,9 +308,14 @@ fun VideoWallpapersScreen(
     viewModel: VideoWallpapersViewModel = hiltViewModel(),
     rotationExclusionsViewModel: RotationExclusionsViewModel = hiltViewModel(),
 ) {
+    // The feed starts with this tab and not with the view model, which Favorites also uses to
+    // preview a saved video. It runs before the first state read so the first frame shows loading.
+    remember(viewModel) { viewModel.startFeed() }
     val state by viewModel.state.collectAsStateWithLifecycle()
     val gallerySelectionResult by viewModel.gallerySelectionResult.collectAsStateWithLifecycle()
     val resolvedIds by viewModel.resolvedIds.collectAsStateWithLifecycle()
+    val streamFailedIds by viewModel.streamFailedIds.collectAsStateWithLifecycle()
+    val favoriteVideoIds by viewModel.favoriteVideoIds.collectAsStateWithLifecycle()
     val savedVideoPresentation by viewModel.videoWallpaperPresentation.collectAsStateWithLifecycle()
     val savedVideoCanvasMode by viewModel.videoFitCanvasMode.collectAsStateWithLifecycle()
     val savedVideoCanvasColor by viewModel.videoFitCanvasColor.collectAsStateWithLifecycle()
@@ -333,6 +342,11 @@ fun VideoWallpapersScreen(
     val shareSource: (VideoWallpaperItem) -> Unit = { item ->
         if (!context.shareVideoSource(item)) {
             Toast.makeText(context, resources.getString(R.string.common_share_failed), Toast.LENGTH_SHORT).show()
+        }
+    }
+    val toggleFavorite: (VideoWallpaperItem) -> Unit = { item ->
+        viewModel.toggleFavorite(item) { change ->
+            Toast.makeText(context, resources.getString(change.messageRes), Toast.LENGTH_SHORT).show()
         }
     }
     var cropItem by remember { mutableStateOf<Pair<VideoWallpaperItem, String>?>(null) }
@@ -732,6 +746,12 @@ fun VideoWallpapersScreen(
                                         onShare = { shareSource(item) },
                                         onReport = { reportItem = item },
                                         reportsEnabled = reportsEnabled,
+                                        isFavorite = item.id in favoriteVideoIds,
+                                        onToggleFavorite = if (item.canBeVideoFavorite()) {
+                                            { toggleFavorite(item) }
+                                        } else {
+                                            null
+                                        },
                                         voteCount = voteCounts[item.id] ?: 0,
                                         onApply = { confirmItem = item },
                                         onOpen = {
@@ -829,229 +849,46 @@ fun VideoWallpapersScreen(
                 immersiveVideoIndex = -1
                 immersiveVideoItems = emptyList()
             },
+            favoriteIds = favoriteVideoIds,
+            onToggleFavorite = toggleFavorite,
+            unavailableIds = streamFailedIds,
         )
     }
 
     // Applying overlay
-    if (state.isApplying != null) {
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(Color.Black.copy(alpha = 0.7f))
-                // Consume touches: without this the scrim lets taps through to the
-                // list beneath, allowing a second concurrent apply.
-                .pointerInput(Unit) {},
-            contentAlignment = Alignment.Center,
-        ) {
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
-                Spacer(Modifier.height(16.dp))
-                Text(stringResource(R.string.video_downloading), color = Color.White, style = MaterialTheme.typography.titleMedium)
-                Spacer(Modifier.height(8.dp))
-                Text(stringResource(R.string.video_downloading_hint), color = Color.White.copy(alpha = 0.6f), style = MaterialTheme.typography.bodySmall)
-            }
-        }
-    }
+    if (state.isApplying != null) VideoApplyingOverlay()
 
     // Confirmation dialog with crop option
     confirmItem?.let { item ->
-        val streamUrl = viewModel.getStreamUrl(item.id)
-        val needsCrop = item.hasDimensions && item.isLandscape
-        val capabilities = remember(item) { item.videoWallpaperLicenseCapabilities() }
-        val canApplyVideo = remember(item) { item.canUseVideoAction(VideoWallpaperAction.APPLY) }
-        var selectedScaleMode by remember(item.id, savedVideoPresentation) {
-            mutableStateOf(
-                if (savedVideoPresentation == WALLPAPER_PRESENTATION_FIT) {
-                    VIDEO_WALLPAPER_SCALE_MODE_FIT
-                } else {
-                    VIDEO_WALLPAPER_SCALE_MODE_ZOOM
-                },
-            )
-        }
-        var selectedCanvasStyle by remember(item.id, savedVideoCanvasMode, savedVideoCanvasColor) {
-            mutableStateOf(
-                FitCanvasStyle(
-                    FitCanvasMode.fromPreference(savedVideoCanvasMode),
-                    savedVideoCanvasColor,
-                ).normalized(),
-            )
-        }
-        AlertDialog(
-            onDismissRequest = { confirmItem = null },
-            title = { Text(stringResource(R.string.video_wallpaper_title)) },
-            text = {
-                Column(Modifier.verticalScroll(rememberScrollState())) {
-                    Text(item.title, style = MaterialTheme.typography.bodyMedium)
-                    Spacer(Modifier.height(2.dp))
-                    Text(
-                        localizedVideoSummary(item),
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                    Spacer(Modifier.height(4.dp))
-                    Text(
-                        stringResource(
-                            R.string.video_wp_badge_summary,
-                            localizedLoopBadge(item),
-                            localizedBatteryBadge(item),
-                            localizedFitBadge(item, state.orientation),
-                        ),
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.primary,
-                    )
-                    Spacer(Modifier.height(12.dp))
-                    FitCanvasMedia(
-                        model = item.thumbnailUrl,
-                        presentation = if (selectedScaleMode == VIDEO_WALLPAPER_SCALE_MODE_FIT) {
-                            WALLPAPER_PRESENTATION_FIT
-                        } else {
-                            WALLPAPER_PRESENTATION_FILL
-                        },
-                        style = selectedCanvasStyle,
-                        dominantColor = null,
-                        contentDescription = stringResource(R.string.a11y_video_preview_ready),
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(180.dp)
-                            .clip(AuraShapes.Medium),
-                    )
-                    Spacer(Modifier.height(12.dp))
-                    VideoProvenanceBlock(
-                        item = item,
-                        normalizedLicense = capabilities.normalizedLicense,
-                        policyLinks = capabilities.providerPolicyLinks,
-                        onOpenUrl = { url -> openExternalUrl(context, url) },
-                    )
-                    if (item.requiresVideoActionConfirmation(VideoWallpaperAction.APPLY)) {
-                        Spacer(Modifier.height(8.dp))
-                        Text(
-                            item.videoActionMessage(VideoWallpaperAction.APPLY),
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.tertiary,
-                        )
-                    }
-                    Spacer(Modifier.height(12.dp))
-                    Text(
-                        stringResource(R.string.video_wp_confirm_presentation),
-                        style = MaterialTheme.typography.labelLarge,
-                        color = MaterialTheme.colorScheme.onSurface,
-                    )
-                    Spacer(Modifier.height(6.dp))
-                    FitCanvasControls(
-                        presentation = if (selectedScaleMode == VIDEO_WALLPAPER_SCALE_MODE_FIT) {
-                            WALLPAPER_PRESENTATION_FIT
-                        } else {
-                            WALLPAPER_PRESENTATION_FILL
-                        },
-                        style = selectedCanvasStyle,
-                        onPresentationChange = { presentation ->
-                            selectedScaleMode = if (presentation == WALLPAPER_PRESENTATION_FIT) {
-                                VIDEO_WALLPAPER_SCALE_MODE_FIT
-                            } else {
-                                VIDEO_WALLPAPER_SCALE_MODE_ZOOM
-                            }
-                            viewModel.setVideoFitCanvasPreferences(presentation, selectedCanvasStyle)
-                        },
-                        onStyleChange = { style ->
-                            selectedCanvasStyle = style
-                            viewModel.setVideoFitCanvasPreferences(
-                                if (selectedScaleMode == VIDEO_WALLPAPER_SCALE_MODE_FIT) {
-                                    WALLPAPER_PRESENTATION_FIT
-                                } else {
-                                    WALLPAPER_PRESENTATION_FILL
-                                },
-                                style,
-                            )
-                        },
-                    )
-                    Spacer(Modifier.height(8.dp))
-                    if (needsCrop) {
-                        Text(
-                            if (selectedScaleMode == VIDEO_WALLPAPER_SCALE_MODE_FIT) {
-                                stringResource(R.string.video_wp_confirm_fit_landscape_letterbox)
-                            } else {
-                                stringResource(R.string.video_wp_confirm_fill_landscape_crop)
-                            },
-                            style = MaterialTheme.typography.bodySmall,
-                            color = if (selectedScaleMode == VIDEO_WALLPAPER_SCALE_MODE_FIT) {
-                                MaterialTheme.colorScheme.onSurfaceVariant
-                            } else {
-                                MaterialTheme.colorScheme.error
-                            },
-                        )
-                    } else {
-                        Text(
-                            stringResource(R.string.video_wp_confirm_fit_portrait),
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        )
-                    }
-                }
+        VideoApplyDialog(
+            item = item,
+            streamUrl = viewModel.getStreamUrl(item.id),
+            orientation = state.orientation,
+            savedPresentation = savedVideoPresentation,
+            savedCanvasMode = savedVideoCanvasMode,
+            savedCanvasColor = savedVideoCanvasColor,
+            onPreferencesChange = viewModel::setVideoFitCanvasPreferences,
+            onApply = { scaleMode, canvasStyle ->
+                viewModel.applyVideoWallpaper(item, scaleMode, canvasStyle)
+                confirmItem = null
             },
-            confirmButton = {
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    if (streamUrl != null && canApplyVideo) {
-                        if (needsCrop) {
-                            OutlinedButton(onClick = { viewModel.applyVideoWallpaper(item, selectedScaleMode, selectedCanvasStyle); confirmItem = null }, shape = AuraShapes.Medium) { Text(stringResource(R.string.video_apply)) }
-                            Button(shape = AuraShapes.Medium, onClick = {
-                                confirmItem = null
-                                cropItem = item to streamUrl
-                            }) {
-                                Icon(Icons.Default.Crop, stringResource(R.string.video_crop), Modifier.size(16.dp))
-                                Spacer(Modifier.width(4.dp))
-                                Text(stringResource(R.string.video_crop))
-                            }
-                        } else {
-                            OutlinedButton(shape = AuraShapes.Medium, onClick = {
-                                confirmItem = null
-                                cropItem = item to streamUrl
-                            }) {
-                                Icon(Icons.Default.Crop, stringResource(R.string.video_crop), Modifier.size(16.dp))
-                                Spacer(Modifier.width(4.dp))
-                                Text(stringResource(R.string.video_crop))
-                            }
-                            Button(onClick = { viewModel.applyVideoWallpaper(item, selectedScaleMode, selectedCanvasStyle); confirmItem = null }, shape = AuraShapes.Medium) { Text(stringResource(R.string.video_apply)) }
-                        }
-                    } else if (canApplyVideo) {
-                        Button(onClick = { viewModel.applyVideoWallpaper(item, selectedScaleMode, selectedCanvasStyle); confirmItem = null }, shape = AuraShapes.Medium) { Text(stringResource(R.string.video_apply)) }
-                    }
-                }
+            onCrop = { streamUrl ->
+                confirmItem = null
+                cropItem = item to streamUrl
             },
-            dismissButton = { TextButton(onClick = { confirmItem = null }) { Text(stringResource(R.string.common_cancel)) } },
+            onDismiss = { confirmItem = null },
         )
     }
 
     // Provider terms before a download, with the same source and rights links Apply shows.
     downloadConfirmItem?.let { item ->
-        val capabilities = remember(item) { item.videoWallpaperLicenseCapabilities() }
-        AlertDialog(
-            onDismissRequest = { downloadConfirmItem = null },
-            title = { Text(stringResource(R.string.video_wp_download_title)) },
-            text = {
-                Column(Modifier.verticalScroll(rememberScrollState())) {
-                    Text(item.title, style = MaterialTheme.typography.bodyMedium)
-                    Spacer(Modifier.height(12.dp))
-                    VideoProvenanceBlock(
-                        item = item,
-                        normalizedLicense = capabilities.normalizedLicense,
-                        policyLinks = capabilities.providerPolicyLinks,
-                        onOpenUrl = { url -> openExternalUrl(context, url) },
-                    )
-                    Spacer(Modifier.height(8.dp))
-                    Text(
-                        item.videoActionMessage(VideoWallpaperAction.DOWNLOAD),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.tertiary,
-                    )
-                }
+        VideoDownloadTermsDialog(
+            item = item,
+            onConfirm = {
+                downloadConfirmItem = null
+                viewModel.downloadVideo(item)
             },
-            confirmButton = {
-                Button(shape = AuraShapes.Medium, onClick = {
-                    downloadConfirmItem = null
-                    viewModel.downloadVideo(item)
-                }) { Text(stringResource(R.string.video_wp_download)) }
-            },
-            dismissButton = { TextButton(onClick = { downloadConfirmItem = null }) { Text(stringResource(R.string.common_cancel)) } },
+            onDismiss = { downloadConfirmItem = null },
         )
     }
 
@@ -1085,6 +922,411 @@ fun VideoWallpapersScreen(
             )
         }
     }
+}
+
+/** Scrim shown while Apply fetches and prepares a video. It takes touches so a second apply can't start. */
+@Composable
+private fun VideoApplyingOverlay() {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color.Black.copy(alpha = 0.7f))
+            // Consume touches: without this the scrim lets taps through to the
+            // list beneath, allowing a second concurrent apply.
+            .pointerInput(Unit) {},
+        contentAlignment = Alignment.Center,
+    ) {
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
+            Spacer(Modifier.height(16.dp))
+            Text(stringResource(R.string.video_downloading), color = Color.White, style = MaterialTheme.typography.titleMedium)
+            Spacer(Modifier.height(8.dp))
+            Text(stringResource(R.string.video_downloading_hint), color = Color.White.copy(alpha = 0.6f), style = MaterialTheme.typography.bodySmall)
+        }
+    }
+}
+
+/**
+ * Apply confirmation: where the video comes from, the provider's terms when its license asks for
+ * them, and how the video fills the screen. The Videos tab and a saved video opened from Favorites
+ * show this one dialog, so both are held to the same license checks.
+ */
+@Composable
+private fun VideoApplyDialog(
+    item: VideoWallpaperItem,
+    streamUrl: String?,
+    orientation: OrientationFilter,
+    savedPresentation: String,
+    savedCanvasMode: String,
+    savedCanvasColor: Int,
+    onPreferencesChange: (String, FitCanvasStyle) -> Unit,
+    onApply: (String, FitCanvasStyle) -> Unit,
+    onCrop: (String) -> Unit,
+    onDismiss: () -> Unit,
+) {
+    val context = LocalContext.current
+    val needsCrop = item.hasDimensions && item.isLandscape
+    val capabilities = remember(item) { item.videoWallpaperLicenseCapabilities() }
+    val canApplyVideo = remember(item) { item.canUseVideoAction(VideoWallpaperAction.APPLY) }
+    var selectedScaleMode by remember(item.id, savedPresentation) {
+        mutableStateOf(
+            if (savedPresentation == WALLPAPER_PRESENTATION_FIT) {
+                VIDEO_WALLPAPER_SCALE_MODE_FIT
+            } else {
+                VIDEO_WALLPAPER_SCALE_MODE_ZOOM
+            },
+        )
+    }
+    var selectedCanvasStyle by remember(item.id, savedCanvasMode, savedCanvasColor) {
+        mutableStateOf(
+            FitCanvasStyle(
+                FitCanvasMode.fromPreference(savedCanvasMode),
+                savedCanvasColor,
+            ).normalized(),
+        )
+    }
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(stringResource(R.string.video_wallpaper_title)) },
+        text = {
+            Column(Modifier.verticalScroll(rememberScrollState())) {
+                Text(item.title, style = MaterialTheme.typography.bodyMedium)
+                Spacer(Modifier.height(2.dp))
+                Text(
+                    localizedVideoSummary(item),
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                Spacer(Modifier.height(4.dp))
+                Text(
+                    stringResource(
+                        R.string.video_wp_badge_summary,
+                        localizedLoopBadge(item),
+                        localizedBatteryBadge(item),
+                        localizedFitBadge(item, orientation),
+                    ),
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.primary,
+                )
+                Spacer(Modifier.height(12.dp))
+                FitCanvasMedia(
+                    model = item.thumbnailUrl,
+                    presentation = if (selectedScaleMode == VIDEO_WALLPAPER_SCALE_MODE_FIT) {
+                        WALLPAPER_PRESENTATION_FIT
+                    } else {
+                        WALLPAPER_PRESENTATION_FILL
+                    },
+                    style = selectedCanvasStyle,
+                    dominantColor = null,
+                    contentDescription = stringResource(R.string.a11y_video_preview_ready),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(180.dp)
+                        .clip(AuraShapes.Medium),
+                )
+                Spacer(Modifier.height(12.dp))
+                VideoProvenanceBlock(
+                    item = item,
+                    normalizedLicense = capabilities.normalizedLicense,
+                    policyLinks = capabilities.providerPolicyLinks,
+                    onOpenUrl = { url -> openExternalUrl(context, url) },
+                )
+                if (item.requiresVideoActionConfirmation(VideoWallpaperAction.APPLY)) {
+                    Spacer(Modifier.height(8.dp))
+                    Text(
+                        item.videoActionMessage(VideoWallpaperAction.APPLY),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.tertiary,
+                    )
+                }
+                Spacer(Modifier.height(12.dp))
+                Text(
+                    stringResource(R.string.video_wp_confirm_presentation),
+                    style = MaterialTheme.typography.labelLarge,
+                    color = MaterialTheme.colorScheme.onSurface,
+                )
+                Spacer(Modifier.height(6.dp))
+                FitCanvasControls(
+                    presentation = if (selectedScaleMode == VIDEO_WALLPAPER_SCALE_MODE_FIT) {
+                        WALLPAPER_PRESENTATION_FIT
+                    } else {
+                        WALLPAPER_PRESENTATION_FILL
+                    },
+                    style = selectedCanvasStyle,
+                    onPresentationChange = { presentation ->
+                        selectedScaleMode = if (presentation == WALLPAPER_PRESENTATION_FIT) {
+                            VIDEO_WALLPAPER_SCALE_MODE_FIT
+                        } else {
+                            VIDEO_WALLPAPER_SCALE_MODE_ZOOM
+                        }
+                        onPreferencesChange(presentation, selectedCanvasStyle)
+                    },
+                    onStyleChange = { style ->
+                        selectedCanvasStyle = style
+                        onPreferencesChange(
+                            if (selectedScaleMode == VIDEO_WALLPAPER_SCALE_MODE_FIT) {
+                                WALLPAPER_PRESENTATION_FIT
+                            } else {
+                                WALLPAPER_PRESENTATION_FILL
+                            },
+                            style,
+                        )
+                    },
+                )
+                Spacer(Modifier.height(8.dp))
+                if (needsCrop) {
+                    Text(
+                        if (selectedScaleMode == VIDEO_WALLPAPER_SCALE_MODE_FIT) {
+                            stringResource(R.string.video_wp_confirm_fit_landscape_letterbox)
+                        } else {
+                            stringResource(R.string.video_wp_confirm_fill_landscape_crop)
+                        },
+                        style = MaterialTheme.typography.bodySmall,
+                        color = if (selectedScaleMode == VIDEO_WALLPAPER_SCALE_MODE_FIT) {
+                            MaterialTheme.colorScheme.onSurfaceVariant
+                        } else {
+                            MaterialTheme.colorScheme.error
+                        },
+                    )
+                } else {
+                    Text(
+                        stringResource(R.string.video_wp_confirm_fit_portrait),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+            }
+        },
+        confirmButton = {
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                if (streamUrl != null && canApplyVideo) {
+                    if (needsCrop) {
+                        OutlinedButton(onClick = { onApply(selectedScaleMode, selectedCanvasStyle) }, shape = AuraShapes.Medium) { Text(stringResource(R.string.video_apply)) }
+                        Button(shape = AuraShapes.Medium, onClick = { onCrop(streamUrl) }) {
+                            Icon(Icons.Default.Crop, stringResource(R.string.video_crop), Modifier.size(16.dp))
+                            Spacer(Modifier.width(4.dp))
+                            Text(stringResource(R.string.video_crop))
+                        }
+                    } else {
+                        OutlinedButton(shape = AuraShapes.Medium, onClick = { onCrop(streamUrl) }) {
+                            Icon(Icons.Default.Crop, stringResource(R.string.video_crop), Modifier.size(16.dp))
+                            Spacer(Modifier.width(4.dp))
+                            Text(stringResource(R.string.video_crop))
+                        }
+                        Button(onClick = { onApply(selectedScaleMode, selectedCanvasStyle) }, shape = AuraShapes.Medium) { Text(stringResource(R.string.video_apply)) }
+                    }
+                } else if (canApplyVideo) {
+                    Button(onClick = { onApply(selectedScaleMode, selectedCanvasStyle) }, shape = AuraShapes.Medium) { Text(stringResource(R.string.video_apply)) }
+                }
+            }
+        },
+        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.common_cancel)) } },
+    )
+}
+
+/** Provider terms before a download, with the same source and rights links Apply shows. */
+@Composable
+private fun VideoDownloadTermsDialog(
+    item: VideoWallpaperItem,
+    onConfirm: () -> Unit,
+    onDismiss: () -> Unit,
+) {
+    val context = LocalContext.current
+    val capabilities = remember(item) { item.videoWallpaperLicenseCapabilities() }
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(stringResource(R.string.video_wp_download_title)) },
+        text = {
+            Column(Modifier.verticalScroll(rememberScrollState())) {
+                Text(item.title, style = MaterialTheme.typography.bodyMedium)
+                Spacer(Modifier.height(12.dp))
+                VideoProvenanceBlock(
+                    item = item,
+                    normalizedLicense = capabilities.normalizedLicense,
+                    policyLinks = capabilities.providerPolicyLinks,
+                    onOpenUrl = { url -> openExternalUrl(context, url) },
+                )
+                Spacer(Modifier.height(8.dp))
+                Text(
+                    item.videoActionMessage(VideoWallpaperAction.DOWNLOAD),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.tertiary,
+                )
+            }
+        },
+        confirmButton = {
+            Button(shape = AuraShapes.Medium, onClick = onConfirm) { Text(stringResource(R.string.video_wp_download)) }
+        },
+        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.common_cancel)) } },
+    )
+}
+
+/**
+ * Full-screen preview for the videos saved under Favorites.
+ *
+ * It is the Videos tab's own pager, terms dialogs and Apply and Download paths over a list of saved
+ * rows, so a saved video is held to the same license checks as a feed item. [viewModel] belongs to
+ * the Favorites destination and never loads a feed.
+ */
+@androidx.annotation.OptIn(androidx.media3.common.util.UnstableApi::class)
+@Composable
+fun SavedVideoPreview(
+    favorites: List<FavoriteEntity>,
+    startId: String,
+    onCrop: (VideoWallpaperItem, String) -> Unit,
+    onDismiss: () -> Unit,
+    viewModel: VideoWallpapersViewModel = hiltViewModel(),
+) {
+    val state by viewModel.state.collectAsStateWithLifecycle()
+    val resolvedIds by viewModel.resolvedIds.collectAsStateWithLifecycle()
+    val streamFailedIds by viewModel.streamFailedIds.collectAsStateWithLifecycle()
+    val favoriteVideoIds by viewModel.favoriteVideoIds.collectAsStateWithLifecycle()
+    val savedVideoPresentation by viewModel.videoWallpaperPresentation.collectAsStateWithLifecycle()
+    val savedVideoCanvasMode by viewModel.videoFitCanvasMode.collectAsStateWithLifecycle()
+    val savedVideoCanvasColor by viewModel.videoFitCanvasColor.collectAsStateWithLifecycle()
+    val reportsEnabled by viewModel.communityReportsEnabled.collectAsStateWithLifecycle()
+    val context = LocalContext.current
+    // Reading a string off LocalContext is not a composition read. LocalResources is.
+    val resources = LocalResources.current
+    val previewMediaSourceFactory = remember(viewModel) { viewModel.previewMediaSourceFactory() }
+    // The pages are the rows saved when the preview opened. Removing one here keeps its page, so it
+    // can be put straight back.
+    val saved = remember {
+        favorites
+            .mapNotNull { row -> row.toVideoWallpaperItem()?.let { item -> item to row } }
+            .distinctBy { (item, _) -> item.id }
+    }
+    val items = remember(saved) { saved.map { (item, _) -> item } }
+    val rowsById = remember(saved) { saved.associate { (item, row) -> item.id to row } }
+    var confirmItem by remember { mutableStateOf<VideoWallpaperItem?>(null) }
+    var downloadConfirmItem by remember { mutableStateOf<VideoWallpaperItem?>(null) }
+    var reportItem by remember { mutableStateOf<VideoWallpaperItem?>(null) }
+
+    if (items.isEmpty()) {
+        LaunchedEffect(Unit) { onDismiss() }
+        return
+    }
+
+    val requestDownload: (VideoWallpaperItem) -> Unit = { item ->
+        // Provider terms come first when the license policy asks for them, as they do for Apply.
+        if (item.itemActionAvailability().downloadNeedsConfirmation) {
+            downloadConfirmItem = item
+        } else {
+            viewModel.downloadVideo(item)
+        }
+    }
+    val shareSource: (VideoWallpaperItem) -> Unit = { item ->
+        if (!context.shareVideoSource(item)) {
+            Toast.makeText(context, resources.getString(R.string.common_share_failed), Toast.LENGTH_SHORT).show()
+        }
+    }
+    val toggleFavorite: (VideoWallpaperItem) -> Unit = { item ->
+        viewModel.toggleFavorite(item) { change ->
+            Toast.makeText(context, resources.getString(change.messageRes), Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    VideoImmersivePager(
+        items = items,
+        initialPage = items.indexOfFirst { it.id == startId }.coerceAtLeast(0),
+        resolvedIds = resolvedIds,
+        mediaSourceFactory = previewMediaSourceFactory,
+        streamUrlFor = viewModel::getStreamUrl,
+        onResolve = { item -> rowsById[item.id]?.let(viewModel::resolveSavedVideo) },
+        // Every saved video is already a page, so there is no next batch to fetch.
+        onLoadMore = {},
+        isLoadingMore = false,
+        downloadingIds = state.downloadingIds,
+        onDownload = requestDownload,
+        onShare = shareSource,
+        onReport = { reportItem = it },
+        reportsEnabled = reportsEnabled,
+        onApply = { confirmItem = it },
+        onDismiss = onDismiss,
+        favoriteIds = favoriteVideoIds,
+        onToggleFavorite = toggleFavorite,
+        unavailableIds = streamFailedIds,
+        // The player lets go of its decoder while the terms are read and the video is prepared.
+        playbackPaused = confirmItem != null || state.isApplying != null,
+    )
+
+    if (state.isApplying != null) {
+        Dialog(
+            onDismissRequest = {},
+            properties = DialogProperties(
+                dismissOnBackPress = false,
+                dismissOnClickOutside = false,
+                usePlatformDefaultWidth = false,
+            ),
+        ) {
+            VideoApplyingOverlay()
+        }
+    }
+
+    confirmItem?.let { item ->
+        VideoApplyDialog(
+            item = item,
+            streamUrl = viewModel.getStreamUrl(item.id),
+            orientation = state.orientation,
+            savedPresentation = savedVideoPresentation,
+            savedCanvasMode = savedVideoCanvasMode,
+            savedCanvasColor = savedVideoCanvasColor,
+            onPreferencesChange = viewModel::setVideoFitCanvasPreferences,
+            onApply = { scaleMode, canvasStyle ->
+                viewModel.applyVideoWallpaper(item, scaleMode, canvasStyle)
+                confirmItem = null
+            },
+            onCrop = { streamUrl ->
+                confirmItem = null
+                onCrop(item, streamUrl)
+            },
+            onDismiss = { confirmItem = null },
+        )
+    }
+
+    downloadConfirmItem?.let { item ->
+        VideoDownloadTermsDialog(
+            item = item,
+            onConfirm = {
+                downloadConfirmItem = null
+                viewModel.downloadVideo(item)
+            },
+            onDismiss = { downloadConfirmItem = null },
+        )
+    }
+
+    reportItem?.let { item ->
+        CommunityReportDialog(
+            title = stringResource(R.string.video_wp_report),
+            onDismiss = { reportItem = null },
+            onSubmit = { reason, note -> viewModel.reportVideo(item, reason, note) },
+        )
+    }
+}
+
+/**
+ * The crop editor for a saved video, with the Videos tab's hand-off to the live wallpaper picker.
+ * [scope] has to outlive this editor, because the hand-off starts as the editor closes.
+ */
+@Composable
+fun SavedVideoCropEditor(
+    item: VideoWallpaperItem,
+    streamUrl: String,
+    scope: CoroutineScope,
+    onDone: () -> Unit,
+) {
+    val appContext = LocalContext.current.applicationContext
+    VideoCropScreen(
+        videoUrl = streamUrl,
+        videoTitle = item.title,
+        onBack = onDone,
+        onCropped = { croppedFile ->
+            onDone()
+            scope.launch {
+                launchOrExportVideoWallpaper(appContext, croppedFile, isCropped = true)
+            }
+        },
+    )
 }
 
 @Composable
@@ -1149,6 +1391,10 @@ private fun VideoImmersivePager(
     reportsEnabled: Boolean,
     onApply: (VideoWallpaperItem) -> Unit,
     onDismiss: () -> Unit,
+    favoriteIds: Set<String> = emptySet(),
+    onToggleFavorite: ((VideoWallpaperItem) -> Unit)? = null,
+    unavailableIds: Set<String> = emptySet(),
+    playbackPaused: Boolean = false,
 ) {
     Dialog(
         onDismissRequest = onDismiss,
@@ -1175,7 +1421,7 @@ private fun VideoImmersivePager(
                 ImmersiveVideoPage(
                     item = item,
                     streamUrl = if (item.id in resolvedIds) streamUrlFor(item.id) else null,
-                    isActive = page == pagerState.currentPage,
+                    isActive = page == pagerState.currentPage && !playbackPaused,
                     mediaSourceFactory = mediaSourceFactory,
                     isDownloading = item.id in downloadingIds,
                     onDownload = { onDownload(item) },
@@ -1183,6 +1429,13 @@ private fun VideoImmersivePager(
                     onReport = { onReport(item) },
                     reportsEnabled = reportsEnabled,
                     onApply = { onApply(item) },
+                    streamUnavailable = item.id in unavailableIds,
+                    isFavorite = item.id in favoriteIds,
+                    onToggleFavorite = if (onToggleFavorite != null && item.canBeVideoFavorite()) {
+                        { onToggleFavorite(item) }
+                    } else {
+                        null
+                    },
                 )
             }
 
@@ -1230,6 +1483,9 @@ private fun ImmersiveVideoPage(
     onReport: () -> Unit,
     reportsEnabled: Boolean,
     onApply: () -> Unit,
+    streamUnavailable: Boolean = false,
+    isFavorite: Boolean = false,
+    onToggleFavorite: (() -> Unit)? = null,
 ) {
     val context = LocalContext.current
     // Reading a string off LocalContext is not a composition read. LocalResources is.
@@ -1326,7 +1582,10 @@ private fun ImmersiveVideoPage(
             )
         }
 
-        if (isActive && streamUrl == null) {
+        if (isActive && streamUrl == null && streamUnavailable) {
+            // The stream couldn't be found, so say so instead of spinning for good.
+            VideoPreviewUnavailableIndicator(Modifier.align(Alignment.Center))
+        } else if (isActive && streamUrl == null) {
             VideoPreviewLoadingIndicator(Modifier.align(Alignment.Center))
         } else if (isActive && playbackFailed) {
             VideoPreviewUnavailableIndicator(Modifier.align(Alignment.Center))
@@ -1384,6 +1643,8 @@ private fun ImmersiveVideoPage(
                 onDownload = onDownload,
                 onShare = onShare,
                 onReport = onReport,
+                isFavorite = isFavorite,
+                onToggleFavorite = onToggleFavorite,
             )
         }
     }
@@ -1460,6 +1721,9 @@ internal fun VideoCard(
     reportsEnabled: Boolean = true,
     rotationExcluded: Boolean = false,
     onToggleRotationExclusion: () -> Unit = {},
+    isFavorite: Boolean = false,
+    /** Null leaves the favorite entry out of the menu, as for a video that can't be saved. */
+    onToggleFavorite: (() -> Unit)? = null,
 ) {
     val context = LocalContext.current
     // Reading a string off LocalContext is not a composition read. LocalResources is.
@@ -1649,6 +1913,27 @@ internal fun VideoCard(
                         },
                         modifier = Modifier.semantics { stateDescription = voteStateDescription },
                     )
+                    if (onToggleFavorite != null) {
+                        DropdownMenuItem(
+                            text = {
+                                Text(
+                                    stringResource(
+                                        if (isFavorite) R.string.video_wp_favorite_remove else R.string.video_wp_favorite_add,
+                                    ),
+                                )
+                            },
+                            leadingIcon = {
+                                Icon(
+                                    if (isFavorite) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
+                                    contentDescription = null,
+                                )
+                            },
+                            onClick = {
+                                showItemActions = false
+                                onToggleFavorite()
+                            },
+                        )
+                    }
                     if (itemActions.canDownload) {
                         DropdownMenuItem(
                             text = { Text(stringResource(if (isDownloading) R.string.video_wp_downloading else R.string.video_wp_download)) },

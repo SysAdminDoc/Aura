@@ -1,6 +1,9 @@
 package com.freevibe.ui.screens.videowallpapers
 
 import android.content.Context
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
@@ -172,6 +175,113 @@ class VideoItemActionsTest {
             composeRule.onNodeWithText("Download").performClick()
             assertEquals(1, downloads)
         }
+    }
+
+    @Test
+    fun `the card menu saves a video and offers to remove it once it is saved`() {
+        var taps = 0
+        var saved by mutableStateOf(false)
+        composeRule.setContent {
+            FreeVibeTheme(darkTheme = true) {
+                VideoCard(
+                    item = reddit,
+                    streamUrl = null,
+                    mediaSourceFactory = mockk(relaxed = true),
+                    shouldPreview = false,
+                    isApplying = false,
+                    onApply = {},
+                    onOpen = {},
+                    isFavorite = saved,
+                    onToggleFavorite = {
+                        taps++
+                        saved = !saved
+                    },
+                )
+            }
+        }
+
+        composeRule.onNodeWithContentDescription("Show quick actions").performClick()
+        composeRule.onNodeWithText("Remove from favorites").assertDoesNotExist()
+        composeRule.onNodeWithText("Add to favorites").performClick()
+        assertEquals(1, taps)
+
+        composeRule.onNodeWithContentDescription("Show quick actions").performClick()
+        composeRule.onNodeWithText("Add to favorites").assertDoesNotExist()
+        composeRule.onNodeWithText("Remove from favorites").performClick()
+        assertEquals(2, taps)
+    }
+
+    @Test
+    fun `a video that can't be saved has no favorite entry in its menu`() {
+        composeRule.setContent {
+            FreeVibeTheme(darkTheme = true) {
+                VideoCard(
+                    item = gallery,
+                    streamUrl = null,
+                    mediaSourceFactory = mockk(relaxed = true),
+                    shouldPreview = false,
+                    isApplying = false,
+                    onApply = {},
+                    onOpen = {},
+                )
+            }
+        }
+
+        composeRule.onNodeWithContentDescription("Show quick actions").performClick()
+        composeRule.onNodeWithText("Add to favorites").assertDoesNotExist()
+        composeRule.onNodeWithText("Remove from favorites").assertDoesNotExist()
+    }
+
+    @Test
+    fun `the full-screen actions carry the favorite button only for a video that can be saved`() {
+        var taps = 0
+        var saved by mutableStateOf(false)
+        var canSave by mutableStateOf(true)
+        composeRule.setContent {
+            FreeVibeTheme(darkTheme = true) {
+                ImmersiveVideoActions(
+                    actions = reddit.itemActionAvailability(),
+                    isDownloading = false,
+                    onDownload = {},
+                    onShare = {},
+                    onReport = {},
+                    isFavorite = saved,
+                    onToggleFavorite = if (canSave) {
+                        {
+                            taps++
+                            saved = !saved
+                        }
+                    } else {
+                        null
+                    },
+                )
+            }
+        }
+
+        composeRule.onNodeWithText("Remove from favorites").assertDoesNotExist()
+        composeRule.onNodeWithText("Add to favorites").performClick()
+        assertEquals(1, taps)
+        composeRule.onNodeWithText("Remove from favorites").assertExists()
+        composeRule.onNodeWithText("Add to favorites").assertDoesNotExist()
+
+        canSave = false
+        composeRule.waitForIdle()
+        composeRule.onNodeWithText("Remove from favorites").assertDoesNotExist()
+        composeRule.onNodeWithText("Add to favorites").assertDoesNotExist()
+        // The rest of the row is still there.
+        composeRule.onNodeWithText("Report video").assertExists()
+    }
+
+    @Test
+    fun `a favorite tap reports what it did in words the screen can show`() {
+        val resources = ApplicationProvider.getApplicationContext<Context>().resources
+
+        assertEquals("Added to favorites", resources.getString(VideoFavoriteChange.ADDED.messageRes))
+        assertEquals("Removed from favorites", resources.getString(VideoFavoriteChange.REMOVED.messageRes))
+        assertEquals(
+            "This video can't be saved yet. Try again once its preview has loaded.",
+            resources.getString(VideoFavoriteChange.UNAVAILABLE.messageRes),
+        )
     }
 
     @Test

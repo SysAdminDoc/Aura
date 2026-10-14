@@ -18,15 +18,21 @@ import com.freevibe.data.legal.isProviderActionPermitted
 import com.freevibe.data.legal.isProviderActionPermittedIn
 import com.freevibe.data.model.CommunityReportReason
 import com.freevibe.data.model.ContentSource
+import com.freevibe.data.model.FavoriteEntity
 import com.freevibe.data.model.FitCanvasMode
 import com.freevibe.data.model.FitCanvasStyle
 import com.freevibe.data.model.RedditFeedMediaType
 import com.freevibe.data.model.RedditFeedPreset
+import com.freevibe.data.model.VideoFavoriteStream
 import com.freevibe.data.model.VideoWallpaperAction
 import com.freevibe.data.model.accepts
 import com.freevibe.data.model.activePreset
 import com.freevibe.data.model.canUseVideoAction
 import com.freevibe.data.model.feedSignature
+import com.freevibe.data.model.toVideoFavoriteEntity
+import com.freevibe.data.model.toVideoWallpaperItem
+import com.freevibe.data.model.videoFavoriteIdentity
+import com.freevibe.data.model.videoFavoriteStream
 import com.freevibe.data.model.videoActionMessage
 import com.freevibe.ui.LiveWallpaperSource
 import com.freevibe.ui.liveWallpaperBlock
@@ -35,6 +41,7 @@ import com.freevibe.util.rethrowIfCancelled
 import com.freevibe.data.remote.pexels.PexelsApi
 import com.freevibe.data.remote.pixabay.PixabayVideo
 import com.freevibe.data.repository.CommunityReportRepository
+import com.freevibe.data.repository.FavoritesRepository
 import com.freevibe.data.repository.RedditRssMediaEntry
 import com.freevibe.data.repository.YouTubeRepository
 import com.freevibe.data.repository.YouTubeVideoMetadata
@@ -73,6 +80,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -513,6 +521,7 @@ class VideoWallpapersViewModel @Inject constructor(
     private val av1CodecSupport: com.freevibe.service.Av1CodecSupport,
     val voteRepo: VoteRepository,
     private val reportRepo: CommunityReportRepository,
+    private val favoritesRepo: FavoritesRepository,
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(VideoWallpapersState())
@@ -544,6 +553,15 @@ class VideoWallpapersViewModel @Inject constructor(
     private val _resolvedIds = MutableStateFlow<Set<String>>(emptySet())
     val resolvedIds = _resolvedIds.asStateFlow()
 
+    /** Videos whose stream couldn't be found, so the preview says so instead of spinning. */
+    private val _streamFailedIds = MutableStateFlow<Set<String>>(emptySet())
+    val streamFailedIds = _streamFailedIds.asStateFlow()
+
+    /** IDs of the videos saved under Favorites, so a card and the full-screen preview show which are. */
+    val favoriteVideoIds = favoritesRepo.getVideos()
+        .map { favorites -> favorites.map { it.id }.toSet() }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptySet())
+
     // Cache of resolved video stream URLs
     // Bounded cache — evict oldest when exceeding 200 entries. Eviction must also
     // un-mark the id as resolved: a resolved id with no cached URL renders a
@@ -559,6 +577,7 @@ class VideoWallpapersViewModel @Inject constructor(
     }.let { java.util.Collections.synchronizedMap(it) }
     private val previewResolveInFlight = java.util.concurrent.ConcurrentHashMap.newKeySet<String>()
     private val loadLock = Any()
+    private val feedStarted = java.util.concurrent.atomic.AtomicBoolean(false)
     private var loadJob: Job? = null
     private var loadGeneration = 0L
 
@@ -626,7 +645,16 @@ class VideoWallpapersViewModel @Inject constructor(
         "smoke", "particles", "underwater", "aurora",
     )
 
-    init { load() }
+    /**
+     * Loads the feed the first time the Videos tab shows, and reports whether this call started it.
+     * Favorites borrows this class to preview, apply and download a saved video. It has no feed to
+     * show, so it never calls this and no provider is searched on its behalf.
+     */
+    fun startFeed(): Boolean {
+        if (!feedStarted.compareAndSet(false, true)) return false
+        load()
+        return true
+    }
 
     fun clearError() = _state.update { it.copy(error = null) }
 
@@ -671,6 +699,7 @@ class VideoWallpapersViewModel @Inject constructor(
         streamUrls.clear()
         previewResolveInFlight.clear()
         _resolvedIds.value = emptySet()
+        _streamFailedIds.value = emptySet()
         load()
     }
 
@@ -713,6 +742,7 @@ class VideoWallpapersViewModel @Inject constructor(
         if (!canPreviewVideoInCurrentArtifact(item)) {
             streamUrls.remove(item.id)
             _resolvedIds.update { it - item.id }
+            _streamFailedIds.update { it + item.id }
             return
         }
         val cachedUrl = streamUrls[item.id]
@@ -723,15 +753,59 @@ class VideoWallpapersViewModel @Inject constructor(
         if (item.source != "YouTube" || item.videoId.isBlank() || !previewResolveInFlight.add(item.id)) return
         viewModelScope.launch {
             try {
-                youtubeRepo.getVideoStreamUrl(item.videoId)?.let { url ->
+                val url = youtubeRepo.getVideoStreamUrl(item.videoId)
+                if (url != null) {
                     rememberStreamUrl(item, url)
                     prebufferPreview(item, url)
+                } else {
+                    _streamFailedIds.update { it + item.id }
                 }
             } catch (e: Throwable) {
                 e.rethrowIfCancelled()
+                _streamFailedIds.update { it + item.id }
             } finally {
                 previewResolveInFlight.remove(item.id)
             }
+        }
+    }
+
+    /**
+     * Finds a saved video's stream again so the preview, Apply and Download can use it.
+     *
+     * An address that stays valid (Reddit's playlist rebuilt from the clip ID, a provider's file) is
+     * known at once. A YouTube stream address expires within hours, so it is resolved from the video
+     * ID by [ensureStreamResolved], the way the feed does it.
+     */
+    fun resolveSavedVideo(favorite: FavoriteEntity) {
+        val item = favorite.toVideoWallpaperItem() ?: return
+        val stream = favorite.videoFavoriteStream()
+        if (stream is VideoFavoriteStream.Direct && streamUrls[item.id] == null) {
+            rememberStreamUrl(item, stream.url)
+        }
+        ensureStreamResolved(item)
+    }
+
+    /**
+     * Saves [item] under Favorites, or removes it when it's already there. [onChange] hears what
+     * happened so the screen can say so. A video is saved with what finds its stream again (the
+     * provider, its ID and its page), never with a stream address that expires.
+     */
+    fun toggleFavorite(item: VideoWallpaperItem, onChange: (VideoFavoriteChange) -> Unit = {}) {
+        viewModelScope.launch {
+            val identity = item.videoFavoriteIdentity()
+            val change = if (favoritesRepo.getByIdentity(identity) != null) {
+                favoritesRepo.remove(identity)
+                VideoFavoriteChange.REMOVED
+            } else {
+                val favorite = item.toVideoFavoriteEntity(streamUrls[item.id])
+                if (favorite == null) {
+                    VideoFavoriteChange.UNAVAILABLE
+                } else {
+                    favoritesRepo.add(favorite)
+                    VideoFavoriteChange.ADDED
+                }
+            }
+            onChange(change)
         }
     }
 
@@ -1035,6 +1109,8 @@ class VideoWallpapersViewModel @Inject constructor(
     }
 
     private fun load(loadMore: Boolean = false) {
+        // A search or refresh starts the feed as well, so a later startFeed() doesn't load it twice.
+        feedStarted.set(true)
         val job = synchronized(loadLock) {
             if (loadMore) {
                 val current = _state.value
@@ -1616,6 +1692,7 @@ class VideoWallpapersViewModel @Inject constructor(
         if (!canPreviewVideoInCurrentArtifact(item)) return
         streamUrls[item.id] = url
         _resolvedIds.update { it + item.id }
+        _streamFailedIds.update { it - item.id }
     }
 
     private suspend fun cacheVisibleVideoFeed(snapshot: VideoWallpapersState) {

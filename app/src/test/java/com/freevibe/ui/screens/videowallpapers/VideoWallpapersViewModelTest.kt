@@ -7,11 +7,14 @@ import com.freevibe.data.legal.ProviderChannel
 import com.freevibe.data.local.PreferencesManager
 import com.freevibe.data.model.ContentSource
 import com.freevibe.data.model.DEFAULT_FIT_CANVAS_COLOR
+import com.freevibe.data.model.FavoriteEntity
+import com.freevibe.data.model.FavoriteIdentity
 import com.freevibe.data.model.FitCanvasMode
 import com.freevibe.data.model.RedditFeedDefault
 import com.freevibe.data.model.RedditFeedMediaType
 import com.freevibe.data.model.RedditFeedPreset
 import com.freevibe.data.model.WALLPAPER_PRESENTATION_FILL
+import com.freevibe.data.model.favoriteIdentity
 import com.freevibe.data.remote.pexels.PexelsApi
 import com.freevibe.data.remote.pixabay.PixabayApi
 import com.freevibe.data.remote.pixabay.PixabayVideo
@@ -19,6 +22,7 @@ import com.freevibe.data.remote.pixabay.PixabayVideoFile
 import com.freevibe.data.remote.pixabay.PixabayVideoFiles
 import com.freevibe.data.remote.pixabay.PixabayVideoResponse
 import com.freevibe.data.repository.CommunityReportRepository
+import com.freevibe.data.repository.FavoritesRepository
 import com.freevibe.data.repository.RedditRssMediaEntry
 import com.freevibe.data.repository.VoteRepository
 import com.freevibe.data.repository.createLegacyCompatibleYouTubeSearchHandler
@@ -34,18 +38,21 @@ import com.freevibe.service.YouTubeYtDlpRequestFactory
 import com.freevibe.service.YtDlpUpdateManager
 import com.freevibe.util.rethrowIfCancelled
 import io.mockk.coEvery
+import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.just
 import io.mockk.mockk
 import io.mockk.mockkStatic
 import io.mockk.runs
 import io.mockk.unmockkStatic
+import io.mockk.verify
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
@@ -66,6 +73,7 @@ import org.junit.Assert.assertNull
 import org.junit.Assert.assertSame
 import org.junit.Assert.assertTrue
 import org.junit.Assert.fail
+import org.junit.Assume.assumeTrue
 import org.junit.Test
 import retrofit2.HttpException
 import retrofit2.Response
@@ -261,8 +269,13 @@ class VideoWallpapersViewModelTest {
             av1CodecSupport = mockk<Av1CodecSupport>(relaxed = true),
             voteRepo = mockk<VoteRepository>(relaxed = true),
             reportRepo = mockk<CommunityReportRepository>(relaxed = true),
+            favoritesRepo = mockk<FavoritesRepository>(relaxed = true) {
+                every { getVideos() } returns flowOf(emptyList())
+            },
         )
 
+        // The Videos tab asks for the feed when it first shows.
+        assertTrue(viewModel.startFeed())
         runCurrent()
         firstRequestStarted.await()
         runCurrent()
@@ -303,6 +316,285 @@ class VideoWallpapersViewModelTest {
             job.join()
             if (loadJobField.get(viewModel) == null) return
         }
+    }
+
+    private val savedYouTube = FavoriteEntity(
+        id = "yt_dQw4w9WgXcQ",
+        source = "YOUTUBE",
+        type = "VIDEO",
+        thumbnailUrl = "https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg",
+        fullUrl = "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+        name = "Neon rain loop",
+        uploaderName = "Loop Studio",
+        sourcePageUrl = "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+        license = "YouTube",
+    )
+    private val savedReddit = FavoriteEntity(
+        id = "rd_1abc2de",
+        source = "REDDIT",
+        type = "VIDEO",
+        thumbnailUrl = "https://b.thumbs.redditmedia.com/rain.jpg",
+        fullUrl = "https://v.redd.it/abc123xyz/HLSPlaylist.m3u8",
+        name = "Rain on glass",
+        uploaderName = "u/maker",
+        sourcePageUrl = "https://www.reddit.com/r/LiveWallpapers/comments/1abc2de/rain_on_glass/",
+    )
+    private val youtubeFeedItem = VideoWallpaperItem(
+        id = "yt_dQw4w9WgXcQ",
+        title = "Neon rain loop",
+        thumbnailUrl = "https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg",
+        source = "YouTube",
+        duration = 42,
+        uploaderName = "Loop Studio",
+        videoId = "dQw4w9WgXcQ",
+        contentSource = ContentSource.YOUTUBE,
+        license = "YouTube",
+        sourcePageUrl = "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+    )
+    private val redditFeedItem = VideoWallpaperItem(
+        id = "rd_1abc2de",
+        title = "Rain on glass",
+        thumbnailUrl = "https://b.thumbs.redditmedia.com/rain.jpg",
+        source = "Reddit",
+        uploaderName = "u/maker",
+        contentSource = ContentSource.REDDIT,
+        sourcePageUrl = "https://www.reddit.com/r/LiveWallpapers/comments/1abc2de/rain_on_glass/",
+    )
+
+    /** Favorites kept in a list, so a test can read what a tap wrote. */
+    private fun favoritesBackedBy(stored: MutableList<FavoriteEntity>) = mockk<FavoritesRepository>(relaxed = true) {
+        every { getVideos() } returns flowOf(stored.toList())
+        coEvery { getByIdentity(any()) } answers {
+            val identity = firstArg<FavoriteIdentity>()
+            stored.firstOrNull { it.favoriteIdentity() == identity }
+        }
+        coEvery { add(any()) } answers {
+            stored += firstArg<FavoriteEntity>()
+        }
+        coEvery { remove(any()) } answers {
+            val identity = firstArg<FavoriteIdentity>()
+            stored.removeAll { it.favoriteIdentity() == identity }
+            Unit
+        }
+    }
+
+    /** The view model the way Favorites holds it: nothing asks for the feed. */
+    private fun savedVideoViewModel(
+        youtubeRepo: YouTubeRepository = mockk(relaxed = true),
+        favoritesRepo: FavoritesRepository = favoritesBackedBy(mutableListOf()),
+        pixabayApi: PixabayApi = mockk(relaxed = true),
+        prefs: PreferencesManager = mockk(relaxed = true),
+    ): VideoWallpapersViewModel {
+        val context = mockk<Context>(relaxed = true)
+        every { context.applicationContext } returns context
+        every { prefs.videoWallpaperPresentation } returns flowOf(WALLPAPER_PRESENTATION_FILL)
+        every { prefs.videoFitCanvasMode } returns flowOf(FitCanvasMode.AMOLED_BLACK.preferenceValue)
+        every { prefs.videoFitCanvasColor } returns flowOf(DEFAULT_FIT_CANVAS_COLOR)
+        return VideoWallpapersViewModel(
+            context = context,
+            youtubeRepo = youtubeRepo,
+            pexelsApi = mockk<PexelsApi>(relaxed = true),
+            pixabayApi = pixabayApi,
+            prefs = prefs,
+            okHttpClient = mockk(relaxed = true),
+            videoWallpaperStorage = mockk<VideoWallpaperStorage>(relaxed = true),
+            sourceMetrics = SourceMetrics(),
+            ytDlpUpdateManager = mockk<YtDlpUpdateManager>(relaxed = true),
+            ytDlpRequestFactory = mockk<YouTubeYtDlpRequestFactory>(relaxed = true),
+            videoPreviewCache = mockk<VideoPreviewCache>(relaxed = true),
+            av1CodecSupport = mockk<Av1CodecSupport>(relaxed = true),
+            voteRepo = mockk<VoteRepository>(relaxed = true),
+            reportRepo = mockk<CommunityReportRepository>(relaxed = true),
+            favoritesRepo = favoritesRepo,
+        )
+    }
+
+    private fun feedLoadsStarted(viewModel: VideoWallpapersViewModel): Long =
+        VideoWallpapersViewModel::class.java
+            .getDeclaredField("loadGeneration")
+            .apply { isAccessible = true }
+            .getLong(viewModel)
+
+    private fun cancelFeedLoad(viewModel: VideoWallpapersViewModel) {
+        val job = VideoWallpapersViewModel::class.java
+            .getDeclaredField("loadJob")
+            .apply { isAccessible = true }
+            .get(viewModel) as? Job
+        job?.cancel()
+    }
+
+    @Test
+    fun `the feed loads once, and only when the Videos tab asks for it`() = runTest(dispatcher) {
+        val pixabayApi = mockk<PixabayApi>(relaxed = true)
+        val prefs = mockk<PreferencesManager>(relaxed = true)
+        val viewModel = savedVideoViewModel(pixabayApi = pixabayApi, prefs = prefs)
+
+        // Favorites holds this class to preview and apply a saved video. It never asks for the
+        // feed, so no provider is searched on its behalf.
+        advanceUntilIdle()
+        assertEquals(0L, feedLoadsStarted(viewModel))
+        assertTrue(viewModel.state.value.items.isEmpty())
+        assertFalse(viewModel.state.value.isLoading)
+        verify(exactly = 0) { prefs.youtubeProviderEnabled }
+        verify(exactly = 0) { prefs.redditProviderEnabled }
+        coVerify(exactly = 0) {
+            pixabayApi.searchVideos(any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), any())
+        }
+
+        assertTrue(viewModel.startFeed())
+        assertFalse(viewModel.startFeed())
+
+        assertEquals(1L, feedLoadsStarted(viewModel))
+        cancelFeedLoad(viewModel)
+    }
+
+    @Test
+    fun `a favorite tap saves a YouTube video by its page and a second tap removes it`() = runTest(dispatcher) {
+        val stored = mutableListOf<FavoriteEntity>()
+        val youtubeRepo = mockk<YouTubeRepository>(relaxed = true)
+        val viewModel = savedVideoViewModel(youtubeRepo = youtubeRepo, favoritesRepo = favoritesBackedBy(stored))
+        val changes = mutableListOf<VideoFavoriteChange>()
+
+        viewModel.toggleFavorite(youtubeFeedItem) { changes += it }
+        advanceUntilIdle()
+
+        assertEquals(listOf(VideoFavoriteChange.ADDED), changes)
+        val row = stored.single()
+        assertEquals("VIDEO", row.type)
+        assertEquals("YOUTUBE", row.source)
+        assertEquals("yt_dQw4w9WgXcQ", row.id)
+        // The page, which lasts. No stream was resolved to save it, and none is stored.
+        assertEquals("https://www.youtube.com/watch?v=dQw4w9WgXcQ", row.fullUrl)
+        assertEquals("Loop Studio", row.uploaderName)
+        assertEquals("YouTube", row.license)
+        assertEquals(42.0, row.duration, 0.0)
+        coVerify(exactly = 0) { youtubeRepo.getVideoStreamUrl(any()) }
+
+        viewModel.toggleFavorite(youtubeFeedItem) { changes += it }
+        advanceUntilIdle()
+
+        assertEquals(listOf(VideoFavoriteChange.ADDED, VideoFavoriteChange.REMOVED), changes)
+        assertTrue(stored.isEmpty())
+    }
+
+    @Test
+    fun `a video with no stream address yet is not saved and says so`() = runTest(dispatcher) {
+        val stored = mutableListOf<FavoriteEntity>()
+        val favoritesRepo = favoritesBackedBy(stored)
+        val viewModel = savedVideoViewModel(favoritesRepo = favoritesRepo)
+        val changes = mutableListOf<VideoFavoriteChange>()
+
+        viewModel.toggleFavorite(redditFeedItem) { changes += it }
+        advanceUntilIdle()
+
+        assertEquals(listOf(VideoFavoriteChange.UNAVAILABLE), changes)
+        assertTrue(stored.isEmpty())
+        coVerify(exactly = 0) { favoritesRepo.add(any()) }
+    }
+
+    @Test
+    fun `a saved Reddit video plays from its row and can be removed and put back`() = runTest(dispatcher) {
+        val stored = mutableListOf(savedReddit)
+        val youtubeRepo = mockk<YouTubeRepository>(relaxed = true)
+        val viewModel = savedVideoViewModel(youtubeRepo = youtubeRepo, favoritesRepo = favoritesBackedBy(stored))
+        val changes = mutableListOf<VideoFavoriteChange>()
+
+        viewModel.resolveSavedVideo(savedReddit)
+        advanceUntilIdle()
+
+        // Known at once from the row, with nothing to look up.
+        assertEquals("https://v.redd.it/abc123xyz/HLSPlaylist.m3u8", viewModel.getStreamUrl("rd_1abc2de"))
+        assertTrue("rd_1abc2de" in viewModel.resolvedIds.value)
+        assertFalse("rd_1abc2de" in viewModel.streamFailedIds.value)
+        coVerify(exactly = 0) { youtubeRepo.getVideoStreamUrl(any()) }
+
+        viewModel.toggleFavorite(redditFeedItem) { changes += it }
+        advanceUntilIdle()
+        assertTrue(stored.isEmpty())
+
+        viewModel.toggleFavorite(redditFeedItem) { changes += it }
+        advanceUntilIdle()
+
+        assertEquals(listOf(VideoFavoriteChange.REMOVED, VideoFavoriteChange.ADDED), changes)
+        assertEquals("https://v.redd.it/abc123xyz/HLSPlaylist.m3u8", stored.single().fullUrl)
+        assertEquals("VIDEO", stored.single().type)
+    }
+
+    @Test
+    fun `a saved YouTube video gets a fresh stream from its video ID`() = runTest(dispatcher) {
+        val stream = "https://rr1---sn-abc.googlevideo.com/videoplayback?expire=1760000000"
+        val youtubeRepo = mockk<YouTubeRepository>(relaxed = true) {
+            coEvery { getVideoStreamUrl("dQw4w9WgXcQ") } returns stream
+        }
+        val viewModel = savedVideoViewModel(youtubeRepo = youtubeRepo)
+        // A Play-channel build has no YouTube preview to resolve.
+        assumeTrue(canPreviewVideoInCurrentArtifact(youtubeFeedItem))
+
+        viewModel.resolveSavedVideo(savedYouTube)
+        // The page in the row is never what plays.
+        assertNull(viewModel.getStreamUrl("yt_dQw4w9WgXcQ"))
+        advanceUntilIdle()
+
+        assertEquals(stream, viewModel.getStreamUrl("yt_dQw4w9WgXcQ"))
+        assertTrue("yt_dQw4w9WgXcQ" in viewModel.resolvedIds.value)
+        assertTrue(viewModel.streamFailedIds.value.isEmpty())
+        coVerify(exactly = 1) { youtubeRepo.getVideoStreamUrl("dQw4w9WgXcQ") }
+    }
+
+    @Test
+    fun `a stream that can't be found is reported and a later try clears it`() = runTest(dispatcher) {
+        val stream = "https://rr1---sn-abc.googlevideo.com/videoplayback?expire=1760000000"
+        val youtubeRepo = mockk<YouTubeRepository>(relaxed = true) {
+            coEvery { getVideoStreamUrl(any()) } returns null
+        }
+        val viewModel = savedVideoViewModel(youtubeRepo = youtubeRepo)
+        assumeTrue(canPreviewVideoInCurrentArtifact(youtubeFeedItem))
+
+        viewModel.resolveSavedVideo(savedYouTube)
+        advanceUntilIdle()
+
+        assertEquals(setOf("yt_dQw4w9WgXcQ"), viewModel.streamFailedIds.value)
+        assertNull(viewModel.getStreamUrl("yt_dQw4w9WgXcQ"))
+
+        coEvery { youtubeRepo.getVideoStreamUrl(any()) } throws java.io.IOException("offline")
+        viewModel.resolveSavedVideo(savedYouTube)
+        advanceUntilIdle()
+        assertEquals(setOf("yt_dQw4w9WgXcQ"), viewModel.streamFailedIds.value)
+
+        coEvery { youtubeRepo.getVideoStreamUrl(any()) } returns stream
+        viewModel.resolveSavedVideo(savedYouTube)
+        advanceUntilIdle()
+
+        assertTrue(viewModel.streamFailedIds.value.isEmpty())
+        assertEquals(stream, viewModel.getStreamUrl("yt_dQw4w9WgXcQ"))
+    }
+
+    @Test
+    fun `a row that isn't a usable video favorite resolves nothing`() = runTest(dispatcher) {
+        val youtubeRepo = mockk<YouTubeRepository>(relaxed = true)
+        val viewModel = savedVideoViewModel(youtubeRepo = youtubeRepo)
+
+        viewModel.resolveSavedVideo(savedYouTube.copy(type = "WALLPAPER"))
+        viewModel.resolveSavedVideo(savedYouTube.copy(fullUrl = "https://media.example/watch?v=dQw4w9WgXcQ"))
+        viewModel.resolveSavedVideo(savedReddit.copy(fullUrl = "https://media.example/abc123xyz/HLSPlaylist.m3u8"))
+        advanceUntilIdle()
+
+        assertNull(viewModel.getStreamUrl("yt_dQw4w9WgXcQ"))
+        assertNull(viewModel.getStreamUrl("rd_1abc2de"))
+        assertTrue(viewModel.resolvedIds.value.isEmpty())
+        coVerify(exactly = 0) { youtubeRepo.getVideoStreamUrl(any()) }
+    }
+
+    @Test
+    fun `the feed knows which videos are saved`() = runTest(dispatcher) {
+        val viewModel = savedVideoViewModel(
+            favoritesRepo = favoritesBackedBy(mutableListOf(savedYouTube, savedReddit)),
+        )
+        val collecting = launch { viewModel.favoriteVideoIds.collect {} }
+        advanceUntilIdle()
+
+        assertEquals(setOf("yt_dQw4w9WgXcQ", "rd_1abc2de"), viewModel.favoriteVideoIds.value)
+        collecting.cancel()
     }
 
     @Test

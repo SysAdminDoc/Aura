@@ -3,6 +3,7 @@ package com.freevibe.data.repository
 import com.freevibe.data.local.FavoriteDao
 import com.freevibe.data.model.FavoriteEntity
 import com.freevibe.data.model.FavoriteIdentity
+import com.freevibe.data.model.MEDIA_TYPE_VIDEO
 import com.freevibe.data.model.SOURCE_AVAILABILITY_AVAILABLE
 import com.freevibe.data.model.SOURCE_AVAILABILITY_UNAVAILABLE
 import com.freevibe.data.model.favoriteIdentity
@@ -18,6 +19,8 @@ class FavoritesRepository @Inject constructor(
     fun getAll(): Flow<List<FavoriteEntity>> = dao.getAll()
     fun getWallpapers(): Flow<List<FavoriteEntity>> = dao.getByType("WALLPAPER")
     fun getSounds(): Flow<List<FavoriteEntity>> = dao.getByType("SOUND")
+    /** Saved motion wallpapers. Kept apart from [getWallpapers], which feeds rotation and batch downloads. */
+    fun getVideos(): Flow<List<FavoriteEntity>> = dao.getByType(MEDIA_TYPE_VIDEO)
     fun isFavorite(identity: FavoriteIdentity): Flow<Boolean> = dao.isFavorite(identity.id, identity.source, identity.type)
     fun allIdentities(): Flow<Set<FavoriteIdentity>> = dao.allIdentities().map { it.toSet() }
     fun count(): Flow<Int> = dao.count()

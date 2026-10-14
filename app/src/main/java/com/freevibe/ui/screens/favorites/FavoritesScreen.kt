@@ -7,6 +7,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.border
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -45,10 +46,14 @@ import com.freevibe.data.model.LocalMediaStatus
 import com.freevibe.data.model.isSourceUnavailable
 import com.freevibe.data.model.needsLocalMediaRelink
 import com.freevibe.data.model.stableKey
+import com.freevibe.data.model.toVideoWallpaperItem
 import com.freevibe.service.LocalMediaRelinkOutcome
 import com.freevibe.ui.components.AuraSnackbarHost
 import com.freevibe.ui.components.AuraStateAction
 import com.freevibe.ui.components.AuraStateCard
+import com.freevibe.ui.screens.videowallpapers.SavedVideoCropEditor
+import com.freevibe.ui.screens.videowallpapers.SavedVideoPreview
+import com.freevibe.ui.screens.videowallpapers.VideoWallpaperItem
 import com.freevibe.ui.theme.AuraShapes
 import kotlinx.coroutines.launch
 
@@ -61,6 +66,7 @@ fun FavoritesScreen(
 ) {
     val wallpapers by viewModel.wallpapers.collectAsStateWithLifecycle()
     val sounds by viewModel.sounds.collectAsStateWithLifecycle()
+    val videos by viewModel.videos.collectAsStateWithLifecycle()
     val message by viewModel.message.collectAsStateWithLifecycle()
     val batchState by viewModel.batchState.collectAsStateWithLifecycle()
     var selectedTab by rememberSaveable { mutableIntStateOf(0) }
@@ -74,6 +80,7 @@ fun FavoritesScreen(
     val tabs = listOf(
         stringResource(R.string.favorites_tab_wallpapers, wallpapers.size),
         stringResource(R.string.favorites_tab_sounds, sounds.size),
+        stringResource(R.string.favorites_tab_videos, videos.size),
     )
 
     // -- Bulk selection state (wallpaper tab only in v1) --
@@ -103,6 +110,16 @@ fun FavoritesScreen(
             else -> sounds.sortedByDescending { it.addedAt }
         }
     }
+    val sortedVideos = remember(videos, sortBy) {
+        when (sortBy) {
+            "name" -> videos.sortedBy { it.name.lowercase(java.util.Locale.ROOT) }
+            "oldest" -> videos.sortedBy { it.addedAt }
+            else -> videos.sortedByDescending { it.addedAt }
+        }
+    }
+    // The saved video whose full-screen preview is open, and the one in the crop editor.
+    var savedVideoPreviewId by remember { mutableStateOf<String?>(null) }
+    var savedVideoCrop by remember { mutableStateOf<Pair<VideoWallpaperItem, String>?>(null) }
 
     // Export launcher
     val exportLauncher = rememberLauncherForActivityResult(
@@ -141,6 +158,17 @@ fun FavoritesScreen(
 
     LaunchedEffect(message) {
         message?.let { snackbarHostState.showSnackbar(it); viewModel.clearMessage() }
+    }
+
+    // The crop editor for a saved video takes the screen over, as it does on the Videos tab.
+    savedVideoCrop?.let { (item, streamUrl) ->
+        SavedVideoCropEditor(
+            item = item,
+            streamUrl = streamUrl,
+            scope = scope,
+            onDone = { savedVideoCrop = null },
+        )
+        return
     }
 
     Scaffold(snackbarHost = { AuraSnackbarHost(snackbarHostState) }) { scaffoldPadding ->
@@ -701,6 +729,166 @@ fun FavoritesScreen(
                         }
                     }
                 }
+                2 -> FavoriteVideosTab(
+                    videos = sortedVideos,
+                    onOpen = { fav ->
+                        if (fav.toVideoWallpaperItem() == null) {
+                            scope.launch {
+                                snackbarHostState.showSnackbar(resources.getString(R.string.video_wp_preview_unavailable))
+                            }
+                        } else {
+                            savedVideoPreviewId = fav.id
+                        }
+                    },
+                    onRemove = { fav ->
+                        viewModel.removeFavorite(fav)
+                        scope.launch {
+                            val result = snackbarHostState.showSnackbar(
+                                message = resources.getString(R.string.favorites_removed_item, favoriteDisplayName(fav)),
+                                actionLabel = resources.getString(R.string.favorites_undo),
+                                duration = SnackbarDuration.Short,
+                            )
+                            if (result == SnackbarResult.ActionPerformed) viewModel.restoreFavorite(fav)
+                        }
+                    },
+                    onImportBackup = { importLauncher.launch(arrayOf("application/json")) },
+                )
+            }
+        }
+    }
+
+    // A saved video opens in the Videos tab's own preview, with its Apply, Download and license checks.
+    savedVideoPreviewId?.let { startId ->
+        key(startId) {
+            SavedVideoPreview(
+                favorites = sortedVideos,
+                startId = startId,
+                onCrop = { item, streamUrl ->
+                    savedVideoPreviewId = null
+                    savedVideoCrop = item to streamUrl
+                },
+                onDismiss = { savedVideoPreviewId = null },
+            )
+        }
+    }
+}
+
+/**
+ * The Videos tab: saved motion wallpapers in a grid. A card opens the video preview, and its heart
+ * removes the video, which the caller follows with an Undo snackbar.
+ */
+@Composable
+internal fun FavoriteVideosTab(
+    videos: List<FavoriteEntity>,
+    onOpen: (FavoriteEntity) -> Unit,
+    onRemove: (FavoriteEntity) -> Unit,
+    onImportBackup: () -> Unit,
+) {
+    if (videos.isEmpty()) {
+        EmptyState(
+            title = stringResource(R.string.favorites_empty_videos_title),
+            description = stringResource(R.string.favorites_empty_videos_description),
+            icon = Icons.Default.Movie,
+            primaryAction = AuraStateAction(
+                label = stringResource(R.string.favorites_import_backup),
+                icon = Icons.Default.Download,
+                onClick = onImportBackup,
+            ),
+        )
+        return
+    }
+    // Reading a string off LocalContext is not a composition read. LocalResources is.
+    val resources = LocalResources.current
+    LazyVerticalGrid(
+        columns = GridCells.Fixed(2),
+        contentPadding = PaddingValues(8.dp),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        items(videos, key = { it.stableKey() }, contentType = { "favorite_video_card" }) { fav ->
+            // A row the preview can't read is shown as unavailable instead of opening to nothing.
+            val sourceUnavailable = remember(fav) { fav.isSourceUnavailable() || fav.toVideoWallpaperItem() == null }
+            val displayName = favoriteDisplayName(fav)
+            val openLabel = stringResource(R.string.favorites_open_item, displayName)
+            val removeLabel = stringResource(R.string.favorites_remove_item, displayName)
+            val summary = favoriteVideoSummary(resources, fav, sourceUnavailable)
+            val caption = favoriteVideoCaption(resources, fav)
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(AuraShapes.Medium)
+                    .clickable(onClickLabel = openLabel) { onOpen(fav) }
+                    .semantics(mergeDescendants = true) {
+                        contentDescription = summary
+                        customActions = listOf(
+                            CustomAccessibilityAction(removeLabel) {
+                                onRemove(fav)
+                                true
+                            },
+                        )
+                    },
+                shape = AuraShapes.Medium,
+            ) {
+                Box {
+                    AsyncImage(
+                        model = fav.thumbnailUrl,
+                        contentDescription = null,
+                        contentScale = ContentScale.Crop,
+                        modifier = Modifier.fillMaxWidth().aspectRatio(0.67f),
+                    )
+                    if (sourceUnavailable) {
+                        SourceUnavailableBadge(
+                            modifier = Modifier
+                                .align(Alignment.BottomStart)
+                                .padding(8.dp),
+                        )
+                    } else {
+                        Surface(
+                            color = MaterialTheme.colorScheme.surface.copy(alpha = 0.78f),
+                            contentColor = MaterialTheme.colorScheme.onSurface,
+                            shape = AuraShapes.Medium,
+                            modifier = Modifier
+                                .align(Alignment.BottomStart)
+                                .padding(8.dp),
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 5.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(5.dp),
+                            ) {
+                                Icon(Icons.Default.PlayArrow, contentDescription = null, modifier = Modifier.size(14.dp))
+                                if (caption.isNotBlank()) {
+                                    Text(
+                                        caption,
+                                        style = MaterialTheme.typography.labelSmall,
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis,
+                                    )
+                                }
+                            }
+                        }
+                    }
+                    IconButton(
+                        onClick = { onRemove(fav) },
+                        modifier = Modifier
+                            .align(Alignment.TopEnd)
+                            .padding(4.dp)
+                            .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.78f), AuraShapes.Medium),
+                    ) {
+                        Icon(
+                            Icons.Default.Favorite,
+                            contentDescription = removeLabel,
+                            tint = MaterialTheme.colorScheme.primary,
+                        )
+                    }
+                }
+                Text(
+                    displayName,
+                    style = MaterialTheme.typography.labelLarge,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 8.dp),
+                )
             }
         }
     }
@@ -814,6 +1002,44 @@ internal fun favoriteSoundSummary(
     return listOf(favoriteDisplayName(favorite), status, duration, sourceDisplayLabel(resources, favorite.source))
         .filter { it.isNotBlank() }
         .joinToString(". ")
+}
+
+/** What TalkBack reads for a saved video: its name, state, length, size and provider. */
+internal fun favoriteVideoSummary(
+    resources: Resources,
+    favorite: FavoriteEntity,
+    sourceUnavailable: Boolean,
+): String {
+    val status = resources.getString(
+        if (sourceUnavailable) R.string.favorites_state_source_unavailable else R.string.favorites_state_saved_video,
+    )
+    val seconds = favorite.duration.toInt()
+    val duration = if (seconds > 0) {
+        resources.getQuantityString(R.plurals.favorites_duration_spoken, seconds, seconds)
+    } else {
+        ""
+    }
+    val dimensions = if (favorite.width > 0 && favorite.height > 0) {
+        resources.getString(R.string.favorites_dimensions, favorite.width, favorite.height)
+    } else {
+        ""
+    }
+    return listOf(
+        favoriteDisplayName(favorite),
+        status,
+        duration,
+        dimensions,
+        sourceDisplayLabel(resources, favorite.source),
+    ).filter { it.isNotBlank() }.joinToString(". ")
+}
+
+/** The short line on a saved video's card: its provider and, when known, its length. */
+internal fun favoriteVideoCaption(resources: Resources, favorite: FavoriteEntity): String {
+    val seconds = favorite.duration.toInt()
+    return listOfNotNull(
+        sourceDisplayLabel(resources, favorite.source).takeIf { it.isNotBlank() },
+        resources.getString(R.string.favorites_duration_seconds, seconds).takeIf { seconds > 0 },
+    ).joinToString(" · ")
 }
 
 internal fun favoriteLocalMediaHealthLabel(resources: Resources, status: String): String = resources.getString(

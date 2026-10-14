@@ -87,6 +87,8 @@ import com.freevibe.data.local.PreferencesManager
 import com.freevibe.data.model.ContentSource
 import com.freevibe.data.model.DownloadEntity
 import com.freevibe.data.model.FavoriteEntity
+import com.freevibe.data.model.MEDIA_TYPE_SOUND
+import com.freevibe.data.model.MEDIA_TYPE_VIDEO
 import com.freevibe.data.model.WallpaperCollectionEntity
 import com.freevibe.data.remote.toSound
 import com.freevibe.data.remote.toWallpaper
@@ -645,6 +647,16 @@ private fun providerDisabledReasonLabel(reason: UniversalProviderDisabledReason)
     UniversalProviderDisabledReason.NEEDS_KEY -> stringResource(R.string.search_provider_needs_key)
 }
 
+/**
+ * Where a favorite's result leads. A saved video has no detail screen of its own, so it opens
+ * Favorites, where the Videos tab plays it. Sent to the wallpaper screen it would load as a picture.
+ */
+private fun FavoriteEntity.searchTarget(): UniversalSearchTarget = when (type.uppercase(Locale.ROOT)) {
+    MEDIA_TYPE_SOUND -> UniversalSearchTarget.SoundFavorite(this)
+    MEDIA_TYPE_VIDEO -> UniversalSearchTarget.FavoriteBucket(MEDIA_TYPE_VIDEO)
+    else -> UniversalSearchTarget.WallpaperFavorite(this)
+}
+
 internal fun buildUniversalSearchResults(
     query: String,
     favorites: List<FavoriteEntity>,
@@ -698,11 +710,7 @@ internal fun buildUniversalSearchResults(
                 title = favorite.displayTitle(),
                 subtitle = "${favorite.source} ${type.lowercase(Locale.ROOT)}",
                 badge = UniversalSearchBadge.SAVED,
-                target = if (type == "SOUND") {
-                    UniversalSearchTarget.SoundFavorite(favorite)
-                } else {
-                    UniversalSearchTarget.WallpaperFavorite(favorite)
-                },
+                target = favorite.searchTarget(),
             )
         }
 
@@ -774,11 +782,7 @@ internal fun buildUniversalSearchResults(
                         badge = UniversalSearchBadge.LOCAL,
                         // Route to the favorite itself: these files aren't listed on
                         // the Downloads screen, so a Downloads target is a dead end.
-                        target = if (favorite.type.equals("SOUND", ignoreCase = true)) {
-                            UniversalSearchTarget.SoundFavorite(favorite)
-                        } else {
-                            UniversalSearchTarget.WallpaperFavorite(favorite)
-                        },
+                        target = favorite.searchTarget(),
                     )
                 }
         )

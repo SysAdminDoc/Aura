@@ -42,6 +42,14 @@ class FavoritesViewModel @Inject constructor(
         viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList()
     )
 
+    /**
+     * Saved motion wallpapers. They are their own list, so Download all and the bulk actions, which
+     * read [wallpapers], never treat a video as a picture.
+     */
+    val videos = favoritesRepo.getVideos().stateIn(
+        viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList()
+    )
+
     private val _message = MutableStateFlow<String?>(null)
     val message = _message.asStateFlow()
 

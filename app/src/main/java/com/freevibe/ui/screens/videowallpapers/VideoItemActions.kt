@@ -3,6 +3,7 @@ package com.freevibe.ui.screens.videowallpapers
 import android.content.Context
 import android.content.Intent
 import android.content.res.Resources
+import androidx.annotation.StringRes
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
@@ -12,6 +13,8 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Download
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.Flag
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.ButtonDefaults
@@ -59,6 +62,15 @@ internal fun VideoWallpaperItem.itemActionAvailability(reportsEnabled: Boolean =
     )
 }
 
+/** What a tap on a video's favorite control did, with the line the screen shows for it. */
+enum class VideoFavoriteChange(@StringRes val messageRes: Int) {
+    ADDED(R.string.wallpaper_feedback_favorite_added),
+    REMOVED(R.string.wallpaper_feedback_favorite_removed),
+
+    /** The feed doesn't have the video's stream address yet, so there is nothing to find it by later. */
+    UNAVAILABLE(R.string.video_wp_favorite_unavailable),
+}
+
 /** The source page with its title, creator and provider, so credit travels with the link. */
 internal fun Resources.videoShareText(item: VideoWallpaperItem): String =
     if (item.uploaderName.isBlank()) {
@@ -93,7 +105,10 @@ internal fun VideoWallpaperItem.reportInput(
     uploaderName = uploaderName,
 )
 
-/** Download, Share and Report for the full-screen preview, drawn over video. */
+/**
+ * Favorite, Download, Share and Report for the full-screen preview, drawn over video. The favorite
+ * button is left out when [onToggleFavorite] is null, which is how a video that can't be saved shows.
+ */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 internal fun ImmersiveVideoActions(
@@ -102,12 +117,23 @@ internal fun ImmersiveVideoActions(
     onDownload: () -> Unit,
     onShare: () -> Unit,
     onReport: () -> Unit,
+    isFavorite: Boolean = false,
+    onToggleFavorite: (() -> Unit)? = null,
 ) {
-    if (!actions.canDownload && !actions.canShare && !actions.canReport) return
+    if (!actions.canDownload && !actions.canShare && !actions.canReport && onToggleFavorite == null) return
     FlowRow(
         horizontalArrangement = Arrangement.spacedBy(8.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
+        if (onToggleFavorite != null) {
+            ImmersiveActionButton(
+                label = stringResource(
+                    if (isFavorite) R.string.video_wp_favorite_remove else R.string.video_wp_favorite_add,
+                ),
+                icon = if (isFavorite) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
+                onClick = onToggleFavorite,
+            )
+        }
         if (actions.canDownload) {
             ImmersiveActionButton(
                 label = stringResource(if (isDownloading) R.string.video_wp_downloading else R.string.video_wp_download),

@@ -76,6 +76,36 @@ class FavoritesScreenPolishTest {
     }
 
     @Test
+    fun `favorite video summary reads length size and provider`() {
+        val favorite = FavoriteEntity(
+            id = "yt_dQw4w9WgXcQ",
+            source = "YOUTUBE",
+            type = "VIDEO",
+            thumbnailUrl = "https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg",
+            fullUrl = "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+            name = "Neon rain loop",
+            width = 1080,
+            height = 1920,
+            duration = 42.0,
+        )
+
+        assertEquals(
+            "Neon rain loop. Saved video. 42 seconds. 1080 by 1920. YouTube",
+            favoriteVideoSummary(resources, favorite, sourceUnavailable = false),
+        )
+        assertEquals(
+            "Neon rain loop. Source unavailable. 42 seconds. 1080 by 1920. YouTube",
+            favoriteVideoSummary(resources, favorite, sourceUnavailable = true),
+        )
+        assertEquals("YouTube · 42s", favoriteVideoCaption(resources, favorite))
+
+        // A Reddit clip often has no length or size on record. What isn't known isn't read out.
+        val bare = favorite.copy(id = "rd_1abc2de", source = "REDDIT", name = "", width = 0, height = 0, duration = 0.0)
+        assertEquals("rd_1abc2de. Saved video. Reddit", favoriteVideoSummary(resources, bare, sourceUnavailable = false))
+        assertEquals("Reddit", favoriteVideoCaption(resources, bare))
+    }
+
+    @Test
     fun `favorite summaries distinguish missing revoked and corrupt local media`() {
         val favorite = FavoriteEntity(
             id = "local-1",
@@ -133,6 +163,15 @@ class FavoritesScreenPolishTest {
         assertEquals(
             "正在下载收藏：第 3 个，共 10 个",
             favoritesBatchProgressSummary(resources, processed = 3, total = 10, failed = 0, blocked = 0, currentItem = ""),
+        )
+        assertEquals("视频 (3)", resources.getString(com.freevibe.R.string.favorites_tab_videos, 3))
+        assertEquals(
+            "Loop. 已保存的视频. 12 秒. YouTube",
+            favoriteVideoSummary(
+                resources,
+                favorite.copy(id = "yt_dQw4w9WgXcQ", source = "YOUTUBE", type = "VIDEO", name = "Loop"),
+                sourceUnavailable = false,
+            ),
         )
     }
 }

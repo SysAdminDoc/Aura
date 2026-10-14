@@ -154,6 +154,38 @@ class UniversalSearchIndexTest {
     }
 
     @Test
+    fun `a saved video leads to Favorites and never to the wallpaper screen`() {
+        val video = FavoriteEntity(
+            id = "yt_dQw4w9WgXcQ",
+            source = "YOUTUBE",
+            type = "VIDEO",
+            thumbnailUrl = "https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg",
+            fullUrl = "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+            name = "Neon rain loop",
+        )
+        fun search(favorite: FavoriteEntity) = buildUniversalSearchResults(
+            query = "neon",
+            favorites = listOf(favorite),
+            downloads = emptyList(),
+            collections = emptyList(),
+        )
+
+        val saved = search(video).single()
+        assertEquals(UniversalSearchSection.FAVORITES, saved.section)
+        assertEquals(UniversalSearchTarget.FavoriteBucket("VIDEO"), saved.target)
+
+        // A row with a file on the phone is listed twice. Neither result may open it as a picture.
+        val withFile = search(video.copy(type = "video", offlinePath = "/storage/emulated/0/Movies/neon-rain.mp4"))
+        assertEquals(
+            setOf(UniversalSearchSection.FAVORITES, UniversalSearchSection.LOCAL_FILES),
+            withFile.map { it.section }.toSet(),
+        )
+        withFile.forEach { result ->
+            assertEquals("${result.section}", UniversalSearchTarget.FavoriteBucket("VIDEO"), result.target)
+        }
+    }
+
+    @Test
     fun `url and raw path fields do not match queries`() {
         val results = buildUniversalSearchResults(
             query = "https",

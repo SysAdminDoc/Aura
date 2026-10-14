@@ -466,6 +466,44 @@ class AutoWallpaperWorkerPrefetchTest {
     }
 
     @Test
+    fun `a saved video is never picked when rotating through favorites`() = runBlocking {
+        val pictures = listOf("f1", "f2", "f3").map { wallpaper(it) }
+        val video = FavoriteEntity(
+            id = "yt_dQw4w9WgXcQ",
+            source = "YOUTUBE",
+            type = "VIDEO",
+            thumbnailUrl = "https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg",
+            fullUrl = "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+            name = "Neon rain loop",
+        )
+        every { favorites.getWallpapers() } returns flowOf(pictures.map { it.asFavorite() })
+        every { favorites.getVideos() } returns flowOf(listOf(video))
+        // The newest favorite is the video, so a rotation reading every favorite would start with it.
+        every { favorites.getAll() } returns flowOf(listOf(video) + pictures.map { it.asFavorite() })
+        prefs.setSchedulerSource("favorites")
+
+        assertEquals(ListenableWorker.Result.success(), runWorker())
+
+        coVerify(exactly = 1) {
+            applier.applyByLocator(
+                pictures[0].fullUrl, WallpaperTarget.BOTH, any(), any(), any(), any(), any(), any(), any(), any(),
+            )
+        }
+        assertEquals("f2", cache.peek(rotationPrefetchSlot("favorites", WallpaperTarget.BOTH))!!.wallpaper.id)
+
+        // The next turn uses the picture saved ahead and saves another. The video is never one of them.
+        assertEquals(ListenableWorker.Result.success(), runWorker())
+
+        verify(exactly = 0) { favorites.getAll() }
+        verify(exactly = 0) { favorites.getVideos() }
+        coVerify(exactly = 0) {
+            applier.applyByLocator(video.fullUrl, any(), any(), any(), any(), any(), any(), any(), any(), any())
+        }
+        coVerify(exactly = 0) { applier.downloadToFile(video.fullUrl, any()) }
+        coVerify(exactly = 0) { history.record(match { it.id == video.id }, any()) }
+    }
+
+    @Test
     fun `an emptied collection rotates through Discover and the two never mix`() = runBlocking {
         val pictures = listOf("a1", "a2", "a3").map { wallpaper(it) }
         val discover = listOf("d1", "d2", "d3").map { wallpaper(it) }

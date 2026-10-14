@@ -98,7 +98,7 @@ data class FavoriteIdentity(
 data class FavoriteEntity(
     val id: String,
     val source: String,
-    val type: String,           // WALLPAPER or SOUND
+    val type: String,           // WALLPAPER, SOUND or VIDEO
     val thumbnailUrl: String,
     val fullUrl: String,
     val name: String = "",
