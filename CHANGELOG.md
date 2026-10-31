@@ -4,6 +4,16 @@ All notable changes to Aura will be documented in this file.
 
 ## Unreleased
 
+- **Video editing moved off FFmpeg**: cropping a video, Fit Canvas, the compatibility copy and Reddit's HLS downloads all run on Android's own media stack through Media3 now, which uses the phone's hardware encoder and copies HLS tracks without re-encoding them. YouTube video downloads pick one file instead of merging two. FFmpeg now only handles MP3 and FLAC sound exports. A video in a codec your phone can't decode, like AV1 on an older phone, no longer gets a compatibility copy.
+- **The rest of Aura's messages follow your language**: error and status messages that the code put together itself, like a failed download, a blocked creator or a source that's turned off, always came out in English. They're in the string tables now, and a test reads them back in Chinese. Refs #47.
+- **Clearer Chinese for the clock overlay**: the subtitle now says the overlay applies to wallpapers you set from here on, which is what the English says too. Refs #47.
+- **Android 8 and 9 no longer crash checking for AV1**: looking for a hardware AV1 decoder called a method those versions don't have, which took down the video download path. Tests run the check on both sides of Android 10 now.
+- **The Battery Saver listener stays private on older Android**: the live wallpaper's listener was only marked private to Aura from Android 13 on. It's private on every version now.
+- **Aura targets Android 17**: it now builds with Android 17's SDK on AGP 9.5, Gradle 9.8.2 and Kotlin 2.4.21, with Room, Hilt, Coil, OkHttp, Compose and the other libraries moved to current versions. The Photo Picker and the eye dropper call Android's own APIs directly instead of looking them up at run time.
+- **A clean checkout builds**: the dependency hash list was missing entries that only a populated Gradle cache could hide, so a fresh clone failed before compiling. It's complete again.
+- **Release builds refuse LeakCanary**: a new check scans the finished APK and fails the build if a debug tool slipped in.
+- **The support bundle counts requests by purpose**: for each source it now shows how many requests were for browsing, images, downloads, applying and so on, which makes a rate limit a lot easier to explain.
+- **An upgrade path from the very first database is tested**: a new device test walks a version 1 database through every migration to today's schema.
 - **Theme packs follow the same address rules as a restore**: a theme pack file could point its pictures and sounds at any web address. Importing one now keeps only what's on your phone or on one of Aura's wallpaper and sound sources. The 24H pack also waits for Wi-Fi when you've asked for Wi-Fi only, and it won't follow a redirect away from those sources.
 - **A saved-ahead picture goes when its source does**: switch a provider off and the next picture rotation had already saved from it is dropped. Favorites and collections keep working as before.
 - **Turning one rotation off leaves the other running**: auto wallpaper and the scheduler share one background job, so turning either off used to stop both.

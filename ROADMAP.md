@@ -13,7 +13,7 @@ Actionable work only. Historical and completed roadmap material is archived in C
   Acceptance: an ordered or shuffled clip list advances at a configured boundary with no black frame at the seam; per-clip fit/crop and mute are preserved; the existing FPS cap, low-battery cap, and `onVisibilityChanged` pause govern the whole playlist, not just the first clip; total decoded storage stays bounded; the soak harness runs the playlist path and asserts nothing survives `onDestroy`.
   Complexity: L
 
-  Note 2026-08-23: compileSdk 36 and Media3 1.11.0 are already shipped, so the old dependency gate is gone. Keep this sequenced after the existing video-cache and main-thread encode reliability work; use Media3 preload first and retain the custom engine only if a measured black-frame test still fails.
+  Note 2026-10-31: compileSdk 37 and Media3 1.11 are already shipped, so the old dependency gate is gone. Keep this sequenced after the existing video-cache and main-thread encode reliability work; use Media3 preload first and retain the custom engine only if a measured black-frame test still fails.
 
 
 
@@ -34,7 +34,7 @@ Actionable work only. Historical and completed roadmap material is archived in C
   Complexity: M
 
 - [ ] P3 — Emit a CycloneDX SBOM from the resolved dependency graph
-  Why: the EU Cyber Resilience Act requires a machine-readable SBOM of at least top-level dependencies from 2027-12-11; Aura's readiness doc defers this to N-1, but the CycloneDX Gradle plugin works on the current toolchain and reads the resolved graph, so the `commons-io`/`jackson`/`commons-compress` constraints appear correctly.
+  Why: the EU Cyber Resilience Act requires a machine-readable SBOM of at least top-level dependencies from 2027-12-11; Aura's readiness doc deferred this until the toolchain upgrade, which has landed, and the CycloneDX Gradle plugin reads the resolved graph, so the `commons-io`/`jackson`/`commons-compress` constraints appear correctly.
   Evidence: `docs/distribution/sbom-readiness.json` (`status: deferredUntilN1ToolchainUpgrade`, `futureSbomArtifacts`); `app/build.gradle.kts` constraints block; CycloneDX Gradle plugin.
   Touches: `app/build.gradle.kts` or a convention plugin, `tools/sbom_readiness_check.py`, release artifact bundle.
   Acceptance: a release task emits `SBOM.cyclonedx.json` covering the release runtime graph plus native payloads; the pinned constraint versions appear as resolved; the artifact is published with the release and checked by the bundle gate.
@@ -78,7 +78,7 @@ Actionable work only. Historical and completed roadmap material is archived in C
   Note 2026-08-23: upstream issue googlesamples/mlkit#1017 reports an uncatchable API 36 SIGSEGV in the exact beta1 artifact. Before choosing a fallback, run the full release build through `SmartCropDetector`, `DepthPortraitComposer`, and `ParallaxWallpaperService` on API 36; if reproduced, prevent inference on affected devices until a patched artifact or tested replacement is available. Confidence: Needs live validation in Aura.
 
 - [ ] P3 — Ship a haptic pattern alongside a ringtone
-  Why: Android 16 added envelope-based vibration builders that describe amplitude and frequency curves and abstract away device capability, and Aura already owns both the sound editor and the apply path. Current compileSdk 36 exposes the APIs, so the remaining work is device-capability fallback and integration.
+  Why: Android 16 added envelope-based vibration builders that describe amplitude and frequency curves and abstract away device capability, and Aura already owns both the sound editor and the apply path. compileSdk 37 exposes the APIs, so the remaining work is device-capability fallback and integration.
   Evidence: no `VibrationEffect`, `BasicEnvelopeBuilder`, or `WaveformEnvelopeBuilder` anywhere in `app/src/main/java`; `SoundApplier.kt` and `ContactRingtoneService.kt` are the apply surfaces; developer.android.com custom-haptic-effects.
   Touches: `SoundApplier.kt`, `SoundEditorScreen.kt`, `ContactRingtoneService.kt`, `PreferencesManager.kt`, theme-pack recipe schema, string resources.
   Acceptance: a small preset set of vibration patterns can be previewed in the editor and stored with a sound; the pattern is applied where the platform allows and the limitation is stated where it does not; devices without envelope support fall back to a simple waveform and say so; patterns round-trip through theme-pack export and import.
@@ -164,18 +164,7 @@ Evidence for every item below is in RESEARCH.md (2026-09-04 pass).
 
 ## Audit Findings — 2026-09-13
 
-### P2
-
-
-
-- [ ] P2 — Move ViewModel and repository messages to string resources
-  Category: ux
-  Where: docs/localization/hardcoded-string-baseline.json (each entry whose reason names this item); app/src/main/java/com/freevibe/ui/screens/**/*ViewModel.kt; ui/screens/wallpapers/WallpaperCommunityActions.kt, WallpaperSearchActions.kt; ui/screens/sounds/SoundApplyActions.kt, SoundIdentity.kt, SoundQuality.kt; ui/screens/settings/SettingsDialogs.kt (communityIdentitySuffixLabel); app/src/main/java/com/freevibe/service/MediaIngestion.kt (imageFormatSupportForFlow, toHumanList, sniff errors); wallpapers/WallpaperDetailScreen.kt sourceDisplayName; sounds/SoundUiTokens.kt soundSourceTone; settings/DiagnosticsComponents.kt sourceDisplayName
-  Problem: 77 of the 91 entries left in the hardcoded-string baseline are English messages set in ViewModel state, thrown as exception messages or built by media ingestion, so Chinese users still see English errors and confirmations. Labels for Aura's own sources (Community, Local, AI generated, Aura Originals) are also spelled in Kotlin outside Resources.wallpaperSourceName, and the image-format error joins formats with an English "or".
-  Fix: Give ViewModel state a UiText type (a resource ID with arguments, or a provider's own message) that Compose resolves. Have MediaIngestion return a resource ID and arguments instead of a sentence, and join format names with ListFormatter on API 33+ and a resource conjunction below it. Route the own-source labels through Resources.wallpaperSourceName and its sound counterpart.
-  Acceptance: Every baseline entry whose reason points here is gone and write mode has pruned it; Chinese shows translated text for a failed upload, a blocked creator, a disabled source and a rejected image format; what's left in the baseline is brand names, file names and internal signals.
-  Confidence: Verified
-  Effort: M
+### P3
 
 - [ ] P3 — Replace OEM emoji category art with adaptive app-owned visuals
   Category: visual
@@ -304,9 +293,9 @@ Remainders of items closed in the 2026-09-30 drain whose full acceptance did not
   Complexity: S
 
 - [ ] P3 — Finish the debug-build StrictMode and LeakCanary pass
-  Why: debug builds now run StrictMode and LeakCanary, but nothing asserts LeakCanary is absent from release APKs, and the violations it logs on a real device haven't been listed.
-  Touches: release APK scan in the build gates, repo notes, `FreeVibeApp.kt`.
-  Acceptance: a gate fails if `leakcanary` classes appear in a release APK; the violations seen during a device session are recorded and each has a fix or an open item.
+  Why: debug builds run StrictMode and LeakCanary, and the violations they log on a real device haven't been listed.
+  Touches: repo notes, `FreeVibeApp.kt`.
+  Acceptance: the violations seen during a device session are recorded and each has a fix or an open item.
   Complexity: S
 
 
