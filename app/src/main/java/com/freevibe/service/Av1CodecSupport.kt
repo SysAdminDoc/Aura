@@ -16,7 +16,7 @@ class Av1CodecSupport @Inject constructor() {
             val codecList = MediaCodecList(MediaCodecList.ALL_CODECS)
             codecList.codecInfos.any { info ->
                 !info.isEncoder &&
-                    info.isHardwareAccelerated &&
+                    info.decodesInHardware() &&
                     info.supportedTypes.any { it.equals(MediaFormat.MIMETYPE_VIDEO_AV1, ignoreCase = true) }
             }
         } catch (_: Exception) {
@@ -24,15 +24,11 @@ class Av1CodecSupport @Inject constructor() {
         }
     }
 
-    private val MediaCodecInfo.isHardwareAccelerated: Boolean
-        get() = try {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                isHardwareAccelerated
-            } else {
-                !isKnownSoftwareCodec(name)
-            }
-        } catch (_: Exception) {
-            false
+    private fun MediaCodecInfo.decodesInHardware(): Boolean =
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            isHardwareAccelerated
+        } else {
+            !isKnownSoftwareCodec(name)
         }
 
     internal fun isKnownSoftwareCodec(codecName: String): Boolean {
