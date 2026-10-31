@@ -4,6 +4,11 @@ All notable changes to Aura will be documented in this file.
 
 ## Unreleased
 
+- **Theme packs follow the same address rules as a restore**: a theme pack file could point its pictures and sounds at any web address. Importing one now keeps only what's on your phone or on one of Aura's wallpaper and sound sources. The 24H pack also waits for Wi-Fi when you've asked for Wi-Fi only, and it won't follow a redirect away from those sources.
+- **A saved-ahead picture goes when its source does**: switch a provider off and the next picture rotation had already saved from it is dropped. Favorites and collections keep working as before.
+- **Turning one rotation off leaves the other running**: auto wallpaper and the scheduler share one background job, so turning either off used to stop both.
+- **Stopping a rotation stops its download**: it used to keep going for up to 64 MB after you'd turned rotation off. It stops right away now and removes the partial file.
+- **A damaged saved-ahead list can't kill a download**: if that list wouldn't read, the download in progress was thrown away with it. The download finishes now and the list starts over.
 - **Motion wallpapers can be favorites**: you can now favorite a motion wallpaper from its card menu or from the full-screen preview. Saved videos show up under Favorites > Videos, where you can apply, crop or download them, and they travel with your favorites and library backups. Rotation and Download all still use pictures only, so a saved video never ends up as a still wallpaper.
 - **Helper text shows in full at large text sizes**: with your text size above the default, summaries in Settings and Library used to end in an ellipsis or break in the middle of a word. They wrap in full now. Cards that don't fit side by side stack instead, and recent searches sit below the search field rather than over it.
 - **The Battery Saver setting no longer shows "15%%"**: the summary under Settings > Video wallpapers printed two percent signs, in English and in Chinese. It shows one now.

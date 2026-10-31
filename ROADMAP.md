@@ -222,13 +222,6 @@ Remainders of items closed in the 2026-09-30 drain whose full acceptance did not
   Acceptance: a video can be added to a collection from its card and from Favorites > Videos, shows there with the rest and applies from it, and survives a backup round trip; the migration runs from 20 with a test; on a phone a Reddit and a YouTube video favorited from the card and the preview are under Videos after a restart, apply and download from there with the same license prompts as the feed, and TalkBack reads the tab.
   Complexity: M
 
-- [ ] P2 — Hold theme pack import and the 24H pack worker to the restore address rules
-  Why: a library restore now keeps only pack pictures and profile sounds that are on the phone or on one of Aura's provider hosts, but a theme pack import still takes any web address, and the pack worker fetches whatever it was given on any network.
-  Evidence: `ThemePackImportPlan.kt` accepts any http or https host for pack slots and profile sounds; `WallpaperPackManager.kt` has no Wi-Fi only check before an https slot; a redirect from an allowed provider host isn't constrained; Reddit's `hostSuffixes` in the provider registry lacks `redd.it`, so a legitimate `i.redd.it` slot is reported for a re-pick.
-  Touches: `ThemePackImportPlan.kt`, `ImportPayloadValidation.kt`, `WallpaperPackManager.kt`, the provider registry, `tools/network_endpoint_inventory_check.py`, tests.
-  Acceptance: theme pack import runs pack slots and profile sounds through the same check a library restore uses; the pack worker honors Wi-Fi only and refuses a redirect that leaves the provider's hosts; an `i.redd.it` picture survives a restore; tests cover a hostile theme pack, a metered connection and a redirect.
-  Complexity: S
-
 - [ ] P2 — Prove offline rotation on a phone and finish its follow-ups
   Why: rotation work no longer carries a network constraint and the check moved into the worker (`RotationNetworkGate`), but nothing has run on a device. Favorites and collection sources still wait for a network even when their pictures are already on the phone, and the catch-up one-shot writes its receipts under the caller's work name.
   Evidence: `RotationNetworkGate.kt`, `AutoWallpaperWorker.kt` (`auto_wallpaper_catch_up`, `relaxStoredNetworkConstraint`), `RotationTriggerService.kt`; `readRotationNetworkState` has no JVM test.
@@ -262,13 +255,6 @@ Remainders of items closed in the 2026-09-30 drain whose full acceptance did not
   Evidence: restored profile sounds are MediaStore row addresses, which name a different sound or nothing on another phone; someone whose night sound was already stuck has it saved as "previous" until they set the day sound once; `sound_profile_now` has no row in `docs/background-work-scheduling-ledger.json`, and the pack's row doesn't mention lost access or the start-up repair; a pack edit that lands during a successful worker run can be hidden by that run's dedup marker until the next time of day; a restore or a theme pack import replaces the pack without releasing the old pictures' grants, and a grant taken for a pick that's never saved still leaks.
   Touches: `SoundProfileManager.kt`, `WallpaperPackManager.kt`, `PickedFileGrants.kt`, `LibraryExporter.kt`, `ThemePackImportPlan.kt`, the scheduling ledger, a device session.
   Acceptance: a restored profile whose sound isn't on this phone is listed for a re-pick instead of playing something else; the ledger lists every profile and pack work name with its lost-access behaviour; an edit made during a worker run is applied at once; restore and theme pack import release grants the new pack doesn't use; on a phone, a profile's hours end and the earlier ringtone comes back, and rotating the screen mid-edit keeps both editors open with the pick intact.
-  Complexity: S
-
-- [ ] P3 — Tie off the rotation loose ends the saved-ahead review found
-  Why: fixing the saved-ahead cache turned up five smaller faults next to it. None of them loses a wallpaper, but each one is a wrong answer waiting for the right timing.
-  Evidence: the `"reddit"` rotation source normalizes to `"discover"`, so its own fetch branch and provider check in `AutoWallpaperWorker.kt` never run; with `discover`, a picture saved ahead from a provider that was switched off afterwards still applies once; a corrupt index in `RotationPrefetchCache.kt` deletes every file in the folder, including one still downloading; `setAutoWallpaper(false)` in `SettingsRotationDelegate.kt` cancels the shared periodic work even when the scheduler is on; `WallpaperApplier.downloadToFile` isn't cancelled with its coroutine, so a stopped run keeps writing until the transfer ends.
-  Touches: `AutoWallpaperWorker.kt`, `RotationPrefetchCache.kt`, `SettingsRotationDelegate.kt`, `WallpaperApplier.kt`, their tests.
-  Acceptance: the Reddit source either has a live branch with a test or the dead one is removed; a saved picture from a disabled provider is dropped; a corrupt index keeps an in-flight download; turning auto wallpaper off leaves the scheduler's work alone; cancelling a run closes its download at once.
   Complexity: S
 
 - [ ] P3 — Finish resumable downloads and prove a resume on a phone
@@ -318,12 +304,12 @@ Remainders of items closed in the 2026-09-30 drain whose full acceptance did not
   Complexity: S
 
 - [ ] P3 — Finish the debug-build StrictMode and LeakCanary pass
-  Why: debug builds now run StrictMode and LeakCanary, but nothing asserts LeakCanary is absent from release APKs, the violations it logs on a real device haven't been listed, and `detectImplicitUriPermissionGrant` needs compileSdk 37.
+  Why: debug builds now run StrictMode and LeakCanary, but nothing asserts LeakCanary is absent from release APKs, and the violations it logs on a real device haven't been listed.
   Touches: release APK scan in the build gates, repo notes, `FreeVibeApp.kt`.
-  Acceptance: a gate fails if `leakcanary` classes appear in a release APK; the violations seen during a device session are recorded and each has a fix or an open item; the URI-grant check is enabled once compileSdk reaches 37.
+  Acceptance: a gate fails if `leakcanary` classes appear in a release APK; the violations seen during a device session are recorded and each has a fix or an open item.
   Complexity: S
 
 
-## Issue Intake (2026-09-26)
+## Issue Intake (2026-10-31)
 
-Open GitHub issues checked against this list on 2026-09-26. The only open issue is #47 (translation call, help wanted). It is covered by the P2 item above that cites it ("Reported: #47"): Simplified Chinese landed through PR #48 on 2026-08-12, and the issue stays open as the umbrella for further languages. No new items.
+Open GitHub issues checked against this list on 2026-10-31. The only open issue is #47 (translation call, help wanted). Simplified Chinese landed through PR #48 and shipped in v6.45.3, and the issue stays open as the umbrella for further languages. The one wording review it still wants is in `Roadmap_Blocked.md`. No new items.
