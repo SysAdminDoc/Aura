@@ -14,8 +14,9 @@
 -dontwarn okhttp3.**
 -dontwarn okio.**
 
-# Room
--keep class * extends androidx.room.RoomDatabase
+# Room builds the generated database through its no-arg constructor. AGP 9's strict full
+# mode no longer keeps that constructor implicitly.
+-keep class * extends androidx.room.RoomDatabase { <init>(); }
 -keep @androidx.room.Entity class *
 
 # NewPipe Extractor + Rhino JS

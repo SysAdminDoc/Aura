@@ -107,12 +107,13 @@ def validate_room_schema_history(
 
     for required_term in (
         'arg("room.schemaLocation"',
-        'getByName("androidTest").assets.srcDir("$projectDir/schemas")',
+        'getByName("androidTest").assets.directories.add("$projectDir/schemas")',
     ):
         if required_term not in gradle_source:
             raise RoomSchemaHistoryError(f"app/build.gradle.kts missing Room schema wiring: {required_term}")
 
     for required_term in (
+        "migrate1ToCurrent_preservesFavoritesDownloadsAndSearchHistory",
         "migrate8To9_preservesCachedWallpaperAndBackfillsMetadataDefaults",
         "migrateEveryExportedSchemaVersionToCurrent",
         "migrate14ToCurrent_preservesRepresentativeRowsAndBackfillsDefaults",

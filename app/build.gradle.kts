@@ -3,7 +3,6 @@ import java.util.Properties
 
 plugins {
     alias(libs.plugins.android.application)
-    alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.baselineprofile)
@@ -87,7 +86,7 @@ require(jdkMajor == 21) {
 
 android {
     namespace = "com.freevibe"
-    compileSdk = 36
+    compileSdk = 37
 
     signingConfigs {
         create("release") {
@@ -101,7 +100,7 @@ android {
     defaultConfig {
         applicationId = "com.freevibe"
         minSdk = 26
-        targetSdk = 36
+        targetSdk = 37
         versionCode = 151
         versionName = "6.46.1"
 
@@ -167,16 +166,6 @@ android {
         isCoreLibraryDesugaringEnabled = true
     }
 
-    kotlinOptions {
-        jvmTarget = "17"
-        // Firebase BoM 34.13.0 ships firebase-auth 24.1.0 compiled with a newer
-        // Kotlin (metadata 2.3.0) than this project's pinned compiler (2.1.0), which
-        // makes kspDebugKotlin reject the .kotlin_module under strict checking. The
-        // bytecode + public API are stable; only the metadata stamp is ahead, so we
-        // read it best-effort rather than dragging the whole toolchain forward.
-        freeCompilerArgs += "-Xskip-metadata-version-check"
-    }
-
     buildFeatures {
         compose = true
         buildConfig = true
@@ -198,12 +187,7 @@ android {
     }
 
     lint {
-        // No detector disables. AGP 8.7.3 could not run lint at all — three Compose
-        // detectors threw IncompatibleClassChangeError against its lint API and took
-        // the whole run down with them, which is why NullSafeMutableLiveData was
-        // disabled here. AGP 8.9.3 ships lint artifacts that match, so the run
-        // completes and every detector reports. Re-add a disable only with the
-        // stack trace that justifies it.
+        // No detector disables. Re-add one only with the stack trace that justifies it.
         warningsAsErrors = false
         abortOnError = true
     }
@@ -255,7 +239,7 @@ android {
     }
 
     sourceSets {
-        getByName("androidTest").assets.srcDir("$projectDir/schemas")
+        getByName("androidTest").assets.directories.add("$projectDir/schemas")
     }
 
     testOptions {
@@ -276,7 +260,8 @@ androidComponents {
             .withBuildType("release")
             .withFlavor("distribution" to "full"),
     ) { variant ->
-        variant.buildConfigFields.put(
+        // Null only if BuildConfig were switched off; fail the build rather than ship the key.
+        variant.buildConfigFields!!.put(
             "STABILITY_AI_KEY",
             BuildConfigField("String", "\"\"", "Release builds exclude local provider credentials"),
         )
@@ -342,7 +327,6 @@ dependencies {
 
     // Room DB
     implementation(libs.room.runtime)
-    implementation(libs.room.ktx)
     implementation(libs.room.paging)
     ksp(libs.room.compiler)
     androidTestImplementation(libs.room.testing)

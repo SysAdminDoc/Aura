@@ -14,7 +14,7 @@ runbook current before broader non-Play distribution.
 | Android developer verification | Decision recorded; owner identity verification and package registration remain |
 | F-Droid mainline | `ready-for-review` since the FOSS flavor isolated Firebase, Play Services, and ML Kit; confirm with `tools/fdroid_preflight.py` |
 | IzzyOnDroid | Ready for owner submission after a signed `v*` GitHub Release is visible |
-| Accrescent | Not submitted. Enforces the Play target-SDK bar by removing apps and caps an APK set at 128 MiB; Aura is on targetSdk 36 |
+| Accrescent | Not submitted. Enforces the Play target-SDK bar by removing apps and caps an APK set at 128 MiB; Aura is on targetSdk 37 |
 
 ## Decision record: register the existing release identity
 
@@ -64,7 +64,7 @@ them to be re-derived.
   access to the program. Registration is therefore aligned with an Accrescent
   submission, but that channel is gated on other things first: it enforces the
   Play target-SDK bar by removing non-compliant apps rather than hiding them,
-  and caps an APK set at 128 MiB. Aura is on targetSdk 36, meeting the
+  and caps an APK set at 128 MiB. Aura is on targetSdk 37, meeting the
   Play target-SDK requirement.
   Source: https://blog.accrescent.app/posts/android-developer-verification/
 

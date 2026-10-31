@@ -149,8 +149,7 @@ same change.
 
 Google's OSS Licenses Gradle task is the release notice input. Aura does not add
 the `play-services-oss-licenses` runtime dependency or stock Google notice
-activity because that runtime path pulls broad UI dependency upgrades on the
-current AGP 8.9.3 / Gradle 8.12 stack.
+activity because that runtime path pulls broad UI dependency upgrades.
 
 Generated dependency notices do not replace Aura's content-source disclosures.
 `ProviderCapability.kt` is the production registry, and

@@ -119,7 +119,7 @@ This table is checked against the [provider capability manifest](docs/providers/
 
 ## Build from source
 
-You'll need JDK 21 and Android SDK 36. Always use the Gradle wrapper, which pins the Gradle 8.12 that AGP 8.9.3 needs.
+You'll need JDK 21 and Android SDK 37. Always use the Gradle wrapper, which pins the Gradle 9.8.2 that AGP 9.5.0 needs.
 
 ```bash
 git clone https://github.com/SysAdminDoc/Aura.git

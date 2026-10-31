@@ -1,43 +1,40 @@
 [versions]
-agp = "8.9.3"
-kotlin = "2.1.0"
-ksp = "2.1.0-1.0.29"
-# 2026.06.01 is the last BOM this toolchain can take: 2026.07+ ships Compose
-# 1.12.x, whose AAR metadata demands compileSdk 37 and AGP 9.1. That is N-1 work,
-# not a version bump.
-compose-bom = "2026.06.01"
-hilt = "2.53.1"
-hilt-navigation = "1.2.0"
-room = "2.7.2"
+agp = "9.5.0"
+kotlin = "2.4.21"
+ksp = "2.3.13"
+compose-bom = "2026.09.00"
+hilt = "2.60.1"
+hilt-navigation = "1.4.0"
+room = "2.8.5"
 retrofit = "3.0.0"
-okhttp = "5.4.0"
-coil = "3.5.0"
-navigation = "2.9.8"
-lifecycle = "2.9.4"
+okhttp = "5.5.1"
+coil = "3.6.3"
+navigation = "2.10.2"
+lifecycle = "2.11.0"
 coroutines = "1.11.0"
 datastore = "1.2.1"
-media3 = "1.11.0"
-work = "2.11.2"
+media3 = "1.11.1"
+work = "2.12.0"
 paging = "3.5.0"
 # 1.2.0 is the first stable line with the generated preview API WidgetPreviewPublisher uses.
 glance = "1.2.0"
-core-ktx = "1.15.0"
-activity-compose = "1.9.3"
-serialization = "1.7.3"
+core-ktx = "1.19.1"
+activity-compose = "1.13.0"
+serialization = "1.12.0"
 moshi = "1.15.2"
 zxing = "3.5.4"
 leakcanary = "2.14"
 junit4 = "4.13.2"
 coroutines-test = "1.11.0"
 turbine = "1.2.0"
-mockk = "1.13.13"
-robolectric = "4.16.1"
-roborazzi = "1.70.0"
-androidx-test-ext-junit = "1.2.1"
-androidx-test-runner = "1.6.2"
-androidx-uiautomator = "2.3.0"
-benchmark = "1.4.1"
-baseline-profile = "1.4.1"
+mockk = "1.14.11"
+robolectric = "4.17"
+roborazzi = "1.77.0"
+androidx-test-ext-junit = "1.3.0"
+androidx-test-runner = "1.7.0"
+androidx-uiautomator = "2.4.0"
+benchmark = "1.5.0"
+baseline-profile = "1.5.0"
 profileinstaller = "1.4.1"
 desugar-jdk-libs = "2.1.5"
 
@@ -76,7 +73,6 @@ hilt-work-compiler = { group = "androidx.hilt", name = "hilt-compiler", version.
 
 # Room
 room-runtime = { group = "androidx.room", name = "room-runtime", version.ref = "room" }
-room-ktx = { group = "androidx.room", name = "room-ktx", version.ref = "room" }
 room-compiler = { group = "androidx.room", name = "room-compiler", version.ref = "room" }
 room-paging = { group = "androidx.room", name = "room-paging", version.ref = "room" }
 room-testing = { group = "androidx.room", name = "room-testing", version.ref = "room" }
@@ -146,7 +142,6 @@ firebase-functions = { group = "com.google.firebase", name = "firebase-functions
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
-kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
 kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
 kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
 baselineprofile = { id = "androidx.baselineprofile", version.ref = "baseline-profile" }

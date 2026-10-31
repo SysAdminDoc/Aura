@@ -48,12 +48,12 @@ def write_sdk(root: Path) -> Path:
 
 
 class Target37ToolchainGateTest(unittest.TestCase):
-    def test_live_repo_keeps_gate_armed_but_pending_until_sdk_bump(self) -> None:
+    def test_live_repo_passes_the_active_gate_on_sdk_37(self) -> None:
         result = validate_toolchain(REPO_ROOT)
 
-        self.assertEqual("pending", result["status"])
-        self.assertEqual(36, result["modules"]["app"]["compileSdk"])
-        self.assertEqual(36, result["modules"]["app"]["targetSdk"])
+        self.assertEqual("ok", result["status"])
+        self.assertEqual(37, result["modules"]["app"]["compileSdk"])
+        self.assertEqual(37, result["modules"]["app"]["targetSdk"])
 
     def test_rejects_target37_with_old_agp(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:

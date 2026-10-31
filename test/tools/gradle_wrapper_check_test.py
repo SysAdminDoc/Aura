@@ -28,7 +28,7 @@ class GradleWrapperCheckTest(unittest.TestCase):
 
         self.assertEqual("ok", result["status"])
         self.assertEqual(
-            "8d97a97984f6cbd2b85fe4c60a743440a347544bf18818048e611f5288d46c94",
+            "21bd5da2de49b642904077f38c0efdc7778e92b3ed0889392dca61b97e389607",
             result["distributionSha256Sum"],
         )
 
@@ -46,7 +46,7 @@ class GradleWrapperCheckTest(unittest.TestCase):
 
     def test_rejects_distribution_sha256_drift(self) -> None:
         text = live_properties_text().replace(
-            "distributionSha256Sum=8d97a97984f6cbd2b85fe4c60a743440a347544bf18818048e611f5288d46c94",
+            "distributionSha256Sum=21bd5da2de49b642904077f38c0efdc7778e92b3ed0889392dca61b97e389607",
             "distributionSha256Sum=0000000000000000000000000000000000000000000000000000000000000000",
         )
         tmpdir, path = write_properties(text)
@@ -56,7 +56,7 @@ class GradleWrapperCheckTest(unittest.TestCase):
             validate_gradle_wrapper(path)
 
     def test_rejects_all_distribution(self) -> None:
-        text = live_properties_text().replace("gradle-8.12.1-bin.zip", "gradle-8.12.1-all.zip")
+        text = live_properties_text().replace("gradle-9.8.2-bin.zip", "gradle-9.8.2-all.zip")
         tmpdir, path = write_properties(text)
         self.addCleanup(tmpdir.cleanup)
 

@@ -1,29 +1,24 @@
 plugins {
     id("com.android.test")
-    alias(libs.plugins.kotlin.android)
     alias(libs.plugins.baselineprofile)
 }
 
 android {
     namespace = "com.freevibe.benchmark"
     // Tracks :app — see the compileSdk note there.
-    compileSdk = 36
+    compileSdk = 37
     targetProjectPath = ":app"
     experimentalProperties["android.experimental.self-instrumenting"] = true
 
     defaultConfig {
         minSdk = 28
-        targetSdk = 35
+        targetSdk = 37
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
-    }
-
-    kotlinOptions {
-        jvmTarget = "17"
     }
 }
 

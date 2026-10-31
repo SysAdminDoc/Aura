@@ -36,7 +36,7 @@
     ]
   },
   "reflection": {
-    "decision": "Reflection is allowed only for reviewed platform/backward-compatibility bridges until compileSdk 37 removes the need for direct API bridges.",
+    "decision": "Reflection is allowed only for reviewed bridges to third-party internals and beta library shapes. Platform APIs are called directly now that the build compiles against SDK 37.",
     "terms": [
       "Class.forName(",
       "getDeclaredField(",
@@ -63,16 +63,6 @@
           "isAccessible = true"
         ],
         "reason": "Reads youtubedl-android FFmpeg binary and LD_LIBRARY_PATH values for local video crop/export."
-      },
-      {
-        "path": "app/src/main/java/com/freevibe/service/PhotoPickerCustomization.kt",
-        "terms": [
-          "Class.forName(",
-          "getDeclaredConstructor(",
-          "getMethod(",
-          "getField("
-        ],
-        "reason": "Bridges Android 17 Photo Picker 9:16 customization before compileSdk 37 is installed."
       },
       {
         "path": "app/src/main/java/com/freevibe/service/SmartCropDetector.kt",

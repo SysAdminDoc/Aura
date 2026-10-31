@@ -55,7 +55,7 @@ VERSION_CODE_CLAIM = re.compile(
     re.IGNORECASE,
 )
 COMPILE_SDK_RE = re.compile(r"compileSdk\s*=\s*(\d+)")
-JVM_TARGET_RE = re.compile(r'jvmTarget\s*=\s*"([^"]+)"')
+JVM_TARGET_RE = re.compile(r"targetCompatibility\s*=\s*JavaVersion\.VERSION_(\d+)")
 # CONTRIBUTING.md told contributors to install "Android SDK 35" while the build
 # compiled against 36, and asked for "JDK 17+" when Gradle 8.12.1 rejects
 # anything newer than 21. Both are things a reader acts on, so both are checked.

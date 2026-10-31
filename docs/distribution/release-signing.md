@@ -49,7 +49,7 @@ publish those unsigned verification APKs in place of the owner-signed release.
 
 Before publishing a GitHub Release:
 
-1. Set `JAVA_HOME` to Adoptium JDK 21 (Gradle 8.12.1 rejects newer JDKs).
+1. Set `JAVA_HOME` to Adoptium JDK 21 (the build requires JDK 21 exactly).
 2. Run every release preflight command listed below.
 3. Build the signed GitHub APK and Play AAB with the two separate commands under Local release commands below.
 4. Copy the APK to `release/Aura-vX.Y.Z-versionCode-N-universal-release.apk`.

@@ -295,12 +295,12 @@ class ReleaseMetadataConsistencyCheckTest(unittest.TestCase):
 
     def test_rejects_a_contributing_sdk_claim_the_build_contradicts(self) -> None:
         message = self._drifted(
-            lambda text: text.replace("Android SDK 36", "Android SDK 35"),
+            lambda text: text.replace("Android SDK 37", "Android SDK 35"),
             surface="CONTRIBUTING.md",
         )
 
         self.assertIn("install Android SDK 35", message)
-        self.assertIn("compiles against 36", message)
+        self.assertIn("compiles against 37", message)
 
     def test_rejects_a_contributing_java_target_the_build_contradicts(self) -> None:
         message = self._drifted(
