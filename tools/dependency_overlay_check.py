@@ -15,9 +15,9 @@ DEFAULT_NATIVE_LOCK = "docs/legal/native-compliance.lock.json"
 
 REQUIRED_ENTRY_IDS = {
     "firebase-android-sdk",
-    "ffmpeg-payload",
     "google-mlkit-subject-segmentation",
     "google-play-services",
+    "jump3r",
     "newpipe-extractor",
     "profileinstaller",
     "python-runtime",

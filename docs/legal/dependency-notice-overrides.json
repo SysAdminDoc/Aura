@@ -20,15 +20,6 @@
       "usage": "Community authentication, uploads, votes, database, storage, and app-check dependencies."
     },
     {
-      "id": "ffmpeg-payload",
-      "licenseId": "GPL-3.0-or-later for the resolved payload; FFmpeg base licensing depends on build flags",
-      "reviewNote": "The resolved AAR embeds FFmpeg 7.1.1 configure lines with --enable-gpl and --enable-version3. See docs/legal/ffmpeg-source-correspondence.md; release owners still must confirm the exact Termux source, patches, dependency source set, and build logs before publishing changed FFmpeg payloads.",
-      "sourceUrl": "https://ffmpeg.org/releases/ffmpeg-7.1.1.tar.xz",
-      "target": "ffmpeg",
-      "targetType": "payload",
-      "usage": "Video crop/export, yt-dlp runtime support, MP3 and FLAC audio encoding, unavailable OGG or Opus encoding, and lossless cuts for containers Media3 cannot remux."
-    },
-    {
       "id": "google-mlkit-subject-segmentation",
       "licenseId": "Google ML Kit terms / Google Play services SDK terms",
       "reviewNote": "Subject segmentation is distributed through Google Play services ML Kit. Review ML Kit device support, beta status, and Google SDK terms when the coordinate changes.",
@@ -45,6 +36,15 @@
       "target": "com.google.android.gms",
       "targetType": "group",
       "usage": "Google service integration, task APIs, base libraries, auth, FIDO, and ML Kit delivery support."
+    },
+    {
+      "id": "jump3r",
+      "licenseId": "LGPL-2.1-or-later",
+      "reviewNote": "jump3r is a pure Java port of LAME with no native code. Aura is open source, so anyone can rebuild it against a changed copy of the library, which is what the LGPL's relinking clause asks for. Keep the source link and notice in step when the coordinate changes.",
+      "sourceUrl": "https://codeberg.org/sciss/jump3r",
+      "target": "de.sciss:jump3r:",
+      "targetType": "coordinate-prefix",
+      "usage": "MP3 encoding for sound editor exports."
     },
     {
       "id": "newpipe-extractor",
@@ -85,11 +85,11 @@
     {
       "id": "youtubedl-android",
       "licenseId": "GPL-3.0",
-      "reviewNote": "youtubedl-android wraps yt-dlp and native runtime payloads. Coordinate changes require notice, native packet, FFmpeg, Python, QuickJS, and release-source review together.",
+      "reviewNote": "youtubedl-android wraps yt-dlp and native runtime payloads. Coordinate changes require notice, native packet, Python, QuickJS, and release-source review together.",
       "sourceUrl": "https://github.com/yausername/youtubedl-android",
       "target": "io.github.junkfood02.youtubedl-android:",
       "targetType": "coordinate-prefix",
-      "usage": "YouTube stream resolution plus the bundled FFmpeg and Python runtime used by extraction, video crop, and final audio codec fallbacks."
+      "usage": "YouTube stream resolution plus the bundled Python runtime used by extraction."
     },
     {
       "id": "yt-dlp-payload",

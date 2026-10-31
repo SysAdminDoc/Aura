@@ -10,7 +10,6 @@
     "docs/legal/dependency-notice-overrides.json",
     "docs/legal/dependency-license-policy.json",
     "docs/legal/native-compliance.lock.json",
-    "docs/legal/ffmpeg-source-correspondence.md",
     "tools/dependency_notice_lock.py",
     "tools/dependency_overlay_check.py",
     "tools/dependency_license_policy.py",
@@ -35,7 +34,7 @@
   "futureSbomScope": [
     "Gradle plugins and version-catalog dependencies",
     "Release runtime dependency graph",
-    "Native, FFmpeg, and youtubedl-android payloads",
+    "Native and youtubedl-android payloads",
     "Release APK/AAB digests and signing certificate fingerprints"
   ],
   "requiredLocalCommands": [

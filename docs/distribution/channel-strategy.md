@@ -21,7 +21,7 @@ review is complete.
 | Community uploads/votes/moderation | Firebase Auth, Realtime Database, Storage, admin Custom Claims, App Check client providers | `foss` hard-disables the community provider and compiles against local no-op Firebase adapters. |
 | Subject segmentation/parallax | Google Play Services ML Kit subject segmentation plus ModuleInstallClient | `foss` compiles against local no-op segmentation adapters and falls back to center-crop/single-layer wallpaper behavior. |
 | Google Services plugin | Applied for full builds with `google-services.json` | FOSS-only Gradle tasks skip the Google Services and OSS Licenses plugins. |
-| YouTube/NewPipe/yt-dlp | Kept | Review F-Droid source-build expectations for native/FFmpeg/Python payloads before submission. |
+| YouTube/NewPipe/yt-dlp | Kept | Review F-Droid source-build expectations for native/Python payloads before submission. |
 | Release signing | GitHub release workflow signs with owner key | For F-Droid reproducible builds, decide whether upstream signature copying is viable or whether F-Droid signs its own APK. |
 
 ## Preflight

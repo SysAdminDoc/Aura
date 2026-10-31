@@ -28,7 +28,6 @@ Current releases must keep these evidence files and controls in place:
 - `docs/legal/dependency-notice-overrides.json`
 - `docs/legal/dependency-license-policy.json`
 - `docs/legal/native-compliance.lock.json`
-- `docs/legal/ffmpeg-source-correspondence.md`
 - `Aura-vX.Y.Z-versionCode-N-universal-release.apk`
 - `Aura-vX.Y.Z-versionCode-N-play-release.aab`
 - `THIRD-PARTY-NOTICES.md`
@@ -55,7 +54,7 @@ The SBOM scope must cover:
 
 - Gradle plugins and version-catalog dependencies.
 - Release runtime dependency graph.
-- Native, FFmpeg, and youtubedl-android payloads.
+- Native and youtubedl-android payloads.
 - Release APK/AAB digests and signing certificate fingerprints.
 
 The local release lane should include the chosen SBOM file in `SHA256SUMS.txt`,

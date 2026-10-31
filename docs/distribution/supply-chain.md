@@ -17,7 +17,7 @@ checksum, and release-note validation.
 | Dependency notice lockfile | `tools/dependency_notice_lock.py --mode check` | Fails when generated release dependency notices or raw metadata rows drift without review. |
 | Dependency notice overlay | `tools/dependency_overlay_check.py --overlay` | Requires curated source, license, usage, and release-review metadata for high-risk dependencies and native payloads. |
 | Dependency license policy | `tools/dependency_license_policy.py --policy` | Fails when curated dependency or native-payload license IDs are disallowed, unknown, or missing required review notes. |
-| Native compliance packet | `tools/native_compliance_inventory.py --mode check-lock` | Inventories youtubedl-android, yt-dlp/Python, FFmpeg, QuickJS, and NewPipeExtractor payload evidence and publishes `NATIVE-COMPLIANCE.md`. |
+| Native compliance packet | `tools/native_compliance_inventory.py --mode check-lock` | Inventories youtubedl-android, yt-dlp/Python, QuickJS, and NewPipeExtractor payload evidence and publishes `NATIVE-COMPLIANCE.md`. |
 | Native alignment packet | `tools/native_alignment_check.py` | Records Android native page-alignment evidence as `NATIVE-ALIGNMENT.json`. |
 | Gradle dependency verification | `gradle/verification-metadata.xml` | Records SHA-256 checksums for resolved Gradle plugins and app dependencies. |
 | Gradle wrapper policy | `tools/gradle_wrapper_check.py` | Pins the Gradle wrapper distribution URL, SHA-256, validation, storage roots, and timeout. |
@@ -179,18 +179,11 @@ rerunning Gradle.
 ## Native compliance packet
 
 `NATIVE-COMPLIANCE.md` is a factual inventory, not legal advice. It records
-artifact hashes, ABI payload paths, nested yt-dlp/Python facts, FFmpeg payload
-entries, and upstream source/build references that release owners must review.
+artifact hashes, ABI payload paths, nested yt-dlp/Python facts, and upstream
+source/build references that release owners must review.
 
-`docs/legal/ffmpeg-source-correspondence.md` is the FFmpeg-specific release
-review checklist. It records the resolved FFmpeg AAR hash, nested
-`libffmpeg.zip.so` hashes, embedded FFmpeg configure lines, the FFmpeg source
-candidate, and remaining owner actions for source correspondence.
-
-Treat a youtubedl-android, NewPipeExtractor, yt-dlp, Python, QuickJS, or FFmpeg
-version change as a required native packet refresh. When FFmpeg payload facts
-change, refresh `docs/legal/ffmpeg-source-correspondence.md` in the same change
-and keep the unresolved-owner-action section accurate.
+Treat a youtubedl-android, NewPipeExtractor, yt-dlp, Python, or QuickJS version
+change as a required native packet refresh.
 
 ## Gradle dependency verification
 
@@ -233,7 +226,7 @@ When N-1 lands, add a CycloneDX or SPDX SBOM lane that covers:
 
 - Gradle plugins and version-catalog dependencies.
 - Release runtime dependency graph.
-- Native, FFmpeg, and youtubedl-android payloads.
+- Native and youtubedl-android payloads.
 - Release APK/AAB digests and signing certificate fingerprints.
 
 The reviewed candidate artifact names are `SBOM.cyclonedx.json`,

@@ -815,7 +815,7 @@ class MediaStackMigrationEvidenceTest(unittest.TestCase):
         ):
             source = self.repo_root / source_path
             source.parent.mkdir(parents=True, exist_ok=True)
-            source.write_text("FFmpeg\n", encoding="utf-8")
+            source.write_text("yt-dlp\n", encoding="utf-8")
 
     def evidence(self):
         return {
@@ -830,13 +830,7 @@ class MediaStackMigrationEvidenceTest(unittest.TestCase):
                 "canDisable": False,
                 "reason": "The extractor still expands bundled native archives.",
             },
-            "retainedFfmpegConsumers": [
-                {
-                    "id": "sound-editor-codec-fallbacks",
-                    "sourcePath": "app/src/main/java/com/freevibe/service/AudioTrimmer.kt",
-                    "mode": "fallback",
-                    "operations": ["MP3 encode"],
-                },
+            "retainedNativeRuntimeConsumers": [
                 {
                     "id": "yt-dlp-extractor-runtime",
                     "sourcePath": "app/build.gradle.kts",
@@ -847,7 +841,7 @@ class MediaStackMigrationEvidenceTest(unittest.TestCase):
             "videoEditingStatus": "Video editing runs on Media3.",
         }
 
-    def test_accepts_measured_artifacts_and_named_ffmpeg_consumers(self):
+    def test_accepts_measured_artifacts_and_named_runtime_consumers(self):
         result = native_alignment_check.validate_media_stack_migration_evidence(
             self.repo_root,
             self.evidence(),
@@ -857,9 +851,9 @@ class MediaStackMigrationEvidenceTest(unittest.TestCase):
         self.assertTrue(result["useLegacyPackaging"])
         self.assertFalse(result["canDisableLegacyPackaging"])
 
-    def test_rejects_an_unnamed_ffmpeg_consumer(self):
+    def test_rejects_an_unnamed_runtime_consumer(self):
         evidence = self.evidence()
-        evidence["retainedFfmpegConsumers"].pop()
+        evidence["retainedNativeRuntimeConsumers"][0]["id"] = "something-else"
 
         with self.assertRaisesRegex(native_alignment_check.NativeAlignmentError, "yt-dlp-extractor-runtime"):
             native_alignment_check.validate_media_stack_migration_evidence(self.repo_root, evidence)

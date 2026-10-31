@@ -20,14 +20,12 @@ DEFAULT_LOCKFILE = "docs/legal/native-compliance.lock.json"
 DEFAULT_COORDINATE_FALLBACK = (
     "io.github.junkfood02.youtubedl-android:common:0.18.1",
     "io.github.junkfood02.youtubedl-android:library:0.18.1",
-    "io.github.junkfood02.youtubedl-android:ffmpeg:0.18.1",
     "com.github.teamnewpipe:NewPipeExtractor:v0.26.3",
 )
 
 DEFAULT_GRADLE_BUILD_FILES = ("app/build.gradle.kts",)
 NATIVE_COORDINATE_PREFIXES = (
     "com.github.teamnewpipe:NewPipeExtractor:",
-    "io.github.junkfood02.youtubedl-android:ffmpeg:",
     "io.github.junkfood02.youtubedl-android:library:",
 )
 
@@ -72,12 +70,6 @@ SOURCE_REFERENCES = {
         license_url="https://raw.githubusercontent.com/yausername/youtubedl-android/master/LICENSE",
         review_note="Bundles yt-dlp plus Python/native runtime payloads; exact nested payload source evidence is required for release review.",
     ),
-    "io.github.junkfood02.youtubedl-android:ffmpeg:0.18.1": SourceReference(
-        license_id="GPL-3.0-or-later for the resolved payload; FFmpeg base licensing depends on build flags",
-        source_url="https://github.com/yausername/youtubedl-android/tree/master/ffmpeg",
-        license_url="https://www.ffmpeg.org/legal.html",
-        review_note="Embedded libraries expose FFmpeg 7.1.1 configure evidence; exact Termux source, patch, and dependency correspondence still needs release-owner review.",
-    ),
     "com.github.teamnewpipe:NewPipeExtractor:v0.26.3": SourceReference(
         license_id="GPL-3.0-or-later",
         source_url="https://github.com/TeamNewPipe/NewPipeExtractor/tree/v0.26.3",
@@ -107,82 +99,12 @@ PAYLOAD_REFERENCES = (
         review_note="libqjs.so is present in youtubedl-android library AARs; exact packaged QuickJS revision is not encoded in the AAR.",
     ),
     PayloadReference(
-        name="FFmpeg payload",
-        license_id="GPL-3.0-or-later for the resolved payload; FFmpeg base licensing depends on build flags",
-        evidence_url="https://www.ffmpeg.org/legal.html",
-        review_note="Embedded configure lines include GPL/version3 flags; FFmpeg legal guidance still requires matching source and build evidence for the shipped binaries.",
-    ),
-    PayloadReference(
-        name="Aura FFmpeg source correspondence checklist",
-        license_id="Release review evidence",
-        evidence_url="docs/legal/ffmpeg-source-correspondence.md",
-        review_note="Records resolved AAR hash, embedded FFmpeg 7.1.1 configure evidence, source candidates, and remaining owner actions.",
-    ),
-    PayloadReference(
-        name="youtubedl-android FFmpeg build notes",
-        license_id="Build evidence, not a separate license",
-        evidence_url="https://raw.githubusercontent.com/yausername/youtubedl-android/master/BUILD_FFMPEG.md",
-        review_note="Upstream describes a Termux package build path; Aura still needs exact source/build correspondence for the resolved 0.18.1 AAR.",
-    ),
-    PayloadReference(
         name="youtubedl-android Python build notes",
         license_id="Build evidence, not a separate license",
         evidence_url="https://raw.githubusercontent.com/yausername/youtubedl-android/master/BUILD_PYTHON.md",
         review_note="Upstream describes a Termux package build path; the resolved AAR contains python3.12 despite older README/build-note examples.",
     ),
 )
-
-
-FFMPEG_CONFIG_RE = re.compile(rb"--arch=[\x20-\x7e]{80,4096}?--disable-libfdk-aac")
-FFMPEG_VERSION_RE = re.compile(rb"FFmpeg version\s+[0-9][0-9A-Za-z.\-+ ]{0,80}")
-
-
-def clean_ascii(value: bytes) -> str:
-    return value.decode("ascii", "replace").replace("\x00", "").strip()
-
-
-def infer_ffmpeg_license_mode(configure_line: str) -> str:
-    if "--enable-nonfree" in configure_line:
-        return "nonfree flags present; do not redistribute without separate review"
-    if "--enable-gpl" in configure_line and "--enable-version3" in configure_line:
-        return "GPL-3.0-or-later flags present (--enable-gpl --enable-version3); --enable-nonfree not found"
-    if "--enable-gpl" in configure_line:
-        return "GPL-2.0-or-later flags present (--enable-gpl); --enable-nonfree not found"
-    return "LGPL-compatible flags inferred; --enable-gpl and --enable-nonfree not found"
-
-
-def extract_ffmpeg_facts(nested: zipfile.ZipFile, names: list[str]) -> dict[str, str]:
-    configs: set[str] = set()
-    versions: set[str] = set()
-    interesting_prefixes = (
-        "usr/lib/libav",
-        "usr/lib/libpostproc",
-        "usr/lib/libswresample",
-        "usr/lib/libswscale",
-    )
-    for name in names:
-        if name.endswith("/") or not name.startswith(interesting_prefixes):
-            continue
-        data = nested.read(name)
-        configs.update(clean_ascii(match.group(0)) for match in FFMPEG_CONFIG_RE.finditer(data))
-        versions.update(clean_ascii(match.group(0)) for match in FFMPEG_VERSION_RE.finditer(data))
-
-    facts: dict[str, str] = {}
-    if versions:
-        facts["FFmpeg version"] = ", ".join(sorted(versions))
-    if configs:
-        normalized = sorted(configs)
-        configure_text = "\n".join(normalized)
-        facts["FFmpeg configure"] = configure_text
-        facts["FFmpeg configure sha256"] = hashlib.sha256(
-            configure_text.encode("utf-8")
-        ).hexdigest()
-        facts["FFmpeg license mode"] = (
-            infer_ffmpeg_license_mode(normalized[0])
-            if len(normalized) == 1
-            else "multiple configure lines detected; inspect the full configure evidence"
-        )
-    return facts
 
 
 def parse_args() -> argparse.Namespace:
@@ -256,7 +178,7 @@ def discover_default_coordinates(repo_root: Path) -> list[Coordinate]:
         return [parse_coordinate(value) for value in DEFAULT_COORDINATE_FALLBACK]
 
     by_name = {parse_coordinate(value).name: parse_coordinate(value) for value in declared}
-    required = {"NewPipeExtractor", "library", "ffmpeg"}
+    required = {"NewPipeExtractor", "library"}
     missing = sorted(required - by_name.keys())
     if missing:
         raise ValueError(
@@ -264,20 +186,13 @@ def discover_default_coordinates(repo_root: Path) -> list[Coordinate]:
             + ", ".join(missing)
         )
 
-    ytdlp_versions = {by_name[name].version for name in ("library", "ffmpeg")}
-    if len(ytdlp_versions) != 1:
-        raise ValueError(
-            "youtubedl-android library and ffmpeg versions must match for native compliance review"
-        )
-    ytdlp_version = next(iter(ytdlp_versions))
     return [
         Coordinate(
             group="io.github.junkfood02.youtubedl-android",
             name="common",
-            version=ytdlp_version,
+            version=by_name["library"].version,
         ),
         by_name["library"],
-        by_name["ffmpeg"],
         by_name["NewPipeExtractor"],
     ]
 
@@ -376,7 +291,6 @@ def nested_zip_summary(data: bytes) -> tuple[int | None, list[str], dict[str, st
             )
             if python_dirs:
                 facts["python payload"] = ", ".join(python_dirs)
-            facts.update(extract_ffmpeg_facts(nested, names))
             return len(names), selected, facts
     except zipfile.BadZipFile:
         return None, [], {}
@@ -706,8 +620,6 @@ def build_markdown(
             "## Release Review Notes",
             "",
             "- Confirm exact upstream source and license text for every artifact listed above before public release expansion.",
-            "- FFmpeg payloads expose embedded configure evidence in this report; release owners still need exact Termux source, patch, dependency-source, and build-log correspondence before publishing changed FFmpeg payloads.",
-            "- FFmpeg source correspondence checklist: docs/legal/ffmpeg-source-correspondence.md",
             "- youtubedl-android library payloads include yt-dlp and Python assets that need version/source disclosure.",
             "- Generated Google OSS notices cover Maven coordinates but do not inspect these nested native payloads.",
         ]

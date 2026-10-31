@@ -20,7 +20,6 @@ class NativeComplianceInventoryTest(unittest.TestCase):
                 dependencies {
                     implementation("com.github.teamnewpipe:NewPipeExtractor:v0.27.0")
                     implementation("io.github.junkfood02.youtubedl-android:library:0.19.0")
-                    implementation("io.github.junkfood02.youtubedl-android:ffmpeg:0.19.0")
                 }
                 """,
             )
@@ -31,30 +30,24 @@ class NativeComplianceInventoryTest(unittest.TestCase):
                 [
                     "io.github.junkfood02.youtubedl-android:common:0.19.0",
                     "io.github.junkfood02.youtubedl-android:library:0.19.0",
-                    "io.github.junkfood02.youtubedl-android:ffmpeg:0.19.0",
                     "com.github.teamnewpipe:NewPipeExtractor:v0.27.0",
                 ],
                 [coordinate.label for coordinate in coordinates],
             )
 
-    def test_rejects_mismatched_youtubedl_android_versions(self):
+    def test_rejects_a_build_missing_a_native_coordinate(self):
         with tempfile.TemporaryDirectory() as temp_dir:
             repo_root = Path(temp_dir)
             write_text(
                 repo_root / "app/build.gradle.kts",
                 """
                 dependencies {
-                    implementation("com.github.teamnewpipe:NewPipeExtractor:v0.26.3")
                     implementation("io.github.junkfood02.youtubedl-android:library:0.18.1")
-                    implementation("io.github.junkfood02.youtubedl-android:ffmpeg:0.19.0")
                 }
                 """,
             )
 
-            with self.assertRaisesRegex(
-                ValueError,
-                "library and ffmpeg versions must match",
-            ):
+            with self.assertRaisesRegex(ValueError, "NewPipeExtractor"):
                 native_compliance_inventory.discover_default_coordinates(repo_root)
 
     def test_falls_back_for_external_report_fixtures_without_gradle_files(self):

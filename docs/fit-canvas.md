@@ -24,9 +24,8 @@ once and reuses it, so playback never calculates a blur for every frame.
 For normal video, the fitted foreground and static canvas are composed into one
 validated H.264 apply copy at up to 30 frames per second. For GIF wallpaper, the
 service keeps one canvas bitmap and draws each GIF frame over it. The source
-media is not stretched. Local video initializes only the bundled FFmpeg runtime
-and its minimal signed linker support set, so Fit Canvas does not start YouTube
-tooling in a release channel where YouTube is unavailable.
+media is not stretched. Local video runs through Media3, so Fit Canvas doesn't
+start YouTube tooling in a release channel where YouTube is unavailable.
 
 ## Fallbacks and limits
 

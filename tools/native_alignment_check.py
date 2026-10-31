@@ -59,9 +59,9 @@ class AlignmentException:
 
     ``loaded_at_startup`` records whether a DT_NEEDED chain from something the
     APK ships reaches the object, so the loader maps it whenever that program
-    runs. The gate measures it. These five entries once claimed FFmpeg only
-    dlopened libwebp when it needed it, while libavcodec named libwebp in
-    DT_NEEDED and every FFmpeg run mapped it.
+    runs. The gate measures it. Five entries for a payload Aura no longer ships
+    once claimed a library was only dlopened when needed, while another object
+    named it in DT_NEEDED and every run mapped it.
     """
 
     archive_entry: str
@@ -78,8 +78,8 @@ class AlignmentException:
         if library.inner_path != self.inner_path:
             return False
         # Compare the archive's file name, not a suffix of its path. A bare
-        # endswith let an unrelated payload named corplibffmpeg.zip.so inherit
-        # libffmpeg.zip.so's exception and ship a brand new under-aligned
+        # endswith let an unrelated payload named corplibpython.zip.so inherit
+        # libpython.zip.so's exception and ship a brand new under-aligned
         # object unreviewed.
         return library.archive_entry.rsplit("/", 1)[-1] == self.archive_entry
 
@@ -225,24 +225,23 @@ def validate_media_stack_migration_evidence(repo_root: Path, value: Any) -> dict
         raise NativeAlignmentError("legacy packaging cannot be enabled while canDisable is true")
 
     consumers = require_object_list(
-        evidence.get("retainedFfmpegConsumers"),
-        "mediaStackMigrationEvidence.retainedFfmpegConsumers",
+        evidence.get("retainedNativeRuntimeConsumers"),
+        "mediaStackMigrationEvidence.retainedNativeRuntimeConsumers",
     )
     consumer_ids: set[str] = set()
     for index, consumer in enumerate(consumers):
-        label = f"retainedFfmpegConsumers[{index}]"
+        label = f"retainedNativeRuntimeConsumers[{index}]"
         consumer_id = require_string(consumer.get("id"), f"{label}.id")
         if consumer_id in consumer_ids:
-            raise NativeAlignmentError(f"retainedFfmpegConsumers contains duplicate id {consumer_id}")
+            raise NativeAlignmentError(f"retainedNativeRuntimeConsumers contains duplicate id {consumer_id}")
         consumer_ids.add(consumer_id)
         source_path = require_string(consumer.get("sourcePath"), f"{label}.sourcePath")
         require_string(consumer.get("mode"), f"{label}.mode")
         require_string_list(consumer.get("operations"), f"{label}.operations")
         if not (repo_root / source_path).is_file():
-            raise NativeAlignmentError(f"retained FFmpeg consumer source is missing: {source_path}")
+            raise NativeAlignmentError(f"retained native runtime consumer source is missing: {source_path}")
 
     required_consumers = {
-        "sound-editor-codec-fallbacks",
         "yt-dlp-extractor-runtime",
     }
     if consumer_ids != required_consumers:
@@ -253,12 +252,12 @@ def validate_media_stack_migration_evidence(repo_root: Path, value: Any) -> dict
             details.append("missing " + ", ".join(missing))
         if extra:
             details.append("unexpected " + ", ".join(extra))
-        raise NativeAlignmentError("retainedFfmpegConsumers mismatch: " + "; ".join(details))
+        raise NativeAlignmentError("retainedNativeRuntimeConsumers mismatch: " + "; ".join(details))
 
     require_string(evidence.get("videoEditingStatus"), "mediaStackMigrationEvidence.videoEditingStatus")
     return {
         "artifactCount": len(after),
-        "retainedFfmpegConsumerIds": sorted(consumer_ids),
+        "retainedNativeRuntimeConsumerIds": sorted(consumer_ids),
         "useLegacyPackaging": legacy_enabled,
         "canDisableLegacyPackaging": can_disable,
     }
@@ -421,12 +420,12 @@ def inspect_nested_archive(
 ) -> tuple[list[NativeLibrary], int]:
     """Read the ELFs inside a `lib/<abi>/*.zip.so` payload.
 
-    youtubedl-android ships FFmpeg and CPython as ZIP archives renamed to `.so`
-    so the APK packager will carry them, then extracts them at runtime. The
-    loader never maps them from the APK, so nothing about the outer entry says
-    anything about the ELFs inside, and this gate used to record the whole
-    archive as "skipped". That left roughly 250 shipped 64-bit ELFs per ABI
-    unmeasured, including five libwebp objects that are only 4 KB aligned.
+    youtubedl-android ships CPython as a ZIP archive renamed to `.so` so the APK
+    packager will carry it, then extracts it at runtime. The loader never maps it
+    from the APK, so nothing about the outer entry says anything about the ELFs
+    inside, and this gate used to record the whole archive as "skipped". That
+    once left roughly 250 shipped 64-bit ELFs per ABI unmeasured, including five
+    objects that were only 4 KB aligned.
 
     Entries that are not ELFs are counted, not skipped silently: the archives
     are full of Python sources and of tiny text files standing in for symlinks.
@@ -472,7 +471,7 @@ def startup_load_chains(libraries: list[NativeLibrary]) -> dict[str, list[str]]:
     """Map every ELF the loader maps at startup to the DT_NEEDED chain that reaches it.
 
     The roots are the ELFs the APK ships directly under lib/<abi>/: the app's own
-    JNI libraries and the FFmpeg and ffprobe executables youtubedl-android runs.
+    JNI libraries and the Python executable youtubedl-android runs.
     Whatever they name in DT_NEEDED, and whatever those name in turn, is mapped
     every time they run, whatever the input. An ELF outside this closure can only
     arrive through an explicit dlopen. A name resolves inside the requesting

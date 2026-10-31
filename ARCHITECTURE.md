@@ -76,8 +76,9 @@ Living architecture overview for contributors. Internal working notes live in `C
 │   YouTube: NewPipe Extractor + yt-dlp (no API key)                 │
 │   Media3: clips, fades, pitch-preserving speed, and platform       │
 │     audio encoding in the Sound Editor                             │
-│   FFmpeg/Python: bundled through youtubedl-android for extraction, │
-│     video crop, missing codecs, and unsupported lossless cuts      │
+│   Media3 also runs video crop, Fit Canvas and HLS downloads        │
+│   jump3r: MP3 encoding. Aura's own encoder writes FLAC             │
+│   Python: bundled through youtubedl-android for extraction         │
 │   Firebase: RTDB (community voting) + Storage (uploads) + Auth     │
 │     (anonymous default; optional Google sign-in queued)            │
 │   ML Kit: Subject Segmentation (unbundled, Google Play services)   │
@@ -188,7 +189,7 @@ locators and history before export. See
 
 - ViewModels: scoped to `NavBackStackEntry`. Survive config changes; recreated after process death.
 - `SelectedContentHolder`: persists primary selection to disk on every `select*` call; restores on Hilt construction. Pager list is in-memory only; detail screen collapses to single-item display when list is empty.
-- `WallpaperService` engines: pause render threads on `onVisibilityChanged(false)`. Sensors deregister when invisible. Media3 sound exports cancel with their coroutine. Retained FFmpeg work has a 120-second process timeout, and video crop keeps its back-press guard.
+- `WallpaperService` engines: pause render threads on `onVisibilityChanged(false)`. Sensors deregister when invisible. Sound exports cancel with their coroutine, and video crop keeps its back-press guard.
 
 ## Live-wallpaper engine discipline
 

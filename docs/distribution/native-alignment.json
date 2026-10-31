@@ -26,7 +26,7 @@
   "abiSplitEvidence": {
     "date": "2026-08-20",
     "status": "verified",
-    "note": "Per-ABI splits cut the download from 199 MB to 60 MB on the architecture every modern phone uses. That is still above IzzyOnDroid's 30 MB per-APK ceiling. The FFmpeg and Python payload remains because yt-dlp extraction, video crop, and codec fallbacks still use it. The Media3 sound-editor migration does not make the artifact eligible by itself.",
+    "note": "Measured while FFmpeg still shipped: per-ABI splits cut the download from 199 MB to 60 MB on the architecture every modern phone uses. That was above IzzyOnDroid's 30 MB per-APK ceiling. See ffmpegRemovalEvidence for the size after FFmpeg left the APK.",
     "artifactBytes": {
       "app-full-arm64-v8a-release.apk": 63439662,
       "app-full-armeabi-v7a-release.apk": 56785934,
@@ -40,7 +40,7 @@
   "mediaStackMigrationEvidence": {
     "date": "2026-08-21",
     "status": "verified",
-    "implementation": "Media3 Transformer now owns clipping, PCM fades, pitch-preserving speed, M4A, WAV, and device-supported OGG or Opus exports. FFmpeg only encodes codecs without a platform encoder and handles unsupported lossless packet copies.",
+    "implementation": "Media3 Transformer owns clipping, PCM fades, pitch-preserving speed, M4A, WAV, and device-supported OGG or Opus exports. jump3r encodes MP3, Aura's own encoder writes FLAC, and lossless MP3 and FLAC cuts copy frames in Kotlin.",
     "fixtureCorpus": {
       "status": "verified",
       "device": "Android API 35 x86_64 emulator",
@@ -90,26 +90,13 @@
       }
     },
     "artifactBuild": "The final signed public artifacts were rebuilt with optional provider BuildConfig defaults blank, then scanned against the workstation values before measurement.",
-    "sizeFinding": "The native payload remains, so each FOSS split grew by 152,465 bytes and each full split grew by 156,597 to 156,601 bytes for this delivery.",
+    "sizeFinding": "FFmpeg still shipped at this point, so each FOSS split grew by 152,465 bytes and each full split grew by 156,597 to 156,601 bytes for this delivery.",
     "legacyPackagingDecision": {
       "useLegacyPackaging": true,
       "canDisable": false,
-      "reason": "youtubedl-android still expands zipped FFmpeg and Python payloads at runtime for stream extraction, video crop, and final codec fallbacks."
+      "reason": "youtubedl-android still expands its zipped Python payload at runtime for stream extraction."
     },
-    "retainedFfmpegConsumers": [
-      {
-        "id": "sound-editor-codec-fallbacks",
-        "sourcePath": "app/src/main/java/com/freevibe/service/AudioTrimmer.kt",
-        "mode": "fallback",
-        "operations": [
-          "MP3 final encoding",
-          "FLAC final encoding",
-          "M4A final encoding only if the device AAC encoder is unavailable",
-          "OGG final encoding only if the device Vorbis encoder is unavailable",
-          "Opus final encoding on Android 8 and 9 or when the device Opus encoder is unavailable",
-          "Lossless stream-copy cuts for MP3, FLAC, or source and container pairs Media3 cannot remux"
-        ]
-      },
+    "retainedNativeRuntimeConsumers": [
       {
         "id": "yt-dlp-extractor-runtime",
         "sourcePath": "app/build.gradle.kts",
@@ -119,7 +106,7 @@
         ]
       }
     ],
-    "videoEditingStatus": "Video crop, Fit Canvas and HLS downloads run on Media3. Sound editor codec fallbacks and the yt-dlp runtime are what keep FFmpeg in the APK."
+    "videoEditingStatus": "Video crop, Fit Canvas and HLS downloads run on Media3. FFmpeg no longer ships. The yt-dlp runtime is what keeps Python in the APK."
   },
   "latestLocalEvidence": {
     "date": "2026-08-21",
@@ -142,68 +129,6 @@
       "lib/x86_64/libpython.zip.so"
     ]
   },
-  "nestedArchiveAlignmentExceptions": [
-    {
-      "archiveEntry": "libffmpeg.zip.so",
-      "innerPath": "usr/lib/libsharpyuv.so",
-      "abis": [
-        "arm64-v8a",
-        "x86_64"
-      ],
-      "observedAlignmentBytes": 4096,
-      "loadedAtStartup": true,
-      "reason": "Byte for byte the copy in Termux's libwebp 1.6.0-rc1-0 package, shipped inside io.github.junkfood02.youtubedl-android:ffmpeg:0.18.1, which is still the newest release. libwebp.so lists it in DT_NEEDED and libavcodec lists libwebp.so, so the loader maps it every time FFmpeg or ffprobe runs, whatever the input. On a phone with 16 KB pages the loader is expected to refuse a 4 KB-aligned object, which would stop FFmpeg from starting at all. That hasn't been tried on such a phone yet. Termux's current package is the same 4 KB build, so there's no aligned copy to swap in. The fix is a 16 KB rebuild of libwebp or dropping FFmpeg.",
-      "upstream": "https://github.com/yausername/youtubedl-android/issues/334"
-    },
-    {
-      "archiveEntry": "libffmpeg.zip.so",
-      "innerPath": "usr/lib/libwebp.so",
-      "abis": [
-        "arm64-v8a",
-        "x86_64"
-      ],
-      "observedAlignmentBytes": 4096,
-      "loadedAtStartup": true,
-      "reason": "Byte for byte the copy in Termux's libwebp 1.6.0-rc1-0 package, shipped inside io.github.junkfood02.youtubedl-android:ffmpeg:0.18.1, which is still the newest release. libavcodec lists it in DT_NEEDED, so the loader maps it every time FFmpeg or ffprobe runs, whatever the input. On a phone with 16 KB pages the loader is expected to refuse a 4 KB-aligned object, which would stop FFmpeg from starting at all. That hasn't been tried on such a phone yet. Termux's current package is the same 4 KB build, so there's no aligned copy to swap in. The fix is a 16 KB rebuild of libwebp or dropping FFmpeg.",
-      "upstream": "https://github.com/yausername/youtubedl-android/issues/334"
-    },
-    {
-      "archiveEntry": "libffmpeg.zip.so",
-      "innerPath": "usr/lib/libwebpdecoder.so",
-      "abis": [
-        "arm64-v8a",
-        "x86_64"
-      ],
-      "observedAlignmentBytes": 4096,
-      "loadedAtStartup": false,
-      "reason": "Byte for byte the copy in Termux's libwebp 1.6.0-rc1-0 package, shipped inside io.github.junkfood02.youtubedl-android:ffmpeg:0.18.1, which is still the newest release. Nothing the APK ships lists it in DT_NEEDED and no payload binary names it for dlopen, so it's extracted to disk but never mapped. It's recorded rather than skipped so a new under-aligned object still fails the gate.",
-      "upstream": "https://github.com/yausername/youtubedl-android/issues/334"
-    },
-    {
-      "archiveEntry": "libffmpeg.zip.so",
-      "innerPath": "usr/lib/libwebpdemux.so",
-      "abis": [
-        "arm64-v8a",
-        "x86_64"
-      ],
-      "observedAlignmentBytes": 4096,
-      "loadedAtStartup": false,
-      "reason": "Byte for byte the copy in Termux's libwebp 1.6.0-rc1-0 package, shipped inside io.github.junkfood02.youtubedl-android:ffmpeg:0.18.1, which is still the newest release. Nothing the APK ships lists it in DT_NEEDED and no payload binary names it for dlopen, so it's extracted to disk but never mapped. It's recorded rather than skipped so a new under-aligned object still fails the gate.",
-      "upstream": "https://github.com/yausername/youtubedl-android/issues/334"
-    },
-    {
-      "archiveEntry": "libffmpeg.zip.so",
-      "innerPath": "usr/lib/libwebpmux.so",
-      "abis": [
-        "arm64-v8a",
-        "x86_64"
-      ],
-      "observedAlignmentBytes": 4096,
-      "loadedAtStartup": true,
-      "reason": "Byte for byte the copy in Termux's libwebp 1.6.0-rc1-0 package, shipped inside io.github.junkfood02.youtubedl-android:ffmpeg:0.18.1, which is still the newest release. libavcodec lists it in DT_NEEDED, so the loader maps it every time FFmpeg or ffprobe runs, whatever the input. On a phone with 16 KB pages the loader is expected to refuse a 4 KB-aligned object, which would stop FFmpeg from starting at all. That hasn't been tried on such a phone yet. Termux's current package is the same 4 KB build, so there's no aligned copy to swap in. The fix is a 16 KB rebuild of libwebp or dropping FFmpeg.",
-      "upstream": "https://github.com/yausername/youtubedl-android/issues/334"
-    }
-  ],
   "nestedArchiveEvidence": {
     "date": "2026-09-05",
     "status": "verified",
@@ -228,11 +153,5 @@
     },
     "skippedArchivePayloads": 0,
     "finding": "Five libwebp objects inside libffmpeg.zip.so carry p_align 4096 on arm64-v8a and x86_64; every other 64-bit LOAD segment in both nested payloads is 16384. libpython.zip.so is fully compliant on both 64-bit ABIs. 32-bit ABIs are 4096 throughout, which carries no 16 KB obligation. The five are recorded in nestedArchiveAlignmentExceptions and the gate fails if a sixth appears or if a listed one stops being observed."
-  },
-  "nestedArchiveDependencyEvidence": {
-    "date": "2026-10-13",
-    "status": "verified",
-    "method": "Read PT_DYNAMIC DT_NEEDED and DT_SONAME from every ELF in the io.github.junkfood02.youtubedl-android:ffmpeg:0.18.1 AAR (jni/<abi>/libffmpeg.so, libffprobe.so and everything in libffmpeg.zip.so) on arm64-v8a and x86_64, and compared the five libwebp objects by SHA-256 with Termux's libwebp_1.6.0-rc1-0 packages.",
-    "finding": "libffmpeg.so and libffprobe.so need libavcodec.so.61, which needs libwebp.so and libwebpmux.so, and libwebp.so needs libsharpyuv.so. Those three are mapped on every FFmpeg run. libwebpdecoder.so and libwebpdemux.so are needed by nothing. All five match Termux's current package byte for byte, and that package is 4 KB aligned too. The gate now measures this chain and fails when an exception's loadedAtStartup disagrees."
   }
 }

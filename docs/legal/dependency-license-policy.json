@@ -21,6 +21,10 @@
       "prefix": "com.google.android.gms"
     },
     {
+      "overlayId": "jump3r",
+      "prefix": "de.sciss:jump3r:"
+    },
+    {
       "overlayId": "newpipe-extractor",
       "prefix": "com.github.teamnewpipe"
     },
@@ -43,10 +47,10 @@
   ],
   "requiredOverlayIds": [
     "firebase-android-sdk",
-    "ffmpeg-payload",
     "bgutil-ytdlp-pot-provider",
     "google-mlkit-subject-segmentation",
     "google-play-services",
+    "jump3r",
     "newpipe-extractor",
     "profileinstaller",
     "python-runtime",
@@ -59,10 +63,6 @@
     {
       "overlayId": "bgutil-ytdlp-pot-provider",
       "target": "bgutil-ytdlp-pot-provider"
-    },
-    {
-      "overlayId": "ffmpeg-payload",
-      "target": "ffmpeg"
     },
     {
       "overlayId": "python-runtime",
@@ -80,9 +80,9 @@
   "reviewRequiredLicenseIds": [
     "GPL-3.0",
     "GPL-3.0-or-later",
-    "GPL-3.0-or-later for the resolved payload; FFmpeg base licensing depends on build flags",
     "Google ML Kit terms / Google Play services SDK terms",
     "Google Play services SDK terms",
+    "LGPL-2.1-or-later",
     "PSF-2.0 plus packaged dependency licenses",
     "Unlicense plus ISC/MIT release-file components"
   ],
