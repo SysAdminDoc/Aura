@@ -2400,4 +2400,13 @@
     <string name="wallpaper_feedback_collection_created">已创建“%1$s”</string>
     <string name="wallpaper_feedback_added_to_collection">已添加到收藏集</string>
     <string name="settings_dialogs_identity_not_created">未创建</string>
+    <string name="video_wp_err_empty_body">服务器没有返回视频</string>
+    <string name="video_wp_err_too_large">视频超过大小限制</string>
+    <string name="video_wp_err_hls">无法将此视频流保存为 MP4</string>
+    <string name="video_wp_err_av1">此设备无法播放 AV1 视频，请换一个视频。</string>
+    <string name="video_wp_pixabay_fallback_title">Pixabay 视频</string>
+    <string name="video_wp_prepare_failed">无法处理这个视频</string>
+    <string name="video_wp_sources_stale">视频源暂时不可用，正在显示上次的有效结果。</string>
+    <string name="video_wp_sources_unavailable">视频源暂时不可用。</string>
+    <string name="video_wp_sources_limited">部分视频源暂时没有响应。</string>
 </resources>

@@ -3,15 +3,6 @@
   "baseline": [
     {
       "count": 1,
-      "firstLine": 89,
-      "id": "eefaa995ac27d7d3",
-      "path": "app/src/full/java/com/freevibe/ui/screens/aigenerate/AiWallpaperViewModel.kt",
-      "reason": "Status or error text set from screen or ViewModel state. Moves to resources with the ROADMAP item \"Move ViewModel and repository messages to string resources\".",
-      "sink": "ifBlank",
-      "text": "Generated wallpaper"
-    },
-    {
-      "count": 1,
       "firstLine": 142,
       "id": "4a602a507a7de7d0",
       "path": "app/src/full/java/com/freevibe/ui/screens/aigenerate/AiWallpaperViewModel.kt",
@@ -24,7 +15,7 @@
       "firstLine": 454,
       "id": "9f66a3278faf9013",
       "path": "app/src/main/java/com/freevibe/service/MediaIngestion.kt",
-      "reason": "Media ingestion error that reaches the upload screen as an exception message. Moves to resources with the ROADMAP item \"Move ViewModel and repository messages to string resources\".",
+      "reason": "Internal English signal, not display text. DownloadManager.downloadFailureReason classifies failures by this message, and the upload, editor and sound-apply callers (UploadRepository, SoundEditorViewModel, SoundApplier) show MediaTypeRejectedException.text through displayMessage instead.",
       "sink": "exception",
       "text": "$label content type could not be verified"
     },
@@ -33,7 +24,7 @@
       "firstLine": 483,
       "id": "44dcdd2a852db662",
       "path": "app/src/main/java/com/freevibe/service/MediaIngestion.kt",
-      "reason": "Media ingestion error that reaches the upload screen as an exception message. Moves to resources with the ROADMAP item \"Move ViewModel and repository messages to string resources\".",
+      "reason": "Internal English signal, not display text. DownloadManager.downloadFailureReason classifies failures by this message, and the upload, editor and sound-apply callers (UploadRepository, SoundEditorViewModel, SoundApplier) show MediaTypeRejectedException.text through displayMessage instead.",
       "sink": "exception",
       "text": "$label content type mismatch: expected ${expectedFamily.name.lowercase(Locale.ROOT)}"
     },
@@ -42,7 +33,7 @@
       "firstLine": 492,
       "id": "4fcdd7969327b2f4",
       "path": "app/src/main/java/com/freevibe/service/MediaIngestion.kt",
-      "reason": "Media ingestion error that reaches the upload screen as an exception message. Moves to resources with the ROADMAP item \"Move ViewModel and repository messages to string resources\".",
+      "reason": "Internal English signal, not display text. DownloadManager.downloadFailureReason classifies failures by this message, and the upload, editor and sound-apply callers (UploadRepository, SoundEditorViewModel, SoundApplier) show MediaTypeRejectedException.text through displayMessage instead.",
       "sink": "exception",
       "text": "Cannot identify container for FFmpeg: unknown file format"
     },
@@ -51,7 +42,7 @@
       "firstLine": 497,
       "id": "78e088d469ea9fcb",
       "path": "app/src/main/java/com/freevibe/service/MediaIngestion.kt",
-      "reason": "Media ingestion error that reaches the upload screen as an exception message. Moves to resources with the ROADMAP item \"Move ViewModel and repository messages to string resources\".",
+      "reason": "Internal English signal, not display text. DownloadManager.downloadFailureReason classifies failures by this message, and the upload, editor and sound-apply callers (UploadRepository, SoundEditorViewModel, SoundApplier) show MediaTypeRejectedException.text through displayMessage instead.",
       "sink": "exception",
       "text": "Container ${sniffed.extension} (${sniffed.mimeType}) is not in the FFmpeg allowlist. "
     },
@@ -75,129 +66,12 @@
     },
     {
       "count": 1,
-      "firstLine": 213,
-      "id": "968cdab32fdf9557",
-      "path": "app/src/main/java/com/freevibe/ui/screens/community/CommunityReportsScreen.kt",
-      "reason": "Status or error text set from screen or ViewModel state. Moves to resources with the ROADMAP item \"Move ViewModel and repository messages to string resources\".",
-      "sink": "error",
-      "text": "This report does not expose a blockable community uploader"
-    },
-    {
-      "count": 1,
-      "firstLine": 166,
-      "id": "fa7bcb58837e894c",
-      "path": "app/src/main/java/com/freevibe/ui/screens/community/CommunityReportsScreen.kt",
-      "reason": "Status or error text set from screen or ViewModel state. Moves to resources with the ROADMAP item \"Move ViewModel and repository messages to string resources\".",
-      "sink": "message",
-      "text": "${status.reviewLabel} reports"
-    },
-    {
-      "count": 1,
-      "firstLine": 223,
-      "id": "99a690a42323d05c",
-      "path": "app/src/main/java/com/freevibe/ui/screens/community/CommunityReportsScreen.kt",
-      "reason": "Status or error text set from screen or ViewModel state. Moves to resources with the ROADMAP item \"Move ViewModel and repository messages to string resources\".",
-      "sink": "message",
-      "text": "Creator blocked"
-    },
-    {
-      "count": 1,
-      "firstLine": 195,
-      "id": "6b07640b3e420566",
-      "path": "app/src/main/java/com/freevibe/ui/screens/community/CommunityReportsScreen.kt",
-      "reason": "Status or error text set from screen or ViewModel state. Moves to resources with the ROADMAP item \"Move ViewModel and repository messages to string resources\".",
-      "sink": "message",
-      "text": "Upload deleted"
-    },
-    {
-      "count": 1,
-      "firstLine": 116,
-      "id": "65892f66cba5d2fb",
-      "path": "app/src/main/java/com/freevibe/ui/screens/community/CreatorProfileScreen.kt",
-      "reason": "Status or error text set from screen or ViewModel state. Moves to resources with the ROADMAP item \"Move ViewModel and repository messages to string resources\".",
-      "sink": "error",
-      "text": "You cannot block your own creator profile"
-    },
-    {
-      "count": 1,
-      "firstLine": 127,
-      "id": "d6cf0c41b3a39eec",
-      "path": "app/src/main/java/com/freevibe/ui/screens/community/CreatorProfileScreen.kt",
-      "reason": "Status or error text set from screen or ViewModel state. Moves to resources with the ROADMAP item \"Move ViewModel and repository messages to string resources\".",
-      "sink": "message",
-      "text": "Creator blocked"
-    },
-    {
-      "count": 1,
-      "firstLine": 161,
-      "id": "b61a1067fb750110",
-      "path": "app/src/main/java/com/freevibe/ui/screens/community/CreatorProfileScreen.kt",
-      "reason": "Status or error text set from screen or ViewModel state. Moves to resources with the ROADMAP item \"Move ViewModel and repository messages to string resources\".",
-      "sink": "message",
-      "text": "Profile saved"
-    },
-    {
-      "count": 1,
       "firstLine": 1054,
       "id": "5c36f8bc58a81e8c",
       "path": "app/src/main/java/com/freevibe/ui/screens/editor/SoundEditorViewModel.kt",
       "reason": "Fallback file name, never shown as text.",
       "sink": "ifBlank",
       "text": "audio"
-    },
-    {
-      "count": 1,
-      "firstLine": 305,
-      "id": "217205d68f7cb5c1",
-      "path": "app/src/main/java/com/freevibe/ui/screens/editor/WallpaperCropViewModel.kt",
-      "reason": "Status or error text set from screen or ViewModel state. Moves to resources with the ROADMAP item \"Move ViewModel and repository messages to string resources\".",
-      "sink": "error",
-      "text": "Couldn't detect a subject \u2014 drag to position manually"
-    },
-    {
-      "count": 1,
-      "firstLine": 150,
-      "id": "3b777c43c6aef6c2",
-      "path": "app/src/main/java/com/freevibe/ui/screens/editor/WallpaperCropViewModel.kt",
-      "reason": "Status or error text set from screen or ViewModel state. Moves to resources with the ROADMAP item \"Move ViewModel and repository messages to string resources\".",
-      "sink": "exception",
-      "text": "Could not open image"
-    },
-    {
-      "count": 1,
-      "firstLine": 112,
-      "id": "b5b7f8848aac1a47",
-      "path": "app/src/main/java/com/freevibe/ui/screens/editor/WallpaperCropViewModel.kt",
-      "reason": "Status or error text set from screen or ViewModel state. Moves to resources with the ROADMAP item \"Move ViewModel and repository messages to string resources\".",
-      "sink": "exception",
-      "text": "Empty body"
-    },
-    {
-      "count": 1,
-      "firstLine": 111,
-      "id": "f69b967552f18364",
-      "path": "app/src/main/java/com/freevibe/ui/screens/editor/WallpaperCropViewModel.kt",
-      "reason": "Status or error text set from screen or ViewModel state. Moves to resources with the ROADMAP item \"Move ViewModel and repository messages to string resources\".",
-      "sink": "exception",
-      "text": "HTTP ${response.code}"
-    },
-    {
-      "count": 1,
-      "firstLine": 115,
-      "id": "92b70c6789669728",
-      "path": "app/src/main/java/com/freevibe/ui/screens/editor/WallpaperCropViewModel.kt",
-      "reason": "Status or error text set from screen or ViewModel state. Moves to resources with the ROADMAP item \"Move ViewModel and repository messages to string resources\".",
-      "sink": "exception",
-      "text": "Image too large to crop"
-    },
-    {
-      "count": 1,
-      "firstLine": 326,
-      "id": "b5efdbfdfe69a262",
-      "path": "app/src/main/java/com/freevibe/ui/screens/editor/WallpaperCropViewModel.kt",
-      "reason": "Status or error text set from screen or ViewModel state. Moves to resources with the ROADMAP item \"Move ViewModel and repository messages to string resources\".",
-      "sink": "success",
-      "text": "Smart crop applied"
     },
     {
       "count": 1,
@@ -225,51 +99,6 @@
       "reason": "Provider brand name, spelled the same in every locale.",
       "sink": "textBuilder",
       "text": "YouTube"
-    },
-    {
-      "count": 1,
-      "firstLine": 847,
-      "id": "79fa694d82f4f078",
-      "path": "app/src/main/java/com/freevibe/ui/screens/settings/SettingsDialogs.kt",
-      "reason": "Status or error text set from screen or ViewModel state. Moves to resources with the ROADMAP item \"Move ViewModel and repository messages to string resources\".",
-      "sink": "textBuilder",
-      "text": "Not created"
-    },
-    {
-      "count": 1,
-      "firstLine": 256,
-      "id": "d5f44ff0b4cedc85",
-      "path": "app/src/main/java/com/freevibe/ui/screens/sounds/ContactPickerScreen.kt",
-      "reason": "Status or error text set from screen or ViewModel state. Moves to resources with the ROADMAP item \"Move ViewModel and repository messages to string resources\".",
-      "sink": "error",
-      "text": "Download failed: ${e.message}"
-    },
-    {
-      "count": 1,
-      "firstLine": 166,
-      "id": "fc4e9342ff6165f5",
-      "path": "app/src/main/java/com/freevibe/ui/screens/sounds/ContactPickerScreen.kt",
-      "reason": "Status or error text set from screen or ViewModel state. Moves to resources with the ROADMAP item \"Move ViewModel and repository messages to string resources\".",
-      "sink": "error",
-      "text": "No sound selected. Return to Sounds and choose a valid item."
-    },
-    {
-      "count": 1,
-      "firstLine": 201,
-      "id": "f3c43aa573b4fc23",
-      "path": "app/src/main/java/com/freevibe/ui/screens/sounds/ContactPickerScreen.kt",
-      "reason": "Status or error text set from screen or ViewModel state. Moves to resources with the ROADMAP item \"Move ViewModel and repository messages to string resources\".",
-      "sink": "error",
-      "text": "This sound does not have a downloadable ringtone file."
-    },
-    {
-      "count": 1,
-      "firstLine": 218,
-      "id": "5f0917f7dde822d9",
-      "path": "app/src/main/java/com/freevibe/ui/screens/sounds/ContactPickerScreen.kt",
-      "reason": "Status or error text set from screen or ViewModel state. Moves to resources with the ROADMAP item \"Move ViewModel and repository messages to string resources\".",
-      "sink": "success",
-      "text": "Ringtone set for contact"
     },
     {
       "count": 1,
@@ -339,81 +168,27 @@
       "firstLine": 197,
       "id": "723ef783d8f92a16",
       "path": "app/src/main/java/com/freevibe/ui/screens/videowallpapers/VideoWallpapersScreen.kt",
-      "reason": "Status or error text set from screen or ViewModel state. Moves to resources with the ROADMAP item \"Move ViewModel and repository messages to string resources\".",
+      "reason": "Internal signal. exportVideoToGallery catches it, logs it in debug builds and returns null; the caller then shows the translated saved/not-saved message.",
       "sink": "exception",
       "text": "Video exceeds size limit"
     },
     {
-      "count": 2,
-      "firstLine": 1057,
-      "id": "08e687b7f8688b0c",
-      "path": "app/src/main/java/com/freevibe/ui/screens/videowallpapers/VideoWallpapersViewModel.kt",
-      "reason": "Status or error text set from screen or ViewModel state. Moves to resources with the ROADMAP item \"Move ViewModel and repository messages to string resources\".",
-      "sink": "exception",
-      "text": "Empty response body"
-    },
-    {
       "count": 1,
-      "firstLine": 1022,
-      "id": "d6c7ecca3723a18c",
-      "path": "app/src/main/java/com/freevibe/ui/screens/videowallpapers/VideoWallpapersViewModel.kt",
-      "reason": "Status or error text set from screen or ViewModel state. Moves to resources with the ROADMAP item \"Move ViewModel and repository messages to string resources\".",
-      "sink": "exception",
-      "text": "HLS download did not produce an MP4"
-    },
-    {
-      "count": 2,
-      "firstLine": 1056,
-      "id": "5a5e2ed924bbf124",
-      "path": "app/src/main/java/com/freevibe/ui/screens/videowallpapers/VideoWallpapersViewModel.kt",
-      "reason": "Status or error text set from screen or ViewModel state. Moves to resources with the ROADMAP item \"Move ViewModel and repository messages to string resources\".",
-      "sink": "exception",
-      "text": "HTTP ${resp.code}"
-    },
-    {
-      "count": 1,
-      "firstLine": 1562,
+      "firstLine": 1564,
       "id": "211fc88715e49fc1",
       "path": "app/src/main/java/com/freevibe/ui/screens/videowallpapers/VideoWallpapersViewModel.kt",
-      "reason": "Status or error text set from screen or ViewModel state. Moves to resources with the ROADMAP item \"Move ViewModel and repository messages to string resources\".",
+      "reason": "Internal signal. The Reddit RSS fetch catch records the source in failedSources and logs in debug builds; the screen shows only the translated video_wp_sources_* messages.",
       "sink": "exception",
       "text": "Reddit RSS HTTP ${response.code}"
     },
     {
       "count": 1,
-      "firstLine": 1564,
+      "firstLine": 1566,
       "id": "957c5ebd12f9820f",
       "path": "app/src/main/java/com/freevibe/ui/screens/videowallpapers/VideoWallpapersViewModel.kt",
-      "reason": "Status or error text set from screen or ViewModel state. Moves to resources with the ROADMAP item \"Move ViewModel and repository messages to string resources\".",
+      "reason": "Internal signal. The Reddit RSS fetch catch records the source in failedSources and logs in debug builds; the screen shows only the translated video_wp_sources_* messages.",
       "sink": "exception",
       "text": "Reddit RSS returned an empty feed"
-    },
-    {
-      "count": 1,
-      "firstLine": 1100,
-      "id": "cf001a3f09cace87",
-      "path": "app/src/main/java/com/freevibe/ui/screens/videowallpapers/VideoWallpapersViewModel.kt",
-      "reason": "Status or error text set from screen or ViewModel state. Moves to resources with the ROADMAP item \"Move ViewModel and repository messages to string resources\".",
-      "sink": "exception",
-      "text": "This device cannot play AV1 video. Try a different clip."
-    },
-    {
-      "count": 2,
-      "firstLine": 1059,
-      "id": "6e37d98e780e7f69",
-      "path": "app/src/main/java/com/freevibe/ui/screens/videowallpapers/VideoWallpapersViewModel.kt",
-      "reason": "Status or error text set from screen or ViewModel state. Moves to resources with the ROADMAP item \"Move ViewModel and repository messages to string resources\".",
-      "sink": "exception",
-      "text": "Video exceeds size limit"
-    },
-    {
-      "count": 1,
-      "firstLine": 412,
-      "id": "58fa02224d23fc10",
-      "path": "app/src/main/java/com/freevibe/ui/screens/videowallpapers/VideoWallpapersViewModel.kt",
-      "reason": "Status or error text set from screen or ViewModel state. Moves to resources with the ROADMAP item \"Move ViewModel and repository messages to string resources\".",
-      "sink": "ifBlank",
-      "text": "Pixabay video"
     },
     {
       "count": 1,
@@ -450,24 +225,6 @@
       "reason": "Provider brand name passed as the format argument of a translated sentence; brands are not translated.",
       "sink": "textBuilder",
       "text": "Wallhaven"
-    },
-    {
-      "count": 1,
-      "firstLine": 481,
-      "id": "eea2d3104659c384",
-      "path": "app/src/main/java/com/freevibe/ui/screens/wallpapers/WallpapersViewModel.kt",
-      "reason": "Status or error text set from screen or ViewModel state. Moves to resources with the ROADMAP item \"Move ViewModel and repository messages to string resources\".",
-      "sink": "applySuccess",
-      "text": "Added to collection"
-    },
-    {
-      "count": 1,
-      "firstLine": 434,
-      "id": "a1469b789b9ec873",
-      "path": "app/src/main/java/com/freevibe/ui/screens/wallpapers/WallpapersViewModel.kt",
-      "reason": "Status or error text set from screen or ViewModel state. Moves to resources with the ROADMAP item \"Move ViewModel and repository messages to string resources\".",
-      "sink": "applySuccess",
-      "text": "Created \"$name\""
     }
   ],
   "ignoredPathFragments": [

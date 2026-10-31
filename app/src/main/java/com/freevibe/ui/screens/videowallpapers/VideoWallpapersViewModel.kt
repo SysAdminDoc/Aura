@@ -409,7 +409,7 @@ internal fun mapPixabayVideosToMetadata(
                     .split(",")
                     .take(3)
                     .joinToString(" ") { tag -> tag.trim() }
-                    .ifBlank { "Pixabay video" },
+                    .ifBlank { context.getString(com.freevibe.R.string.video_wp_pixabay_fallback_title) },
                 thumbnailUrl = video.thumbnailUrl,
                 source = "Pixabay",
                 duration = video.duration.toLong(),
@@ -835,7 +835,7 @@ class VideoWallpapersViewModel @Inject constructor(
             _gallerySelectionResult.value = result.fold(
                 onSuccess = { VideoWallpaperSelectionResult.Ready },
                 onFailure = {
-                    VideoWallpaperSelectionResult.Failure(it.message ?: "Could not prepare video")
+                    VideoWallpaperSelectionResult.Failure(it.message ?: context.getString(com.freevibe.R.string.video_wp_prepare_failed))
                 },
             )
         }
@@ -1019,7 +1019,7 @@ class VideoWallpapersViewModel @Inject constructor(
                     request.addOption("-o", hlsOutput.absolutePath)
                     applyYtDlpDownloadBounds(request)
                     com.yausername.youtubedl_android.YoutubeDL.getInstance().execute(request)
-                    if (!hlsOutput.exists()) throw java.io.IOException("HLS download did not produce an MP4")
+                    if (!hlsOutput.exists()) throw java.io.IOException(context.getString(com.freevibe.R.string.video_wp_err_hls))
                     // Move rather than copy: both files live in the same
                     // directory, so a copy would briefly need twice the
                     // video's size on a device already near its cap.
@@ -1053,10 +1053,10 @@ class VideoWallpapersViewModel @Inject constructor(
                     ytDlpUpdateManager.recordExtractionFailure(e)
                     if (com.freevibe.BuildConfig.DEBUG) Log.e("VideoWP", "yt-dlp download failed: ${e.message}, using stream URL")
                     okHttpClient.newCall(Request.Builder().purpose(RequestPurpose.DOWNLOAD).url(videoUrl).build()).execute().use { resp ->
-                        if (!resp.isSuccessful) throw Exception("HTTP ${resp.code}")
-                        val body = resp.body ?: throw Exception("Empty response body")
+                        if (!resp.isSuccessful) throw Exception(context.getString(com.freevibe.R.string.download_failed_http, resp.code))
+                        val body = resp.body ?: throw Exception(context.getString(com.freevibe.R.string.video_wp_err_empty_body))
                         if (advertisedLengthExceeds(body.contentLength(), MAX_VIDEO_WALLPAPER_BYTES)) {
-                            throw Exception("Video exceeds size limit")
+                            throw Exception(context.getString(com.freevibe.R.string.video_wp_err_too_large))
                         }
                         body.byteStream().use { input ->
                             cacheFile.parentFile?.mkdirs()
@@ -1069,10 +1069,10 @@ class VideoWallpapersViewModel @Inject constructor(
             } else {
                 // Pexels / direct URL: simple download
                 okHttpClient.newCall(Request.Builder().purpose(RequestPurpose.DOWNLOAD).url(videoUrl).build()).execute().use { resp ->
-                    if (!resp.isSuccessful) throw Exception("HTTP ${resp.code}")
-                    val body = resp.body ?: throw Exception("Empty response body")
+                    if (!resp.isSuccessful) throw Exception(context.getString(com.freevibe.R.string.download_failed_http, resp.code))
+                    val body = resp.body ?: throw Exception(context.getString(com.freevibe.R.string.video_wp_err_empty_body))
                     if (advertisedLengthExceeds(body.contentLength(), MAX_VIDEO_WALLPAPER_BYTES)) {
-                        throw Exception("Video exceeds size limit")
+                        throw Exception(context.getString(com.freevibe.R.string.video_wp_err_too_large))
                     }
                     body.byteStream().use { input ->
                         cacheFile.parentFile?.mkdirs()
@@ -1097,7 +1097,7 @@ class VideoWallpapersViewModel @Inject constructor(
         if (metadata.codec?.contains("av01", ignoreCase = true) == true ||
             metadata.codec?.contains("av1", ignoreCase = true) == true
         ) {
-            throw IllegalStateException("This device cannot play AV1 video. Try a different clip.")
+            throw IllegalStateException(context.getString(com.freevibe.R.string.video_wp_err_av1))
         }
     }
 
@@ -1402,9 +1402,11 @@ class VideoWallpapersViewModel @Inject constructor(
                     error = when {
                         videoReach.block != null && mixed.isEmpty() && !loadMore && !preserveCurrentFeed ->
                             context.getString(com.freevibe.R.string.video_wp_no_sources)
-                        allAttemptedFailed && preserveCurrentFeed -> "Video sources are unavailable right now. Showing your last good results."
-                        allAttemptedFailed -> "Video sources are unavailable right now."
-                        sourceFailures.isNotEmpty() && mixed.isEmpty() && !preserveCurrentFeed -> "Limited source availability right now."
+                        allAttemptedFailed && preserveCurrentFeed ->
+                            context.getString(com.freevibe.R.string.video_wp_sources_stale)
+                        allAttemptedFailed -> context.getString(com.freevibe.R.string.video_wp_sources_unavailable)
+                        sourceFailures.isNotEmpty() && mixed.isEmpty() && !preserveCurrentFeed ->
+                            context.getString(com.freevibe.R.string.video_wp_sources_limited)
                         else -> null
                     },
                     degradedSources = sourceFailures,

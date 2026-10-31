@@ -2619,4 +2619,13 @@
     <string name="wallpaper_feedback_collection_created">Created \"%1$s\"</string>
     <string name="wallpaper_feedback_added_to_collection">Added to collection</string>
     <string name="settings_dialogs_identity_not_created">Not created</string>
+    <string name="video_wp_err_empty_body">The server sent no video</string>
+    <string name="video_wp_err_too_large">This video is over the size limit</string>
+    <string name="video_wp_err_hls">Couldn\'t save this stream as an MP4</string>
+    <string name="video_wp_err_av1">This device can\'t play AV1 video. Try a different clip.</string>
+    <string name="video_wp_pixabay_fallback_title">Pixabay video</string>
+    <string name="video_wp_prepare_failed">Couldn\'t prepare this video</string>
+    <string name="video_wp_sources_stale">Video sources are unavailable right now. Showing your last good results.</string>
+    <string name="video_wp_sources_unavailable">Video sources are unavailable right now.</string>
+    <string name="video_wp_sources_limited">Some video sources aren\'t responding right now.</string>
 </resources>
