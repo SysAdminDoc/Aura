@@ -8,6 +8,8 @@ import com.freevibe.data.legal.orderedCurrentProviderCapabilities
 import com.freevibe.data.model.ContentSource
 import com.freevibe.data.model.Sound
 import com.freevibe.data.model.stableKey
+import com.freevibe.util.UiText
+import com.freevibe.util.uiText
 import kotlin.math.roundToInt
 
 enum class SoundQualityFilter { BEST, CLEAN, SHORT, CALM, PUNCHY }
@@ -101,22 +103,22 @@ internal fun soundQualityScore(
     return score
 }
 
-internal fun soundBadges(sound: Sound, tab: SoundTab): List<String> {
-    val badges = mutableListOf<String>()
-    if (sound.isAiGenerated == true) badges += "AI-generated"
+internal fun soundBadges(sound: Sound, tab: SoundTab): List<UiText> {
+    val badges = mutableListOf<UiText>()
+    if (sound.isAiGenerated == true) badges += uiText(R.string.sound_badge_ai)
     badges += when (tab) {
-        SoundTab.RINGTONES -> "Ringtone-ready"
-        SoundTab.NOTIFICATIONS -> "Notification-ready"
-        SoundTab.ALARMS -> "Alarm-ready"
-        SoundTab.YOUTUBE -> "Importable"
-        SoundTab.COMMUNITY -> "Community"
-        SoundTab.SEARCH -> "Quick pick"
+        SoundTab.RINGTONES -> uiText(R.string.sound_badge_ringtone_ready)
+        SoundTab.NOTIFICATIONS -> uiText(R.string.sound_badge_notification_ready)
+        SoundTab.ALARMS -> uiText(R.string.sound_badge_alarm_ready)
+        SoundTab.YOUTUBE -> uiText(R.string.sound_badge_importable)
+        SoundTab.COMMUNITY -> uiText(R.string.sounds_tab_community)
+        SoundTab.SEARCH -> uiText(R.string.sound_badge_quick_pick)
     }
-    if (soundLooksClean(sound)) badges += "Clean intro"
-    if (soundFeelsCalm(sound)) badges += "Calm"
-    if (soundFeelsPunchy(sound)) badges += "Punchy"
-    if (sound.duration <= shortThreshold(tab)) badges += "Short"
-    if (sound.license.startsWith("CC")) badges += sound.license
+    if (soundLooksClean(sound)) badges += uiText(R.string.sound_badge_clean_intro)
+    if (soundFeelsCalm(sound)) badges += uiText(R.string.sound_badge_calm)
+    if (soundFeelsPunchy(sound)) badges += uiText(R.string.sound_badge_punchy)
+    if (sound.duration <= shortThreshold(tab)) badges += uiText(R.string.sound_badge_short)
+    if (sound.license.startsWith("CC")) badges += UiText.Plain(sound.license)
     return badges.distinct().take(3)
 }
 

@@ -15,6 +15,11 @@ import java.io.IOException
 sealed interface UiText {
     fun resolve(context: Context): String
 
+    /** Text that is already in its final form, such as a license name. */
+    data class Plain(val text: String) : UiText {
+        override fun resolve(context: Context): String = text
+    }
+
     /** A string resource. An argument that is itself a [UiText] is resolved first. */
     data class Res(@StringRes val id: Int, val args: List<Any> = emptyList()) : UiText {
         override fun resolve(context: Context): String =

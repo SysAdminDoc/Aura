@@ -149,7 +149,10 @@ fun SoundDetailScreen(
     val showUploader = s.uploaderName.isNotEmpty() &&
         s.uploaderName != "Unknown" &&
         !(s.source == ContentSource.BUNDLED && s.uploaderName in setOf("Aura", "Aura Picks"))
-    val detailBadges = remember(s, state.selectedTab) { soundBadges(s, state.selectedTab) }
+    val badgeContext = LocalContext.current
+    val detailBadges = remember(s, state.selectedTab, badgeContext) {
+        soundBadges(s, state.selectedTab).map { it.resolve(badgeContext) }
+    }
     val sourceTone = soundSourceTone(s.source)
     val sourceLabel = LocalContext.current.resources.soundSourceName(s.source)
     val sourceColor = sourceTone.colorForSurface()

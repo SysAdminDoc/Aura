@@ -539,8 +539,8 @@ fun SourceBadge(source: String, modifier: Modifier = Modifier) {
         "PIXABAY" -> "Pixabay"
         "KLIPY" -> "Klipy"
         "SOUNDCLOUD" -> "SoundCloud"
-        "COMMUNITY" -> "Community"
-        "BUNDLED" -> "Aura Originals"
+        "COMMUNITY" -> stringResource(R.string.wallpapers_tab_community)
+        "BUNDLED" -> stringResource(R.string.sound_shuffle_originals_title)
         else -> source
     }
     val colorScheme = MaterialTheme.colorScheme

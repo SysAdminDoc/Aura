@@ -1,8 +1,10 @@
 package com.freevibe.ui.screens.sounds
 
+import com.freevibe.R
 import com.freevibe.data.legal.isProviderAvailableInCurrentArtifact
 import com.freevibe.data.model.ContentSource
 import com.freevibe.data.model.Sound
+import com.freevibe.util.uiText
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
@@ -155,8 +157,8 @@ class SoundQualityTest {
 
         val badges = soundBadges(sound, SoundTab.ALARMS)
 
-        assertTrue(badges.contains("Alarm-ready"))
-        assertTrue(badges.contains("Punchy"))
+        assertTrue(badges.contains(uiText(R.string.sound_badge_alarm_ready)))
+        assertTrue(badges.contains(uiText(R.string.sound_badge_punchy)))
     }
 
     @Test

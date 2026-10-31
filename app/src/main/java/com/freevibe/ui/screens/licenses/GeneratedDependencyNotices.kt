@@ -20,10 +20,18 @@ internal object GoogleOssNoticeReader {
                 .use { it.readText() }
             val licenseBytes = resources.openRawResource(R.raw.third_party_licenses)
                 .use { it.readBytes() }
-            parse(metadataText = metadataText, licenseBytes = licenseBytes)
+            parse(
+                metadataText = metadataText,
+                licenseBytes = licenseBytes,
+                fallbackLabel = resources.getString(R.string.licenses_notice_fallback),
+            )
         }.getOrDefault(emptyList())
 
-    fun parse(metadataText: String, licenseBytes: ByteArray): List<GeneratedDependencyNotice> =
+    fun parse(
+        metadataText: String,
+        licenseBytes: ByteArray,
+        fallbackLabel: String = "",
+    ): List<GeneratedDependencyNotice> =
         metadataText
             .lineSequence()
             .mapNotNull { parseMetadataLine(it) }
@@ -38,7 +46,7 @@ internal object GoogleOssNoticeReader {
                         .trim()
                     GeneratedDependencyNotice(
                         name = entry.name,
-                        licenseLabel = summarizeLicense(licenseText),
+                        licenseLabel = summarizeLicense(licenseText, fallbackLabel),
                         licenseText = licenseText,
                         reviewLabelRes = reviewLabelResFor(entry.name),
                     )
@@ -82,7 +90,7 @@ internal object GoogleOssNoticeReader {
         return MetadataEntry(offset = offset, length = length, name = name)
     }
 
-    private fun summarizeLicense(licenseText: String): String {
+    private fun summarizeLicense(licenseText: String, fallbackLabel: String): String {
         val lower = licenseText.lowercase(Locale.ROOT)
         val firstLine = licenseText.lineSequence()
             .firstOrNull { it.isNotBlank() }
@@ -100,7 +108,7 @@ internal object GoogleOssNoticeReader {
             firstLine.length in 1..80 -> firstLine
                 .removePrefix("https://")
                 .removePrefix("http://")
-            else -> "Generated notice"
+            else -> fallbackLabel
         }
     }
 
