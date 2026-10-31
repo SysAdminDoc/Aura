@@ -250,7 +250,12 @@ android {
             isIncludeAndroidResources = true
             // Robolectric keeps a sandbox per SDK level alive in the worker. The suite outgrew
             // Gradle's 512 MB default and died with OutOfMemoryError partway through.
-            all { it.maxHeapSize = "2g" }
+            all {
+                it.maxHeapSize = "2g"
+                // From SDK 36 Robolectric's sandbox sets file descriptors through this package
+                // while it starts, so every test on the app's own target fails without it.
+                it.jvmArgs("--add-opens=java.base/jdk.internal.access=ALL-UNNAMED")
+            }
         }
     }
 

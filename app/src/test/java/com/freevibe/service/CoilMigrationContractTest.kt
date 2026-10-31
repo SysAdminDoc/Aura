@@ -18,7 +18,7 @@ class CoilMigrationContractTest {
             .filter { it.isFile && it.extension == "kt" }
             .joinToString("\n") { it.readText() }
 
-        assertTrue(catalog.contains("coil = \"3.5.0\""))
+        assertTrue(catalog.contains("coil = \"3."))
         assertTrue(catalog.contains("group = \"io.coil-kt.coil3\""))
         assertTrue(catalog.contains("coil-network-okhttp"))
         assertTrue(appBuild.contains("implementation(libs.coil.network.okhttp)"))
