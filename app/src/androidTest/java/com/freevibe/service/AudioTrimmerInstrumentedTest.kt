@@ -184,6 +184,59 @@ class AudioTrimmerInstrumentedTest {
     }
 
     @Test
+    fun oggLosslessCutOfAnExportKeepsTheLoopTag() = runBlocking {
+        Assume.assumeTrue(AudioExportFormat.OGG in trimmer.availableExportFormats())
+        val sampleRate = 44_100
+        val wav = File(fixtureDirectory, "ogg_cut_source.wav")
+        writePcm16Wav(wav, sineFixture(sampleRate, durationMs = 3_000L), sampleRate)
+        val source = trimmer.trim(
+            inputPath = wav.absolutePath,
+            startMs = 0L,
+            endMs = 3_000L,
+            outputFileName = "ogg_cut_source",
+            exportFormat = AudioExportFormat.OGG,
+        ).getOrThrow()
+
+        val output = trimmer.trim(
+            inputPath = source,
+            startMs = 1_000L,
+            endMs = 2_000L,
+            outputFileName = "ogg_cut",
+            losslessCut = true,
+        ).getOrThrow()
+
+        assertLoopTaggedCut(output)
+    }
+
+    @Test
+    fun vorbisLosslessCutWorksOnADeviceWithNoVorbisEncoder() = runBlocking {
+        val input = File(fixtureDirectory, "tone_vorbis_3s.ogg")
+        input.parentFile?.mkdirs()
+        InstrumentationRegistry.getInstrumentation().context.assets.open("tone_vorbis_3s.ogg").use { source ->
+            input.outputStream().use { destination -> source.copyTo(destination) }
+        }
+
+        val output = trimmer.trim(
+            inputPath = input.absolutePath,
+            startMs = 1_000L,
+            endMs = 2_000L,
+            outputFileName = "vorbis_cut",
+            losslessCut = true,
+        ).getOrThrow()
+
+        assertEquals("audio/vorbis", readEncodedAudio(File(output)).first)
+        assertLoopTaggedCut(output)
+    }
+
+    private suspend fun assertLoopTaggedCut(output: String) {
+        val durationMs = readEncodedAudio(File(output)).second
+        Log.i(TAG, "Lossless OGG cut of ${File(output).name} runs $durationMs ms")
+        assertTrue("duration $durationMs", durationMs in 900L..1_200L)
+        assertTrue(File(output).readBytes().toString(Charsets.ISO_8859_1).contains("ANDROID_LOOP=true"))
+        assertToneIsAbout440Hz(output, durationMs = 900L)
+    }
+
+    @Test
     fun opusExportResamplesInputTheEncoderCannotTake() = runBlocking {
         Assume.assumeTrue(AudioExportFormat.OPUS in trimmer.availableExportFormats())
         val sampleRate = 44_100

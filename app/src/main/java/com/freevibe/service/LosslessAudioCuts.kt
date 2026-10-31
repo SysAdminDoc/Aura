@@ -157,6 +157,102 @@ private fun ByteBuffer.copyTo(from: Int, target: ByteArray, targetOffset: Int, c
     view.get(target, targetOffset, count)
 }
 
+private class FlacFrameSpan(val start: Int, val end: Int, val header: FlacFrameHeader)
+
+/** Audio ends where a trailing ID3v1 tag starts. */
+private fun flacAudioLimit(source: ByteBuffer): Int {
+    val size = source.capacity()
+    return if (size > ID3V1_TAG_BYTES && source.matchesAscii(size - ID3V1_TAG_BYTES.toInt(), "TAG")) {
+        size - ID3V1_TAG_BYTES.toInt()
+    } else {
+        size
+    }
+}
+
+/** Walks the metadata blocks after the stream marker and answers where the first frame starts. */
+private fun walkFlacMetadata(
+    source: ByteBuffer,
+    limit: Int,
+    onBlock: (type: Int, at: Int, length: Int) -> Unit = { _, _, _ -> },
+): Int {
+    var cursor = 0
+    if (source.matchesAscii(0, "ID3") && limit > 10) {
+        var tagBody = 0
+        for (index in 6..9) tagBody = (tagBody shl 7) or (source.get(index).toInt() and 0x7F)
+        cursor = 10 + tagBody
+    }
+    require(source.matchesAscii(cursor, FLAC_STREAM_MARKER)) { "Not a FLAC file" }
+    cursor += FLAC_STREAM_MARKER.length
+    while (true) {
+        require(cursor + 4 <= limit) { "FLAC metadata is cut short" }
+        val lead = source.get(cursor).toInt() and 0xFF
+        val length = ((source.get(cursor + 1).toInt() and 0xFF) shl 16) or
+            ((source.get(cursor + 2).toInt() and 0xFF) shl 8) or
+            (source.get(cursor + 3).toInt() and 0xFF)
+        cursor += 4
+        require(cursor + length <= limit) { "FLAC metadata is cut short" }
+        onBlock(lead and 0x7F, cursor, length)
+        cursor += length
+        if (lead and FLAC_LAST_BLOCK_FLAG != 0) return cursor
+    }
+}
+
+/** Stops at the first frame that doesn't parse or check out, the same place a cut stops copying. */
+private fun flacFrames(source: ByteBuffer, limit: Int): Sequence<FlacFrameSpan> = sequence {
+    var cursor = walkFlacMetadata(source, limit)
+    while (cursor < limit) {
+        val header = parseFlacFrameHeader(source, cursor, limit) ?: break
+        val end = flacFrameEnd(source, cursor, header, limit) ?: break
+        yield(FlacFrameSpan(cursor, end, header))
+        cursor = end
+    }
+}
+
+private fun ByteBuffer.sameBytes(at: Int, other: ByteBuffer, otherAt: Int, count: Int): Boolean =
+    (0 until count).all { get(at + it) == other.get(otherAt + it) }
+
+/** Everything a cut keeps: the frame's format, its audio, but not its number or the checksums that cover it. */
+private fun sameFlacFrameAudio(a: ByteBuffer, frameA: FlacFrameSpan, b: ByteBuffer, frameB: FlacFrameSpan): Boolean {
+    val leadBytes = 4
+    val extraA = frameA.header.length - leadBytes - frameA.header.numberLength - 1
+    val extraB = frameB.header.length - leadBytes - frameB.header.numberLength - 1
+    val bodyA = frameA.end - frameA.start - frameA.header.length - 2
+    val bodyB = frameB.end - frameB.start - frameB.header.length - 2
+    return extraA == extraB &&
+        bodyA == bodyB &&
+        a.sameBytes(frameA.start, b, frameB.start, leadBytes) &&
+        a.sameBytes(
+            frameA.start + leadBytes + frameA.header.numberLength,
+            b,
+            frameB.start + leadBytes + frameB.header.numberLength,
+            extraA,
+        ) &&
+        a.sameBytes(frameA.start + frameA.header.length, b, frameB.start + frameB.header.length, bodyA)
+}
+
+/**
+ * The extractor can't judge a FLAC cut: depending on the Android release it hands back PCM or whole
+ * frames, and a cut's frame numbers and checksums differ from the source's on purpose. So this reads
+ * both files itself and looks for the cut's frames as one unbroken run in the source.
+ */
+internal fun flacCutKeepsSourceAudio(input: File, cut: File): Boolean =
+    RandomAccessFile(input, "r").use { inputFile ->
+        RandomAccessFile(cut, "r").use { cutFile ->
+            val source = inputFile.channel.map(FileChannel.MapMode.READ_ONLY, 0L, inputFile.length())
+            val copy = cutFile.channel.map(FileChannel.MapMode.READ_ONLY, 0L, cutFile.length())
+            val copyLimit = flacAudioLimit(copy)
+            val copyFrames = flacFrames(copy, copyLimit).toList()
+            if (copyFrames.lastOrNull()?.end != copyLimit) return@use false
+            val recent = ArrayDeque<FlacFrameSpan>()
+            flacFrames(source, flacAudioLimit(source)).any { frame ->
+                recent.addLast(frame)
+                if (recent.size > copyFrames.size) recent.removeFirst()
+                recent.size == copyFrames.size &&
+                    copyFrames.indices.all { sameFlacFrameAudio(source, recent[it], copy, copyFrames[it]) }
+            }
+        }
+    }
+
 /** A frame ends where its checksum comes out clean and a real frame header or the file's end follows. */
 private fun flacFrameEnd(source: ByteBuffer, start: Int, header: FlacFrameHeader, limit: Int): Int? {
     var crc = 0
@@ -217,38 +313,16 @@ internal fun cutFlacFrames(
     RandomAccessFile(input, "r").use { file ->
         require(file.length() in 1L..Int.MAX_VALUE.toLong()) { "FLAC file is too large to cut" }
         val source = file.channel.map(FileChannel.MapMode.READ_ONLY, 0L, file.length())
-        var limit = file.length().toInt()
-        if (limit > ID3V1_TAG_BYTES && source.matchesAscii(limit - ID3V1_TAG_BYTES.toInt(), "TAG")) {
-            limit -= ID3V1_TAG_BYTES.toInt()
-        }
-
-        var cursor = 0
-        if (source.matchesAscii(0, "ID3") && limit > 10) {
-            var tagBody = 0
-            for (index in 6..9) tagBody = (tagBody shl 7) or (source.get(index).toInt() and 0x7F)
-            cursor = 10 + tagBody
-        }
-        require(source.matchesAscii(cursor, FLAC_STREAM_MARKER)) { "Not a FLAC file" }
-        cursor += FLAC_STREAM_MARKER.length
+        val limit = flacAudioLimit(source)
 
         var streamInfo: ByteArray? = null
         val keptBlocks = ArrayList<Pair<Int, ByteArray>>()
-        while (true) {
-            require(cursor + 4 <= limit) { "FLAC metadata is cut short" }
-            val lead = source.get(cursor).toInt() and 0xFF
-            val type = lead and 0x7F
-            val length = ((source.get(cursor + 1).toInt() and 0xFF) shl 16) or
-                ((source.get(cursor + 2).toInt() and 0xFF) shl 8) or
-                (source.get(cursor + 3).toInt() and 0xFF)
-            cursor += 4
-            require(cursor + length <= limit) { "FLAC metadata is cut short" }
+        var cursor = walkFlacMetadata(source, limit) { type, at, length ->
             if (type == FLAC_BLOCK_STREAM_INFO || type == FLAC_BLOCK_VORBIS_COMMENT || type == FLAC_BLOCK_PICTURE) {
                 val body = ByteArray(length)
-                source.copyTo(cursor, body, 0, length)
+                source.copyTo(at, body, 0, length)
                 if (type == FLAC_BLOCK_STREAM_INFO) streamInfo = body else keptBlocks += type to body
             }
-            cursor += length
-            if (lead and FLAC_LAST_BLOCK_FLAG != 0) break
         }
         val info = streamInfo?.takeIf { it.size == FLAC_STREAM_INFO_BYTES }
             ?: throw IllegalArgumentException("FLAC file has no stream information")

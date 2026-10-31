@@ -2,6 +2,7 @@ package com.freevibe.service
 
 import org.junit.Assert.assertArrayEquals
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertThrows
 import org.junit.Assert.assertTrue
@@ -332,6 +333,73 @@ class AudioFileEncodersTest {
 
         assertArrayEquals(plainCut.readBytes(), wrappedCut.readBytes())
         assertEquals(3, decodeFlac(wrappedCut).frameNumbers.size)
+        assertTrue(flacCutKeepsSourceAudio(wrapped, wrappedCut))
+    }
+
+    @Test
+    fun `FLAC cut check finds a cut anywhere in its source`() {
+        val source = flacOf(correlatedStereo(FLAC_FRAME * 10), channelCount = 2)
+        val stretches = listOf(0L to 100L, 200L to 700L, 900L to 10_000L, 0L to 10_000L)
+
+        stretches.forEach { (startMs, endMs) ->
+            val cut = folder.newFile()
+            cutFlacFrames(source, cut, startMs, endMs)
+            assertTrue("cut $startMs..$endMs", flacCutKeepsSourceAudio(source, cut))
+        }
+    }
+
+    @Test
+    fun `FLAC cut check copes with a source of repeated frames`() {
+        val source = flacOf(ShortArray(FLAC_FRAME * 8))
+        val cut = folder.newFile()
+
+        cutFlacFrames(source, cut, startMs = 200L, endMs = 500L)
+
+        assertTrue(flacCutKeepsSourceAudio(source, cut))
+    }
+
+    @Test
+    fun `FLAC cut check refuses audio from somewhere else`() {
+        val source = flacOf(sine(FLAC_FRAME * 8))
+        val other = flacOf(sine(FLAC_FRAME * 8, hz = 523.0))
+        val cut = folder.newFile()
+
+        cutFlacFrames(other, cut, startMs = 0L, endMs = 200L)
+
+        assertFalse(flacCutKeepsSourceAudio(source, cut))
+    }
+
+    @Test
+    fun `FLAC cut check refuses changed audio even with its checksums redone`() {
+        val source = flacOf(sine(FLAC_FRAME * 8))
+        val cut = folder.newFile()
+        cutFlacFrames(source, cut, startMs = 0L, endMs = 200L)
+        val bytes = cut.readBytes()
+        val checksumAt = bytes.size - 2
+        val bodyAt = checksumAt - decodeFlac(cut).frameBodies.last().size
+        // No extra header fields at this rate and block size, and a one byte frame number.
+        val frameAt = bodyAt - 6
+        val stored = ((bytes[checksumAt].toInt() and 0xFF) shl 8) or (bytes[checksumAt + 1].toInt() and 0xFF)
+        assertEquals("the frame was found", stored, flacCrc16(bytes, frameAt, checksumAt))
+
+        bytes[bodyAt + 5] = (bytes[bodyAt + 5].toInt() xor 1).toByte()
+        val redone = flacCrc16(bytes, frameAt, checksumAt)
+        bytes[checksumAt] = (redone ushr 8).toByte()
+        bytes[checksumAt + 1] = redone.toByte()
+        cut.writeBytes(bytes)
+
+        assertFalse(flacCutKeepsSourceAudio(source, cut))
+    }
+
+    @Test
+    fun `FLAC cut check refuses a cut with its end missing`() {
+        val source = flacOf(sine(FLAC_FRAME * 8))
+        val cut = folder.newFile()
+        cutFlacFrames(source, cut, startMs = 0L, endMs = 200L)
+
+        cut.writeBytes(cut.readBytes().let { it.copyOf(it.size - 3) })
+
+        assertFalse(flacCutKeepsSourceAudio(source, cut))
     }
 
     @Test

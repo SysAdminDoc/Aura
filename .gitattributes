@@ -28,5 +28,6 @@
 *.keystore binary
 *.pdf binary
 *.mp3 binary
+*.ogg binary
 *.mp4 binary
 *.webm binary

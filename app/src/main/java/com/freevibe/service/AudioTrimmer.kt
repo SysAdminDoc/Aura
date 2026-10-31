@@ -28,7 +28,6 @@ import androidx.media3.common.audio.BaseAudioProcessor
 import androidx.media3.common.audio.SonicAudioProcessor
 import androidx.media3.common.audio.SpeedProvider
 import androidx.media3.decoder.DecoderInputBuffer
-import androidx.media3.extractor.metadata.vorbis.VorbisComment
 import androidx.media3.muxer.Muxer
 import androidx.media3.muxer.MuxerException
 import androidx.media3.muxer.OggMuxer
@@ -70,6 +69,7 @@ import kotlin.math.sin
 
 private const val MEDIA3_TIMEOUT_MILLISECONDS = 120_000L
 private const val OPUS_SAMPLE_RATE_HZ = 48_000
+private const val ANDROID_LOOP_COMMENT = "ANDROID_LOOP=true"
 private const val LOSSLESS_VERIFY_MAX_BYTES = 64L * 1024 * 1024
 private const val LOSSLESS_FALLBACK_PACKET_BYTES = 1024 * 1024
 private const val RAW_PCM_CODEC_BUFFER_BYTES = 64 * 1024
@@ -282,17 +282,10 @@ private class ConstantAudioSpeedProvider(private val speed: Float) : SpeedProvid
 
 private class PlatformAudioMuxerFactory(
     private val plan: PlatformAudioExportPlan,
-    private val addAndroidLoopMetadata: Boolean,
 ) : Muxer.Factory {
     override fun create(path: String): Muxer = try {
         when (plan.container) {
-            PlatformAudioContainer.OGG -> OggMuxer.Builder(FileOutputStream(path).channel)
-                .build()
-                .also { muxer ->
-                    if (addAndroidLoopMetadata) {
-                        muxer.addMetadataEntry(VorbisComment("ANDROID_LOOP", "true"))
-                    }
-                }
+            PlatformAudioContainer.OGG -> OggMuxer.Builder(FileOutputStream(path).channel).build()
             PlatformAudioContainer.WAV -> WavMuxer(SeekableMuxerOutput.of(path))
             PlatformAudioContainer.MP4 -> error("The platform MP4 muxer is selected by Transformer")
         }
@@ -489,7 +482,6 @@ class AudioTrimmer @Inject constructor(
                         fadeCurve = fadeCurve,
                         playbackSpeed = 1f,
                         plan = plan,
-                        addAndroidLoopMetadata = effectiveFormat == AudioExportFormat.OGG,
                     )
                     effectiveFormat == AudioExportFormat.FLAC ->
                         cutFlacFrames(File(inputPath), outputFile, startMs, endMs) { ensureActive() }
@@ -514,7 +506,6 @@ class AudioTrimmer @Inject constructor(
                         fadeCurve = fadeCurve,
                         playbackSpeed = playbackSpeed,
                         plan = plan,
-                        addAndroidLoopMetadata = exportFormat == AudioExportFormat.OGG,
                         outputSampleRateHz = OPUS_SAMPLE_RATE_HZ.takeIf { plan.audioMimeType == MimeTypes.AUDIO_OPUS },
                     )
                 } else {
@@ -541,7 +532,6 @@ class AudioTrimmer @Inject constructor(
                             container = PlatformAudioContainer.WAV,
                             bitrateKbps = null,
                         ),
-                        addAndroidLoopMetadata = false,
                     )
                     require(intermediate.exists() && intermediate.length() > 100L) {
                         "Platform audio processing did not produce an intermediate file"
@@ -559,7 +549,8 @@ class AudioTrimmer @Inject constructor(
             require(outputFile.exists() && outputFile.length() > 0L) {
                 "Audio export did not produce a non-empty file"
             }
-            if (losslessCut && !verifyLosslessPacketCopy(inputPath, outputFile.absolutePath)) {
+            if (effectiveFormat == AudioExportFormat.OGG) addOggComment(outputFile, ANDROID_LOOP_COMMENT)
+            if (losslessCut && !losslessCutMatchesSource(inputPath, outputFile, effectiveFormat)) {
                 throw Exception("Lossless export verification failed: copied audio bytes changed")
             }
             val timing = readEncodedAudioTiming(outputFile.absolutePath)
@@ -596,7 +587,6 @@ class AudioTrimmer @Inject constructor(
         fadeCurve: AudioFadeCurve,
         playbackSpeed: Float,
         plan: PlatformAudioExportPlan,
-        addAndroidLoopMetadata: Boolean,
         outputSampleRateHz: Int? = null,
     ) = withTimeout(MEDIA3_TIMEOUT_MILLISECONDS) {
         withContext(Dispatchers.Main.immediate) {
@@ -647,7 +637,7 @@ class AudioTrimmer @Inject constructor(
                     )
                 if (plan.container != PlatformAudioContainer.MP4) {
                     transformerBuilder.setMuxerFactory(
-                        PlatformAudioMuxerFactory(plan, addAndroidLoopMetadata),
+                        PlatformAudioMuxerFactory(plan),
                     )
                 }
 
@@ -743,6 +733,14 @@ class AudioTrimmer @Inject constructor(
             }
         }
     }
+
+    // A FLAC cut renumbers its frames, so the extractor's packets can't match the source byte for byte.
+    private fun losslessCutMatchesSource(inputPath: String, output: File, format: AudioExportFormat): Boolean =
+        if (format == AudioExportFormat.FLAC) {
+            flacCutKeepsSourceAudio(File(inputPath), output)
+        } else {
+            verifyLosslessPacketCopy(inputPath, output.absolutePath)
+        }
 
     private fun verifyLosslessPacketCopy(inputPath: String, outputPath: String): Boolean {
         val outputPackets = readEncodedAudioPackets(outputPath)
