@@ -36,6 +36,8 @@ import androidx.media3.common.Player
 import androidx.media3.exoplayer.ExoPlayer
 import com.freevibe.data.remote.RequestPurpose
 import com.freevibe.data.remote.purpose
+import com.freevibe.service.VideoCropRegion
+import com.freevibe.service.exportCroppedVideo
 import com.freevibe.ui.theme.AuraShapes
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -670,30 +672,6 @@ private fun extractTimelineFrames(
     }
 }
 
-/**
- * Get ffmpeg binary path and LD_LIBRARY_PATH from youtubedl-android via reflection.
- * Returns Pair(ffmpegPath, ldLibraryPath) or null if not available.
- */
-private fun getYtdlpFfmpeg(): Pair<File, String>? {
-    return try {
-        val ytdl = com.yausername.youtubedl_android.YoutubeDL.getInstance()
-        val cls = ytdl::class.java
-
-        val ffmpegField = cls.getDeclaredField("ffmpegPath")
-        ffmpegField.isAccessible = true
-        val ffmpegPath = ffmpegField.get(null) as? File ?: return null
-
-        val ldField = cls.getDeclaredField("ENV_LD_LIBRARY_PATH")
-        ldField.isAccessible = true
-        val ldPath = ldField.get(null) as? String ?: ""
-
-        if (ffmpegPath.exists()) Pair(ffmpegPath, ldPath) else null
-    } catch (e: Exception) {
-        if (com.freevibe.BuildConfig.DEBUG) Log.e("VideoCrop", "Reflection failed: ${e.message}")
-        null
-    }
-}
-
 private suspend fun cropVideoConstrained(
     context: Context,
     videoUrl: String,
@@ -739,17 +717,11 @@ private suspend fun cropVideoConstrained(
             }
             cacheFile
         } else {
-            // Local URI / file path — validate existence before handing to FFmpeg, otherwise
-            // we get a cryptic "Invalid data found" error instead of a user-friendly skip.
+            // Local URI / file path: validate existence before the export, otherwise
+            // we get a cryptic decoder error instead of a user-friendly skip.
             val f = File(videoUrl)
             if (!f.exists() || !f.canRead()) return@withContext null
             f
-        }
-
-        try {
-            com.freevibe.service.requireFfmpegSafeContainer(inputFile)
-        } catch (_: java.io.IOException) {
-            return@withContext null
         }
 
         val outputFile = File(context.filesDir, "live_wallpaper.mp4")
@@ -790,78 +762,31 @@ private suspend fun cropVideoConstrained(
         if (outputFile.exists()) outputFile.delete()
 
         var cropSucceeded = false
-        val ffmpegInfo = getYtdlpFfmpeg()
-
-        if (ffmpegInfo != null) {
-            val (ffmpegPath, ldLibPath) = ffmpegInfo
-            try {
-                val tempOutput = File(context.cacheDir, "crop_output.mp4")
-                if (tempOutput.exists()) tempOutput.delete()
-
-                val cmd = listOf(
-                    ffmpegPath.absolutePath,
-                    "-y",
-                    "-i", inputFile.absolutePath,
-                ) + videoTrimArgs(loopStartMs, loopEndMs) + listOf(
-                    "-vf", "crop=$cropW:$cropH:$cropX:$cropY",
-                    "-c:v", "libx264",
-                    "-preset", "ultrafast",
-                    "-an",
-                    "-movflags", "+faststart",
-                    tempOutput.absolutePath,
-                )
-                if (com.freevibe.BuildConfig.DEBUG) Log.d("VideoCrop", "FFmpeg cmd: ${cmd.joinToString(" ")}")
-                if (com.freevibe.BuildConfig.DEBUG) Log.d("VideoCrop", "LD_LIBRARY_PATH=$ldLibPath")
-
-                val env = mutableMapOf<String, String>()
-                if (ldLibPath.isNotEmpty()) env["LD_LIBRARY_PATH"] = ldLibPath
-
-                val pb = ProcessBuilder(cmd)
-                    .redirectErrorStream(true)
-                    .directory(context.cacheDir)
-                pb.environment().putAll(env)
-                val process = pb.start()
-
-                val exitCode: Int
-                try {
-                    // Drain FFmpeg's merged stdout/stderr with a bounded buffer instead of
-                    // `readText()` — a chatty run can produce MBs of progress lines we would
-                    // otherwise keep in-memory just to log the last 500 chars.
-                    val tail = StringBuilder()
-                    process.inputStream.bufferedReader().use { reader ->
-                        val chunk = CharArray(4096)
-                        while (true) {
-                            val n = try { reader.read(chunk) } catch (_: Exception) { -1 }
-                            if (n <= 0) break
-                            if (tail.length < 4096) {
-                                tail.append(chunk, 0, n.coerceAtMost(4096 - tail.length))
-                            }
-                        }
-                    }
-                    val completed = process.waitFor(120, java.util.concurrent.TimeUnit.SECONDS)
-                    exitCode = if (completed) process.exitValue() else { process.destroyForcibly(); -1 }
-                    if (com.freevibe.BuildConfig.DEBUG && exitCode != 0) Log.e("VideoCrop", "FFmpeg output: ${tail.takeLast(500)}")
-                } finally {
-                    process.destroy()
-                }
-
-                if (com.freevibe.BuildConfig.DEBUG) Log.d("VideoCrop", "FFmpeg exit=$exitCode, output size=${tempOutput.length() / 1024}KB")
-
-                if (exitCode == 0 && tempOutput.exists() && tempOutput.length() > 1024) {
-                    tempOutput.copyTo(outputFile, overwrite = true)
-                    tempOutput.delete()
-                    cropSucceeded = true
-                    if (com.freevibe.BuildConfig.DEBUG) Log.d("VideoCrop", "Crop success: ${outputFile.length() / 1024}KB")
-                } else {
-                    if (com.freevibe.BuildConfig.DEBUG) Log.e("VideoCrop", "FFmpeg crop produced invalid output")
-                    tempOutput.delete()
-                }
-            } catch (e: Exception) {
-                if (e is kotlinx.coroutines.CancellationException) throw e
-                if (com.freevibe.BuildConfig.DEBUG) Log.e("VideoCrop", "FFmpeg crop failed: ${e.message}")
+        val tempOutput = File(context.cacheDir, "crop_output.mp4")
+        try {
+            if (tempOutput.exists()) tempOutput.delete()
+            exportCroppedVideo(
+                context = context,
+                input = inputFile,
+                region = VideoCropRegion(cropX, cropY, cropW, cropH),
+                videoWidth = videoWidth,
+                videoHeight = videoHeight,
+                loopStartMs = loopStartMs,
+                loopEndMs = loopEndMs,
+                output = tempOutput,
+            )
+            if (tempOutput.exists() && tempOutput.length() > 1024) {
+                tempOutput.copyTo(outputFile, overwrite = true)
+                cropSucceeded = true
+                if (com.freevibe.BuildConfig.DEBUG) Log.d("VideoCrop", "Crop success: ${outputFile.length() / 1024}KB")
+            } else if (com.freevibe.BuildConfig.DEBUG) {
+                Log.e("VideoCrop", "Crop produced invalid output")
             }
-        } else {
-            if (com.freevibe.BuildConfig.DEBUG) Log.e("VideoCrop", "FFmpeg not available via yt-dlp reflection")
+        } catch (e: Exception) {
+            if (e is kotlinx.coroutines.CancellationException) throw e
+            if (com.freevibe.BuildConfig.DEBUG) Log.e("VideoCrop", "Crop export failed: ${e.message}")
+        } finally {
+            tempOutput.delete()
         }
 
         // Clean up input cache
@@ -877,22 +802,6 @@ private suspend fun cropVideoConstrained(
         null
     }
 }
-
-internal fun videoTrimArgs(
-    loopStartMs: Long,
-    loopEndMs: Long,
-): List<String> {
-    val safeStart = loopStartMs.coerceAtLeast(0L)
-    val duration = (loopEndMs - safeStart).coerceAtLeast(0L)
-    if (duration <= 0L) return emptyList()
-    return listOf(
-        "-ss", formatFfmpegSeconds(safeStart),
-        "-t", formatFfmpegSeconds(duration),
-    )
-}
-
-internal fun formatFfmpegSeconds(ms: Long): String =
-    String.format(java.util.Locale.ROOT, "%.3f", ms.coerceAtLeast(0L) / 1000.0)
 
 private const val MIN_VIDEO_LOOP_MS = 2_000L
 private const val MAX_TIMELINE_FRAMES = 6

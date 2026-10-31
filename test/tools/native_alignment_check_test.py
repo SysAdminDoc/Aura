@@ -812,7 +812,6 @@ class MediaStackMigrationEvidenceTest(unittest.TestCase):
         build_file.write_text("useLegacyPackaging = true\n", encoding="utf-8")
         for source_path in (
             "app/src/main/java/com/freevibe/service/AudioTrimmer.kt",
-            "app/src/main/java/com/freevibe/ui/screens/videowallpapers/VideoCropScreen.kt",
         ):
             source = self.repo_root / source_path
             source.parent.mkdir(parents=True, exist_ok=True)
@@ -839,20 +838,13 @@ class MediaStackMigrationEvidenceTest(unittest.TestCase):
                     "operations": ["MP3 encode"],
                 },
                 {
-                    "id": "video-crop-export",
-                    "sourcePath": "app/src/main/java/com/freevibe/ui/screens/videowallpapers/VideoCropScreen.kt",
-                    "mode": "direct",
-                    "operations": ["video crop"],
-                },
-                {
                     "id": "yt-dlp-extractor-runtime",
                     "sourcePath": "app/build.gradle.kts",
                     "mode": "runtime",
                     "operations": ["stream extraction"],
                 },
             ],
-            "videoCropIsSoleRemainingConsumer": False,
-            "videoCropStatus": "Last direct video editing consumer, but not the sole consumer.",
+            "videoEditingStatus": "Video editing runs on Media3.",
         }
 
     def test_accepts_measured_artifacts_and_named_ffmpeg_consumers(self):

@@ -57,14 +57,6 @@
         "reason": "Reads youtubedl-android FFmpeg binary and LD_LIBRARY_PATH values only for MP3, FLAC, unavailable OGG or Opus encoders, and unsupported lossless stream-copy cuts after Media3 handles the editor transform."
       },
       {
-        "path": "app/src/main/java/com/freevibe/ui/screens/videowallpapers/VideoCropScreen.kt",
-        "terms": [
-          "getDeclaredField(",
-          "isAccessible = true"
-        ],
-        "reason": "Reads youtubedl-android FFmpeg binary and LD_LIBRARY_PATH values for local video crop/export."
-      },
-      {
         "path": "app/src/main/java/com/freevibe/service/SmartCropDetector.kt",
         "terms": [
           "getMethod("

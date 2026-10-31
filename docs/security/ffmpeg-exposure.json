@@ -16,8 +16,6 @@
   "containerAllowlist": ["mp4", "m4a", "mp3", "ogg", "wav", "flac", "webm", "aac"],
   "containerAllowlistEnforcement": [
     "app/src/main/java/com/freevibe/service/MediaIngestion.kt",
-    "app/src/main/java/com/freevibe/ui/screens/videowallpapers/VideoCropScreen.kt",
-    "app/src/main/java/com/freevibe/service/VideoFitCanvasComposer.kt",
     "app/src/main/java/com/freevibe/service/AudioTrimmer.kt"
   ],
   "notes": "Removal of the bundled FFmpeg module (P2 item) is the complete fix. This policy bounds the exposure by rejecting containers that can carry MagicYUV before they reach FFmpeg's demuxer."

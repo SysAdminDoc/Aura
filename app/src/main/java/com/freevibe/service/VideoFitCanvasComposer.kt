@@ -1,10 +1,23 @@
+@file:androidx.annotation.OptIn(androidx.media3.common.util.UnstableApi::class)
+
 package com.freevibe.service
 
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.graphics.Canvas
+import android.graphics.Paint
+import android.graphics.PorterDuff
+import android.graphics.PorterDuffXfermode
 import android.media.MediaFormat
 import android.media.MediaMetadataRetriever
+import android.net.Uri
+import androidx.media3.common.MediaItem
+import androidx.media3.effect.BitmapOverlay
+import androidx.media3.effect.OverlayEffect
+import androidx.media3.effect.Presentation
+import androidx.media3.transformer.EditedMediaItem
+import androidx.media3.transformer.Effects
 import com.freevibe.data.model.FitCanvasStyle
 import com.freevibe.data.model.FitCanvasSize
 import com.freevibe.data.model.ResolvedFitCanvas
@@ -13,13 +26,15 @@ import com.freevibe.util.rethrowIfCancelled
 import dagger.hilt.android.qualifiers.ApplicationContext
 import java.io.File
 import java.io.IOException
-import java.util.concurrent.TimeUnit
-import java.util.zip.ZipFile
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import kotlin.math.abs
+import kotlin.math.ceil
+import kotlin.math.floor
 import kotlin.math.max
+import kotlin.math.min
 
 data class PreparedVideoFitCanvas(
     val file: File,
@@ -123,66 +138,45 @@ internal fun decodeBoundedVideoFrame(path: String, maxLongEdge: Int = 512): Bitm
     }
 }
 
-internal fun videoFitCanvasFfmpegArgs(
-    ffmpegPath: String,
-    backgroundPath: String,
-    inputPath: String,
-    outputPath: String,
-    width: Int,
-    height: Int,
-): List<String> {
-    require(width > 0 && height > 0 && width % 2 == 0 && height % 2 == 0)
-    val foreground = "[1:v]scale=$width:$height:" +
-        "force_original_aspect_ratio=decrease:force_divisible_by=2[fg]"
-    val composition = "[0:v][fg]overlay=(W-w)/2:(H-h)/2:shortest=1,format=yuv420p[v]"
-    return listOf(
-        ffmpegPath,
-        "-y",
-        "-loop", "1",
-        // The cached background is static, but it is clocked at Aura's default
-        // live-wallpaper ceiling so overlay frames are not collapsed to 1 FPS.
-        "-framerate", "30",
-        "-i", backgroundPath,
-        "-i", inputPath,
-        "-filter_complex", "$foreground;$composition",
-        "-map", "[v]",
-        "-map_metadata", "1",
-        "-c:v", "libx264",
-        "-preset", "ultrafast",
-        "-crf", "20",
-        "-pix_fmt", "yuv420p",
-        "-an",
-        "-shortest",
-        "-movflags", "+faststart",
-        outputPath,
+/**
+ * Where a video lands when fitted inside a canvas. Rounded inward, so the background's opening
+ * never shows the black bars Media3 leaves around the frame.
+ */
+internal fun fittedVideoRect(
+    videoWidth: Int,
+    videoHeight: Int,
+    canvasWidth: Int,
+    canvasHeight: Int,
+): VideoRect {
+    require(videoWidth > 0 && videoHeight > 0 && canvasWidth > 0 && canvasHeight > 0)
+    val scale = min(canvasWidth.toDouble() / videoWidth, canvasHeight.toDouble() / videoHeight)
+    val fittedWidth = videoWidth * scale
+    val fittedHeight = videoHeight * scale
+    return VideoRect(
+        left = ceil((canvasWidth - fittedWidth) / 2 - ROUNDING_SLACK).toInt().coerceAtLeast(0),
+        top = ceil((canvasHeight - fittedHeight) / 2 - ROUNDING_SLACK).toInt().coerceAtLeast(0),
+        right = floor((canvasWidth + fittedWidth) / 2 + ROUNDING_SLACK).toInt().coerceAtMost(canvasWidth),
+        bottom = floor((canvasHeight + fittedHeight) / 2 + ROUNDING_SLACK).toInt().coerceAtMost(canvasHeight),
     )
 }
 
-internal fun videoCompatibilityFfmpegArgs(
-    ffmpegPath: String,
-    inputPath: String,
-    outputPath: String,
+/**
+ * A device's encoder can settle on a nearby size or a smaller one, which still shows the whole
+ * canvas. Only a different shape means the video is wrong.
+ */
+internal fun composedVideoMatchesCanvas(
     width: Int,
     height: Int,
-): List<String> {
-    require(width > 0 && height > 0 && width % 2 == 0 && height % 2 == 0)
-    return listOf(
-        ffmpegPath,
-        "-y",
-        "-i", inputPath,
-        "-map", "0:v:0",
-        "-map_metadata", "0",
-        "-vf", "scale=$width:$height:force_original_aspect_ratio=decrease:force_divisible_by=2,format=yuv420p",
-        "-c:v", "libx264",
-        "-preset", "ultrafast",
-        "-crf", "20",
-        "-pix_fmt", "yuv420p",
-        "-an",
-        "-movflags", "+faststart",
-        "-f", "mp4",
-        outputPath,
-    )
+    expectedWidth: Int,
+    expectedHeight: Int,
+): Boolean {
+    if (width <= 0 || height <= 0 || expectedWidth <= 0 || expectedHeight <= 0) return false
+    val ratio = (width.toDouble() / height) / (expectedWidth.toDouble() / expectedHeight)
+    return abs(ratio - 1.0) <= COMPOSED_SHAPE_TOLERANCE
 }
+
+private const val ROUNDING_SLACK = 1e-6
+private const val COMPOSED_SHAPE_TOLERANCE = 0.01
 
 @Singleton
 class VideoFitCanvasComposer @Inject constructor(
@@ -203,7 +197,7 @@ class VideoFitCanvasComposer @Inject constructor(
         targetHeight: Int,
     ): Result<PreparedVideoFitCanvas> =
         withContext(Dispatchers.IO) {
-            runCatching { prepareBlocking(file, style, targetWidth, targetHeight) }
+            runCatching { prepareComposed(file, style, targetWidth, targetHeight) }
                 .onFailure { it.rethrowIfCancelled() }
         }
 
@@ -214,15 +208,15 @@ class VideoFitCanvasComposer @Inject constructor(
         targetHeight: Int = context.resources.displayMetrics.heightPixels.coerceAtLeast(2),
     ): Result<Unit> = withContext(Dispatchers.IO) {
         runCatching {
-            val metadata = readMediaTechnicalMetadata(source)
-            if (metadata.width <= 0 || metadata.height <= 0) {
+            val (sourceWidth, sourceHeight) = readUprightVideoSize(source)
+            if (sourceWidth <= 0 || sourceHeight <= 0) {
                 throw IOException("Video dimensions could not be read")
             }
             val maxLongEdge = (max(targetWidth, targetHeight).coerceAtLeast(2) * 2)
                 .coerceAtMost(4_096)
             val (longEdgeWidth, longEdgeHeight) = boundedVideoFrameSize(
-                metadata.width,
-                metadata.height,
+                sourceWidth,
+                sourceHeight,
                 maxLongEdge,
             )
             val bounded = boundedVideoCanvasSize(
@@ -230,19 +224,27 @@ class VideoFitCanvasComposer @Inject constructor(
                 longEdgeHeight,
                 FitCanvasRenderer.MAX_OUTPUT_PIXELS,
             )
-            requireFfmpegSafeContainer(source)
-            val (ffmpeg, libraryPath) = initializeFfmpegRuntime()
-            val command = videoCompatibilityFfmpegArgs(
-                ffmpegPath = ffmpeg.absolutePath,
-                inputPath = source.absolutePath,
-                outputPath = output.absolutePath,
-                width = bounded.width,
-                height = bounded.height,
+            val item = EditedMediaItem.Builder(MediaItem.fromUri(Uri.fromFile(source)))
+                .setRemoveAudio(true)
+                .setEffects(
+                    Effects(
+                        emptyList(),
+                        listOf(
+                            Presentation.createForWidthAndHeight(
+                                bounded.width,
+                                bounded.height,
+                                Presentation.LAYOUT_SCALE_TO_FIT_WITH_CROP,
+                            ),
+                        ),
+                    ),
+                )
+                .build()
+            runMedia3VideoExport(
+                builder = h264ExportBuilder(context),
+                composition = sdrComposition(item),
+                output = output,
+                operation = "Video optimization",
             )
-            executeFfmpeg(command, libraryPath, "Video optimization", output)
-            if (output.length() > MAX_VIDEO_WALLPAPER_BYTES) {
-                throw IOException("Optimized video exceeds the video wallpaper limit")
-            }
             val result = readMediaTechnicalMetadata(output, "video/mp4")
             if (result.width <= 0 || result.height <= 0) {
                 throw IOException("Optimized video could not be validated")
@@ -250,13 +252,15 @@ class VideoFitCanvasComposer @Inject constructor(
         }.onFailure { it.rethrowIfCancelled() }
     }
 
-    private fun prepareBlocking(
+    private suspend fun prepareComposed(
         file: File,
         style: FitCanvasStyle,
         targetWidth: Int,
         targetHeight: Int,
     ): PreparedVideoFitCanvas {
         if (!file.exists() || !file.canRead()) throw IOException("Video wallpaper file is unavailable")
+        // Versions that composed with FFmpeg unpacked its support libraries here.
+        File(context.noBackupFilesDir, "aura-ffmpeg-runtime").deleteRecursively()
         val isGif = file.extension.equals("gif", ignoreCase = true)
         val target = boundedVideoCanvasSize(
             targetWidth.coerceAtLeast(2),
@@ -281,20 +285,13 @@ class VideoFitCanvasComposer @Inject constructor(
 
         val backgroundFile = File(context.filesDir, VIDEO_WALLPAPER_CANVAS_BACKGROUND_FILE)
         val backgroundTemp = File.createTempFile("aura-fit-canvas-", ".png", context.cacheDir)
+        var overlay: Bitmap? = null
         try {
             backgroundTemp.outputStream().use { output ->
                 if (!backgroundResult.bitmap.compress(Bitmap.CompressFormat.PNG, 100, output)) {
                     throw IOException("Could not write Fit Canvas background")
                 }
             }
-        } catch (error: Throwable) {
-            backgroundTemp.delete()
-            throw error
-        } finally {
-            backgroundResult.bitmap.recycle()
-        }
-
-        try {
             if (isGif) {
                 moveIntoPlace(backgroundTemp, backgroundFile)
                 return PreparedVideoFitCanvas(
@@ -305,43 +302,44 @@ class VideoFitCanvasComposer @Inject constructor(
                 )
             }
 
-            requireFfmpegSafeContainer(file)
-            val (ffmpeg, libraryPath) = initializeFfmpegRuntime()
+            val (sourceWidth, sourceHeight) = readUprightVideoSize(file)
+            if (sourceWidth <= 0 || sourceHeight <= 0) {
+                throw IOException("Video dimensions could not be read")
+            }
+            val composedOverlay = backgroundWithOpening(
+                backgroundResult.bitmap,
+                fittedVideoRect(sourceWidth, sourceHeight, width, height),
+            )
+            overlay = composedOverlay
             val output = File(context.filesDir, "live_wallpaper.fit.mp4")
             val tempOutput = File.createTempFile("aura-fit-canvas-", ".mp4", context.cacheDir)
             try {
-                val command = videoFitCanvasFfmpegArgs(
-                    ffmpegPath = ffmpeg.absolutePath,
-                    backgroundPath = backgroundTemp.absolutePath,
-                    inputPath = file.absolutePath,
-                    outputPath = tempOutput.absolutePath,
-                    width = width,
-                    height = height,
+                val item = EditedMediaItem.Builder(MediaItem.fromUri(Uri.fromFile(file)))
+                    .setRemoveAudio(true)
+                    .setEffects(
+                        Effects(
+                            emptyList(),
+                            listOf(
+                                Presentation.createForWidthAndHeight(
+                                    width,
+                                    height,
+                                    Presentation.LAYOUT_SCALE_TO_FIT,
+                                ),
+                                // The background goes over the frame with an opening where the
+                                // video shows, so no frame gets blurred and nothing is drawn twice.
+                                OverlayEffect(
+                                    listOf(BitmapOverlay.createStaticBitmapOverlay(composedOverlay)),
+                                ),
+                            ),
+                        ),
+                    )
+                    .build()
+                runMedia3VideoExport(
+                    builder = h264ExportBuilder(context),
+                    composition = sdrComposition(item),
+                    output = tempOutput,
+                    operation = "Fit Canvas video",
                 )
-                val builder = ProcessBuilder(command)
-                    .redirectErrorStream(true)
-                    .directory(context.cacheDir)
-                if (libraryPath.isNotBlank()) builder.environment()["LD_LIBRARY_PATH"] = libraryPath
-                val process = builder.start()
-                val tail = StringBuilder()
-                val drain = Thread({
-                    process.inputStream.bufferedReader().useLines { lines ->
-                        lines.forEach { line ->
-                            if (tail.length > 4096) tail.delete(0, tail.length - 2048)
-                            tail.appendLine(line)
-                        }
-                    }
-                }, "aura-fit-canvas-ffmpeg").apply { start() }
-                val completed = process.waitFor(VIDEO_FIT_CANVAS_TIMEOUT_SECONDS, TimeUnit.SECONDS)
-                if (!completed) process.destroyForcibly()
-                drain.join(2_000L)
-                val exitCode = if (completed) process.exitValue() else -1
-                if (exitCode != 0 || !tempOutput.exists() || tempOutput.length() < 1024L) {
-                    throw IOException("Fit Canvas video render failed: ${tail.takeLast(400)}")
-                }
-                if (tempOutput.length() > MAX_VIDEO_WALLPAPER_BYTES) {
-                    throw IOException("Fit Canvas video exceeds the video wallpaper limit")
-                }
                 requireValidComposedVideo(tempOutput, width, height)
                 // Keep the active wallpaper intact until both staged assets have
                 // been rendered and validated successfully.
@@ -358,36 +356,22 @@ class VideoFitCanvasComposer @Inject constructor(
             }
         } finally {
             backgroundTemp.delete()
+            backgroundResult.bitmap.recycle()
+            overlay?.recycle()
         }
     }
 
-    private fun executeFfmpeg(
-        command: List<String>,
-        libraryPath: String,
-        operation: String,
-        output: File,
-    ) {
-        val builder = ProcessBuilder(command)
-            .redirectErrorStream(true)
-            .directory(context.cacheDir)
-        if (libraryPath.isNotBlank()) builder.environment()["LD_LIBRARY_PATH"] = libraryPath
-        val process = builder.start()
-        val tail = StringBuilder()
-        val drain = Thread({
-            process.inputStream.bufferedReader().useLines { lines ->
-                lines.forEach { line ->
-                    if (tail.length > 4096) tail.delete(0, tail.length - 2048)
-                    tail.appendLine(line)
-                }
-            }
-        }, "aura-video-ffmpeg").apply { start() }
-        val completed = process.waitFor(VIDEO_FIT_CANVAS_TIMEOUT_SECONDS, TimeUnit.SECONDS)
-        if (!completed) process.destroyForcibly()
-        drain.join(2_000L)
-        val exitCode = if (completed) process.exitValue() else -1
-        if (exitCode != 0 || !output.exists() || output.length() < 1024L) {
-            throw IOException("$operation failed: ${tail.takeLast(400)}")
-        }
+    private fun backgroundWithOpening(background: Bitmap, opening: VideoRect): Bitmap {
+        val overlay = background.copy(Bitmap.Config.ARGB_8888, true)
+            ?: throw IOException("Could not prepare Fit Canvas background")
+        Canvas(overlay).drawRect(
+            opening.left.toFloat(),
+            opening.top.toFloat(),
+            opening.right.toFloat(),
+            opening.bottom.toFloat(),
+            Paint().apply { xfermode = PorterDuffXfermode(PorterDuff.Mode.CLEAR) },
+        )
+        return overlay
     }
 
     private fun requireValidComposedVideo(file: File, expectedWidth: Int, expectedHeight: Int) {
@@ -406,9 +390,15 @@ class VideoFitCanvasComposer @Inject constructor(
                 mimeType = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_MIMETYPE),
             )
             videoWallpaperProbeFailure(probe)?.let { throw IOException(it) }
-            if (probe.width != expectedWidth || probe.height != expectedHeight) {
+            val (uprightWidth, uprightHeight) = uprightVideoSize(
+                probe.width,
+                probe.height,
+                retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_ROTATION)
+                    ?.toIntOrNull() ?: 0,
+            )
+            if (!composedVideoMatchesCanvas(uprightWidth, uprightHeight, expectedWidth, expectedHeight)) {
                 throw IOException(
-                    "Fit Canvas video dimensions ${probe.width}x${probe.height} do not match " +
+                    "Fit Canvas video dimensions ${uprightWidth}x$uprightHeight do not match " +
                         "${expectedWidth}x$expectedHeight",
                 )
             }
@@ -446,82 +436,7 @@ class VideoFitCanvasComposer @Inject constructor(
         }
     }
 
-    private fun initializeFfmpegRuntime(): Pair<File, String> {
-        try {
-            com.yausername.ffmpeg.FFmpeg.getInstance().init(context)
-        } catch (error: Throwable) {
-            error.rethrowIfCancelled()
-            throw IOException("Fit Canvas video renderer could not start", error)
-        }
-        val ffmpeg = File(context.applicationInfo.nativeLibraryDir, "libffmpeg.so")
-        val libraryDirectory = File(
-            context.noBackupFilesDir,
-            "youtubedl-android/packages/ffmpeg/usr/lib",
-        )
-        if (!ffmpeg.exists() || !ffmpeg.canExecute() || !libraryDirectory.isDirectory) {
-            throw IOException("Fit Canvas video renderer is unavailable")
-        }
-        val supportDirectory = prepareFfmpegSupportLibrary()
-        val libraryPath = listOf(
-            context.applicationInfo.nativeLibraryDir,
-            supportDirectory.absolutePath,
-            libraryDirectory.absolutePath,
-        ).joinToString(File.pathSeparator)
-        return ffmpeg to libraryPath
-    }
-
-    private fun prepareFfmpegSupportLibrary(): File {
-        val runtimeDirectory = File(context.noBackupFilesDir, "aura-ffmpeg-runtime")
-        if (!runtimeDirectory.exists() && !runtimeDirectory.mkdirs()) {
-            throw IOException("Fit Canvas support directory could not be created")
-        }
-        val archive = File(context.applicationInfo.nativeLibraryDir, "libpython.zip.so")
-        if (!archive.exists() || !archive.canRead()) {
-            throw IOException("Fit Canvas support library is unavailable")
-        }
-        ZipFile(archive).use { zip ->
-            FFMPEG_SUPPORT_LIBRARIES.forEach { support ->
-                val destination = File(runtimeDirectory, support.outputName)
-                val entry = zip.getEntry(support.archiveEntry)
-                    ?: throw IOException("Fit Canvas support library is missing from the app")
-                if (entry.size !in 1..MAX_FFMPEG_SUPPORT_LIBRARY_BYTES) {
-                    throw IOException("Fit Canvas support library has an invalid size")
-                }
-                if (destination.length() == entry.size) return@forEach
-                val temp = File.createTempFile("aura-ffmpeg-", ".tmp", runtimeDirectory)
-                try {
-                    zip.getInputStream(entry).use { input ->
-                        temp.outputStream().use { output ->
-                            copyStreamCapped(input, output, MAX_FFMPEG_SUPPORT_LIBRARY_BYTES)
-                        }
-                    }
-                    if (temp.length() != entry.size) {
-                        throw IOException("Fit Canvas support library could not be verified")
-                    }
-                    moveIntoPlace(temp, destination)
-                } finally {
-                    temp.delete()
-                }
-            }
-        }
-        return runtimeDirectory
-    }
-
     private companion object {
-        private const val VIDEO_FIT_CANVAS_TIMEOUT_SECONDS = 180L
         private const val GIF_BACKGROUND_MAX_PIXELS = 250_000L
-        private const val MAX_FFMPEG_SUPPORT_LIBRARY_BYTES = 8L * 1024L * 1024L
-        private val FFMPEG_SUPPORT_LIBRARIES = listOf(
-            FfmpegSupportLibrary("libandroid-posix-semaphore.so", "usr/lib/libandroid-posix-semaphore.so"),
-            FfmpegSupportLibrary("libandroid-support.so", "usr/lib/libandroid-support.so"),
-            FfmpegSupportLibrary("libc++_shared.so", "usr/lib/libc++_shared.so"),
-            FfmpegSupportLibrary("libcrypto.so.3", "usr/lib/libcrypto.so.3"),
-            FfmpegSupportLibrary("libexpat.so.1", "usr/lib/libexpat.so.1.11.1"),
-        )
     }
 }
-
-private data class FfmpegSupportLibrary(
-    val outputName: String,
-    val archiveEntry: String,
-)

@@ -393,7 +393,7 @@ class YouTubeRepository @Inject constructor(
             sourceMetrics.measure(sourceName) {
                 val url = "https://www.youtube.com/watch?v=$videoId"
                 val request = ytDlpRequestFactory.create(url)
-                request.addOption("-f", "bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best")
+                request.addOption("-f", "bestvideo[ext=mp4]/best[ext=mp4]/best")
                 request.addOption("--get-url")
                 val response = com.yausername.youtubedl_android.YoutubeDL.getInstance().execute(request)
                 val streamUrl = response.out?.trim()?.lines()?.firstOrNull()
@@ -423,7 +423,7 @@ class YouTubeRepository @Inject constructor(
             sourceMetrics.measure(sourceName) {
                 val url = "https://www.youtube.com/watch?v=$videoId"
                 val request = ytDlpRequestFactory.create(url)
-                request.addOption("-f", "bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best")
+                request.addOption("-f", "bestvideo[ext=mp4]/best[ext=mp4]/best")
                 request.addOption("--skip-download")
                 request.addOption("--no-playlist")
                 request.addOption("--print", "width=%(width)s")

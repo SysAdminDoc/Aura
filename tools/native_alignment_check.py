@@ -243,7 +243,6 @@ def validate_media_stack_migration_evidence(repo_root: Path, value: Any) -> dict
 
     required_consumers = {
         "sound-editor-codec-fallbacks",
-        "video-crop-export",
         "yt-dlp-extractor-runtime",
     }
     if consumer_ids != required_consumers:
@@ -256,14 +255,7 @@ def validate_media_stack_migration_evidence(repo_root: Path, value: Any) -> dict
             details.append("unexpected " + ", ".join(extra))
         raise NativeAlignmentError("retainedFfmpegConsumers mismatch: " + "; ".join(details))
 
-    if require_bool(
-        evidence.get("videoCropIsSoleRemainingConsumer"),
-        "mediaStackMigrationEvidence.videoCropIsSoleRemainingConsumer",
-    ):
-        raise NativeAlignmentError(
-            "videoCropIsSoleRemainingConsumer must be false while codec fallbacks and yt-dlp remain"
-        )
-    require_string(evidence.get("videoCropStatus"), "mediaStackMigrationEvidence.videoCropStatus")
+    require_string(evidence.get("videoEditingStatus"), "mediaStackMigrationEvidence.videoEditingStatus")
     return {
         "artifactCount": len(after),
         "retainedFfmpegConsumerIds": sorted(consumer_ids),

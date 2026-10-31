@@ -183,7 +183,7 @@
     },
     {
       "count": 1,
-      "firstLine": 1564,
+      "firstLine": 1557,
       "id": "211fc88715e49fc1",
       "path": "app/src/main/java/com/freevibe/ui/screens/videowallpapers/VideoWallpapersViewModel.kt",
       "reason": "Internal signal. The Reddit RSS fetch catch records the source in failedSources and logs in debug builds; the screen shows only the translated video_wp_sources_* messages.",
@@ -192,7 +192,7 @@
     },
     {
       "count": 1,
-      "firstLine": 1566,
+      "firstLine": 1559,
       "id": "957c5ebd12f9820f",
       "path": "app/src/main/java/com/freevibe/ui/screens/videowallpapers/VideoWallpapersViewModel.kt",
       "reason": "Internal signal. The Reddit RSS fetch catch records the source in failedSources and logs in debug builds; the screen shows only the translated video_wp_sources_* messages.",

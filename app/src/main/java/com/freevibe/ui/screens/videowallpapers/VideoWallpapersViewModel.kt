@@ -1006,29 +1006,22 @@ class VideoWallpapersViewModel @Inject constructor(
             provenanceUrl = item.sourcePageUrl.ifBlank { videoUrl },
         ) { cacheFile ->
             if (isHlsMotionUrl(videoUrl)) {
-                // A Reddit HLS URL is a playlist, not a video file. Let yt-dlp and
-                // ffmpeg fetch its segments and produce a bounded MP4; raw-copying
-                // the m3u8 bytes would create an invalid wallpaper file.
+                // A Reddit HLS URL is a playlist, not a video file. Media3 fetches its
+                // segments into a bounded MP4; raw-copying the m3u8 bytes would create an
+                // invalid wallpaper file.
                 val hlsOutput = java.io.File(cacheFile.parentFile, "${cacheFile.name}.hls.mp4")
                 try {
-                    val request = com.yausername.youtubedl_android.YoutubeDLRequest(videoUrl)
-                    request.addOption("-f", "bestvideo[height<=1080]+bestaudio/best[height<=1080]/best")
-                    request.addOption("--merge-output-format", "mp4")
-                    request.addOption("--remux-video", "mp4")
-                    request.addOption("--force-overwrites")
-                    request.addOption("-o", hlsOutput.absolutePath)
-                    applyYtDlpDownloadBounds(request)
-                    com.yausername.youtubedl_android.YoutubeDL.getInstance().execute(request)
-                    if (!hlsOutput.exists()) throw java.io.IOException(context.getString(com.freevibe.R.string.video_wp_err_hls))
+                    try {
+                        com.freevibe.service.transmuxHlsToMp4(context, videoUrl, hlsOutput)
+                    } catch (e: kotlinx.coroutines.CancellationException) {
+                        throw e
+                    } catch (e: Exception) {
+                        throw java.io.IOException(com.freevibe.service.hlsDownloadFailureText(context, e), e)
+                    }
                     // Move rather than copy: both files live in the same
                     // directory, so a copy would briefly need twice the
                     // video's size on a device already near its cap.
                     moveIntoPlace(hlsOutput, cacheFile)
-                    ytDlpUpdateManager.recordExtractionSuccess()
-                } catch (e: Exception) {
-                    if (e is kotlinx.coroutines.CancellationException) throw e
-                    ytDlpUpdateManager.recordExtractionFailure(e)
-                    throw e
                 } finally {
                     hlsOutput.delete()
                 }

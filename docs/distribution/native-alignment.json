@@ -111,24 +111,15 @@
         ]
       },
       {
-        "id": "video-crop-export",
-        "sourcePath": "app/src/main/java/com/freevibe/ui/screens/videowallpapers/VideoCropScreen.kt",
-        "mode": "direct",
-        "operations": [
-          "Video crop and portrait export"
-        ]
-      },
-      {
         "id": "yt-dlp-extractor-runtime",
         "sourcePath": "app/build.gradle.kts",
         "mode": "runtime",
         "operations": [
-          "YouTube stream extraction and segmented download merging"
+          "YouTube stream extraction"
         ]
       }
     ],
-    "videoCropIsSoleRemainingConsumer": false,
-    "videoCropStatus": "Video crop is the last direct video-editing consumer, but codec fallbacks and yt-dlp also remain."
+    "videoEditingStatus": "Video crop, Fit Canvas and HLS downloads run on Media3. Sound editor codec fallbacks and the yt-dlp runtime are what keep FFmpeg in the APK."
   },
   "latestLocalEvidence": {
     "date": "2026-08-21",

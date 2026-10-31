@@ -36,6 +36,7 @@ import com.freevibe.service.VideoPreviewCache
 import com.freevibe.service.VideoWallpaperStorage
 import com.freevibe.service.YouTubeYtDlpRequestFactory
 import com.freevibe.service.YtDlpUpdateManager
+import com.freevibe.service.videoClipWindow
 import com.freevibe.util.rethrowIfCancelled
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -1125,12 +1126,10 @@ class VideoWallpapersViewModelTest {
     }
 
     @Test
-    fun `videoTrimArgs formats ffmpeg time arguments`() {
-        assertEquals(
-            listOf("-ss", "1.250", "-t", "3.500"),
-            videoTrimArgs(loopStartMs = 1_250, loopEndMs = 4_750),
-        )
-        assertEquals(emptyList<String>(), videoTrimArgs(loopStartMs = 2_000, loopEndMs = 2_000))
+    fun `videoClipWindow keeps the chosen stretch and skips an empty one`() {
+        assertEquals(1_250L to 4_750L, videoClipWindow(loopStartMs = 1_250, loopEndMs = 4_750))
+        assertEquals(0L to 3_000L, videoClipWindow(loopStartMs = -5, loopEndMs = 3_000))
+        assertNull(videoClipWindow(loopStartMs = 2_000, loopEndMs = 2_000))
     }
 
     @Test

@@ -189,7 +189,7 @@
     {"path": "cacheDir/media_relink", "purpose": "Bounded candidate staging for local media type, digest, and metadata checks", "sourceFile": "LocalMediaRelinkManager.kt"},
     {"path": "cacheDir/wallpaper_pack_slot.img", "purpose": "24H pack staging for a slot fetched from a provider's host (64 MB cap). Deleted when the run ends.", "sourceFile": "WallpaperPackManager.kt"},
     {"path": "cacheDir/crop_input.mp4", "purpose": "Video crop input (256 MB cap)", "sourceFile": "VideoCropScreen.kt"},
-    {"path": "cacheDir/crop_output.mp4", "purpose": "Video crop FFmpeg output", "sourceFile": "VideoCropScreen.kt"}
+    {"path": "cacheDir/crop_output.mp4", "purpose": "Video crop output", "sourceFile": "VideoCropScreen.kt"}
   ],
   "sharedPreferencesFiles": [
     "freevibe_widget.xml",
