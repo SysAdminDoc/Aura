@@ -1,18 +1,35 @@
 package com.freevibe.service
 
 import androidx.media3.common.C
+import androidx.media3.common.Metadata
 import androidx.media3.common.MimeTypes
 import androidx.media3.common.audio.AudioProcessor
+import io.mockk.mockk
 import org.junit.Assert.assertArrayEquals
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
+import java.io.File
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 
 class AudioTrimmerTest {
+
+    @Test
+    fun `a file's tags don't stop an export to WAV or OGG`() {
+        listOf(PlatformAudioContainer.WAV, PlatformAudioContainer.OGG).forEach { container ->
+            val output = File.createTempFile("tagged", ".audio")
+            try {
+                PlatformAudioMuxerFactory(PlatformAudioExportPlan(MimeTypes.AUDIO_RAW, container, null))
+                    .create(output.path)
+                    .use { muxer -> muxer.addMetadataEntry(mockk<Metadata.Entry>()) }
+            } finally {
+                output.delete()
+            }
+        }
+    }
 
     @Test
     fun `platform plans route AAC WAV Vorbis and modern Opus`() {

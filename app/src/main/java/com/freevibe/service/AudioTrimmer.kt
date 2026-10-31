@@ -21,6 +21,7 @@ import android.view.Surface
 import androidx.media3.common.C
 import androidx.media3.common.Format
 import androidx.media3.common.MediaItem
+import androidx.media3.common.Metadata
 import androidx.media3.common.MimeTypes
 import androidx.media3.common.SpeedParameters
 import androidx.media3.common.audio.AudioProcessor
@@ -280,13 +281,22 @@ private class ConstantAudioSpeedProvider(private val speed: Float) : SpeedProvid
     override fun getNextSpeedChangeTimeUs(timeUs: Long): Long = C.TIME_UNSET
 }
 
-private class PlatformAudioMuxerFactory(
+/**
+ * Transformer hands the muxer every tag on the input, and OggMuxer and WavMuxer throw on all of
+ * them, so a tagged MP3, FLAC or OGG would fail the export. Exports don't carry those tags on, and
+ * the OGG loop tag goes into the finished file through [addOggComment].
+ */
+private class TagDroppingMuxer(delegate: Muxer) : Muxer by delegate {
+    override fun addMetadataEntry(metadataEntry: Metadata.Entry) = Unit
+}
+
+internal class PlatformAudioMuxerFactory(
     private val plan: PlatformAudioExportPlan,
 ) : Muxer.Factory {
     override fun create(path: String): Muxer = try {
         when (plan.container) {
-            PlatformAudioContainer.OGG -> OggMuxer.Builder(FileOutputStream(path).channel).build()
-            PlatformAudioContainer.WAV -> WavMuxer(SeekableMuxerOutput.of(path))
+            PlatformAudioContainer.OGG -> TagDroppingMuxer(OggMuxer.Builder(FileOutputStream(path).channel).build())
+            PlatformAudioContainer.WAV -> TagDroppingMuxer(WavMuxer(SeekableMuxerOutput.of(path)))
             PlatformAudioContainer.MP4 -> error("The platform MP4 muxer is selected by Transformer")
         }
     } catch (error: Exception) {

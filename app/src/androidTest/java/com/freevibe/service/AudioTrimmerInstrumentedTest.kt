@@ -210,11 +210,7 @@ class AudioTrimmerInstrumentedTest {
 
     @Test
     fun vorbisLosslessCutWorksOnADeviceWithNoVorbisEncoder() = runBlocking {
-        val input = File(fixtureDirectory, "tone_vorbis_3s.ogg")
-        input.parentFile?.mkdirs()
-        InstrumentationRegistry.getInstrumentation().context.assets.open("tone_vorbis_3s.ogg").use { source ->
-            input.outputStream().use { destination -> source.copyTo(destination) }
-        }
+        val input = assetFixture("tone_vorbis_3s.ogg")
 
         val output = trimmer.trim(
             inputPath = input.absolutePath,
@@ -226,6 +222,51 @@ class AudioTrimmerInstrumentedTest {
 
         assertEquals("audio/vorbis", readEncodedAudio(File(output)).first)
         assertLoopTaggedCut(output)
+    }
+
+    /** Real music carries ID3 tags or Vorbis comments, and Media3 passes them on to the muxer. */
+    @Test
+    fun taggedFilesExportToEveryFormat() = runBlocking {
+        for (asset in listOf("tone_tagged_3s.mp3", "tone_vorbis_3s.ogg")) {
+            val input = assetFixture(asset)
+            for (format in trimmer.availableExportFormats()) {
+                val output = trimmer.trim(
+                    inputPath = input.absolutePath,
+                    startMs = 500L,
+                    endMs = 2_500L,
+                    outputFileName = "tagged_${input.extension}_${format.extension}",
+                    exportFormat = format,
+                ).getOrThrow()
+
+                assertToneIsAbout440Hz(output, durationMs = 1_500L)
+            }
+        }
+    }
+
+    @Test
+    fun taggedMp3LosslessCutKeepsTheTone() = runBlocking {
+        val input = assetFixture("tone_tagged_3s.mp3")
+
+        val output = trimmer.trim(
+            inputPath = input.absolutePath,
+            startMs = 1_000L,
+            endMs = 2_000L,
+            outputFileName = "tagged_mp3_cut",
+            losslessCut = true,
+        ).getOrThrow()
+
+        val durationMs = readEncodedAudio(File(output)).second
+        assertTrue("duration $durationMs", durationMs in 900L..1_200L)
+        assertToneIsAbout440Hz(output, durationMs = 900L)
+    }
+
+    private fun assetFixture(name: String): File {
+        val fixture = File(fixtureDirectory, name)
+        fixture.parentFile?.mkdirs()
+        InstrumentationRegistry.getInstrumentation().context.assets.open(name).use { source ->
+            fixture.outputStream().use { destination -> source.copyTo(destination) }
+        }
+        return fixture
     }
 
     private suspend fun assertLoopTaggedCut(output: String) {
