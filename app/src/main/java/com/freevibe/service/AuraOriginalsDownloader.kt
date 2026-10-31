@@ -11,6 +11,8 @@ import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.OutOfQuotaPolicy
 import androidx.work.WorkManager
 import androidx.work.WorkerParameters
+import com.freevibe.data.remote.RequestPurpose
+import com.freevibe.data.remote.purpose
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
 import java.io.File
@@ -154,7 +156,7 @@ class AuraOriginalsDownloader @AssistedInject constructor(
         val perFileBudget = remainingBudget.coerceAtMost(MAX_PER_FILE_BYTES)
         val tmpFile = File(targetDir, "$safeId.tmp")
         try {
-            val request = Request.Builder().url(entry.url).build()
+            val request = Request.Builder().purpose(RequestPurpose.DOWNLOAD).url(entry.url).build()
             okHttpClient.newCall(request).execute().use { response ->
                 if (!response.isSuccessful) return EntryOutcome(false, 0L)
                 val body = response.body ?: return EntryOutcome(false, 0L)

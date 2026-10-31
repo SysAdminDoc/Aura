@@ -7,6 +7,7 @@ import android.os.Build
 import com.freevibe.BuildConfig
 import com.freevibe.data.local.PreferencesManager
 import com.freevibe.data.model.diagnosticsSummary
+import com.freevibe.data.remote.RequestPurposeMetrics
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.first
 import java.io.File
@@ -48,6 +49,7 @@ class CrashDiagnosticsCollector @Inject constructor(
     @ApplicationContext private val context: Context,
     private val prefs: PreferencesManager,
     private val sourceMetrics: SourceMetrics,
+    private val requestPurposeMetrics: RequestPurposeMetrics,
     private val backgroundWorkDiagnosticsReader: BackgroundWorkDiagnosticsReader,
     private val ytDlpUpdateManager: YtDlpUpdateManager,
     private val liveWallpaperReceiptStore: LiveWallpaperReceiptStore,
@@ -167,6 +169,11 @@ class CrashDiagnosticsCollector @Inject constructor(
             if (sourceRows.isNotEmpty()) {
                 appendLine("- Source health rows:")
                 sourceRows.forEach { row -> appendLine("  - $row") }
+            }
+            val purposeRows = requestPurposeMetrics.rows()
+            if (purposeRows.isNotEmpty()) {
+                appendLine("- Requests this session by purpose:")
+                purposeRows.forEach { row -> appendLine("  - $row") }
             }
             appendLine()
             appendLine(backgroundWork)

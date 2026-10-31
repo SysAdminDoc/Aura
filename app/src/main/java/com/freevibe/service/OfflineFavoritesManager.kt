@@ -5,6 +5,8 @@ import com.freevibe.data.local.FavoriteDao
 import com.freevibe.data.model.FavoriteEntity
 import com.freevibe.data.model.isVideoFavorite
 import com.freevibe.data.model.stableKey
+import com.freevibe.data.remote.RequestPurpose
+import com.freevibe.data.remote.purpose
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
@@ -66,7 +68,7 @@ class OfflineFavoritesManager @Inject constructor(
                     return@withContext legacyFile.absolutePath
                 }
 
-                val request = Request.Builder().url(url).build()
+                val request = Request.Builder().purpose(RequestPurpose.DOWNLOAD).url(url).build()
                 val response = okHttpClient.newCall(request).execute()
                 response.use { resp ->
                     if (!resp.isSuccessful) return@withContext null

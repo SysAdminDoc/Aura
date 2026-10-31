@@ -536,6 +536,7 @@ class SettingsViewModelTest {
                 context = context,
                 prefs = prefs,
                 sourceMetrics = com.freevibe.service.SourceMetrics(),
+                requestPurposeMetrics = com.freevibe.data.remote.RequestPurposeMetrics(),
                 backgroundWorkDiagnosticsReader = backgroundWorkDiagnosticsReaderOverride
                     ?: FakeBackgroundWorkDiagnosticsReader(BackgroundWorkDiagnostics()),
                 ytDlpUpdateManager = ytDlpUpdateManager,

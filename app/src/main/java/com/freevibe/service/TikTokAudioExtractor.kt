@@ -8,6 +8,8 @@ import android.media.MediaMuxer
 import android.net.Uri
 import com.freevibe.BuildConfig
 import com.freevibe.data.model.Sound
+import com.freevibe.data.remote.RequestPurpose
+import com.freevibe.data.remote.purpose
 import com.freevibe.data.remote.tiktok.tiktokVideoId
 import com.freevibe.data.repository.TikTokSoundRepository
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -83,7 +85,7 @@ class TikTokAudioExtractor @Inject constructor(
     }
 
     private fun download(url: String, target: File): Int {
-        val request = Request.Builder()
+        val request = Request.Builder().purpose(RequestPurpose.DOWNLOAD)
             .url(url)
             .header("User-Agent", userAgent)
             .build()

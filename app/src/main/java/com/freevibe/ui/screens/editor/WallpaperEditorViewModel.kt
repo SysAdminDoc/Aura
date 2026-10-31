@@ -9,6 +9,8 @@ import com.freevibe.R
 import com.freevibe.data.model.Wallpaper
 import com.freevibe.data.model.WallpaperTarget
 import com.freevibe.data.model.stableKey
+import com.freevibe.data.remote.RequestPurpose
+import com.freevibe.data.remote.purpose
 import com.freevibe.service.DepthBackgroundStyle
 import com.freevibe.service.DepthFrameStyle
 import com.freevibe.service.DepthPortraitComposer
@@ -590,7 +592,7 @@ class WallpaperEditorViewModel @Inject constructor(
             overlayUndoStack.clear()
             try {
                 val bitmap = withContext(Dispatchers.IO) {
-                    val request = okhttp3.Request.Builder().url(url).build()
+                    val request = okhttp3.Request.Builder().purpose(RequestPurpose.EDIT).url(url).build()
                     okHttpClient.newCall(request).execute().use { response ->
                         if (!response.isSuccessful) {
                             throw Exception(context.getString(R.string.editor_wallpaper_http_error, response.code))

@@ -15,6 +15,8 @@ import com.freevibe.data.model.decideWallpaperOptimization
 import com.freevibe.data.model.mediaOptimizationKey
 import com.freevibe.data.model.originalTechnicalMetadata
 import com.freevibe.data.model.wallpaperOptimizationReason
+import com.freevibe.data.remote.RequestPurpose
+import com.freevibe.data.remote.purpose
 import com.freevibe.util.rethrowIfCancelled
 import dagger.hilt.android.qualifiers.ApplicationContext
 import java.io.FilterInputStream
@@ -248,7 +250,7 @@ class WallpaperApplier @Inject constructor(
         return when {
             locator.startsWith("http://", ignoreCase = true) ||
                 locator.startsWith("https://", ignoreCase = true) -> {
-                okHttpClient.newCall(Request.Builder().url(locator).build()).execute().use { response ->
+                okHttpClient.newCall(Request.Builder().purpose(RequestPurpose.APPLY).url(locator).build()).execute().use { response ->
                     if (!response.isSuccessful) throw java.io.IOException("Download failed: ${response.code}")
                     val body = response.body ?: throw java.io.IOException("Empty response body")
                     val advertised = body.contentLength()
@@ -316,7 +318,7 @@ class WallpaperApplier @Inject constructor(
      */
     suspend fun prepareParallaxWallpaper(url: String, fileName: String): Result<String> = withContext(Dispatchers.IO) {
         runCatching {
-            val request = Request.Builder().url(url).build()
+            val request = Request.Builder().purpose(RequestPurpose.APPLY).url(url).build()
             val response = okHttpClient.newCall(request).execute()
             response.use { resp ->
                 if (!resp.isSuccessful) throw java.io.IOException("Download failed: ${resp.code}")
@@ -361,7 +363,7 @@ class WallpaperApplier @Inject constructor(
      */
     suspend fun downloadToFile(url: String, destination: java.io.File): Result<Long> = withContext(Dispatchers.IO) {
         runCatching {
-            val call = okHttpClient.newCall(Request.Builder().url(url).build())
+            val call = okHttpClient.newCall(Request.Builder().purpose(RequestPurpose.DOWNLOAD).url(url).build())
             cancelCallWithCoroutine(call) { call.execute().use { resp -> saveBody(resp, destination) } }
         }.onFailure { it.rethrowIfCancelled() }
     }
@@ -387,7 +389,7 @@ class WallpaperApplier @Inject constructor(
         while (true) {
             if (!mayFetch(address.toString())) throw WallpaperAddressRefusedException(address.host)
             val from = address
-            val call = redirectCheckedClient.newCall(Request.Builder().url(from).build())
+            val call = redirectCheckedClient.newCall(Request.Builder().purpose(RequestPurpose.DOWNLOAD).url(from).build())
             val hop = cancelCallWithCoroutine(call) {
                 call.execute().use { resp ->
                     if (resp.isRedirect) {
@@ -585,7 +587,7 @@ class WallpaperApplier @Inject constructor(
         imageFlow: MediaIngestionImageFlow,
         maxLongEdge: Int,
     ): Bitmap? = withContext(Dispatchers.IO) {
-        val request = Request.Builder().url(url).build()
+        val request = Request.Builder().purpose(RequestPurpose.APPLY).url(url).build()
         val response = okHttpClient.newCall(request).execute()
         response.use { resp ->
             if (!resp.isSuccessful) throw java.io.IOException("Download failed: ${resp.code}")

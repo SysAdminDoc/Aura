@@ -1,6 +1,8 @@
 package com.freevibe.service
 
 import com.freevibe.data.model.ContentSource
+import com.freevibe.data.remote.RequestPurpose
+import com.freevibe.data.remote.purpose
 import com.freevibe.util.rethrowIfCancelled
 import com.freevibe.data.model.Sound
 import com.freevibe.data.repository.YouTubeRepository
@@ -59,7 +61,7 @@ class SoundUrlResolver @Inject constructor(
             sound.sourcePageUrl.contains("freesound.org", ignoreCase = true)
 
     private fun canFetch(url: String): Boolean {
-        val request = Request.Builder().url(url).head().build()
+        val request = Request.Builder().purpose(RequestPurpose.RESOLVE).url(url).head().build()
         return try {
             okHttpClient.newCall(request).execute().use { response ->
                 response.isSuccessful || response.code == 405
@@ -72,7 +74,7 @@ class SoundUrlResolver @Inject constructor(
 
     private fun resolveFromSourcePage(pageUrl: String): String? {
         if (!pageUrl.contains("freesound.org", ignoreCase = true)) return null
-        val request = Request.Builder().url(pageUrl).build()
+        val request = Request.Builder().purpose(RequestPurpose.RESOLVE).url(pageUrl).build()
         val html = try {
             okHttpClient.newCall(request).execute().use { response ->
                 if (!response.isSuccessful) return null

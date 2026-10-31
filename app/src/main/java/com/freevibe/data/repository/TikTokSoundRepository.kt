@@ -4,6 +4,8 @@ import com.freevibe.BuildConfig
 import com.freevibe.data.legal.isProviderAvailableInCurrentArtifact
 import com.freevibe.data.model.ContentSource
 import com.freevibe.data.model.Sound
+import com.freevibe.data.remote.RequestPurpose
+import com.freevibe.data.remote.purpose
 import com.freevibe.data.remote.tiktok.isTikTokMediaUrlUsable
 import com.freevibe.data.remote.tiktok.parseMp4DurationSeconds
 import com.freevibe.data.remote.tiktok.parseTikTokCreatorEmbed
@@ -130,7 +132,7 @@ class TikTokSoundRepository @Inject constructor(
 
     /** Reads the first kilobyte of the clip; a failed probe only costs the duration label. */
     private fun probeDurationSeconds(mediaUrl: String): Double? {
-        val request = Request.Builder()
+        val request = Request.Builder().purpose(RequestPurpose.RESOLVE)
             .url(mediaUrl)
             .header("User-Agent", userAgent)
             .header("Range", "bytes=0-${DURATION_PROBE_BYTES - 1}")
@@ -147,7 +149,7 @@ class TikTokSoundRepository @Inject constructor(
     }
 
     private fun fetchText(url: String): String {
-        val request = Request.Builder()
+        val request = Request.Builder().purpose(RequestPurpose.CATALOG)
             .url(url)
             .header("User-Agent", userAgent)
             .header("Accept", "text/html")

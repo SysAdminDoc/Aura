@@ -3,6 +3,8 @@ package com.freevibe.service
 import android.content.ContentValues
 import android.content.Context
 import android.content.Intent
+import com.freevibe.data.remote.RequestPurpose
+import com.freevibe.data.remote.purpose
 import com.freevibe.util.rethrowIfCancelled
 import android.net.Uri
 import android.os.Build
@@ -307,7 +309,7 @@ class SoundApplier @Inject constructor(
                 tempFile.delete()
             }
         }
-        val request = Request.Builder().url(url).build()
+        val request = Request.Builder().purpose(RequestPurpose.APPLY).url(url).build()
         return okHttpClient.newCall(request).execute().use { resp ->
             if (!resp.isSuccessful) {
                 throw IllegalStateException("Download failed: HTTP ${resp.code}")
@@ -345,7 +347,7 @@ class SoundApplier @Inject constructor(
                 maxBytes = MAX_APPLY_BYTES,
             )
         }
-        val request = Request.Builder().url(locator).build()
+        val request = Request.Builder().purpose(RequestPurpose.APPLY).url(locator).build()
         return okHttpClient.newCall(request).execute().use { response ->
             if (!response.isSuccessful) {
                 throw IllegalStateException("Download failed: HTTP ${response.code}")

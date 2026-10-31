@@ -6,6 +6,8 @@ import com.freevibe.BuildConfig
 import com.freevibe.data.legal.ProviderChannel
 import com.freevibe.data.legal.currentProviderChannel
 import com.freevibe.data.local.PreferencesManager
+import com.freevibe.data.remote.RequestPurpose
+import com.freevibe.data.remote.purpose
 import com.squareup.moshi.Json
 import com.squareup.moshi.JsonAdapter
 import com.squareup.moshi.JsonClass
@@ -383,7 +385,7 @@ class UpdateChecker internal constructor(
 
 private class OkHttpReleaseFeed(private val client: OkHttpClient) : ReleaseFeed {
     override suspend fun latest(): ReleaseFeedResponse = withContext(Dispatchers.IO) {
-        val request = Request.Builder()
+        val request = Request.Builder().purpose(RequestPurpose.UPDATE_CHECK)
             .url(RELEASES_API_URL)
             .header("Accept", "application/vnd.github+json")
             .build()

@@ -19,6 +19,8 @@ import com.freevibe.data.local.WallpaperHistoryDao
 import com.freevibe.data.model.providerRetryAfterHostSuffixes
 import com.freevibe.data.remote.ProviderAvailabilityInterceptor
 import com.freevibe.data.remote.RateLimitInterceptor
+import com.freevibe.data.remote.RequestPurposeInterceptor
+import com.freevibe.data.remote.RequestPurposeMetrics
 import com.freevibe.data.remote.bing.BingDailyApi
 import com.freevibe.data.remote.lemmy.LemmyApi
 import com.freevibe.data.remote.nasa.NasaApodApi
@@ -59,7 +61,7 @@ object AppModule {
 
     @Provides
     @Singleton
-    fun provideOkHttpClient(): OkHttpClient = OkHttpClient.Builder()
+    fun provideOkHttpClient(requestPurposeMetrics: RequestPurposeMetrics): OkHttpClient = OkHttpClient.Builder()
         .connectTimeout(30, TimeUnit.SECONDS)
         .readTimeout(60, TimeUnit.SECONDS)
         .writeTimeout(60, TimeUnit.SECONDS)
@@ -71,6 +73,7 @@ object AppModule {
             }
         }
         .addInterceptor(ProviderAvailabilityInterceptor())
+        .addInterceptor(RequestPurposeInterceptor(requestPurposeMetrics))
         .addInterceptor { chain ->
             val original = chain.request()
             val request = if (original.header("User-Agent") == null) {

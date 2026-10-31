@@ -34,6 +34,8 @@ import androidx.compose.ui.viewinterop.AndroidView
 import androidx.media3.common.MediaItem
 import androidx.media3.common.Player
 import androidx.media3.exoplayer.ExoPlayer
+import com.freevibe.data.remote.RequestPurpose
+import com.freevibe.data.remote.purpose
 import com.freevibe.ui.theme.AuraShapes
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -708,7 +710,7 @@ private suspend fun cropVideoConstrained(
     try {
         val inputFile = if (videoUrl.startsWith("http")) {
             val cacheFile = File(context.cacheDir, "crop_input.mp4")
-            sharedHttpClient.newCall(okhttp3.Request.Builder().url(videoUrl).build()).execute().use { resp ->
+            sharedHttpClient.newCall(okhttp3.Request.Builder().purpose(RequestPurpose.EDIT).url(videoUrl).build()).execute().use { resp ->
                 if (!resp.isSuccessful) return@withContext null
                 val body = resp.body ?: return@withContext null
                 // Reject oversized video downloads up front — a 4K hour-long video can be

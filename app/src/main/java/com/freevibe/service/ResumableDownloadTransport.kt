@@ -1,5 +1,7 @@
 package com.freevibe.service
 
+import com.freevibe.data.remote.RequestPurpose
+import com.freevibe.data.remote.purpose
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.ensureActive
@@ -105,7 +107,7 @@ internal class ResumableDownloadTransport(
         retry: DownloadRetryRequest?,
         onProgress: (Long, Long) -> Unit,
     ): File {
-        val request = Request.Builder().url(url).build()
+        val request = Request.Builder().purpose(RequestPurpose.DOWNLOAD).url(url).build()
         return okHttpClient.newCall(request).execute().use { response ->
             receiveWholeFile(response, id, url, partial, maxBytes, retry, onProgress)
         }
@@ -118,7 +120,7 @@ internal class ResumableDownloadTransport(
         maxBytes: Long,
         onProgress: (Long, Long) -> Unit,
     ): File {
-        val request = Request.Builder()
+        val request = Request.Builder().purpose(RequestPurpose.DOWNLOAD)
             .url(saved.url)
             .header("Range", "bytes=${saved.bytesReceived}-")
             .header("If-Range", validator)

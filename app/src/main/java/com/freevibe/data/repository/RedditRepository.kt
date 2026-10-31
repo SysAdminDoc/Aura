@@ -12,6 +12,8 @@ import com.freevibe.data.model.feedSignature
 import com.freevibe.data.model.isMarkedAdult
 import com.freevibe.data.model.SearchResult
 import com.freevibe.data.model.Wallpaper
+import com.freevibe.data.remote.RequestPurpose
+import com.freevibe.data.remote.purpose
 import com.freevibe.service.SourceMetrics
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
@@ -306,7 +308,7 @@ class RedditRepository @Inject constructor(
         url: String,
         fallbackSubreddit: String,
     ): RedditRssPage = withContext(Dispatchers.IO) {
-        val request = Request.Builder()
+        val request = Request.Builder().purpose(RequestPurpose.CATALOG)
             .url(url)
             .header(
                 "User-Agent",

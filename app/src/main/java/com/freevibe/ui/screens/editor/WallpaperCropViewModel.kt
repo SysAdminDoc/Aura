@@ -10,6 +10,8 @@ import com.freevibe.data.model.Wallpaper
 import com.freevibe.data.model.FitCanvasStyle
 import com.freevibe.data.model.WallpaperTarget
 import com.freevibe.data.model.stableKey
+import com.freevibe.data.remote.RequestPurpose
+import com.freevibe.data.remote.purpose
 import com.freevibe.service.SmartCropCalculator
 import com.freevibe.service.SmartCropDetector
 import com.freevibe.service.WallpaperApplyCoordinator
@@ -104,7 +106,7 @@ class WallpaperCropViewModel @Inject constructor(
             setCrop(aspect, transform)
             try {
                 val bitmap = withContext(Dispatchers.IO) {
-                    val request = Request.Builder().url(url).build()
+                    val request = Request.Builder().purpose(RequestPurpose.EDIT).url(url).build()
                     okHttpClient.newCall(request).execute().use { response ->
                         if (!response.isSuccessful) throw Exception("HTTP ${response.code}")
                         val body = response.body ?: throw Exception("Empty body")

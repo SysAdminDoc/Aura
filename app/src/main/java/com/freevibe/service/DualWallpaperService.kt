@@ -5,6 +5,8 @@ import android.graphics.Bitmap
 import com.freevibe.data.model.Wallpaper
 import com.freevibe.data.model.WallpaperPair
 import com.freevibe.data.model.WallpaperTarget
+import com.freevibe.data.remote.RequestPurpose
+import com.freevibe.data.remote.purpose
 import com.freevibe.util.rethrowIfCancelled
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
@@ -84,7 +86,7 @@ class DualWallpaperService @Inject constructor(
     }
 
     private fun downloadBitmap(url: String): Bitmap {
-        val request = Request.Builder().url(url).build()
+        val request = Request.Builder().purpose(RequestPurpose.APPLY).url(url).build()
         val response = okHttpClient.newCall(request).execute()
         return response.use { resp ->
             if (!resp.isSuccessful) throw java.io.IOException("Download failed: ${resp.code}")

@@ -10,6 +10,8 @@ import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
 import androidx.hilt.work.HiltWorker
+import com.freevibe.data.remote.RequestPurpose
+import com.freevibe.data.remote.purpose
 import java.util.Locale
 import androidx.work.*
 import com.freevibe.MainActivity
@@ -57,7 +59,7 @@ class DailyWallpaperWorker @AssistedInject constructor(
                 ?: wallpaper.fullUrl
             val bitmap = withContext(Dispatchers.IO) {
                 try {
-                    okHttpClient.newCall(Request.Builder().url(thumbUrl).build()).execute().use { resp ->
+                    okHttpClient.newCall(Request.Builder().purpose(RequestPurpose.IMAGE).url(thumbUrl).build()).execute().use { resp ->
                         val body = resp.body ?: return@use null
                         // Notification thumbs should be tiny; cap at 4 MB so a compromised feed
                         // can't force a giant byte[] + bitmap into a background worker.

@@ -17,6 +17,8 @@ import coil3.request.crossfade
 import com.freevibe.data.legal.isProviderAvailableInCurrentArtifact
 import com.freevibe.data.local.WallpaperCacheManager
 import com.freevibe.data.model.ContentSource
+import com.freevibe.data.remote.DefaultRequestPurposeInterceptor
+import com.freevibe.data.remote.RequestPurpose
 import com.freevibe.service.NotificationChannels
 import com.freevibe.service.CrashDiagnosticsCollector
 import com.freevibe.service.CrashDiagnosticsText
@@ -71,7 +73,15 @@ class FreeVibeApp : Application(), Configuration.Provider, SingletonImageLoader.
     @OptIn(ExperimentalCoilApi::class)
     override fun newImageLoader(context: android.content.Context): ImageLoader = ImageLoader.Builder(context)
         .components {
-            add(OkHttpNetworkFetcherFactory(callFactory = { okHttpClient.newBuilder().build() }))
+            add(
+                OkHttpNetworkFetcherFactory(
+                    callFactory = {
+                        okHttpClient.newBuilder()
+                            .apply { interceptors().add(0, DefaultRequestPurposeInterceptor(RequestPurpose.IMAGE)) }
+                            .build()
+                    },
+                ),
+            )
             if (android.os.Build.VERSION.SDK_INT >= 28) {
                 add(AnimatedImageDecoder.Factory())
             } else {

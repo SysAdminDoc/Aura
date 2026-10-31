@@ -34,6 +34,8 @@ import com.freevibe.data.model.toVideoWallpaperItem
 import com.freevibe.data.model.videoFavoriteIdentity
 import com.freevibe.data.model.videoFavoriteStream
 import com.freevibe.data.model.videoActionMessage
+import com.freevibe.data.remote.RequestPurpose
+import com.freevibe.data.remote.purpose
 import com.freevibe.ui.LiveWallpaperSource
 import com.freevibe.ui.liveWallpaperBlock
 import com.freevibe.ui.liveWallpaperBlockedMessage
@@ -1050,7 +1052,7 @@ class VideoWallpapersViewModel @Inject constructor(
                     if (e is kotlinx.coroutines.CancellationException) throw e
                     ytDlpUpdateManager.recordExtractionFailure(e)
                     if (com.freevibe.BuildConfig.DEBUG) Log.e("VideoWP", "yt-dlp download failed: ${e.message}, using stream URL")
-                    okHttpClient.newCall(Request.Builder().url(videoUrl).build()).execute().use { resp ->
+                    okHttpClient.newCall(Request.Builder().purpose(RequestPurpose.DOWNLOAD).url(videoUrl).build()).execute().use { resp ->
                         if (!resp.isSuccessful) throw Exception("HTTP ${resp.code}")
                         val body = resp.body ?: throw Exception("Empty response body")
                         if (advertisedLengthExceeds(body.contentLength(), MAX_VIDEO_WALLPAPER_BYTES)) {
@@ -1066,7 +1068,7 @@ class VideoWallpapersViewModel @Inject constructor(
                 }
             } else {
                 // Pexels / direct URL: simple download
-                okHttpClient.newCall(Request.Builder().url(videoUrl).build()).execute().use { resp ->
+                okHttpClient.newCall(Request.Builder().purpose(RequestPurpose.DOWNLOAD).url(videoUrl).build()).execute().use { resp ->
                     if (!resp.isSuccessful) throw Exception("HTTP ${resp.code}")
                     val body = resp.body ?: throw Exception("Empty response body")
                     if (advertisedLengthExceeds(body.contentLength(), MAX_VIDEO_WALLPAPER_BYTES)) {
@@ -1506,7 +1508,7 @@ class VideoWallpapersViewModel @Inject constructor(
     }
 
     private fun readRedditClipLength(videoId: String): Int? = try {
-        val request = Request.Builder()
+        val request = Request.Builder().purpose(RequestPurpose.RESOLVE)
             .url("https://v.redd.it/$videoId/DASHPlaylist.mpd")
             .header("User-Agent", "Aura/${com.freevibe.BuildConfig.VERSION_NAME} open-source wallpaper reader")
             .build()
@@ -1547,7 +1549,7 @@ class VideoWallpapersViewModel @Inject constructor(
             )
         }
         return try {
-            val request = Request.Builder()
+            val request = Request.Builder().purpose(RequestPurpose.CATALOG)
                 .url(redditRssMotionUrl(group, after, count))
                 .header(
                     "User-Agent",
