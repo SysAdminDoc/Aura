@@ -23,6 +23,7 @@ checksum, and release-note validation.
 | Gradle wrapper policy | `tools/gradle_wrapper_check.py` | Pins the Gradle wrapper distribution URL, SHA-256, validation, storage roots, and timeout. |
 | Provider credential release guard | `tools/provider_credential_release_check.py` | Confirms release variants force optional provider keys blank even when a developer has local debug keys configured. |
 | Provider credential APK scan | `tools/provider_credential_apk_scan.py` | Scans packaged signed APKs for nonblank local provider values before publication. |
+| Debug tool APK scan | `tools/debug_tool_apk_scan.py` | Fails when LeakCanary classes, manifest components, or version files reach a packaged release APK. |
 | Provider credential storage policy | `tools/provider_credential_storage_check.py` | Checks Android Keystore AES-GCM storage, restore recovery, backup exclusions, clear controls, export boundaries, and privacy/support disclosures for user-entered credentials. |
 | Cleartext release guard | `tools/cleartext_release_check.py` | Rejects cleartext manifest/network drift in public releases. |
 | Network endpoint inventory | `tools/network_endpoint_inventory_check.py` | Fails when provider network-code hosts drift from the reviewed endpoint inventory. |
@@ -123,6 +124,7 @@ python tools\google_oss_to_markdown.py --variant fullRelease --output build\repo
 python tools\google_oss_raw_archive.py --variant fullRelease --output build\reports\GOOGLE-OSS-RAW-INPUTS.zip
 python tools\native_compliance_inventory.py --output docs\legal\native-compliance.md
 python tools\provider_credential_apk_scan.py --local-properties local.properties --apk release\Aura-vX.Y.Z-versionCode-N-universal-release.apk
+python tools\debug_tool_apk_scan.py --apk release\Aura-vX.Y.Z-versionCode-N-universal-release.apk
 python tools\release_artifact_bundle_check.py --release-dir release --apk-name Aura-vX.Y.Z-versionCode-N-universal-release.apk --aab-name Aura-vX.Y.Z-versionCode-N-play-release.aab --version-name X.Y.Z --version-code N
 ```
 

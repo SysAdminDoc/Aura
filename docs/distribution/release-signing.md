@@ -93,6 +93,7 @@ python tools\sbom_readiness_check.py --policy docs\distribution\sbom-readiness.j
 .\gradlew.bat :app:assembleFullRelease --stacktrace --no-daemon
 .\gradlew.bat -PauraReleaseChannel=play :app:bundleFullRelease --stacktrace --no-daemon
 python tools\provider_credential_apk_scan.py --local-properties local.properties --apk app\build\outputs\apk\full\release\app-full-release.apk
+python tools\debug_tool_apk_scan.py --apk app\build\outputs\apk\full\release\app-full-release.apk
 ```
 
 The provider credential check confirms that release variants force the Pexels
