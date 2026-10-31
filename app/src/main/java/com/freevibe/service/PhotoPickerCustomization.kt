@@ -1,72 +1,59 @@
 package com.freevibe.service
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.os.Build
-import android.os.IBinder
-import android.os.Parcelable
 import android.os.ext.SdkExtensions
+import android.provider.MediaStore
 import android.util.Log
 import android.view.Display
-import android.view.SurfaceControlViewHost
 import android.view.SurfaceView
+import android.widget.photopicker.EmbeddedPhotoPickerClient
+import android.widget.photopicker.EmbeddedPhotoPickerFeatureInfo
+import android.widget.photopicker.EmbeddedPhotoPickerProviderFactory
+import android.widget.photopicker.EmbeddedPhotoPickerSession
+import android.widget.photopicker.PhotoPickerSelectionParams
+import android.widget.photopicker.PhotoPickerUiCustomizationParams
 import androidx.annotation.RequiresApi
-import java.lang.reflect.Proxy
-import java.util.concurrent.Executor
+import androidx.annotation.RequiresExtension
 
 /**
- * Compile-safe bridge for newer platform Photo Picker features.
+ * Typed entry points for the embedded Photo Picker and its portrait grid.
  *
- * Aura currently builds at compileSdk 35, while embedded Photo Picker and
- * portrait-grid customization are delivered through newer Android platform and
- * SDK-extension APIs. Keep all reflection in this reviewed bridge so callers
- * can use typed methods without broad storage permissions or toolchain bumps.
+ * The embedded picker reaches Android 14 and newer through SDK Extensions, and the feature
+ * builder gained its newer setters in later extension levels, so each call below is gated on
+ * the level that introduced it. Keep every check in here so callers stay free of them.
  */
 object PhotoPickerCustomization {
     private const val TAG = "PhotoPickerCustomization"
     private const val EMBEDDED_PICKER_MIN_EXTENSION = 15
+    private const val EXPANDED_STATE_MIN_EXTENSION = 21
+    private const val CUSTOMIZATION_MIN_EXTENSION = 22
     private const val IMAGE_MIME_TYPE = "image/*"
 
     /**
-     * Mutates [intent] to attach a 9:16 Photo Picker UI customization extra
-     * when the runtime exposes it. No-op on older devices and extension levels.
+     * Mutates [intent] to attach the 9:16 Photo Picker grid. The intent extra is Android 17
+     * only, unlike the embedded builder setter, so this is a no-op below it.
      */
+    @SuppressLint("NewApi", "InlinedApi") // Gated on API 37 on the first line.
     fun apply9x16AspectRatio(intent: Intent) {
-        if (Build.VERSION.SDK_INT < 34) return
-        runCatching {
-            val params = buildPortraitGridCustomization() ?: return
-            val extraKey = photoPickerUiCustomizationExtraKey() ?: return
-            Intent::class.java.getMethod(
-                "putExtra",
-                String::class.java,
-                Parcelable::class.java,
-            ).invoke(intent, extraKey, params)
-        }.onFailure { e ->
-            Log.d(TAG, "apply9x16 reflection skipped: ${e.message}")
-        }
+        if (Build.VERSION.SDK_INT < 37) return
+        intent.putExtra(MediaStore.EXTRA_PICK_IMAGES_UI_CUSTOMIZATION_PARAMS, portraitGridCustomization())
     }
 
     /**
      * Embedded picker availability from Android's documented gate:
      * Android 14/API 34 with SDK Extensions version 15 or newer.
      */
+    @SuppressLint("NewApi") // create() is only reached after the extension gate above it.
     fun isEmbeddedImagePickerAvailable(context: Context): Boolean {
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.UPSIDE_DOWN_CAKE) return false
-        val extension = runCatching {
-            SdkExtensions.getExtensionVersion(Build.VERSION_CODES.UPSIDE_DOWN_CAKE)
-        }.getOrDefault(0)
-        if (extension < EMBEDDED_PICKER_MIN_EXTENSION) return false
-
-        return runCatching {
-            val providerFactoryCls = Class.forName(
-                "android.widget.photopicker.EmbeddedPhotoPickerProviderFactory",
-            )
-            val create = providerFactoryCls.getMethod("create", Context::class.java)
-            create.invoke(null, context) != null
-        }.getOrDefault(false)
+        if (extensionVersion() < EMBEDDED_PICKER_MIN_EXTENSION) return false
+        return runCatching { EmbeddedPhotoPickerProviderFactory.create(context) }.isSuccess
     }
 
+    @SuppressLint("NewApi") // Every picker call runs behind isEmbeddedImagePickerAvailable.
     @RequiresApi(Build.VERSION_CODES.UPSIDE_DOWN_CAKE)
     fun openEmbeddedImagePicker(
         context: Context,
@@ -81,212 +68,89 @@ object PhotoPickerCustomization {
     ): EmbeddedPhotoPickerController? {
         if (!isEmbeddedImagePickerAvailable(context)) return null
         @Suppress("DEPRECATION")
-        val hostToken: IBinder = surfaceView.hostToken ?: return null
+        val hostToken = surfaceView.hostToken ?: return null
         if (widthPx <= 0 || heightPx <= 0) return null
 
         return runCatching {
-            val providerFactoryCls = Class.forName(
-                "android.widget.photopicker.EmbeddedPhotoPickerProviderFactory",
-            )
-            val providerCls = Class.forName("android.widget.photopicker.EmbeddedPhotoPickerProvider")
-            val clientCls = Class.forName("android.widget.photopicker.EmbeddedPhotoPickerClient")
-            val featureInfoCls = Class.forName("android.widget.photopicker.EmbeddedPhotoPickerFeatureInfo")
-            val sessionCls = Class.forName("android.widget.photopicker.EmbeddedPhotoPickerSession")
-            val provider = providerFactoryCls.getMethod("create", Context::class.java)
-                .invoke(null, context)
-                ?: return null
-            val controller = EmbeddedPhotoPickerController(sessionCls)
-
-            val client = Proxy.newProxyInstance(
-                clientCls.classLoader,
-                arrayOf(clientCls),
-            ) { proxy, method, args ->
-                when (method.name) {
-                    // Object methods are routed through the handler too — returning
-                    // null for hashCode/equals NPEs on unboxing if the platform ever
-                    // stores the client in a hash container.
-                    "hashCode" -> System.identityHashCode(proxy)
-                    "equals" -> proxy === args?.firstOrNull()
-                    "toString" -> "AuraEmbeddedPhotoPickerClient"
-                    "onSessionOpened" -> {
-                        val session = args?.firstOrNull()
-                        if (session != null) {
-                            // This runs as an async platform callback after the outer
-                            // runCatching returned — a reflection failure here must
-                            // route to onSessionError (scoped-picker fallback), not
-                            // crash the main thread.
-                            runCatching {
-                                attachSurfacePackage(surfaceView, session, sessionCls)
-                                controller.attach(session)
-                                controller.resize(widthPx, heightPx)
-                                controller.setVisible(true)
-                            }.onFailure(onSessionError)
-                        }
-                        null
-                    }
-                    "onUriPermissionGranted" -> {
-                        onUriPermissionGranted(args.firstUriList())
-                        null
-                    }
-                    "onUriPermissionRevoked" -> {
-                        onUriPermissionRevoked(args.firstUriList())
-                        null
-                    }
-                    "onSelectionComplete" -> {
-                        onSelectionComplete()
-                        null
-                    }
-                    "onSessionError" -> {
-                        onSessionError(args?.firstOrNull() as? Throwable ?: RuntimeException("Embedded picker error"))
-                        null
-                    }
-                    else -> null
+            val provider = EmbeddedPhotoPickerProviderFactory.create(context)
+            val controller = EmbeddedPhotoPickerController()
+            val client = object : EmbeddedPhotoPickerClient {
+                override fun onSessionOpened(session: EmbeddedPhotoPickerSession) {
+                    // An async platform callback, past the outer runCatching. A failure here
+                    // must reach onSessionError (scoped-picker fallback), not the main thread.
+                    runCatching {
+                        surfaceView.setChildSurfacePackage(session.surfacePackage)
+                        controller.attach(session)
+                        controller.resize(widthPx, heightPx)
+                        controller.setVisible(true)
+                    }.onFailure(onSessionError)
                 }
-            }
 
-            val featureInfo = buildEmbeddedFeatureInfo(accentColor)
-            val openSession = providerCls.getMethod(
-                "openSession",
-                IBinder::class.java,
-                Int::class.javaPrimitiveType!!,
-                Int::class.javaPrimitiveType!!,
-                Int::class.javaPrimitiveType!!,
-                featureInfoCls,
-                Executor::class.java,
-                clientCls,
-            )
-            openSession.invoke(
-                provider,
+                override fun onUriPermissionGranted(uris: List<Uri>) = onUriPermissionGranted(uris)
+
+                override fun onUriPermissionRevoked(uris: List<Uri>) = onUriPermissionRevoked(uris)
+
+                override fun onSelectionComplete() = onSelectionComplete()
+
+                override fun onSessionError(cause: Throwable) = onSessionError(cause)
+            }
+            provider.openSession(
                 hostToken,
                 surfaceView.display?.displayId ?: Display.DEFAULT_DISPLAY,
                 widthPx,
                 heightPx,
-                featureInfo,
+                buildEmbeddedFeatureInfo(accentColor),
                 context.mainExecutor,
                 client,
             )
             controller
         }.onFailure { e ->
-            Log.d(TAG, "embedded picker reflection skipped: ${e.message}")
+            Log.d(TAG, "embedded picker skipped: ${e.message}")
             onSessionError(e)
         }.getOrNull()
     }
 
-    private fun buildEmbeddedFeatureInfo(accentColor: Long?): Any {
-        val builderCls = Class.forName("android.widget.photopicker.EmbeddedPhotoPickerFeatureInfo\$Builder")
-        val builder = builderCls.getDeclaredConstructor().newInstance()
-        invokeOptional(builder, "setMaxSelectionLimit", intArray(), 1)
-        invokeOptional(builder, "setMimeTypes", arrayOf(List::class.java), listOf(IMAGE_MIME_TYPE))
-        invokeOptional(builder, "setOrderedSelection", booleanArray(), false)
-        invokeOptional(builder, "setPickerLaunchedInExpandedState", booleanArray(), true)
-        accentColor?.let {
-            invokeOptional(builder, "setAccentColor", arrayOf(Long::class.javaPrimitiveType!!), it)
-        }
-
-        buildSelectionParams()?.let { selectionParams ->
-            invokeOptional(
-                builder,
-                "setSelectionParams",
-                arrayOf(selectionParams.javaClass),
-                selectionParams,
+    @SuppressLint("NewApi") // Setters past level 15 sit behind the level that added them.
+    private fun buildEmbeddedFeatureInfo(accentColor: Long?): EmbeddedPhotoPickerFeatureInfo {
+        val builder = EmbeddedPhotoPickerFeatureInfo.Builder()
+            .setMaxSelectionLimit(1)
+            .setMimeTypes(listOf(IMAGE_MIME_TYPE))
+            .setOrderedSelection(false)
+        accentColor?.let(builder::setAccentColor)
+        val extension = extensionVersion()
+        if (extension >= EXPANDED_STATE_MIN_EXTENSION) builder.setPickerLaunchedInExpandedState(true)
+        if (extension >= CUSTOMIZATION_MIN_EXTENSION) {
+            builder.setSelectionParams(
+                PhotoPickerSelectionParams.Builder().setMimeTypes(listOf(IMAGE_MIME_TYPE)).build(),
             )
+            builder.setUiCustomizationParams(portraitGridCustomization())
         }
-        buildPortraitGridCustomization()?.let { customizationParams ->
-            invokeOptional(
-                builder,
-                "setUiCustomizationParams",
-                arrayOf(customizationParams.javaClass),
-                customizationParams,
-            )
-        }
-        return builderCls.getMethod("build").invoke(builder)
+        return builder.build()
     }
 
-    private fun buildSelectionParams(): Any? = runCatching {
-        val builderCls = Class.forName("android.widget.photopicker.PhotoPickerSelectionParams\$Builder")
-        val builder = builderCls.getDeclaredConstructor().newInstance()
-        invokeOptional(builder, "setMimeTypes", arrayOf(List::class.java), listOf(IMAGE_MIME_TYPE))
-        builderCls.getMethod("build").invoke(builder)
-    }.getOrNull()
+    @RequiresApi(Build.VERSION_CODES.UPSIDE_DOWN_CAKE)
+    @RequiresExtension(extension = Build.VERSION_CODES.UPSIDE_DOWN_CAKE, version = CUSTOMIZATION_MIN_EXTENSION)
+    private fun portraitGridCustomization(): PhotoPickerUiCustomizationParams =
+        PhotoPickerUiCustomizationParams.Builder()
+            .setAspectRatio(PhotoPickerUiCustomizationParams.ASPECT_RATIO_PORTRAIT_9_16)
+            .build()
 
-    private fun buildPortraitGridCustomization(): Any? {
-        buildOfficialPortraitGridCustomization()?.let { return it }
-        return buildLegacyPortraitGridCustomization()
-    }
-
-    private fun buildOfficialPortraitGridCustomization(): Any? = runCatching {
-        val builderCls = Class.forName("android.widget.photopicker.PhotoPickerUiCustomizationParams\$Builder")
-        val paramsCls = Class.forName("android.widget.photopicker.PhotoPickerUiCustomizationParams")
-        val builder = builderCls.getDeclaredConstructor().newInstance()
-        val aspectRatio = paramsCls.getField("ASPECT_RATIO_PORTRAIT_9_16").getInt(null)
-        builderCls.getMethod("setAspectRatio", Int::class.javaPrimitiveType!!).invoke(builder, aspectRatio)
-        builderCls.getMethod("build").invoke(builder)
-    }.getOrNull()
-
-    private fun buildLegacyPortraitGridCustomization(): Any? = runCatching {
-        val builderCls = Class.forName(
-            "android.provider.MediaStore\$PhotoPickerUiCustomizationParams\$Builder",
-        )
-        val builder = builderCls.getDeclaredConstructor().newInstance()
-        builderCls.getMethod(
-            "setGridAspectRatio",
-            Int::class.javaPrimitiveType!!,
-            Int::class.javaPrimitiveType!!,
-        ).invoke(builder, 9, 16)
-        builderCls.getMethod("build").invoke(builder)
-    }.getOrNull()
-
-    private fun photoPickerUiCustomizationExtraKey(): String? = runCatching {
-        val mediaStoreCls = Class.forName("android.provider.MediaStore")
-        listOf(
-            "EXTRA_PICK_IMAGES_UI_CUSTOMIZATION_PARAMS",
-            "EXTRA_PHOTO_PICKER_UI_CUSTOMIZATION_PARAMS",
-        ).firstNotNullOfOrNull { fieldName ->
-            runCatching { mediaStoreCls.getField(fieldName).get(null) as? String }.getOrNull()
+    private fun extensionVersion(): Int =
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+            0
+        } else {
+            runCatching { SdkExtensions.getExtensionVersion(Build.VERSION_CODES.UPSIDE_DOWN_CAKE) }.getOrDefault(0)
         }
-    }.getOrNull()
-
-    @RequiresApi(Build.VERSION_CODES.R)
-    private fun attachSurfacePackage(
-        surfaceView: SurfaceView,
-        session: Any,
-        sessionCls: Class<*>,
-    ) {
-        val surfacePackage = sessionCls.getMethod("getSurfacePackage").invoke(session)
-        if (surfacePackage is SurfaceControlViewHost.SurfacePackage) {
-            surfaceView.setChildSurfacePackage(surfacePackage)
-        }
-    }
-
-    private fun invokeOptional(
-        target: Any,
-        methodName: String,
-        parameterTypes: Array<Class<*>>,
-        vararg args: Any?,
-    ) {
-        runCatching {
-            target.javaClass.getMethod(methodName, *parameterTypes).invoke(target, *args)
-        }
-    }
-
-    private fun intArray(): Array<Class<*>> = arrayOf(Int::class.javaPrimitiveType!!)
-
-    private fun booleanArray(): Array<Class<*>> = arrayOf(Boolean::class.javaPrimitiveType!!)
-
-    @Suppress("UNCHECKED_CAST")
-    private fun Array<Any?>?.firstUriList(): List<Uri> =
-        this?.firstOrNull() as? List<Uri> ?: emptyList()
 }
 
-class EmbeddedPhotoPickerController internal constructor(
-    private val sessionCls: Class<*>,
-) {
-    private var session: Any? = null
+@SuppressLint("NewApi") // A session only arrives from the picker, which is already gated.
+class EmbeddedPhotoPickerController internal constructor() {
+    private var session: EmbeddedPhotoPickerSession? = null
     private var closed = false
     private var pendingWidth = 0
     private var pendingHeight = 0
 
-    internal fun attach(session: Any) {
+    internal fun attach(session: EmbeddedPhotoPickerSession) {
         this.session = session
         if (closed) {
             close()
@@ -299,36 +163,21 @@ class EmbeddedPhotoPickerController internal constructor(
         if (widthPx <= 0 || heightPx <= 0) return
         pendingWidth = widthPx
         pendingHeight = heightPx
-        invokeSession(
-            "notifyResized",
-            arrayOf(Int::class.javaPrimitiveType!!, Int::class.javaPrimitiveType!!),
-            widthPx,
-            heightPx,
-        )
+        withSession { notifyResized(widthPx, heightPx) }
     }
 
     fun setVisible(visible: Boolean) {
-        invokeSession(
-            "notifyVisibilityChanged",
-            arrayOf(Boolean::class.javaPrimitiveType!!),
-            visible,
-        )
+        withSession { notifyVisibilityChanged(visible) }
     }
 
     fun close() {
         closed = true
-        invokeSession("close", emptyArray())
+        withSession { close() }
         session = null
     }
 
-    private fun invokeSession(
-        methodName: String,
-        parameterTypes: Array<Class<*>>,
-        vararg args: Any?,
-    ) {
+    private inline fun withSession(call: EmbeddedPhotoPickerSession.() -> Unit) {
         val activeSession = session ?: return
-        runCatching {
-            sessionCls.getMethod(methodName, *parameterTypes).invoke(activeSession, *args)
-        }
+        runCatching { activeSession.call() }
     }
 }

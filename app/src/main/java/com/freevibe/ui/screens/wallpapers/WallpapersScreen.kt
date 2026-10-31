@@ -271,8 +271,7 @@ fun WallpapersScreen(
     // NX-10: EyeDropper API (Android 17+). The EyeDropper app launches a system
     // pixel-picker overlay; on confirm, it returns an Int colour via
     // Intent.EXTRA_COLOR. We strip alpha and feed the lower 24 bits to the
-    // wallpaper-by-colour search. Raw action / extra strings keep this
-    // compatible with compileSdk 35 — no API 37 class refs at compile time.
+    // wallpaper-by-colour search.
     val eyeDropperLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.StartActivityForResult()
     ) { result ->
@@ -281,7 +280,7 @@ fun WallpapersScreen(
             // Try the documented Int extra first, then the colour-int alias some
             // OEM EyeDropper builds emit. Falls through silently when neither
             // is present (e.g. user cancelled before confirming).
-            val color = data.getIntExtra("android.intent.extra.COLOR", Int.MIN_VALUE)
+            val color = data.getIntExtra(android.content.Intent.EXTRA_COLOR, Int.MIN_VALUE)
             if (color != Int.MIN_VALUE) {
                 viewModel.searchByPickedColor(color)
             }
@@ -294,7 +293,7 @@ fun WallpapersScreen(
             // EyeDropper is delivered as a system app on Android 17 devices.
             // Probe with PackageManager so the FAB doesn't surface on un-updated
             // GSI builds where the system app hasn't been installed yet.
-            val probe = android.content.Intent("android.intent.action.OPEN_EYE_DROPPER")
+            val probe = android.content.Intent(android.content.Intent.ACTION_OPEN_EYE_DROPPER)
             probe.resolveActivity(context.packageManager) != null
         }
     }
@@ -529,7 +528,7 @@ fun WallpapersScreen(
                                             leadingIcon = { Icon(Icons.Default.Colorize, contentDescription = null) },
                                             onClick = {
                                                 showQuickActionsMenu = false
-                                                val intent = android.content.Intent("android.intent.action.OPEN_EYE_DROPPER")
+                                                val intent = android.content.Intent(android.content.Intent.ACTION_OPEN_EYE_DROPPER)
                                                 runCatching { eyeDropperLauncher.launch(intent) }
                                             },
                                         )

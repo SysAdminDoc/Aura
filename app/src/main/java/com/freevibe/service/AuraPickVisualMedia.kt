@@ -13,8 +13,6 @@ import androidx.activity.result.contract.ActivityResultContracts
  * default 1:1 squares.
  *
  * On Android 16 and below behaviour is identical to the parent contract.
- * Reflection in [PhotoPickerCustomization] handles the API-37-only API
- * surface without requiring `compileSdk = 37`.
  *
  * Wallpaper apps are the canonical use case Google called out for the
  * customisation API (Android 17 Beta 3 announcement).

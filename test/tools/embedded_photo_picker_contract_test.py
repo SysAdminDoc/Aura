@@ -17,17 +17,24 @@ class EmbeddedPhotoPickerContractTest(unittest.TestCase):
         self.assertIn("SdkExtensions.getExtensionVersion", source)
         self.assertIn("android.widget.photopicker.EmbeddedPhotoPickerProviderFactory", source)
         self.assertIn("android.widget.photopicker.EmbeddedPhotoPickerClient", source)
-        self.assertIn("setMaxSelectionLimit", source)
+        self.assertIn("setMaxSelectionLimit(1)", source)
         self.assertIn("setMimeTypes", source)
         self.assertIn('"image/*"', source)
 
-    def test_portrait_grid_customization_uses_current_and_legacy_keys(self):
+    def test_portrait_grid_customization_uses_the_platform_api(self):
         source = self.read("app/src/main/java/com/freevibe/service/PhotoPickerCustomization.kt")
 
         self.assertIn("android.widget.photopicker.PhotoPickerUiCustomizationParams", source)
         self.assertIn("ASPECT_RATIO_PORTRAIT_9_16", source)
-        self.assertIn("EXTRA_PICK_IMAGES_UI_CUSTOMIZATION_PARAMS", source)
-        self.assertIn("EXTRA_PHOTO_PICKER_UI_CUSTOMIZATION_PARAMS", source)
+        self.assertIn("MediaStore.EXTRA_PICK_IMAGES_UI_CUSTOMIZATION_PARAMS", source)
+        self.assertIn("CUSTOMIZATION_MIN_EXTENSION = 22", source)
+        self.assertIn("Build.VERSION.SDK_INT < 37", source)
+
+    def test_bridge_has_no_reflection_left(self):
+        source = self.read("app/src/main/java/com/freevibe/service/PhotoPickerCustomization.kt")
+
+        for term in ("Class.forName", "getMethod(", "getField(", "getDeclaredConstructor(", "Proxy.newProxyInstance"):
+            self.assertNotIn(term, source)
 
     def test_wallpaper_and_collection_imports_have_classic_picker_fallback(self):
         wallpaper_screen = self.read("app/src/main/java/com/freevibe/ui/screens/wallpapers/WallpapersScreen.kt")

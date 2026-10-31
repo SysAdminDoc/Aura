@@ -128,6 +128,7 @@ class FreeVibeApp : Application(), Configuration.Provider, SingletonImageLoader.
             android.os.StrictMode.VmPolicy.Builder()
                 .detectLeakedClosableObjects()
                 .detectActivityLeaks()
+                .apply { if (android.os.Build.VERSION.SDK_INT >= 37) detectImplicitUriPermissionGrant() }
                 .penaltyLog()
                 .build(),
         )
