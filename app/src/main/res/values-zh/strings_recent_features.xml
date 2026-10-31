@@ -83,7 +83,7 @@
     <string name="settings_storage_calculating">正在计算…</string>
 
     <string name="settings_wp_clock_overlay_title">时钟和日期叠加层</string>
-    <string name="settings_wp_clock_overlay_on_subtitle">在新应用的静态壁纸和支持的动态壁纸上显示本地化时间或日期</string>
+    <string name="settings_wp_clock_overlay_on_subtitle">在新设置的静态壁纸和支持的动态壁纸上显示本地化时间或日期</string>
     <string name="settings_wp_clock_overlay_off_subtitle">保持已应用的壁纸整洁，不渲染叠加内容</string>
     <string name="settings_wp_clock_overlay_mode_title">叠加内容</string>
     <string name="settings_wp_clock_overlay_mode_time">时间</string>
