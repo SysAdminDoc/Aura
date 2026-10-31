@@ -4,7 +4,7 @@ const val COMMUNITY_DELETION_REQUEST_SUBJECT = "Aura community deletion request"
 
 fun communityDeletionRequestBody(summary: CommunityIdentitySummary): String {
     val requestCode = summary.deletionRequestCode.ifBlank { "Not available" }
-    val suffix = if (summary.identitySuffix == "Not created") {
+    val suffix = if (summary.identitySuffix == IDENTITY_SUFFIX_NOT_CREATED) {
         summary.identitySuffix
     } else {
         "...${summary.identitySuffix}"

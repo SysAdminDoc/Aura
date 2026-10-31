@@ -1,5 +1,6 @@
 package com.freevibe.ui.screens.community
 
+import android.content.Context
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
@@ -37,6 +38,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.res.stringResource
 import com.freevibe.R
+import com.freevibe.util.displayMessage
 import com.freevibe.ui.theme.AuraShapes
 import java.util.Locale
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -56,6 +58,7 @@ import com.freevibe.ui.components.AuraStateAction
 import com.freevibe.ui.components.AuraStateCard
 import com.freevibe.ui.components.GlassCard
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
@@ -74,6 +77,7 @@ data class CreatorProfileUiState(
 
 @HiltViewModel
 class CreatorProfileViewModel @Inject constructor(
+    @ApplicationContext private val context: Context,
     private val repository: CreatorProfileRepository,
     private val communityBlockRepo: CommunityBlockRepository,
 ) : ViewModel() {
@@ -96,7 +100,7 @@ class CreatorProfileViewModel @Inject constructor(
                 .onFailure { e ->
                     if (e is kotlinx.coroutines.CancellationException) throw e
                     _state.update {
-                        it.copy(isLoading = false, error = e.message ?: "Creator profile could not load", message = null)
+                        it.copy(isLoading = false, error = e.displayMessage(context) ?: context.getString(R.string.creator_profile_load_failed), message = null)
                     }
                 }
         }
@@ -113,7 +117,7 @@ class CreatorProfileViewModel @Inject constructor(
     fun blockCreator(creator: CreatorStats) {
         val dashboard = _state.value.dashboard
         if (dashboard != null && creator.matchesCreator(dashboard.currentCreator.creatorId)) {
-            _state.update { it.copy(error = "You cannot block your own creator profile", message = null) }
+            _state.update { it.copy(error = context.getString(R.string.creator_profile_block_self), message = null) }
             return
         }
         viewModelScope.launch {
@@ -124,7 +128,7 @@ class CreatorProfileViewModel @Inject constructor(
                         state.copy(
                             actionInFlightCreatorId = null,
                             dashboard = state.dashboard?.withoutCreator(creator.creatorId),
-                            message = "Creator blocked",
+                            message = context.getString(R.string.feedback_creator_blocked),
                         )
                     }
                 }
@@ -133,7 +137,7 @@ class CreatorProfileViewModel @Inject constructor(
                     _state.update {
                         it.copy(
                             actionInFlightCreatorId = null,
-                            error = e.message ?: "Creator block failed",
+                            error = e.displayMessage(context) ?: context.getString(R.string.reports_block_failed),
                             message = null,
                         )
                     }
@@ -158,7 +162,7 @@ class CreatorProfileViewModel @Inject constructor(
                             isProfileSaving = false,
                             dashboard = state.dashboard?.withCurrentProfile(profile),
                             error = null,
-                            message = "Profile saved",
+                            message = context.getString(R.string.creator_profile_saved),
                         )
                     }
                 }
@@ -167,7 +171,7 @@ class CreatorProfileViewModel @Inject constructor(
                     _state.update {
                         it.copy(
                             isProfileSaving = false,
-                            error = e.message ?: "Profile save failed",
+                            error = e.displayMessage(context) ?: context.getString(R.string.creator_profile_save_failed),
                             message = null,
                         )
                     }
@@ -193,7 +197,7 @@ class CreatorProfileViewModel @Inject constructor(
                     _state.update {
                     it.copy(
                         actionInFlightCreatorId = null,
-                        error = e.message ?: "Follow action failed",
+                        error = e.displayMessage(context) ?: context.getString(R.string.creator_profile_follow_failed),
                         message = null,
                     )
                 }

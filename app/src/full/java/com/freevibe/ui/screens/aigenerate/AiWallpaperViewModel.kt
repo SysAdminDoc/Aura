@@ -86,7 +86,7 @@ fun duplicateGenerationConfirmation(
     if (current != lastSuccessfulRequest) return null
     val preview = prompt.trim().replace(GENERATED_PROMPT_WHITESPACE_RE, " ").take(80)
     return DuplicateGenerationConfirmation(
-        promptPreview = preview.ifBlank { "Generated wallpaper" },
+        promptPreview = preview,
         styleLabelRes = style.labelRes(),
     )
 }

@@ -22,6 +22,7 @@ import com.freevibe.service.MediaIngestionImageFlow
 import com.freevibe.service.decodeImageBytesForFlow
 import com.freevibe.service.readStreamCapped
 import com.freevibe.service.ShareOutbox
+import com.freevibe.util.displayMessage
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
@@ -108,11 +109,11 @@ class WallpaperCropViewModel @Inject constructor(
                 val bitmap = withContext(Dispatchers.IO) {
                     val request = Request.Builder().purpose(RequestPurpose.EDIT).url(url).build()
                     okHttpClient.newCall(request).execute().use { response ->
-                        if (!response.isSuccessful) throw Exception("HTTP ${response.code}")
-                        val body = response.body ?: throw Exception("Empty body")
+                        if (!response.isSuccessful) throw Exception(appContext.getString(com.freevibe.R.string.crop_load_http, response.code))
+                        val body = response.body ?: throw Exception(appContext.getString(com.freevibe.R.string.crop_load_empty))
                         val advertised = body.contentLength()
                         if (advertisedLengthExceeds(advertised, MAX_CROP_BYTES)) {
-                            throw Exception("Image too large to crop")
+                            throw Exception(appContext.getString(com.freevibe.R.string.crop_load_too_large))
                         }
                         val bytes = readStreamCapped(body.byteStream(), MAX_CROP_BYTES)
                         decodeImageBytesForFlow(
@@ -128,7 +129,7 @@ class WallpaperCropViewModel @Inject constructor(
                 refit()
             } catch (e: Exception) {
                 if (e is kotlinx.coroutines.CancellationException) throw e
-                _state.update { it.copy(isLoading = false, error = e.message) }
+                _state.update { it.copy(isLoading = false, error = e.displayMessage(appContext)) }
             }
         }
     }
@@ -147,7 +148,7 @@ class WallpaperCropViewModel @Inject constructor(
             try {
                 val bitmap = withContext(Dispatchers.IO) {
                     val stream = appContext.contentResolver.openInputStream(uri)
-                        ?: throw Exception("Could not open image")
+                        ?: throw Exception(appContext.getString(com.freevibe.R.string.crop_open_failed))
                     stream.use {
                         val bytes = readStreamCapped(it, MAX_CROP_BYTES)
                         val bitmap = decodeImageBytesForFlow(
@@ -165,7 +166,7 @@ class WallpaperCropViewModel @Inject constructor(
                 refit()
             } catch (e: Exception) {
                 if (e is kotlinx.coroutines.CancellationException) throw e
-                _state.update { it.copy(isLoading = false, error = e.message) }
+                _state.update { it.copy(isLoading = false, error = e.displayMessage(appContext)) }
             }
         }
     }
@@ -269,14 +270,14 @@ class WallpaperCropViewModel @Inject constructor(
                             }
                         }
                         .onFailure { e ->
-                            _state.update { it.copy(isApplying = false, error = e.message) }
+                            _state.update { it.copy(isApplying = false, error = e.displayMessage(appContext)) }
                         }
                 } finally {
                     if (ownsOutputBitmap && !outputBitmap.isRecycled) outputBitmap.recycle()
                 }
             } catch (e: Exception) {
                 if (e is kotlinx.coroutines.CancellationException) throw e
-                _state.update { it.copy(isApplying = false, error = e.message) }
+                _state.update { it.copy(isApplying = false, error = e.displayMessage(appContext)) }
             }
         }
     }
@@ -302,7 +303,7 @@ class WallpaperCropViewModel @Inject constructor(
                 _state.update {
                     it.copy(
                         smartCropInProgress = false,
-                        error = "Couldn't detect a subject — drag to position manually",
+                        error = appContext.getString(com.freevibe.R.string.crop_subject_not_found),
                     )
                 }
                 return null
@@ -323,13 +324,13 @@ class WallpaperCropViewModel @Inject constructor(
             _state.update {
                 it.copy(
                     smartCropInProgress = false,
-                    success = "Smart crop applied",
+                    success = appContext.getString(com.freevibe.R.string.crop_smart_applied),
                 )
             }
             SmartCropCalculator.Transform(transform.scale, transform.offsetX, transform.offsetY)
         } catch (e: Exception) {
             if (e is kotlinx.coroutines.CancellationException) throw e
-            _state.update { it.copy(smartCropInProgress = false, error = e.message) }
+            _state.update { it.copy(smartCropInProgress = false, error = e.displayMessage(appContext)) }
             null
         }
     }

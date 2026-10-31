@@ -13,7 +13,7 @@ import javax.inject.Singleton
 
 data class CommunityIdentitySummary(
     val authLabel: String = "Local identity",
-    val identitySuffix: String = "Not created",
+    val identitySuffix: String = IDENTITY_SUFFIX_NOT_CREATED,
     val deletionRequestCode: String = "",
     val hasFirebaseIdentity: Boolean = false,
 )
@@ -65,7 +65,7 @@ class CommunityIdentityProvider @Inject constructor(
         val displayId = firebaseUid ?: localFallbackId
         return CommunityIdentitySummary(
             authLabel = currentAuthLabel(),
-            identitySuffix = displayId?.let(::communityIdentitySuffix) ?: "Not created",
+            identitySuffix = displayId?.let(::communityIdentitySuffix) ?: IDENTITY_SUFFIX_NOT_CREATED,
             deletionRequestCode = firebaseUid?.let(::communityDeletionRequestCode).orEmpty(),
             hasFirebaseIdentity = !firebaseUid.isNullOrBlank(),
         )
@@ -107,8 +107,11 @@ class CommunityIdentityProvider @Inject constructor(
     }
 }
 
+/** Stored in the summary when no identity exists. Screens show their own wording for it. */
+const val IDENTITY_SUFFIX_NOT_CREATED = "Not created"
+
 internal fun communityIdentitySuffix(identityId: String): String =
-    identityId.trim().takeLast(8).ifBlank { "Not created" }
+    identityId.trim().takeLast(8).ifBlank { IDENTITY_SUFFIX_NOT_CREATED }
 
 internal fun communityDeletionRequestCode(identityId: String): String {
     val normalized = identityId.trim()

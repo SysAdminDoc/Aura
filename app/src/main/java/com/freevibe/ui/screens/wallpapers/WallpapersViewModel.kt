@@ -431,7 +431,7 @@ class WallpapersViewModel @Inject constructor(
         viewModelScope.launch {
             val id = collectionRepo.create(name)
             wallpaper?.let { collectionRepo.addWallpaper(id, it) }
-            _state.update { it.copy(applySuccess = "Created \"$name\"") }
+            _state.update { it.copy(applySuccess = context.getString(com.freevibe.R.string.wallpaper_feedback_collection_created, name)) }
         }
     }
 
@@ -478,7 +478,7 @@ class WallpapersViewModel @Inject constructor(
     fun addToCollection(collectionId: Long, wallpaper: Wallpaper) {
         viewModelScope.launch {
             collectionRepo.addWallpaper(collectionId, wallpaper)
-            _state.update { it.copy(applySuccess = "Added to collection") }
+            _state.update { it.copy(applySuccess = context.getString(com.freevibe.R.string.wallpaper_feedback_added_to_collection)) }
         }
     }
 

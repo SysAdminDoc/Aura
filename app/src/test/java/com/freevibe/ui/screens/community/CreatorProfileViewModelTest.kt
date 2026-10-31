@@ -1,5 +1,7 @@
 package com.freevibe.ui.screens.community
 
+import android.content.Context
+import com.freevibe.R
 import com.freevibe.data.model.CommunityBlockReason
 import com.freevibe.data.repository.CommunityBlockRepository
 import com.freevibe.data.repository.CreatorProfileDashboard
@@ -9,6 +11,7 @@ import com.freevibe.data.repository.CreatorStats
 import com.freevibe.data.repository.CreatorUploadRef
 import io.mockk.coEvery
 import io.mockk.coVerify
+import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -54,7 +57,7 @@ class CreatorProfileViewModelTest {
         coEvery { repository.getDashboard(80) } returns dashboard
         coEvery { blockRepo.blockUser("creator/1", CommunityBlockReason.OTHER) } returns Result.success(Unit)
 
-        val viewModel = CreatorProfileViewModel(repository, blockRepo)
+        val viewModel = CreatorProfileViewModel(localizedContext(), repository, blockRepo)
         advanceUntilIdle()
 
         assertEquals(listOf("creator/1", "creator.1", "creator-2"), viewModel.state.value.dashboard?.topCreators?.map { it.creatorId })
@@ -91,7 +94,7 @@ class CreatorProfileViewModelTest {
         coEvery { repository.getDashboard(80) } returns dashboard
         coEvery { repository.updateCreatorProfile(any()) } returns Result.success(updatedProfile)
 
-        val viewModel = CreatorProfileViewModel(repository, blockRepo)
+        val viewModel = CreatorProfileViewModel(localizedContext(), repository, blockRepo)
         advanceUntilIdle()
 
         viewModel.updateProfile(
@@ -130,4 +133,9 @@ class CreatorProfileViewModelTest {
         votes = 1,
         uploadedAt = 1L,
     )
+
+    private fun localizedContext(): Context = mockk<Context>(relaxed = true).also { context ->
+        every { context.getString(R.string.feedback_creator_blocked) } returns "Creator blocked"
+        every { context.getString(R.string.creator_profile_saved) } returns "Profile saved"
+    }
 }

@@ -52,6 +52,7 @@ import com.freevibe.data.model.WALLPAPER_SOURCE_LOCAL_FOLDER
 import com.freevibe.data.model.WallpaperTarget
 import com.freevibe.data.repository.CommunityBlockedUser
 import com.freevibe.service.CommunityIdentitySummary
+import com.freevibe.service.IDENTITY_SUFFIX_NOT_CREATED
 import com.freevibe.service.effectiveVideoFpsLimit
 import com.freevibe.service.shouldUseVideoBatterySaver
 import com.freevibe.service.shouldPauseVideoMotionForPowerSave
@@ -843,8 +844,13 @@ internal fun communityIdentitySubtitle(summary: CommunityIdentitySummary): Strin
         stringResource(R.string.settings_dialogs_identity_none)
     }
 
+@Composable
 internal fun communityIdentitySuffixLabel(summary: CommunityIdentitySummary): String =
-    if (summary.identitySuffix == "Not created") summary.identitySuffix else "...${summary.identitySuffix}"
+    if (summary.identitySuffix == IDENTITY_SUFFIX_NOT_CREATED) {
+        stringResource(R.string.settings_dialogs_identity_not_created)
+    } else {
+        "...${summary.identitySuffix}"
+    }
 
 internal fun isLocalWallpaperFolderReady(
     localFolderUri: String,

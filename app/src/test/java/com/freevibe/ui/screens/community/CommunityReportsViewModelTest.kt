@@ -1,5 +1,7 @@
 package com.freevibe.ui.screens.community
 
+import android.content.Context
+import com.freevibe.R
 import com.freevibe.data.model.CommunityBlockReason
 import com.freevibe.data.model.CommunityReportReason
 import com.freevibe.data.model.CommunityReportRecord
@@ -297,5 +299,13 @@ class CommunityReportsViewModelTest {
         reportRepo: CommunityReportRepository,
         voteRepo: VoteRepository,
         blockRepo: CommunityBlockRepository = mockk(relaxed = true),
-    ): CommunityReportsViewModel = CommunityReportsViewModel(reportRepo, voteRepo, blockRepo)
+    ): CommunityReportsViewModel = CommunityReportsViewModel(localizedContext(), reportRepo, voteRepo, blockRepo)
+
+    private fun localizedContext(): Context = mockk<Context>(relaxed = true).also { context ->
+        every { context.getString(R.string.reports_action_hidden) } returns "Report hidden"
+        every { context.getString(R.string.reports_action_dismissed) } returns "Report dismissed"
+        every { context.getString(R.string.reports_action_restored) } returns "Report restored"
+        every { context.getString(R.string.feedback_upload_deleted) } returns "Upload deleted"
+        every { context.getString(R.string.feedback_creator_blocked) } returns "Creator blocked"
+    }
 }

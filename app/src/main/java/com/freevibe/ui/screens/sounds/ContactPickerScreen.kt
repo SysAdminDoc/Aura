@@ -60,6 +60,7 @@ import javax.inject.Inject
 import com.freevibe.data.model.SoundAction
 import com.freevibe.data.model.SoundActionDecision
 import com.freevibe.data.model.soundLicenseCapabilities
+import com.freevibe.util.displayMessage
 import com.freevibe.util.tryStartActivity
 
 data class ContactPickerState(
@@ -163,7 +164,7 @@ class ContactPickerViewModel @Inject constructor(
         ignoreDnd: Boolean,
     ) {
         val sound = _state.value.selectedSound ?: run {
-            _state.update { it.copy(error = "No sound selected. Return to Sounds and choose a valid item.") }
+            _state.update { it.copy(error = context.getString(R.string.contact_picker_no_sound)) }
             return
         }
         soundActionGateMessage(sound, confirmed)?.let { message ->
@@ -198,7 +199,7 @@ class ContactPickerViewModel @Inject constructor(
             }
             val dlUrl = soundUrlResolver.resolve(sound)
             if (dlUrl.isNullOrBlank()) {
-                _state.update { it.copy(isApplying = false, applyingContactId = null, error = "This sound does not have a downloadable ringtone file.") }
+                _state.update { it.copy(isApplying = false, applyingContactId = null, error = context.getString(R.string.contact_picker_no_file)) }
                 return@launch
             }
             soundApplier.downloadOnly(dlUrl, sound.name, ContentType.RINGTONE)
@@ -215,7 +216,7 @@ class ContactPickerViewModel @Inject constructor(
                                     it.copy(
                                         isApplying = false,
                                         applyingContactId = null,
-                                        success = "Ringtone set for contact",
+                                        success = context.getString(R.string.contact_picker_ringtone_set),
                                     )
                                 }
                             } else {
@@ -247,13 +248,13 @@ class ContactPickerViewModel @Inject constructor(
                             val message = if (e is ContactRingtoneNotKeptException) {
                                 context.getString(R.string.contact_picker_ringtone_not_kept)
                             } else {
-                                e.message
+                                e.displayMessage(context)
                             }
                             _state.update { it.copy(isApplying = false, applyingContactId = null, error = message) }
                         }
                 }
                 .onFailure { e ->
-                    _state.update { it.copy(isApplying = false, applyingContactId = null, error = "Download failed: ${e.message}") }
+                    _state.update { it.copy(isApplying = false, applyingContactId = null, error = context.getString(R.string.contact_picker_download_failed, e.displayMessage(context) ?: e.javaClass.simpleName)) }
                 }
         }
     }
