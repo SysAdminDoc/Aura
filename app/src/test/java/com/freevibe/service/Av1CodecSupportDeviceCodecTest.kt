@@ -1,5 +1,6 @@
 package com.freevibe.service
 
+import android.app.Application
 import android.media.MediaCodecInfo
 import android.media.MediaFormat
 import org.junit.After
@@ -12,7 +13,11 @@ import org.robolectric.annotation.Config
 import org.robolectric.shadows.MediaCodecInfoBuilder
 import org.robolectric.shadows.ShadowMediaCodecList
 
+// A plain Application, because FreeVibeApp's startup work loads fonts in the background. Robolectric
+// 4.17 can't load the next SDK's native runtime while that copy holds the font jar open, which fails
+// the first SDK 35 test whenever this class is the first to run in its JVM.
 @RunWith(RobolectricTestRunner::class)
+@Config(application = Application::class)
 class Av1CodecSupportDeviceCodecTest {
 
     @After
