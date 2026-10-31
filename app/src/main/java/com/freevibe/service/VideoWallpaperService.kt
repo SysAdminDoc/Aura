@@ -12,9 +12,7 @@ import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.Color
 import android.graphics.Movie
-import android.media.AudioAttributes
-import android.media.MediaMetadataRetriever
-import android.media.MediaPlayer
+import android.net.Uri
 import android.os.BatteryManager
 import android.os.Handler
 import android.os.Looper
@@ -23,7 +21,14 @@ import androidx.core.content.ContextCompat
 import android.os.SystemClock
 import android.service.wallpaper.WallpaperService
 import android.view.SurfaceHolder
+import androidx.annotation.OptIn
 import androidx.annotation.RequiresApi
+import androidx.media3.common.C
+import androidx.media3.common.MediaItem
+import androidx.media3.common.PlaybackException
+import androidx.media3.common.Player
+import androidx.media3.common.util.UnstableApi
+import androidx.media3.exoplayer.ExoPlayer
 import com.freevibe.BuildConfig
 import com.freevibe.R
 import java.io.File
@@ -34,6 +39,14 @@ import kotlin.math.max
  * size on a wallpaper process is exactly the allocation this app has been bitten by.
  */
 private const val COLOR_FRAME_SAMPLE_SIZE = 4
+
+@OptIn(UnstableApi::class)
+internal fun videoScalingModeFor(scaleMode: String): Int =
+    if (scaleMode == VIDEO_WALLPAPER_SCALE_MODE_FIT) {
+        C.VIDEO_SCALING_MODE_SCALE_TO_FIT
+    } else {
+        C.VIDEO_SCALING_MODE_SCALE_TO_FIT_WITH_CROPPING
+    }
 
 private data class BatterySnapshot(
     val percent: Int?,
@@ -55,6 +68,7 @@ private data class VideoPlaybackProfile(
  * Uses center-crop rendering: motion fills the screen, overflow is clipped, and
  * aspect ratio is always preserved.
  */
+@OptIn(UnstableApi::class)
 class VideoWallpaperService : WallpaperService() {
 
     override fun onCreateEngine(): Engine = VideoEngine()
@@ -67,7 +81,15 @@ class VideoWallpaperService : WallpaperService() {
         private val describedVideoPath: String? = null,
     ) : Engine(), LiveWallpaperResourceReporter {
         private val receiptStore by lazy { LiveWallpaperReceiptStore.create(this@VideoWallpaperService) }
-        private var mediaPlayer: MediaPlayer? = null
+        private var player: ExoPlayer? = null
+        private val playerListener = object : Player.Listener {
+            override fun onPlayerError(error: PlaybackException) {
+                handlePlaybackFailure(
+                    VideoPlaybackFailure.RUNTIME_ERROR,
+                    error.errorCodeName + ": " + error.message,
+                )
+            }
+        }
         private var gifMovie: Movie? = null
         private var gifCanvasBackground: Bitmap? = null
         private var gifStartedAtMs = 0L
@@ -310,17 +332,17 @@ class VideoWallpaperService : WallpaperService() {
                     return
                 }
                 try {
-                    mediaPlayer?.let {
-                        if (!it.isPlaying) {
+                    player?.let {
+                        if (!it.playWhenReady) {
                             it.seekTo(0)
-                            if (!motionPausedForPowerSave) it.start()
+                            if (!motionPausedForPowerSave) it.play()
                         }
                     }
                 } catch (_: Exception) {}
             } else {
                 stopTelemetryHeartbeat()
                 pauseGifPlayback()
-                try { mediaPlayer?.pause() } catch (_: Exception) {}
+                try { player?.pause() } catch (_: Exception) {}
                 publishVideoTelemetry()
             }
         }
@@ -362,108 +384,32 @@ class VideoWallpaperService : WallpaperService() {
                 }
                 refreshWallpaperColors(path, lastModified)
                 activeMediaType = "video"
-                val speed = getPlaybackSpeed()
                 val scaleMode = getScaleMode()
-
-                // Detect video dimensions before playback for accurate surface sizing
-                var videoW = 0
-                var videoH = 0
-                try {
-                    val retriever = MediaMetadataRetriever()
-                    try {
-                        retriever.setDataSource(path)
-                        val w = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_WIDTH)?.toIntOrNull() ?: 0
-                        val h = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_HEIGHT)?.toIntOrNull() ?: 0
-                        val rotation = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_ROTATION)?.toIntOrNull() ?: 0
-                        if (rotation == 90 || rotation == 270) {
-                            videoW = h; videoH = w
-                        } else {
-                            videoW = w; videoH = h
-                        }
-                    } finally {
-                        retriever.release()
-                    }
-                } catch (e: Exception) {
-                    android.util.Log.w("VideoWallpaper", "Failed to read video metadata: $path", e)
-                }
 
                 // Set surface to screen size — this is the canvas the user sees
                 val (sw, sh) = configureSurface(holder)
                 configureFrameRate(holder)
                 publishVideoTelemetry()
 
-                val safeHolder = object : SurfaceHolder by holder {
-                    override fun setKeepScreenOn(screenOn: Boolean) {}
-                }
-
-                mediaPlayer = MediaPlayer().apply {
-                    setDataSource(path)
-                    setDisplay(safeHolder)
-                    isLooping = true
-                    setVolume(0f, 0f)
-                    // Android 17 background audio hardening: WallpaperService is not a
-                    // foreground service, so MediaPlayer.start() can fail silently if
-                    // the platform detects an active audio session. Set non-media
-                    // attributes and deselect audio tracks after prepare to avoid
-                    // creating an AudioTrack entirely.
-                    setAudioAttributes(
-                        AudioAttributes.Builder()
-                            .setUsage(AudioAttributes.USAGE_UNKNOWN)
-                            .setContentType(AudioAttributes.CONTENT_TYPE_UNKNOWN)
-                            .build()
-                    )
-                    try {
-                        setVideoScalingMode(
-                            if (scaleMode == VIDEO_WALLPAPER_SCALE_MODE_FIT) {
-                                MediaPlayer.VIDEO_SCALING_MODE_SCALE_TO_FIT
-                            } else {
-                                MediaPlayer.VIDEO_SCALING_MODE_SCALE_TO_FIT_WITH_CROPPING
-                            },
-                        )
-                    } catch (_: Exception) {}
-                    setOnPreparedListener { mp ->
-                        // If MediaMetadataRetriever didn't get dimensions, read from MediaPlayer
-                        if (videoW <= 0 || videoH <= 0) {
-                            videoW = mp.videoWidth
-                            videoH = mp.videoHeight
-                        }
-                        mp.isLooping = true
-                        try {
-                            for (i in mp.trackInfo.indices) {
-                                if (mp.trackInfo[i].trackType == MediaPlayer.TrackInfo.MEDIA_TRACK_TYPE_AUDIO) {
-                                    mp.deselectTrack(i)
-                                }
-                            }
-                        } catch (_: Exception) {}
-                        try { mp.playbackParams = mp.playbackParams.setSpeed(speed) } catch (_: Exception) {}
-                        // A rebuild resumes where the dead player stopped, so recovery
-                        // is not visible to the user as a restart from the first frame.
-                        val resumeMs = pendingResumePositionMs
-                        pendingResumePositionMs = 0
-                        if (resumeMs > 0) {
-                            try { mp.seekTo(resumeMs) } catch (_: Exception) {}
-                        }
-                        if (visible && !motionPausedForPowerSave) {
-                            mp.start()
-                        } else if (resumeMs <= 0) {
-                            try { mp.seekTo(0) } catch (_: Exception) {}
-                        }
-                        startPlaybackWatchdog()
-                    }
-                    setOnErrorListener { _, what, extra ->
-                        // Returning true claims the error so MediaPlayer does not also
-                        // fire onCompletion for a player we are about to discard.
-                        handlePlaybackFailure(
-                            VideoPlaybackFailure.RUNTIME_ERROR,
-                            "MediaPlayer error what=" + what + " extra=" + extra,
-                        )
-                        true
-                    }
-                    prepareAsync()
-                }
+                // A rebuild resumes where the dead player stopped, so recovery is not
+                // visible to the user as a restart from the first frame.
+                val resumeMs = pendingResumePositionMs
+                pendingResumePositionMs = 0
+                // Held before it's set up, so a failure below still releases it.
+                val built = videoWallpaperPlayerFactory(this@VideoWallpaperService)
+                player = built
+                built.addListener(playerListener)
+                built.setVideoSurface(holder.surface)
+                built.videoScalingMode = videoScalingModeFor(scaleMode)
+                built.repeatMode = Player.REPEAT_MODE_ONE
+                built.setPlaybackSpeed(getPlaybackSpeed())
+                built.setMediaItem(MediaItem.fromUri(Uri.fromFile(file)), resumeMs.toLong())
+                built.playWhenReady = visible && !motionPausedForPowerSave
+                built.prepare()
+                startPlaybackWatchdog()
 
                 if (BuildConfig.DEBUG) android.util.Log.d("VideoWPService",
-                    "Playing ${videoW}x${videoH} on ${sw}x${sh} screen, mode=$scaleMode, path=$path")
+                    "Playing on ${sw}x${sh} screen, mode=$scaleMode, path=$path")
             } catch (e: Exception) {
                 if (BuildConfig.DEBUG) android.util.Log.e("VideoWPService", "Init failed: ${e.message}")
                 handlePlaybackFailure(
@@ -483,7 +429,7 @@ class VideoWallpaperService : WallpaperService() {
          */
         private fun handlePlaybackFailure(failure: VideoPlaybackFailure, detail: String) {
             stopPlaybackWatchdog()
-            val positionMs = runCatching { mediaPlayer?.currentPosition ?: 0 }.getOrDefault(0)
+            val positionMs = runCatching { player?.currentPosition?.toInt() ?: 0 }.getOrDefault(0)
             releasePlayback()
             receiptStore.recordError(
                 LiveWallpaperReceiptStore.ENGINE_VIDEO,
@@ -493,7 +439,7 @@ class VideoWallpaperService : WallpaperService() {
                 state = recoveryState,
                 failure = failure,
                 positionMs = positionMs,
-                nowMs = System.currentTimeMillis(),
+                nowMs = SystemClock.uptimeMillis(),
             )
             recoveryState = next
             when (decision) {
@@ -533,33 +479,42 @@ class VideoWallpaperService : WallpaperService() {
         }
 
         /**
-         * Watches playback position while visible. Decoder death after an OEM
-         * sleep/wake cycle produces no error callback at all - the position simply
-         * stops advancing - so polling is the only way to notice.
+         * Watches decoded frames while visible. Decoder death after an OEM sleep/wake
+         * cycle can produce no error callback at all, so polling is the only way to
+         * notice. The position can't show it: with no audio renderer it comes from a
+         * plain clock that keeps running after the decoder has stopped.
          */
         private fun startPlaybackWatchdog() {
             stopPlaybackWatchdog()
+            // A new player counts frames from zero, and the last sample may be old, so
+            // a match with it says nothing about this player.
+            recoveryState = recoveryState.copy(hasSample = false)
             val runnable = object : Runnable {
                 override fun run() {
-                    val player = mediaPlayer
+                    val player = player
                     if (player == null) {
                         watchdogRunnable = null
                         return
                     }
-                    val positionMs = runCatching { player.currentPosition }.getOrDefault(0)
-                    val isPlaying = runCatching { player.isPlaying }.getOrDefault(false)
+                    val frames = runCatching { player.decodedFrameCount() }.getOrDefault(0)
+                    // playWhenReady, because a decoder that hangs before its first frame
+                    // leaves the player buffering, and isPlaying is false while it does.
+                    val wantsFrames = runCatching { player.playWhenReady }.getOrDefault(false)
                     val (next, stalled) = VideoWallpaperRecovery.onWatchdogSample(
                         state = recoveryState,
-                        positionMs = positionMs,
-                        isPlaying = isPlaying && visible && !motionPausedForPowerSave,
-                        nowMs = System.currentTimeMillis(),
+                        progress = frames,
+                        isPlaying = wantsFrames && visible && !motionPausedForPowerSave,
+                        nowMs = SystemClock.uptimeMillis(),
+                        stallTimeoutMs = VideoWallpaperRecovery.stallTimeoutMs(
+                            runCatching { player.knownFrameRate() }.getOrNull(),
+                        ),
                     )
                     recoveryState = next
                     if (stalled) {
                         watchdogRunnable = null
                         handlePlaybackFailure(
                             VideoPlaybackFailure.PROGRESS_STALLED,
-                            "position frozen at ${positionMs}ms",
+                            "no new frame after $frames",
                         )
                         return
                     }
@@ -760,7 +715,7 @@ class VideoWallpaperService : WallpaperService() {
         override fun resourceSnapshot(): LiveWallpaperResourceSnapshot =
             LiveWallpaperResourceSnapshot(
                 engine = LiveWallpaperReceiptStore.ENGINE_VIDEO,
-                players = (if (mediaPlayer != null) 1 else 0) + (if (gifMovie != null) 1 else 0),
+                players = (if (player != null) 1 else 0) + (if (gifMovie != null) 1 else 0),
                 frameCallbacks = listOf(
                     gifFrameRunnable,
                     telemetryRunnable,
@@ -778,13 +733,11 @@ class VideoWallpaperService : WallpaperService() {
             gifCanvasBackground?.takeUnless { it.isRecycled }?.recycle()
             gifCanvasBackground = null
             activeMediaType = "none"
-            mediaPlayer?.apply {
-                try { setOnPreparedListener(null) } catch (_: Exception) {}
-                try { setOnErrorListener(null) } catch (_: Exception) {}
-                try { if (isPlaying) stop() } catch (_: Exception) {}
+            player?.apply {
+                try { removeListener(playerListener) } catch (_: Exception) {}
                 try { release() } catch (_: Exception) {}
             }
-            mediaPlayer = null
+            player = null
         }
 
         private fun registerPowerSaveReceiver() {
@@ -838,14 +791,14 @@ class VideoWallpaperService : WallpaperService() {
             when (action) {
                 VideoMotionPowerSaveAction.PAUSE -> {
                     pauseGifPlayback()
-                    try { mediaPlayer?.pause() } catch (_: Exception) {}
+                    try { player?.pause() } catch (_: Exception) {}
                 }
                 VideoMotionPowerSaveAction.RESUME -> {
                     if (visible) {
                         if (gifMovie != null) {
                             currentHolder?.let { resumeGifPlayback(it) }
                         } else try {
-                            mediaPlayer?.let { if (!it.isPlaying) it.start() }
+                            player?.let { if (!it.playWhenReady) it.play() }
                         } catch (_: Exception) {
                         }
                     }

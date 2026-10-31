@@ -41,7 +41,7 @@ Living architecture overview for contributors. Internal working notes live in `C
 ├────────────────────────────────────────────────────────────────────┤
 │  Services (service/)                                               │
 │   WallpaperService implementations:                                │
-│     VideoWallpaperService (MediaPlayer + Canvas GIF renderer)      │
+│     VideoWallpaperService (ExoPlayer + Canvas GIF renderer)        │
 │     ParallaxWallpaperService (ML Kit subject segmentation +        │
 │       accelerometer parallax: see N-3 / NX-3)                      │
 │     WeatherWallpaperService (Open-Meteo + Canvas particle overlay) │
@@ -201,7 +201,7 @@ Every live wallpaper must:
 4. Synchronize bitmap access (parallax engine writes from segmenter callback, reads from draw loop).
 5. Recycle bitmap layers in `onDestroy` and on engine teardown.
 
-`VideoWallpaperService` and `ParallaxWallpaperService` are the reference implementations. New engines should follow the same lifecycle protocol. See ROADMAP NX-1 (GL/AGSL engine migration) for the planned consolidation.
+`VideoWallpaperService` and `ParallaxWallpaperService` are the reference implementations. New engines should follow the same lifecycle protocol.
 
 ## Build and Release
 

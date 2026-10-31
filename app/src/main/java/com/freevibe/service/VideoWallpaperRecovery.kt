@@ -2,16 +2,16 @@ package com.freevibe.service
 
 /** How a video wallpaper stopped working. */
 enum class VideoPlaybackFailure {
-    /** `MediaPlayer` never reached the prepared state. */
+    /** The player could not be built or set up for the file. */
     PREPARE_ERROR,
 
-    /** `MediaPlayer` reported an error while playing. */
+    /** The player reported an error, while preparing or while playing. */
     RUNTIME_ERROR,
 
     /**
-     * The player claims to be playing but its position has not advanced. This is
-     * the silent OEM sleep/wake failure: no error callback ever fires, the surface
-     * simply freezes.
+     * The player claims to be playing but the decoder has stopped handing back
+     * frames. This is the silent OEM sleep/wake failure: no error callback ever
+     * fires, the surface simply freezes.
      */
     PROGRESS_STALLED,
 }
@@ -27,8 +27,8 @@ data class VideoRecoveryState(
     val resumePositionMs: Int = 0,
     /** Wall-clock of the last observed forward progress. */
     val lastProgressAtMs: Long = 0L,
-    /** Last observed playback position, used to detect a frozen player. */
-    val lastPositionMs: Int = 0,
+    /** Last observed progress value, used to detect a frozen player. */
+    val lastProgress: Int = 0,
     /**
      * Whether any watchdog sample has been taken. Kept explicit rather than
      * inferred from a zero timestamp, so a clock reading of 0 cannot masquerade
@@ -80,11 +80,25 @@ object VideoWallpaperRecovery {
     /** Ceiling on the backoff so a persistent failure cannot spin. */
     const val MAX_BACKOFF_MS = 30_000L
 
-    /** How long a playing player may report the same position before it is stalled. */
+    /** How long a playing player may go without a new frame before it is stalled. */
     const val STALL_TIMEOUT_MS = 6_000L
 
-    /** How often the watchdog samples playback position. */
+    /** How often the watchdog samples playback progress. */
     const val WATCHDOG_INTERVAL_MS = 2_000L
+
+    /** Frames this many intervals apart still count as a healthy, very slow clip. */
+    private const val SLOW_CLIP_FRAME_ALLOWANCE = 3
+
+    /**
+     * How long to wait for a frame before calling the player stalled. A slideshow
+     * made as a video can hold each picture for several seconds, so a clip whose own
+     * frame rate is that low gets more than the usual wait.
+     */
+    fun stallTimeoutMs(frameRate: Float?): Long {
+        if (frameRate == null || frameRate <= 0f) return STALL_TIMEOUT_MS
+        val frameIntervalMs = (1_000f / frameRate).toLong()
+        return maxOf(STALL_TIMEOUT_MS, frameIntervalMs * SLOW_CLIP_FRAME_ALLOWANCE)
+    }
 
     /** Healthy playback for this long clears the attempt budget. */
     const val HEALTHY_RUN_MS = 60_000L
@@ -128,7 +142,7 @@ object VideoWallpaperRecovery {
             lastFailure = failure,
             resumePositionMs = resumePositionMs,
             lastProgressAtMs = nowMs,
-            lastPositionMs = resumePositionMs,
+            lastProgress = 0,
             healthySinceMs = 0L,
             hasSample = false,
         )
@@ -142,33 +156,38 @@ object VideoWallpaperRecovery {
     /**
      * Feeds a watchdog sample in.
      *
+     * @param progress anything that keeps changing while frames are being produced.
+     *   The engine passes the decoded frame count, because a player with no audio
+     *   renderer runs its position off a plain clock, and that clock keeps going when
+     *   the decoder has died.
      * @return the updated state, and true when the player is considered stalled.
      */
     fun onWatchdogSample(
         state: VideoRecoveryState,
-        positionMs: Int,
+        progress: Int,
         isPlaying: Boolean,
         nowMs: Long,
+        stallTimeoutMs: Long = STALL_TIMEOUT_MS,
     ): Pair<VideoRecoveryState, Boolean> {
         // A paused or invisible wallpaper is supposed to stand still; only a player
         // that claims to be playing can be stalled.
         if (!isPlaying) {
             return state.copy(
-                lastPositionMs = positionMs,
+                lastProgress = progress,
                 lastProgressAtMs = nowMs,
                 healthySinceMs = 0L,
                 hasSample = true,
             ) to false
         }
-        val advanced = !state.hasSample || positionMs != state.lastPositionMs
+        val advanced = !state.hasSample || progress != state.lastProgress
         if (!advanced) {
-            val stalled = nowMs - state.lastProgressAtMs >= STALL_TIMEOUT_MS
+            val stalled = nowMs - state.lastProgressAtMs >= stallTimeoutMs
             return state to stalled
         }
         val healthySinceMs = state.healthySinceMs.takeIf { it != 0L } ?: nowMs
         val healthyLongEnough = state.attempt > 0 && nowMs - healthySinceMs >= HEALTHY_RUN_MS
         val next = state.copy(
-            lastPositionMs = positionMs,
+            lastProgress = progress,
             lastProgressAtMs = nowMs,
             hasSample = true,
             healthySinceMs = if (healthyLongEnough) nowMs else healthySinceMs,

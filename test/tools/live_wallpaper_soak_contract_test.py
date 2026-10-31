@@ -54,7 +54,7 @@ def test_every_engine_is_named_as_a_soak_target():
 
 def test_the_gif_path_is_soaked_separately_from_video():
     # GIF and video share one service but share almost no code below it: Movie
-    # decode with a hand-posted frame loop versus MediaPlayer. One target for both
+    # decode with a hand-posted frame loop versus ExoPlayer. One target for both
     # would leave whichever path lost the coin toss untested.
     harness = read(HARNESS)
     assert "GIF(" in harness

@@ -16,7 +16,7 @@ package com.freevibe.service
  */
 data class LiveWallpaperResourceSnapshot(
     val engine: String,
-    /** MediaPlayer instances and decoded animations retained for playback. */
+    /** Video players and decoded animations retained for playback. */
     val players: Int = 0,
     /** Render, telemetry, watchdog, and rebuild Runnables currently posted. */
     val frameCallbacks: Int = 0,

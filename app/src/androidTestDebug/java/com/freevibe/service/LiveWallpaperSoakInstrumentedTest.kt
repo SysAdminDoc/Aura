@@ -24,18 +24,14 @@ import org.junit.runner.RunWith
  * The on-device half of the cross-engine live-wallpaper soak.
  *
  * It runs byte-for-byte the same scenario script as `LiveWallpaperSoakTest`, but
- * against the real platform: real MediaPlayer and GIF decoders, real
+ * against the real platform: real ExoPlayer and GIF decoders, real
  * SensorManager, real ML Kit, real bitmap allocation through `ImageDecoder`. The
  * JVM soak cannot reach any of those, so a leak that only exists behind a real
  * decoder is only visible here.
  *
- * Run on an emulator:
- *
- * ```
- * ./gradlew :app:connectedFullDebugAndroidTest \
- *     -Pandroid.testInstrumentationRunnerArguments.class=\
- * com.freevibe.service.LiveWallpaperSoakInstrumentedTest
- * ```
+ * Run it through `tools/run_device_tests.py` (see CONTRIBUTING.md). The power saver
+ * scenario turns Battery Saver on for the whole phone, so on a phone someone relies on
+ * add `--arg powerSaveSteps=skip` and those steps do nothing.
  *
  * This debug-only soak does not replace the physical-device captures tracked in
  * `Roadmap_Blocked.md`: OEM power management and OEM decoder death are exactly
@@ -62,10 +58,12 @@ class LiveWallpaperSoakInstrumentedTest {
          * so the step degrades to a no-op instead of failing the soak.
          */
         override fun setPowerSaveMode(enabled: Boolean) {
-            runCatching {
-                instrumentation.uiAutomation
-                    .executeShellCommand("settings put global low_power " + if (enabled) "1" else "0")
-                    .close()
+            if (InstrumentationRegistry.getArguments().getString("powerSaveSteps") != "skip") {
+                runCatching {
+                    instrumentation.uiAutomation
+                        .executeShellCommand("settings put global low_power " + if (enabled) "1" else "0")
+                        .close()
+                }
             }
             settle()
         }
@@ -85,15 +83,22 @@ class LiveWallpaperSoakInstrumentedTest {
 
     /**
      * Real media, so the engines build real decoders. A tiny animated GIF and a
-     * small PNG are assembled in code rather than shipped as test assets, and the
-     * video target reuses the GIF bytes under an `.mp4` name so `MediaPlayer`
-     * exercises its prepare-failure and bounded-rebuild path on every device
-     * regardless of which codecs that device happens to have.
+     * small PNG are assembled in code rather than shipped as test assets. The video
+     * target starts on a real clip, and each replacement swaps between that and the
+     * GIF bytes under an `.mp4` name, so the player's failure and bounded-rebuild path
+     * gets soaked along with real playback.
      */
     private fun writeMedia(file: File, target: LiveWallpaperSoakTarget, generation: Int) {
         when (target) {
             LiveWallpaperSoakTarget.GIF -> file.writeBytes(GIF_BYTES)
-            LiveWallpaperSoakTarget.VIDEO -> file.writeBytes(GIF_BYTES)
+            LiveWallpaperSoakTarget.VIDEO ->
+                if (generation % 2 == 0) {
+                    instrumentation.context.assets.open(REAL_CLIP_ASSET).use { input ->
+                        file.outputStream().use { input.copyTo(it) }
+                    }
+                } else {
+                    file.writeBytes(GIF_BYTES)
+                }
             LiveWallpaperSoakTarget.WEATHER,
             LiveWallpaperSoakTarget.PARALLAX,
             -> file.outputStream().use { out ->
@@ -236,6 +241,7 @@ class LiveWallpaperSoakInstrumentedTest {
         const val LONG_RUN = 25
         const val SETTLE_MS = 120L
         const val IMAGE_EDGE = 120
+        const val REAL_CLIP_ASSET = "wallpaper_loop_with_audio.mp4"
 
         /** A minimal two-frame animated GIF, so GIF playback really starts. */
         val GIF_BYTES: ByteArray = byteArrayOf(

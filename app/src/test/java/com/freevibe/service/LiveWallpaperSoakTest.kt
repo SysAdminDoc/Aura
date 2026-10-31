@@ -6,18 +6,22 @@ import android.hardware.SensorManager
 import android.os.Looper
 import android.os.PowerManager
 import android.service.wallpaper.WallpaperService
+import androidx.media3.exoplayer.ExoPlayer
 import com.freevibe.service.soak.LiveWallpaperSoakDriver
 import com.freevibe.service.soak.LiveWallpaperSoakEnvironment
 import com.freevibe.service.soak.LiveWallpaperSoakScenario
 import com.freevibe.service.soak.LiveWallpaperSoakScenarios
 import com.freevibe.service.soak.LiveWallpaperSoakTarget
 import com.freevibe.service.soak.SoakSurfaceHolder
+import io.mockk.mockk
 import java.io.ByteArrayOutputStream
 import java.io.File
 import java.util.zip.CRC32
 import java.util.zip.Deflater
+import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
+import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.Robolectric
@@ -25,9 +29,7 @@ import org.robolectric.RobolectricTestRunner
 import org.robolectric.RuntimeEnvironment
 import org.robolectric.Shadows.shadowOf
 import org.robolectric.annotation.Config
-import org.robolectric.shadows.ShadowMediaPlayer
 import org.robolectric.shadows.ShadowSensor
-import org.robolectric.shadows.util.DataSource
 
 /**
  * The cross-engine live-wallpaper soak.
@@ -49,6 +51,19 @@ import org.robolectric.shadows.util.DataSource
 class LiveWallpaperSoakTest {
 
     private val context get() = RuntimeEnvironment.getApplication()
+    private val originalPlayerFactory = videoWallpaperPlayerFactory
+
+    // The JVM has no decoder for ExoPlayer to run, so a stand-in keeps the video engine
+    // on its success path, holding a live player. The instrumented soak runs the real one.
+    @Before
+    fun usePlayerThatCanRunWithoutADecoder() {
+        videoWallpaperPlayerFactory = { mockk<ExoPlayer>(relaxed = true) }
+    }
+
+    @After
+    fun restorePlayer() {
+        videoWallpaperPlayerFactory = originalPlayerFactory
+    }
 
     private class RobolectricSoakEnvironment(
         private val mediaFile: File,
@@ -101,13 +116,7 @@ class LiveWallpaperSoakTest {
             LiveWallpaperSoakTarget.WEATHER,
             LiveWallpaperSoakTarget.PARALLAX,
             -> file.writeBytes(pngBytes(IMAGE_WIDTH, IMAGE_HEIGHT))
-            LiveWallpaperSoakTarget.VIDEO -> {
-                file.writeBytes(ByteArray(64) { it.toByte() })
-                ShadowMediaPlayer.addMediaInfo(
-                    DataSource.toDataSource(file.absolutePath),
-                    ShadowMediaPlayer.MediaInfo(VIDEO_DURATION_MS, PREPARE_DELAY_MS),
-                )
-            }
+            LiveWallpaperSoakTarget.VIDEO -> file.writeBytes(ByteArray(64) { it.toByte() })
             // GIF decode has no usable JVM shadow, so this target soaks the decode
             // failure and bounded-rebuild path; real GIF playback is what the
             // instrumented run on an emulator contributes.
@@ -243,7 +252,7 @@ class LiveWallpaperSoakTest {
      */
     private fun assertPeaksBounded(label: String, peak: Map<String, Int>) {
         val ceilings = mapOf(
-            // A MediaPlayer or a decoded Movie, never a growing set of either.
+            // A video player or a decoded Movie, never a growing set of either.
             "players" to 2,
             // Video's four: GIF frame loop, telemetry heartbeat, stall watchdog,
             // and a pending recovery rebuild.
@@ -311,7 +320,7 @@ class LiveWallpaperSoakTest {
             covered,
         )
         // GIF shares VideoWallpaperService but takes a completely different code
-        // path (Movie decode + hand-posted frame loop instead of MediaPlayer), so
+        // path (Movie decode + hand-posted frame loop instead of ExoPlayer), so
         // it is soaked as its own target rather than folded into video.
         assertTrue(
             LiveWallpaperSoakTarget.GIF.mediaFileName.endsWith(".gif"),
@@ -352,8 +361,6 @@ class LiveWallpaperSoakTest {
         const val MIN_SDK = 26
         const val SHORT_RUN = 3
         const val LONG_RUN = 30
-        const val VIDEO_DURATION_MS = 5_000
-        const val PREPARE_DELAY_MS = 0
         const val IMAGE_WIDTH = 240
         const val IMAGE_HEIGHT = 480
     }

@@ -1,6 +1,5 @@
 package com.freevibe.service
 
-import java.io.File
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
@@ -208,38 +207,30 @@ class VideoWallpaperRecoveryTest {
         assertEquals(VideoRecoveryState(), VideoWallpaperRecovery.reset())
     }
 
-    // -- engine wiring --
+    // -- stall window --
 
     @Test
-    fun `the video engine wires the error listener watchdog and bounded rebuild`() {
-        val source = File("src/main/java/com/freevibe/service/VideoWallpaperService.kt").readText()
+    fun `an ordinary clip gets the usual wait`() {
+        assertEquals(VideoWallpaperRecovery.STALL_TIMEOUT_MS, VideoWallpaperRecovery.stallTimeoutMs(null))
+        assertEquals(VideoWallpaperRecovery.STALL_TIMEOUT_MS, VideoWallpaperRecovery.stallTimeoutMs(0f))
+        assertEquals(VideoWallpaperRecovery.STALL_TIMEOUT_MS, VideoWallpaperRecovery.stallTimeoutMs(-1f))
+        assertEquals(VideoWallpaperRecovery.STALL_TIMEOUT_MS, VideoWallpaperRecovery.stallTimeoutMs(30f))
+        assertEquals(VideoWallpaperRecovery.STALL_TIMEOUT_MS, VideoWallpaperRecovery.stallTimeoutMs(1f))
+    }
 
-        assertTrue("the engine must listen for runtime errors", source.contains("setOnErrorListener {"))
-        assertTrue(
-            "runtime errors must go through the recovery policy",
-            source.contains("VideoPlaybackFailure.RUNTIME_ERROR"),
-        )
-        assertTrue(
-            "prepare failures must go through the recovery policy",
-            source.contains("VideoPlaybackFailure.PREPARE_ERROR"),
-        )
-        assertTrue(
-            "a frozen player must be detected by the watchdog",
-            source.contains("VideoPlaybackFailure.PROGRESS_STALLED"),
-        )
-        assertTrue("rebuilds must be delayed", source.contains("recoveryHandler.postDelayed(runnable, decision.delayMs)"))
-        assertTrue("exhaustion must be recorded", source.contains("holding last frame"))
-        assertTrue(
-            "the watchdog and pending rebuild must be torn down with the surface",
-            source.contains("stopPlaybackWatchdog()") && source.contains("cancelPendingRebuild()"),
-        )
-        assertTrue(
-            "the error listener must be cleared before release",
-            source.contains("setOnErrorListener(null)"),
-        )
-        assertTrue(
-            "a rebuild must resume rather than restart",
-            source.contains("mp.seekTo(resumeMs)"),
-        )
+    @Test
+    fun `a clip slower than the usual wait gets three of its own frame intervals`() {
+        assertEquals(30_000L, VideoWallpaperRecovery.stallTimeoutMs(0.1f))
+    }
+
+    @Test
+    fun `a longer stall window is honoured`() {
+        val (state, _) = VideoWallpaperRecovery.onWatchdogSample(start, 5, isPlaying = true, nowMs = 0L)
+
+        val inside = VideoWallpaperRecovery.onWatchdogSample(state, 5, true, 29_999L, stallTimeoutMs = 30_000L)
+        val past = VideoWallpaperRecovery.onWatchdogSample(state, 5, true, 30_000L, stallTimeoutMs = 30_000L)
+
+        assertFalse(inside.second)
+        assertTrue(past.second)
     }
 }

@@ -212,9 +212,9 @@ data class LiveWallpaperSoakReport(
  *
  * Locking a canvas returns null so engines take their "surface not ready" path -
  * the harness is about lifecycle bookkeeping, not pixels. [getSurface] is real,
- * though: `MediaPlayer.setDisplay` reads it, and handing back a stub sends the
- * video engine down its failure branch, which would silently mean the player is
- * never built and never soaked.
+ * though: the video engine hands it to the player, and a stub would send the decoder
+ * down its failure branch on a device, which would silently mean real playback is
+ * never soaked.
  */
 class SoakSurfaceHolder(
     private val width: Int = 1080,
@@ -252,7 +252,7 @@ class SoakSurfaceHolder(
  *
  * @param onEngineCallback how to reach the thread the platform would deliver
  *   engine callbacks on. The JVM soak already runs on the main thread; the
- *   instrumented soak hands in `runOnMainSync` so Handlers and MediaPlayer see
+ *   instrumented soak hands in `runOnMainSync` so Handlers and the player see
  *   the same thread they would in production.
  */
 class LiveWallpaperSoakDriver(
