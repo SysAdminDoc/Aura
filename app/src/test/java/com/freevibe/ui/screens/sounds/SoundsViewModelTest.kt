@@ -281,7 +281,7 @@ class SoundsViewModelTest {
         advanceUntilIdle()
 
         val expectedError = if (isProviderAvailableInCurrentArtifact(ContentSource.YOUTUBE)) {
-            "Could not resolve audio stream URL"
+            "Couldn't get a playable audio link"
         } else {
             "This provider is unavailable in this Aura build."
         }
@@ -1261,6 +1261,8 @@ class SoundsViewModelTest {
         every { context.getString(R.string.sound_feedback_community_disabled) } returns
             "Community source is disabled in Settings"
         every { context.getString(R.string.feedback_report_submitted) } returns "Report submitted"
+        every { context.getString(R.string.sound_error_resolve_stream) } returns
+            "Couldn't get a playable audio link"
         every { context.getString(R.string.feedback_creator_blocked) } returns "Creator blocked"
         every { context.getString(R.string.feedback_upload_deleted) } returns "Upload deleted"
         every { context.getString(R.string.feedback_delete_failed, "Offline") } returns "Delete failed: Offline"

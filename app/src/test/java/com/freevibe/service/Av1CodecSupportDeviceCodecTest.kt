@@ -1,5 +1,6 @@
 package com.freevibe.service
 
+import android.media.MediaCodecInfo
 import android.media.MediaFormat
 import org.junit.After
 import org.junit.Assert.assertFalse
@@ -29,6 +30,7 @@ class Av1CodecSupportDeviceCodecTest {
                 .setCapabilities(
                     MediaCodecInfoBuilder.CodecCapabilitiesBuilder.newBuilder()
                         .setMediaFormat(format)
+                        .setColorFormats(intArrayOf(MediaCodecInfo.CodecCapabilities.COLOR_FormatYUV420Flexible))
                         .build(),
                 )
                 .build(),

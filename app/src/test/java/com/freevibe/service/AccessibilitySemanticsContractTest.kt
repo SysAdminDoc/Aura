@@ -135,7 +135,7 @@ class AccessibilitySemanticsContractTest {
                     "calculateZoom()",
                     "fun MillisecondField",
                     "AudioFadeCurve.entries",
-                    "AudioExportFormat.entries",
+                    "exportFormats.forEach { format ->",
                     "R.string.editor_sound_export_to_music",
                     "onClick(label = if (state.isPlaying) pausePreviewLabel else playPreviewLabel",
                     "onClick(label = applyLabel",
