@@ -47,6 +47,45 @@ class DatabaseMigrationTest {
     }
 
     @Test
+    fun migrate1ToCurrent_preservesFavoritesDownloadsAndSearchHistory() {
+        createVersion1Database()
+
+        helper.runMigrationsAndValidate(
+            TEST_DB,
+            CURRENT_SCHEMA_VERSION,
+            true,
+            *DatabaseMigrations.ALL_MIGRATIONS,
+        ).use { db ->
+            db.query(
+                """
+                SELECT source, fullUrl, name, offlinePath, tags, sourceAvailability
+                FROM favorites
+                WHERE id = 'fav-1'
+                """.trimIndent()
+            ).use { cursor ->
+                assertTrue(cursor.moveToFirst())
+                assertEquals("WALLHAVEN", cursor.getString(0))
+                assertEquals("https://example.com/full.jpg", cursor.getString(1))
+                assertEquals("Original favorite", cursor.getString(2))
+                assertEquals("/offline/fav-1.jpg", cursor.getString(3))
+                assertTrue(cursor.isNull(4))
+                assertEquals("AVAILABLE", cursor.getString(5))
+            }
+            db.query("SELECT source, localPath, name FROM downloads WHERE id = 'dl-1'").use { cursor ->
+                assertTrue(cursor.moveToFirst())
+                assertEquals("PEXELS", cursor.getString(0))
+                assertEquals("/downloads/dl-1.jpg", cursor.getString(1))
+                assertEquals("Original download", cursor.getString(2))
+            }
+            db.query("SELECT type, timestamp FROM search_history WHERE query = 'mountains'").use { cursor ->
+                assertTrue(cursor.moveToFirst())
+                assertEquals("WALLPAPER", cursor.getString(0))
+                assertEquals(1700000000002L, cursor.getLong(1))
+            }
+        }
+    }
+
+    @Test
     fun migrateEveryExportedSchemaVersionToCurrent() {
         for (startVersion in EXPORTED_SCHEMA_START_VERSION until CURRENT_SCHEMA_VERSION) {
             createEmptyExportedSchemaDatabase(startVersion)
@@ -286,6 +325,67 @@ class DatabaseMigrationTest {
                 """.trimIndent()
             )
             db.version = 14
+        }
+    }
+
+    // v1 predates schema export, so its tables are written out from what MIGRATION_1_2 through
+    // MIGRATION_7_8 assume already exists.
+    private fun createVersion1Database() {
+        val context = InstrumentationRegistry.getInstrumentation().targetContext
+        context.deleteDatabase(TEST_DB)
+        val dbFile = context.getDatabasePath(TEST_DB).apply { parentFile?.mkdirs() }
+        SQLiteDatabase.openOrCreateDatabase(dbFile, null).use { db ->
+            db.execSQL(
+                """
+                CREATE TABLE `favorites` (
+                    `id` TEXT NOT NULL, `source` TEXT NOT NULL, `type` TEXT NOT NULL,
+                    `thumbnailUrl` TEXT NOT NULL, `fullUrl` TEXT NOT NULL, `name` TEXT NOT NULL,
+                    `width` INTEGER NOT NULL, `height` INTEGER NOT NULL, `duration` REAL NOT NULL,
+                    `addedAt` INTEGER NOT NULL, `offlinePath` TEXT NOT NULL, PRIMARY KEY(`id`)
+                )
+                """.trimIndent()
+            )
+            db.execSQL(
+                """
+                CREATE TABLE `downloads` (
+                    `id` TEXT NOT NULL, `source` TEXT NOT NULL, `type` TEXT NOT NULL,
+                    `localPath` TEXT NOT NULL, `name` TEXT NOT NULL,
+                    `downloadedAt` INTEGER NOT NULL, PRIMARY KEY(`id`)
+                )
+                """.trimIndent()
+            )
+            db.execSQL(
+                """
+                CREATE TABLE `search_history` (
+                    `query` TEXT NOT NULL, `type` TEXT NOT NULL,
+                    `timestamp` INTEGER NOT NULL, PRIMARY KEY(`query`)
+                )
+                """.trimIndent()
+            )
+            db.execSQL(
+                """
+                INSERT INTO favorites (
+                    id, source, type, thumbnailUrl, fullUrl, name, width, height, duration, addedAt, offlinePath
+                ) VALUES (
+                    'fav-1', 'WALLHAVEN', 'WALLPAPER', 'https://example.com/thumb.jpg',
+                    'https://example.com/full.jpg', 'Original favorite', 1080, 1920, 0.0,
+                    1700000000000, '/offline/fav-1.jpg'
+                )
+                """.trimIndent()
+            )
+            db.execSQL(
+                """
+                INSERT INTO downloads (id, source, type, localPath, name, downloadedAt)
+                VALUES ('dl-1', 'PEXELS', 'WALLPAPER', '/downloads/dl-1.jpg', 'Original download', 1700000000001)
+                """.trimIndent()
+            )
+            db.execSQL(
+                """
+                INSERT INTO search_history (query, type, timestamp)
+                VALUES ('mountains', 'WALLPAPER', 1700000000002)
+                """.trimIndent()
+            )
+            db.version = 1
         }
     }
 
