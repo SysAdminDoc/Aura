@@ -873,7 +873,7 @@ internal fun wallpaperRotationSourceLabel(
         localFolderUri.isBlank() -> stringResource(R.string.settings_dialogs_source_local_folder_choose)
         else -> stringResource(R.string.settings_dialogs_source_local_folder_permission)
     }
-    else -> sourceDisplayName(source)
+    else -> localizedSourceName(source)
 }
 
 internal fun hasPersistedReadPermission(context: Context, uriString: String): Boolean {

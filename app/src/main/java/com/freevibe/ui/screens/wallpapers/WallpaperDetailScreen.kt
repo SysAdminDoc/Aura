@@ -1357,18 +1357,16 @@ internal fun sourceDisplayName(source: ContentSource): String = when (source) {
     ContentSource.JAMENDO -> "Jamendo"
     ContentSource.AUDIUS -> "Audius"
     ContentSource.CCMIXTER -> "ccMixter"
-    ContentSource.LOCAL -> "Local"
     ContentSource.YOUTUBE -> "YouTube"
     ContentSource.PEXELS -> "Pexels"
     ContentSource.PIXABAY -> "Pixabay"
     ContentSource.KLIPY -> "Klipy"
     ContentSource.SOUNDCLOUD -> "SoundCloud"
-    ContentSource.COMMUNITY -> "Community"
-    ContentSource.BUNDLED -> "Aura Originals"
-    ContentSource.AI_GENERATED -> "AI Generated"
     ContentSource.OPEN_METEO -> "Open-Meteo"
     ContentSource.LEMMY -> "Lemmy"
     ContentSource.TIKTOK -> "TikTok"
+    // Aura's own sources are named through Resources.wallpaperSourceName.
+    else -> source.name.lowercase(java.util.Locale.ROOT).replaceFirstChar { it.titlecase(java.util.Locale.ROOT) }
 }
 
 internal fun formatCompactCount(value: Int): String {

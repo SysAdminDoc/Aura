@@ -1132,7 +1132,7 @@ private fun SoundCard(
         sound.uploaderName != "Unknown" &&
         !(sound.source == ContentSource.BUNDLED && sound.uploaderName in setOf("Aura", "Aura Picks"))
     val sourceTone = soundSourceTone(sound.source)
-    val sourceLabel = sourceTone.label
+    val sourceLabel = LocalContext.current.resources.soundSourceName(sound.source)
     val sourceColor = sourceTone.colorForSurface()
     val playPreviewLabel = stringResource(R.string.a11y_play_preview)
     val pausePreviewLabel = stringResource(R.string.a11y_pause_preview)

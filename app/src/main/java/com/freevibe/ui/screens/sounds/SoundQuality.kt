@@ -1,5 +1,7 @@
 package com.freevibe.ui.screens.sounds
 
+import android.content.res.Resources
+import com.freevibe.R
 import com.freevibe.data.legal.ProviderMediaType
 import com.freevibe.data.legal.currentProviderPriorityBonus
 import com.freevibe.data.legal.orderedCurrentProviderCapabilities
@@ -129,8 +131,14 @@ internal fun soundFingerprint(sound: Sound): String {
     }
 }
 
+/** Aura's own sources read in the user's language; provider brands keep their own spelling. */
+internal fun Resources.soundSourceName(source: ContentSource): String = when (source) {
+    ContentSource.BUNDLED -> getString(R.string.sound_shuffle_originals_title)
+    ContentSource.COMMUNITY -> getString(R.string.sounds_tab_community)
+    else -> soundSourceLabel(source)
+}
+
 internal fun soundSourceLabel(source: ContentSource): String = when (source) {
-    ContentSource.BUNDLED -> "Aura Originals"
     ContentSource.YOUTUBE -> "YouTube"
     ContentSource.TIKTOK -> "TikTok"
     ContentSource.FREESOUND -> "Freesound"
@@ -139,7 +147,6 @@ internal fun soundSourceLabel(source: ContentSource): String = when (source) {
     ContentSource.AUDIUS -> "Audius"
     ContentSource.CCMIXTER -> "ccMixter"
     ContentSource.SOUNDCLOUD -> "SoundCloud"
-    ContentSource.COMMUNITY -> "Community"
     else -> source.name.lowercase(java.util.Locale.ROOT).replaceFirstChar { it.titlecase(java.util.Locale.ROOT) }
     }
 

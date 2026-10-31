@@ -27,6 +27,7 @@ import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.material3.TextButton
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.runtime.Composable
@@ -39,6 +40,8 @@ import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.freevibe.R
+import com.freevibe.data.model.ContentSource
+import com.freevibe.ui.screens.wallpapers.wallpaperSourceName
 import com.freevibe.service.BackgroundWorkDiagnostics
 import com.freevibe.service.BackgroundWorkStatusRow
 import com.freevibe.service.COMMUNITY_DELETION_REQUEST_SUBJECT
@@ -638,7 +641,7 @@ internal fun SourceDiagnosticRow(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                Text(sourceDisplayName(stat.source), style = MaterialTheme.typography.titleSmall)
+                Text(localizedSourceName(stat.source), style = MaterialTheme.typography.titleSmall)
                 HighlightPill(
                     label = when {
                         persistentFailure -> stringResource(R.string.settings_diag_source_persistent_failure)
@@ -792,6 +795,19 @@ private fun sourceRetryActionLabel(action: SourceMetrics.SourceRetryAction): Str
         SourceMetrics.SourceRetryAction.ENABLE_SOURCE ->
             stringResource(R.string.settings_diag_source_retry_enable_source)
     }
+
+/** Aura's own source keys read in the user's language; provider keys keep their title-cased spelling. */
+@Composable
+internal fun localizedSourceName(source: String): String {
+    val own = when (source.lowercase(java.util.Locale.ROOT)) {
+        "community" -> ContentSource.COMMUNITY
+        "local" -> ContentSource.LOCAL
+        "ai_generated" -> ContentSource.AI_GENERATED
+        "bundled" -> ContentSource.BUNDLED
+        else -> null
+    }
+    return if (own != null) LocalContext.current.resources.wallpaperSourceName(own) else sourceDisplayName(source)
+}
 
 internal fun sourceDisplayName(source: String): String =
     source.split('_', '-')

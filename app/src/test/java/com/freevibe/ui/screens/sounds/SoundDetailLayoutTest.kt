@@ -116,14 +116,14 @@ class SoundDetailLayoutTest {
             lightSurfaces.forEach { surface ->
                 val ratio = contrastRatio(tone.onLight, surface)
                 assertTrue(
-                    "${tone.label} light tone is $ratio:1 on $surface, below 4.5:1",
+                    "${source.name} light tone is $ratio:1 on $surface, below 4.5:1",
                     ratio >= 4.5,
                 )
             }
             darkSurfaces.forEach { surface ->
                 val ratio = contrastRatio(tone.onDark, surface)
                 assertTrue(
-                    "${tone.label} dark tone is $ratio:1 on $surface, below 4.5:1",
+                    "${source.name} dark tone is $ratio:1 on $surface, below 4.5:1",
                     ratio >= 4.5,
                 )
             }

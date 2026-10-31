@@ -17,7 +17,6 @@ import com.freevibe.data.model.ContentSource
  * `SoundSourceToneContrastTest`.
  */
 internal data class SoundSourceTone(
-    val label: String,
     /** Used on light surfaces. */
     val onLight: Color,
     /** Used on dark/AMOLED surfaces. */
@@ -25,17 +24,17 @@ internal data class SoundSourceTone(
 )
 
 internal fun soundSourceTone(source: ContentSource): SoundSourceTone = when (source) {
-    ContentSource.BUNDLED -> SoundSourceTone("Aura Originals", Color(0xFF8A6100), Color(0xFFFFC94D))
-    ContentSource.YOUTUBE -> SoundSourceTone("YouTube", Color(0xFFC62828), Color(0xFFFF6B6B))
-    ContentSource.TIKTOK -> SoundSourceTone("TikTok", Color(0xFF00707A), Color(0xFF25F4EE))
-    ContentSource.FREESOUND -> SoundSourceTone("Freesound", Color(0xFF00697F), Color(0xFF6FD3E8))
-    ContentSource.JAMENDO -> SoundSourceTone("Jamendo", Color(0xFF5E35B1), Color(0xFFB39DDB))
-    ContentSource.WIKIMEDIA -> SoundSourceTone("Wikimedia", Color(0xFF00639A), Color(0xFF6EC1F5))
-    ContentSource.AUDIUS -> SoundSourceTone("Audius", Color(0xFF00695C), Color(0xFF4DD9C4))
-    ContentSource.CCMIXTER -> SoundSourceTone("ccMixter", Color(0xFF8E24AA), Color(0xFFDDA0E8))
-    ContentSource.SOUNDCLOUD -> SoundSourceTone("SoundCloud", Color(0xFFBF3B00), Color(0xFFFF8A50))
-    ContentSource.COMMUNITY -> SoundSourceTone("Community", Color(0xFF2E7D32), Color(0xFF7BD182))
-    else -> SoundSourceTone(soundSourceLabel(source), Color(0xFF455A64), Color(0xFFA6BCC7))
+    ContentSource.BUNDLED -> SoundSourceTone(Color(0xFF8A6100), Color(0xFFFFC94D))
+    ContentSource.YOUTUBE -> SoundSourceTone(Color(0xFFC62828), Color(0xFFFF6B6B))
+    ContentSource.TIKTOK -> SoundSourceTone(Color(0xFF00707A), Color(0xFF25F4EE))
+    ContentSource.FREESOUND -> SoundSourceTone(Color(0xFF00697F), Color(0xFF6FD3E8))
+    ContentSource.JAMENDO -> SoundSourceTone(Color(0xFF5E35B1), Color(0xFFB39DDB))
+    ContentSource.WIKIMEDIA -> SoundSourceTone(Color(0xFF00639A), Color(0xFF6EC1F5))
+    ContentSource.AUDIUS -> SoundSourceTone(Color(0xFF00695C), Color(0xFF4DD9C4))
+    ContentSource.CCMIXTER -> SoundSourceTone(Color(0xFF8E24AA), Color(0xFFDDA0E8))
+    ContentSource.SOUNDCLOUD -> SoundSourceTone(Color(0xFFBF3B00), Color(0xFFFF8A50))
+    ContentSource.COMMUNITY -> SoundSourceTone(Color(0xFF2E7D32), Color(0xFF7BD182))
+    else -> SoundSourceTone(Color(0xFF455A64), Color(0xFFA6BCC7))
 }
 
 /**
