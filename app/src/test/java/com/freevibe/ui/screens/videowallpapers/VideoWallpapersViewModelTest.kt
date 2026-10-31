@@ -155,6 +155,7 @@ class VideoWallpapersViewModelTest {
         // Cache access runs on the IO dispatcher, so the fake store is shared across threads.
         val cacheValues = java.util.Collections.synchronizedMap(mutableMapOf<String, Any?>())
         every { context.applicationContext } returns context
+        every { context.getString(com.freevibe.R.string.video_wp_pixabay_fallback_title) } returns "Pixabay video"
         every {
             context.getSharedPreferences("freevibe_pixabay_video_cache", Context.MODE_PRIVATE)
         } returns cachePreferences
