@@ -871,6 +871,7 @@ class VideoWallpapersViewModelTest {
                 pixabayVideo(id = 2, duration = 90, mediumUrl = "https://cdn.example.com/two.mp4"),
                 pixabayVideo(id = 3, duration = 10, mediumUrl = ""),
             ),
+            fallbackTitle = "Pixabay video",
         )
 
         assertEquals(listOf("pbv_1"), result.items.map { it.id })

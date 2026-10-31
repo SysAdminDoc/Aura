@@ -397,6 +397,7 @@ internal fun mapYouTubeVideoSearchItem(
 
 internal fun mapPixabayVideosToMetadata(
     videos: List<PixabayVideo>,
+    fallbackTitle: String,
 ): PixabayVideoMetadataResult {
     val urls = linkedMapOf<String, String>()
     val items = videos.filter { it.duration in 2..60 }.mapNotNull { video ->
@@ -409,7 +410,7 @@ internal fun mapPixabayVideosToMetadata(
                     .split(",")
                     .take(3)
                     .joinToString(" ") { tag -> tag.trim() }
-                    .ifBlank { context.getString(com.freevibe.R.string.video_wp_pixabay_fallback_title) },
+                    .ifBlank { fallbackTitle },
                 thumbnailUrl = video.thumbnailUrl,
                 source = "Pixabay",
                 duration = video.duration.toLong(),
@@ -1477,7 +1478,10 @@ class VideoWallpapersViewModel @Inject constructor(
                     perPage = spec.perPage,
                 )
             }
-            mapPixabayVideosToMetadata(response.hits)
+            mapPixabayVideosToMetadata(
+                response.hits,
+                context.getString(com.freevibe.R.string.video_wp_pixabay_fallback_title),
+            )
                 .also { result ->
                     if (result.items.isNotEmpty()) writePixabayVideoCache(cacheKey, result)
                 }
