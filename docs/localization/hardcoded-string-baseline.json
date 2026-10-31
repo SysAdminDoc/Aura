@@ -102,7 +102,16 @@
     },
     {
       "count": 1,
-      "firstLine": 147,
+      "firstLine": 102,
+      "id": "4b464d452241ba3e",
+      "path": "app/src/main/java/com/freevibe/ui/screens/licenses/GeneratedDependencyNotices.kt",
+      "reason": "SPDX-style license name recognized in notice text; license names are not translated.",
+      "sink": "whenBranch",
+      "text": "Apache 2.0"
+    },
+    {
+      "count": 1,
+      "firstLine": 149,
       "id": "2ed0c623602b4f1e",
       "path": "app/src/main/java/com/freevibe/ui/screens/sounds/SoundQuality.kt",
       "reason": "Provider brand name, spelled the same in every locale.",
@@ -111,7 +120,7 @@
     },
     {
       "count": 1,
-      "firstLine": 144,
+      "firstLine": 146,
       "id": "ab7aed23ad62eba8",
       "path": "app/src/main/java/com/freevibe/ui/screens/sounds/SoundQuality.kt",
       "reason": "Provider brand name, spelled the same in every locale.",
@@ -120,7 +129,7 @@
     },
     {
       "count": 1,
-      "firstLine": 145,
+      "firstLine": 147,
       "id": "b86ea437a1af9136",
       "path": "app/src/main/java/com/freevibe/ui/screens/sounds/SoundQuality.kt",
       "reason": "Provider brand name, spelled the same in every locale.",
@@ -129,7 +138,7 @@
     },
     {
       "count": 1,
-      "firstLine": 149,
+      "firstLine": 151,
       "id": "7d84c1f290e21014",
       "path": "app/src/main/java/com/freevibe/ui/screens/sounds/SoundQuality.kt",
       "reason": "Provider brand name, spelled the same in every locale.",
@@ -138,7 +147,7 @@
     },
     {
       "count": 1,
-      "firstLine": 143,
+      "firstLine": 145,
       "id": "3ebcfbaac6648cf5",
       "path": "app/src/main/java/com/freevibe/ui/screens/sounds/SoundQuality.kt",
       "reason": "Provider brand name, spelled the same in every locale.",
@@ -147,7 +156,7 @@
     },
     {
       "count": 1,
-      "firstLine": 146,
+      "firstLine": 148,
       "id": "909e3dcb00d1be47",
       "path": "app/src/main/java/com/freevibe/ui/screens/sounds/SoundQuality.kt",
       "reason": "Provider brand name, spelled the same in every locale.",
@@ -156,7 +165,7 @@
     },
     {
       "count": 1,
-      "firstLine": 142,
+      "firstLine": 144,
       "id": "83084ba2211abb04",
       "path": "app/src/main/java/com/freevibe/ui/screens/sounds/SoundQuality.kt",
       "reason": "Provider brand name, spelled the same in every locale.",
@@ -216,6 +225,15 @@
       "reason": "Provider brand name passed as the format argument of a translated sentence; brands are not translated.",
       "sink": "textBuilder",
       "text": "Wallhaven"
+    },
+    {
+      "count": 1,
+      "firstLine": 1353,
+      "id": "97a82f55243fa098",
+      "path": "app/src/main/java/com/freevibe/ui/screens/wallpapers/WallpaperDetailScreen.kt",
+      "reason": "Provider brand name in the source display-name table; brands keep their own spelling.",
+      "sink": "whenBranch",
+      "text": "Internet Archive"
     },
     {
       "count": 1,

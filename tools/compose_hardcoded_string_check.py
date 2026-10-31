@@ -77,6 +77,13 @@ BLANK_DEFAULT_RE = re.compile(
     re.DOTALL,
 )
 
+# A whole sentence as the result of a when branch, e.g. `error = when { failed -> "Sources are down." }`.
+# The state is assigned from the when, not from a literal, so no named-argument sink sees it.
+WHEN_BRANCH_RE = re.compile(
+    r"->\s*(?P<literal>" + STRING_LITERAL_PATTERN + r")[ \t]*(?=$|,|//|\))",
+    re.MULTILINE,
+)
+
 # Plain functions that build spoken or visible text. Their prose literals are findings even when
 # no Compose sink is in sight, since the result reaches TalkBack or a Text later.
 TEXT_BUILDER_FUNCTION_RE = re.compile(
@@ -189,6 +196,12 @@ def is_prose_literal(value: str) -> bool:
     if not re.search(r"[a-z]{2,}", stripped):
         return False
     return " " in stripped or bool(re.match(r"[A-Z][a-z]", stripped))
+
+
+def is_sentence_literal(value: str) -> bool:
+    """Several words starting with a capital: the shape of a message, not a key or a unit."""
+    stripped = FORMAT_OR_TEMPLATE_RE.sub("", value).strip()
+    return bool(re.match(r"[A-Z]", stripped)) and " " in stripped and is_prose_literal(value)
 
 
 def is_lone_output_word(text: str, start: int, end: int, value: str) -> bool:
@@ -336,6 +349,14 @@ def iter_file_findings(path: Path, repo_root: Path) -> list[Finding]:
                 continue
             claimed.add((line, value))
             findings.append(Finding(path=relative_path, sink=sink, text=value, line=line))
+
+    for match in WHEN_BRANCH_RE.finditer(text):
+        value = decode_kotlin_string(match.group("literal"))
+        line = line_number_for_offset(text, match.start("literal"))
+        if (line, value) in claimed or not is_sentence_literal(value):
+            continue
+        claimed.add((line, value))
+        findings.append(Finding(path=relative_path, sink="whenBranch", text=value, line=line))
     return findings
 
 

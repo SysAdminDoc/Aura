@@ -113,7 +113,7 @@ def validate_community_identity_laziness(repo_root: Path) -> dict[str, int | str
     provider_text = read_text(repo_root / "app/src/main/java/com/freevibe/service/CommunityIdentityProvider.kt")
     if "currentIdentitySummary" not in provider_text or "hasFirebaseIdentity" not in provider_text:
         raise CommunityIdentityLazinessError("Community identity summary must expose auth state without forcing sign-in")
-    if 'identitySuffix = displayId?.let(::communityIdentitySuffix) ?: "Not created"' not in provider_text:
+    if 'identitySuffix = displayId?.let(::communityIdentitySuffix) ?: IDENTITY_SUFFIX_NOT_CREATED' not in provider_text or 'const val IDENTITY_SUFFIX_NOT_CREATED = "Not created"' not in provider_text:
         raise CommunityIdentityLazinessError("Community identity summary must keep fresh installs in the Not created state")
 
     lazy_write_count = 0
@@ -124,7 +124,7 @@ def validate_community_identity_laziness(repo_root: Path) -> dict[str, int | str
         lazy_write_count += text.count("ensureSignedIn(")
 
     settings_text = read_settings_surface_text(repo_root)
-    if "communityIdentitySummary" not in settings_text or "Not created" not in settings_text:
+    if "communityIdentitySummary" not in settings_text or "IDENTITY_SUFFIX_NOT_CREATED" not in settings_text:
         raise CommunityIdentityLazinessError("Settings must expose current community identity state before deletion/cleanup actions")
 
     moderation_listener_count = validate_moderation_listener_consent(repo_root)

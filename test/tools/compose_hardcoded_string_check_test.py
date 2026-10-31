@@ -363,6 +363,41 @@ class ComposeHardcodedStringCheckTest(unittest.TestCase):
 
             self.assertEqual({"selected", "ready", "playing"}, builder)
 
+    def test_flags_a_sentence_returned_from_a_when_branch_in_state(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            repo_root = Path(temp_dir)
+            (repo_root / "app/src/full/java/com/freevibe/ui").mkdir(parents=True)
+            write_text(
+                repo_root / "app/src/main/java/com/freevibe/ui/FeedViewModel.kt",
+                "\n".join(
+                    [
+                        "package com.freevibe.ui",
+                        "",
+                        "fun update(state: State, failed: Boolean, partial: Boolean) = state.copy(",
+                        "    error = when {",
+                        "        failed -> context.getString(R.string.feed_failed)",
+                        '        partial -> "Limited source availability right now."',
+                        '        state.items.isEmpty() -> "Nothing here yet" // shown as-is',
+                        '        failed && partial -> "Retry the %s sources now."',
+                        "        else -> null",
+                        "    },",
+                        "    kind = when (state.kind) {",
+                        '        "wallpaper" -> "image"',
+                        '        "Mixed Feed" -> "Video"',
+                        '        else -> "QHD"',
+                        "    },",
+                        ")",
+                    ]
+                ),
+            )
+
+            branches = {text for sink, text in scan(repo_root) if sink == "whenBranch"}
+
+            self.assertEqual(
+                {"Limited source availability right now.", "Nothing here yet", "Retry the %s sources now."},
+                branches,
+            )
+
     def test_live_baseline_is_valid(self):
         repo_root = Path(__file__).resolve().parents[2]
         baseline_path = repo_root / BASELINE
