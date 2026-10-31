@@ -795,7 +795,7 @@ class VideoWallpaperService : WallpaperService() {
             }
             try {
                 ContextCompat.registerReceiver(
-                    this,
+                    this@VideoWallpaperService,
                     powerSaveReceiver,
                     filter,
                     ContextCompat.RECEIVER_NOT_EXPORTED,
