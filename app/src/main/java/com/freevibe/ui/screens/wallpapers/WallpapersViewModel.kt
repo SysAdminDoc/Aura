@@ -423,7 +423,6 @@ class WallpapersViewModel @Inject constructor(
     ) = community.uploadCommunityWallpaper(localUri, name, category, tags, rights, isAiGenerated)
 
     // -- Collections --
-
     val collections = collectionRepo.getAll()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
@@ -436,7 +435,6 @@ class WallpapersViewModel @Inject constructor(
     }
 
     // -- Color extraction (Material You preview) --
-
     private val _colorPalette = MutableStateFlow<ColorExtractor.WallpaperPalette?>(null)
     val colorPalette = _colorPalette.asStateFlow()
     private var colorExtractionJob: Job? = null

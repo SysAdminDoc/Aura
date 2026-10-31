@@ -2409,4 +2409,15 @@
     <string name="video_wp_sources_stale">视频源暂时不可用，正在显示上次的有效结果。</string>
     <string name="video_wp_sources_unavailable">视频源暂时不可用。</string>
     <string name="video_wp_sources_limited">部分视频源暂时没有响应。</string>
+    <string name="sound_badge_ai">AI 生成</string>
+    <string name="sound_badge_ringtone_ready">适合做铃声</string>
+    <string name="sound_badge_notification_ready">适合做通知音</string>
+    <string name="sound_badge_alarm_ready">适合做闹钟</string>
+    <string name="sound_badge_importable">可导入</string>
+    <string name="sound_badge_quick_pick">快速精选</string>
+    <string name="sound_badge_clean_intro">开头干净</string>
+    <string name="sound_badge_calm">舒缓</string>
+    <string name="sound_badge_punchy">有力</string>
+    <string name="sound_badge_short">简短</string>
+    <string name="licenses_notice_fallback">第三方声明</string>
 </resources>

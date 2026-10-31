@@ -2628,4 +2628,15 @@
     <string name="video_wp_sources_stale">Video sources are unavailable right now. Showing your last good results.</string>
     <string name="video_wp_sources_unavailable">Video sources are unavailable right now.</string>
     <string name="video_wp_sources_limited">Some video sources aren\'t responding right now.</string>
+    <string name="sound_badge_ai">AI-generated</string>
+    <string name="sound_badge_ringtone_ready">Ringtone-ready</string>
+    <string name="sound_badge_notification_ready">Notification-ready</string>
+    <string name="sound_badge_alarm_ready">Alarm-ready</string>
+    <string name="sound_badge_importable">Importable</string>
+    <string name="sound_badge_quick_pick">Quick pick</string>
+    <string name="sound_badge_clean_intro">Clean intro</string>
+    <string name="sound_badge_calm">Calm</string>
+    <string name="sound_badge_punchy">Punchy</string>
+    <string name="sound_badge_short">Short</string>
+    <string name="licenses_notice_fallback">Third-party notice</string>
 </resources>
