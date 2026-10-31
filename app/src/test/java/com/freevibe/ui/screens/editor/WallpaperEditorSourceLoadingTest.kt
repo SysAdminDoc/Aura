@@ -2,11 +2,14 @@ package com.freevibe.ui.screens.editor
 
 import android.content.Context
 import android.graphics.Bitmap
+import androidx.lifecycle.viewModelScope
 import com.freevibe.service.DepthPortraitComposer
 import com.freevibe.service.WallpaperApplier
 import io.mockk.mockk
 import java.io.File
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withTimeout
@@ -53,7 +56,12 @@ class WallpaperEditorSourceLoadingTest {
     }
 
     @After
-    fun tearDown() = Dispatchers.resetMain()
+    fun tearDown() {
+        // A render runs on the real Default dispatcher, and a cancelled one still hops back to Main when it
+        // ends. Wait here so it can't land on the next test's dispatcher.
+        runBlocking { viewModel.viewModelScope.coroutineContext[Job]!!.cancelAndJoin() }
+        Dispatchers.resetMain()
+    }
 
     private fun bitmap(width: Int = 8, height: Int = 8): Bitmap =
         Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)

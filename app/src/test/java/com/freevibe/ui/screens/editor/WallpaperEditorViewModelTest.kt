@@ -2,6 +2,7 @@ package com.freevibe.ui.screens.editor
 
 import android.content.Context
 import android.graphics.Bitmap
+import androidx.lifecycle.viewModelScope
 import app.cash.turbine.test
 import com.freevibe.R
 import com.freevibe.data.model.WallpaperTarget
@@ -13,6 +14,9 @@ import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.cancelAndJoin
+import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
@@ -52,6 +56,9 @@ class WallpaperEditorViewModelTest {
 
     @After
     fun tearDown() {
+        // A render runs on the real Default dispatcher, and a cancelled one still hops back to Main when it
+        // ends. Wait here so it can't land on the next test's dispatcher.
+        runBlocking { viewModel.viewModelScope.coroutineContext[Job]!!.cancelAndJoin() }
         Dispatchers.resetMain()
     }
 
