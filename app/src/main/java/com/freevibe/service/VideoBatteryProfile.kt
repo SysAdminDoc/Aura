@@ -1,5 +1,10 @@
 package com.freevibe.service
 
+import androidx.annotation.StringRes
+import com.freevibe.R
+import com.freevibe.util.UiText
+import com.freevibe.util.uiText
+
 internal const val VIDEO_PREFS_NAME = "freevibe_prefs"
 internal const val VIDEO_STATS_PREFS_NAME = "freevibe_video_stats"
 internal const val VIDEO_FPS_LIMIT_PREF = "video_fps_limit"
@@ -60,19 +65,20 @@ internal fun effectiveVideoFpsLimit(
     return if (lowBatterySaverActive) minOf(sanitized, 15) else sanitized
 }
 
+@StringRes
 internal fun videoBatteryImpactLabel(
     requestedFps: Int,
     fpsOverlayEnabled: Boolean,
     lowBatterySaverActive: Boolean,
     motionPausedForPowerSave: Boolean = false,
-): String {
-    if (motionPausedForPowerSave) return "System Battery Saver"
-    if (lowBatterySaverActive) return "Low battery saver"
+): Int {
+    if (motionPausedForPowerSave) return R.string.video_battery_impact_system_saver
+    if (lowBatterySaverActive) return R.string.video_battery_impact_low_battery
     val sanitized = sanitizeVideoFpsLimit(requestedFps)
     return when {
-        sanitized <= 15 -> "Light"
-        sanitized >= 60 || fpsOverlayEnabled -> "High"
-        else -> "Balanced"
+        sanitized <= 15 -> R.string.video_battery_impact_light
+        sanitized >= 60 || fpsOverlayEnabled -> R.string.video_battery_impact_high
+        else -> R.string.video_battery_impact_balanced
     }
 }
 
@@ -82,17 +88,19 @@ internal fun videoBatteryImpactSummary(
     fpsOverlayEnabled: Boolean,
     lowBatterySaverActive: Boolean,
     motionPausedForPowerSave: Boolean = false,
-): String {
-    val impact = videoBatteryImpactLabel(
-        requestedFps = requestedFps,
-        fpsOverlayEnabled = fpsOverlayEnabled,
-        lowBatterySaverActive = lowBatterySaverActive,
-        motionPausedForPowerSave = motionPausedForPowerSave,
+): UiText {
+    val impact = uiText(
+        videoBatteryImpactLabel(
+            requestedFps = requestedFps,
+            fpsOverlayEnabled = fpsOverlayEnabled,
+            lowBatterySaverActive = lowBatterySaverActive,
+            motionPausedForPowerSave = motionPausedForPowerSave,
+        ),
     )
     return when {
-        motionPausedForPowerSave -> "$impact - static frame until saver exits"
-        lowBatterySaverActive -> "$impact - capped at ${effectiveFps} FPS until battery recovers"
-        fpsOverlayEnabled -> "$impact - ${effectiveFps} FPS target with debug overlay enabled"
-        else -> "$impact - ${effectiveFps} FPS target"
+        motionPausedForPowerSave -> uiText(R.string.video_battery_summary_static, impact)
+        lowBatterySaverActive -> uiText(R.string.video_battery_summary_capped, impact, effectiveFps)
+        fpsOverlayEnabled -> uiText(R.string.video_battery_summary_overlay, impact, effectiveFps)
+        else -> uiText(R.string.video_battery_summary_target, impact, effectiveFps)
     }
 }

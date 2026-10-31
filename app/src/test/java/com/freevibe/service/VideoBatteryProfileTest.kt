@@ -1,11 +1,21 @@
 package com.freevibe.service
 
+import android.app.Application
+import android.content.Context
+import androidx.test.core.app.ApplicationProvider
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
+import org.junit.runner.RunWith
+import org.robolectric.RobolectricTestRunner
+import org.robolectric.annotation.Config
 
+@RunWith(RobolectricTestRunner::class)
+@Config(sdk = [35], application = Application::class)
 class VideoBatteryProfileTest {
+
+    private val context: Context = ApplicationProvider.getApplicationContext()
 
     @Test
     fun `sanitizeVideoFpsLimit keeps supported steps`() {
@@ -73,32 +83,32 @@ class VideoBatteryProfileTest {
     @Test
     fun `videoBatteryImpactSummary names active tradeoff`() {
         assertEquals(
-            "Balanced - 30 FPS target",
+            "Balanced, 30 FPS target",
             videoBatteryImpactSummary(
                 requestedFps = 30,
                 effectiveFps = 30,
                 fpsOverlayEnabled = false,
                 lowBatterySaverActive = false,
-            ),
+            ).resolve(context),
         )
         assertEquals(
-            "Low battery saver - capped at 15 FPS until battery recovers",
+            "Low battery saver, capped at 15 FPS until the battery recovers",
             videoBatteryImpactSummary(
                 requestedFps = 60,
                 effectiveFps = 15,
                 fpsOverlayEnabled = false,
                 lowBatterySaverActive = true,
-            ),
+            ).resolve(context),
         )
         assertEquals(
-            "System Battery Saver - static frame until saver exits",
+            "System Battery Saver, still frame until the saver turns off",
             videoBatteryImpactSummary(
                 requestedFps = 60,
                 effectiveFps = 60,
                 fpsOverlayEnabled = false,
                 lowBatterySaverActive = false,
                 motionPausedForPowerSave = true,
-            ),
+            ).resolve(context),
         )
     }
 }

@@ -160,7 +160,7 @@ class AndroidRotationHealthReader @Inject constructor(
         )
     }.getOrElse { error ->
         WorkReading(
-            state = "WorkInfo read failed",
+            state = WORK_INFO_STATUS_READ_FAILED,
             nextFireUtc = null,
             stopReason = null,
             readError = error.javaClass.simpleName,

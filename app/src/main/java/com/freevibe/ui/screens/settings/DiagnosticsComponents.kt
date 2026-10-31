@@ -41,6 +41,11 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.freevibe.R
 import com.freevibe.data.model.ContentSource
+import com.freevibe.service.ROTATION_HOLD_OFFLINE
+import com.freevibe.service.ROTATION_HOLD_WIFI
+import com.freevibe.service.WORK_INFO_STATUS_NONE
+import com.freevibe.service.WORK_INFO_STATUS_READ_FAILED
+import com.freevibe.service.WORK_INFO_STATUS_UNAVAILABLE
 import com.freevibe.ui.screens.wallpapers.wallpaperSourceName
 import com.freevibe.service.BackgroundWorkDiagnostics
 import com.freevibe.service.BackgroundWorkStatusRow
@@ -68,6 +73,43 @@ import java.util.Locale
 
 // -- Subtitle formatters --
 
+/** The reader keeps Android's own wording for the support bundle. Screens show this. */
+@Composable
+internal fun dataSaverStatusLabel(status: String): String = stringResource(
+    when (status) {
+        "disabled" -> R.string.settings_diag_data_saver_off
+        "whitelisted" -> R.string.settings_diag_data_saver_exempt
+        "enabled" -> R.string.settings_diag_data_saver_on
+        else -> R.string.settings_diag_data_saver_unknown
+    },
+)
+
+/** A live state such as ENQUEUED=1 is WorkManager's own name and stays as it is. */
+@Composable
+internal fun workInfoStatusText(status: String): String = when (status) {
+    WORK_INFO_STATUS_NONE -> stringResource(R.string.settings_diag_workinfo_none)
+    WORK_INFO_STATUS_UNAVAILABLE -> stringResource(R.string.settings_diag_workinfo_unavailable)
+    WORK_INFO_STATUS_READ_FAILED -> stringResource(R.string.settings_diag_workinfo_read_failed)
+    else -> status
+}
+
+@Composable
+internal fun workResultLabel(result: String): String = when (result.lowercase(Locale.ROOT)) {
+    "success" -> stringResource(R.string.settings_diag_result_success)
+    "retry" -> stringResource(R.string.settings_diag_result_retry)
+    "failure" -> stringResource(R.string.settings_diag_result_failure)
+    "deferred" -> stringResource(R.string.settings_diag_result_deferred)
+    else -> result
+}
+
+/** The two waits anyone can act on read in their language. Other receipts are the worker's log line. */
+@Composable
+internal fun receiptReasonText(reason: String): String = when (reason) {
+    ROTATION_HOLD_WIFI -> stringResource(R.string.rotation_waiting_for_wifi)
+    ROTATION_HOLD_OFFLINE -> stringResource(R.string.rotation_waiting_offline)
+    else -> reason
+}
+
 @Composable
 internal fun backgroundWorkDiagnosticsSubtitle(status: BackgroundWorkDiagnostics): String {
     if (status.rows.isEmpty()) return stringResource(R.string.settings_diag_background_check_subtitle)
@@ -76,7 +118,7 @@ internal fun backgroundWorkDiagnosticsSubtitle(status: BackgroundWorkDiagnostics
         R.string.settings_diag_background_status_subtitle,
         pluralStringResource(R.plurals.settings_diag_workinfo_receipts, receiptCount, receiptCount),
         meteredNetworkLabel(status.network.activeNetworkMetered),
-        status.network.restrictBackgroundStatus,
+        dataSaverStatusLabel(status.network.restrictBackgroundStatus),
     )
 }
 
@@ -183,12 +225,9 @@ internal fun ytDlpUpdateSubtitle(
     val version = snapshot.activeVersionName
         ?: snapshot.activeVersion
         ?: stringResource(R.string.settings_ytdlp_update_version_unknown)
-    val lastCheck = if (snapshot.lastAttemptAtMs > 0L) {
-        DateFormat.getDateTimeInstance(DateFormat.SHORT, DateFormat.SHORT)
-            .format(Date(snapshot.lastAttemptAtMs))
-    } else {
-        stringResource(R.string.settings_ytdlp_update_never_checked)
-    }
+    if (snapshot.lastAttemptAtMs <= 0L) return stringResource(R.string.settings_ytdlp_update_status_unchecked, version)
+    val lastCheck = DateFormat.getDateTimeInstance(DateFormat.SHORT, DateFormat.SHORT)
+        .format(Date(snapshot.lastAttemptAtMs))
     return stringResource(
         R.string.settings_ytdlp_update_status,
         version,
@@ -373,7 +412,7 @@ internal fun BackgroundWorkDiagnosticsSummary(status: BackgroundWorkDiagnostics)
         )
         DiagnosticMetricPill(
             stringResource(R.string.settings_diag_metric_data_saver),
-            network.restrictBackgroundStatus,
+            dataSaverStatusLabel(network.restrictBackgroundStatus),
             if (network.restrictBackgroundStatus == "enabled") {
                 MaterialTheme.colorScheme.error
             } else {
@@ -404,7 +443,7 @@ internal fun BackgroundWorkDiagnosticsSummary(status: BackgroundWorkDiagnostics)
         stringResource(
             R.string.settings_diag_background_oem_guidance,
             status.batteryGuidance.manufacturer,
-            status.batteryGuidance.summary,
+            status.batteryGuidance.summary.resolve(LocalContext.current),
         ),
         style = MaterialTheme.typography.bodySmall,
         color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -435,7 +474,7 @@ internal fun BackgroundWorkDiagnosticRow(row: BackgroundWorkStatusRow) {
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Column(modifier = Modifier.weight(1f)) {
-                    Text(row.label, style = MaterialTheme.typography.titleSmall)
+                    Text(row.labelRes?.let { stringResource(it) } ?: row.label, style = MaterialTheme.typography.titleSmall)
                     Text(
                         row.uniqueWorkName,
                         style = MaterialTheme.typography.bodySmall,
@@ -457,7 +496,7 @@ internal fun BackgroundWorkDiagnosticRow(row: BackgroundWorkStatusRow) {
                 )
             }
             Text(
-                row.workInfoStatus,
+                workInfoStatusText(row.workInfoStatus),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
@@ -475,7 +514,7 @@ internal fun BackgroundWorkDiagnosticRow(row: BackgroundWorkStatusRow) {
             }
             row.lastResult?.let { result ->
                 Text(
-                    stringResource(R.string.settings_diag_last_result, result),
+                    stringResource(R.string.settings_diag_last_result, workResultLabel(result)),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
@@ -497,14 +536,14 @@ internal fun BackgroundWorkDiagnosticRow(row: BackgroundWorkStatusRow) {
             }
             row.lastDeferralReason?.let { reason ->
                 Text(
-                    stringResource(R.string.settings_diag_deferral, reason),
+                    stringResource(R.string.settings_diag_deferral, receiptReasonText(reason)),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
             row.actionHint?.let { hint ->
                 Text(
-                    stringResource(R.string.settings_diag_action, hint),
+                    stringResource(R.string.settings_diag_action, hint.resolve(LocalContext.current)),
                     style = MaterialTheme.typography.bodySmall,
                     // A run that waited for a connection has nothing to fix, so its hint isn't an error.
                     color = if (row.lastResult == "success" || row.lastResult == "deferred") {

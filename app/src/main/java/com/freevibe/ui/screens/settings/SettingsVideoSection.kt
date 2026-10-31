@@ -15,6 +15,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import com.freevibe.R
 import com.freevibe.data.model.RedditFeedMediaType
@@ -77,7 +78,7 @@ internal fun VideoSettingsSection(
                 fpsOverlayEnabled = videoBatteryDashboard.fpsOverlayEnabled,
                 lowBatterySaverActive = videoBatteryDashboard.lowBatterySaverActive,
                 motionPausedForPowerSave = videoBatteryDashboard.motionPausedForPowerSave,
-            ),
+            ).resolve(LocalContext.current),
             onClick = { showFpsPicker = true },
         )
         SettingsItem(

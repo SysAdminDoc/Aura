@@ -1,5 +1,6 @@
 package com.freevibe.service
 
+import com.freevibe.util.UiText
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -192,11 +193,12 @@ class CrashDiagnosticsTextTest {
                         lastErrorClass = "IOException",
                         lastResult = "retry",
                         lastDeferralReason = "network unavailable",
-                        actionHint = "Check connection and provider availability; WorkManager will retry with exponential backoff.",
+                        actionHint = UiText.Plain("Check connection and provider availability; WorkManager will retry with exponential backoff."),
                     ),
                 ),
+                batteryGuidance = BackgroundBatteryGuidance("Android", UiText.Plain("Open App info > Battery for Aura")),
             ),
-        )
+        ) { (it as UiText.Plain).text }
 
         assertTrue(section.startsWith("## Background work live receipts"))
         assertTrue(section.contains("meter=unmetered"))

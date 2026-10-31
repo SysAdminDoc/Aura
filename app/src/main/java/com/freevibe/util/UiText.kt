@@ -1,11 +1,13 @@
 package com.freevibe.util
 
 import android.content.Context
+import android.content.res.Configuration
 import android.icu.text.ListFormatter
 import android.os.Build
 import androidx.annotation.StringRes
 import com.freevibe.R
 import java.io.IOException
+import java.util.Locale
 
 /**
  * Text that gets its wording where a [Context] exists. Code that builds a message without one
@@ -46,6 +48,10 @@ sealed interface UiText {
 }
 
 fun uiText(@StringRes id: Int, vararg args: Any): UiText = UiText.Res(id, args.toList())
+
+/** Resources that answer in English, for the support bundle, whatever language the app is showing. */
+fun Context.englishContext(): Context =
+    createConfigurationContext(Configuration(resources.configuration).apply { setLocale(Locale.ENGLISH) })
 
 /**
  * An I/O failure whose wording is a resource. The exception text stays a short diagnostic

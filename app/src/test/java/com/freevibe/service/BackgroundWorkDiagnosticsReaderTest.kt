@@ -1,11 +1,27 @@
 package com.freevibe.service
 
+import android.app.Application
+import android.content.Context
 import android.net.ConnectivityManager
+import androidx.test.core.app.ApplicationProvider
 import androidx.work.WorkInfo
 import org.junit.Assert.assertEquals
 import org.junit.Test
+import org.junit.runner.RunWith
+import org.robolectric.RobolectricTestRunner
+import org.robolectric.annotation.Config
 
+@RunWith(RobolectricTestRunner::class)
+@Config(sdk = [35], application = Application::class)
 class BackgroundWorkDiagnosticsReaderTest {
+
+    private val context: Context = ApplicationProvider.getApplicationContext()
+
+    private fun backgroundWorkActionHint(
+        row: BackgroundWorkStatusRow,
+        network: BackgroundNetworkDiagnostics,
+        batteryGuidance: BackgroundBatteryGuidance = backgroundBatteryGuidanceForManufacturer(""),
+    ): String? = com.freevibe.service.backgroundWorkActionHint(row, network, batteryGuidance)?.resolve(context)
 
     @Test
     fun summarizeWorkInfoStatesCountsSortedStates() {
@@ -181,7 +197,7 @@ class BackgroundWorkDiagnosticsReaderTest {
         assertEquals("Samsung", guide.manufacturer)
         assertEquals(
             "Open Settings > Battery > Background usage limits and remove Aura from Sleeping and Deep sleeping apps.",
-            guide.summary,
+            guide.summary.resolve(context),
         )
     }
 
@@ -192,7 +208,7 @@ class BackgroundWorkDiagnosticsReaderTest {
         assertEquals("Pixel", guide.manufacturer)
         assertEquals(
             "Open Settings > Apps > Aura > App battery usage and allow background usage; disable Battery Saver while testing schedules.",
-            guide.summary,
+            guide.summary.resolve(context),
         )
     }
 
@@ -203,7 +219,7 @@ class BackgroundWorkDiagnosticsReaderTest {
         assertEquals("Android", guide.manufacturer)
         assertEquals(
             "Open App info > Battery for Aura and allow unrestricted or background battery usage before retesting schedules.",
-            guide.summary,
+            guide.summary.resolve(context),
         )
     }
 

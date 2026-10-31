@@ -144,7 +144,7 @@ internal fun RotationHealthContent(
         AuraStateCard(
             icon = snapshot.verdict.icon(),
             title = stringResource(snapshot.verdict.titleRes()),
-            description = snapshot.actionHint
+            description = snapshot.actionHint?.resolve(LocalContext.current)
                 ?: stringResource(R.string.rotation_health_healthy_body),
             tone = snapshot.verdict.tone(),
             primaryAction = AuraStateAction(
@@ -208,7 +208,7 @@ internal fun RotationHealthContent(
         )
         RotationHealthRow(
             label = stringResource(R.string.rotation_health_row_work_state),
-            value = snapshot.workState,
+            value = workInfoStatusText(snapshot.workState),
         )
         snapshot.stopReason?.let {
             RotationHealthRow(
@@ -240,7 +240,7 @@ internal fun RotationHealthContent(
         snapshot.lastDeferralReason?.let {
             RotationHealthRow(
                 label = stringResource(R.string.rotation_health_row_deferral),
-                value = it,
+                value = receiptReasonText(it),
             )
         }
         snapshot.readError?.let {

@@ -1,5 +1,9 @@
 package com.freevibe.service
 
+import com.freevibe.R
+import com.freevibe.util.UiText
+import com.freevibe.util.uiText
+
 /**
  * Why a rotation is or is not going to happen.
  *
@@ -37,7 +41,7 @@ data class RotationHealthSnapshot(
     val rotationEnabled: Boolean = false,
     val intervalMinutes: Long? = null,
     val sourceLabel: String? = null,
-    val workState: String = "No WorkInfo records",
+    val workState: String = WORK_INFO_STATUS_NONE,
     val lastFireUtc: String? = null,
     val lastFailureUtc: String? = null,
     val nextFireUtc: String? = null,
@@ -49,7 +53,7 @@ data class RotationHealthSnapshot(
     val ignoringBatteryOptimizations: Boolean? = null,
     val batteryGuidance: BackgroundBatteryGuidance =
         backgroundBatteryGuidanceForManufacturer(""),
-    val actionHint: String? = null,
+    val actionHint: UiText? = null,
     val readError: String? = null,
 ) {
     /** True when the user has something to act on rather than something to read. */
@@ -147,38 +151,35 @@ internal fun rotationHealthActionHint(
     batteryGuidance: BackgroundBatteryGuidance,
     lastErrorClass: String?,
     lastDeferralReason: String?,
-): String? = when (verdict) {
-    RotationHealthVerdict.DISABLED ->
-        "Rotation is off. Turn on automatic wallpaper change to schedule it."
+): UiText? = when (verdict) {
+    RotationHealthVerdict.DISABLED -> uiText(R.string.rotation_health_hint_disabled)
 
     RotationHealthVerdict.HEALTHY -> null
 
-    RotationHealthVerdict.NOT_SCHEDULED ->
-        "Rotation is on but nothing is scheduled, which usually means the schedule was " +
-            "dropped after a reboot or a force stop. Use Run now below to rebuild it."
+    RotationHealthVerdict.NOT_SCHEDULED -> uiText(R.string.rotation_health_hint_not_scheduled)
 
-    RotationHealthVerdict.FAILING -> buildString {
-        append("The last rotation failed")
-        lastErrorClass?.let { append(" with $it") }
-        append(". ")
-        append(
-            when {
-                lastDeferralReason?.contains("network", ignoreCase = true) == true ||
-                    lastErrorClass == "IOException" ->
-                    "Check your connection and the enabled wallpaper sources."
-                lastDeferralReason?.contains("permission", ignoreCase = true) == true ->
-                    "Review the permission named below, then run it again."
-                else -> "Try Run now; if it fails again, send the support bundle."
-            },
-        )
+    RotationHealthVerdict.FAILING -> {
+        val advice = when {
+            lastDeferralReason?.contains("network", ignoreCase = true) == true ||
+                lastErrorClass == "IOException" -> uiText(R.string.rotation_health_hint_check_connection)
+            lastDeferralReason?.contains("permission", ignoreCase = true) == true ->
+                uiText(R.string.rotation_health_hint_check_permission)
+            else -> uiText(R.string.rotation_health_hint_try_run_now)
+        }
+        if (lastErrorClass != null) {
+            uiText(R.string.rotation_health_hint_failed_with, lastErrorClass, advice)
+        } else {
+            uiText(R.string.rotation_health_hint_failed, advice)
+        }
     }
 
     RotationHealthVerdict.THROTTLED -> if (ignoringBatteryOptimizations == false) {
-        "Android is holding rotation back to save battery. Allow unrestricted background " +
-            "use for Aura, then run it once to confirm. " +
-            "${batteryGuidance.manufacturer}: ${batteryGuidance.summary}"
+        uiText(
+            R.string.rotation_health_hint_throttled,
+            batteryGuidance.manufacturer,
+            batteryGuidance.summary,
+        )
     } else {
-        "Rotation is waiting on a condition such as network, charging, or device idle. " +
-            "It will run when that clears; Run now bypasses the wait once."
+        uiText(R.string.rotation_health_hint_waiting)
     }
 }

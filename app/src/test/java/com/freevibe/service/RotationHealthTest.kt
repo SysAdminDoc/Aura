@@ -1,11 +1,17 @@
 package com.freevibe.service
 
+import android.app.Application
+import android.content.Context
+import androidx.test.core.app.ApplicationProvider
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
+import org.junit.runner.RunWith
+import org.robolectric.RobolectricTestRunner
+import org.robolectric.annotation.Config
 
 /**
  * The five situations a stopped rotation can be in.
@@ -154,8 +160,11 @@ class RotationHealthClassifierTest {
     }
 }
 
+@RunWith(RobolectricTestRunner::class)
+@Config(sdk = [35], application = Application::class)
 class RotationHealthActionHintTest {
 
+    private val context: Context = ApplicationProvider.getApplicationContext()
     private val guidance = backgroundBatteryGuidanceForManufacturer("samsung")
 
     private fun hint(
@@ -163,7 +172,7 @@ class RotationHealthActionHintTest {
         exempt: Boolean? = true,
         errorClass: String? = null,
         deferral: String? = null,
-    ) = rotationHealthActionHint(verdict, exempt, guidance, errorClass, deferral)
+    ) = rotationHealthActionHint(verdict, exempt, guidance, errorClass, deferral)?.resolve(context)
 
     @Test
     fun `a healthy schedule gets no advice`() {

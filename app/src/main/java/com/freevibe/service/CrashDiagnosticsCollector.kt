@@ -8,6 +8,8 @@ import com.freevibe.BuildConfig
 import com.freevibe.data.local.PreferencesManager
 import com.freevibe.data.model.diagnosticsSummary
 import com.freevibe.data.remote.RequestPurposeMetrics
+import com.freevibe.util.UiText
+import com.freevibe.util.englishContext
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.first
 import java.io.File
@@ -183,7 +185,8 @@ class CrashDiagnosticsCollector @Inject constructor(
             appendLine(backgroundWork)
             if (liveBackgroundWork != null) {
                 appendLine()
-                appendLine(CrashDiagnosticsText.formatLiveBackgroundWorkReceipts(liveBackgroundWork))
+                val english = context.englishContext()
+                appendLine(CrashDiagnosticsText.formatLiveBackgroundWorkReceipts(liveBackgroundWork) { it.resolve(english) })
             }
             appendLine()
             // Receipts carry raw media file paths (user filenames) — run them through
@@ -496,14 +499,17 @@ internal object CrashDiagnosticsText {
         appendLine("- Live Data Saver receipt: pending Settings diagnostics via restricted-background status.")
     }.trimEnd()
 
-    fun formatLiveBackgroundWorkReceipts(status: BackgroundWorkDiagnostics): String = buildString {
+    fun formatLiveBackgroundWorkReceipts(
+        status: BackgroundWorkDiagnostics,
+        text: (UiText) -> String,
+    ): String = buildString {
         appendLine("## Background work live receipts")
         appendLine(
             "- Network: meter=${status.network.activeNetworkMetered?.let { if (it) "metered" else "unmetered" } ?: "unknown"}; " +
                 "Data Saver=${status.network.restrictBackgroundStatus}" +
                 (status.network.readError?.let { "; readError=$it" } ?: ""),
         )
-        appendLine("- Battery recovery (${status.batteryGuidance.manufacturer}): ${status.batteryGuidance.summary}")
+        appendLine("- Battery recovery (${status.batteryGuidance.manufacturer}): ${text(status.batteryGuidance.summary)}")
         if (status.rows.isEmpty()) {
             appendLine("- No WorkInfo rows available.")
         } else {
@@ -519,7 +525,7 @@ internal object CrashDiagnosticsText {
                         "lastFailure=${row.lastFailureUtc ?: "none"}; " +
                         "lastError=${row.lastErrorClass ?: "none"}; " +
                         "deferral=${row.lastDeferralReason ?: "none"}; " +
-                        "action=${row.actionHint ?: "none"}" +
+                        "action=${row.actionHint?.let(text) ?: "none"}" +
                         (row.readError?.let { "; readError=$it" } ?: ""),
                 )
             }

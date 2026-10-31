@@ -831,12 +831,11 @@ internal fun shouldRestartRotationCountdown(
 ): Boolean = requested && succeeded && applied
 
 /** What diagnostics show for a run that waited on a connection instead of failing. */
+internal const val ROTATION_HOLD_WIFI = "Wi-Fi only is on and this connection is metered. The next wallpaper loads on Wi-Fi."
+internal const val ROTATION_HOLD_OFFLINE = "No connection and no wallpaper saved ahead. The next one loads when the phone is back online."
+
 internal fun rotationHoldReason(hold: RotationNetworkAccess): String =
-    if (hold == RotationNetworkAccess.WAITING_FOR_WIFI) {
-        "Wi-Fi only is on and this connection is metered. The next wallpaper loads on Wi-Fi."
-    } else {
-        "No connection and no wallpaper saved ahead. The next one loads when the phone is back online."
-    }
+    if (hold == RotationNetworkAccess.WAITING_FOR_WIFI) ROTATION_HOLD_WIFI else ROTATION_HOLD_OFFLINE
 
 /**
  * Pure builder for AutoWallpaper rotation constraints. Always sets
