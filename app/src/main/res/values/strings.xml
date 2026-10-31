@@ -2578,4 +2578,14 @@
     <string name="wallpaper_error_server">Server error. Try again later.</string>
     <string name="wallpaper_error_service_unavailable">Service temporarily unavailable</string>
     <string name="wallpaper_error_load_failed">Couldn\'t load wallpapers</string>
+    <string name="editor_sound_err_no_url">Couldn\'t find an audio link for this sound</string>
+    <string name="editor_sound_load_failed">Couldn\'t load the sound: %1$s</string>
+    <string name="editor_sound_file_load_failed">Couldn\'t load the file: %1$s</string>
+    <string name="editor_sound_download_http">Download failed (HTTP %1$d)</string>
+    <string name="editor_sound_empty_body">The server sent no audio</string>
+    <string name="editor_sound_too_large">The audio file is too large (%1$d MB)</string>
+    <string name="editor_sound_over_limit">The audio file is over the %1$d MB editing limit</string>
+    <string name="editor_sound_download_empty">The download was empty</string>
+    <string name="editor_sound_cannot_read">Couldn\'t read the file</string>
+    <string name="editor_sound_file_empty">The selected file is empty</string>
 </resources>

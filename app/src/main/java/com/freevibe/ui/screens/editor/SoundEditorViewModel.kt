@@ -35,6 +35,7 @@ import com.freevibe.service.normalizeMediaFileName
 import com.freevibe.service.requireSniffedMediaFile
 import com.freevibe.service.sha256File
 import com.freevibe.service.speedAdjustedDurationMs
+import com.freevibe.util.displayMessage
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
@@ -188,7 +189,7 @@ class SoundEditorViewModel @Inject constructor(
         if (sound.downloadUrl.isBlank() && sound.previewUrl.isBlank() && sound.sourcePageUrl.isBlank()) return false
         loadRemoteSound(sound.name) {
             val resolvedUrl = soundUrlResolver.resolve(sound)
-                ?: throw IllegalStateException("No audio URL available")
+                ?: throw IllegalStateException(context.getString(com.freevibe.R.string.editor_sound_err_no_url))
             downloadToCache(resolvedUrl, sound.name, soundKey)
         }
         return true
@@ -249,7 +250,15 @@ class SoundEditorViewModel @Inject constructor(
                 }
             } catch (e: Exception) {
                 if (e is kotlinx.coroutines.CancellationException) throw e
-                _state.update { it.copy(isLoading = false, error = "Failed to load: ${e.message}") }
+                _state.update {
+                    it.copy(
+                        isLoading = false,
+                        error = context.getString(
+                            R.string.editor_sound_load_failed,
+                            e.displayMessage(context) ?: context.getString(R.string.sound_error_generic),
+                        ),
+                    )
+                }
             }
         }
     }
@@ -313,7 +322,15 @@ class SoundEditorViewModel @Inject constructor(
                 // A revoked or malformed local URI can fail after the bounded copy
                 // succeeds. Do not leave that unusable cache entry behind.
                 cachedFile?.delete()
-                _state.update { it.copy(isLoading = false, error = "Failed to load file: ${e.message}") }
+                _state.update {
+                    it.copy(
+                        isLoading = false,
+                        error = context.getString(
+                            R.string.editor_sound_file_load_failed,
+                            e.displayMessage(context) ?: context.getString(R.string.sound_error_generic),
+                        ),
+                    )
+                }
             }
         }
     }
@@ -499,7 +516,7 @@ class SoundEditorViewModel @Inject constructor(
         val path = s.localFilePath ?: return
         viewModelScope.launch {
             if (!soundApplier.canWriteSettings()) {
-                _state.update { it.copy(error = "System settings access is required before applying sounds.") }
+                _state.update { it.copy(error = context.getString(com.freevibe.R.string.sound_apply_write_settings_required)) }
                 return@launch
             }
             _state.update { it.copy(isApplying = true) }
@@ -512,20 +529,22 @@ class SoundEditorViewModel @Inject constructor(
                 }
                 applyResult
                     .onSuccess {
-                        val label = when (type) {
-                            ContentType.RINGTONE -> "ringtone"
-                            ContentType.NOTIFICATION -> "notification"
-                            ContentType.ALARM -> "alarm"
-                            else -> "sound"
-                        }
-                        _state.update { it.copy(isApplying = false, success = "Set as $label") }
+                        val setAsLabel = context.getString(
+                            when (type) {
+                                ContentType.RINGTONE -> com.freevibe.R.string.sounds_quick_apply_set_ringtone
+                                ContentType.NOTIFICATION -> com.freevibe.R.string.sounds_quick_apply_set_notification
+                                ContentType.ALARM -> com.freevibe.R.string.sounds_quick_apply_set_alarm
+                                else -> com.freevibe.R.string.sound_set_as_sound
+                            },
+                        )
+                        _state.update { it.copy(isApplying = false, success = setAsLabel) }
                     }
                     .onFailure { e ->
-                        _state.update { it.copy(isApplying = false, error = e.message) }
+                        _state.update { it.copy(isApplying = false, error = e.displayMessage(context)) }
                     }
             } catch (e: Exception) {
                 if (e is kotlinx.coroutines.CancellationException) throw e
-                _state.update { it.copy(isApplying = false, error = e.message) }
+                _state.update { it.copy(isApplying = false, error = e.displayMessage(context)) }
             }
         }
     }
@@ -559,7 +578,7 @@ class SoundEditorViewModel @Inject constructor(
                         isApplying = false,
                         error = context.getString(
                             R.string.editor_sound_export_failed,
-                            e.message ?: e.javaClass.simpleName,
+                            e.displayMessage(context) ?: e.javaClass.simpleName,
                         ),
                     )
                 }
@@ -749,20 +768,20 @@ class SoundEditorViewModel @Inject constructor(
             try {
                 val request = Request.Builder().purpose(RequestPurpose.EDIT).url(url).build()
                 okHttpClient.newCall(request).execute().use { response ->
-                    if (!response.isSuccessful) throw Exception("Download failed: HTTP ${response.code}")
-                    val body = response.body ?: throw Exception("Empty response body")
+                    if (!response.isSuccessful) throw Exception(context.getString(com.freevibe.R.string.editor_sound_download_http, response.code))
+                    val body = response.body ?: throw Exception(context.getString(com.freevibe.R.string.editor_sound_empty_body))
                     // Editing is for short clips — cap at 96 MB so a hostile/misresolved YT
                     // URL can't fill cacheDir while the user waits on the editor.
                     val advertised = body.contentLength()
                     if (advertised in 1..Long.MAX_VALUE && advertised > MAX_EDIT_DOWNLOAD_BYTES) {
-                        throw Exception("Audio file too large (${advertised / (1024 * 1024)} MB)")
+                        throw Exception(context.getString(com.freevibe.R.string.editor_sound_too_large, advertised / (1024 * 1024)))
                     }
                     body.byteStream().use { input ->
                         FileOutputStream(tmpFile).use { output ->
                             try {
                                 copyStreamCapped(input, output, MAX_EDIT_DOWNLOAD_BYTES)
                             } catch (e: MediaIngestionLimitExceeded) {
-                                throw Exception("Audio file is over the ${MAX_EDIT_DOWNLOAD_BYTES / (1024 * 1024)} MB editing limit", e)
+                                throw Exception(context.getString(com.freevibe.R.string.editor_sound_over_limit, MAX_EDIT_DOWNLOAD_BYTES / (1024 * 1024)), e)
                             }
                         }
                     }
@@ -772,7 +791,7 @@ class SoundEditorViewModel @Inject constructor(
                     moveStagedFileIntoPlace(tmpFile, file)
                 } else {
                     tmpFile.delete()
-                    throw Exception("Download produced empty file")
+                    throw Exception(context.getString(com.freevibe.R.string.editor_sound_download_empty))
                 }
             } catch (e: Exception) {
                 tmpFile.delete()
@@ -800,11 +819,11 @@ class SoundEditorViewModel @Inject constructor(
                     try {
                         copyStreamCapped(input, output, MAX_EDIT_DOWNLOAD_BYTES)
                     } catch (e: MediaIngestionLimitExceeded) {
-                        throw Exception("Audio file is over the ${MAX_EDIT_DOWNLOAD_BYTES / (1024 * 1024)} MB editing limit", e)
+                        throw Exception(context.getString(com.freevibe.R.string.editor_sound_over_limit, MAX_EDIT_DOWNLOAD_BYTES / (1024 * 1024)), e)
                     }
                 }
-            } ?: throw IllegalStateException("Cannot read file")
-            if (tempFile.length() <= 0L) throw IllegalStateException("The selected file is empty")
+            } ?: throw IllegalStateException(context.getString(com.freevibe.R.string.editor_sound_cannot_read))
+            if (tempFile.length() <= 0L) throw IllegalStateException(context.getString(com.freevibe.R.string.editor_sound_file_empty))
 
             val sniffed = requireSniffedMediaFile(tempFile, MediaFamily.AUDIO, "Sound")
             val file = File(cacheDir, normalizeMediaFileName(safeName, sniffed))

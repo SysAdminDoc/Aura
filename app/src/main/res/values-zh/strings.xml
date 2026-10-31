@@ -2359,4 +2359,14 @@
     <string name="wallpaper_error_server">服务器出错，请稍后再试。</string>
     <string name="wallpaper_error_service_unavailable">服务暂时不可用</string>
     <string name="wallpaper_error_load_failed">无法加载壁纸</string>
+    <string name="editor_sound_err_no_url">找不到这个声音的音频链接</string>
+    <string name="editor_sound_load_failed">无法加载声音：%1$s</string>
+    <string name="editor_sound_file_load_failed">无法加载文件：%1$s</string>
+    <string name="editor_sound_download_http">下载失败（HTTP %1$d）</string>
+    <string name="editor_sound_empty_body">服务器没有返回音频</string>
+    <string name="editor_sound_too_large">音频文件太大（%1$d MB）</string>
+    <string name="editor_sound_over_limit">音频文件超过 %1$d MB 的编辑上限</string>
+    <string name="editor_sound_download_empty">下载的内容为空</string>
+    <string name="editor_sound_cannot_read">无法读取该文件</string>
+    <string name="editor_sound_file_empty">所选文件为空</string>
 </resources>
