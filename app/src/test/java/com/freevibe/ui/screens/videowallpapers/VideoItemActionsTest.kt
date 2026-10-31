@@ -287,7 +287,7 @@ class VideoItemActionsTest {
     @Test
     fun `the full-screen preview has the same actions and a download keeps one copy`() {
         val screen = File("src/main/java/com/freevibe/ui/screens/videowallpapers/VideoWallpapersScreen.kt").readText()
-        val model = File("src/main/java/com/freevibe/ui/screens/videowallpapers/VideoWallpapersViewModel.kt").readText()
+        val model = File("src/main/java/com/freevibe/ui/screens/videowallpapers/VideoDownloadActions.kt").readText()
 
         assertTrue(screen.contains("onDownload = { requestDownload(item) }"))
         assertTrue(screen.contains("onDownload = requestDownload"))

@@ -29,6 +29,7 @@
     "wallpaperPreviewUi": "app/src/main/java/com/freevibe/ui/screens/wallpapers/WallpaperPreviewScreen.kt",
     "videoActions": "app/src/main/java/com/freevibe/data/model/VideoWallpaperLicensePolicy.kt",
     "videoRuntime": "app/src/main/java/com/freevibe/ui/screens/videowallpapers/VideoWallpapersViewModel.kt",
+    "videoFeedRuntime": "app/src/main/java/com/freevibe/ui/screens/videowallpapers/VideoFeedActions.kt",
     "videoPreviewTransport": "app/src/main/java/com/freevibe/service/VideoPreviewCache.kt",
     "youtubeRuntime": "app/src/main/java/com/freevibe/data/repository/YouTubeRepository.kt",
     "releaseDryRun": "docs/distribution/release-dry-run.md",

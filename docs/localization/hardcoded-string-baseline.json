@@ -156,30 +156,30 @@
     },
     {
       "count": 1,
-      "firstLine": 197,
-      "id": "723ef783d8f92a16",
-      "path": "app/src/main/java/com/freevibe/ui/screens/videowallpapers/VideoWallpapersScreen.kt",
-      "reason": "Internal signal. exportVideoToGallery catches it, logs it in debug builds and returns null; the caller then shows the translated saved/not-saved message.",
-      "sink": "exception",
-      "text": "Video exceeds size limit"
-    },
-    {
-      "count": 1,
-      "firstLine": 1561,
-      "id": "211fc88715e49fc1",
-      "path": "app/src/main/java/com/freevibe/ui/screens/videowallpapers/VideoWallpapersViewModel.kt",
+      "firstLine": 567,
+      "id": "aa268e428c672a68",
+      "path": "app/src/main/java/com/freevibe/ui/screens/videowallpapers/VideoFeedActions.kt",
       "reason": "Internal signal. The Reddit RSS fetch catch records the source in failedSources and logs in debug builds; the screen shows only the translated video_wp_sources_* messages.",
       "sink": "exception",
       "text": "Reddit RSS HTTP ${response.code}"
     },
     {
       "count": 1,
-      "firstLine": 1563,
-      "id": "957c5ebd12f9820f",
-      "path": "app/src/main/java/com/freevibe/ui/screens/videowallpapers/VideoWallpapersViewModel.kt",
+      "firstLine": 569,
+      "id": "0d29bec8f058b7ed",
+      "path": "app/src/main/java/com/freevibe/ui/screens/videowallpapers/VideoFeedActions.kt",
       "reason": "Internal signal. The Reddit RSS fetch catch records the source in failedSources and logs in debug builds; the screen shows only the translated video_wp_sources_* messages.",
       "sink": "exception",
       "text": "Reddit RSS returned an empty feed"
+    },
+    {
+      "count": 1,
+      "firstLine": 197,
+      "id": "723ef783d8f92a16",
+      "path": "app/src/main/java/com/freevibe/ui/screens/videowallpapers/VideoWallpapersScreen.kt",
+      "reason": "Internal signal. exportVideoToGallery catches it, logs it in debug builds and returns null; the caller then shows the translated saved/not-saved message.",
+      "sink": "exception",
+      "text": "Video exceeds size limit"
     },
     {
       "count": 1,

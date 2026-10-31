@@ -125,7 +125,7 @@ def write_call_site(repo_root: Path, extra: str = "") -> None:
     )
 
 
-DOWNLOAD_SITE = "app/src/main/java/com/freevibe/ui/screens/videowallpapers/VideoWallpapersViewModel.kt"
+DOWNLOAD_SITE = "app/src/main/java/com/freevibe/ui/screens/videowallpapers/VideoDownloadActions.kt"
 BOUNDS_HELPER = "app/src/main/java/com/freevibe/service/YtDlpDownloadSafety.kt"
 
 

@@ -553,6 +553,7 @@ class ReleasePolishContractTest {
     fun `media discovery keeps warm caches and vertical swipe viewers`() {
         val videos = File("src/main/java/com/freevibe/ui/screens/videowallpapers/VideoWallpapersScreen.kt").readText()
         val videoModel = File("src/main/java/com/freevibe/ui/screens/videowallpapers/VideoWallpapersViewModel.kt").readText()
+        val videoFeed = File("src/main/java/com/freevibe/ui/screens/videowallpapers/VideoFeedActions.kt").readText()
         val wallpaperDetail = File("src/main/java/com/freevibe/ui/screens/wallpapers/WallpaperDetailScreen.kt").readText()
         val playback = File("src/main/java/com/freevibe/service/AudioPlaybackManager.kt").readText()
         val soundBrowse = File("src/main/java/com/freevibe/ui/screens/sounds/SoundBrowseViewModel.kt").readText()
@@ -561,7 +562,7 @@ class ReleasePolishContractTest {
         assertTrue(videos.contains("VerticalPager("))
         assertTrue(videos.contains("beyondViewportPageCount = 1"))
         assertTrue(videos.contains("setCustomCacheKey(item.id)"))
-        assertTrue(videoModel.contains("Warm feed ready:"))
+        assertTrue(videoFeed.contains("Warm feed ready:"))
         assertTrue(videoModel.contains("VideoPreviewCache"))
         assertTrue(wallpaperDetail.contains("VerticalPager("))
         // The detail pager's one-page lookahead is its warm cache; extra original-size prefetches doubled downloads.

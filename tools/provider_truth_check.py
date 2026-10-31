@@ -64,6 +64,7 @@ RUNTIME_SURFACE_KEYS = (
     "wallpaperPreviewUi",
     "videoActions",
     "videoRuntime",
+    "videoFeedRuntime",
     "videoPreviewTransport",
     "youtubeRuntime",
     "releaseDryRun",
@@ -135,11 +136,11 @@ RUNTIME_SURFACE_MARKERS = {
     ),
     "videoActions": ("isProviderActionPermitted",),
     "videoRuntime": (
-        "filterVideoMetadataForCurrentArtifact",
         "canPreviewVideoInCurrentArtifact(item)",
         "item.canUseVideoAction(VideoWallpaperAction.APPLY)",
         "rememberStreamUrl(item, url)",
     ),
+    "videoFeedRuntime": ("filterVideoMetadataForCurrentArtifact",),
     "videoPreviewTransport": (
         "ResolvingDataSource.Factory",
         "isVideoPreviewHostAllowed",
@@ -683,7 +684,7 @@ def _validate_runtime_surfaces(
         "video apply runtime",
         errors,
     )
-    if "filterVideoMetadataForCurrentArtifact(cached.result)" not in video_runtime:
+    if "filterVideoMetadataForCurrentArtifact(cached.result)" not in surface_texts["videoFeedRuntime"]:
         errors.append("video cache restore must filter metadata for the current artifact")
 
     video_transport = _checked_block(

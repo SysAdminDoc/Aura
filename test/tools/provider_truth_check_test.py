@@ -38,6 +38,7 @@ FIXTURE_PATHS = (
     "app/src/main/java/com/freevibe/ui/screens/wallpapers/WallpaperPreviewScreen.kt",
     "app/src/main/java/com/freevibe/data/model/VideoWallpaperLicensePolicy.kt",
     "app/src/main/java/com/freevibe/ui/screens/videowallpapers/VideoWallpapersViewModel.kt",
+    "app/src/main/java/com/freevibe/ui/screens/videowallpapers/VideoFeedActions.kt",
     "app/src/main/java/com/freevibe/service/VideoPreviewCache.kt",
     "app/src/main/java/com/freevibe/data/repository/YouTubeRepository.kt",
     "docs/distribution/release-dry-run.md",
@@ -67,7 +68,7 @@ class ProviderTruthCheckTest(unittest.TestCase):
         self.assertEqual(23, result["providerCount"])
         self.assertEqual(8, result["legacyProviderCount"])
         self.assertEqual(4, result["publicSurfaceCount"])
-        self.assertEqual(25, result["runtimeSurfaceCount"])
+        self.assertEqual(26, result["runtimeSurfaceCount"])
 
     def test_runtime_priority_drift_fails(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -200,7 +201,7 @@ class ProviderTruthCheckTest(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmpdir:
             root = Path(tmpdir)
             make_fixture(root)
-            path = root / "app/src/main/java/com/freevibe/ui/screens/videowallpapers/VideoWallpapersViewModel.kt"
+            path = root / "app/src/main/java/com/freevibe/ui/screens/videowallpapers/VideoFeedActions.kt"
             text = path.read_text(encoding="utf-8").replace(
                 "filterVideoMetadataForCurrentArtifact(cached.result)",
                 "cached.result",
