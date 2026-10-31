@@ -244,6 +244,7 @@ class VideoWallpapersViewModel @Inject constructor(
         streamUrls.clear()
         previewResolveInFlight.clear()
         _resolvedIds.value = emptySet()
+        _streamFailedIds.value = emptySet()
         load()
     }
 

@@ -572,6 +572,22 @@ class VideoWallpapersViewModelTest {
     }
 
     @Test
+    fun `a new search forgets which streams failed`() = runTest(dispatcher) {
+        val youtubeRepo = mockk<YouTubeRepository>(relaxed = true) {
+            coEvery { getVideoStreamUrl(any()) } returns null
+        }
+        val viewModel = savedVideoViewModel(youtubeRepo = youtubeRepo)
+        assumeTrue(canPreviewVideoInCurrentArtifact(youtubeFeedItem))
+        viewModel.resolveSavedVideo(savedYouTube)
+        advanceUntilIdle()
+        assertEquals(setOf("yt_dQw4w9WgXcQ"), viewModel.streamFailedIds.value)
+
+        viewModel.search("rain")
+
+        assertTrue(viewModel.streamFailedIds.value.isEmpty())
+    }
+
+    @Test
     fun `a row that isn't a usable video favorite resolves nothing`() = runTest(dispatcher) {
         val youtubeRepo = mockk<YouTubeRepository>(relaxed = true)
         val viewModel = savedVideoViewModel(youtubeRepo = youtubeRepo)
