@@ -22,9 +22,11 @@ import com.freevibe.data.model.validateCommunityUploadRights
 import com.freevibe.service.ColorExtractor
 import com.freevibe.service.CommunityIdentityProvider
 import com.freevibe.service.MediaIngestionImageFlow
+import com.freevibe.service.MediaIngestionImageRejected
 import com.freevibe.service.SourceMetrics
 import com.freevibe.service.decodeImageUri
 import com.freevibe.service.imageFormatSupportForFlow
+import com.freevibe.util.UiText
 import com.freevibe.service.imageMimeTypeFromExtension
 import com.freevibe.util.rethrowIfCancelled
 import com.google.firebase.database.DataSnapshot
@@ -128,7 +130,7 @@ class WallpaperUploadRepository @Inject constructor(
                 uploadInfo.mimeType,
             )
             if (!imageSupport.supported) {
-                throw IllegalArgumentException(imageSupport.message)
+                throw MediaIngestionImageRejected(imageSupport.message)
             }
 
             ensureReadableWallpaper(localUri)
@@ -540,7 +542,7 @@ internal fun isSupportedWallpaperUploadMime(mimeType: String, sdkInt: Int): Bool
         sdkInt,
     ).supported
 
-internal fun unsupportedWallpaperUploadFormatMessage(mimeType: String, sdkInt: Int = Build.VERSION.SDK_INT): String =
+internal fun unsupportedWallpaperUploadFormatMessage(mimeType: String, sdkInt: Int = Build.VERSION.SDK_INT): UiText =
     imageFormatSupportForFlow(
         MediaIngestionImageFlow.COMMUNITY_WALLPAPER_UPLOAD,
         mimeType,

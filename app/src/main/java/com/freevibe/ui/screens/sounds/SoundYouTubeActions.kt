@@ -1,5 +1,6 @@
 package com.freevibe.ui.screens.sounds
 
+import android.content.Context
 import com.freevibe.data.local.PreferencesManager
 import com.freevibe.data.model.ContentSource
 import com.freevibe.data.model.Sound
@@ -18,6 +19,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 internal class SoundYouTubeActions(
+    private val context: Context,
     private val youtubeRepo: YouTubeRepository,
     private val prefs: PreferencesManager,
     private val searchHistoryRepo: SearchHistoryRepository,
@@ -39,7 +41,7 @@ internal class SoundYouTubeActions(
     fun searchYouTube(query: String) {
         if (query.isBlank()) return
         if (!youtubeProviderEnabled.value) {
-            state.update { it.copy(error = youtubeDisabledMessage()) }
+            state.update { it.copy(error = youtubeDisabledMessage(context)) }
             return
         }
         state.update {
@@ -62,12 +64,12 @@ internal class SoundYouTubeActions(
 
     fun importYouTubeUrl(url: String) {
         if (!youtubeProviderEnabled.value) {
-            state.update { it.copy(error = youtubeDisabledMessage()) }
+            state.update { it.copy(error = youtubeDisabledMessage(context)) }
             return
         }
         val videoId = extractYouTubeId(url)
         if (videoId == null) {
-            state.update { it.copy(error = "Not a valid YouTube URL") }
+            state.update { it.copy(error = context.getString(com.freevibe.R.string.sound_error_invalid_youtube_url)) }
             return
         }
         state.update {
@@ -108,7 +110,7 @@ internal class SoundYouTubeActions(
                 youtubeRepo.getAudioPreviewUrl(videoId)?.let { cacheResolvedPreview(sound, it) }
             } catch (e: Exception) {
                 e.rethrowIfCancelled()
-                state.update { it.copy(isLoading = false, error = "Could not load video: ${e.message}") }
+                state.update { it.copy(isLoading = false, error = context.getString(com.freevibe.R.string.sound_error_video_load_failed, e.message.orEmpty())) }
             }
         }
     }
@@ -152,7 +154,7 @@ internal class SoundYouTubeActions(
                     isLoading = false,
                     isRefreshing = false,
                     hasMore = false,
-                    error = youtubeDisabledMessage(),
+                    error = youtubeDisabledMessage(context),
                 )
             }
             return
@@ -209,7 +211,7 @@ internal class SoundYouTubeActions(
                         isLoading = false,
                         isRefreshing = false,
                         hasMore = false,
-                        error = youtubeDisabledMessage(),
+                        error = youtubeDisabledMessage(context),
                     )
                 }
                 return
@@ -239,7 +241,7 @@ internal class SoundYouTubeActions(
                 it.copy(
                     isLoading = false,
                     isRefreshing = false,
-                    error = categorizeSoundError(e),
+                    error = categorizeSoundError(context, e),
                 )
             }
         }

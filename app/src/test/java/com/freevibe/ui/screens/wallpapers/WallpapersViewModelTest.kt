@@ -1052,7 +1052,7 @@ class WallpapersViewModelTest {
         }
 
         return WallpapersViewModel(
-            context = mockk<Context>(relaxed = true),
+            context = localizedFeedbackContext(),
             wallpaperRepo = wallpaperRepo,
             redditRepo = redditRepo,
             favoritesRepo = favoritesRepo,
@@ -1124,4 +1124,12 @@ class WallpapersViewModelTest {
         tags = listOf("minimal"),
         colors = listOf(color),
     )
+
+    private fun localizedFeedbackContext(): Context = mockk<Context>(relaxed = true).also { context ->
+        every { context.getString(com.freevibe.R.string.wallpaper_source_disabled, "Wallhaven") } returns
+            "Wallhaven source is disabled in Settings"
+        every { context.getString(com.freevibe.R.string.feedback_report_submitted) } returns "Report submitted"
+        every { context.getString(com.freevibe.R.string.feedback_creator_blocked) } returns "Creator blocked"
+        every { context.getString(com.freevibe.R.string.feedback_upload_deleted) } returns "Upload deleted"
+    }
 }

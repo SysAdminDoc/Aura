@@ -1,5 +1,6 @@
 package com.freevibe.ui.screens.sounds
 
+import android.content.Context
 import com.freevibe.data.model.ContentSource
 import com.freevibe.data.model.Sound
 
@@ -23,11 +24,12 @@ internal fun matchesSoundIdentity(
     return true
 }
 
-internal fun youtubeDisabledMessage(): String = "YouTube features are disabled in Settings"
+internal fun youtubeDisabledMessage(context: Context): String =
+    context.getString(com.freevibe.R.string.video_wp_youtube_disabled)
 
-internal fun categorizeSoundError(error: Exception): String = when (error) {
-    is java.net.UnknownHostException -> "No internet connection"
-    is java.net.SocketTimeoutException -> "Connection timed out - try again"
-    is java.net.ConnectException -> "Could not connect to server"
-    else -> error.message ?: "Something went wrong"
+internal fun categorizeSoundError(context: Context, error: Exception): String = when (error) {
+    is java.net.UnknownHostException -> context.getString(com.freevibe.R.string.sound_error_no_internet)
+    is java.net.SocketTimeoutException -> context.getString(com.freevibe.R.string.sound_error_timed_out)
+    is java.net.ConnectException -> context.getString(com.freevibe.R.string.sound_error_connect_failed)
+    else -> error.message ?: context.getString(com.freevibe.R.string.sound_error_generic)
 }

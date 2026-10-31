@@ -111,7 +111,7 @@ internal class WallpaperSearchActions(
             } else {
                 state.update {
                     it.copy(
-                        error = "Wallpaper unavailable",
+                        error = context.getString(com.freevibe.R.string.detail_unavailable_title),
                         errorSource = WallpaperTab.SEARCH.name,
                         isLoading = false,
                         isLoadingMore = false,
@@ -270,9 +270,10 @@ internal class WallpaperSearchActions(
         return null
     }
 
+    private fun wallhavenDisabledMessage(): String =
+        context.getString(com.freevibe.R.string.wallpaper_source_disabled, "Wallhaven")
+
     private companion object {
         const val SOURCE_WALLHAVEN = "wallhaven"
     }
 }
-
-private fun wallhavenDisabledMessage(): String = "Wallhaven source is disabled in Settings"

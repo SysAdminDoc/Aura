@@ -3,7 +3,6 @@ package com.freevibe.ui.screens.wallpapers
 import com.freevibe.data.legal.ProviderSetup
 import com.freevibe.data.local.PreferencesManager
 import com.freevibe.data.local.WallpaperCacheManager
-import com.freevibe.data.model.COMMUNITY_GUIDELINES_REQUIRED_MESSAGE
 import com.freevibe.data.model.ContentSource
 import com.freevibe.data.model.SearchResult
 import com.freevibe.data.model.Wallpaper
@@ -49,6 +48,7 @@ internal fun mergeRedditFirstHomeResults(
 }
 
 internal class WallpaperBrowseViewModel(
+    private val context: android.content.Context,
     private val wallpaperRepo: WallpaperRepository,
     private val redditRepo: RedditRepository,
     private val prefs: PreferencesManager,
@@ -396,17 +396,17 @@ internal class WallpaperBrowseViewModel(
     }
 
     private fun categorizeError(e: Exception): String = when (e) {
-        is java.net.UnknownHostException -> "No internet connection"
-        is java.net.SocketTimeoutException -> "Connection timed out - try again"
-        is java.net.ConnectException -> "Could not connect to server"
+        is java.net.UnknownHostException -> context.getString(com.freevibe.R.string.wallpaper_error_no_internet)
+        is java.net.SocketTimeoutException -> context.getString(com.freevibe.R.string.wallpaper_error_timed_out)
+        is java.net.ConnectException -> context.getString(com.freevibe.R.string.wallpaper_error_connect_failed)
         is retrofit2.HttpException -> when (e.code()) {
-            401, 403 -> "API key invalid or expired"
-            404 -> "Content not found"
-            429 -> "Rate limited - wait a moment and retry"
-            in 500..599 -> "Server error - try again later"
-            else -> "Service temporarily unavailable"
+            401, 403 -> context.getString(com.freevibe.R.string.wallpaper_error_key_invalid)
+            404 -> context.getString(com.freevibe.R.string.wallpaper_error_not_found)
+            429 -> context.getString(com.freevibe.R.string.wallpaper_error_rate_limited)
+            in 500..599 -> context.getString(com.freevibe.R.string.wallpaper_error_server)
+            else -> context.getString(com.freevibe.R.string.wallpaper_error_service_unavailable)
         }
-        else -> e.message ?: "Failed to load wallpapers"
+        else -> e.message ?: context.getString(com.freevibe.R.string.wallpaper_error_load_failed)
     }
 
     suspend fun loadUserStyles(): List<String> =
@@ -436,23 +436,24 @@ internal class WallpaperBrowseViewModel(
 
     private fun providerDisabledMessage(tab: WallpaperTab): String = when (tab) {
         WallpaperTab.WALLHAVEN -> wallhavenDisabledMessage()
-        WallpaperTab.PEXELS -> "Pexels source is disabled in Settings"
-        WallpaperTab.PIXABAY -> "Pixabay source is disabled in Settings"
+        WallpaperTab.PEXELS -> context.getString(com.freevibe.R.string.wallpaper_source_disabled, "Pexels")
+        WallpaperTab.PIXABAY -> context.getString(com.freevibe.R.string.wallpaper_source_disabled, "Pixabay")
         WallpaperTab.COMMUNITY -> communityDisabledMessage()
         else -> redditDisabledMessage()
     }
 
     private fun communityDisabledMessage(): String =
         if (!communityProviderEnabled.value) {
-            "Community source is disabled in Settings"
+            context.getString(com.freevibe.R.string.sound_feedback_community_disabled)
         } else {
-            COMMUNITY_GUIDELINES_REQUIRED_MESSAGE
+            context.getString(com.freevibe.R.string.community_guidelines_action_required)
         }
 
     private fun redditDisabledMessage(): String =
-        "Reddit RSS is disabled in Settings. Cached and saved wallpapers remain available."
+        context.getString(com.freevibe.R.string.wallpaper_reddit_disabled)
 
-    private fun wallhavenDisabledMessage(): String = "Wallhaven source is disabled in Settings"
+    private fun wallhavenDisabledMessage(): String =
+        context.getString(com.freevibe.R.string.wallpaper_source_disabled, "Wallhaven")
 
     private companion object {
         const val SOURCE_WALLHAVEN = "wallhaven"

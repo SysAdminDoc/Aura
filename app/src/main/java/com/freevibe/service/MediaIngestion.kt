@@ -6,6 +6,10 @@ import android.graphics.BitmapFactory
 import android.graphics.ImageDecoder
 import android.net.Uri
 import android.os.Build
+import com.freevibe.R
+import com.freevibe.util.UiText
+import com.freevibe.util.UiTextException
+import com.freevibe.util.uiText
 import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.FileInputStream
@@ -22,8 +26,17 @@ class MediaIngestionLimitExceeded(
 ) : IOException(message)
 
 class MediaIngestionImageRejected(
+    text: UiText,
+) : UiTextException(text)
+
+/**
+ * A sniff or container check failed. The English [message] is an internal signal: the download
+ * path classifies failures by its wording. [text] is what a screen shows.
+ */
+class MediaTypeRejectedException(
     message: String,
-) : IOException(message)
+    text: UiText,
+) : UiTextException(text, message)
 
 class MediaIngestionMediaRejected(
     message: String,
@@ -149,7 +162,7 @@ internal data class ImageIngestionPolicy(
 internal data class ImageFormatSupport(
     val supported: Boolean,
     val format: IngestedImageFormat?,
-    val message: String,
+    val message: UiText,
     val outputMimeType: String?,
     val stripsMetadata: Boolean,
 )
@@ -197,7 +210,7 @@ internal fun imageFormatSupportForFlow(
         return ImageFormatSupport(
             supported = false,
             format = format,
-            message = "Choose a ${acceptedImageFormatSummary(flow)} image.",
+            message = uiText(R.string.media_image_choose_format, acceptedImageFormatSummary(flow)),
             outputMimeType = policy.outputMimeType,
             stripsMetadata = policy.stripsMetadata,
         )
@@ -205,12 +218,12 @@ internal fun imageFormatSupportForFlow(
     if (sdkInt < format.minSdk) {
         val message = if (format == IngestedImageFormat.AVIF) {
             if (flow == MediaIngestionImageFlow.COMMUNITY_WALLPAPER_UPLOAD) {
-                "AVIF images require Android 14 or newer so Aura can decode and scrub them safely."
+                uiText(R.string.media_image_avif_needs_android14_scrub)
             } else {
-                "AVIF images require Android 14 or newer so Aura can decode them."
+                uiText(R.string.media_image_avif_needs_android14)
             }
         } else {
-            "${format.displayName} images are not supported on this Android version."
+            uiText(R.string.media_image_format_unsupported_version, format.displayName)
         }
         return ImageFormatSupport(
             supported = false,
@@ -224,9 +237,9 @@ internal fun imageFormatSupportForFlow(
         supported = true,
         format = format,
         message = if (policy.stripsMetadata) {
-            "Aura will transcode this image to JPEG before upload so embedded metadata and location tags are not kept."
+            uiText(R.string.media_image_transcode_notice)
         } else {
-            "${format.displayName} image supported."
+            uiText(R.string.media_image_supported, format.displayName)
         },
         outputMimeType = policy.outputMimeType,
         stripsMetadata = policy.stripsMetadata,
@@ -246,10 +259,8 @@ internal fun imageFormatForMimeType(mimeType: String): IngestedImageFormat? {
     return IngestedImageFormat.entries.firstOrNull { normalized in it.mimeTypes }
 }
 
-internal fun acceptedImageFormatSummary(flow: MediaIngestionImageFlow): String =
-    imageIngestionPolicy(flow).inputFormats
-        .map { it.displayName }
-        .toHumanList()
+internal fun acceptedImageFormatSummary(flow: MediaIngestionImageFlow): UiText =
+    UiText.OrList(imageIngestionPolicy(flow).inputFormats.map { it.displayName })
 
 internal fun imageFormatSupportForInput(
     flow: MediaIngestionImageFlow,
@@ -295,9 +306,7 @@ internal fun decodeImageBytesForFlow(
 ): Bitmap {
     val support = requireImageFormatSupport(flow, bytes, declaredMimeType, extension)
     return decodeImageBytes(bytes, maxLongEdge)
-        ?: throw MediaIngestionImageRejected(
-            "${support.format?.displayName ?: "Image"} image could not be decoded on this device.",
-        )
+        ?: throw MediaIngestionImageRejected(imageDecodeFailedText(support.format))
 }
 
 internal fun decodeImageUriForFlow(
@@ -315,9 +324,7 @@ internal fun decodeImageUriForFlow(
         extension = extension,
     )
     return decodeImageUri(context, uri, maxLongEdge)
-        ?: throw MediaIngestionImageRejected(
-            "${support.format?.displayName ?: "Image"} image could not be decoded on this device.",
-        )
+        ?: throw MediaIngestionImageRejected(imageDecodeFailedText(support.format))
 }
 
 internal fun decodeImageFileForFlow(
@@ -332,9 +339,7 @@ internal fun decodeImageFileForFlow(
         extension = file.extension,
     )
     return decodeImageFile(file, maxLongEdge)
-        ?: throw MediaIngestionImageRejected(
-            "${support.format?.displayName ?: "Image"} image could not be decoded on this device.",
-        )
+        ?: throw MediaIngestionImageRejected(imageDecodeFailedText(support.format))
 }
 
 internal fun decodeImageBytes(
@@ -445,7 +450,10 @@ internal fun requireSniffedMediaFile(
     label: String,
 ): SniffedMediaType {
     val sniffed = sniffMediaFile(file)
-        ?: throw IOException("$label content type could not be verified")
+        ?: throw MediaTypeRejectedException(
+            "$label content type could not be verified",
+            uiText(if (expectedFamily == MediaFamily.IMAGE) R.string.media_unverified_image else R.string.media_unverified_audio),
+        )
     if (sniffed.family == MediaFamily.CONTAINER) {
         // The header proves the container but not the track layout, and the caller already
         // knows which one it requested. Resolve to the expected family's MIME type rather
@@ -453,7 +461,7 @@ internal fun requireSniffedMediaFile(
         return resolveContainerFor(sniffed, expectedFamily, label)
     }
     if (sniffed.family != expectedFamily) {
-        throw IOException("$label content type mismatch: expected ${expectedFamily.name.lowercase(Locale.ROOT)}")
+        throw contentTypeMismatch(label, expectedFamily)
     }
     return sniffed
 }
@@ -466,19 +474,29 @@ private fun resolveContainerFor(
     MediaFamily.AUDIO -> sniffed.copy(family = MediaFamily.AUDIO, mimeType = "audio/${sniffed.extension}")
     MediaFamily.IMAGE ->
         // No still-image format sniffs as a container, so this is a genuine mismatch.
-        throw IOException("$label content type mismatch: expected ${expectedFamily.name.lowercase(Locale.ROOT)}")
+        throw contentTypeMismatch(label, expectedFamily)
     MediaFamily.CONTAINER -> sniffed
 }
+
+private fun contentTypeMismatch(label: String, expectedFamily: MediaFamily): MediaTypeRejectedException =
+    MediaTypeRejectedException(
+        "$label content type mismatch: expected ${expectedFamily.name.lowercase(Locale.ROOT)}",
+        uiText(if (expectedFamily == MediaFamily.IMAGE) R.string.media_mismatch_image else R.string.media_mismatch_audio),
+    )
 
 private val FFMPEG_SAFE_EXTENSIONS = setOf("mp4", "m4a", "mp3", "ogg", "wav", "flac", "webm", "aac")
 
 internal fun requireFfmpegSafeContainer(file: File): SniffedMediaType {
     val sniffed = sniffMediaFile(file)
-        ?: throw IOException("Cannot identify container for FFmpeg: unknown file format")
+        ?: throw MediaTypeRejectedException(
+            "Cannot identify container for FFmpeg: unknown file format",
+            uiText(R.string.media_container_unknown),
+        )
     if (sniffed.extension !in FFMPEG_SAFE_EXTENSIONS) {
-        throw IOException(
+        throw MediaTypeRejectedException(
             "Container ${sniffed.extension} (${sniffed.mimeType}) is not in the FFmpeg allowlist. " +
-                "This file type may trigger a known decoder vulnerability."
+                "This file type may trigger a known decoder vulnerability.",
+            uiText(R.string.media_container_not_allowed, sniffed.extension),
         )
     }
     return sniffed
@@ -506,13 +524,8 @@ private fun readImageHeader(input: InputStream): ByteArray {
     return if (read > 0) header.copyOf(read) else byteArrayOf()
 }
 
-private fun List<String>.toHumanList(): String =
-    when (size) {
-        0 -> ""
-        1 -> single()
-        2 -> "${this[0]} or ${this[1]}"
-        else -> dropLast(1).joinToString(", ") + ", or " + last()
-    }
+private fun imageDecodeFailedText(format: IngestedImageFormat?): UiText =
+    if (format != null) uiText(R.string.media_image_decode_failed_format, format.displayName) else uiText(R.string.media_image_decode_failed)
 
 @Suppress("NewApi")
 private fun decodeWithImageDecoder(

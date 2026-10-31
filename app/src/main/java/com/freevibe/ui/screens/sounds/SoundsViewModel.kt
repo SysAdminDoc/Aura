@@ -130,6 +130,7 @@ class SoundsViewModel @Inject constructor(
     private val previewWorkPermits = Semaphore(PREVIEW_WORK_CONCURRENCY)
 
     internal val playback: SoundPlaybackActions = SoundPlaybackActions(
+        context = context,
         audioPlaybackManager = audioPlaybackManager,
         audioPreviewCache = audioPreviewCache,
         selectedContent = selectedContent,
@@ -143,7 +144,7 @@ class SoundsViewModel @Inject constructor(
         scope = viewModelScope,
         resolveRemotePreview = ::resolveRemotePreview,
         shouldRefreshRemotePreview = ::shouldRefreshRemotePreview,
-        youtubeDisabledMessage = ::youtubeDisabledMessage,
+        youtubeDisabledMessage = { youtubeDisabledMessage(context) },
         persistFeed = { snapshot ->
             viewModelScope.launch(Dispatchers.IO) {
                 soundFeedCache.write(
@@ -164,6 +165,7 @@ class SoundsViewModel @Inject constructor(
     )
 
     internal val youtubeActions: SoundYouTubeActions = SoundYouTubeActions(
+        context = context,
         youtubeRepo = youtubeRepo,
         prefs = prefs,
         searchHistoryRepo = searchHistoryRepo,
@@ -178,6 +180,7 @@ class SoundsViewModel @Inject constructor(
     )
 
     internal val communityFeed: SoundCommunityFeed = SoundCommunityFeed(
+        context = context,
         uploadRepo = uploadRepo,
         sourceMetrics = sourceMetrics,
         state = _state,
@@ -196,6 +199,7 @@ class SoundsViewModel @Inject constructor(
     )
 
     internal val browse: SoundBrowseViewModel = SoundBrowseViewModel(
+        context = context,
         youtubeRepo = youtubeRepo,
         queries = browseQueries,
         sourceMetrics = sourceMetrics,
@@ -216,6 +220,7 @@ class SoundsViewModel @Inject constructor(
     )
 
     internal val applyActions: SoundApplyActions = SoundApplyActions(
+        context = context,
         soundApplier = soundApplier,
         downloadManager = downloadManager,
         favoritesRepo = favoritesRepo,

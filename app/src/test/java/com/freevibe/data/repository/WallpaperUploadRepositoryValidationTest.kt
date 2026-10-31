@@ -1,8 +1,10 @@
 package com.freevibe.data.repository
 
 import com.freevibe.service.ColorExtractor
+import com.freevibe.R
 import com.freevibe.service.MediaIngestionImageFlow
 import com.freevibe.service.imageFormatSupportForFlow
+import com.freevibe.util.uiText
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -59,7 +61,10 @@ class WallpaperUploadRepositoryValidationTest {
         assertFalse(isSupportedWallpaperUploadMime("image/avif", sdkInt = 33))
         assertFalse(isSupportedWallpaperUploadMime("image/gif", sdkInt = 34))
         assertFalse(isSupportedWallpaperUploadMime("", sdkInt = 34))
-        assertTrue(unsupportedWallpaperUploadFormatMessage("image/avif", sdkInt = 33).contains("Android 14"))
+        assertEquals(
+            uiText(R.string.media_image_avif_needs_android14_scrub),
+            unsupportedWallpaperUploadFormatMessage("image/avif", sdkInt = 33),
+        )
     }
 
     @Test
@@ -93,7 +98,7 @@ class WallpaperUploadRepositoryValidationTest {
         assertTrue(support.supported)
         assertTrue(support.stripsMetadata)
         assertEquals("image/jpeg", support.outputMimeType)
-        assertTrue(support.message.contains("metadata"))
+        assertEquals(uiText(R.string.media_image_transcode_notice), support.message)
     }
 
     @Test

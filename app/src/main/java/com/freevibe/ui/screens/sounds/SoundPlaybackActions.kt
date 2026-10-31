@@ -1,5 +1,6 @@
 package com.freevibe.ui.screens.sounds
 
+import android.content.Context
 import com.freevibe.data.model.ContentSource
 import com.freevibe.data.model.Sound
 import com.freevibe.data.model.SoundAction
@@ -27,6 +28,7 @@ import java.util.concurrent.ConcurrentHashMap
 private const val FIRST_VISIBLE_PREVIEW_COUNT = 8
 
 internal class SoundPlaybackActions(
+    private val context: Context,
     private val audioPlaybackManager: AudioPlaybackManager,
     private val audioPreviewCache: AudioPreviewCache,
     private val selectedContent: SelectedContentHolder,
@@ -77,7 +79,7 @@ internal class SoundPlaybackActions(
                     state.update { it.copy(resolvingId = null) }
                     startPlayback(updatedSound)
                 } else {
-                    state.update { it.copy(resolvingId = null, error = "Could not load audio") }
+                    state.update { it.copy(resolvingId = null, error = context.getString(com.freevibe.R.string.sound_error_audio_load_failed)) }
                 }
             }
         } else {

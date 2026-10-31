@@ -1,6 +1,8 @@
 package com.freevibe.ui.screens.wallpapers
 
+import android.content.Context
 import android.net.Uri
+import com.freevibe.R
 import com.freevibe.data.local.PreferencesManager
 import com.freevibe.data.local.WallpaperCacheManager
 import com.freevibe.data.model.CommunityBlockReason
@@ -8,7 +10,6 @@ import com.freevibe.data.model.CommunityReportInput
 import com.freevibe.data.model.CommunityReportReason
 import com.freevibe.data.model.CommunityUploadRights
 import com.freevibe.data.model.ContentSource
-import com.freevibe.data.model.COMMUNITY_GUIDELINES_REQUIRED_MESSAGE
 import com.freevibe.data.model.Wallpaper
 import com.freevibe.data.model.stableKey
 import com.freevibe.data.repository.CommunityBlockRepository
@@ -16,6 +17,7 @@ import com.freevibe.data.repository.CommunityReportRepository
 import com.freevibe.data.repository.VoteRepository
 import com.freevibe.data.repository.WallpaperUploadRepository
 import com.freevibe.service.SourceMetrics
+import com.freevibe.util.displayMessage
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -25,6 +27,7 @@ import kotlinx.coroutines.launch
 import com.freevibe.data.repository.HiddenItemLabel
 
 internal class WallpaperCommunityActions(
+    private val context: Context,
     val voteRepo: VoteRepository,
     private val reportRepo: CommunityReportRepository,
     private val communityBlockRepo: CommunityBlockRepository,
@@ -49,7 +52,7 @@ internal class WallpaperCommunityActions(
         if (communityActionBlocked()) return
         scope.launch {
             val success = voteRepo.upvote(contentId)
-            if (!success) state.update { it.copy(applySuccess = "Already voted") }
+            if (!success) state.update { it.copy(applySuccess = context.getString(R.string.wallpaper_feedback_already_voted)) }
         }
     }
 
@@ -57,7 +60,10 @@ internal class WallpaperCommunityActions(
         if (communityActionBlocked()) return
         scope.launch {
             voteRepo.downvote(contentId, label)
-            state.update { it.copy(applySuccess = if (voteRepo.isAdmin) "Moderated (hidden for all)" else "Hidden") }
+            state.update { it.copy(applySuccess = context.getString(
+                        if (voteRepo.isAdmin) R.string.wallpaper_feedback_moderated else R.string.wallpaper_feedback_hidden,
+                    ),
+                ) }
         }
     }
 
@@ -78,9 +84,16 @@ internal class WallpaperCommunityActions(
                     uploaderUid = if (isGeneratedWallpaper) "" else wallpaper.communityUploaderId,
                 ),
             ).onSuccess {
-                state.update { it.copy(applySuccess = "Report submitted") }
+                state.update { it.copy(applySuccess = context.getString(R.string.feedback_report_submitted)) }
             }.onFailure { error ->
-                state.update { it.copy(error = "Report failed: ${error.message ?: "try again"}") }
+                state.update {
+                    it.copy(
+                        error = context.getString(
+                            R.string.feedback_report_failed,
+                            error.displayMessage(context) ?: context.getString(R.string.feedback_try_again),
+                        ),
+                    )
+                }
             }
         }
     }
@@ -95,7 +108,7 @@ internal class WallpaperCommunityActions(
         if (communityActionBlocked()) return
         val blockedUploaderId = wallpaper.communityUploaderId
         if (wallpaper.source != ContentSource.COMMUNITY || blockedUploaderId.isBlank()) {
-            state.update { it.copy(error = "This wallpaper does not expose a blockable community uploader") }
+            state.update { it.copy(error = context.getString(R.string.wallpaper_feedback_unblockable_uploader)) }
             return
         }
         scope.launch {
@@ -105,13 +118,20 @@ internal class WallpaperCommunityActions(
                     state.update { s ->
                         s.copy(
                             wallpapers = s.wallpapers.filterNot { it.matchesCommunityUploader(blockedUploaderId) },
-                            applySuccess = "Creator blocked",
+                            applySuccess = context.getString(R.string.feedback_creator_blocked),
                         )
                     }
                     onBlocked()
                 }
                 .onFailure { error ->
-                    state.update { it.copy(error = "Block failed: ${error.message ?: "try again"}") }
+                    state.update {
+                        it.copy(
+                            error = context.getString(
+                                R.string.feedback_block_failed,
+                                error.displayMessage(context) ?: context.getString(R.string.feedback_try_again),
+                            ),
+                        )
+                    }
                 }
         }
     }
@@ -134,12 +154,19 @@ internal class WallpaperCommunityActions(
                     state.update { s ->
                         s.copy(
                             wallpapers = s.wallpapers.filterNot { it.stableKey() == key },
-                            applySuccess = "Upload deleted",
+                            applySuccess = context.getString(R.string.feedback_upload_deleted),
                         )
                     }
                 }
                 .onFailure { error ->
-                    state.update { it.copy(error = "Delete failed: ${error.message ?: "try again"}") }
+                    state.update {
+                        it.copy(
+                            error = context.getString(
+                                R.string.feedback_delete_failed,
+                                error.displayMessage(context) ?: context.getString(R.string.feedback_try_again),
+                            ),
+                        )
+                    }
                 }
         }
     }
@@ -182,7 +209,7 @@ internal class WallpaperCommunityActions(
                         isUploadingWallpaper = false,
                         wallpaperUploadComplete = true,
                         wallpaperUploadProgress = 0f,
-                        applySuccess = "Wallpaper upload complete",
+                        applySuccess = context.getString(R.string.wallpaper_feedback_upload_complete),
                         wallpapers = if (shouldInsert) {
                             (listOf(wallpaper) + it.wallpapers).distinctBy { candidate -> candidate.stableKey() }
                         } else {
@@ -196,7 +223,10 @@ internal class WallpaperCommunityActions(
                     it.copy(
                         isUploadingWallpaper = false,
                         wallpaperUploadProgress = 0f,
-                        error = "Upload failed: ${e.message ?: "try another image"}",
+                        error = context.getString(
+                            R.string.wallpaper_feedback_upload_failed,
+                            e.displayMessage(context) ?: context.getString(R.string.wallpaper_feedback_try_another_image),
+                        ),
                         errorSource = WallpaperTab.COMMUNITY.name,
                     )
                 }
@@ -217,9 +247,9 @@ internal class WallpaperCommunityActions(
 
     fun communityDisabledMessage(): String =
         if (!communityProviderEnabled.value) {
-            "Community source is disabled in Settings"
+            context.getString(R.string.sound_feedback_community_disabled)
         } else {
-            COMMUNITY_GUIDELINES_REQUIRED_MESSAGE
+            context.getString(R.string.community_guidelines_action_required)
         }
 
     private companion object {

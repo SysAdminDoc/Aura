@@ -1264,6 +1264,11 @@ class SoundsViewModelTest {
         every { context.getString(R.string.feedback_creator_blocked) } returns "Creator blocked"
         every { context.getString(R.string.feedback_upload_deleted) } returns "Upload deleted"
         every { context.getString(R.string.feedback_delete_failed, "Offline") } returns "Delete failed: Offline"
+        every { context.getString(R.string.video_wp_youtube_disabled) } returns
+            "YouTube features are disabled in Settings"
+        every { context.getString(R.string.sound_error_no_internet) } returns "No internet connection"
+        every { context.getString(R.string.sound_error_last_good, "No internet connection") } returns
+            "No internet connection. Showing your last good results."
     }
 
     private fun stubCommonDependencies(

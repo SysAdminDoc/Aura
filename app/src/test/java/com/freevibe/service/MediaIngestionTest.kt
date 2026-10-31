@@ -1,5 +1,7 @@
 package com.freevibe.service
 
+import com.freevibe.R
+import com.freevibe.util.uiText
 import org.junit.Assert.assertArrayEquals
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -103,7 +105,7 @@ class MediaIngestionTest {
         assertEquals("image/jpeg", supported.outputMimeType)
         assertTrue(supported.stripsMetadata)
         assertFalse(rejected.supported)
-        assertTrue(rejected.message.contains("Android 14"))
+        assertEquals(uiText(R.string.media_image_avif_needs_android14_scrub), rejected.message)
     }
 
     @Test
@@ -166,8 +168,7 @@ class MediaIngestionTest {
         )
 
         assertFalse(support.supported)
-        assertTrue(support.message.contains("Android 14"))
-        assertFalse(support.message.contains("scrub"))
+        assertEquals(uiText(R.string.media_image_avif_needs_android14), support.message)
     }
 
     @Test

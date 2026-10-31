@@ -1,5 +1,6 @@
 package com.freevibe.ui.screens.sounds
 
+import android.content.Context
 import com.freevibe.data.model.ContentType
 import com.freevibe.data.model.Sound
 import com.freevibe.data.model.SoundAction
@@ -25,6 +26,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 internal class SoundApplyActions(
+    private val context: Context,
     private val soundApplier: SoundApplier,
     private val downloadManager: DownloadManager,
     private val favoritesRepo: FavoritesRepository,
@@ -46,7 +48,7 @@ internal class SoundApplyActions(
                 state.update {
                     it.copy(
                         isApplying = false,
-                        error = "System settings access is required before applying sounds.",
+                        error = context.getString(com.freevibe.R.string.sound_apply_write_settings_required),
                     )
                 }
                 return@launch
@@ -54,7 +56,7 @@ internal class SoundApplyActions(
             state.update { it.copy(isApplying = true, applySuccess = null) }
             val url = resolveDownloadUrl(sound)
                 ?: run {
-                    state.update { it.copy(isApplying = false, error = "Could not resolve audio") }
+                    state.update { it.copy(isApplying = false, error = context.getString(com.freevibe.R.string.sound_error_resolve_audio)) }
                     return@launch
                 }
             soundApplier.downloadAndApply(
@@ -64,14 +66,16 @@ internal class SoundApplyActions(
                 savedOriginalId = downloadHistoryId("SOUND", sound.stableKey()),
             )
                 .onSuccess {
-                    val label = when (type) {
-                        ContentType.RINGTONE -> "ringtone"
-                        ContentType.NOTIFICATION -> "notification sound"
-                        ContentType.ALARM -> "alarm sound"
-                        else -> "sound"
-                    }
+                    val setAsLabel = context.getString(
+                        when (type) {
+                            ContentType.RINGTONE -> com.freevibe.R.string.sounds_quick_apply_set_ringtone
+                            ContentType.NOTIFICATION -> com.freevibe.R.string.sounds_quick_apply_set_notification
+                            ContentType.ALARM -> com.freevibe.R.string.sounds_quick_apply_set_alarm
+                            else -> com.freevibe.R.string.sound_set_as_sound
+                        },
+                    )
                     clearSoundSourceUnavailableAfterSuccess(sound)
-                    state.update { it.copy(isApplying = false, applySuccess = "Set as $label") }
+                    state.update { it.copy(isApplying = false, applySuccess = setAsLabel) }
                 }
                 .onFailure { e ->
                     markSoundSourceUnavailableIfRemoved(sound, e)
@@ -87,7 +91,7 @@ internal class SoundApplyActions(
                 return@launch
             }
             val dlUrl = resolveDownloadUrl(sound) ?: run {
-                state.update { it.copy(error = "Could not resolve audio stream URL") }
+                state.update { it.copy(error = context.getString(com.freevibe.R.string.sound_error_resolve_stream)) }
                 return@launch
             }
             val ext = sound.fileType.substringAfterLast("/", "mp3").substringAfterLast(".", "mp3").lowercase(java.util.Locale.ROOT)
@@ -100,7 +104,7 @@ internal class SoundApplyActions(
             ).fold(
                 onSuccess = {
                     clearSoundSourceUnavailableAfterSuccess(sound)
-                    state.update { it.copy(applySuccess = "Download started") }
+                    state.update { it.copy(applySuccess = context.getString(com.freevibe.R.string.sound_download_started)) }
                 },
                 onFailure = { error ->
                     markSoundSourceUnavailableIfRemoved(sound, error)
@@ -119,7 +123,7 @@ internal class SoundApplyActions(
             val entity = sound.toFavoriteEntity()
             val isFav = favoritesRepo.isFavorite(sound.favoriteIdentity()).first()
             favoritesRepo.toggle(entity, isFav)
-            state.update { it.copy(applySuccess = if (isFav) "Removed from favorites" else "Added to favorites") }
+            state.update { it.copy(applySuccess = if (isFav) context.getString(com.freevibe.R.string.wallpaper_feedback_favorite_removed) else context.getString(com.freevibe.R.string.wallpaper_feedback_favorite_added)) }
         }
     }
 

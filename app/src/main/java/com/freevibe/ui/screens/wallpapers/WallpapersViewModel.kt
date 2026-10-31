@@ -116,6 +116,7 @@ class WallpapersViewModel @Inject constructor(
     val topVoted = _topVoted.asStateFlow()
 
     internal val browse = WallpaperBrowseViewModel(
+        context = context,
         wallpaperRepo = wallpaperRepo,
         redditRepo = redditRepo,
         prefs = prefs,
@@ -177,6 +178,7 @@ class WallpapersViewModel @Inject constructor(
     )
 
     internal val community = WallpaperCommunityActions(
+        context = context,
         voteRepo = voteRepo,
         reportRepo = reportRepo,
         communityBlockRepo = communityBlockRepo,

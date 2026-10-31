@@ -1,5 +1,6 @@
 package com.freevibe.ui.screens.sounds
 
+import android.content.Context
 import com.freevibe.data.model.ContentSource
 import com.freevibe.data.model.ContentType
 import com.freevibe.data.model.Sound
@@ -23,6 +24,7 @@ import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicReference
 
 internal class SoundBrowseViewModel(
+    private val context: Context,
     private val youtubeRepo: YouTubeRepository,
     private val queries: SoundBrowseQueries,
     private val sourceMetrics: SourceMetrics,
@@ -380,7 +382,7 @@ internal class SoundBrowseViewModel(
                 val preserveCurrentFeed = !loadMore && combined.isEmpty() && snapshot.sounds.isNotEmpty()
                 val surfacedError = firstFailure.get()
                     ?.takeIf { combined.isEmpty() }
-                    ?.let(::categorizeSoundError)
+                    ?.let { categorizeSoundError(context, it) }
                 var visibleSoundsAfterLoad: List<Sound> = emptyList()
                 state.update {
                     val nextSounds = when {
@@ -416,9 +418,9 @@ internal class SoundBrowseViewModel(
                         isRefreshing = false,
                         hasMore = it.hasMore,
                         error = if (it.sounds.isNotEmpty()) {
-                            "${categorizeSoundError(e)}. Showing your last good results."
+                            context.getString(com.freevibe.R.string.sound_error_last_good, categorizeSoundError(context, e))
                         } else {
-                            categorizeSoundError(e)
+                            categorizeSoundError(context, e)
                         },
                     )
                 }
@@ -450,7 +452,7 @@ internal class SoundBrowseViewModel(
                 isLoadingMore = false,
                 isRefreshing = false,
                 hasMore = false,
-                error = if (loadTab == SoundTab.SEARCH) youtubeDisabledMessage() else null,
+                error = if (loadTab == SoundTab.SEARCH) youtubeDisabledMessage(context) else null,
             )
         }
         schedulePreviewPrebuffer(fallbackSounds)

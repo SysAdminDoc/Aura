@@ -2532,4 +2532,50 @@
         <item>Tools</item>
         <item>Browse</item>
     </string-array>
+    <string name="list_or_two">%1$s or %2$s</string>
+    <string name="list_or_last">%1$s, or %2$s</string>
+    <string name="list_join">%1$s, %2$s</string>
+    <string name="media_image_choose_format">Choose a %1$s image.</string>
+    <string name="media_image_avif_needs_android14_scrub">AVIF images need Android 14 or newer so Aura can decode and scrub them safely.</string>
+    <string name="media_image_avif_needs_android14">AVIF images need Android 14 or newer so Aura can decode them.</string>
+    <string name="media_image_format_unsupported_version">%1$s images aren\'t supported on this Android version.</string>
+    <string name="media_image_transcode_notice">Aura will convert this image to JPEG before upload so embedded metadata and location tags aren\'t kept.</string>
+    <string name="media_image_supported">%1$s image supported.</string>
+    <string name="media_image_decode_failed_format">This device couldn\'t decode that %1$s image.</string>
+    <string name="media_image_decode_failed">This device couldn\'t decode that image.</string>
+    <string name="media_unverified_audio">Couldn\'t verify that this file is a sound.</string>
+    <string name="media_unverified_image">Couldn\'t verify that this file is an image.</string>
+    <string name="media_mismatch_audio">This file isn\'t a sound.</string>
+    <string name="media_mismatch_image">This file isn\'t an image.</string>
+    <string name="media_container_unknown">Couldn\'t identify this file\'s format.</string>
+    <string name="media_container_not_allowed">This file type (%1$s) isn\'t supported here.</string>
+    <string name="wallpaper_feedback_already_voted">Already voted</string>
+    <string name="wallpaper_feedback_moderated">Moderated (hidden for all)</string>
+    <string name="wallpaper_feedback_unblockable_uploader">This wallpaper does not expose a blockable community uploader</string>
+    <string name="wallpaper_feedback_upload_failed">Upload failed: %1$s</string>
+    <string name="wallpaper_feedback_try_another_image">try another image</string>
+    <string name="sound_error_no_internet">No internet connection</string>
+    <string name="sound_error_timed_out">Connection timed out. Try again.</string>
+    <string name="sound_error_connect_failed">Couldn\'t connect to the server.</string>
+    <string name="sound_error_generic">Something went wrong</string>
+    <string name="sound_error_last_good">%1$s. Showing your last good results.</string>
+    <string name="sound_error_invalid_youtube_url">That isn\'t a valid YouTube link.</string>
+    <string name="sound_error_video_load_failed">Couldn\'t load the video: %1$s</string>
+    <string name="sound_error_audio_load_failed">Couldn\'t load the audio</string>
+    <string name="sound_error_community_timed_out">Community uploads timed out</string>
+    <string name="sound_error_resolve_audio">Couldn\'t find the audio for this sound</string>
+    <string name="sound_error_resolve_stream">Couldn\'t get a playable audio link</string>
+    <string name="sound_set_as_sound">Set as sound</string>
+    <string name="sound_download_started">Download started</string>
+    <string name="wallpaper_source_disabled">%1$s source is disabled in Settings</string>
+    <string name="wallpaper_reddit_disabled">Reddit RSS is disabled in Settings. Cached and saved wallpapers remain available.</string>
+    <string name="wallpaper_error_no_internet">No internet connection</string>
+    <string name="wallpaper_error_timed_out">Connection timed out. Try again.</string>
+    <string name="wallpaper_error_connect_failed">Couldn\'t connect to the server.</string>
+    <string name="wallpaper_error_key_invalid">API key invalid or expired</string>
+    <string name="wallpaper_error_not_found">Content not found</string>
+    <string name="wallpaper_error_rate_limited">Rate limited. Wait a moment and retry.</string>
+    <string name="wallpaper_error_server">Server error. Try again later.</string>
+    <string name="wallpaper_error_service_unavailable">Service temporarily unavailable</string>
+    <string name="wallpaper_error_load_failed">Couldn\'t load wallpapers</string>
 </resources>

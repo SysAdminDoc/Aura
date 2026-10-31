@@ -1,5 +1,6 @@
 package com.freevibe.ui.screens.sounds
 
+import android.content.Context
 import com.freevibe.data.model.Sound
 import com.freevibe.data.repository.UploadRepository
 import com.freevibe.service.SourceMetrics
@@ -11,6 +12,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 internal class SoundCommunityFeed(
+    private val context: Context,
     private val uploadRepo: UploadRepository,
     private val sourceMetrics: SourceMetrics,
     private val state: MutableStateFlow<SoundsUiState>,
@@ -44,7 +46,7 @@ internal class SoundCommunityFeed(
                 kotlinx.coroutines.delay(10_000L)
                 val snapshot = state.value
                 if (snapshot.isLoading || snapshot.isRefreshing) {
-                    state.update { it.copy(isLoading = false, isRefreshing = false, error = "Community uploads timed out") }
+                    state.update { it.copy(isLoading = false, isRefreshing = false, error = context.getString(com.freevibe.R.string.sound_error_community_timed_out)) }
                 }
             }
             try {
