@@ -484,24 +484,6 @@ private fun contentTypeMismatch(label: String, expectedFamily: MediaFamily): Med
         uiText(if (expectedFamily == MediaFamily.IMAGE) R.string.media_mismatch_image else R.string.media_mismatch_audio),
     )
 
-private val FFMPEG_SAFE_EXTENSIONS = setOf("mp4", "m4a", "mp3", "ogg", "wav", "flac", "webm", "aac")
-
-internal fun requireFfmpegSafeContainer(file: File): SniffedMediaType {
-    val sniffed = sniffMediaFile(file)
-        ?: throw MediaTypeRejectedException(
-            "Cannot identify container for FFmpeg: unknown file format",
-            uiText(R.string.media_container_unknown),
-        )
-    if (sniffed.extension !in FFMPEG_SAFE_EXTENSIONS) {
-        throw MediaTypeRejectedException(
-            "Container ${sniffed.extension} (${sniffed.mimeType}) is not in the FFmpeg allowlist. " +
-                "This file type may trigger a known decoder vulnerability.",
-            uiText(R.string.media_container_not_allowed, sniffed.extension),
-        )
-    }
-    return sniffed
-}
-
 internal fun normalizeMediaFileName(
     fileName: String,
     sniffed: SniffedMediaType,

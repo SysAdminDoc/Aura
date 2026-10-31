@@ -15,7 +15,7 @@ import java.nio.ByteOrder
 class AudioTrimmerTest {
 
     @Test
-    fun `platform plans route AAC WAV Vorbis and modern Opus without FFmpeg`() {
+    fun `platform plans route AAC WAV Vorbis and modern Opus`() {
         val availableEncoders = setOf(
             MimeTypes.AUDIO_AAC,
             MimeTypes.AUDIO_VORBIS,
@@ -109,63 +109,31 @@ class AudioTrimmerTest {
     }
 
     @Test
-    fun `FFmpeg fallback command only encodes processed audio`() {
-        val command = buildFfmpegEncodeCommand(
-            ffmpegPath = "/ffmpeg",
-            inputPath = "/processed.wav",
-            outputPath = "/output.mp3",
-            exportFormat = AudioExportFormat.MP3,
-            bitrateKbps = 256,
+    fun `OGG falls back to Opus when no Vorbis encoder exists on Android 10 and later`() {
+        assertEquals(
+            PlatformAudioExportPlan(MimeTypes.AUDIO_OPUS, PlatformAudioContainer.OGG, 192),
+            platformAudioExportPlan(AudioExportFormat.OGG, setOf(MimeTypes.AUDIO_OPUS), sdkInt = 29),
         )
-
-        assertTrue(command.windowed(2).contains(listOf("-i", "/processed.wav")))
-        assertTrue(command.windowed(2).contains(listOf("-c:a", "libmp3lame")))
-        assertTrue(command.windowed(2).contains(listOf("-b:a", "256k")))
-        assertFalse(command.contains("-ss"))
-        assertFalse(command.contains("-t"))
-        assertFalse(command.contains("-af"))
-        assertFalse(command.any { it.contains("atrim") || it.contains("atempo") || it.contains("afade") })
+        assertNull(platformAudioExportPlan(AudioExportFormat.OGG, setOf(MimeTypes.AUDIO_OPUS), sdkInt = 28))
+        assertNull(platformAudioExportPlan(AudioExportFormat.OGG, setOf(MimeTypes.AUDIO_AAC), sdkInt = 35))
     }
 
     @Test
-    fun `FFmpeg fallback preserves FLAC and Ogg encoding contracts`() {
-        val flac = buildFfmpegEncodeCommand(
-            ffmpegPath = "/ffmpeg",
-            inputPath = "/processed.wav",
-            outputPath = "/output.flac",
-            exportFormat = AudioExportFormat.FLAC,
-            bitrateKbps = null,
-        )
-        val ogg = buildFfmpegEncodeCommand(
-            ffmpegPath = "/ffmpeg",
-            inputPath = "/processed.wav",
-            outputPath = "/output.ogg",
-            exportFormat = AudioExportFormat.OGG,
-            bitrateKbps = 192,
-        )
+    fun `export chips hide only the formats a device has no encoder for`() {
+        val everything = AudioExportFormat.entries.toList()
 
-        assertTrue(flac.windowed(2).contains(listOf("-c:a", "flac")))
-        assertFalse(flac.contains("-b:a"))
-        assertTrue(ogg.windowed(2).contains(listOf("-metadata", "ANDROID_LOOP=true")))
-    }
-
-    @Test
-    fun `stream copy fallback never adds an audio filter or encoder`() {
-        val command = buildFfmpegStreamCopyTrimCommand(
-            ffmpegPath = "/ffmpeg",
-            inputPath = "/input.ogg",
-            outputPath = "/output.ogg",
-            startMs = 123L,
-            endMs = 1_987L,
-            outputFormat = AudioExportFormat.OGG,
+        assertEquals(
+            everything,
+            exportableAudioFormats(setOf(MimeTypes.AUDIO_AAC, MimeTypes.AUDIO_OPUS), sdkInt = 35),
         )
-
-        assertTrue(command.windowed(2).contains(listOf("-ss", "0.123")))
-        assertTrue(command.windowed(2).contains(listOf("-t", "1.864")))
-        assertTrue(command.windowed(2).contains(listOf("-c:a", "copy")))
-        assertFalse(command.contains("-af"))
-        assertFalse(command.contains("-b:a"))
-        assertTrue(command.windowed(2).contains(listOf("-metadata", "ANDROID_LOOP=true")))
+        assertEquals(
+            everything - AudioExportFormat.OGG - AudioExportFormat.OPUS,
+            exportableAudioFormats(setOf(MimeTypes.AUDIO_AAC), sdkInt = 28),
+        )
+        assertEquals(
+            everything - AudioExportFormat.M4A - AudioExportFormat.OGG - AudioExportFormat.OPUS,
+            exportableAudioFormats(emptySet(), sdkInt = 35),
+        )
     }
 
     @Test

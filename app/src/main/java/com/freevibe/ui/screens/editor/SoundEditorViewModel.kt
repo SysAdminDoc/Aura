@@ -35,7 +35,9 @@ import com.freevibe.service.normalizeMediaFileName
 import com.freevibe.service.requireSniffedMediaFile
 import com.freevibe.service.sha256File
 import com.freevibe.service.speedAdjustedDurationMs
+import com.freevibe.util.UiTextException
 import com.freevibe.util.displayMessage
+import com.freevibe.util.uiText
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
@@ -155,6 +157,15 @@ class SoundEditorViewModel @Inject constructor(
 
     private val _state = MutableStateFlow(SoundEditorState())
     val state = _state.asStateFlow()
+
+    private val _exportFormats = MutableStateFlow(AudioExportFormat.entries.toList())
+    val exportFormats = _exportFormats.asStateFlow()
+
+    init {
+        viewModelScope.launch(Dispatchers.IO) {
+            _exportFormats.value = audioTrimmer.availableExportFormats()
+        }
+    }
 
     private var player: android.media.MediaPlayer? = null
     private var playbackJob: kotlinx.coroutines.Job? = null
@@ -632,7 +643,10 @@ class SoundEditorViewModel @Inject constructor(
             exportFormat = state.exportFormat,
             bitrateKbps = state.exportBitrateKbps,
             losslessCut = state.losslessCut,
-        ).getOrThrow()
+        ).getOrElse { error ->
+            Log.w(TAG, "Audio render failed: ${error.javaClass.simpleName}")
+            throw UiTextException(uiText(R.string.editor_sound_render_failed), "Audio render failed", error)
+        }
         val rendered = File(renderedPath)
         if (savedOriginal == null) return PreparedEditedSoundCopy(renderedPath, temporary = true)
         return try {

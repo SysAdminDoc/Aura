@@ -22,6 +22,7 @@
 # NewPipe Extractor + Rhino JS
 -dontwarn javax.script.**
 -dontwarn java.beans.**
+-dontwarn javax.sound.sampled.**
 -dontwarn jdk.dynalink.**
 -keep class org.schabi.newpipe.extractor.** { *; }
 -keep class org.mozilla.javascript.** { *; }

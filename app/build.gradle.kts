@@ -197,8 +197,8 @@ android {
 
     // Per-ABI release APKs alongside the universal one.
     //
-    // The universal artifact is ~199 MB because FFmpeg and Python ship for four
-    // ABIs and a phone uses exactly one of them. IzzyOnDroid caps a single APK at
+    // The universal artifact is large because Python ships for four ABIs and a
+    // phone uses exactly one of them. IzzyOnDroid caps a single APK at
     // 30 MB and Accrescent at 128 MiB, so the universal build is a direct-download
     // artifact and nothing else.
     //
@@ -232,7 +232,7 @@ android {
 
     packaging {
         jniLibs {
-            // youtubedl-android extracts its zipped FFmpeg and Python payloads at runtime.
+            // youtubedl-android extracts its zipped Python payload at runtime.
             // This cannot move to modern packaging until that extractor runtime is removed.
             useLegacyPackaging = true
         }
@@ -434,7 +434,10 @@ dependencies {
 
     // yt-dlp for Android (YouTube stream URL extraction)
     implementation("io.github.junkfood02.youtubedl-android:library:0.18.1")
-    implementation("io.github.junkfood02.youtubedl-android:ffmpeg:0.18.1")
+
+    // Pure Java MP3 encoder for the sound editor. The wrapper class that reads javax.sound
+    // is never touched; AudioFileEncoders wires the encoder's low-level classes directly.
+    implementation("de.sciss:jump3r:1.0.5")
 
     // ML Kit Subject Segmentation — API 24+, multi-subject, unbundled (the model
     // is downloaded on first use via Google Play services). Roadmap N-3.

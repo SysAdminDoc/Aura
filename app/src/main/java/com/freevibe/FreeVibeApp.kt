@@ -266,8 +266,7 @@ class FreeVibeApp : Application(), Configuration.Provider, SingletonImageLoader.
         appScope.launch {
             try {
                 com.yausername.youtubedl_android.YoutubeDL.getInstance().init(this@FreeVibeApp)
-                com.yausername.ffmpeg.FFmpeg.getInstance().init(this@FreeVibeApp)
-                if (BuildConfig.DEBUG) Log.d("AuraApp", "yt-dlp + FFmpeg initialized")
+                if (BuildConfig.DEBUG) Log.d("AuraApp", "yt-dlp initialized")
             } catch (e: Throwable) {
                 // Must catch CancellationException-as-Throwable here? Throwable catches it, but
                 // we never cancel appScope before process death, so swallowing is OK. We do NOT

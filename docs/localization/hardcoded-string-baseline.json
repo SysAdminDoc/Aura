@@ -29,26 +29,8 @@
       "text": "$label content type mismatch: expected ${expectedFamily.name.lowercase(Locale.ROOT)}"
     },
     {
-      "count": 1,
-      "firstLine": 492,
-      "id": "4fcdd7969327b2f4",
-      "path": "app/src/main/java/com/freevibe/service/MediaIngestion.kt",
-      "reason": "Internal English signal, not display text. DownloadManager.downloadFailureReason classifies failures by this message, and the upload, editor and sound-apply callers (UploadRepository, SoundEditorViewModel, SoundApplier) show MediaTypeRejectedException.text through displayMessage instead.",
-      "sink": "exception",
-      "text": "Cannot identify container for FFmpeg: unknown file format"
-    },
-    {
-      "count": 1,
-      "firstLine": 497,
-      "id": "78e088d469ea9fcb",
-      "path": "app/src/main/java/com/freevibe/service/MediaIngestion.kt",
-      "reason": "Internal English signal, not display text. DownloadManager.downloadFailureReason classifies failures by this message, and the upload, editor and sound-apply callers (UploadRepository, SoundEditorViewModel, SoundApplier) show MediaTypeRejectedException.text through displayMessage instead.",
-      "sink": "exception",
-      "text": "Container ${sniffed.extension} (${sniffed.mimeType}) is not in the FFmpeg allowlist. "
-    },
-    {
       "count": 2,
-      "firstLine": 509,
+      "firstLine": 491,
       "id": "6af5dcf037a894e8",
       "path": "app/src/main/java/com/freevibe/service/MediaIngestion.kt",
       "reason": "Fallback file name, never shown as text.",
@@ -66,7 +48,7 @@
     },
     {
       "count": 1,
-      "firstLine": 1054,
+      "firstLine": 1068,
       "id": "5c36f8bc58a81e8c",
       "path": "app/src/main/java/com/freevibe/ui/screens/editor/SoundEditorViewModel.kt",
       "reason": "Fallback file name, never shown as text.",
@@ -183,7 +165,7 @@
     },
     {
       "count": 1,
-      "firstLine": 1557,
+      "firstLine": 1561,
       "id": "211fc88715e49fc1",
       "path": "app/src/main/java/com/freevibe/ui/screens/videowallpapers/VideoWallpapersViewModel.kt",
       "reason": "Internal signal. The Reddit RSS fetch catch records the source in failedSources and logs in debug builds; the screen shows only the translated video_wp_sources_* messages.",
@@ -192,7 +174,7 @@
     },
     {
       "count": 1,
-      "firstLine": 1559,
+      "firstLine": 1563,
       "id": "957c5ebd12f9820f",
       "path": "app/src/main/java/com/freevibe/ui/screens/videowallpapers/VideoWallpapersViewModel.kt",
       "reason": "Internal signal. The Reddit RSS fetch catch records the source in failedSources and logs in debug builds; the screen shows only the translated video_wp_sources_* messages.",

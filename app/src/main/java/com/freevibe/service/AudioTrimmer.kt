@@ -25,6 +25,7 @@ import androidx.media3.common.MimeTypes
 import androidx.media3.common.SpeedParameters
 import androidx.media3.common.audio.AudioProcessor
 import androidx.media3.common.audio.BaseAudioProcessor
+import androidx.media3.common.audio.SonicAudioProcessor
 import androidx.media3.common.audio.SpeedProvider
 import androidx.media3.decoder.DecoderInputBuffer
 import androidx.media3.extractor.metadata.vorbis.VorbisComment
@@ -46,6 +47,7 @@ import com.google.common.collect.ImmutableList
 import com.freevibe.util.rethrowIfCancelled
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeout
@@ -66,9 +68,8 @@ import kotlin.math.roundToInt
 import kotlin.math.roundToLong
 import kotlin.math.sin
 
-private const val FFMPEG_TIMEOUT_SECONDS = 120L
 private const val MEDIA3_TIMEOUT_MILLISECONDS = 120_000L
-private const val FFMPEG_LOG_DRAIN_LIMIT_BYTES = 256 * 1024 // cap stderr-draining to 256 KB so a misbehaving FFmpeg can't OOM us
+private const val OPUS_SAMPLE_RATE_HZ = 48_000
 private const val LOSSLESS_VERIFY_MAX_BYTES = 64L * 1024 * 1024
 private const val LOSSLESS_FALLBACK_PACKET_BYTES = 1024 * 1024
 private const val RAW_PCM_CODEC_BUFFER_BYTES = 64 * 1024
@@ -177,13 +178,28 @@ internal fun platformAudioExportPlan(
         AudioExportFormat.OPUS -> MimeTypes.AUDIO_OPUS
             .takeIf { sdkInt >= Build.VERSION_CODES.Q && it in availableEncoderMimeTypes }
             ?.let { PlatformAudioExportPlan(it, PlatformAudioContainer.OGG, exportFormat.defaultBitrateKbps) }
-        AudioExportFormat.OGG -> MimeTypes.AUDIO_VORBIS
-            .takeIf(availableEncoderMimeTypes::contains)
-            ?.let { PlatformAudioExportPlan(it, PlatformAudioContainer.OGG, exportFormat.defaultBitrateKbps) }
+        // Most phones have no Vorbis encoder, and an Ogg file may hold Opus just as well.
+        AudioExportFormat.OGG -> when {
+            MimeTypes.AUDIO_VORBIS in availableEncoderMimeTypes ->
+                PlatformAudioExportPlan(MimeTypes.AUDIO_VORBIS, PlatformAudioContainer.OGG, exportFormat.defaultBitrateKbps)
+            sdkInt >= Build.VERSION_CODES.Q && MimeTypes.AUDIO_OPUS in availableEncoderMimeTypes ->
+                PlatformAudioExportPlan(MimeTypes.AUDIO_OPUS, PlatformAudioContainer.OGG, exportFormat.defaultBitrateKbps)
+            else -> null
+        }
         AudioExportFormat.MP3,
         AudioExportFormat.FLAC,
         -> null
     }
+}
+
+/** MP3 and FLAC are encoded by the app itself, and the other formats need a platform encoder. */
+internal fun exportableAudioFormats(
+    availableEncoderMimeTypes: Set<String>,
+    sdkInt: Int,
+): List<AudioExportFormat> = AudioExportFormat.entries.filter { format ->
+    format == AudioExportFormat.MP3 ||
+        format == AudioExportFormat.FLAC ||
+        platformAudioExportPlan(format, availableEncoderMimeTypes, sdkInt) != null
 }
 
 internal fun speedAdjustedDurationMs(durationMs: Long, playbackSpeed: Float): Long {
@@ -262,90 +278,6 @@ private class ConstantAudioSpeedProvider(private val speed: Float) : SpeedProvid
     override fun getSpeed(timeUs: Long): Float = speed
 
     override fun getNextSpeedChangeTimeUs(timeUs: Long): Long = C.TIME_UNSET
-}
-
-private fun ffmpegSeconds(milliseconds: Long): String =
-    String.format(Locale.ROOT, "%.3f", milliseconds / 1000.0)
-
-internal fun buildFfmpegEncodeCommand(
-    ffmpegPath: String,
-    inputPath: String,
-    outputPath: String,
-    exportFormat: AudioExportFormat,
-    bitrateKbps: Int?,
-): List<String> {
-    val codec = when (exportFormat) {
-        AudioExportFormat.MP3 -> listOf("-c:a", "libmp3lame", "-b:a", "${bitrateKbps ?: exportFormat.defaultBitrateKbps}k")
-        AudioExportFormat.OGG -> listOf("-c:a", "libvorbis", "-b:a", "${bitrateKbps ?: exportFormat.defaultBitrateKbps}k")
-        AudioExportFormat.OPUS -> listOf("-c:a", "libopus", "-b:a", "${bitrateKbps ?: exportFormat.defaultBitrateKbps}k")
-        AudioExportFormat.WAV -> listOf("-c:a", "pcm_s16le")
-        AudioExportFormat.FLAC -> listOf("-c:a", "flac")
-        AudioExportFormat.M4A -> listOf("-c:a", "aac", "-b:a", "${bitrateKbps ?: exportFormat.defaultBitrateKbps}k")
-    }
-
-    return mutableListOf(
-        ffmpegPath,
-        "-hide_banner",
-        "-loglevel", "error",
-        "-y",
-        "-i", inputPath,
-        "-map", "0:a:0",
-        "-vn",
-    ) + codec + if (exportFormat == AudioExportFormat.OGG) {
-        listOf("-metadata", "ANDROID_LOOP=true")
-    } else {
-        emptyList()
-    } + outputPath
-}
-
-internal fun buildFfmpegStreamCopyTrimCommand(
-    ffmpegPath: String,
-    inputPath: String,
-    outputPath: String,
-    startMs: Long,
-    endMs: Long,
-    outputFormat: AudioExportFormat,
-): List<String> {
-    require(startMs >= 0L) { "Start time must not be negative" }
-    require(endMs > startMs) { "End time must be after start time" }
-    val metadata = if (outputFormat == AudioExportFormat.OGG) {
-        listOf("-metadata", "ANDROID_LOOP=true")
-    } else {
-        emptyList()
-    }
-    return listOf(
-        ffmpegPath,
-        "-hide_banner",
-        "-loglevel", "error",
-        "-y",
-        "-ss", ffmpegSeconds(startMs),
-        "-i", inputPath,
-        "-map", "0:a:0",
-        "-vn",
-        "-t", ffmpegSeconds(endMs - startMs),
-        "-c:a", "copy",
-    ) + metadata + outputPath
-}
-
-/**
- * Drain stdout/stderr from an FFmpeg process without buffering the full stream.
- * FFmpeg with redirectErrorStream() can emit MBs of progress text per invocation; the
- * previous `readText()` would store all of it in a String only to throw it away. We
- * only need to keep the pipe flowing so the process doesn't block on a full pipe buffer.
- */
-private fun java.io.InputStream.drainBounded(limit: Int = FFMPEG_LOG_DRAIN_LIMIT_BYTES) {
-    use { input ->
-        val buf = ByteArray(8192)
-        var total = 0
-        while (true) {
-            val n = try { input.read(buf) } catch (_: Exception) { -1 }
-            if (n <= 0) break
-            total += n
-            // Keep reading (and discarding) once we pass the log-retention limit so the
-            // process pipe never blocks — we just stop counting.
-            if (total > Int.MAX_VALUE / 2) total = limit
-        }
-    }
 }
 
 private class PlatformAudioMuxerFactory(
@@ -493,7 +425,10 @@ private class RawPcmPassthroughCodec(
 class AudioTrimmer @Inject constructor(
     @ApplicationContext private val context: Context,
 ) {
-    /** Clip and process audio with Media3, using FFmpeg only for unavailable final codecs. */
+    fun availableExportFormats(): List<AudioExportFormat> =
+        exportableAudioFormats(availableAudioEncoderMimeTypes(), Build.VERSION.SDK_INT)
+
+    /** Clip and process audio with Media3, then encode it with a platform codec or the app's own. */
     suspend fun trim(
         inputPath: String,
         startMs: Long,
@@ -543,8 +478,8 @@ class AudioTrimmer @Inject constructor(
                     sdkInt = Build.VERSION.SDK_INT,
                     losslessInputMimeType = inputMimeType,
                 )
-                if (plan != null) {
-                    exportWithMedia3(
+                when {
+                    plan != null -> exportWithMedia3(
                         inputPath = inputPath,
                         outputPath = outputFile.absolutePath,
                         startMs = startMs,
@@ -556,18 +491,11 @@ class AudioTrimmer @Inject constructor(
                         plan = plan,
                         addAndroidLoopMetadata = effectiveFormat == AudioExportFormat.OGG,
                     )
-                } else {
-                    requireFfmpegSafeContainer(File(inputPath))
-                    runFfmpeg(outputDir, outputFile, "Lossless audio cut") { ffmpegPath ->
-                        buildFfmpegStreamCopyTrimCommand(
-                            ffmpegPath = ffmpegPath,
-                            inputPath = inputPath,
-                            outputPath = outputFile.absolutePath,
-                            startMs = startMs,
-                            endMs = endMs,
-                            outputFormat = effectiveFormat,
-                        )
-                    }
+                    effectiveFormat == AudioExportFormat.FLAC ->
+                        cutFlacFrames(File(inputPath), outputFile, startMs, endMs) { ensureActive() }
+                    effectiveFormat == AudioExportFormat.MP3 && inputMimeType == MimeTypes.AUDIO_MPEG ->
+                        cutMp3Frames(inputPath, outputFile, startMs, endMs) { ensureActive() }
+                    else -> throw Exception("Lossless cut can't copy $inputMimeType into ${effectiveFormat.name}")
                 }
             } else {
                 val plan = platformAudioExportPlan(
@@ -587,8 +515,12 @@ class AudioTrimmer @Inject constructor(
                         playbackSpeed = playbackSpeed,
                         plan = plan,
                         addAndroidLoopMetadata = exportFormat == AudioExportFormat.OGG,
+                        outputSampleRateHz = OPUS_SAMPLE_RATE_HZ.takeIf { plan.audioMimeType == MimeTypes.AUDIO_OPUS },
                     )
                 } else {
+                    require(exportFormat == AudioExportFormat.MP3 || exportFormat == AudioExportFormat.FLAC) {
+                        "This device has no ${exportFormat.name} encoder"
+                    }
                     val intermediate = File(
                         outputDir,
                         ".${outputFile.nameWithoutExtension}.${System.nanoTime()}.wav",
@@ -614,14 +546,12 @@ class AudioTrimmer @Inject constructor(
                     require(intermediate.exists() && intermediate.length() > 100L) {
                         "Platform audio processing did not produce an intermediate file"
                     }
-                    runFfmpeg(outputDir, outputFile, "${exportFormat.name} encoding") { ffmpegPath ->
-                        buildFfmpegEncodeCommand(
-                            ffmpegPath = ffmpegPath,
-                            inputPath = intermediate.absolutePath,
-                            outputPath = outputFile.absolutePath,
-                            exportFormat = exportFormat,
-                            bitrateKbps = bitrateKbps,
-                        )
+                    if (exportFormat == AudioExportFormat.MP3) {
+                        encodeWavToMp3(intermediate, outputFile, bitrateKbps ?: checkNotNull(exportFormat.defaultBitrateKbps)) {
+                            ensureActive()
+                        }
+                    } else {
+                        encodeWavToFlac(intermediate, outputFile) { ensureActive() }
                     }
                 }
             }
@@ -667,6 +597,7 @@ class AudioTrimmer @Inject constructor(
         playbackSpeed: Float,
         plan: PlatformAudioExportPlan,
         addAndroidLoopMetadata: Boolean,
+        outputSampleRateHz: Int? = null,
     ) = withTimeout(MEDIA3_TIMEOUT_MILLISECONDS) {
         withContext(Dispatchers.Main.immediate) {
             suspendCancellableCoroutine { continuation ->
@@ -680,17 +611,20 @@ class AudioTrimmer @Inject constructor(
                     )
                     .build()
                 val outputDurationMs = speedAdjustedDurationMs(endMs - startMs, playbackSpeed)
-                val audioProcessors = if (fadeInMs > 0L || fadeOutMs > 0L) {
-                    listOf(
-                        PcmFadeAudioProcessor(
-                            durationMs = outputDurationMs,
-                            fadeInMs = fadeInMs.coerceAtMost(outputDurationMs),
-                            fadeOutMs = fadeOutMs.coerceAtMost(outputDurationMs),
-                            fadeCurve = fadeCurve,
-                        ),
-                    )
-                } else {
-                    emptyList()
+                val audioProcessors = buildList<AudioProcessor> {
+                    if (fadeInMs > 0L || fadeOutMs > 0L) {
+                        add(
+                            PcmFadeAudioProcessor(
+                                durationMs = outputDurationMs,
+                                fadeInMs = fadeInMs.coerceAtMost(outputDurationMs),
+                                fadeOutMs = fadeOutMs.coerceAtMost(outputDurationMs),
+                                fadeCurve = fadeCurve,
+                            ),
+                        )
+                    }
+                    if (outputSampleRateHz != null) {
+                        add(SonicAudioProcessor().apply { setOutputSampleRateHz(outputSampleRateHz) })
+                    }
                 }
                 val editedItemBuilder = EditedMediaItem.Builder(mediaItem)
                     .setRemoveVideo(true)
@@ -767,45 +701,45 @@ class AudioTrimmer @Inject constructor(
         }
     }
 
-    private fun runFfmpeg(
-        outputDir: File,
-        outputFile: File,
-        operation: String,
-        command: (String) -> List<String>,
+    /** MP3 frames carry their own headers, so a cut is the frames of that stretch written back to back. */
+    private fun cutMp3Frames(
+        inputPath: String,
+        output: File,
+        startMs: Long,
+        endMs: Long,
+        beforeEachFrame: () -> Unit,
     ) {
-        val (ffmpegPath, ldLibraryPath) = getYtdlpFfmpeg()
-            ?: throw Exception("FFmpeg is not available for $operation")
-        val processBuilder = ProcessBuilder(command(ffmpegPath.absolutePath))
-            .redirectErrorStream(true)
-            .directory(outputDir)
-        if (ldLibraryPath.isNotEmpty()) {
-            processBuilder.environment()["LD_LIBRARY_PATH"] = ldLibraryPath
-        }
-        val process = processBuilder.start()
-        val logDrainThread = Thread(
-            { process.inputStream.drainBounded() },
-            "audio-ffmpeg-log-drain",
-        ).apply {
-            isDaemon = true
-            start()
-        }
-        try {
-            val completed = process.waitFor(
-                FFMPEG_TIMEOUT_SECONDS,
-                java.util.concurrent.TimeUnit.SECONDS,
-            )
-            if (!completed) {
-                process.destroyForcibly()
-                throw Exception("$operation timed out after ${FFMPEG_TIMEOUT_SECONDS}s")
+        val startUs = startMs * 1_000L
+        val endUs = endMs * 1_000L
+        var firstFrame: ByteArray? = null
+        var firstBitrateKbps = 0
+        var mixedBitrates = false
+        var frameCount = 0
+        var audioBytes = 0L
+        forEachEncodedAudioPacket(inputPath) { frame, timeUs ->
+            beforeEachFrame()
+            if (timeUs >= endUs) return@forEachEncodedAudioPacket false
+            if (timeUs >= startUs) {
+                val info = parseMp3FrameHeader(frame) ?: throw Exception("MP3 audio has a damaged frame")
+                if (firstFrame == null) {
+                    firstFrame = frame
+                    firstBitrateKbps = info.bitrateKbps
+                } else if (info.bitrateKbps != firstBitrateKbps) {
+                    mixedBitrates = true
+                }
+                frameCount += 1
+                audioBytes += frame.size
             }
-            val exitCode = process.exitValue()
-            if (exitCode != 0 || !outputFile.exists() || outputFile.length() <= 100L) {
-                throw Exception("$operation failed (exit $exitCode)")
-            }
-        } finally {
-            try { process.destroy() } catch (_: Exception) {}
-            try { logDrainThread.join(1_000L) } catch (_: InterruptedException) {
-                Thread.currentThread().interrupt()
+            true
+        }
+        val first = firstFrame ?: throw Exception("The chosen stretch is past the end of the MP3 audio")
+        FileOutputStream(output).use { mp3 ->
+            if (mixedBitrates) mp3.write(mp3VbrTagFrame(first, frameCount, audioBytes))
+            forEachEncodedAudioPacket(inputPath) { frame, timeUs ->
+                beforeEachFrame()
+                if (timeUs >= endUs) return@forEachEncodedAudioPacket false
+                if (timeUs >= startUs) mp3.write(frame)
+                true
             }
         }
     }
@@ -831,7 +765,7 @@ class AudioTrimmer @Inject constructor(
 
         var matched = 0
         var found = false
-        forEachEncodedAudioPacket(inputPath, packetLoop@ { sourcePacket ->
+        forEachEncodedAudioPacket(inputPath, packetLoop@ { sourcePacket, _ ->
             sourcePacket.forEach { sourceByte ->
                 while (matched > 0 && sourceByte != outputBytes[matched]) {
                     matched = prefix[matched - 1]
@@ -850,7 +784,7 @@ class AudioTrimmer @Inject constructor(
     private fun readEncodedAudioPackets(path: String): List<ByteArray> {
         val packets = ArrayList<ByteArray>()
         var totalBytes = 0L
-        forEachEncodedAudioPacket(path) { packet ->
+        forEachEncodedAudioPacket(path) { packet, _ ->
             totalBytes += packet.size
             if (totalBytes > LOSSLESS_VERIFY_MAX_BYTES) {
                 throw Exception("Lossless export verification input is too large")
@@ -861,7 +795,7 @@ class AudioTrimmer @Inject constructor(
         return packets
     }
 
-    private fun forEachEncodedAudioPacket(path: String, block: (ByteArray) -> Boolean): Boolean {
+    private fun forEachEncodedAudioPacket(path: String, block: (ByteArray, Long) -> Boolean): Boolean {
         val extractor = MediaExtractor()
         return try {
             extractor.setDataSource(path)
@@ -888,7 +822,7 @@ class AudioTrimmer @Inject constructor(
                 if (Build.VERSION.SDK_INT < Build.VERSION_CODES.P && bytesRead == buffer.capacity()) {
                     throw Exception("Encoded audio sample exceeds the verifier buffer")
                 }
-                if (bytesRead > 0 && !block(buffer.array().copyOf(bytesRead))) return false
+                if (bytesRead > 0 && !block(buffer.array().copyOf(bytesRead), extractor.sampleTime)) return false
                 if (!extractor.advance()) break
             }
             true
@@ -935,20 +869,6 @@ class AudioTrimmer @Inject constructor(
         } finally {
             try { extractor.release() } catch (_: Exception) {}
         }
-    }
-
-    /** Get FFmpeg binary and LD_LIBRARY_PATH from yt-dlp via reflection */
-    private fun getYtdlpFfmpeg(): Pair<File, String>? {
-        return try {
-            val ytdl = com.yausername.youtubedl_android.YoutubeDL.getInstance()
-            val cls = ytdl::class.java
-            val ffmpegField = cls.getDeclaredField("ffmpegPath").apply { isAccessible = true }
-            val ldField = cls.getDeclaredField("ENV_LD_LIBRARY_PATH").apply { isAccessible = true }
-            // Try instance field first, then static
-            val ffmpegPath = (ffmpegField.get(ytdl) ?: ffmpegField.get(null)) as? File ?: return null
-            val ldPath = (ldField.get(ytdl) ?: ldField.get(null)) as? String ?: ""
-            if (ffmpegPath.exists()) Pair(ffmpegPath, ldPath) else null
-        } catch (_: Exception) { null }
     }
 
     /** Clean up trimmed files cache */

@@ -28430,13 +28430,6 @@ SPLcom/squareup/moshi/internal/Util$ParameterizedTypeImpl;->getActualTypeArgumen
 SPLcom/squareup/moshi/internal/Util$ParameterizedTypeImpl;->getOwnerType()Ljava/lang/reflect/Type;
 SPLcom/squareup/moshi/internal/Util$ParameterizedTypeImpl;->getRawType()Ljava/lang/reflect/Type;
 SPLcom/squareup/moshi/internal/Util$ParameterizedTypeImpl;->hashCode()I
-Lcom/yausername/ffmpeg/FFmpeg;
-SPLcom/yausername/ffmpeg/FFmpeg;-><clinit>()V
-SPLcom/yausername/ffmpeg/FFmpeg;-><init>()V
-SPLcom/yausername/ffmpeg/FFmpeg;->getInstance()Lcom/yausername/ffmpeg/FFmpeg;
-SPLcom/yausername/ffmpeg/FFmpeg;->init(Landroid/content/Context;)V
-SPLcom/yausername/ffmpeg/FFmpeg;->initFFmpeg(Landroid/content/Context;Ljava/io/File;)V
-PLcom/yausername/ffmpeg/FFmpeg;->updateFFmpeg(Landroid/content/Context;Ljava/lang/String;)V
 Lcom/yausername/youtubedl_android/R$raw;
 PLcom/yausername/youtubedl_android/StreamGobbler;-><clinit>()V
 PLcom/yausername/youtubedl_android/StreamGobbler;-><init>(Ljava/lang/StringBuffer;Ljava/io/InputStream;)V

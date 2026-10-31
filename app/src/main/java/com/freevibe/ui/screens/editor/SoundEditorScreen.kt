@@ -47,7 +47,6 @@ import com.freevibe.R
 import com.freevibe.data.model.ContentType
 import com.freevibe.data.model.Sound
 import com.freevibe.data.model.stableKey
-import com.freevibe.service.AudioExportFormat
 import com.freevibe.service.AudioFadeCurve
 import com.freevibe.ui.components.AuraSnackbarHost
 import com.freevibe.ui.components.AuraStateAction
@@ -71,6 +70,7 @@ fun SoundEditorScreen(
     viewModel: SoundEditorViewModel = androidx.hilt.navigation.compose.hiltViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
+    val exportFormats by viewModel.exportFormats.collectAsStateWithLifecycle()
     val currentSelectedSound by recoveryViewModel.selectedSound.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
     val playPreviewLabel = stringResource(R.string.a11y_play_preview)
@@ -543,7 +543,7 @@ fun SoundEditorScreen(
                         .horizontalScroll(rememberScrollState()),
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                 ) {
-                    AudioExportFormat.entries.forEach { format ->
+                    exportFormats.forEach { format ->
                         FilterChip(
                             selected = state.exportFormat == format,
                             onClick = { viewModel.setExportFormat(format) },

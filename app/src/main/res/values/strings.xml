@@ -2547,8 +2547,6 @@
     <string name="media_unverified_image">Couldn\'t verify that this file is an image.</string>
     <string name="media_mismatch_audio">This file isn\'t a sound.</string>
     <string name="media_mismatch_image">This file isn\'t an image.</string>
-    <string name="media_container_unknown">Couldn\'t identify this file\'s format.</string>
-    <string name="media_container_not_allowed">This file type (%1$s) isn\'t supported here.</string>
     <string name="wallpaper_feedback_already_voted">Already voted</string>
     <string name="wallpaper_feedback_moderated">Moderated (hidden for all)</string>
     <string name="wallpaper_feedback_unblockable_uploader">This wallpaper does not expose a blockable community uploader</string>
@@ -2586,6 +2584,7 @@
     <string name="editor_sound_too_large">The audio file is too large (%1$d MB)</string>
     <string name="editor_sound_over_limit">The audio file is over the %1$d MB editing limit</string>
     <string name="editor_sound_download_empty">The download was empty</string>
+    <string name="editor_sound_render_failed">Couldn\'t process this sound</string>
     <string name="editor_sound_cannot_read">Couldn\'t read the file</string>
     <string name="editor_sound_file_empty">The selected file is empty</string>
     <string name="reports_status_open">Open</string>

@@ -2328,8 +2328,6 @@
     <string name="media_unverified_image">无法确认此文件是图片。</string>
     <string name="media_mismatch_audio">此文件不是声音文件。</string>
     <string name="media_mismatch_image">此文件不是图片。</string>
-    <string name="media_container_unknown">无法识别此文件的格式。</string>
-    <string name="media_container_not_allowed">此处不支持该文件类型（%1$s）。</string>
     <string name="wallpaper_feedback_already_voted">已投过票</string>
     <string name="wallpaper_feedback_moderated">已审核（对所有人隐藏）</string>
     <string name="wallpaper_feedback_unblockable_uploader">此壁纸未提供可屏蔽的社区上传者</string>
@@ -2367,6 +2365,7 @@
     <string name="editor_sound_too_large">音频文件太大（%1$d MB）</string>
     <string name="editor_sound_over_limit">音频文件超过 %1$d MB 的编辑上限</string>
     <string name="editor_sound_download_empty">下载的内容为空</string>
+    <string name="editor_sound_render_failed">无法处理这段音频</string>
     <string name="editor_sound_cannot_read">无法读取该文件</string>
     <string name="editor_sound_file_empty">所选文件为空</string>
     <string name="reports_status_open">待处理</string>

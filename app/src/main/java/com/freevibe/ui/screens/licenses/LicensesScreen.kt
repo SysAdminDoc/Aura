@@ -60,7 +60,7 @@ private val licenses = listOf(
     OssLicense("NewPipe Extractor", "https://github.com/TeamNewPipe/NewPipeExtractor", "GPL-3.0", "YouTube and streaming-site extraction"),
     OssLicense("youtubedl-android", "https://github.com/yausername/youtubedl-android", "GPL-3.0", "yt-dlp wrapper for Android"),
     OssLicense("yt-dlp", "https://github.com/yt-dlp/yt-dlp", "Unlicense", "YouTube stream extraction payload"),
-    OssLicense("FFmpeg", "https://ffmpeg.org/legal.html", "LGPL/GPL depending on build", "Video crop, extractor runtime, and fallback audio codec payload"),
+    OssLicense("jump3r", "https://codeberg.org/sciss/jump3r", "LGPL-2.1", "MP3 sound exports"),
     OssLicense("Core library desugaring", "https://developer.android.com/studio/write/java8-support", "Apache 2.0", "Java API backports for Android"),
 )
 
@@ -81,7 +81,7 @@ internal val releaseNoticeLinks = listOf(
         name = "Native compliance packet",
         url = "https://github.com/SysAdminDoc/Aura/releases/latest",
         license = "Release artifact",
-        description = "Download NATIVE-COMPLIANCE.md for native, extractor, Python, QuickJS, and FFmpeg evidence.",
+        description = "Download NATIVE-COMPLIANCE.md for native, extractor, Python, and QuickJS evidence.",
     ),
 )
 
