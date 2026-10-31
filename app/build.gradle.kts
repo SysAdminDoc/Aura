@@ -128,6 +128,9 @@ android {
     buildTypes {
         debug {
             isPseudoLocalesEnabled = true
+            // A FOSS debug build can sit beside a phone's release install, whose signature it
+            // can't replace. Firebase has no client for the suffixed id, so Full refuses it.
+            providers.gradleProperty("aura.debugApplicationIdSuffix").orNull?.let { applicationIdSuffix = it }
         }
         release {
             isMinifyEnabled = true
