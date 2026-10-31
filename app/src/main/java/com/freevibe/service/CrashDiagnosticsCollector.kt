@@ -81,7 +81,11 @@ class CrashDiagnosticsCollector @Inject constructor(
     }
 
     private fun memoryLimiterExitCount(): Int =
-        AndroidMemoryLimiter.countMemoryLimiterExits(recentExits().map { it.description })
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.R) {
+            0
+        } else {
+            AndroidMemoryLimiter.countMemoryLimiterExits(recentExits().map { it.description })
+        }
 
     suspend fun buildBundle(): String {
         val summary = readSummary()

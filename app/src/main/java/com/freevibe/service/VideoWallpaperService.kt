@@ -19,6 +19,7 @@ import android.os.BatteryManager
 import android.os.Handler
 import android.os.Looper
 import android.os.PowerManager
+import androidx.core.content.ContextCompat
 import android.os.SystemClock
 import android.service.wallpaper.WallpaperService
 import android.view.SurfaceHolder
@@ -793,12 +794,12 @@ class VideoWallpaperService : WallpaperService() {
                 addAction(VIDEO_AUTO_BATTERY_SAVER_CHANGED_ACTION)
             }
             try {
-                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
-                    registerReceiver(powerSaveReceiver, filter, Context.RECEIVER_NOT_EXPORTED)
-                } else {
-                    @Suppress("DEPRECATION")
-                    registerReceiver(powerSaveReceiver, filter)
-                }
+                ContextCompat.registerReceiver(
+                    this,
+                    powerSaveReceiver,
+                    filter,
+                    ContextCompat.RECEIVER_NOT_EXPORTED,
+                )
                 powerSaveReceiverRegistered = true
             } catch (_: Exception) {
             }
