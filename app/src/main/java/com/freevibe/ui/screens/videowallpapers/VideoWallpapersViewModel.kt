@@ -22,6 +22,7 @@ import com.freevibe.data.remote.pexels.PexelsApi
 import com.freevibe.data.repository.CommunityReportRepository
 import com.freevibe.data.repository.FavoritesRepository
 import com.freevibe.data.repository.HiddenItemLabel
+import com.freevibe.data.repository.RedditRepository
 import com.freevibe.data.repository.VoteRepository
 import com.freevibe.data.repository.YouTubeRepository
 import com.freevibe.service.SourceMetrics
@@ -60,6 +61,7 @@ import okhttp3.OkHttpClient
 class VideoWallpapersViewModel @Inject constructor(
     @ApplicationContext private val context: Context,
     private val youtubeRepo: YouTubeRepository,
+    private val redditRepo: RedditRepository,
     private val pexelsApi: PexelsApi,
     private val pixabayApi: com.freevibe.data.remote.pixabay.PixabayApi,
     private val prefs: PreferencesManager,
@@ -132,6 +134,7 @@ class VideoWallpapersViewModel @Inject constructor(
     private val feed = VideoFeedActions(
         context = context,
         youtubeRepo = youtubeRepo,
+        redditRepo = redditRepo,
         pexelsApi = pexelsApi,
         pixabayApi = pixabayApi,
         prefs = prefs,
@@ -446,7 +449,9 @@ class VideoWallpapersViewModel @Inject constructor(
                 synchronized(loadLock) {
                     if (loadGeneration == generation) {
                         loadJob = null
-                        _state.update { it.copy(isLoading = false, isLoadingMore = false, isRefreshing = false) }
+                        _state.update {
+                            it.copy(isLoading = false, isLoadingMore = false, isRefreshing = false, redditWaiting = false)
+                        }
                     }
                 }
             }

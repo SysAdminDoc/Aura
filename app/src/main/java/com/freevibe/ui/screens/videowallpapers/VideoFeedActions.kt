@@ -13,6 +13,7 @@ import com.freevibe.data.remote.RequestPurpose
 import com.freevibe.data.remote.pexels.PexelsApi
 import com.freevibe.data.remote.pixabay.PixabayApi
 import com.freevibe.data.remote.purpose
+import com.freevibe.data.repository.RedditRepository
 import com.freevibe.data.repository.RedditRssMediaEntry
 import com.freevibe.data.repository.YouTubeRepository
 import com.freevibe.data.repository.createLegacyCompatibleYouTubeSearchHandler
@@ -25,6 +26,7 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.first
@@ -46,17 +48,24 @@ private const val REDDIT_CLIP_MANIFEST_MAX_BYTES = 64L * 1024L
 private const val PIXABAY_VIDEO_RATE_LIMITED_UNTIL_KEY = "pixabay_video_rate_limited_until_ms"
 private const val YOUTUBE_VIDEO_METADATA_PROBE_LIMIT = 30
 private const val MAX_CACHED_VIDEO_FEED_ITEMS = 120
+// Another feed can get to Reddit's one request a minute first, so a load may lose its turn a time or two.
+private const val MAX_REDDIT_BUDGET_WAITS = 3
 
 private data class RedditRssMotionPage(
     val result: PixabayVideoMetadataResult,
     val groupKey: String,
     val nextAfter: String?,
     val exhausted: Boolean,
+    /** Reddit's request budget was spent and no cached page could stand in, so this page is still to come. */
+    val deferred: Boolean = false,
 )
+
+private class RedditFeedRateLimited : java.io.IOException("Reddit RSS rate limit")
 
 internal class VideoFeedActions(
     private val context: Context,
     private val youtubeRepo: YouTubeRepository,
+    private val redditRepo: RedditRepository,
     private val pexelsApi: PexelsApi,
     private val pixabayApi: PixabayApi,
     private val prefs: PreferencesManager,
@@ -139,14 +148,18 @@ internal class VideoFeedActions(
     /**
      * One load of the feed: the body the ViewModel runs inside its load job. [scope] is that job's scope,
      * so the stream pre-resolves launched at the end belong to the job the way they did before the split.
+     * [redditWaits] counts the passes this load has spent waiting on Reddit. Those later passes only
+     * fetch the page that had to wait, since the other sources have already answered.
      */
-    suspend fun loadBatch(loadMore: Boolean, scope: CoroutineScope) {
+    suspend fun loadBatch(loadMore: Boolean, scope: CoroutineScope, redditWaits: Int = 0) {
+    val redditOnly = redditWaits > 0
     if (!loadMore) {
         state.update {
             it.copy(
                 isLoading = !it.isRefreshing && it.items.isEmpty(),
                 error = null,
-                degradedSources = emptyList(),
+                degradedSources = if (redditOnly) it.degradedSources else emptyList(),
+                redditWaiting = redditOnly && it.redditWaiting,
             )
         }
     }
@@ -209,6 +222,7 @@ internal class VideoFeedActions(
     kotlinx.coroutines.supervisorScope {
         // 1. Pexels
         val pexelsJob = async(Dispatchers.IO) {
+            if (redditOnly) return@async emptyList<VideoWallpaperItem>()
             if (!pexelsEnabled) {
                 sourceMetrics.recordDisabled("pexels")
                 return@async emptyList<VideoWallpaperItem>()
@@ -262,6 +276,9 @@ internal class VideoFeedActions(
                     preset = redditPreset,
                     showAdultContent = showAdultContent,
                 )
+                if (page.deferred && redditWaits >= MAX_REDDIT_BUDGET_WAITS) {
+                    throw java.io.IOException("Reddit's request budget stayed spent")
+                }
                 rememberPixabayVideoMetadata(page.result)
                 page.copy(
                     result = page.result.copy(
@@ -280,6 +297,7 @@ internal class VideoFeedActions(
 
         // 3. YouTube
         val ytJob = async(Dispatchers.IO) {
+            if (redditOnly) return@async emptyList<VideoWallpaperItem>()
             if (!youtubeEnabled) {
                 sourceMetrics.recordDisabled("youtube")
                 return@async emptyList<VideoWallpaperItem>()
@@ -343,6 +361,7 @@ internal class VideoFeedActions(
 
         // 4. Pixabay Videos (animated loops + short videos)
         val pixabayJob = async(Dispatchers.IO) {
+            if (redditOnly) return@async emptyList<VideoWallpaperItem>()
             if (!pixabayEnabled) {
                 sourceMetrics.recordDisabled("pixabay")
                 return@async emptyList<VideoWallpaperItem>()
@@ -392,14 +411,23 @@ internal class VideoFeedActions(
         orientation = s.orientation,
     )
 
-    val loadProgress = resolveVideoLoadProgress(
-        previousEmptyLoadCount = s.emptyLoadCount,
-        newItemCount = mixed.size,
-    )
+    val redditDeferred = loadedRedditPage?.deferred == true
+    // Nothing to show yet only because Reddit asked to wait, so this batch says nothing about the catalog.
+    val waitingOnReddit = redditDeferred && mixed.isEmpty()
+    val loadProgress = if (waitingOnReddit) {
+        VideoLoadProgress(hasMore = true, emptyLoadCount = s.emptyLoadCount)
+    } else {
+        resolveVideoLoadProgress(
+            previousEmptyLoadCount = s.emptyLoadCount,
+            newItemCount = mixed.size,
+        )
+    }
     val sourceFailures = failedSources.toList().sorted()
     val sourceFailureSet = sourceFailures.toSet()
     val attemptedCount = attemptedSources.size
-    val allAttemptedFailed = attemptedCount > 0 && sourceFailures.size == attemptedCount
+    // A pass for the waiting Reddit page only asks Reddit, so its failure says nothing about feed items already showing.
+    val allAttemptedFailed = attemptedCount > 0 && sourceFailures.size == attemptedCount &&
+        !(redditOnly && s.items.isNotEmpty())
     val preserveCurrentFeed = !loadMore && mixed.isEmpty() && state.value.items.isNotEmpty()
 
     currentCoroutineContext().ensureActive()
@@ -410,10 +438,12 @@ internal class VideoFeedActions(
                 preserveCurrentFeed -> it.items
                 else -> mixed
             },
-            isLoading = false,
-            isLoadingMore = false,
+            isLoading = waitingOnReddit && !loadMore && it.items.isEmpty(),
+            isLoadingMore = waitingOnReddit && loadMore,
             isRefreshing = false,
+            redditWaiting = waitingOnReddit && it.items.isEmpty(),
             error = when {
+                waitingOnReddit -> null
                 videoReach.block != null && mixed.isEmpty() && !loadMore && !preserveCurrentFeed ->
                     context.getString(com.freevibe.R.string.video_wp_no_sources)
                 allAttemptedFailed && preserveCurrentFeed ->
@@ -423,17 +453,17 @@ internal class VideoFeedActions(
                     context.getString(com.freevibe.R.string.video_wp_sources_limited)
                 else -> null
             },
-            degradedSources = sourceFailures,
+            degradedSources = if (redditOnly) (it.degradedSources + sourceFailures).distinct().sorted() else sourceFailures,
             hasMore = loadProgress.hasMore,
             pexelsPage = if ("Pexels" !in sourceFailureSet && "Pexels" in attemptedSources) it.pexelsPage + 1 else it.pexelsPage,
             pixabayPage = if ("Pixabay" !in sourceFailureSet && "Pixabay" in attemptedSources) it.pixabayPage + 1 else it.pixabayPage,
             ytQueryIndex = if ("YouTube" !in sourceFailureSet && "YouTube" in attemptedSources) it.ytQueryIndex + 1 else it.ytQueryIndex,
-            redditSubIndex = if ("Reddit" !in sourceFailureSet && "Reddit" in attemptedSources) {
+            redditSubIndex = if ("Reddit" !in sourceFailureSet && "Reddit" in attemptedSources && !redditDeferred) {
                 redditFeedSelection?.nextSubIndex ?: it.redditSubIndex
             } else {
                 it.redditSubIndex
             },
-            redditAfters = loadedRedditPage?.let { page ->
+            redditAfters = loadedRedditPage?.takeUnless { page -> page.deferred }?.let { page ->
                 it.redditAfters + (page.groupKey to page.nextAfter.takeUnless { page.exhausted })
             } ?: it.redditAfters,
             emptyLoadCount = loadProgress.emptyLoadCount,
@@ -462,6 +492,16 @@ internal class VideoFeedActions(
                 }
             }
         }
+    }
+
+    // Everything else is on screen by now. A newer load cancels this wait along with the rest of the job.
+    if (redditDeferred) {
+        delay(redditRepo.retryDelayMs().coerceAtLeast(250L) + 100L)
+        loadBatch(
+            loadMore = loadMore || state.value.items.isNotEmpty(),
+            scope = scope,
+            redditWaits = redditWaits + 1,
+        )
     }
     }
 
@@ -553,6 +593,9 @@ internal class VideoFeedActions(
                 exhausted = cached.pageExhausted ?: false,
             )
         }
+        if (!redditRepo.tryClaimRssRequest()) {
+            return staleRedditMotionPage(group, cacheKey) ?: deferredRedditMotionPage(group)
+        }
         return try {
             val request = Request.Builder().purpose(RequestPurpose.CATALOG)
                 .url(redditRssMotionUrl(group, after, count))
@@ -564,6 +607,10 @@ internal class VideoFeedActions(
                 .build()
             val rssPage = sourceMetrics.measure("reddit") {
                 okHttpClient.newCall(request).execute().use { response ->
+                    if (response.code == 429) {
+                        redditRepo.recordRssRateLimit(response.headers)
+                        throw RedditFeedRateLimited()
+                    }
                     if (!response.isSuccessful) throw java.io.IOException("Reddit RSS HTTP ${response.code}")
                     val xml = response.body?.string().orEmpty()
                     if (xml.isBlank()) throw java.io.IOException("Reddit RSS returned an empty feed")
@@ -620,23 +667,36 @@ internal class VideoFeedActions(
             )
         } catch (e: Throwable) {
             e.rethrowIfCancelled()
-            val stale = readVideoMetadataCache(
-                cacheKey = cacheKey,
-                freshOnly = false,
-                freshnessTtlMs = REDDIT_RSS_MOTION_CACHE_TTL_MS,
-            ) ?: throw e
-            RedditRssMotionPage(
-                result = stale.result,
-                groupKey = group.key,
-                nextAfter = if (stale.pageExhausted != null) {
-                    stale.nextAfter
-                } else {
-                    redditAfterToken(stale.result.items.lastOrNull()?.id)
-                },
-                exhausted = stale.pageExhausted ?: false,
-            )
+            staleRedditMotionPage(group, cacheKey)
+                ?: if (e is RedditFeedRateLimited) deferredRedditMotionPage(group) else throw e
         }
     }
+
+    private suspend fun staleRedditMotionPage(group: RedditMotionFeedGroup, cacheKey: String): RedditRssMotionPage? {
+        val stale = readVideoMetadataCache(
+            cacheKey = cacheKey,
+            freshOnly = false,
+            freshnessTtlMs = REDDIT_RSS_MOTION_CACHE_TTL_MS,
+        ) ?: return null
+        return RedditRssMotionPage(
+            result = stale.result,
+            groupKey = group.key,
+            nextAfter = if (stale.pageExhausted != null) {
+                stale.nextAfter
+            } else {
+                redditAfterToken(stale.result.items.lastOrNull()?.id)
+            },
+            exhausted = stale.pageExhausted ?: false,
+        )
+    }
+
+    private fun deferredRedditMotionPage(group: RedditMotionFeedGroup) = RedditRssMotionPage(
+        result = PixabayVideoMetadataResult(items = emptyList(), streamUrls = emptyMap()),
+        groupKey = group.key,
+        nextAfter = null,
+        exhausted = false,
+        deferred = true,
+    )
 
     private suspend fun readPixabayVideoCache(
         cacheKey: String,

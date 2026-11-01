@@ -259,6 +259,7 @@ class VideoWallpapersViewModelTest {
         val viewModel = VideoWallpapersViewModel(
             context = context,
             youtubeRepo = mockk<YouTubeRepository>(relaxed = true),
+            redditRepo = mockk(relaxed = true),
             pexelsApi = mockk<PexelsApi>(relaxed = true),
             pixabayApi = pixabayApi,
             prefs = prefs,
@@ -395,6 +396,7 @@ class VideoWallpapersViewModelTest {
         return VideoWallpapersViewModel(
             context = context,
             youtubeRepo = youtubeRepo,
+            redditRepo = mockk(relaxed = true),
             pexelsApi = mockk<PexelsApi>(relaxed = true),
             pixabayApi = pixabayApi,
             prefs = prefs,

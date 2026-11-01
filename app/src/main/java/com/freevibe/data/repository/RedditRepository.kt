@@ -174,6 +174,27 @@ class RedditRepository @Inject constructor(
         return (maxOf(persisted, inProcess) - System.currentTimeMillis()).coerceAtLeast(0L)
     }
 
+    /**
+     * Reddit gives an anonymous reader about one feed request a minute per IP, across every feed. This
+     * books that request for a feed outside this class, or says no while it's still spent.
+     */
+    suspend fun tryClaimRssRequest(): Boolean = requestMutex.withLock {
+        val now = System.currentTimeMillis()
+        if (now < maxOf(lastNetworkAttemptAtMs + REDDIT_RSS_COOLDOWN_MS, prefs.getRedditRssNextAllowedAtMs())) {
+            return@withLock false
+        }
+        lastNetworkAttemptAtMs = now
+        prefs.setRedditRssNextAllowedAtMs(now + REDDIT_RSS_COOLDOWN_MS)
+        true
+    }
+
+    /** Holds every feed back until a 429's headers say Reddit will answer again. */
+    suspend fun recordRssRateLimit(headers: okhttp3.Headers) {
+        prefs.setRedditRssNextAllowedAtMs(
+            maxOf(prefs.getRedditRssNextAllowedAtMs(), System.currentTimeMillis() + redditRetryAfterMs(headers)),
+        )
+    }
+
     private suspend fun loadRssWallpapers(
         subreddits: List<String>,
         sort: String,

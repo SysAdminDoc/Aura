@@ -4,9 +4,13 @@ import android.content.Context
 import android.content.SharedPreferences
 import com.freevibe.R
 import com.freevibe.data.local.PreferencesManager
+import com.freevibe.data.model.ContentSource
 import com.freevibe.data.model.DEFAULT_FIT_CANVAS_COLOR
 import com.freevibe.data.model.FavoriteEntity
 import com.freevibe.data.model.FitCanvasMode
+import com.freevibe.data.model.RedditFeedMediaType
+import com.freevibe.data.model.RedditFeedPreset
+import com.freevibe.data.model.RedditFeedPresetStore
 import com.freevibe.data.model.WALLPAPER_PRESENTATION_FILL
 import com.freevibe.data.remote.pexels.PexelsApi
 import com.freevibe.data.remote.pexels.PexelsUser
@@ -20,6 +24,7 @@ import com.freevibe.data.remote.pixabay.PixabayVideoFiles
 import com.freevibe.data.remote.pixabay.PixabayVideoResponse
 import com.freevibe.data.repository.CommunityReportRepository
 import com.freevibe.data.repository.FavoritesRepository
+import com.freevibe.data.repository.RedditRepository
 import com.freevibe.data.repository.VoteRepository
 import com.freevibe.data.repository.YouTubeRepository
 import com.freevibe.service.Av1CodecSupport
@@ -50,6 +55,11 @@ import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import kotlinx.coroutines.withContext
+import okhttp3.MediaType.Companion.toMediaType
+import okhttp3.OkHttpClient
+import okhttp3.Protocol
+import okhttp3.Response
+import okhttp3.ResponseBody.Companion.toResponseBody
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -132,6 +142,7 @@ class VideoFeedLoadCharacterizationTest {
         youtube: Boolean = false,
         pexels: Boolean = false,
         pixabay: Boolean = false,
+        reddit: Boolean = false,
         pexelsKey: String = "",
         pixabayKey: String = "",
     ): PreferencesManager = mockk(relaxed = true) {
@@ -139,7 +150,15 @@ class VideoFeedLoadCharacterizationTest {
         every { videoFitCanvasMode } returns flowOf(FitCanvasMode.AMOLED_BLACK.preferenceValue)
         every { videoFitCanvasColor } returns flowOf(DEFAULT_FIT_CANVAS_COLOR)
         every { youtubeProviderEnabled } returns flowOf(youtube)
-        every { redditProviderEnabled } returns flowOf(false)
+        every { redditProviderEnabled } returns flowOf(reddit)
+        every { redditFeedPresets } returns flowOf(
+            RedditFeedPresetStore(
+                presets = listOf(redditVideoPreset),
+                activeWallpaperPresetId = "",
+                activeVideoPresetId = redditVideoPreset.id,
+            ),
+        )
+        every { showNsfwContent } returns flowOf(false)
         every { pexelsProviderEnabled } returns flowOf(pexels)
         every { pixabayProviderEnabled } returns flowOf(pixabay)
         every { this@mockk.pexelsApiKey } returns flowOf(pexelsKey)
@@ -152,13 +171,16 @@ class VideoFeedLoadCharacterizationTest {
         pexelsApi: PexelsApi = mockk(relaxed = true),
         pixabayApi: PixabayApi = mockk(relaxed = true),
         youtubeRepo: YouTubeRepository = mockk(relaxed = true),
+        okHttpClient: OkHttpClient = mockk(relaxed = true),
+        redditRepo: RedditRepository = mockk(relaxed = true),
     ) = VideoWallpapersViewModel(
         context = context,
         youtubeRepo = youtubeRepo,
+        redditRepo = redditRepo,
         pexelsApi = pexelsApi,
         pixabayApi = pixabayApi,
         prefs = prefs,
-        okHttpClient = mockk(relaxed = true),
+        okHttpClient = okHttpClient,
         videoWallpaperStorage = mockk<VideoWallpaperStorage>(relaxed = true),
         sourceMetrics = SourceMetrics(),
         ytDlpUpdateManager = mockk<YtDlpUpdateManager>(relaxed = true),
@@ -524,5 +546,223 @@ class VideoFeedLoadCharacterizationTest {
         assertEquals("rain", viewModel.state.value.searchQuery)
         awaitLoad(viewModel)
         advanceUntilIdle()
+    }
+
+    // Reddit takes one anonymous request a minute, shared by every feed.
+
+    private val redditVideoPreset = RedditFeedPreset(
+        id = "video",
+        name = "Video",
+        mediaType = RedditFeedMediaType.VIDEO,
+        subreddits = listOf("Cinemagraphs"),
+    )
+
+    private val redditFeedXml =
+        "<feed><entry><id>t3_clip1</id><title>Aurora loop</title>" +
+            "<content type=\"html\">&lt;a href=&quot;https://v.redd.it/clip1&quot;&gt;x&lt;/a&gt;</content></entry></feed>"
+
+    /** Answers each request with the next code in [codes], then keeps repeating the last one. */
+    private fun redditClient(requests: AtomicInteger, vararg codes: Int): OkHttpClient =
+        OkHttpClient.Builder()
+            .addInterceptor { chain ->
+                val code = codes[requests.getAndIncrement().coerceAtMost(codes.lastIndex)]
+                Response.Builder()
+                    .request(chain.request())
+                    .protocol(Protocol.HTTP_1_1)
+                    .code(code)
+                    .message("HTTP $code")
+                    .body(redditFeedXml.toResponseBody("application/atom+xml".toMediaType()))
+                    .build()
+            }
+            .build()
+
+    private fun redditRepoWithClaims(vararg claims: Boolean) = mockk<RedditRepository>(relaxed = true) {
+        coEvery { tryClaimRssRequest() } returnsMany claims.toList()
+    }
+
+    @Test
+    fun `a spent Reddit budget is a wait with no error and the feed fills by itself`() = runTest(dispatcher) {
+        val requests = AtomicInteger(0)
+        val redditRepo = redditRepoWithClaims(false, true)
+        val duringWait = mutableListOf<VideoWallpapersState>()
+        lateinit var viewModel: VideoWallpapersViewModel
+        coEvery { redditRepo.retryDelayMs() } coAnswers {
+            duringWait += viewModel.state.value
+            30_000L
+        }
+        viewModel = viewModel(
+            prefs = fakePrefs(reddit = true),
+            okHttpClient = redditClient(requests, 200),
+            redditRepo = redditRepo,
+        )
+
+        viewModel.startFeed()
+        awaitLoad(viewModel)
+        advanceUntilIdle()
+
+        val waiting = duringWait.single()
+        assertNull(waiting.error)
+        assertTrue(waiting.degradedSources.isEmpty())
+        assertTrue(waiting.isLoading)
+        assertTrue(waiting.redditWaiting)
+        assertTrue(waiting.items.isEmpty())
+
+        val state = viewModel.state.value
+        assertEquals(listOf("rd_clip1"), state.items.map { it.id })
+        assertEquals(1, requests.get())
+        assertNull(state.error)
+        assertTrue(state.degradedSources.isEmpty())
+        assertFalse(state.isLoading)
+        assertFalse(state.redditWaiting)
+    }
+
+    @Test
+    fun `a 429 from Reddit is the same wait and tells every other feed to hold back`() = runTest(dispatcher) {
+        val requests = AtomicInteger(0)
+        val redditRepo = redditRepoWithClaims(true, true)
+        coEvery { redditRepo.retryDelayMs() } returns 30_000L
+        val viewModel = viewModel(
+            prefs = fakePrefs(reddit = true),
+            okHttpClient = redditClient(requests, 429, 200),
+            redditRepo = redditRepo,
+        )
+
+        viewModel.startFeed()
+        awaitLoad(viewModel)
+        advanceUntilIdle()
+
+        val state = viewModel.state.value
+        assertEquals(listOf("rd_clip1"), state.items.map { it.id })
+        assertEquals(2, requests.get())
+        assertNull(state.error)
+        assertTrue(state.degradedSources.isEmpty())
+        coVerify(exactly = 1) { redditRepo.recordRssRateLimit(any()) }
+    }
+
+    @Test
+    fun `a budget that stays spent ends the wait and names Reddit`() = runTest(dispatcher) {
+        val requests = AtomicInteger(0)
+        val redditRepo = redditRepoWithClaims(false)
+        coEvery { redditRepo.retryDelayMs() } returns 1L
+        val viewModel = viewModel(
+            prefs = fakePrefs(reddit = true),
+            okHttpClient = redditClient(requests, 200),
+            redditRepo = redditRepo,
+        )
+
+        viewModel.startFeed()
+        awaitLoad(viewModel)
+        advanceUntilIdle()
+
+        val state = viewModel.state.value
+        assertEquals(listOf("Reddit"), state.degradedSources)
+        assertEquals("UNAVAILABLE", state.error)
+        assertFalse(state.isLoading)
+        assertFalse(state.isLoadingMore)
+        assertFalse(state.redditWaiting)
+        assertEquals(0, requests.get())
+        coVerify(exactly = 3) { redditRepo.retryDelayMs() }
+    }
+
+    @Test
+    fun `other sources show while Reddit waits and aren't asked twice`() = runTest(dispatcher) {
+        val requests = AtomicInteger(0)
+        val pixabayApi = mockk<PixabayApi>().apply { stubSearch { PixabayVideoResponse(hits = listOf(pixabayHit(1))) } }
+        val redditRepo = redditRepoWithClaims(false, true)
+        val duringWait = mutableListOf<VideoWallpapersState>()
+        lateinit var viewModel: VideoWallpapersViewModel
+        coEvery { redditRepo.retryDelayMs() } coAnswers {
+            duringWait += viewModel.state.value
+            30_000L
+        }
+        viewModel = viewModel(
+            prefs = fakePrefs(reddit = true, pixabay = true, pixabayKey = "pb-key"),
+            pixabayApi = pixabayApi,
+            okHttpClient = redditClient(requests, 200),
+            redditRepo = redditRepo,
+        )
+
+        viewModel.startFeed()
+        awaitLoad(viewModel)
+        advanceUntilIdle()
+
+        val waiting = duringWait.single()
+        assertEquals(listOf("pbv_1"), waiting.items.map { it.id })
+        assertFalse(waiting.isLoading)
+        assertFalse(waiting.redditWaiting)
+        assertNull(waiting.error)
+
+        val state = viewModel.state.value
+        assertEquals(setOf("pbv_1", "rd_clip1"), state.items.map { it.id }.toSet())
+        assertEquals(2, state.pixabayPage)
+        assertNull(state.error)
+        coVerify(exactly = 1) {
+            pixabayApi.searchVideos(any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), any())
+        }
+    }
+
+    @Test
+    fun `a Reddit server error stays an ordinary failure with no wait`() = runTest(dispatcher) {
+        val requests = AtomicInteger(0)
+        val redditRepo = redditRepoWithClaims(true)
+        val viewModel = viewModel(
+            prefs = fakePrefs(reddit = true),
+            okHttpClient = redditClient(requests, 500),
+            redditRepo = redditRepo,
+        )
+
+        viewModel.startFeed()
+        awaitLoad(viewModel)
+        advanceUntilIdle()
+
+        val state = viewModel.state.value
+        assertEquals(listOf("Reddit"), state.degradedSources)
+        assertEquals("UNAVAILABLE", state.error)
+        assertEquals(1, requests.get())
+        coVerify(exactly = 0) { redditRepo.retryDelayMs() }
+        coVerify(exactly = 0) { redditRepo.recordRssRateLimit(any()) }
+    }
+
+    @Test
+    fun `an older cached Reddit page beats waiting`() = runTest(dispatcher) {
+        val requests = AtomicInteger(0)
+        val redditRepo = redditRepoWithClaims(false)
+        val group = resolveRedditMotionFeedGroups(redditVideoPreset, showAdultContent = false).single()
+        val item = VideoWallpaperItem(
+            id = "rd_old",
+            title = "Old loop",
+            thumbnailUrl = "https://example.com/old.jpg",
+            source = "Reddit",
+            uploaderName = "u/maker",
+            contentSource = ContentSource.REDDIT,
+            license = "Reddit",
+            sourcePageUrl = "https://www.reddit.com/r/Cinemagraphs/comments/old/loop/",
+        )
+        cacheValues[redditRssMotionCacheKey(group, after = null)] = encodePixabayVideoCache(
+            CachedPixabayVideoMetadata(
+                result = PixabayVideoMetadataResult(
+                    items = listOf(item),
+                    streamUrls = mapOf(item.id to "https://v.redd.it/old/HLSPlaylist.m3u8"),
+                ),
+                cachedAtMs = System.currentTimeMillis() - REDDIT_RSS_MOTION_CACHE_TTL_MS - 60_000L,
+                nextAfter = null,
+                pageExhausted = true,
+            ),
+        )
+        val viewModel = viewModel(
+            prefs = fakePrefs(reddit = true),
+            okHttpClient = redditClient(requests, 200),
+            redditRepo = redditRepo,
+        )
+
+        viewModel.startFeed()
+        awaitLoad(viewModel)
+        advanceUntilIdle()
+
+        val state = viewModel.state.value
+        assertEquals(listOf("rd_old"), state.items.map { it.id })
+        assertNull(state.error)
+        assertEquals(0, requests.get())
+        coVerify(exactly = 0) { redditRepo.retryDelayMs() }
     }
 }

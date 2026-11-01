@@ -157,6 +157,8 @@ data class VideoWallpapersState(
     val isLoading: Boolean = false,
     val isLoadingMore: Boolean = false,
     val isRefreshing: Boolean = false,
+    /** The feed is empty only because Reddit's one request a minute was already used. */
+    val redditWaiting: Boolean = false,
     val isApplying: String? = null,
     /** Videos whose Download is still running. */
     val downloadingIds: Set<String> = emptySet(),
@@ -625,6 +627,14 @@ fun VideoWallpapersScreen(
                                 stringResource(R.string.video_wp_loading_title),
                                 modifier = Modifier.politeAnnouncement(),
                                 style = MaterialTheme.typography.labelLarge,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                        }
+                        if (state.redditWaiting) {
+                            Text(
+                                stringResource(R.string.video_wp_reddit_waiting),
+                                modifier = Modifier.padding(horizontal = 8.dp).politeAnnouncement(),
+                                style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                             )
                         }

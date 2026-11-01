@@ -1111,6 +1111,7 @@
     <string name="video_wp_degraded_refresh">Refresh</string>
     <string name="video_wp_degraded_gallery">Use gallery</string>
     <string name="video_wp_loading_title">Finding motion wallpapers</string>
+    <string name="video_wp_reddit_waiting">Reddit only takes one request a minute, so your videos will show up shortly.</string>
     <string name="video_wp_loading_description">Aura is checking sources for portrait-friendly clips and battery-aware playback hints.</string>
     <string name="video_wp_error_title">Video sources did not respond</string>
     <string name="video_wp_error_description">Aura could not load live wallpaper candidates. Retry or choose a clip from your gallery.</string>

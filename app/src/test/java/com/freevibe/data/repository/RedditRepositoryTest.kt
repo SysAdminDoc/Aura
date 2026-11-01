@@ -142,6 +142,57 @@ class RedditRepositoryTest {
         assertEquals(1, harness.cacheRows.size)
     }
 
+    @Test
+    fun `a claim from another feed holds the wallpaper feed back`() = runTest {
+        val harness = Harness(atomPage(directImages = 1))
+        val repository = harness.repository()
+
+        assertTrue(repository.tryClaimRssRequest())
+        val page = repository.getMultiSubreddit(page = 1)
+
+        assertTrue(page.items.isEmpty())
+        assertTrue(page.hasMore)
+        assertTrue(repository.hasDeferredRequest())
+        assertTrue(harness.requests.isEmpty())
+    }
+
+    @Test
+    fun `only one feed gets the minute's request`() = runTest {
+        val repository = Harness(atomPage(directImages = 1)).repository()
+
+        assertTrue(repository.tryClaimRssRequest())
+        assertFalse(repository.tryClaimRssRequest())
+    }
+
+    @Test
+    fun `a wallpaper fetch spends the budget for every other feed`() = runTest {
+        val repository = Harness(atomPage(directImages = 1)).repository()
+
+        repository.getMultiSubreddit(page = 1)
+
+        assertFalse(repository.tryClaimRssRequest())
+        assertTrue(repository.retryDelayMs() > 0)
+    }
+
+    @Test
+    fun `a claim made by an earlier process still counts`() = runTest {
+        val harness = Harness(atomPage(directImages = 1))
+
+        assertTrue(harness.repository().tryClaimRssRequest())
+
+        assertFalse(harness.repository().tryClaimRssRequest())
+    }
+
+    @Test
+    fun `a 429 holds every feed back for as long as Reddit asks`() = runTest {
+        val repository = Harness(atomPage(directImages = 1)).repository()
+
+        repository.recordRssRateLimit(okhttp3.Headers.headersOf("Retry-After", "300"))
+
+        assertFalse(repository.tryClaimRssRequest())
+        assertTrue(repository.retryDelayMs() > 60_000)
+    }
+
     private class Harness(
         private val xml: String,
         active: RedditFeedPreset = wallpaperPreset("iWallpaper"),

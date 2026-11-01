@@ -1017,6 +1017,7 @@
     <string name="video_wp_degraded_refresh">刷新</string>
     <string name="video_wp_degraded_gallery">使用图库</string>
     <string name="video_wp_loading_title">正在查找动态壁纸</string>
+    <string name="video_wp_reddit_waiting">Reddit 每分钟只接受一次请求，视频很快就会显示。</string>
     <string name="video_wp_loading_description">Aura 正在检查来源，寻找适合竖屏的片段和电池友好的播放提示。</string>
     <string name="video_wp_error_title">视频源未响应</string>
     <string name="video_wp_error_description">Aura 无法加载动态壁纸候选。请重试或从图库中选择一个片段。</string>
