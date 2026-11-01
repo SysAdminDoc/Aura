@@ -54,6 +54,41 @@ internal fun addOggComment(file: File, comment: String) {
     }
 }
 
+/**
+ * Walks the audio packets of an Opus or Vorbis OGG file as they sit in the file, skipping the codec's
+ * headers. MediaExtractor can't stand in for this: it adds four bytes to every Vorbis packet that
+ * depend on how the file's pages are laid out. [block] answers false to stop early, and the second
+ * value it gets is always 0, since nothing here needs a time.
+ */
+internal fun forEachOggAudioPacket(path: String, block: (ByteArray, Long) -> Boolean): Boolean {
+    DataInputStream(File(path).inputStream().buffered()).use { input ->
+        val partial = ByteArrayOutputStream()
+        var headersLeft = -1
+        while (true) {
+            val page = readOggPage(input) ?: return true
+            val segments = page[OGG_SEGMENT_COUNT_AT].toInt() and 0xFF
+            var at = OGG_PAGE_HEADER_BYTES + segments
+            for (segment in 0 until segments) {
+                val length = page[OGG_PAGE_HEADER_BYTES + segment].toInt() and 0xFF
+                partial.write(page, at, length)
+                at += length
+                if (length == OGG_MAX_SEGMENT_BYTES) continue
+                val packet = partial.toByteArray()
+                partial.reset()
+                when {
+                    headersLeft < 0 -> headersLeft = when {
+                        packet.startsWithBytes(OPUS_HEAD) -> 1
+                        packet.startsWithBytes(VORBIS_ID) -> 2
+                        else -> throw IllegalArgumentException("OGG file isn't Opus or Vorbis")
+                    }
+                    headersLeft > 0 -> headersLeft -= 1
+                    !block(packet, 0L) -> return false
+                }
+            }
+        }
+    }
+}
+
 private fun copyWithOggComment(input: DataInputStream, output: OutputStream, comment: ByteArray) {
     val firstPage = readOggPage(input) ?: throw IllegalArgumentException("OGG file is empty")
     require(firstPage[OGG_FLAGS_AT].toInt() and OGG_FLAG_FIRST_PAGE != 0) { "OGG file has no first page" }

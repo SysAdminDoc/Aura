@@ -146,6 +146,36 @@ class OggCommentsTest {
     }
 
     @Test
+    fun `audio packets come straight from the file with the headers left out`() {
+        listOf("tone-vorbis.ogg" to 3, "tone-opus.ogg" to 2).forEach { (name, headers) ->
+            val file = fixture(name)
+            val seen = mutableListOf<ByteArray>()
+
+            val finished = forEachOggAudioPacket(file.path) { packet, _ ->
+                seen += packet
+                true
+            }
+
+            assertTrue(name, finished)
+            assertSameBytes(packets(readPages(file)).drop(headers), seen)
+        }
+    }
+
+    @Test
+    fun `walking audio packets stops when asked`() {
+        val file = fixture("tone-vorbis.ogg")
+        var seen = 0
+
+        val finished = forEachOggAudioPacket(file.path) { _, _ ->
+            seen += 1
+            seen < 2
+        }
+
+        assertFalse(finished)
+        assertEquals(2, seen)
+    }
+
+    @Test
     fun `comment too long for one page renumbers the audio pages`() {
         val file = fixture("tone-vorbis.ogg")
         val before = readPages(file)

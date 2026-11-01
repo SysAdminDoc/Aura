@@ -4,6 +4,9 @@ import androidx.media3.common.C
 import androidx.media3.common.Metadata
 import androidx.media3.common.MimeTypes
 import androidx.media3.common.audio.AudioProcessor
+import androidx.media3.muxer.BufferInfo
+import androidx.media3.muxer.Muxer
+import io.mockk.every
 import io.mockk.mockk
 import org.junit.Assert.assertArrayEquals
 import org.junit.Assert.assertEquals
@@ -29,6 +32,34 @@ class AudioTrimmerTest {
                 output.delete()
             }
         }
+    }
+
+    @Test
+    fun `a copied Vorbis packet loses the count the extractor put on its end`() {
+        val written = mutableListOf<Pair<Int, BufferInfo>>()
+        val delegate = mockk<Muxer>()
+        every { delegate.writeSampleData(any(), any(), any()) } answers {
+            written += secondArg<ByteBuffer>().remaining() to thirdArg<BufferInfo>()
+        }
+
+        VorbisPacketCopyMuxer(delegate).writeSampleData(0, ByteBuffer.allocate(20), BufferInfo(1_234L, 20, C.BUFFER_FLAG_KEY_FRAME))
+
+        val (remaining, info) = written.single()
+        assertEquals(16, remaining)
+        assertEquals(16, info.size)
+        assertEquals(1_234L, info.presentationTimeUs)
+        assertEquals(C.BUFFER_FLAG_KEY_FRAME, info.flags)
+    }
+
+    @Test
+    fun `only a copied Vorbis stream needs that count taken off`() {
+        fun lossless(mimeType: String) =
+            platformAudioExportPlan(AudioExportFormat.OGG, emptySet(), sdkInt = 35, losslessInputMimeType = mimeType)
+
+        assertTrue(checkNotNull(lossless(MimeTypes.AUDIO_VORBIS)).copiesVorbisPackets)
+        assertFalse(checkNotNull(lossless(MimeTypes.AUDIO_OPUS)).copiesVorbisPackets)
+        val encoded = platformAudioExportPlan(AudioExportFormat.OGG, setOf(MimeTypes.AUDIO_VORBIS), sdkInt = 35)
+        assertFalse(checkNotNull(encoded).copiesVorbisPackets)
     }
 
     @Test
@@ -182,6 +213,67 @@ class AudioTrimmerTest {
     fun `trim duration tolerance covers both codec frame boundaries`() {
         assertTrue(isTrimDurationWithinCodecBoundaries(5_000L, 5_046L, 23L))
         assertFalse(isTrimDurationWithinCodecBoundaries(5_000L, 5_047L, 23L))
+    }
+
+    @Test
+    fun `window takes the exact frames out of one buffer`() {
+        val processor = windowProcessor(skipMs = 2L, keepMs = 3L)
+
+        assertArrayEquals(shortArrayOf(3, 4, 5), processor.feed(shortArrayOf(1, 2, 3, 4, 5, 6, 7, 8)))
+    }
+
+    @Test
+    fun `window carries its count across buffers`() {
+        val processor = windowProcessor(skipMs = 2L, keepMs = 5L)
+
+        assertArrayEquals(shortArrayOf(), processor.feed(shortArrayOf(1, 2)))
+        assertArrayEquals(shortArrayOf(3, 4), processor.feed(shortArrayOf(3, 4)))
+        assertArrayEquals(shortArrayOf(5, 6, 7), processor.feed(shortArrayOf(5, 6, 7, 8, 9)))
+        assertArrayEquals(shortArrayOf(), processor.feed(shortArrayOf(10, 11)))
+    }
+
+    @Test
+    fun `window never splits a stereo frame`() {
+        val processor = windowProcessor(skipMs = 1L, keepMs = 2L, channels = 2)
+
+        assertArrayEquals(shortArrayOf(3, 4, 5, 6), processor.feed(shortArrayOf(1, 2, 3, 4, 5, 6, 7, 8)))
+    }
+
+    @Test
+    fun `window lets a short stream end early with nothing added`() {
+        val processor = windowProcessor(skipMs = 1L, keepMs = 50L)
+
+        assertArrayEquals(shortArrayOf(2, 3), processor.feed(shortArrayOf(1, 2, 3)))
+        processor.queueEndOfStream()
+        assertEquals(0, processor.output.remaining())
+        assertTrue(processor.isEnded)
+    }
+
+    @Test
+    fun `window counts from the top again after a flush`() {
+        val processor = windowProcessor(skipMs = 1L, keepMs = 1L)
+        assertArrayEquals(shortArrayOf(2), processor.feed(shortArrayOf(1, 2, 3)))
+
+        processor.flush(AudioProcessor.StreamMetadata.DEFAULT)
+
+        assertArrayEquals(shortArrayOf(5), processor.feed(shortArrayOf(4, 5, 6)))
+    }
+
+    private fun windowProcessor(skipMs: Long, keepMs: Long, channels: Int = 1) =
+        PcmWindowAudioProcessor(skipUs = skipMs * 1_000L, durationUs = keepMs * 1_000L).apply {
+            configure(AudioProcessor.AudioFormat(1_000, channels, C.ENCODING_PCM_16BIT))
+            flush(AudioProcessor.StreamMetadata.DEFAULT)
+        }
+
+    private fun PcmWindowAudioProcessor.feed(samples: ShortArray): ShortArray {
+        val input = ByteBuffer.allocateDirect(samples.size * Short.SIZE_BYTES)
+            .order(ByteOrder.nativeOrder())
+        samples.forEach { sample -> input.putShort(sample) }
+        input.flip()
+        queueInput(input)
+        assertEquals(0, input.remaining())
+        val pcm = output.order(ByteOrder.nativeOrder())
+        return ShortArray(pcm.remaining() / Short.SIZE_BYTES) { pcm.getShort() }
     }
 
     private fun processPcmFixture(

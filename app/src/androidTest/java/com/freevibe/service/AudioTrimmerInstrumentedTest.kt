@@ -19,6 +19,7 @@ import java.io.File
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import kotlin.math.PI
+import kotlin.math.abs
 import kotlin.math.roundToInt
 import kotlin.math.sin
 
@@ -222,25 +223,45 @@ class AudioTrimmerInstrumentedTest {
 
         assertEquals("audio/vorbis", readEncodedAudio(File(output)).first)
         assertLoopTaggedCut(output)
+        val cutPackets = oggAudioPackets(output)
+        val sourcePackets = oggAudioPackets(input.absolutePath).map { it.toList() }.toSet()
+        assertTrue("the cut holds no audio", cutPackets.isNotEmpty())
+        assertTrue(
+            "a cut packet isn't one of the source's",
+            cutPackets.all { it.toList() in sourcePackets },
+        )
+    }
+
+    private fun oggAudioPackets(path: String): List<ByteArray> = buildList {
+        forEachOggAudioPacket(path) { packet, _ ->
+            add(packet)
+            true
+        }
     }
 
     /** Real music carries ID3 tags or Vorbis comments, and Media3 passes them on to the muxer. */
     @Test
     fun taggedFilesExportToEveryFormat() = runBlocking {
+        val failures = mutableListOf<String>()
         for (asset in listOf("tone_tagged_3s.mp3", "tone_vorbis_3s.ogg")) {
             val input = assetFixture(asset)
             for (format in trimmer.availableExportFormats()) {
-                val output = trimmer.trim(
-                    inputPath = input.absolutePath,
-                    startMs = 500L,
-                    endMs = 2_500L,
-                    outputFileName = "tagged_${input.extension}_${format.extension}",
-                    exportFormat = format,
-                ).getOrThrow()
-
-                assertToneIsAbout440Hz(output, durationMs = 1_500L)
+                val result = runCatching {
+                    val output = trimmer.trim(
+                        inputPath = input.absolutePath,
+                        startMs = 500L,
+                        endMs = 2_500L,
+                        outputFileName = "tagged_${input.extension}_${format.extension}",
+                        exportFormat = format,
+                    ).getOrThrow()
+                    assertToneIsAbout440Hz(output, durationMs = 1_500L)
+                    readEncodedAudio(File(output)).second
+                }
+                Log.i(TAG, "Tagged $asset to $format: $result")
+                result.exceptionOrNull()?.let { failures += "$asset to $format: ${it.message}" }
             }
         }
+        assertTrue(failures.joinToString("; "), failures.isEmpty())
     }
 
     @Test
@@ -259,6 +280,134 @@ class AudioTrimmerInstrumentedTest {
         assertTrue("duration $durationMs", durationMs in 900L..1_200L)
         assertToneIsAbout440Hz(output, durationMs = 900L)
     }
+
+    /**
+     * A cut holds exactly the frames asked for, and they're the frames a decode of the whole file has at
+     * that spot. A chirp changes pitch all the way through, so a cut that starts in the wrong place can't pass.
+     */
+    @Test
+    fun aCutIsExactlyTheStretchAskedFor() = runBlocking {
+        val inputs = CHIRP_ASSETS.map(::assetFixture).toMutableList()
+        val wav = File(fixtureDirectory, "chirp_3s.wav")
+        decodeWhole(inputs.first(), "whole_for_wav").copyTo(wav)
+        val flac = trimmer.trim(
+            inputPath = wav.absolutePath,
+            startMs = 0L,
+            endMs = 3_000L,
+            outputFileName = "chirp_flac_input",
+            exportFormat = AudioExportFormat.FLAC,
+        ).getOrThrow()
+        inputs += wav
+        inputs += File(fixtureDirectory, "chirp_3s.flac").also { File(flac).copyTo(it) }
+
+        val failures = mutableListOf<String>()
+        for (input in inputs) {
+            val whole = decodeWhole(input, "whole_${input.extension}")
+            val wholeSamples = readPcm16Wav(whole)
+            val sampleRate = readAudioFormat(whole).getInteger(MediaFormat.KEY_SAMPLE_RATE)
+            for ((startMs, endMs) in CUT_RANGES) {
+                val began = SystemClock.elapsedRealtime()
+                val result = runCatching {
+                    val cut = readPcm16Wav(
+                        File(
+                            trimmer.trim(
+                                inputPath = input.absolutePath,
+                                startMs = startMs,
+                                endMs = endMs,
+                                outputFileName = "cut_${input.extension}_$startMs",
+                                exportFormat = AudioExportFormat.WAV,
+                            ).getOrThrow(),
+                        ),
+                    )
+                    val offset = (startMs * sampleRate / 1_000L).toInt()
+                    val expected = minOf((endMs - startMs) * sampleRate / 1_000L, (wholeSamples.size - offset).toLong())
+                    assertEquals("frames", expected.toInt(), cut.size)
+                    // WebM only stores times to the millisecond, so a cut from the middle can start that far off.
+                    val shiftLimit = if (input.extension == "webm") sampleRate / 1_000 else 0
+                    val (shift, worst) = (-shiftLimit..shiftLimit)
+                        .filter { offset + it >= 0 && offset + it + cut.size <= wholeSamples.size }
+                        .map { shift -> shift to cut.indices.maxOf { abs(cut[it] - wholeSamples[offset + shift + it]) } }
+                        .minBy { it.second }
+                    // An AAC decoder started mid-stream doesn't round quite like one that ran from the top.
+                    val differenceLimit = if (input.extension == "m4a") AAC_RESTART_DIFFERENCE else 0
+                    assertTrue(
+                        "difference from the whole decode is $worst, $shift frames off",
+                        worst <= differenceLimit,
+                    )
+                    "$shift frames off, difference $worst"
+                }
+                Log.i(
+                    TAG,
+                    "Cut ${input.name} $startMs..$endMs at $sampleRate Hz in " +
+                        "${SystemClock.elapsedRealtime() - began} ms: $result",
+                )
+                result.exceptionOrNull()?.let { failures += "${input.name} $startMs..$endMs: ${it.message}" }
+            }
+        }
+        assertTrue(failures.joinToString("; "), failures.isEmpty())
+    }
+
+    @Test
+    fun fadesOnACompressedCutLandOnTheCutsOwnEnds() = runBlocking {
+        for (asset in listOf("chirp_3s.mp3", "chirp_3s.m4a")) {
+            val input = assetFixture(asset)
+            val output = File(
+                trimmer.trim(
+                    inputPath = input.absolutePath,
+                    startMs = 500L,
+                    endMs = 2_500L,
+                    outputFileName = "faded_${input.extension}",
+                    fadeInMs = 200L,
+                    fadeOutMs = 200L,
+                    fadeCurve = AudioFadeCurve.LINEAR,
+                    exportFormat = AudioExportFormat.WAV,
+                ).getOrThrow(),
+            )
+            val samples = readPcm16Wav(output)
+            val sampleRate = readAudioFormat(output).getInteger(MediaFormat.KEY_SAMPLE_RATE)
+            val edge = sampleRate / 200
+            assertEquals(asset, sampleRate * 2, samples.size)
+            val opening = (0 until edge).maxOf { abs(samples[it].toInt()) }
+            val closing = (samples.size - edge until samples.size).maxOf { abs(samples[it].toInt()) }
+            val middle = (sampleRate / 2 until sampleRate * 3 / 2).maxOf { abs(samples[it].toInt()) }
+            Log.i(TAG, "Faded $asset opens at $opening, closes at $closing, plays at $middle")
+            assertTrue("$asset opens at $opening", opening < middle / 20)
+            assertTrue("$asset closes at $closing", closing < middle / 20)
+            assertTrue("$asset plays at $middle", middle > TONE_FLOOR)
+        }
+    }
+
+    @Test
+    fun speedOnACompressedCutKeepsAnExactLength() = runBlocking {
+        for (asset in listOf("chirp_3s.mp3", "chirp_3s.ogg")) {
+            val input = assetFixture(asset)
+            val output = File(
+                trimmer.trim(
+                    inputPath = input.absolutePath,
+                    startMs = 500L,
+                    endMs = 2_500L,
+                    outputFileName = "fast_${input.extension}",
+                    playbackSpeed = 2f,
+                    exportFormat = AudioExportFormat.WAV,
+                ).getOrThrow(),
+            )
+            val samples = readPcm16Wav(output)
+            val sampleRate = readAudioFormat(output).getInteger(MediaFormat.KEY_SAMPLE_RATE)
+            assertEquals(asset, sampleRate, samples.size)
+            val loudest = samples.maxOf { abs(it.toInt()) }
+            assertTrue("$asset plays at $loudest", loudest > TONE_FLOOR)
+        }
+    }
+
+    private suspend fun decodeWhole(input: File, name: String): File = File(
+        trimmer.trim(
+            inputPath = input.absolutePath,
+            startMs = 0L,
+            endMs = 3_000L,
+            outputFileName = name,
+            exportFormat = AudioExportFormat.WAV,
+        ).getOrThrow(),
+    )
 
     private fun assetFixture(name: String): File {
         val fixture = File(fixtureDirectory, name)
@@ -397,13 +546,28 @@ class AudioTrimmerInstrumentedTest {
     }
 
     private suspend fun assertToneIsAbout440Hz(path: String, durationMs: Long) {
-        val samples = decodeToPcm(path, durationMs)
-        val zeroCrossings = (1 until samples.size).count { index ->
+        val decoded = trimmer.trim(
+            inputPath = path,
+            startMs = 0L,
+            endMs = durationMs,
+            outputFileName = "decoded_${File(path).nameWithoutExtension}",
+            exportFormat = AudioExportFormat.WAV,
+        ).getOrThrow()
+        val samples = readPcm16Wav(File(decoded))
+        val sampleRate = readAudioFormat(File(decoded)).getInteger(MediaFormat.KEY_SAMPLE_RATE)
+        // A lossless MP3 cut can open with a few quiet frames, since the first ones it keeps lean on
+        // bits from frames it dropped. The tone is measured where it plays, and has to fill the window.
+        val firstLoud = samples.indexOfFirst { abs(it.toInt()) > TONE_FLOOR }
+        val lastLoud = samples.indexOfLast { abs(it.toInt()) > TONE_FLOOR }
+        assertTrue("no tone at all", firstLoud in 0 until lastLoud)
+        val toneMs = (lastLoud - firstLoud) * 1_000L / sampleRate
+        assertTrue("only $toneMs ms of tone in $durationMs ms", toneMs >= durationMs * 4 / 5)
+        val zeroCrossings = (firstLoud + 1..lastLoud).count { index ->
             val first = samples[index - 1]
             val second = samples[index]
             first < 0 && second >= 0 || first >= 0 && second < 0
         }
-        val frequency = zeroCrossings * 500f / durationMs
+        val frequency = zeroCrossings * 500f / toneMs
         assertTrue("detected $frequency Hz", frequency in 420f..460f)
     }
 
@@ -473,5 +637,11 @@ class AudioTrimmerInstrumentedTest {
 
     private companion object {
         const val TAG = "AudioTrimmerTest"
+        const val TONE_FLOOR = 500
+
+        /** Out of 32,767. The S25 measured 13 at worst, and a wrong start measures in the tens of thousands. */
+        const val AAC_RESTART_DIFFERENCE = 32
+        val CHIRP_ASSETS = listOf("chirp_3s.m4a", "chirp_3s.mp3", "chirp_3s.ogg", "chirp_3s.opus", "chirp_3s.webm")
+        val CUT_RANGES = listOf(500L to 2_500L, 1_000L to 2_000L, 0L to 2_000L, 1_000L to 3_000L, 777L to 1_234L)
     }
 }
