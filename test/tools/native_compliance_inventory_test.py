@@ -50,6 +50,16 @@ class NativeComplianceInventoryTest(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, "NewPipeExtractor"):
                 native_compliance_inventory.discover_default_coordinates(repo_root)
 
+    def test_every_coordinate_this_build_declares_has_a_source_reference(self):
+        # The table is keyed on exact versions, so a dependency bump would otherwise report "Unknown".
+        repo_root = Path(__file__).resolve().parents[2]
+
+        coordinates = native_compliance_inventory.discover_default_coordinates(repo_root)
+
+        self.assertTrue(coordinates)
+        for coordinate in coordinates:
+            self.assertIn(coordinate.label, native_compliance_inventory.SOURCE_REFERENCES)
+
     def test_falls_back_for_external_report_fixtures_without_gradle_files(self):
         with tempfile.TemporaryDirectory() as temp_dir:
             coordinates = native_compliance_inventory.discover_default_coordinates(Path(temp_dir))

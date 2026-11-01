@@ -1,26 +1,26 @@
 {
   "counts": {
-    "dependencyRecords": 312,
-    "noticeSections": 316
+    "dependencyRecords": 324,
+    "noticeSections": 328
   },
   "dependencies": [
     {
-      "coordinate": "androidx.activity:activity:1.9.3",
+      "coordinate": "androidx.activity:activity:1.13.0",
       "group": "androidx.activity",
       "name": "activity",
-      "version": "1.9.3"
+      "version": "1.13.0"
     },
     {
-      "coordinate": "androidx.activity:activity-compose:1.9.3",
+      "coordinate": "androidx.activity:activity-compose:1.13.0",
       "group": "androidx.activity",
       "name": "activity-compose",
-      "version": "1.9.3"
+      "version": "1.13.0"
     },
     {
-      "coordinate": "androidx.activity:activity-ktx:1.9.3",
+      "coordinate": "androidx.activity:activity-ktx:1.13.0",
       "group": "androidx.activity",
       "name": "activity-ktx",
-      "version": "1.9.3"
+      "version": "1.13.0"
     },
     {
       "coordinate": "androidx.annotation:annotation:1.10.0",
@@ -29,10 +29,10 @@
       "version": "1.10.0"
     },
     {
-      "coordinate": "androidx.annotation:annotation-experimental:1.4.1",
+      "coordinate": "androidx.annotation:annotation-experimental:1.5.0",
       "group": "androidx.annotation",
       "name": "annotation-experimental",
-      "version": "1.4.1"
+      "version": "1.5.0"
     },
     {
       "coordinate": "androidx.annotation:annotation-jvm:1.10.0",
@@ -95,58 +95,58 @@
       "version": "1.5.0"
     },
     {
-      "coordinate": "androidx.compose:compose-bom:2026.06.01",
+      "coordinate": "androidx.compose:compose-bom:2026.09.00",
       "group": "androidx.compose",
       "name": "compose-bom",
-      "version": "2026.06.01"
+      "version": "2026.09.00"
     },
     {
-      "coordinate": "androidx.compose.animation:animation:1.11.4",
+      "coordinate": "androidx.compose.animation:animation:1.12.1",
       "group": "androidx.compose.animation",
       "name": "animation",
-      "version": "1.11.4"
+      "version": "1.12.1"
     },
     {
-      "coordinate": "androidx.compose.animation:animation-android:1.11.4",
+      "coordinate": "androidx.compose.animation:animation-android:1.12.1",
       "group": "androidx.compose.animation",
       "name": "animation-android",
-      "version": "1.11.4"
+      "version": "1.12.1"
     },
     {
-      "coordinate": "androidx.compose.animation:animation-core:1.11.4",
+      "coordinate": "androidx.compose.animation:animation-core:1.12.1",
       "group": "androidx.compose.animation",
       "name": "animation-core",
-      "version": "1.11.4"
+      "version": "1.12.1"
     },
     {
-      "coordinate": "androidx.compose.animation:animation-core-android:1.11.4",
+      "coordinate": "androidx.compose.animation:animation-core-android:1.12.1",
       "group": "androidx.compose.animation",
       "name": "animation-core-android",
-      "version": "1.11.4"
+      "version": "1.12.1"
     },
     {
-      "coordinate": "androidx.compose.foundation:foundation:1.11.4",
+      "coordinate": "androidx.compose.foundation:foundation:1.12.1",
       "group": "androidx.compose.foundation",
       "name": "foundation",
-      "version": "1.11.4"
+      "version": "1.12.1"
     },
     {
-      "coordinate": "androidx.compose.foundation:foundation-android:1.11.4",
+      "coordinate": "androidx.compose.foundation:foundation-android:1.12.1",
       "group": "androidx.compose.foundation",
       "name": "foundation-android",
-      "version": "1.11.4"
+      "version": "1.12.1"
     },
     {
-      "coordinate": "androidx.compose.foundation:foundation-layout:1.11.4",
+      "coordinate": "androidx.compose.foundation:foundation-layout:1.12.1",
       "group": "androidx.compose.foundation",
       "name": "foundation-layout",
-      "version": "1.11.4"
+      "version": "1.12.1"
     },
     {
-      "coordinate": "androidx.compose.foundation:foundation-layout-android:1.11.4",
+      "coordinate": "androidx.compose.foundation:foundation-layout-android:1.12.1",
       "group": "androidx.compose.foundation",
       "name": "foundation-layout-android",
-      "version": "1.11.4"
+      "version": "1.12.1"
     },
     {
       "coordinate": "androidx.compose.material:material-icons-core:1.7.8",
@@ -173,16 +173,16 @@
       "version": "1.7.8"
     },
     {
-      "coordinate": "androidx.compose.material:material-ripple:1.11.4",
+      "coordinate": "androidx.compose.material:material-ripple:1.12.1",
       "group": "androidx.compose.material",
       "name": "material-ripple",
-      "version": "1.11.4"
+      "version": "1.12.1"
     },
     {
-      "coordinate": "androidx.compose.material:material-ripple-android:1.11.4",
+      "coordinate": "androidx.compose.material:material-ripple-android:1.12.1",
       "group": "androidx.compose.material",
       "name": "material-ripple-android",
-      "version": "1.11.4"
+      "version": "1.12.1"
     },
     {
       "coordinate": "androidx.compose.material3:material3:1.4.0",
@@ -197,136 +197,136 @@
       "version": "1.4.0"
     },
     {
-      "coordinate": "androidx.compose.runtime:runtime:1.11.4",
+      "coordinate": "androidx.compose.runtime:runtime:1.12.1",
       "group": "androidx.compose.runtime",
       "name": "runtime",
-      "version": "1.11.4"
+      "version": "1.12.1"
     },
     {
-      "coordinate": "androidx.compose.runtime:runtime-android:1.11.4",
+      "coordinate": "androidx.compose.runtime:runtime-android:1.12.1",
       "group": "androidx.compose.runtime",
       "name": "runtime-android",
-      "version": "1.11.4"
+      "version": "1.12.1"
     },
     {
-      "coordinate": "androidx.compose.runtime:runtime-annotation:1.11.4",
+      "coordinate": "androidx.compose.runtime:runtime-annotation:1.12.1",
       "group": "androidx.compose.runtime",
       "name": "runtime-annotation",
-      "version": "1.11.4"
+      "version": "1.12.1"
     },
     {
-      "coordinate": "androidx.compose.runtime:runtime-annotation-android:1.11.4",
+      "coordinate": "androidx.compose.runtime:runtime-annotation-android:1.12.1",
       "group": "androidx.compose.runtime",
       "name": "runtime-annotation-android",
-      "version": "1.11.4"
+      "version": "1.12.1"
     },
     {
-      "coordinate": "androidx.compose.runtime:runtime-retain:1.11.4",
+      "coordinate": "androidx.compose.runtime:runtime-retain:1.12.1",
       "group": "androidx.compose.runtime",
       "name": "runtime-retain",
-      "version": "1.11.4"
+      "version": "1.12.1"
     },
     {
-      "coordinate": "androidx.compose.runtime:runtime-retain-android:1.11.4",
+      "coordinate": "androidx.compose.runtime:runtime-retain-android:1.12.1",
       "group": "androidx.compose.runtime",
       "name": "runtime-retain-android",
-      "version": "1.11.4"
+      "version": "1.12.1"
     },
     {
-      "coordinate": "androidx.compose.runtime:runtime-saveable:1.11.4",
+      "coordinate": "androidx.compose.runtime:runtime-saveable:1.12.1",
       "group": "androidx.compose.runtime",
       "name": "runtime-saveable",
-      "version": "1.11.4"
+      "version": "1.12.1"
     },
     {
-      "coordinate": "androidx.compose.runtime:runtime-saveable-android:1.11.4",
+      "coordinate": "androidx.compose.runtime:runtime-saveable-android:1.12.1",
       "group": "androidx.compose.runtime",
       "name": "runtime-saveable-android",
-      "version": "1.11.4"
+      "version": "1.12.1"
     },
     {
-      "coordinate": "androidx.compose.ui:ui:1.11.4",
+      "coordinate": "androidx.compose.ui:ui:1.12.1",
       "group": "androidx.compose.ui",
       "name": "ui",
-      "version": "1.11.4"
+      "version": "1.12.1"
     },
     {
-      "coordinate": "androidx.compose.ui:ui-android:1.11.4",
+      "coordinate": "androidx.compose.ui:ui-android:1.12.1",
       "group": "androidx.compose.ui",
       "name": "ui-android",
-      "version": "1.11.4"
+      "version": "1.12.1"
     },
     {
-      "coordinate": "androidx.compose.ui:ui-geometry:1.11.4",
+      "coordinate": "androidx.compose.ui:ui-geometry:1.12.1",
       "group": "androidx.compose.ui",
       "name": "ui-geometry",
-      "version": "1.11.4"
+      "version": "1.12.1"
     },
     {
-      "coordinate": "androidx.compose.ui:ui-geometry-android:1.11.4",
+      "coordinate": "androidx.compose.ui:ui-geometry-android:1.12.1",
       "group": "androidx.compose.ui",
       "name": "ui-geometry-android",
-      "version": "1.11.4"
+      "version": "1.12.1"
     },
     {
-      "coordinate": "androidx.compose.ui:ui-graphics:1.11.4",
+      "coordinate": "androidx.compose.ui:ui-graphics:1.12.1",
       "group": "androidx.compose.ui",
       "name": "ui-graphics",
-      "version": "1.11.4"
+      "version": "1.12.1"
     },
     {
-      "coordinate": "androidx.compose.ui:ui-graphics-android:1.11.4",
+      "coordinate": "androidx.compose.ui:ui-graphics-android:1.12.1",
       "group": "androidx.compose.ui",
       "name": "ui-graphics-android",
-      "version": "1.11.4"
+      "version": "1.12.1"
     },
     {
-      "coordinate": "androidx.compose.ui:ui-text:1.11.4",
+      "coordinate": "androidx.compose.ui:ui-text:1.12.1",
       "group": "androidx.compose.ui",
       "name": "ui-text",
-      "version": "1.11.4"
+      "version": "1.12.1"
     },
     {
-      "coordinate": "androidx.compose.ui:ui-text-android:1.11.4",
+      "coordinate": "androidx.compose.ui:ui-text-android:1.12.1",
       "group": "androidx.compose.ui",
       "name": "ui-text-android",
-      "version": "1.11.4"
+      "version": "1.12.1"
     },
     {
-      "coordinate": "androidx.compose.ui:ui-tooling-preview:1.11.4",
+      "coordinate": "androidx.compose.ui:ui-tooling-preview:1.12.1",
       "group": "androidx.compose.ui",
       "name": "ui-tooling-preview",
-      "version": "1.11.4"
+      "version": "1.12.1"
     },
     {
-      "coordinate": "androidx.compose.ui:ui-tooling-preview-android:1.11.4",
+      "coordinate": "androidx.compose.ui:ui-tooling-preview-android:1.12.1",
       "group": "androidx.compose.ui",
       "name": "ui-tooling-preview-android",
-      "version": "1.11.4"
+      "version": "1.12.1"
     },
     {
-      "coordinate": "androidx.compose.ui:ui-unit:1.11.4",
+      "coordinate": "androidx.compose.ui:ui-unit:1.12.1",
       "group": "androidx.compose.ui",
       "name": "ui-unit",
-      "version": "1.11.4"
+      "version": "1.12.1"
     },
     {
-      "coordinate": "androidx.compose.ui:ui-unit-android:1.11.4",
+      "coordinate": "androidx.compose.ui:ui-unit-android:1.12.1",
       "group": "androidx.compose.ui",
       "name": "ui-unit-android",
-      "version": "1.11.4"
+      "version": "1.12.1"
     },
     {
-      "coordinate": "androidx.compose.ui:ui-util:1.11.4",
+      "coordinate": "androidx.compose.ui:ui-util:1.12.1",
       "group": "androidx.compose.ui",
       "name": "ui-util",
-      "version": "1.11.4"
+      "version": "1.12.1"
     },
     {
-      "coordinate": "androidx.compose.ui:ui-util-android:1.11.4",
+      "coordinate": "androidx.compose.ui:ui-util-android:1.12.1",
       "group": "androidx.compose.ui",
       "name": "ui-util-android",
-      "version": "1.11.4"
+      "version": "1.12.1"
     },
     {
       "coordinate": "androidx.concurrent:concurrent-futures:1.2.0",
@@ -341,16 +341,16 @@
       "version": "1.2.0"
     },
     {
-      "coordinate": "androidx.core:core:1.16.0",
+      "coordinate": "androidx.core:core:1.19.1",
       "group": "androidx.core",
       "name": "core",
-      "version": "1.16.0"
+      "version": "1.19.1"
     },
     {
-      "coordinate": "androidx.core:core-ktx:1.16.0",
+      "coordinate": "androidx.core:core-ktx:1.19.1",
       "group": "androidx.core",
       "name": "core-ktx",
-      "version": "1.16.0"
+      "version": "1.19.1"
     },
     {
       "coordinate": "androidx.core:core-remoteviews:1.1.0",
@@ -479,12 +479,6 @@
       "version": "1.0.0"
     },
     {
-      "coordinate": "androidx.dynamicanimation:dynamicanimation:1.0.0",
-      "group": "androidx.dynamicanimation",
-      "name": "dynamicanimation",
-      "version": "1.0.0"
-    },
-    {
       "coordinate": "androidx.emoji2:emoji2:1.4.0",
       "group": "androidx.emoji2",
       "name": "emoji2",
@@ -545,28 +539,34 @@
       "version": "1.0.1"
     },
     {
-      "coordinate": "androidx.hilt:hilt-common:1.2.0",
+      "coordinate": "androidx.hilt:hilt-common:1.4.0",
       "group": "androidx.hilt",
       "name": "hilt-common",
-      "version": "1.2.0"
+      "version": "1.4.0"
     },
     {
-      "coordinate": "androidx.hilt:hilt-navigation:1.2.0",
+      "coordinate": "androidx.hilt:hilt-lifecycle-viewmodel:1.4.0",
       "group": "androidx.hilt",
-      "name": "hilt-navigation",
-      "version": "1.2.0"
+      "name": "hilt-lifecycle-viewmodel",
+      "version": "1.4.0"
     },
     {
-      "coordinate": "androidx.hilt:hilt-navigation-compose:1.2.0",
+      "coordinate": "androidx.hilt:hilt-lifecycle-viewmodel-compose:1.4.0",
+      "group": "androidx.hilt",
+      "name": "hilt-lifecycle-viewmodel-compose",
+      "version": "1.4.0"
+    },
+    {
+      "coordinate": "androidx.hilt:hilt-navigation-compose:1.4.0",
       "group": "androidx.hilt",
       "name": "hilt-navigation-compose",
-      "version": "1.2.0"
+      "version": "1.4.0"
     },
     {
-      "coordinate": "androidx.hilt:hilt-work:1.2.0",
+      "coordinate": "androidx.hilt:hilt-work:1.4.0",
       "group": "androidx.hilt",
       "name": "hilt-work",
-      "version": "1.2.0"
+      "version": "1.4.0"
     },
     {
       "coordinate": "androidx.interpolator:interpolator:1.0.0",
@@ -581,136 +581,136 @@
       "version": "1.0.0"
     },
     {
-      "coordinate": "androidx.lifecycle:lifecycle-common:2.9.4",
+      "coordinate": "androidx.lifecycle:lifecycle-common:2.11.0",
       "group": "androidx.lifecycle",
       "name": "lifecycle-common",
-      "version": "2.9.4"
+      "version": "2.11.0"
     },
     {
-      "coordinate": "androidx.lifecycle:lifecycle-common-java8:2.9.4",
+      "coordinate": "androidx.lifecycle:lifecycle-common-java8:2.11.0",
       "group": "androidx.lifecycle",
       "name": "lifecycle-common-java8",
-      "version": "2.9.4"
+      "version": "2.11.0"
     },
     {
-      "coordinate": "androidx.lifecycle:lifecycle-common-jvm:2.9.4",
+      "coordinate": "androidx.lifecycle:lifecycle-common-jvm:2.11.0",
       "group": "androidx.lifecycle",
       "name": "lifecycle-common-jvm",
-      "version": "2.9.4"
+      "version": "2.11.0"
     },
     {
-      "coordinate": "androidx.lifecycle:lifecycle-livedata:2.9.4",
+      "coordinate": "androidx.lifecycle:lifecycle-livedata:2.11.0",
       "group": "androidx.lifecycle",
       "name": "lifecycle-livedata",
-      "version": "2.9.4"
+      "version": "2.11.0"
     },
     {
-      "coordinate": "androidx.lifecycle:lifecycle-livedata-core:2.9.4",
+      "coordinate": "androidx.lifecycle:lifecycle-livedata-core:2.11.0",
       "group": "androidx.lifecycle",
       "name": "lifecycle-livedata-core",
-      "version": "2.9.4"
+      "version": "2.11.0"
     },
     {
-      "coordinate": "androidx.lifecycle:lifecycle-livedata-core-ktx:2.9.4",
+      "coordinate": "androidx.lifecycle:lifecycle-livedata-core-ktx:2.11.0",
       "group": "androidx.lifecycle",
       "name": "lifecycle-livedata-core-ktx",
-      "version": "2.9.4"
+      "version": "2.11.0"
     },
     {
-      "coordinate": "androidx.lifecycle:lifecycle-livedata-ktx:2.9.4",
+      "coordinate": "androidx.lifecycle:lifecycle-livedata-ktx:2.11.0",
       "group": "androidx.lifecycle",
       "name": "lifecycle-livedata-ktx",
-      "version": "2.9.4"
+      "version": "2.11.0"
     },
     {
-      "coordinate": "androidx.lifecycle:lifecycle-process:2.9.4",
+      "coordinate": "androidx.lifecycle:lifecycle-process:2.11.0",
       "group": "androidx.lifecycle",
       "name": "lifecycle-process",
-      "version": "2.9.4"
+      "version": "2.11.0"
     },
     {
-      "coordinate": "androidx.lifecycle:lifecycle-runtime:2.9.4",
+      "coordinate": "androidx.lifecycle:lifecycle-runtime:2.11.0",
       "group": "androidx.lifecycle",
       "name": "lifecycle-runtime",
-      "version": "2.9.4"
+      "version": "2.11.0"
     },
     {
-      "coordinate": "androidx.lifecycle:lifecycle-runtime-android:2.9.4",
+      "coordinate": "androidx.lifecycle:lifecycle-runtime-android:2.11.0",
       "group": "androidx.lifecycle",
       "name": "lifecycle-runtime-android",
-      "version": "2.9.4"
+      "version": "2.11.0"
     },
     {
-      "coordinate": "androidx.lifecycle:lifecycle-runtime-compose:2.9.4",
+      "coordinate": "androidx.lifecycle:lifecycle-runtime-compose:2.11.0",
       "group": "androidx.lifecycle",
       "name": "lifecycle-runtime-compose",
-      "version": "2.9.4"
+      "version": "2.11.0"
     },
     {
-      "coordinate": "androidx.lifecycle:lifecycle-runtime-compose-android:2.9.4",
+      "coordinate": "androidx.lifecycle:lifecycle-runtime-compose-android:2.11.0",
       "group": "androidx.lifecycle",
       "name": "lifecycle-runtime-compose-android",
-      "version": "2.9.4"
+      "version": "2.11.0"
     },
     {
-      "coordinate": "androidx.lifecycle:lifecycle-runtime-ktx:2.9.4",
+      "coordinate": "androidx.lifecycle:lifecycle-runtime-ktx:2.11.0",
       "group": "androidx.lifecycle",
       "name": "lifecycle-runtime-ktx",
-      "version": "2.9.4"
+      "version": "2.11.0"
     },
     {
-      "coordinate": "androidx.lifecycle:lifecycle-runtime-ktx-android:2.9.4",
+      "coordinate": "androidx.lifecycle:lifecycle-runtime-ktx-android:2.11.0",
       "group": "androidx.lifecycle",
       "name": "lifecycle-runtime-ktx-android",
-      "version": "2.9.4"
+      "version": "2.11.0"
     },
     {
-      "coordinate": "androidx.lifecycle:lifecycle-service:2.9.4",
+      "coordinate": "androidx.lifecycle:lifecycle-service:2.11.0",
       "group": "androidx.lifecycle",
       "name": "lifecycle-service",
-      "version": "2.9.4"
+      "version": "2.11.0"
     },
     {
-      "coordinate": "androidx.lifecycle:lifecycle-viewmodel:2.9.4",
+      "coordinate": "androidx.lifecycle:lifecycle-viewmodel:2.11.0",
       "group": "androidx.lifecycle",
       "name": "lifecycle-viewmodel",
-      "version": "2.9.4"
+      "version": "2.11.0"
     },
     {
-      "coordinate": "androidx.lifecycle:lifecycle-viewmodel-android:2.9.4",
+      "coordinate": "androidx.lifecycle:lifecycle-viewmodel-android:2.11.0",
       "group": "androidx.lifecycle",
       "name": "lifecycle-viewmodel-android",
-      "version": "2.9.4"
+      "version": "2.11.0"
     },
     {
-      "coordinate": "androidx.lifecycle:lifecycle-viewmodel-compose:2.9.4",
+      "coordinate": "androidx.lifecycle:lifecycle-viewmodel-compose:2.11.0",
       "group": "androidx.lifecycle",
       "name": "lifecycle-viewmodel-compose",
-      "version": "2.9.4"
+      "version": "2.11.0"
     },
     {
-      "coordinate": "androidx.lifecycle:lifecycle-viewmodel-compose-android:2.9.4",
+      "coordinate": "androidx.lifecycle:lifecycle-viewmodel-compose-android:2.11.0",
       "group": "androidx.lifecycle",
       "name": "lifecycle-viewmodel-compose-android",
-      "version": "2.9.4"
+      "version": "2.11.0"
     },
     {
-      "coordinate": "androidx.lifecycle:lifecycle-viewmodel-ktx:2.9.4",
+      "coordinate": "androidx.lifecycle:lifecycle-viewmodel-ktx:2.11.0",
       "group": "androidx.lifecycle",
       "name": "lifecycle-viewmodel-ktx",
-      "version": "2.9.4"
+      "version": "2.11.0"
     },
     {
-      "coordinate": "androidx.lifecycle:lifecycle-viewmodel-savedstate:2.9.4",
+      "coordinate": "androidx.lifecycle:lifecycle-viewmodel-savedstate:2.11.0",
       "group": "androidx.lifecycle",
       "name": "lifecycle-viewmodel-savedstate",
-      "version": "2.9.4"
+      "version": "2.11.0"
     },
     {
-      "coordinate": "androidx.lifecycle:lifecycle-viewmodel-savedstate-android:2.9.4",
+      "coordinate": "androidx.lifecycle:lifecycle-viewmodel-savedstate-android:2.11.0",
       "group": "androidx.lifecycle",
       "name": "lifecycle-viewmodel-savedstate-android",
-      "version": "2.9.4"
+      "version": "2.11.0"
     },
     {
       "coordinate": "androidx.loader:loader:1.0.0",
@@ -731,118 +731,142 @@
       "version": "1.7.0"
     },
     {
-      "coordinate": "androidx.media3:media3-common:1.11.0",
+      "coordinate": "androidx.media3:media3-common:1.11.1",
       "group": "androidx.media3",
       "name": "media3-common",
-      "version": "1.11.0"
+      "version": "1.11.1"
     },
     {
-      "coordinate": "androidx.media3:media3-container:1.11.0",
+      "coordinate": "androidx.media3:media3-container:1.11.1",
       "group": "androidx.media3",
       "name": "media3-container",
-      "version": "1.11.0"
+      "version": "1.11.1"
     },
     {
-      "coordinate": "androidx.media3:media3-database:1.11.0",
+      "coordinate": "androidx.media3:media3-database:1.11.1",
       "group": "androidx.media3",
       "name": "media3-database",
-      "version": "1.11.0"
+      "version": "1.11.1"
     },
     {
-      "coordinate": "androidx.media3:media3-datasource:1.11.0",
+      "coordinate": "androidx.media3:media3-datasource:1.11.1",
       "group": "androidx.media3",
       "name": "media3-datasource",
-      "version": "1.11.0"
+      "version": "1.11.1"
     },
     {
-      "coordinate": "androidx.media3:media3-decoder:1.11.0",
+      "coordinate": "androidx.media3:media3-decoder:1.11.1",
       "group": "androidx.media3",
       "name": "media3-decoder",
-      "version": "1.11.0"
+      "version": "1.11.1"
     },
     {
-      "coordinate": "androidx.media3:media3-effect:1.11.0",
+      "coordinate": "androidx.media3:media3-effect:1.11.1",
       "group": "androidx.media3",
       "name": "media3-effect",
-      "version": "1.11.0"
+      "version": "1.11.1"
     },
     {
-      "coordinate": "androidx.media3:media3-exoplayer:1.11.0",
+      "coordinate": "androidx.media3:media3-exoplayer:1.11.1",
       "group": "androidx.media3",
       "name": "media3-exoplayer",
-      "version": "1.11.0"
+      "version": "1.11.1"
     },
     {
-      "coordinate": "androidx.media3:media3-exoplayer-hls:1.11.0",
+      "coordinate": "androidx.media3:media3-exoplayer-hls:1.11.1",
       "group": "androidx.media3",
       "name": "media3-exoplayer-hls",
-      "version": "1.11.0"
+      "version": "1.11.1"
     },
     {
-      "coordinate": "androidx.media3:media3-extractor:1.11.0",
+      "coordinate": "androidx.media3:media3-extractor:1.11.1",
       "group": "androidx.media3",
       "name": "media3-extractor",
-      "version": "1.11.0"
+      "version": "1.11.1"
     },
     {
-      "coordinate": "androidx.media3:media3-muxer:1.11.0",
+      "coordinate": "androidx.media3:media3-muxer:1.11.1",
       "group": "androidx.media3",
       "name": "media3-muxer",
-      "version": "1.11.0"
+      "version": "1.11.1"
     },
     {
-      "coordinate": "androidx.media3:media3-session:1.11.0",
+      "coordinate": "androidx.media3:media3-session:1.11.1",
       "group": "androidx.media3",
       "name": "media3-session",
-      "version": "1.11.0"
+      "version": "1.11.1"
     },
     {
-      "coordinate": "androidx.media3:media3-transformer:1.11.0",
+      "coordinate": "androidx.media3:media3-transformer:1.11.1",
       "group": "androidx.media3",
       "name": "media3-transformer",
-      "version": "1.11.0"
+      "version": "1.11.1"
     },
     {
-      "coordinate": "androidx.media3:media3-ui:1.11.0",
+      "coordinate": "androidx.media3:media3-ui:1.11.1",
       "group": "androidx.media3",
       "name": "media3-ui",
-      "version": "1.11.0"
+      "version": "1.11.1"
     },
     {
-      "coordinate": "androidx.navigation:navigation-common:2.9.8",
+      "coordinate": "androidx.navigation:navigation-common:2.10.2",
       "group": "androidx.navigation",
       "name": "navigation-common",
-      "version": "2.9.8"
+      "version": "2.10.2"
     },
     {
-      "coordinate": "androidx.navigation:navigation-common-android:2.9.8",
+      "coordinate": "androidx.navigation:navigation-common-android:2.10.2",
       "group": "androidx.navigation",
       "name": "navigation-common-android",
-      "version": "2.9.8"
+      "version": "2.10.2"
     },
     {
-      "coordinate": "androidx.navigation:navigation-compose:2.9.8",
+      "coordinate": "androidx.navigation:navigation-compose:2.10.2",
       "group": "androidx.navigation",
       "name": "navigation-compose",
-      "version": "2.9.8"
+      "version": "2.10.2"
     },
     {
-      "coordinate": "androidx.navigation:navigation-compose-android:2.9.8",
+      "coordinate": "androidx.navigation:navigation-compose-android:2.10.2",
       "group": "androidx.navigation",
       "name": "navigation-compose-android",
-      "version": "2.9.8"
+      "version": "2.10.2"
     },
     {
-      "coordinate": "androidx.navigation:navigation-runtime:2.9.8",
+      "coordinate": "androidx.navigation:navigation-runtime:2.10.2",
       "group": "androidx.navigation",
       "name": "navigation-runtime",
-      "version": "2.9.8"
+      "version": "2.10.2"
     },
     {
-      "coordinate": "androidx.navigation:navigation-runtime-android:2.9.8",
+      "coordinate": "androidx.navigation:navigation-runtime-android:2.10.2",
       "group": "androidx.navigation",
       "name": "navigation-runtime-android",
-      "version": "2.9.8"
+      "version": "2.10.2"
+    },
+    {
+      "coordinate": "androidx.navigationevent:navigationevent:1.1.2",
+      "group": "androidx.navigationevent",
+      "name": "navigationevent",
+      "version": "1.1.2"
+    },
+    {
+      "coordinate": "androidx.navigationevent:navigationevent-android:1.1.2",
+      "group": "androidx.navigationevent",
+      "name": "navigationevent-android",
+      "version": "1.1.2"
+    },
+    {
+      "coordinate": "androidx.navigationevent:navigationevent-compose:1.1.2",
+      "group": "androidx.navigationevent",
+      "name": "navigationevent-compose",
+      "version": "1.1.2"
+    },
+    {
+      "coordinate": "androidx.navigationevent:navigationevent-compose-android:1.1.2",
+      "group": "androidx.navigationevent",
+      "name": "navigationevent-compose-android",
+      "version": "1.1.2"
     },
     {
       "coordinate": "androidx.paging:paging-common:3.5.0",
@@ -923,100 +947,94 @@
       "version": "1.0.1"
     },
     {
-      "coordinate": "androidx.room:room-common:2.7.2",
+      "coordinate": "androidx.room:room-common:2.8.5",
       "group": "androidx.room",
       "name": "room-common",
-      "version": "2.7.2"
+      "version": "2.8.5"
     },
     {
-      "coordinate": "androidx.room:room-common-jvm:2.7.2",
+      "coordinate": "androidx.room:room-common-jvm:2.8.5",
       "group": "androidx.room",
       "name": "room-common-jvm",
-      "version": "2.7.2"
+      "version": "2.8.5"
     },
     {
-      "coordinate": "androidx.room:room-ktx:2.7.2",
-      "group": "androidx.room",
-      "name": "room-ktx",
-      "version": "2.7.2"
-    },
-    {
-      "coordinate": "androidx.room:room-paging:2.7.2",
+      "coordinate": "androidx.room:room-paging:2.8.5",
       "group": "androidx.room",
       "name": "room-paging",
-      "version": "2.7.2"
+      "version": "2.8.5"
     },
     {
-      "coordinate": "androidx.room:room-paging-android:2.7.2",
+      "coordinate": "androidx.room:room-paging-android:2.8.5",
       "group": "androidx.room",
       "name": "room-paging-android",
-      "version": "2.7.2"
+      "version": "2.8.5"
     },
     {
-      "coordinate": "androidx.room:room-runtime:2.7.2",
+      "coordinate": "androidx.room:room-runtime:2.8.5",
       "group": "androidx.room",
       "name": "room-runtime",
-      "version": "2.7.2"
+      "version": "2.8.5"
     },
     {
-      "coordinate": "androidx.room:room-runtime-android:2.7.2",
+      "coordinate": "androidx.room:room-runtime-android:2.8.5",
       "group": "androidx.room",
       "name": "room-runtime-android",
-      "version": "2.7.2"
+      "version": "2.8.5"
     },
     {
-      "coordinate": "androidx.savedstate:savedstate:1.4.0",
+      "coordinate": "androidx.savedstate:savedstate:1.5.0",
       "group": "androidx.savedstate",
       "name": "savedstate",
-      "version": "1.4.0"
+      "version": "1.5.0"
     },
     {
-      "coordinate": "androidx.savedstate:savedstate-android:1.4.0",
+      "coordinate": "androidx.savedstate:savedstate-android:1.5.0",
       "group": "androidx.savedstate",
       "name": "savedstate-android",
-      "version": "1.4.0"
+      "version": "1.5.0"
     },
     {
-      "coordinate": "androidx.savedstate:savedstate-compose:1.4.0",
+      "coordinate": "androidx.savedstate:savedstate-compose:1.5.0",
       "group": "androidx.savedstate",
       "name": "savedstate-compose",
-      "version": "1.4.0"
+      "version": "1.5.0"
     },
     {
-      "coordinate": "androidx.savedstate:savedstate-compose-android:1.4.0",
+      "coordinate": "androidx.savedstate:savedstate-compose-android:1.5.0",
       "group": "androidx.savedstate",
       "name": "savedstate-compose-android",
-      "version": "1.4.0"
+      "version": "1.5.0"
     },
     {
-      "coordinate": "androidx.savedstate:savedstate-ktx:1.4.0",
+      "coordinate": "androidx.savedstate:savedstate-ktx:1.5.0",
       "group": "androidx.savedstate",
       "name": "savedstate-ktx",
-      "version": "1.4.0"
+      "version": "1.5.0"
     },
     {
-      "coordinate": "androidx.sqlite:sqlite:2.5.1",
+      "coordinate": "androidx.sqlite:sqlite:2.6.2",
       "group": "androidx.sqlite",
       "name": "sqlite",
-      "version": "2.5.1"
+      "version": "2.6.2"
     },
     {
-      "coordinate": "androidx.sqlite:sqlite-android:2.5.1",
+      "coordinate": "androidx.sqlite:sqlite-android:2.6.2",
       "group": "androidx.sqlite",
       "name": "sqlite-android",
-      "version": "2.5.1"
+      "version": "2.6.2"
     },
     {
-      "coordinate": "androidx.sqlite:sqlite-framework:2.5.1",
+      "coordinate": "androidx.sqlite:sqlite-framework:2.6.2",
       "group": "androidx.sqlite",
       "name": "sqlite-framework",
-      "version": "2.5.1"
+      "version": "2.6.2"
     },
     {
-      "coordinate": "androidx.sqlite:sqlite-framework-android:2.5.1",
+      "coordinate": "androidx.sqlite:sqlite-framework-android:2.6.2",
       "group": "androidx.sqlite",
       "name": "sqlite-framework-android",
-      "version": "2.5.1"
+      "version": "2.6.2"
     },
     {
       "coordinate": "androidx.startup:startup-runtime:1.2.0",
@@ -1035,12 +1053,6 @@
       "group": "androidx.tracing",
       "name": "tracing-ktx",
       "version": "1.2.0"
-    },
-    {
-      "coordinate": "androidx.transition:transition:1.6.0",
-      "group": "androidx.transition",
-      "name": "transition",
-      "version": "1.6.0"
     },
     {
       "coordinate": "androidx.vectordrawable:vectordrawable:1.2.0",
@@ -1085,16 +1097,16 @@
       "version": "1.5.0"
     },
     {
-      "coordinate": "androidx.work:work-runtime:2.11.2",
+      "coordinate": "androidx.work:work-runtime:2.12.0",
       "group": "androidx.work",
       "name": "work-runtime",
-      "version": "2.11.2"
+      "version": "2.12.0"
     },
     {
-      "coordinate": "androidx.work:work-runtime-ktx:2.11.2",
+      "coordinate": "androidx.work:work-runtime-ktx:2.12.0",
       "group": "androidx.work",
       "name": "work-runtime-ktx",
-      "version": "2.11.2"
+      "version": "2.12.0"
     },
     {
       "coordinate": "com.fasterxml.jackson:jackson-bom:2.18.9",
@@ -1253,28 +1265,28 @@
       "version": "3.0.2"
     },
     {
-      "coordinate": "com.google.dagger:dagger:2.53.1",
+      "coordinate": "com.google.dagger:dagger:2.60.1",
       "group": "com.google.dagger",
       "name": "dagger",
-      "version": "2.53.1"
+      "version": "2.60.1"
     },
     {
-      "coordinate": "com.google.dagger:dagger-lint-aar:2.53.1",
+      "coordinate": "com.google.dagger:dagger-lint-aar:2.60.1",
       "group": "com.google.dagger",
       "name": "dagger-lint-aar",
-      "version": "2.53.1"
+      "version": "2.60.1"
     },
     {
-      "coordinate": "com.google.dagger:hilt-android:2.53.1",
+      "coordinate": "com.google.dagger:hilt-android:2.60.1",
       "group": "com.google.dagger",
       "name": "hilt-android",
-      "version": "2.53.1"
+      "version": "2.60.1"
     },
     {
-      "coordinate": "com.google.dagger:hilt-core:2.53.1",
+      "coordinate": "com.google.dagger:hilt-core:2.60.1",
       "group": "com.google.dagger",
       "name": "hilt-core",
-      "version": "2.53.1"
+      "version": "2.60.1"
     },
     {
       "coordinate": "com.google.errorprone:error_prone_annotations:2.28.0",
@@ -1457,34 +1469,34 @@
       "version": "1.15.2"
     },
     {
-      "coordinate": "com.squareup.okhttp3:logging-interceptor:5.4.0",
+      "coordinate": "com.squareup.okhttp3:logging-interceptor:5.5.1",
       "group": "com.squareup.okhttp3",
       "name": "logging-interceptor",
-      "version": "5.4.0"
+      "version": "5.5.1"
     },
     {
-      "coordinate": "com.squareup.okhttp3:okhttp:5.4.0",
+      "coordinate": "com.squareup.okhttp3:okhttp:5.5.1",
       "group": "com.squareup.okhttp3",
       "name": "okhttp",
-      "version": "5.4.0"
+      "version": "5.5.1"
     },
     {
-      "coordinate": "com.squareup.okhttp3:okhttp-android:5.4.0",
+      "coordinate": "com.squareup.okhttp3:okhttp-android:5.5.1",
       "group": "com.squareup.okhttp3",
       "name": "okhttp-android",
-      "version": "5.4.0"
+      "version": "5.5.1"
     },
     {
-      "coordinate": "com.squareup.okio:okio:3.17.0",
+      "coordinate": "com.squareup.okio:okio:3.18.1",
       "group": "com.squareup.okio",
       "name": "okio",
-      "version": "3.17.0"
+      "version": "3.18.1"
     },
     {
-      "coordinate": "com.squareup.okio:okio-jvm:3.17.0",
+      "coordinate": "com.squareup.okio:okio-jvm:3.18.1",
       "group": "com.squareup.okio",
       "name": "okio-jvm",
-      "version": "3.17.0"
+      "version": "3.18.1"
     },
     {
       "coordinate": "com.squareup.retrofit2:converter-moshi:3.0.0",
@@ -1511,93 +1523,93 @@
       "version": "2.20.0"
     },
     {
-      "coordinate": "io.coil-kt.coil3:coil:3.5.0",
+      "coordinate": "de.sciss:jump3r:1.0.5",
+      "group": "de.sciss",
+      "name": "jump3r",
+      "version": "1.0.5"
+    },
+    {
+      "coordinate": "io.coil-kt.coil3:coil:3.6.3",
       "group": "io.coil-kt.coil3",
       "name": "coil",
-      "version": "3.5.0"
+      "version": "3.6.3"
     },
     {
-      "coordinate": "io.coil-kt.coil3:coil-android:3.5.0",
+      "coordinate": "io.coil-kt.coil3:coil-android:3.6.3",
       "group": "io.coil-kt.coil3",
       "name": "coil-android",
-      "version": "3.5.0"
+      "version": "3.6.3"
     },
     {
-      "coordinate": "io.coil-kt.coil3:coil-compose:3.5.0",
+      "coordinate": "io.coil-kt.coil3:coil-compose:3.6.3",
       "group": "io.coil-kt.coil3",
       "name": "coil-compose",
-      "version": "3.5.0"
+      "version": "3.6.3"
     },
     {
-      "coordinate": "io.coil-kt.coil3:coil-compose-android:3.5.0",
+      "coordinate": "io.coil-kt.coil3:coil-compose-android:3.6.3",
       "group": "io.coil-kt.coil3",
       "name": "coil-compose-android",
-      "version": "3.5.0"
+      "version": "3.6.3"
     },
     {
-      "coordinate": "io.coil-kt.coil3:coil-compose-core:3.5.0",
+      "coordinate": "io.coil-kt.coil3:coil-compose-core:3.6.3",
       "group": "io.coil-kt.coil3",
       "name": "coil-compose-core",
-      "version": "3.5.0"
+      "version": "3.6.3"
     },
     {
-      "coordinate": "io.coil-kt.coil3:coil-compose-core-android:3.5.0",
+      "coordinate": "io.coil-kt.coil3:coil-compose-core-android:3.6.3",
       "group": "io.coil-kt.coil3",
       "name": "coil-compose-core-android",
-      "version": "3.5.0"
+      "version": "3.6.3"
     },
     {
-      "coordinate": "io.coil-kt.coil3:coil-core:3.5.0",
+      "coordinate": "io.coil-kt.coil3:coil-core:3.6.3",
       "group": "io.coil-kt.coil3",
       "name": "coil-core",
-      "version": "3.5.0"
+      "version": "3.6.3"
     },
     {
-      "coordinate": "io.coil-kt.coil3:coil-core-android:3.5.0",
+      "coordinate": "io.coil-kt.coil3:coil-core-android:3.6.3",
       "group": "io.coil-kt.coil3",
       "name": "coil-core-android",
-      "version": "3.5.0"
+      "version": "3.6.3"
     },
     {
-      "coordinate": "io.coil-kt.coil3:coil-gif:3.5.0",
+      "coordinate": "io.coil-kt.coil3:coil-gif:3.6.3",
       "group": "io.coil-kt.coil3",
       "name": "coil-gif",
-      "version": "3.5.0"
+      "version": "3.6.3"
     },
     {
-      "coordinate": "io.coil-kt.coil3:coil-network-core:3.5.0",
+      "coordinate": "io.coil-kt.coil3:coil-network-core:3.6.3",
       "group": "io.coil-kt.coil3",
       "name": "coil-network-core",
-      "version": "3.5.0"
+      "version": "3.6.3"
     },
     {
-      "coordinate": "io.coil-kt.coil3:coil-network-core-android:3.5.0",
+      "coordinate": "io.coil-kt.coil3:coil-network-core-android:3.6.3",
       "group": "io.coil-kt.coil3",
       "name": "coil-network-core-android",
-      "version": "3.5.0"
+      "version": "3.6.3"
     },
     {
-      "coordinate": "io.coil-kt.coil3:coil-network-okhttp:3.5.0",
+      "coordinate": "io.coil-kt.coil3:coil-network-okhttp:3.6.3",
       "group": "io.coil-kt.coil3",
       "name": "coil-network-okhttp",
-      "version": "3.5.0"
+      "version": "3.6.3"
     },
     {
-      "coordinate": "io.coil-kt.coil3:coil-network-okhttp-android:3.5.0",
+      "coordinate": "io.coil-kt.coil3:coil-network-okhttp-android:3.6.3",
       "group": "io.coil-kt.coil3",
       "name": "coil-network-okhttp-android",
-      "version": "3.5.0"
+      "version": "3.6.3"
     },
     {
       "coordinate": "io.github.junkfood02.youtubedl-android:common:0.18.1",
       "group": "io.github.junkfood02.youtubedl-android",
       "name": "common",
-      "version": "0.18.1"
-    },
-    {
-      "coordinate": "io.github.junkfood02.youtubedl-android:ffmpeg:0.18.1",
-      "group": "io.github.junkfood02.youtubedl-android",
-      "name": "ffmpeg",
       "version": "0.18.1"
     },
     {
@@ -1661,18 +1673,6 @@
       "version": "2.9.6"
     },
     {
-      "coordinate": "org.jetbrains.androidx.lifecycle:lifecycle-viewmodel:2.9.6",
-      "group": "org.jetbrains.androidx.lifecycle",
-      "name": "lifecycle-viewmodel",
-      "version": "2.9.6"
-    },
-    {
-      "coordinate": "org.jetbrains.androidx.lifecycle:lifecycle-viewmodel-savedstate:2.9.6",
-      "group": "org.jetbrains.androidx.lifecycle",
-      "name": "lifecycle-viewmodel-savedstate",
-      "version": "2.9.6"
-    },
-    {
       "coordinate": "org.jetbrains.androidx.savedstate:savedstate:1.3.6",
       "group": "org.jetbrains.androidx.savedstate",
       "name": "savedstate",
@@ -1685,88 +1685,160 @@
       "version": "1.3.6"
     },
     {
-      "coordinate": "org.jetbrains.compose.animation:animation:1.11.1",
+      "coordinate": "org.jetbrains.compose.animation:animation:1.12.0",
       "group": "org.jetbrains.compose.animation",
       "name": "animation",
-      "version": "1.11.1"
+      "version": "1.12.0"
     },
     {
-      "coordinate": "org.jetbrains.compose.animation:animation-core:1.11.1",
+      "coordinate": "org.jetbrains.compose.animation:animation-android:1.12.0",
+      "group": "org.jetbrains.compose.animation",
+      "name": "animation-android",
+      "version": "1.12.0"
+    },
+    {
+      "coordinate": "org.jetbrains.compose.animation:animation-core:1.12.0",
       "group": "org.jetbrains.compose.animation",
       "name": "animation-core",
-      "version": "1.11.1"
+      "version": "1.12.0"
     },
     {
-      "coordinate": "org.jetbrains.compose.foundation:foundation:1.11.1",
+      "coordinate": "org.jetbrains.compose.animation:animation-core-android:1.12.0",
+      "group": "org.jetbrains.compose.animation",
+      "name": "animation-core-android",
+      "version": "1.12.0"
+    },
+    {
+      "coordinate": "org.jetbrains.compose.foundation:foundation:1.12.0",
       "group": "org.jetbrains.compose.foundation",
       "name": "foundation",
-      "version": "1.11.1"
+      "version": "1.12.0"
     },
     {
-      "coordinate": "org.jetbrains.compose.foundation:foundation-layout:1.11.1",
+      "coordinate": "org.jetbrains.compose.foundation:foundation-android:1.12.0",
+      "group": "org.jetbrains.compose.foundation",
+      "name": "foundation-android",
+      "version": "1.12.0"
+    },
+    {
+      "coordinate": "org.jetbrains.compose.foundation:foundation-layout:1.12.0",
       "group": "org.jetbrains.compose.foundation",
       "name": "foundation-layout",
-      "version": "1.11.1"
+      "version": "1.12.0"
     },
     {
-      "coordinate": "org.jetbrains.compose.runtime:runtime:1.11.1",
+      "coordinate": "org.jetbrains.compose.foundation:foundation-layout-android:1.12.0",
+      "group": "org.jetbrains.compose.foundation",
+      "name": "foundation-layout-android",
+      "version": "1.12.0"
+    },
+    {
+      "coordinate": "org.jetbrains.compose.runtime:runtime:1.12.0",
       "group": "org.jetbrains.compose.runtime",
       "name": "runtime",
-      "version": "1.11.1"
+      "version": "1.12.0"
     },
     {
-      "coordinate": "org.jetbrains.compose.runtime:runtime-saveable:1.11.1",
+      "coordinate": "org.jetbrains.compose.runtime:runtime-android:1.12.0",
+      "group": "org.jetbrains.compose.runtime",
+      "name": "runtime-android",
+      "version": "1.12.0"
+    },
+    {
+      "coordinate": "org.jetbrains.compose.runtime:runtime-saveable:1.12.0",
       "group": "org.jetbrains.compose.runtime",
       "name": "runtime-saveable",
-      "version": "1.11.1"
+      "version": "1.12.0"
     },
     {
-      "coordinate": "org.jetbrains.compose.ui:ui:1.11.1",
+      "coordinate": "org.jetbrains.compose.runtime:runtime-saveable-android:1.12.0",
+      "group": "org.jetbrains.compose.runtime",
+      "name": "runtime-saveable-android",
+      "version": "1.12.0"
+    },
+    {
+      "coordinate": "org.jetbrains.compose.ui:ui:1.12.0",
       "group": "org.jetbrains.compose.ui",
       "name": "ui",
-      "version": "1.11.1"
+      "version": "1.12.0"
     },
     {
-      "coordinate": "org.jetbrains.compose.ui:ui-geometry:1.11.1",
+      "coordinate": "org.jetbrains.compose.ui:ui-android:1.12.0",
+      "group": "org.jetbrains.compose.ui",
+      "name": "ui-android",
+      "version": "1.12.0"
+    },
+    {
+      "coordinate": "org.jetbrains.compose.ui:ui-geometry:1.12.0",
       "group": "org.jetbrains.compose.ui",
       "name": "ui-geometry",
-      "version": "1.11.1"
+      "version": "1.12.0"
     },
     {
-      "coordinate": "org.jetbrains.compose.ui:ui-graphics:1.11.1",
+      "coordinate": "org.jetbrains.compose.ui:ui-geometry-android:1.12.0",
+      "group": "org.jetbrains.compose.ui",
+      "name": "ui-geometry-android",
+      "version": "1.12.0"
+    },
+    {
+      "coordinate": "org.jetbrains.compose.ui:ui-graphics:1.12.0",
       "group": "org.jetbrains.compose.ui",
       "name": "ui-graphics",
-      "version": "1.11.1"
+      "version": "1.12.0"
     },
     {
-      "coordinate": "org.jetbrains.compose.ui:ui-text:1.11.1",
+      "coordinate": "org.jetbrains.compose.ui:ui-graphics-android:1.12.0",
+      "group": "org.jetbrains.compose.ui",
+      "name": "ui-graphics-android",
+      "version": "1.12.0"
+    },
+    {
+      "coordinate": "org.jetbrains.compose.ui:ui-text:1.12.0",
       "group": "org.jetbrains.compose.ui",
       "name": "ui-text",
-      "version": "1.11.1"
+      "version": "1.12.0"
     },
     {
-      "coordinate": "org.jetbrains.compose.ui:ui-unit:1.11.1",
+      "coordinate": "org.jetbrains.compose.ui:ui-text-android:1.12.0",
+      "group": "org.jetbrains.compose.ui",
+      "name": "ui-text-android",
+      "version": "1.12.0"
+    },
+    {
+      "coordinate": "org.jetbrains.compose.ui:ui-unit:1.12.0",
       "group": "org.jetbrains.compose.ui",
       "name": "ui-unit",
-      "version": "1.11.1"
+      "version": "1.12.0"
     },
     {
-      "coordinate": "org.jetbrains.compose.ui:ui-util:1.11.1",
+      "coordinate": "org.jetbrains.compose.ui:ui-unit-android:1.12.0",
+      "group": "org.jetbrains.compose.ui",
+      "name": "ui-unit-android",
+      "version": "1.12.0"
+    },
+    {
+      "coordinate": "org.jetbrains.compose.ui:ui-util:1.12.0",
       "group": "org.jetbrains.compose.ui",
       "name": "ui-util",
-      "version": "1.11.1"
+      "version": "1.12.0"
     },
     {
-      "coordinate": "org.jetbrains.kotlin:kotlin-stdlib:2.4.0",
+      "coordinate": "org.jetbrains.compose.ui:ui-util-android:1.12.0",
+      "group": "org.jetbrains.compose.ui",
+      "name": "ui-util-android",
+      "version": "1.12.0"
+    },
+    {
+      "coordinate": "org.jetbrains.kotlin:kotlin-stdlib:2.4.21",
       "group": "org.jetbrains.kotlin",
       "name": "kotlin-stdlib",
-      "version": "2.4.0"
+      "version": "2.4.21"
     },
     {
-      "coordinate": "org.jetbrains.kotlin:kotlin-stdlib-common:2.4.0",
+      "coordinate": "org.jetbrains.kotlin:kotlin-stdlib-common:2.4.21",
       "group": "org.jetbrains.kotlin",
       "name": "kotlin-stdlib-common",
-      "version": "2.4.0"
+      "version": "2.4.21"
     },
     {
       "coordinate": "org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.8.21",
@@ -1817,34 +1889,34 @@
       "version": "1.11.0"
     },
     {
-      "coordinate": "org.jetbrains.kotlinx:kotlinx-serialization-bom:1.7.3",
+      "coordinate": "org.jetbrains.kotlinx:kotlinx-serialization-bom:1.12.0",
       "group": "org.jetbrains.kotlinx",
       "name": "kotlinx-serialization-bom",
-      "version": "1.7.3"
+      "version": "1.12.0"
     },
     {
-      "coordinate": "org.jetbrains.kotlinx:kotlinx-serialization-core:1.7.3",
+      "coordinate": "org.jetbrains.kotlinx:kotlinx-serialization-core:1.12.0",
       "group": "org.jetbrains.kotlinx",
       "name": "kotlinx-serialization-core",
-      "version": "1.7.3"
+      "version": "1.12.0"
     },
     {
-      "coordinate": "org.jetbrains.kotlinx:kotlinx-serialization-core-jvm:1.7.3",
+      "coordinate": "org.jetbrains.kotlinx:kotlinx-serialization-core-jvm:1.12.0",
       "group": "org.jetbrains.kotlinx",
       "name": "kotlinx-serialization-core-jvm",
-      "version": "1.7.3"
+      "version": "1.12.0"
     },
     {
-      "coordinate": "org.jetbrains.kotlinx:kotlinx-serialization-json:1.7.3",
+      "coordinate": "org.jetbrains.kotlinx:kotlinx-serialization-json:1.12.0",
       "group": "org.jetbrains.kotlinx",
       "name": "kotlinx-serialization-json",
-      "version": "1.7.3"
+      "version": "1.12.0"
     },
     {
-      "coordinate": "org.jetbrains.kotlinx:kotlinx-serialization-json-jvm:1.7.3",
+      "coordinate": "org.jetbrains.kotlinx:kotlinx-serialization-json-jvm:1.12.0",
       "group": "org.jetbrains.kotlinx",
       "name": "kotlinx-serialization-json-jvm",
-      "version": "1.7.3"
+      "version": "1.12.0"
     },
     {
       "coordinate": "org.jsoup:jsoup:1.22.2",
@@ -1883,9 +1955,9 @@
     "licenseText": "app/build/generated/res/fullReleaseOssLicensesTask/raw/third_party_licenses"
   },
   "inputSha256": {
-    "dependencies": "f67565c2614e306833d960a830d040eb885ecccdba992aab002d318b6514bb34",
-    "licenseMetadata": "6c3238731b73f91473b2efdf5ccc0cb5e0652814fdaa71b53f75bcba2c5f57b6",
-    "licenseText": "794ec7b5ff969007e0e7b195b1669a5f92c65663e8cee5314f3f2b8e17814888"
+    "dependencies": "901d089387dad77902b2e3fbe7a044e414428966bbbbb13c265d3d842375a14d",
+    "licenseMetadata": "d1fe71d006468735a3e065fe41099277463e9b817f1fd16bb2ae250290803c85",
+    "licenseText": "bddc7352da0f80de195427ca61c5fd113e8bb157d88fcea23cf6a555b0933660"
   },
   "noticeSections": [
     {
@@ -2202,12 +2274,6 @@
     },
     {
       "length": 46,
-      "name": "Android Support DynamicAnimation",
-      "noticeSha256": "0dec6aeec4006c044352a33f0825bf879bcd810e5e38e2b3230e4475916cdd2f",
-      "offset": 0
-    },
-    {
-      "length": 46,
       "name": "Emoji2",
       "noticeSha256": "0dec6aeec4006c044352a33f0825bf879bcd810e5e38e2b3230e4475916cdd2f",
       "offset": 0
@@ -2274,7 +2340,13 @@
     },
     {
       "length": 46,
-      "name": "Navigation Hilt Extension",
+      "name": "ViewModel Hilt Extension",
+      "noticeSha256": "0dec6aeec4006c044352a33f0825bf879bcd810e5e38e2b3230e4475916cdd2f",
+      "offset": 0
+    },
+    {
+      "length": 46,
+      "name": "ViewModel Compose Hilt Extension",
       "noticeSha256": "0dec6aeec4006c044352a33f0825bf879bcd810e5e38e2b3230e4475916cdd2f",
       "offset": 0
     },
@@ -2514,6 +2586,18 @@
     },
     {
       "length": 46,
+      "name": "Navigation Event",
+      "noticeSha256": "0dec6aeec4006c044352a33f0825bf879bcd810e5e38e2b3230e4475916cdd2f",
+      "offset": 0
+    },
+    {
+      "length": 46,
+      "name": "NavigationEvent Compose",
+      "noticeSha256": "0dec6aeec4006c044352a33f0825bf879bcd810e5e38e2b3230e4475916cdd2f",
+      "offset": 0
+    },
+    {
+      "length": 46,
       "name": "Paging-Common",
       "noticeSha256": "0dec6aeec4006c044352a33f0825bf879bcd810e5e38e2b3230e4475916cdd2f",
       "offset": 0
@@ -2586,12 +2670,6 @@
     },
     {
       "length": 46,
-      "name": "Room Kotlin Extensions",
-      "noticeSha256": "0dec6aeec4006c044352a33f0825bf879bcd810e5e38e2b3230e4475916cdd2f",
-      "offset": 0
-    },
-    {
-      "length": 46,
       "name": "Room Paging",
       "noticeSha256": "0dec6aeec4006c044352a33f0825bf879bcd810e5e38e2b3230e4475916cdd2f",
       "offset": 0
@@ -2647,12 +2725,6 @@
     {
       "length": 46,
       "name": "Android Tracing Runtime Kotlin Extensions",
-      "noticeSha256": "0dec6aeec4006c044352a33f0825bf879bcd810e5e38e2b3230e4475916cdd2f",
-      "offset": 0
-    },
-    {
-      "length": 46,
-      "name": "Transition",
       "noticeSha256": "0dec6aeec4006c044352a33f0825bf879bcd810e5e38e2b3230e4475916cdd2f",
       "offset": 0
     },
@@ -3617,6 +3689,12 @@
       "offset": 94
     },
     {
+      "length": 41,
+      "name": "jump3r",
+      "noticeSha256": "3d6c044f3795524fc849ae6bef8885b3cfe27aebc6c7650d9a5ecb1c1772df36",
+      "offset": 862017
+    },
+    {
       "length": 47,
       "name": "coil",
       "noticeSha256": "736a325ef9e9536d16c9fd809854aac91be9b601663c6674bb3f0bc2a6fa33ad",
@@ -3662,19 +3740,13 @@
       "length": 44,
       "name": "youtubedl-android",
       "noticeSha256": "1b79220a341bece2927be4c892333ab7153186fa81b1ca3f50028045b6ab8c26",
-      "offset": 862017
+      "offset": 862060
     },
     {
       "length": 44,
       "name": "youtubedl-android",
       "noticeSha256": "1b79220a341bece2927be4c892333ab7153186fa81b1ca3f50028045b6ab8c26",
-      "offset": 862017
-    },
-    {
-      "length": 44,
-      "name": "youtubedl-android",
-      "noticeSha256": "1b79220a341bece2927be4c892333ab7153186fa81b1ca3f50028045b6ab8c26",
-      "offset": 862017
+      "offset": 862060
     },
     {
       "length": 46,
@@ -3692,11 +3764,83 @@
       "length": 34,
       "name": "Checker Qual",
       "noticeSha256": "ea45d3f26a20f56d6cc259c932369ac5cb69ecafe6e525a192714d1044abad36",
-      "offset": 862063
+      "offset": 862106
     },
     {
       "length": 47,
       "name": "JetBrains Java Annotations",
+      "noticeSha256": "736a325ef9e9536d16c9fd809854aac91be9b601663c6674bb3f0bc2a6fa33ad",
+      "offset": 94
+    },
+    {
+      "length": 47,
+      "name": "Compose Animation",
+      "noticeSha256": "736a325ef9e9536d16c9fd809854aac91be9b601663c6674bb3f0bc2a6fa33ad",
+      "offset": 94
+    },
+    {
+      "length": 47,
+      "name": "Compose Animation Core",
+      "noticeSha256": "736a325ef9e9536d16c9fd809854aac91be9b601663c6674bb3f0bc2a6fa33ad",
+      "offset": 94
+    },
+    {
+      "length": 47,
+      "name": "Compose Foundation",
+      "noticeSha256": "736a325ef9e9536d16c9fd809854aac91be9b601663c6674bb3f0bc2a6fa33ad",
+      "offset": 94
+    },
+    {
+      "length": 47,
+      "name": "Compose Layouts",
+      "noticeSha256": "736a325ef9e9536d16c9fd809854aac91be9b601663c6674bb3f0bc2a6fa33ad",
+      "offset": 94
+    },
+    {
+      "length": 47,
+      "name": "Compose Runtime",
+      "noticeSha256": "736a325ef9e9536d16c9fd809854aac91be9b601663c6674bb3f0bc2a6fa33ad",
+      "offset": 94
+    },
+    {
+      "length": 47,
+      "name": "Compose Saveable",
+      "noticeSha256": "736a325ef9e9536d16c9fd809854aac91be9b601663c6674bb3f0bc2a6fa33ad",
+      "offset": 94
+    },
+    {
+      "length": 47,
+      "name": "Compose UI",
+      "noticeSha256": "736a325ef9e9536d16c9fd809854aac91be9b601663c6674bb3f0bc2a6fa33ad",
+      "offset": 94
+    },
+    {
+      "length": 47,
+      "name": "Compose Geometry",
+      "noticeSha256": "736a325ef9e9536d16c9fd809854aac91be9b601663c6674bb3f0bc2a6fa33ad",
+      "offset": 94
+    },
+    {
+      "length": 47,
+      "name": "Compose Graphics",
+      "noticeSha256": "736a325ef9e9536d16c9fd809854aac91be9b601663c6674bb3f0bc2a6fa33ad",
+      "offset": 94
+    },
+    {
+      "length": 47,
+      "name": "Compose UI Text",
+      "noticeSha256": "736a325ef9e9536d16c9fd809854aac91be9b601663c6674bb3f0bc2a6fa33ad",
+      "offset": 94
+    },
+    {
+      "length": 47,
+      "name": "Compose Unit",
+      "noticeSha256": "736a325ef9e9536d16c9fd809854aac91be9b601663c6674bb3f0bc2a6fa33ad",
+      "offset": 94
+    },
+    {
+      "length": 47,
+      "name": "Compose Util",
       "noticeSha256": "736a325ef9e9536d16c9fd809854aac91be9b601663c6674bb3f0bc2a6fa33ad",
       "offset": 94
     },
@@ -3758,7 +3902,7 @@
       "length": 25,
       "name": "jsoup Java HTML Parser",
       "noticeSha256": "29b6f0c083155ceebec1ec130d7b7bc36e525f8bbbc5fce12f577c39fa40d49d",
-      "offset": 862099
+      "offset": 862142
     },
     {
       "length": 46,
@@ -3770,19 +3914,19 @@
       "length": 40,
       "name": "rhino",
       "noticeSha256": "c0e4d7c997ac8120d6ea3a8d2fd2560b720cbb3bea7df5bc925cb6f47bb35b3a",
-      "offset": 862126
+      "offset": 862169
     },
     {
       "length": 40,
       "name": "rhino-engine",
       "noticeSha256": "c0e4d7c997ac8120d6ea3a8d2fd2560b720cbb3bea7df5bc925cb6f47bb35b3a",
-      "offset": 862126
+      "offset": 862169
     },
     {
       "length": 36,
       "name": "reactive-streams",
       "noticeSha256": "cdfe7a2d1de3c3b1bf7dd515128ca856b7ada6953d3ae8a5d9d091f1d934d2f9",
-      "offset": 862168
+      "offset": 862211
     }
   ],
   "schemaVersion": 1,

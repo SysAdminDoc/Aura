@@ -20,7 +20,7 @@ DEFAULT_LOCKFILE = "docs/legal/native-compliance.lock.json"
 DEFAULT_COORDINATE_FALLBACK = (
     "io.github.junkfood02.youtubedl-android:common:0.18.1",
     "io.github.junkfood02.youtubedl-android:library:0.18.1",
-    "com.github.teamnewpipe:NewPipeExtractor:v0.26.3",
+    "com.github.teamnewpipe:NewPipeExtractor:v0.26.5",
 )
 
 DEFAULT_GRADLE_BUILD_FILES = ("app/build.gradle.kts",)
@@ -70,10 +70,10 @@ SOURCE_REFERENCES = {
         license_url="https://raw.githubusercontent.com/yausername/youtubedl-android/master/LICENSE",
         review_note="Bundles yt-dlp plus Python/native runtime payloads; exact nested payload source evidence is required for release review.",
     ),
-    "com.github.teamnewpipe:NewPipeExtractor:v0.26.3": SourceReference(
+    "com.github.teamnewpipe:NewPipeExtractor:v0.26.5": SourceReference(
         license_id="GPL-3.0-or-later",
-        source_url="https://github.com/TeamNewPipe/NewPipeExtractor/tree/v0.26.3",
-        license_url="https://raw.githubusercontent.com/TeamNewPipe/NewPipeExtractor/v0.26.3/LICENSE",
+        source_url="https://github.com/TeamNewPipe/NewPipeExtractor/tree/v0.26.5",
+        license_url="https://raw.githubusercontent.com/TeamNewPipe/NewPipeExtractor/v0.26.5/LICENSE",
         review_note="Single NewPipeExtractor artifact used by Aura's YouTube metadata path.",
     ),
 }

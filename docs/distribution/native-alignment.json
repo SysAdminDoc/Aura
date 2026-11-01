@@ -108,50 +108,72 @@
     ],
     "videoEditingStatus": "Video crop, Fit Canvas and HLS downloads run on Media3. FFmpeg no longer ships. The yt-dlp runtime is what keeps Python in the APK."
   },
+  "ffmpegRemovalEvidence": {
+    "date": "2026-10-31",
+    "status": "verified",
+    "note": "Release builds with no libffmpeg.zip.so in any ABI. Every per-ABI APK is under IzzyOnDroid's ceiling now; the universal APK isn't, and it isn't what that listing would use.",
+    "artifactBytes": {
+      "before": {
+        "app-full-arm64-v8a-release.apk": 63439662,
+        "app-full-armeabi-v7a-release.apk": 56785934,
+        "app-full-universal-release.apk": 208831546,
+        "app-full-x86-release.apk": 62027502,
+        "app-full-x86_64-release.apk": 66431342
+      },
+      "after": {
+        "app-full-arm64-v8a-release.apk": 28958915,
+        "app-full-armeabi-v7a-release.apk": 27436669,
+        "app-full-universal-release.apk": 70643645,
+        "app-full-x86-release.apk": 28648009,
+        "app-full-x86_64-release.apk": 28986684
+      }
+    },
+    "fossArtifactBytes": {
+      "app-foss-arm64-v8a-release.apk": 27772314,
+      "app-foss-armeabi-v7a-release.apk": 26250068,
+      "app-foss-universal-release.apk": 69457048,
+      "app-foss-x86-release.apk": 27461412,
+      "app-foss-x86_64-release.apk": 27800083
+    },
+    "izzyOnDroidPerApkCeilingBytes": 31457280,
+    "arm64UnderIzzyOnDroidCeiling": true,
+    "fossArm64UnderIzzyOnDroidCeiling": true
+  },
   "latestLocalEvidence": {
-    "date": "2026-08-21",
+    "date": "2026-10-31",
     "status": "verified",
     "apkPath": "app/build/outputs/apk/full/release/app-full-universal-release.apk",
-    "apkSha256": "c25038a64a02686d3e3979cf2039b6407b4865b100618a2601240e2791e715e2",
-    "checked64BitLoadSegments": 46,
+    "apkSha256": "9210193b627145b137ff7e87e60af6c6507f5f9e710efa2fb6cbe40a7ff48555",
+    "checked64BitLoadSegments": 986,
     "seen64BitAbis": [
       "arm64-v8a",
       "x86_64"
     ],
-    "skippedArchivePayloads": [
-      "lib/arm64-v8a/libffmpeg.zip.so",
-      "lib/arm64-v8a/libpython.zip.so",
-      "lib/armeabi-v7a/libffmpeg.zip.so",
-      "lib/armeabi-v7a/libpython.zip.so",
-      "lib/x86/libffmpeg.zip.so",
-      "lib/x86/libpython.zip.so",
-      "lib/x86_64/libffmpeg.zip.so",
-      "lib/x86_64/libpython.zip.so"
-    ]
+    "skippedArchivePayloads": []
   },
   "nestedArchiveEvidence": {
-    "date": "2026-09-05",
+    "date": "2026-10-31",
     "status": "verified",
     "note": "The gate used to record lib/<abi>/*.zip.so as skipped, so roughly 250 shipped 64-bit ELFs per ABI were never measured. It now reads inside those archives. Measured against APKs assembled from the exact io.github.junkfood02.youtubedl-android 0.18.1 ffmpeg and library AAR payloads, because no release APK could be built on this host.",
     "measured": {
       "arm64-v8a": {
-        "nestedElfCount": 252,
-        "checked64BitLoadSegments": 910
+        "nestedElfCount": 140,
+        "checked64BitLoadSegments": 491
       },
       "x86_64": {
-        "nestedElfCount": 254,
-        "checked64BitLoadSegments": 914
+        "nestedElfCount": 142,
+        "checked64BitLoadSegments": 495
       },
       "armeabi-v7a": {
-        "nestedElfCount": 252,
+        "nestedElfCount": 140,
         "checked64BitLoadSegments": 0
       },
       "x86": {
-        "nestedElfCount": 254,
+        "nestedElfCount": 142,
         "checked64BitLoadSegments": 0
       }
     },
     "skippedArchivePayloads": 0,
-    "finding": "Five libwebp objects inside libffmpeg.zip.so carry p_align 4096 on arm64-v8a and x86_64; every other 64-bit LOAD segment in both nested payloads is 16384. libpython.zip.so is fully compliant on both 64-bit ABIs. 32-bit ABIs are 4096 throughout, which carries no 16 KB obligation. The five are recorded in nestedArchiveAlignmentExceptions and the gate fails if a sixth appears or if a listed one stops being observed."
+    "finding": "Every 64-bit LOAD segment in the Python payload is 16384. The libwebp objects that used to fall short came in with FFmpeg and left with it."
   }
 }

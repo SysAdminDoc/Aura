@@ -331,326 +331,35 @@
     {
       "artifacts": [
         {
-          "fileName": "ffmpeg-0.18.1.aar",
-          "kind": "aar",
-          "payloadEntries": [
-            {
-              "entry": "jni/",
-              "facts": {},
-              "nestedCount": null,
-              "nestedSample": [],
-              "size": 0
-            },
-            {
-              "entry": "jni/arm64-v8a/",
-              "facts": {},
-              "nestedCount": null,
-              "nestedSample": [],
-              "size": 0
-            },
-            {
-              "entry": "jni/arm64-v8a/libffmpeg.so",
-              "facts": {},
-              "nestedCount": null,
-              "nestedSample": [],
-              "size": 317120
-            },
-            {
-              "entry": "jni/arm64-v8a/libffmpeg.zip.so",
-              "facts": {
-                "FFmpeg configure": "--arch=aarch64 --as=aarch64-linux-android-clang --cc=aarch64-linux-android-clang --cxx=aarch64-linux-android-clang++ --nm=llvm-nm --ar=llvm-ar --ranlib=llvm-ranlib --pkg-config=/home/builder/.termux-build/_cache/android-r28c-api-24-v1/bin/pkg-config --strip=llvm-strip --cross-prefix=aarch64-linux-android- --disable-indevs --disable-outdevs --enable-indev=lavfi --disable-static --disable-symver --enable-cross-compile --enable-gnutls --enable-gpl --enable-version3 --enable-jni --enable-lcms2 --enable-libaom --enable-libass --enable-libbluray --enable-libdav1d --enable-libfontconfig --enable-libfreetype --enable-libfribidi --enable-libgme --enable-libharfbuzz --enable-libmp3lame --enable-libopencore-amrnb --enable-libopencore-amrwb --enable-libopenmpt --enable-libopus --enable-librav1e --enable-librubberband --enable-libsoxr --enable-libsrt --enable-libssh --enable-libsvtav1 --enable-libtheora --enable-libv4l2 --enable-libvidstab --enable-libvmaf --enable-libvo-amrwbenc --enable-libvorbis --enable-libvpx --enable-libwebp --enable-libx264 --enable-libx265 --enable-libxml2 --enable-libxvid --enable-libzimg --enable-libzmq --enable-mediacodec --enable-opencl --enable-shared --prefix=/data/data/com.termux/files/usr --target-os=android --extra-libs=-landroid-glob --disable-vulkan --enable-neon --disable-libfdk-aac",
-                "FFmpeg configure sha256": "203d15374b60141718c798b584c751eccc92e18fa7df4f3564f34ca5ff35c1f0",
-                "FFmpeg license mode": "GPL-3.0-or-later flags present (--enable-gpl --enable-version3); --enable-nonfree not found",
-                "FFmpeg version": "FFmpeg version 7.1.1"
-              },
-              "nestedCount": 184,
-              "nestedSample": [
-                "usr/lib/",
-                "usr/lib/libswscale.so",
-                "usr/lib/libavformat.so",
-                "usr/lib/libass.so",
-                "usr/lib/libz.so",
-                "usr/lib/libffi.so",
-                "usr/lib/libtheoradec.so",
-                "usr/lib/librav1e.so.0",
-                "usr/lib/libx264.so",
-                "usr/lib/libmediandk.so",
-                "usr/lib/libgio-2.0.so.0",
-                "usr/lib/libgthread-2.0.so.0.8600.0",
-                "usr/lib/libxml2.so.16.0.6",
-                "usr/lib/libnettle.so.8.11",
-                "usr/lib/libv4l1.so",
-                "usr/lib/libvo-amrwbenc.so.0",
-                "usr/lib/libavcodec.so.61.19.101",
-                "usr/lib/libgme.so",
-                "usr/lib/libv4l2rds.so",
-                "usr/lib/libgirepository-2.0.so.0.8600.0",
-                "usr/lib/libglib-2.0.so",
-                "usr/lib/liblzma.so.5.8.1",
-                "usr/lib/librav1e.so",
-                "usr/lib/libxvidcore.so",
-                "usr/lib/libvpx.so.11.0.1",
-                "usr/lib/liblzma.so",
-                "usr/lib/libandroid-glob.so",
-                "usr/lib/libout123.so",
-                "usr/lib/libfftw3f_threads.so",
-                "usr/lib/liblcms2.so"
-              ],
-              "size": 35624931
-            },
-            {
-              "entry": "jni/arm64-v8a/libffprobe.so",
-              "facts": {},
-              "nestedCount": null,
-              "nestedSample": [],
-              "size": 233664
-            },
-            {
-              "entry": "jni/armeabi-v7a/",
-              "facts": {},
-              "nestedCount": null,
-              "nestedSample": [],
-              "size": 0
-            },
-            {
-              "entry": "jni/armeabi-v7a/libffmpeg.so",
-              "facts": {},
-              "nestedCount": null,
-              "nestedSample": [],
-              "size": 235228
-            },
-            {
-              "entry": "jni/armeabi-v7a/libffmpeg.zip.so",
-              "facts": {
-                "FFmpeg configure": "--arch=armeabi-v7a --as=arm-linux-androideabi-clang --cc=arm-linux-androideabi-clang --cxx=arm-linux-androideabi-clang++ --nm=llvm-nm --ar=llvm-ar --ranlib=llvm-ranlib --pkg-config=/home/builder/.termux-build/_cache/android-r28c-api-24-v1/bin/pkg-config --strip=llvm-strip --cross-prefix=arm-linux-androideabi- --disable-indevs --disable-outdevs --enable-indev=lavfi --disable-static --disable-symver --enable-cross-compile --enable-gnutls --enable-gpl --enable-version3 --enable-jni --enable-lcms2 --enable-libaom --enable-libass --enable-libbluray --enable-libdav1d --enable-libfontconfig --enable-libfreetype --enable-libfribidi --enable-libgme --enable-libharfbuzz --enable-libmp3lame --enable-libopencore-amrnb --enable-libopencore-amrwb --enable-libopenmpt --enable-libopus --enable-librav1e --enable-librubberband --enable-libsoxr --enable-libsrt --enable-libssh --enable-libsvtav1 --enable-libtheora --enable-libv4l2 --enable-libvidstab --enable-libvmaf --enable-libvo-amrwbenc --enable-libvorbis --enable-libvpx --enable-libwebp --enable-libx264 --enable-libx265 --enable-libxml2 --enable-libxvid --enable-libzimg --enable-libzmq --enable-mediacodec --enable-opencl --enable-shared --prefix=/data/data/com.termux/files/usr --target-os=android --extra-libs=-landroid-glob --disable-vulkan --enable-neon --disable-libfdk-aac",
-                "FFmpeg configure sha256": "11215245be9ec6e63a9422d2f2a26f8cbfa361c13f5ca079b3cc780565f2bf38",
-                "FFmpeg license mode": "GPL-3.0-or-later flags present (--enable-gpl --enable-version3); --enable-nonfree not found",
-                "FFmpeg version": "FFmpeg version 7.1.1"
-              },
-              "nestedCount": 184,
-              "nestedSample": [
-                "usr/lib/",
-                "usr/lib/libswscale.so",
-                "usr/lib/libavformat.so",
-                "usr/lib/libass.so",
-                "usr/lib/libz.so",
-                "usr/lib/libffi.so",
-                "usr/lib/libtheoradec.so",
-                "usr/lib/librav1e.so.0",
-                "usr/lib/libx264.so",
-                "usr/lib/libmediandk.so",
-                "usr/lib/libgio-2.0.so.0",
-                "usr/lib/libgthread-2.0.so.0.8600.0",
-                "usr/lib/libxml2.so.16.0.6",
-                "usr/lib/libnettle.so.8.11",
-                "usr/lib/libv4l1.so",
-                "usr/lib/libvo-amrwbenc.so.0",
-                "usr/lib/libavcodec.so.61.19.101",
-                "usr/lib/libgme.so",
-                "usr/lib/libv4l2rds.so",
-                "usr/lib/libgirepository-2.0.so.0.8600.0",
-                "usr/lib/libglib-2.0.so",
-                "usr/lib/liblzma.so.5.8.1",
-                "usr/lib/librav1e.so",
-                "usr/lib/libxvidcore.so",
-                "usr/lib/libvpx.so.11.0.1",
-                "usr/lib/liblzma.so",
-                "usr/lib/libandroid-glob.so",
-                "usr/lib/libout123.so",
-                "usr/lib/libfftw3f_threads.so",
-                "usr/lib/liblcms2.so"
-              ],
-              "size": 30476956
-            },
-            {
-              "entry": "jni/armeabi-v7a/libffprobe.so",
-              "facts": {},
-              "nestedCount": null,
-              "nestedSample": [],
-              "size": 166580
-            },
-            {
-              "entry": "jni/x86/",
-              "facts": {},
-              "nestedCount": null,
-              "nestedSample": [],
-              "size": 0
-            },
-            {
-              "entry": "jni/x86/libffmpeg.so",
-              "facts": {},
-              "nestedCount": null,
-              "nestedSample": [],
-              "size": 320692
-            },
-            {
-              "entry": "jni/x86/libffmpeg.zip.so",
-              "facts": {
-                "FFmpeg configure": "--arch=x86 --as=i686-linux-android-clang --cc=i686-linux-android-clang --cxx=i686-linux-android-clang++ --nm=llvm-nm --ar=llvm-ar --ranlib=llvm-ranlib --pkg-config=/home/builder/.termux-build/_cache/android-r28c-api-24-v1/bin/pkg-config --strip=llvm-strip --cross-prefix=i686-linux-android- --disable-indevs --disable-outdevs --enable-indev=lavfi --disable-static --disable-symver --enable-cross-compile --enable-gnutls --enable-gpl --enable-version3 --enable-jni --enable-lcms2 --enable-libaom --enable-libass --enable-libbluray --enable-libdav1d --enable-libfontconfig --enable-libfreetype --enable-libfribidi --enable-libgme --enable-libharfbuzz --enable-libmp3lame --enable-libopencore-amrnb --enable-libopencore-amrwb --enable-libopenmpt --enable-libopus --enable-librav1e --enable-librubberband --enable-libsoxr --enable-libsrt --enable-libssh --enable-libsvtav1 --enable-libtheora --enable-libv4l2 --enable-libvidstab --enable-libvmaf --enable-libvo-amrwbenc --enable-libvorbis --enable-libvpx --enable-libwebp --enable-libx264 --enable-libx265 --enable-libxml2 --enable-libxvid --enable-libzimg --enable-libzmq --enable-mediacodec --enable-opencl --enable-shared --prefix=/data/data/com.termux/files/usr --target-os=android --extra-libs=-landroid-glob --disable-vulkan --disable-asm --disable-libfdk-aac",
-                "FFmpeg configure sha256": "444e99bffd340bb709024bcfeebe1e38d99a8a5b63de7c5f0583258c48a2fa49",
-                "FFmpeg license mode": "GPL-3.0-or-later flags present (--enable-gpl --enable-version3); --enable-nonfree not found",
-                "FFmpeg version": "FFmpeg version 7.1.1"
-              },
-              "nestedCount": 184,
-              "nestedSample": [
-                "usr/lib/",
-                "usr/lib/libswscale.so",
-                "usr/lib/libavformat.so",
-                "usr/lib/libass.so",
-                "usr/lib/libz.so",
-                "usr/lib/libffi.so",
-                "usr/lib/libtheoradec.so",
-                "usr/lib/librav1e.so.0",
-                "usr/lib/libx264.so",
-                "usr/lib/libmediandk.so",
-                "usr/lib/libgio-2.0.so.0",
-                "usr/lib/libgthread-2.0.so.0.8600.0",
-                "usr/lib/libxml2.so.16.0.6",
-                "usr/lib/libnettle.so.8.11",
-                "usr/lib/libv4l1.so",
-                "usr/lib/libvo-amrwbenc.so.0",
-                "usr/lib/libavcodec.so.61.19.101",
-                "usr/lib/libgme.so",
-                "usr/lib/libv4l2rds.so",
-                "usr/lib/libgirepository-2.0.so.0.8600.0",
-                "usr/lib/libglib-2.0.so",
-                "usr/lib/liblzma.so.5.8.1",
-                "usr/lib/librav1e.so",
-                "usr/lib/libxvidcore.so",
-                "usr/lib/libvpx.so.11.0.1",
-                "usr/lib/liblzma.so",
-                "usr/lib/libandroid-glob.so",
-                "usr/lib/libout123.so",
-                "usr/lib/libfftw3f_threads.so",
-                "usr/lib/liblcms2.so"
-              ],
-              "size": 34544829
-            },
-            {
-              "entry": "jni/x86/libffprobe.so",
-              "facts": {},
-              "nestedCount": null,
-              "nestedSample": [],
-              "size": 209704
-            },
-            {
-              "entry": "jni/x86_64/",
-              "facts": {},
-              "nestedCount": null,
-              "nestedSample": [],
-              "size": 0
-            },
-            {
-              "entry": "jni/x86_64/libffmpeg.so",
-              "facts": {},
-              "nestedCount": null,
-              "nestedSample": [],
-              "size": 334776
-            },
-            {
-              "entry": "jni/x86_64/libffmpeg.zip.so",
-              "facts": {
-                "FFmpeg configure": "--arch=x86_64 --as=x86_64-linux-android-clang --cc=x86_64-linux-android-clang --cxx=x86_64-linux-android-clang++ --nm=llvm-nm --ar=llvm-ar --ranlib=llvm-ranlib --pkg-config=/home/builder/.termux-build/_cache/android-r28c-api-24-v1/bin/pkg-config --strip=llvm-strip --cross-prefix=x86_64-linux-android- --disable-indevs --disable-outdevs --enable-indev=lavfi --disable-static --disable-symver --enable-cross-compile --enable-gnutls --enable-gpl --enable-version3 --enable-jni --enable-lcms2 --enable-libaom --enable-libass --enable-libbluray --enable-libdav1d --enable-libfontconfig --enable-libfreetype --enable-libfribidi --enable-libgme --enable-libharfbuzz --enable-libmp3lame --enable-libopencore-amrnb --enable-libopencore-amrwb --enable-libopenmpt --enable-libopus --enable-librav1e --enable-librubberband --enable-libsoxr --enable-libsrt --enable-libssh --enable-libsvtav1 --enable-libtheora --enable-libv4l2 --enable-libvidstab --enable-libvmaf --enable-libvo-amrwbenc --enable-libvorbis --enable-libvpx --enable-libwebp --enable-libx264 --enable-libx265 --enable-libxml2 --enable-libxvid --enable-libzimg --enable-libzmq --enable-mediacodec --enable-opencl --enable-shared --prefix=/data/data/com.termux/files/usr --target-os=android --extra-libs=-landroid-glob --disable-vulkan --disable-libfdk-aac",
-                "FFmpeg configure sha256": "0945d7c6158ac48c3cb36d81c0db0321444c37383a6b6ca68fd5e580db11e772",
-                "FFmpeg license mode": "GPL-3.0-or-later flags present (--enable-gpl --enable-version3); --enable-nonfree not found",
-                "FFmpeg version": "FFmpeg version 7.1.1"
-              },
-              "nestedCount": 184,
-              "nestedSample": [
-                "usr/lib/",
-                "usr/lib/libswscale.so",
-                "usr/lib/libavformat.so",
-                "usr/lib/libass.so",
-                "usr/lib/libz.so",
-                "usr/lib/libffi.so",
-                "usr/lib/libtheoradec.so",
-                "usr/lib/librav1e.so.0",
-                "usr/lib/libx264.so",
-                "usr/lib/libmediandk.so",
-                "usr/lib/libgio-2.0.so.0",
-                "usr/lib/libgthread-2.0.so.0.8600.0",
-                "usr/lib/libxml2.so.16.0.6",
-                "usr/lib/libnettle.so.8.11",
-                "usr/lib/libv4l1.so",
-                "usr/lib/libvo-amrwbenc.so.0",
-                "usr/lib/libavcodec.so.61.19.101",
-                "usr/lib/libgme.so",
-                "usr/lib/libv4l2rds.so",
-                "usr/lib/libgirepository-2.0.so.0.8600.0",
-                "usr/lib/libglib-2.0.so",
-                "usr/lib/liblzma.so.5.8.1",
-                "usr/lib/librav1e.so",
-                "usr/lib/libxvidcore.so",
-                "usr/lib/libvpx.so.11.0.1",
-                "usr/lib/liblzma.so",
-                "usr/lib/libandroid-glob.so",
-                "usr/lib/libout123.so",
-                "usr/lib/libfftw3f_threads.so",
-                "usr/lib/liblcms2.so"
-              ],
-              "size": 38595503
-            },
-            {
-              "entry": "jni/x86_64/libffprobe.so",
-              "facts": {},
-              "nestedCount": null,
-              "nestedSample": [],
-              "size": 231304
-            }
-          ],
-          "sha256": "0a87ffa6cf912b0fe76c1a99b9107f543ee2f247935fae2c71f0822eb7bc5f49",
-          "size": 139371444
-        },
-        {
-          "fileName": "ffmpeg-0.18.1.module",
-          "kind": "module",
-          "payloadEntries": [],
-          "sha256": "89d9c9577d0a922396cb1c6dad51d004ed8f67b8981f4b5cdf457ec4c8b8a6f7",
-          "size": 3746
-        },
-        {
-          "fileName": "ffmpeg-0.18.1.pom",
-          "kind": "pom",
-          "payloadEntries": [],
-          "sha256": "5f4f089a20eb3240cfccfb0082235e1bd44c8109f26cdd8da10247709bfa5071",
-          "size": 2377
-        }
-      ],
-      "coordinate": "io.github.junkfood02.youtubedl-android:ffmpeg:0.18.1",
-      "missing": false
-    },
-    {
-      "artifacts": [
-        {
-          "fileName": "NewPipeExtractor-v0.26.3.jar",
+          "fileName": "NewPipeExtractor-v0.26.5.jar",
           "kind": "jar",
           "payloadEntries": [],
-          "sha256": "8c53b4b4fb25c8a2f5789ec00f0532fb337b91d6f0f384fd02efd1dc52e7fba9",
-          "size": 801535
+          "sha256": "923bf0a60938d570ad176ed7b08fa9fec7d0772d7a386ca89a2dd3b9212979c7",
+          "size": 802094
         },
         {
-          "fileName": "NewPipeExtractor-v0.26.3.module",
+          "fileName": "NewPipeExtractor-v0.26.5.module",
           "kind": "module",
           "payloadEntries": [],
-          "sha256": "efeccee23d3bc1bb044b1a0c0338a19830bb569c9db07f541147df39ee9a4d4c",
+          "sha256": "43456deb5537cedfd53c6ff42e831faad1651ac8e5f9b059ec29fa5c46ffefdf",
           "size": 4164
         },
         {
-          "fileName": "NewPipeExtractor-v0.26.3.pom",
+          "fileName": "NewPipeExtractor-v0.26.5.pom",
           "kind": "pom",
           "payloadEntries": [],
-          "sha256": "933016a107bf22c8df7a437a4bc493acc75d82b9f71c514351f959a04a01bf5d",
+          "sha256": "6ffc041f836531a2706cb9652014f4e2c0d7c0d34a2913e95601675cfa46062b",
           "size": 2438
         }
       ],
-      "coordinate": "com.github.teamnewpipe:NewPipeExtractor:v0.26.3",
+      "coordinate": "com.github.teamnewpipe:NewPipeExtractor:v0.26.5",
       "missing": false
     }
   ],
   "counts": {
-    "artifactRecords": 12,
-    "coordinates": 4,
-    "payloadEntries": 36
+    "artifactRecords": 9,
+    "coordinates": 3,
+    "payloadEntries": 19
   },
   "gradleCache": "~/.gradle/caches/modules-2/files-2.1",
   "schemaVersion": 1
