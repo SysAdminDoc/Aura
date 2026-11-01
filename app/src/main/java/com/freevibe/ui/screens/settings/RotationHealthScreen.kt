@@ -191,7 +191,11 @@ internal fun RotationHealthContent(
         snapshot.sourceLabel?.let {
             RotationHealthRow(
                 label = stringResource(R.string.rotation_health_row_source),
-                value = it,
+                value = wallpaperRotationSourceLabel(
+                    source = it,
+                    localFolderUri = "",
+                    localFolderPermissionActive = true,
+                ),
             )
         }
         RotationHealthRow(

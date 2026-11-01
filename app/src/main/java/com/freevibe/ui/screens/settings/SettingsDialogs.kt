@@ -5,6 +5,7 @@ import android.content.Intent
 import android.content.IntentFilter
 import android.os.BatteryManager
 import android.os.PowerManager
+import androidx.annotation.StringRes
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -55,6 +56,7 @@ import com.freevibe.data.repository.CommunityBlockedUser
 import com.freevibe.service.CommunityIdentitySummary
 import com.freevibe.service.IDENTITY_SUFFIX_NOT_CREATED
 import com.freevibe.service.effectiveVideoFpsLimit
+import com.freevibe.service.normalizeWallpaperRotationSource
 import com.freevibe.service.shouldUseVideoBatterySaver
 import com.freevibe.service.shouldPauseVideoMotionForPowerSave
 import com.freevibe.service.videoBatteryImpactSummary
@@ -880,7 +882,18 @@ internal fun wallpaperRotationSourceLabel(
         localFolderUri.isBlank() -> stringResource(R.string.settings_dialogs_source_local_folder_choose)
         else -> stringResource(R.string.settings_dialogs_source_local_folder_permission)
     }
-    else -> localizedSourceName(source)
+    else -> wallpaperRotationSourceNameRes(source)?.let { stringResource(it) } ?: localizedSourceName(source)
+}
+
+/** The picker's own label for a rotation source, reading a retired stored key the way rotation does. */
+@StringRes
+internal fun wallpaperRotationSourceNameRes(source: String): Int? = when (source.normalizeWallpaperRotationSource()) {
+    "discover" -> R.string.settings_dialogs_source_discover
+    "favorites" -> R.string.settings_dialogs_source_favorites
+    "wallhaven" -> R.string.settings_dialogs_source_wallhaven
+    "pixabay" -> R.string.settings_dialogs_source_pixabay
+    "bing" -> R.string.settings_dialogs_source_bing
+    else -> null
 }
 
 internal fun hasPersistedReadPermission(context: Context, uriString: String): Boolean {
