@@ -24,6 +24,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
@@ -383,6 +384,32 @@ fun HighlightPill(
             color = tint,
         )
     }
+}
+
+/**
+ * Puts the cursor in a search field when the user opens it, and only then, so coming back to a screen
+ * whose search is already open doesn't pop the keyboard.
+ */
+@Stable
+class SearchOpenFocus {
+    val requester = FocusRequester()
+    internal var pending by mutableStateOf(false)
+
+    fun request() {
+        pending = true
+    }
+}
+
+@Composable
+fun rememberSearchOpenFocus(): SearchOpenFocus {
+    val focus = remember { SearchOpenFocus() }
+    LaunchedEffect(focus.pending) {
+        if (focus.pending) {
+            focus.requester.requestFocus()
+            focus.pending = false
+        }
+    }
+    return focus
 }
 
 @Composable

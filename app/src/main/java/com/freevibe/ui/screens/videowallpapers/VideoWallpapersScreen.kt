@@ -33,6 +33,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.platform.LocalFocusManager
@@ -102,6 +103,7 @@ import com.freevibe.ui.components.ShimmerBox
 import com.freevibe.ui.components.feedSection
 import com.freevibe.ui.components.feedTraversalRoot
 import com.freevibe.ui.components.politeAnnouncement
+import com.freevibe.ui.components.rememberSearchOpenFocus
 import com.freevibe.ui.LiveWallpaperBlock
 import com.freevibe.ui.LiveWallpaperLaunchMode
 import com.freevibe.ui.LiveWallpaperLaunchResult
@@ -402,6 +404,7 @@ fun VideoWallpapersScreen(
 
     var searchQuery by rememberSaveable(state.searchQuery) { mutableStateOf(state.searchQuery) }
     var searchExpanded by rememberSaveable { mutableStateOf(false) }
+    val searchOpenFocus = rememberSearchOpenFocus()
     var showQuickMenu by remember { mutableStateOf(false) }
     val videoNewestQuery = stringResource(R.string.browse_rail_video_newest_query)
     val focusManager = LocalFocusManager.current
@@ -480,7 +483,10 @@ fun VideoWallpapersScreen(
                     modifier = Modifier.weight(1f),
                     style = MaterialTheme.typography.headlineSmall,
                 )
-                IconButton(onClick = { searchExpanded = !searchExpanded }) {
+                IconButton(onClick = {
+                    searchExpanded = !searchExpanded
+                    if (searchExpanded) searchOpenFocus.request()
+                }) {
                     Icon(Icons.Default.Search, contentDescription = stringResource(R.string.video_wp_search_placeholder))
                 }
                 Box {
@@ -570,7 +576,7 @@ fun VideoWallpapersScreen(
                     value = searchQuery,
                     onValueChange = { searchQuery = it },
                     placeholder = stringResource(R.string.video_wp_search_placeholder),
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier.fillMaxWidth().focusRequester(searchOpenFocus.requester),
                     onClear = {
                         searchQuery = ""
                         viewModel.search("")

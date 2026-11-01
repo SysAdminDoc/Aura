@@ -34,6 +34,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.platform.LocalFocusManager
@@ -85,6 +86,7 @@ import com.freevibe.ui.components.CountBadge
 import com.freevibe.ui.components.CommunityPolicyNotice
 import com.freevibe.ui.components.SearchFieldWithHistory
 import com.freevibe.ui.components.ShimmerSoundList
+import com.freevibe.ui.components.rememberSearchOpenFocus
 import com.freevibe.ui.components.AuraStatusAction
 import com.freevibe.ui.components.AuraStatusBanner
 import com.freevibe.ui.components.feedSection
@@ -167,6 +169,7 @@ fun SoundsScreen(
     }
     var showSearchHistory by remember { mutableStateOf(false) }
     var searchExpanded by remember { mutableStateOf(false) }
+    val searchOpenFocus = rememberSearchOpenFocus()
     var showQuickActionsMenu by remember { mutableStateOf(false) }
     var showCommunityGuidelines by remember { mutableStateOf(false) }
     var quickApplySound by remember { mutableStateOf<Sound?>(null) }
@@ -441,7 +444,10 @@ fun SoundsScreen(
                         modifier = Modifier.weight(1f),
                         style = MaterialTheme.typography.headlineSmall,
                     )
-                    IconButton(onClick = { searchExpanded = !searchExpanded }) {
+                    IconButton(onClick = {
+                        searchExpanded = !searchExpanded
+                        if (searchExpanded) searchOpenFocus.request()
+                    }) {
                         Icon(Icons.Default.Search, contentDescription = stringResource(R.string.sounds_search_generic))
                     }
                     IconButton(onClick = { showFiltersSheet = true }) {
@@ -546,7 +552,7 @@ fun SoundsScreen(
                             }),
                             leadingIcon = if (isYouTubeTab) Icons.Default.SmartDisplay else Icons.Default.Search,
                             leadingTint = if (isYouTubeTab) soundSourceTone(ContentSource.YOUTUBE).colorForSurface() else MaterialTheme.colorScheme.onSurfaceVariant,
-                            modifier = Modifier.weight(1f),
+                            modifier = Modifier.weight(1f).focusRequester(searchOpenFocus.requester),
                             onClear = {
                                 searchQuery = ""
                                 showSearchHistory = false

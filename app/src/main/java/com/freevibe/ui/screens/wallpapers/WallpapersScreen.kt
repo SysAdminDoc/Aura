@@ -26,6 +26,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.platform.LocalResources
 import com.freevibe.ui.theme.AuraShapes
 import kotlinx.coroutines.launch
@@ -89,6 +90,7 @@ import com.freevibe.ui.components.DownloadProgressBar
 import com.freevibe.ui.components.EmbeddedImagePickerSheet
 import com.freevibe.ui.components.GlassCard
 import com.freevibe.ui.components.SearchFieldWithHistory
+import com.freevibe.ui.components.rememberSearchOpenFocus
 import com.freevibe.ui.components.ShimmerBox
 import com.freevibe.ui.components.ShimmerWallpaperGrid
 import com.freevibe.ui.components.SourceBadge
@@ -213,6 +215,7 @@ fun WallpapersScreen(
     var nonBlockingWarningSource by remember { mutableStateOf<String?>(null) }
     var showSearchHistory by remember { mutableStateOf(false) }
     var searchExpanded by remember { mutableStateOf(initialQuery?.isNotBlank() == true) }
+    val searchOpenFocus = rememberSearchOpenFocus()
     var showSourceMenu by remember { mutableStateOf(false) }
     var showQuickActionsMenu by remember { mutableStateOf(false) }
     var showFiltersSheet by remember { mutableStateOf(false) }
@@ -418,7 +421,10 @@ fun WallpapersScreen(
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
                     )
-                    IconButton(onClick = { searchExpanded = !searchExpanded }) {
+                    IconButton(onClick = {
+                        searchExpanded = !searchExpanded
+                        if (searchExpanded) searchOpenFocus.request()
+                    }) {
                         Icon(
                             Icons.Default.Search,
                             contentDescription = stringResource(R.string.wallpapers_search_placeholder),
@@ -566,7 +572,8 @@ fun WallpapersScreen(
                             onValueChange = { searchQuery = it; showSearchHistory = it.isEmpty() },
                             placeholder = stringResource(R.string.wallpapers_search_placeholder),
                             modifier = Modifier
-                                .fillMaxWidth(),
+                                .fillMaxWidth()
+                                .focusRequester(searchOpenFocus.requester),
                             onClear = {
                                 showSearchHistory = false
                                 focusManager.clearFocus()
