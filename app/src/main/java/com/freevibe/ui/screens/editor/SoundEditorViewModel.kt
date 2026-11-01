@@ -28,6 +28,7 @@ import com.freevibe.service.SoundApplier
 import com.freevibe.service.SoundUrlResolver
 import com.freevibe.service.copyStreamCapped
 import com.freevibe.service.downloadHistoryId
+import com.freevibe.service.isLocalMediaLocator
 import com.freevibe.service.isLosslessCutAllowed
 import com.freevibe.service.losslessCutExportFormat
 import com.freevibe.service.moveStagedFileIntoPlace
@@ -35,6 +36,7 @@ import com.freevibe.service.normalizeMediaFileName
 import com.freevibe.service.requireSniffedMediaFile
 import com.freevibe.service.sha256File
 import com.freevibe.service.speedAdjustedDurationMs
+import com.freevibe.service.stageLocalMediaLocator
 import com.freevibe.util.UiTextException
 import com.freevibe.util.displayMessage
 import com.freevibe.util.uiText
@@ -776,6 +778,18 @@ class SoundEditorViewModel @Inject constructor(
     private suspend fun downloadToCache(url: String, name: String, cacheIdentity: String): File = withContext(Dispatchers.IO) {
         val cacheDir = File(context.cacheDir, "audio_edit")
         cacheDir.mkdirs()
+        if (isLocalMediaLocator(url)) {
+            return@withContext try {
+                stageLocalSoundForEditing(
+                    context = context,
+                    locator = url,
+                    baseName = buildRemoteAudioCacheFileName(name, cacheIdentity, url),
+                    maxBytes = MAX_EDIT_DOWNLOAD_BYTES,
+                )
+            } catch (e: MediaIngestionLimitExceeded) {
+                throw Exception(context.getString(com.freevibe.R.string.editor_sound_over_limit, MAX_EDIT_DOWNLOAD_BYTES / (1024 * 1024)), e)
+            }
+        }
         val file = File(cacheDir, buildRemoteAudioCacheFileName(name, cacheIdentity, url))
         if (!file.exists()) {
             val tmpFile = File(cacheDir, file.name + ".tmp")
@@ -1055,6 +1069,34 @@ internal fun soundEditorEditGateMessage(sound: Sound, editConfirmed: Boolean): S
         SoundActionDecision.ALLOWED -> null
         SoundActionDecision.CONFIRMATION_REQUIRED -> capability.reason.takeUnless { editConfirmed }
         SoundActionDecision.DISABLED -> capability.reason
+    }
+}
+
+/**
+ * Copies a sound the app already holds, such as an Aura Original, into the editor's cache. The real
+ * format names the copy, since a locator like `rawresource:///123` has no extension to go by.
+ */
+internal fun stageLocalSoundForEditing(
+    context: Context,
+    locator: String,
+    baseName: String,
+    maxBytes: Long,
+): File {
+    val staged = stageLocalMediaLocator(
+        context = context,
+        locator = locator,
+        tempDirectoryName = "audio_edit",
+        prefix = "local_",
+        maxBytes = maxBytes,
+    )
+    try {
+        val sniffed = requireSniffedMediaFile(staged, MediaFamily.AUDIO, "Sound")
+        val file = File(staged.parentFile, normalizeMediaFileName(baseName, sniffed))
+        moveStagedFileIntoPlace(staged, file)
+        return file
+    } catch (error: Exception) {
+        staged.delete()
+        throw error
     }
 }
 
