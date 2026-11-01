@@ -21,7 +21,10 @@ import com.freevibe.service.WallpaperApplyPolicy
 import com.freevibe.service.WallpaperApplier
 import com.freevibe.service.advertisedLengthExceeds
 import com.freevibe.service.MediaIngestionImageFlow
+import com.freevibe.service.currentFullUrl
 import com.freevibe.service.decodeImageBytesForFlow
+import com.freevibe.service.decodeLocalMediaImage
+import com.freevibe.service.isLocalMediaLocator
 import com.freevibe.service.readStreamCapped
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -150,7 +153,7 @@ class WallpaperEditorViewModel @Inject constructor(
             return true
         }
         loadedWallpaperKey = wallpaperKey
-        loadFromUrl(wallpaper.fullUrl)
+        loadFromUrl(wallpaper.currentFullUrl())
         return true
     }
 
@@ -592,6 +595,15 @@ class WallpaperEditorViewModel @Inject constructor(
             overlayUndoStack.clear()
             try {
                 val bitmap = withContext(Dispatchers.IO) {
+                    if (isLocalMediaLocator(url)) {
+                        return@withContext decodeLocalMediaImage(
+                            context = context,
+                            locator = url,
+                            flow = MediaIngestionImageFlow.EDITOR,
+                            maxBytes = MAX_EDIT_BYTES,
+                            maxLongEdge = MAX_EDIT_LONG_EDGE,
+                        )
+                    }
                     val request = okhttp3.Request.Builder().purpose(RequestPurpose.EDIT).url(url).build()
                     okHttpClient.newCall(request).execute().use { response ->
                         if (!response.isSuccessful) {

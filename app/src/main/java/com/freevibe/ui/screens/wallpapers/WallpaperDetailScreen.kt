@@ -50,6 +50,7 @@ import com.freevibe.data.model.isSourceUnavailable
 import com.freevibe.data.model.stableKey
 import com.freevibe.data.model.rotationIdentity
 import com.freevibe.data.model.wallpaperLicenseCapabilities
+import com.freevibe.data.model.webUrl
 import com.freevibe.service.ParallaxWallpaperService
 import com.freevibe.ui.LiveWallpaperBlock
 import com.freevibe.ui.LiveWallpaperLaunchMode
@@ -663,7 +664,7 @@ fun WallpaperDetailScreen(
                                     label = stringResource(R.string.common_share),
                                     tint = MaterialTheme.colorScheme.primary,
                                     onClick = {
-                                        val shareUrl = if (sourceUnavailable) wp.fullUrl else wp.sourcePageUrl.ifEmpty { wp.fullUrl }
+                                        val shareUrl = if (sourceUnavailable) wp.webUrl else wp.sourcePageUrl.ifEmpty { wp.webUrl }
                                         if (shareUrl.isBlank()) return@DetailActionPill
                                         val intent = Intent(Intent.ACTION_SEND).apply {
                                             type = "text/plain"

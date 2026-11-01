@@ -725,7 +725,6 @@ class SoundShufflePoolManager @Inject constructor(
     }
 
     private fun normalizeSoundLocator(locator: String): String {
-        if (isLocalMediaLocator(locator)) return locator
         val file = File(locator)
         return if (file.isAbsolute) Uri.fromFile(file).toString() else locator
     }

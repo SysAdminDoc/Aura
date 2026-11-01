@@ -12,6 +12,7 @@ import com.freevibe.data.model.CommunityUploadRights
 import com.freevibe.data.model.ContentSource
 import com.freevibe.data.model.Wallpaper
 import com.freevibe.data.model.stableKey
+import com.freevibe.data.model.webUrl
 import com.freevibe.data.repository.CommunityBlockRepository
 import com.freevibe.data.repository.CommunityReportRepository
 import com.freevibe.data.repository.VoteRepository
@@ -78,7 +79,7 @@ internal class WallpaperCommunityActions(
                     contentSource = wallpaper.source,
                     reason = reason,
                     note = note,
-                    sourceUrl = if (isGeneratedWallpaper) "" else reportSourceUrl(wallpaper.sourcePageUrl, wallpaper.fullUrl),
+                    sourceUrl = if (isGeneratedWallpaper) "" else reportSourceUrl(wallpaper.sourcePageUrl, wallpaper.webUrl),
                     license = if (isGeneratedWallpaper) "Generated wallpaper" else wallpaper.license,
                     uploaderName = if (isGeneratedWallpaper) "Aura generated wallpaper" else wallpaper.uploaderName,
                     uploaderUid = if (isGeneratedWallpaper) "" else wallpaper.communityUploaderId,

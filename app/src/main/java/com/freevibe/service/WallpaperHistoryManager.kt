@@ -5,6 +5,7 @@ import com.freevibe.data.local.WallpaperHistoryDao
 import com.freevibe.data.model.Wallpaper
 import com.freevibe.data.model.WallpaperHistoryEntity
 import com.freevibe.data.model.WallpaperTarget
+import com.freevibe.data.model.webUrl
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
@@ -43,7 +44,7 @@ class WallpaperHistoryManager @Inject constructor(
                 wallpaperId = wallpaper.id,
                 source = wallpaper.source.name,
                 thumbnailUrl = wallpaper.thumbnailUrl,
-                fullUrl = wallpaper.fullUrl,
+                fullUrl = wallpaper.webUrl,
                 width = wallpaper.width,
                 height = wallpaper.height,
                 target = target.name,

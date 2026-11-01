@@ -4,6 +4,7 @@ import com.freevibe.data.local.CollectionDao
 import com.freevibe.data.model.Wallpaper
 import com.freevibe.data.model.WallpaperCollectionEntity
 import com.freevibe.data.model.WallpaperCollectionItemEntity
+import com.freevibe.data.model.webUrl
 import com.freevibe.service.DeletedCollectionSnapshot
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
@@ -33,7 +34,7 @@ class CollectionRepository @Inject constructor(
                 collectionId = collectionId,
                 wallpaperId = wallpaper.id,
                 thumbnailUrl = wallpaper.thumbnailUrl,
-                fullUrl = wallpaper.fullUrl,
+                fullUrl = wallpaper.webUrl,
                 source = wallpaper.source.name,
                 width = wallpaper.width,
                 height = wallpaper.height,

@@ -8,6 +8,7 @@ import com.freevibe.data.model.ContentSource
 import com.freevibe.data.model.Wallpaper
 import com.freevibe.data.model.providerNetworkPoliciesBySource
 import com.freevibe.data.model.stableKey
+import com.freevibe.data.model.webUrl
 import com.squareup.moshi.JsonClass
 import com.squareup.moshi.Moshi
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -236,7 +237,7 @@ internal fun batchDownloadItem(wallpaper: Wallpaper): BatchDownloadItem = BatchD
     url = wallpaper.fullUrl,
     fileName = buildBatchFileName(wallpaper, guessBatchExtension(wallpaper.fileType)),
     source = wallpaper.source.name,
-    provenanceUrl = wallpaper.sourcePageUrl.ifBlank { wallpaper.fullUrl },
+    provenanceUrl = wallpaper.sourcePageUrl.ifBlank { wallpaper.webUrl },
     displayName = batchDisplayName(wallpaper),
 )
 

@@ -14,6 +14,7 @@ import com.freevibe.data.model.isSourceUnavailable
 import com.freevibe.data.model.sourceUnavailableReasonForFailure
 import com.freevibe.data.model.stableKey
 import com.freevibe.data.model.wallpaperLicenseCapabilities
+import com.freevibe.data.model.webUrl
 import com.freevibe.data.remote.toFavoriteEntity
 import com.freevibe.data.repository.AiWallpaperRepository
 import com.freevibe.data.repository.FavoritesRepository
@@ -27,6 +28,7 @@ import com.freevibe.service.WallpaperApplyPolicy
 import com.freevibe.service.WallpaperApplier
 import com.freevibe.service.WallpaperHistoryManager
 import com.freevibe.service.WallpaperStyleLearningSignal
+import com.freevibe.service.currentFullUrl
 import com.freevibe.service.downloadHistoryId
 import com.freevibe.service.shouldUseNightWallpaperVariant
 import kotlinx.coroutines.CoroutineScope
@@ -71,7 +73,7 @@ internal class WallpaperApplyActions(
                 onStyleSignal = { onStyleSignal(it, WallpaperStyleLearningSignal.APPLIED) },
             ) {
                 wallpaperApplier.applyFromUrl(
-                    wallpaper.fullUrl,
+                    wallpaper.currentFullUrl(),
                     target,
                     nightVariant = shouldApplyNightVariant(),
                     savedOriginalId = downloadHistoryId("WALLPAPER", wallpaper.stableKey()),
@@ -157,8 +159,9 @@ internal class WallpaperApplyActions(
         if (blockDisallowedAction(wallpaper, WallpaperAction.EDIT)) return
         scope.launch {
             state.update { it.copy(isApplying = true, applySuccess = null) }
-            val ext = guessImageExtension(wallpaper.fileType, wallpaper.fullUrl)
-            wallpaperApplier.prepareParallaxWallpaper(wallpaper.fullUrl, "parallax_wp.$ext")
+            val url = wallpaper.currentFullUrl()
+            val ext = guessImageExtension(wallpaper.fileType, url)
+            wallpaperApplier.prepareParallaxWallpaper(url, "parallax_wp.$ext")
                 .onSuccess {
                     onStyleSignal(wallpaper, WallpaperStyleLearningSignal.APPLIED)
                     state.update { it.copy(isApplying = false, pendingLiveWallpaperLaunch = true) }
@@ -185,13 +188,14 @@ internal class WallpaperApplyActions(
     fun downloadWallpaper(wallpaper: Wallpaper) {
         if (blockDisallowedAction(wallpaper, WallpaperAction.DOWNLOAD)) return
         scope.launch {
-            val ext = guessImageExtension(wallpaper.fileType, wallpaper.fullUrl)
+            val url = wallpaper.currentFullUrl()
+            val ext = guessImageExtension(wallpaper.fileType, url)
             downloadManager.downloadWallpaper(
                 id = wallpaper.stableKey(),
-                url = wallpaper.fullUrl,
+                url = url,
                 fileName = buildWallpaperDownloadFileName(wallpaper, ext),
                 source = wallpaper.source.name,
-                provenanceUrl = wallpaper.sourcePageUrl.ifBlank { wallpaper.fullUrl },
+                provenanceUrl = wallpaper.sourcePageUrl.ifBlank { wallpaper.webUrl },
             ).onSuccess {
                 clearSourceUnavailableAfterSuccess(wallpaper)
             }.onFailure { error ->
@@ -212,13 +216,13 @@ internal class WallpaperApplyActions(
             favoritesRepo.toggle(entity, isFav)
             if (!isFav) {
                 onStyleSignal(wallpaper, WallpaperStyleLearningSignal.FAVORITED)
-                offlineFavorites.cacheOffline(entity, wallpaper.fullUrl)
+                offlineFavorites.cacheOffline(entity, entity.fullUrl)
             } else {
                 onStyleSignal(wallpaper, WallpaperStyleLearningSignal.UNFAVORITED)
                 offlineFavorites.removeOffline(entity)
                 if (wallpaper.source == ContentSource.AI_GENERATED) {
-                    aiWallpaperRepository.deleteGeneratedWallpaper(wallpaper.fullUrl)
-                    if (wallpaper.thumbnailUrl != wallpaper.fullUrl) {
+                    aiWallpaperRepository.deleteGeneratedWallpaper(wallpaper.webUrl)
+                    if (wallpaper.thumbnailUrl != wallpaper.webUrl) {
                         aiWallpaperRepository.deleteGeneratedWallpaper(wallpaper.thumbnailUrl)
                     }
                 }

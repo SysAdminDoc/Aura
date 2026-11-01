@@ -19,7 +19,10 @@ import com.freevibe.service.WallpaperApplyPolicy
 import com.freevibe.service.WallpaperApplier
 import com.freevibe.service.advertisedLengthExceeds
 import com.freevibe.service.MediaIngestionImageFlow
+import com.freevibe.service.currentFullUrl
 import com.freevibe.service.decodeImageBytesForFlow
+import com.freevibe.service.isLocalMediaLocator
+import com.freevibe.service.localMediaUri
 import com.freevibe.service.readStreamCapped
 import com.freevibe.service.ShareOutbox
 import com.freevibe.util.displayMessage
@@ -84,10 +87,9 @@ class WallpaperCropViewModel @Inject constructor(
         loadedWallpaperKey = wallpaperKey
         savedStateHandle[KEY_WALLPAPER] = wallpaperKey
         val (aspect, transform) = if (restoring) savedCrop() else CropAspect.FREE to CropTransform()
-        val url = wallpaper.fullUrl
-        val scheme = url.substringBefore(":", "").lowercase(java.util.Locale.ROOT)
-        if (scheme == "content" || scheme == "file") {
-            loadFromContentUri(Uri.parse(url), aspect, transform)
+        val url = wallpaper.currentFullUrl()
+        if (isLocalMediaLocator(url)) {
+            loadFromContentUri(localMediaUri(url), aspect, transform)
         } else {
             loadFromUrl(url, aspect, transform)
         }

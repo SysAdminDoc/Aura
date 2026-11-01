@@ -4,6 +4,9 @@ All notable changes to Aura will be documented in this file.
 
 ## Unreleased
 
+- **Favorites work from their offline copy**: a favorite with a saved copy failed with "Something went wrong" when you downloaded it, alone or through Download all wallpapers. Edit, Crop, the split crop and parallax couldn't open it either. They all read the copy on your phone now, and go back to the web once the copy is gone.
+- **A favorite keeps its web address**: opening a favorite, removing the heart and adding it back stored the path of the copy on your phone instead of the picture's address, so it stopped working once that copy was cleaned up. Collections, history, Share and Report had the same mix-up. They all keep the real address now. A favorite that already lost its address has nothing left to recover it from, so it needs saving again from its source.
+- **Removing an AI favorite removes its file**: the generated picture used to stay behind on your phone after you took the heart off.
 - **Settings shows a yt-dlp check when it happens**: after an update, the extractor row kept saying it was waiting to be checked even once a search had already checked it, until you restarted the app. A check or a rollback from any screen now reaches the row straight away.
 - **Rotation sources read by their real names**: Settings and Rotation health showed Discover, My Favorites and Bing Daily in English whatever your language, and Rotation health showed the raw word `reddit` on older installs. They use the same translated names as the source picker now, and an old Reddit setting reads as Discover, which is what's been rotating all along. Refs #47.
 - **FOSS builds don't offer collection links**: Show QR code, the link field and the QR image button could only ever fail there, since a FOSS build has no backend to hold a shared link. The menu now says Share file, and Import opens a shared JSON file.

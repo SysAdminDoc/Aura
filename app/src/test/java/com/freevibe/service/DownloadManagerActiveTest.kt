@@ -10,6 +10,8 @@ import android.os.ParcelFileDescriptor
 import androidx.test.core.app.ApplicationProvider
 import com.freevibe.R
 import com.freevibe.data.local.DownloadDao
+import com.freevibe.data.model.FavoriteEntity
+import com.freevibe.data.remote.toWallpaper
 import com.squareup.moshi.Moshi
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -110,6 +112,28 @@ class DownloadManagerActiveTest {
         assertTrue(retried.isFailure)
         assertTrue(ID !in manager.activeDownloads.value)
         assertEquals(0, media.rows.size)
+    }
+
+    @Test
+    fun `Download all saves a favorite from its offline copy and credits the web address`() = runBlocking {
+        val copy = File(context.filesDir, "offline_favorites/WALLPAPER__REDDIT__rd_1.png")
+        copy.parentFile?.mkdirs()
+        copy.writeBytes(Base64.getDecoder().decode(ONE_PIXEL_PNG))
+        val favorite = FavoriteEntity(
+            id = "rd_1",
+            source = "REDDIT",
+            type = "WALLPAPER",
+            thumbnailUrl = "https://example.com/t.jpg",
+            fullUrl = "https://example.com/full.png",
+            offlinePath = copy.absolutePath.replace('\\', '/').substringAfter(':'),
+        )
+
+        val item = batchDownloadItem(favorite.toWallpaper())
+        val saved = manager.downloadWallpaper(item.downloadId, item.url, item.fileName, item.source, item.provenanceUrl)
+
+        assertTrue(saved.exceptionOrNull()?.toString(), saved.isSuccess)
+        assertEquals(1, media.rows.size)
+        assertEquals("https://example.com/full.png", item.provenanceUrl)
     }
 
     @Test

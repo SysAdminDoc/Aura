@@ -318,42 +318,50 @@ class WallpaperApplier @Inject constructor(
      */
     suspend fun prepareParallaxWallpaper(url: String, fileName: String): Result<String> = withContext(Dispatchers.IO) {
         runCatching {
-            val request = Request.Builder().purpose(RequestPurpose.APPLY).url(url).build()
-            val response = okHttpClient.newCall(request).execute()
-            response.use { resp ->
-                if (!resp.isSuccessful) throw java.io.IOException("Download failed: ${resp.code}")
-                val dir = java.io.File(context.filesDir, "parallax")
-                dir.mkdirs()
-                val file = java.io.File(dir, fileName)
-                // Atomic temp-then-rename: if copy is interrupted mid-stream, the
-                // ParallaxWallpaperService used to read a truncated file on the next surface
-                // creation. Write to a sibling .tmp, rename on success, and clean up the .tmp
-                // on any failure so orphaned partial writes never accumulate.
-                val tempFile = java.io.File(dir, "$fileName.tmp")
-                val body = resp.body ?: throw java.io.IOException("Empty response body")
-                try {
-                    body.byteStream().use { input ->
-                        tempFile.outputStream().use { output ->
-                            copyCapped(input, output, MAX_WALLPAPER_BYTES)
-                        }
-                    }
-                    if (!tempFile.renameTo(file)) {
-                        // renameTo can fail across filesystems; fall back to copy+delete.
-                        tempFile.copyTo(file, overwrite = true)
-                        tempFile.delete()
-                    }
-                } catch (e: Exception) {
-                    try { tempFile.delete() } catch (_: Exception) {}
-                    throw e
+            if (isLocalMediaLocator(url)) {
+                saveParallaxImage(openLocalMediaLocator(context, url), fileName)
+            } else {
+                val request = Request.Builder().purpose(RequestPurpose.APPLY).url(url).build()
+                val response = okHttpClient.newCall(request).execute()
+                response.use { resp ->
+                    if (!resp.isSuccessful) throw java.io.IOException("Download failed: ${resp.code}")
+                    val body = resp.body ?: throw java.io.IOException("Empty response body")
+                    saveParallaxImage(body.byteStream(), fileName)
                 }
-                // Store path for ParallaxWallpaperService
-                context.getSharedPreferences("freevibe_parallax", Context.MODE_PRIVATE)
-                    .edit()
-                    .putString("image_path", file.absolutePath)
-                    .apply()
-                file.absolutePath
             }
         }.onFailure { it.rethrowIfCancelled() }
+    }
+
+    private fun saveParallaxImage(source: InputStream, fileName: String): String {
+        val dir = java.io.File(context.filesDir, "parallax")
+        dir.mkdirs()
+        val file = java.io.File(dir, fileName)
+        // Atomic temp-then-rename: if copy is interrupted mid-stream, the
+        // ParallaxWallpaperService used to read a truncated file on the next surface
+        // creation. Write to a sibling .tmp, rename on success, and clean up the .tmp
+        // on any failure so orphaned partial writes never accumulate.
+        val tempFile = java.io.File(dir, "$fileName.tmp")
+        try {
+            source.use { input ->
+                tempFile.outputStream().use { output ->
+                    copyCapped(input, output, MAX_WALLPAPER_BYTES)
+                }
+            }
+            if (!tempFile.renameTo(file)) {
+                // renameTo can fail across filesystems; fall back to copy+delete.
+                tempFile.copyTo(file, overwrite = true)
+                tempFile.delete()
+            }
+        } catch (e: Exception) {
+            try { tempFile.delete() } catch (_: Exception) {}
+            throw e
+        }
+        // Store path for ParallaxWallpaperService
+        context.getSharedPreferences("freevibe_parallax", Context.MODE_PRIVATE)
+            .edit()
+            .putString("image_path", file.absolutePath)
+            .apply()
+        return file.absolutePath
     }
 
     /**

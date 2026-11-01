@@ -52,7 +52,15 @@ data class Wallpaper(
     val communityUploaderId: String = "",
     val isAiGenerated: Boolean? = null,
     val contentHash: String = "",
+    /** The web address behind a favorite whose [fullUrl] points at its offline copy. Empty otherwise. */
+    val remoteFullUrl: String = "",
 )
+
+/**
+ * The address to save or hand on. [Wallpaper.fullUrl] can be a favorite's offline copy, which is
+ * gone once the favorite is removed.
+ */
+val Wallpaper.webUrl: String get() = remoteFullUrl.ifBlank { fullUrl }
 
 // -- Sound --
 

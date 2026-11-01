@@ -27,8 +27,8 @@ class DualWallpaperService @Inject constructor(
     suspend fun applyPair(pair: WallpaperPair): Result<Unit> = withContext(Dispatchers.IO) {
         runCatching {
             // Download both concurrently
-            val homeBitmap = async { downloadBitmap(pair.home.fullUrl) }
-            val lockBitmap = async { downloadBitmap(pair.lock.fullUrl) }
+            val homeBitmap = async { downloadBitmap(pair.home.currentFullUrl()) }
+            val lockBitmap = async { downloadBitmap(pair.lock.currentFullUrl()) }
 
             val home = try {
                 homeBitmap.await()
@@ -61,7 +61,7 @@ class DualWallpaperService @Inject constructor(
         lockCropTop: Float = 0.3f,     // Offset for lock screen
     ): Result<Unit> = withContext(Dispatchers.IO) {
         runCatching {
-            val bitmap = downloadBitmap(wallpaper.fullUrl)
+            val bitmap = downloadBitmap(wallpaper.currentFullUrl())
             var homeCrop: Bitmap? = null
             var lockCrop: Bitmap? = null
             try {
@@ -86,6 +86,15 @@ class DualWallpaperService @Inject constructor(
     }
 
     private fun downloadBitmap(url: String): Bitmap {
+        if (isLocalMediaLocator(url)) {
+            return decodeLocalMediaImage(
+                context = context,
+                locator = url,
+                flow = MediaIngestionImageFlow.LOCAL_APPLY,
+                maxBytes = MAX_WALLPAPER_BYTES,
+                maxLongEdge = targetWallpaperDecodeLongEdge(),
+            )
+        }
         val request = Request.Builder().purpose(RequestPurpose.APPLY).url(url).build()
         val response = okHttpClient.newCall(request).execute()
         return response.use { resp ->

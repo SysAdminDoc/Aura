@@ -13,6 +13,42 @@ import org.junit.Test
 
 class MappersTest {
 
+    // ── A favorite's offline copy ──
+
+    private val favoriteWithCopy = FavoriteEntity(
+        id = "rd_1",
+        source = "REDDIT",
+        type = "WALLPAPER",
+        thumbnailUrl = "https://example.com/t.jpg",
+        fullUrl = "https://example.com/full.jpg",
+        offlinePath = "/data/user/0/com.freevibe/files/offline_favorites/rd_1.jpg",
+    )
+
+    @Test
+    fun `a favorite with an offline copy reads the copy and remembers its web address`() {
+        val wallpaper = favoriteWithCopy.toWallpaper()
+
+        assertEquals(favoriteWithCopy.offlinePath, wallpaper.fullUrl)
+        assertEquals("https://example.com/full.jpg", wallpaper.remoteFullUrl)
+        assertEquals("https://example.com/full.jpg", wallpaper.webUrl)
+    }
+
+    @Test
+    fun `saving a favorite again keeps its web address instead of the local path`() {
+        val saved = favoriteWithCopy.toWallpaper().toFavoriteEntity()
+
+        assertEquals("https://example.com/full.jpg", saved.fullUrl)
+    }
+
+    @Test
+    fun `a favorite with no offline copy has one address`() {
+        val wallpaper = favoriteWithCopy.copy(offlinePath = "").toWallpaper()
+
+        assertEquals("https://example.com/full.jpg", wallpaper.fullUrl)
+        assertEquals("", wallpaper.remoteFullUrl)
+        assertEquals("https://example.com/full.jpg", wallpaper.webUrl)
+    }
+
     // ── Wallpaper.toFavoriteEntity ──
 
     @Test
