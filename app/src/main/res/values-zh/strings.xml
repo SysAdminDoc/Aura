@@ -453,6 +453,7 @@
     <string name="collections_title">收藏集</string>
     <string name="collections_more">更多</string>
     <string name="collections_share_link_and_file">分享链接和文件</string>
+    <string name="collections_share_file">分享文件</string>
     <string name="collections_show_qr">显示二维码</string>
     <string name="collections_delete">删除收藏集</string>
     <string name="collections_import">导入收藏集</string>
@@ -474,6 +475,7 @@
     <string name="collections_link_copied">收藏集链接已复制</string>
     <string name="collections_import_title">导入收藏集</string>
     <string name="collections_import_body">粘贴 Aura 收藏集链接、打开共享的 JSON 文件，或扫描二维码图片。</string>
+    <string name="collections_import_body_file_only">打开共享的 JSON 文件。</string>
     <string name="collections_import_link_label">Aura 收藏集链接</string>
     <string name="collections_import_link_button">导入链接</string>
     <string name="collections_import_json">JSON</string>

@@ -40,6 +40,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.freevibe.BuildConfig
 import com.freevibe.R
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -388,12 +389,9 @@ fun CollectionsScreen(
     }
 
     qrState?.let { state ->
-        val qrImage by produceState<CollectionQrImage>(CollectionQrImage.Loading, state.shareLink) {
-            value = viewModel.buildQrBitmap(state.shareLink)?.let(CollectionQrImage::Ready) ?: CollectionQrImage.Failed
-        }
-        CollectionQrDialog(
+        CollectionQrDialogHost(
             state = state,
-            qrImage = qrImage,
+            buildBitmap = viewModel::buildQrBitmap,
             onCopyLink = {
                 clipboard.setText(AnnotatedString(state.shareLink))
                 scope.launch { snackbarHostState.showSnackbar(resources.getString(R.string.collections_link_copied)) }
@@ -425,21 +423,31 @@ fun CollectionsScreen(
                             }
                             DropdownMenu(expanded = showMenu, onDismissRequest = { showMenu = false }) {
                                 DropdownMenuItem(
-                                    text = { Text(stringResource(R.string.collections_share_link_and_file)) },
+                                    text = {
+                                        Text(
+                                            stringResource(
+                                                if (BuildConfig.FOSS_BUILD) R.string.collections_share_file
+                                                else R.string.collections_share_link_and_file,
+                                            ),
+                                        )
+                                    },
                                     onClick = {
                                         showMenu = false
                                         viewModel.shareCollection(selectedCollection)
                                     },
                                     leadingIcon = { Icon(Icons.Default.Share, null) },
                                 )
-                                DropdownMenuItem(
-                                    text = { Text(stringResource(R.string.collections_show_qr)) },
-                                    onClick = {
-                                        showMenu = false
-                                        viewModel.showQr(selectedCollection)
-                                    },
-                                    leadingIcon = { Icon(Icons.Default.QrCode2, null) },
-                                )
+                                // A FOSS build has no backend to publish a link to, and a QR only carries a link.
+                                if (!BuildConfig.FOSS_BUILD) {
+                                    DropdownMenuItem(
+                                        text = { Text(stringResource(R.string.collections_show_qr)) },
+                                        onClick = {
+                                            showMenu = false
+                                            viewModel.showQr(selectedCollection)
+                                        },
+                                        leadingIcon = { Icon(Icons.Default.QrCode2, null) },
+                                    )
+                                }
                                 DropdownMenuItem(
                                     text = { Text(stringResource(R.string.collections_rename)) },
                                     onClick = {
@@ -709,27 +717,33 @@ private fun ImportCollectionSheet(
         ) {
             Text(stringResource(R.string.collections_import_title), style = MaterialTheme.typography.titleLarge)
             Text(
-                stringResource(R.string.collections_import_body),
+                stringResource(
+                    if (BuildConfig.FOSS_BUILD) R.string.collections_import_body_file_only
+                    else R.string.collections_import_body,
+                ),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
-            OutlinedTextField(
-                value = link,
-                onValueChange = { link = it },
-                modifier = Modifier.fillMaxWidth(),
-                label = { Text(stringResource(R.string.collections_import_link_label)) },
-                singleLine = true,
-                shape = AuraShapes.Medium,
-            )
-            Button(
-                onClick = { onImportLink(link) },
-                enabled = link.isNotBlank(),
-                modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp),
-                shape = AuraShapes.Medium,
-            ) {
-                Icon(Icons.Default.Link, contentDescription = null)
-                Spacer(Modifier.width(8.dp))
-                Text(stringResource(R.string.collections_import_link_button))
+            // Links and QR codes both read the shared copy from the backend a FOSS build doesn't have.
+            if (!BuildConfig.FOSS_BUILD) {
+                OutlinedTextField(
+                    value = link,
+                    onValueChange = { link = it },
+                    modifier = Modifier.fillMaxWidth(),
+                    label = { Text(stringResource(R.string.collections_import_link_label)) },
+                    singleLine = true,
+                    shape = AuraShapes.Medium,
+                )
+                Button(
+                    onClick = { onImportLink(link) },
+                    enabled = link.isNotBlank(),
+                    modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp),
+                    shape = AuraShapes.Medium,
+                ) {
+                    Icon(Icons.Default.Link, contentDescription = null)
+                    Spacer(Modifier.width(8.dp))
+                    Text(stringResource(R.string.collections_import_link_button))
+                }
             }
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -744,14 +758,16 @@ private fun ImportCollectionSheet(
                     Spacer(Modifier.width(8.dp))
                     Text(stringResource(R.string.collections_import_json))
                 }
-                OutlinedButton(
-                    onClick = onOpenQrImage,
-                    modifier = Modifier.weight(1f).heightIn(min = 48.dp),
-                    shape = AuraShapes.Medium,
-                ) {
-                    Icon(Icons.Default.QrCodeScanner, contentDescription = null)
-                    Spacer(Modifier.width(8.dp))
-                    Text(stringResource(R.string.collections_import_qr))
+                if (!BuildConfig.FOSS_BUILD) {
+                    OutlinedButton(
+                        onClick = onOpenQrImage,
+                        modifier = Modifier.weight(1f).heightIn(min = 48.dp),
+                        shape = AuraShapes.Medium,
+                    ) {
+                        Icon(Icons.Default.QrCodeScanner, contentDescription = null)
+                        Spacer(Modifier.width(8.dp))
+                        Text(stringResource(R.string.collections_import_qr))
+                    }
                 }
             }
             Spacer(Modifier.height(12.dp))
@@ -763,6 +779,24 @@ private sealed interface CollectionQrImage {
     data object Loading : CollectionQrImage
     data class Ready(val bitmap: ImageBitmap) : CollectionQrImage
     data object Failed : CollectionQrImage
+}
+
+@Composable
+internal fun CollectionQrDialogHost(
+    state: CollectionQrState,
+    buildBitmap: suspend (String) -> ImageBitmap?,
+    onCopyLink: () -> Unit,
+    onDismiss: () -> Unit,
+) {
+    val qrImage by produceState<CollectionQrImage>(CollectionQrImage.Loading, state.shareLink) {
+        value = buildBitmap(state.shareLink)?.let(CollectionQrImage::Ready) ?: CollectionQrImage.Failed
+    }
+    CollectionQrDialog(
+        state = state,
+        qrImage = qrImage,
+        onCopyLink = onCopyLink,
+        onDismiss = onDismiss,
+    )
 }
 
 @Composable

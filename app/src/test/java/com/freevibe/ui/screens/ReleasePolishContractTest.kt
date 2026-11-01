@@ -504,6 +504,18 @@ class ReleasePolishContractTest {
     }
 
     @Test
+    fun `a FOSS build offers no collection link or QR action it could never finish`() {
+        val collections = File("src/main/java/com/freevibe/ui/screens/collections/CollectionsScreen.kt").readText()
+        val importSheet = collections.substringAfter("private fun ImportCollectionSheet(").substringBefore("private sealed interface CollectionQrImage")
+
+        assertTrue(collections.substringBefore("R.string.collections_show_qr").substringAfterLast("if (").startsWith("!BuildConfig.FOSS_BUILD)"))
+        assertTrue(collections.contains("if (BuildConfig.FOSS_BUILD) R.string.collections_share_file"))
+        assertTrue(importSheet.contains("if (BuildConfig.FOSS_BUILD) R.string.collections_import_body_file_only"))
+        assertTrue(importSheet.substringBefore("R.string.collections_import_link_label").substringAfterLast("if (").startsWith("!BuildConfig.FOSS_BUILD)"))
+        assertTrue(importSheet.substringBefore("R.string.collections_import_qr").substringAfterLast("if (").startsWith("!BuildConfig.FOSS_BUILD)"))
+    }
+
+    @Test
     fun `empty collections expose creation as a first class action`() {
         val source = File("src/main/java/com/freevibe/ui/screens/collections/CollectionsScreen.kt").readText()
         val emptyList = source.substringAfter("// Collection list").substringBefore("LazyColumn(")

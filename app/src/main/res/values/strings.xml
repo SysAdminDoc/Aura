@@ -501,6 +501,7 @@
     <string name="collections_title">Collections</string>
     <string name="collections_more">More</string>
     <string name="collections_share_link_and_file">Share link and file</string>
+    <string name="collections_share_file">Share file</string>
     <string name="collections_show_qr">Show QR code</string>
     <string name="collections_delete">Delete collection</string>
     <string name="collections_import">Import collection</string>
@@ -522,6 +523,7 @@
     <string name="collections_link_copied">Collection link copied</string>
     <string name="collections_import_title">Import collection</string>
     <string name="collections_import_body">Paste an Aura collection link, open a shared JSON file, or scan a QR image.</string>
+    <string name="collections_import_body_file_only">Open a shared JSON file.</string>
     <string name="collections_import_link_label">Aura collection link</string>
     <string name="collections_import_link_button">Import link</string>
     <string name="collections_import_json">JSON</string>

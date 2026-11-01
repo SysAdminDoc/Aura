@@ -344,10 +344,12 @@ size, or no backend). A read the rules refuse because the share expired shows
 "Collection link is expired or unavailable."
 
 Until `publishSharedCollection` is deployed, a call that comes back `NOT_FOUND`
-or `UNIMPLEMENTED` writes the share directly to `/shared_collections/{token}`
-with the same fields and 30 day `expiresAt` the function stores
-(`publishShareWithFallback` and `directSharedCollectionRecord`). Any other
-refusal still fails the link. Vote counts follow the same migration rule: each
+or `UNIMPLEMENTED` tries writing the share directly to
+`/shared_collections/{token}` with the same fields and 30 day `expiresAt` the
+function stores (`publishShareWithFallback` and `directSharedCollectionRecord`).
+The rules refuse that create for everyone but an admin, so an ordinary user gets
+no link and no QR code until the function is live. Any other refusal fails the
+link the same way. Vote counts follow the same migration rule: each
 read prefers `/vote_counts/{contentId}/upvotes` and falls back to the legacy
 `/votes/{contentId}/upvotes` tally for a row that isn't there yet, and the
 leaderboard reads the legacy tree only while `/vote_counts` is empty. The

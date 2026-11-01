@@ -188,13 +188,7 @@ class CollectionExporter @Inject constructor(
             addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
         }
 
-    /** Draws the QR on a background thread and fills the bitmap in one call, so the dialog never waits on it. */
-    suspend fun buildQrBitmap(text: String, sizePx: Int = 768): Bitmap = withContext(Dispatchers.Default) {
-        val matrix = encodeCollectionQr(text, sizePx)
-        Bitmap.createBitmap(matrix.width, matrix.height, Bitmap.Config.ARGB_8888).apply {
-            setPixels(qrPixels(matrix), 0, matrix.width, 0, 0, matrix.width, matrix.height)
-        }
-    }
+    suspend fun buildQrBitmap(text: String, sizePx: Int = 768): Bitmap = renderCollectionQr(text, sizePx)
 
     private suspend fun buildExportFile(collectionId: Long, collectionName: String): CollectionExportFile {
         val items = collectionDao.getCollectionItems(collectionId).first()
@@ -395,6 +389,14 @@ internal fun encodeCollectionQr(text: String, sizePx: Int): BitMatrix {
         sizePx,
         mapOf(EncodeHintType.MARGIN to 1),
     )
+}
+
+/** Draws the QR on a background thread and fills the bitmap in one call, so the dialog never waits on it. */
+internal suspend fun renderCollectionQr(text: String, sizePx: Int = 768): Bitmap = withContext(Dispatchers.Default) {
+    val matrix = encodeCollectionQr(text, sizePx)
+    Bitmap.createBitmap(matrix.width, matrix.height, Bitmap.Config.ARGB_8888).apply {
+        setPixels(qrPixels(matrix), 0, matrix.width, 0, 0, matrix.width, matrix.height)
+    }
 }
 
 /** Black and white ARGB pixels for [matrix], row by row, ready for a single `Bitmap.setPixels`. */
