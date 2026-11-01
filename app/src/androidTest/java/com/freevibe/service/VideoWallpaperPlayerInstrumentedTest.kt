@@ -1,13 +1,17 @@
 package com.freevibe.service
 
 import android.content.Context
-import android.graphics.ImageFormat
-import android.media.ImageReader
+import android.graphics.SurfaceTexture
 import android.net.Uri
+import android.opengl.EGL14
+import android.opengl.EGLConfig
+import android.opengl.GLES11Ext
+import android.opengl.GLES20
 import android.os.Handler
 import android.os.HandlerThread
 import android.os.SystemClock
 import android.util.Log
+import android.view.Surface
 import androidx.media3.common.C
 import androidx.media3.common.MediaItem
 import androidx.media3.common.PlaybackException
@@ -18,7 +22,11 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.LargeTest
 import androidx.test.platform.app.InstrumentationRegistry
 import java.io.File
+import java.nio.ByteBuffer
+import java.nio.ByteOrder
 import java.util.concurrent.CopyOnWriteArrayList
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicReference
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
@@ -61,27 +69,9 @@ class VideoWallpaperPlayerInstrumentedTest {
     /** Plays [file] on a loop for [playMs] and reports every frame that reached the surface. */
     private fun play(file: File, width: Int, height: Int, playMs: Long): Playback {
         val frames = CopyOnWriteArrayList<Frame>()
-        val readerThread = HandlerThread("wallpaper-player-test").apply { start() }
-        val reader = ImageReader.newInstance(width, height, ImageFormat.YUV_420_888, 4)
-        reader.setOnImageAvailableListener({ source ->
-            source.acquireLatestImage()?.use { image ->
-                val plane = image.planes[0]
-                val buffer = plane.buffer
-                var sum = 0L
-                var count = 0
-                var row = 0
-                while (row < image.height) {
-                    var column = 0
-                    while (column < image.width) {
-                        sum += buffer.get(row * plane.rowStride + column * plane.pixelStride).toInt() and 0xFF
-                        count += 1
-                        column += SAMPLE_STEP
-                    }
-                    row += SAMPLE_STEP
-                }
-                frames += Frame(SystemClock.uptimeMillis(), sum.toDouble() / count)
-            }
-        }, Handler(readerThread.looper))
+        val reader = SurfaceBrightnessReader(width, height) { brightness ->
+            frames += Frame(SystemClock.uptimeMillis(), brightness)
+        }
 
         val playerRef = AtomicReference<ExoPlayer>()
         val error = AtomicReference<PlaybackException?>()
@@ -112,7 +102,6 @@ class VideoWallpaperPlayerInstrumentedTest {
         } finally {
             instrumentation.runOnMainSync { playerRef.get()?.release() }
             reader.close()
-            readerThread.quitSafely()
             file.delete()
         }
     }
@@ -182,5 +171,170 @@ class VideoWallpaperPlayerInstrumentedTest {
         const val SAMPLE_STEP = 8
         const val DARK_BELOW = 30.0
         const val LONGEST_GAP_MS = 250L
+    }
+
+    /**
+     * Reads what a decoder draws through the GPU, which is how a wallpaper's surface shows it. An
+     * ImageReader won't do here: on a Galaxy S25 a decoder's YUV frame hands back a plane with a null
+     * pointer, and CheckJNI aborts a debuggable process as soon as it's read.
+     */
+    private class SurfaceBrightnessReader(
+        private val width: Int,
+        private val height: Int,
+        private val onFrame: (Double) -> Unit,
+    ) {
+        private val thread = HandlerThread("wallpaper-player-test").apply { start() }
+        private val handler = Handler(thread.looper)
+        private val pixels = ByteBuffer.allocateDirect(width * height * 4).order(ByteOrder.nativeOrder())
+        private val transform = FloatArray(16)
+        private var display = EGL14.EGL_NO_DISPLAY
+        private var eglContext = EGL14.EGL_NO_CONTEXT
+        private var pbuffer = EGL14.EGL_NO_SURFACE
+        private var program = 0
+        private var texture = 0
+        private var transformUniform = 0
+        private var closed = false
+        private lateinit var surfaceTexture: SurfaceTexture
+        lateinit var surface: Surface
+            private set
+
+        init {
+            onReaderThread(::open)
+        }
+
+        private fun onReaderThread(block: () -> Unit) {
+            val done = CountDownLatch(1)
+            handler.post {
+                block()
+                done.countDown()
+            }
+            check(done.await(10, TimeUnit.SECONDS)) { "the frame reader's thread stopped answering" }
+        }
+
+        private fun open() {
+            display = EGL14.eglGetDisplay(EGL14.EGL_DEFAULT_DISPLAY)
+            val version = IntArray(2)
+            check(EGL14.eglInitialize(display, version, 0, version, 1)) { "no EGL display" }
+            val configs = arrayOfNulls<EGLConfig>(1)
+            val found = IntArray(1)
+            val wanted = intArrayOf(
+                EGL14.EGL_RENDERABLE_TYPE, EGL14.EGL_OPENGL_ES2_BIT,
+                EGL14.EGL_SURFACE_TYPE, EGL14.EGL_PBUFFER_BIT,
+                EGL14.EGL_RED_SIZE, 8,
+                EGL14.EGL_GREEN_SIZE, 8,
+                EGL14.EGL_BLUE_SIZE, 8,
+                EGL14.EGL_ALPHA_SIZE, 8,
+                EGL14.EGL_NONE,
+            )
+            check(EGL14.eglChooseConfig(display, wanted, 0, configs, 0, 1, found, 0) && found[0] > 0) { "no EGL config" }
+            val contextAttributes = intArrayOf(EGL14.EGL_CONTEXT_CLIENT_VERSION, 2, EGL14.EGL_NONE)
+            eglContext = EGL14.eglCreateContext(display, configs[0], EGL14.EGL_NO_CONTEXT, contextAttributes, 0)
+            val size = intArrayOf(EGL14.EGL_WIDTH, width, EGL14.EGL_HEIGHT, height, EGL14.EGL_NONE)
+            pbuffer = EGL14.eglCreatePbufferSurface(display, configs[0], size, 0)
+            check(EGL14.eglMakeCurrent(display, pbuffer, pbuffer, eglContext)) { "EGL context didn't start" }
+
+            program = linkProgram()
+            GLES20.glUseProgram(program)
+            transformUniform = GLES20.glGetUniformLocation(program, "uTransform")
+            val corners = ByteBuffer.allocateDirect(8 * Float.SIZE_BYTES).order(ByteOrder.nativeOrder()).asFloatBuffer()
+            corners.put(floatArrayOf(-1f, -1f, 1f, -1f, -1f, 1f, 1f, 1f)).position(0)
+            val position = GLES20.glGetAttribLocation(program, "aPosition")
+            GLES20.glEnableVertexAttribArray(position)
+            GLES20.glVertexAttribPointer(position, 2, GLES20.GL_FLOAT, false, 0, corners)
+
+            val textures = IntArray(1)
+            GLES20.glGenTextures(1, textures, 0)
+            texture = textures[0]
+            GLES20.glBindTexture(GLES11Ext.GL_TEXTURE_EXTERNAL_OES, texture)
+
+            surfaceTexture = SurfaceTexture(texture).apply {
+                setDefaultBufferSize(width, height)
+                setOnFrameAvailableListener({ if (!closed) readFrame() }, handler)
+            }
+            surface = Surface(surfaceTexture)
+        }
+
+        private fun linkProgram(): Int {
+            val linked = GLES20.glCreateProgram()
+            GLES20.glAttachShader(linked, compileShader(GLES20.GL_VERTEX_SHADER, VERTEX_SHADER))
+            GLES20.glAttachShader(linked, compileShader(GLES20.GL_FRAGMENT_SHADER, FRAGMENT_SHADER))
+            GLES20.glLinkProgram(linked)
+            val status = IntArray(1)
+            GLES20.glGetProgramiv(linked, GLES20.GL_LINK_STATUS, status, 0)
+            check(status[0] != 0) { GLES20.glGetProgramInfoLog(linked) }
+            return linked
+        }
+
+        private fun compileShader(type: Int, source: String): Int {
+            val shader = GLES20.glCreateShader(type)
+            GLES20.glShaderSource(shader, source)
+            GLES20.glCompileShader(shader)
+            val status = IntArray(1)
+            GLES20.glGetShaderiv(shader, GLES20.GL_COMPILE_STATUS, status, 0)
+            check(status[0] != 0) { GLES20.glGetShaderInfoLog(shader) }
+            return shader
+        }
+
+        private fun readFrame() {
+            surfaceTexture.updateTexImage()
+            surfaceTexture.getTransformMatrix(transform)
+            GLES20.glViewport(0, 0, width, height)
+            GLES20.glUniformMatrix4fv(transformUniform, 1, false, transform, 0)
+            GLES20.glDrawArrays(GLES20.GL_TRIANGLE_STRIP, 0, 4)
+            pixels.clear()
+            GLES20.glReadPixels(0, 0, width, height, GLES20.GL_RGBA, GLES20.GL_UNSIGNED_BYTE, pixels)
+            var sum = 0.0
+            var count = 0
+            var row = 0
+            while (row < height) {
+                var column = 0
+                while (column < width) {
+                    val at = (row * width + column) * 4
+                    sum += 0.299 * (pixels.get(at).toInt() and 0xFF) +
+                        0.587 * (pixels.get(at + 1).toInt() and 0xFF) +
+                        0.114 * (pixels.get(at + 2).toInt() and 0xFF)
+                    count += 1
+                    column += SAMPLE_STEP
+                }
+                row += SAMPLE_STEP
+            }
+            onFrame(sum / count)
+        }
+
+        fun close() {
+            onReaderThread {
+                closed = true
+                surfaceTexture.setOnFrameAvailableListener(null)
+                surface.release()
+                surfaceTexture.release()
+                GLES20.glDeleteTextures(1, intArrayOf(texture), 0)
+                GLES20.glDeleteProgram(program)
+                EGL14.eglMakeCurrent(display, EGL14.EGL_NO_SURFACE, EGL14.EGL_NO_SURFACE, EGL14.EGL_NO_CONTEXT)
+                EGL14.eglDestroySurface(display, pbuffer)
+                EGL14.eglDestroyContext(display, eglContext)
+                EGL14.eglReleaseThread()
+            }
+            thread.quitSafely()
+        }
+
+        private companion object {
+            const val VERTEX_SHADER = """
+                attribute vec2 aPosition;
+                uniform mat4 uTransform;
+                varying vec2 vCoord;
+                void main() {
+                    gl_Position = vec4(aPosition, 0.0, 1.0);
+                    vCoord = (uTransform * vec4(aPosition * 0.5 + 0.5, 0.0, 1.0)).xy;
+                }
+            """
+            const val FRAGMENT_SHADER = """#extension GL_OES_EGL_image_external : require
+                precision mediump float;
+                uniform samplerExternalOES uTexture;
+                varying vec2 vCoord;
+                void main() {
+                    gl_FragColor = texture2D(uTexture, vCoord);
+                }
+            """
+        }
     }
 }
