@@ -60,9 +60,20 @@ class VideoWallpaperEngineTest {
         var startPosition = -1L
         var item: MediaItem? = null
         var format: Format? = null
+        var items: List<MediaItem> = emptyList()
+        var index = 0
         private val listener = slot<Player.Listener>()
 
         init {
+            every { mock.setMediaItems(any<List<MediaItem>>(), any<Int>(), any<Long>()) } answers {
+                items = firstArg()
+                index = secondArg()
+                startPosition = thirdArg()
+            }
+            every { mock.currentMediaItemIndex } answers { index }
+            every { mock.hasNextMediaItem() } answers { index < items.lastIndex }
+            every { mock.seekToNextMediaItem() } answers { index += 1 }
+            every { mock.seekToDefaultPosition(any<Int>()) } answers { index = firstArg() }
             every { mock.addListener(capture(listener)) } answers { }
             every { mock.playWhenReady } answers { wantsToPlay }
             every { mock.playWhenReady = any() } answers { wantsToPlay = firstArg() }
@@ -402,5 +413,256 @@ class VideoWallpaperEngineTest {
         } finally {
             player.release()
         }
+    }
+
+    private fun storePlaylist(
+        clipCount: Int = 3,
+        shuffle: Boolean = false,
+        advanceSeconds: Int = 0,
+        order: List<Int> = (0 until clipCount).toList(),
+    ): List<File> {
+        val files = (0 until clipCount).map { File(context.filesDir, "clip$it.mp4").apply { writeBytes(ByteArray(64)) } }
+        val playlist = VideoPlaylist(
+            clips = order.map { index ->
+                VideoPlaylistClip(files[index].path, files[index].path, files[index].name, VIDEO_WALLPAPER_SCALE_MODE_ZOOM)
+            },
+            shuffle = shuffle,
+            advanceSeconds = advanceSeconds,
+        )
+        prefs().edit()
+            .putString(VIDEO_WALLPAPER_PLAYLIST_PREF, encodeVideoPlaylist(playlist))
+            .putBoolean(VIDEO_WALLPAPER_PLAYLIST_ACTIVE_PREF, true)
+            .commit()
+        return files
+    }
+
+    /** Time on screen with a decoder that keeps drawing, so only the timer can move the list. */
+    private fun FakePlayer.playFor(ms: Long) = runWatchdog(ms) { counters.renderedOutputBufferCount += 30 }
+
+    @Test
+    fun `a playlist plays every clip on one player`() {
+        val files = storePlaylist()
+
+        engine().showOnScreen()
+
+        val player = players.single()
+        assertEquals(files.map { Uri.fromFile(it) }, player.items.map { it.localConfiguration?.uri })
+        assertEquals(0, player.index)
+        assertEquals(0L, player.startPosition)
+        assertTrue(player.wantsToPlay)
+        verify { player.mock.repeatMode = Player.REPEAT_MODE_ALL }
+        verify { player.mock.videoScalingMode = C.VIDEO_SCALING_MODE_SCALE_TO_FIT_WITH_CROPPING }
+        verify {
+            player.mock.preloadConfiguration = match { it.targetPreloadDurationUs == VIDEO_PLAYLIST_PRELOAD_US }
+        }
+        verify { player.mock.prepare() }
+        verify(exactly = 0) { player.mock.setMediaItem(any<MediaItem>(), any<Long>()) }
+    }
+
+    @Test
+    fun `shuffle reaches the player`() {
+        storePlaylist(shuffle = true)
+
+        engine().showOnScreen()
+
+        verify { players.single().mock.shuffleModeEnabled = true }
+    }
+
+    @Test
+    fun `the speed setting and the battery saver govern a playlist too`() {
+        storePlaylist()
+        context.getSharedPreferences(VIDEO_PREFS_NAME, Context.MODE_PRIVATE)
+            .edit().putFloat(VIDEO_PLAYBACK_SPEED_PREF, 1.5f).commit()
+
+        engine().showOnScreen()
+        val player = players.single()
+        verify { player.mock.setPlaybackSpeed(1.5f) }
+
+        setPowerSave(true)
+        assertFalse(player.wantsToPlay)
+
+        setPowerSave(false)
+        assertTrue(player.wantsToPlay)
+        assertEquals(1, players.size)
+    }
+
+    @Test
+    fun `the timer moves to the next clip at the interval and loops one clip until then`() {
+        storePlaylist(advanceSeconds = 30)
+
+        engine().showOnScreen()
+        val player = players.single()
+        verify { player.mock.repeatMode = Player.REPEAT_MODE_ONE }
+
+        player.playFor(28_000L)
+        assertEquals(0, player.index)
+
+        player.playFor(2_000L)
+        assertEquals(1, player.index)
+        assertEquals("moving on must reuse the same player", 1, players.size)
+    }
+
+    @Test
+    fun `the timer wraps from the last clip back to the first`() {
+        storePlaylist(clipCount = 2, advanceSeconds = 30)
+
+        engine().showOnScreen()
+        val player = players.single()
+
+        player.playFor(30_000L)
+        assertEquals(1, player.index)
+
+        player.playFor(30_000L)
+        assertEquals(0, player.index)
+        verify { player.mock.seekToDefaultPosition(0) }
+    }
+
+    @Test
+    fun `the timer only counts time on screen`() {
+        storePlaylist(advanceSeconds = 30)
+        val engine = engine()
+        engine.showOnScreen()
+        val player = players.single()
+
+        player.playFor(10_000L)
+        engine.onVisibilityChanged(false)
+        idleFor(600_000L)
+        assertEquals("a hidden wallpaper keeps its clip", 0, player.index)
+
+        engine.onVisibilityChanged(true)
+        player.playFor(18_000L)
+        assertEquals(0, player.index)
+
+        player.playFor(2_000L)
+        assertEquals(1, player.index)
+    }
+
+    @Test
+    fun `battery saver stops the timer and lets it finish afterwards`() {
+        storePlaylist(advanceSeconds = 30)
+        engine().showOnScreen()
+        val player = players.single()
+
+        player.playFor(10_000L)
+        setPowerSave(true)
+        idleFor(600_000L)
+        assertEquals(0, player.index)
+
+        setPowerSave(false)
+        player.playFor(18_000L)
+        assertEquals(0, player.index)
+
+        player.playFor(2_000L)
+        assertEquals(1, player.index)
+    }
+
+    @Test
+    fun `a list with no timer leaves moving on to the player`() {
+        storePlaylist()
+        engine().showOnScreen()
+        val player = players.single()
+
+        player.playFor(600_000L)
+
+        verify(exactly = 0) { player.mock.seekToNextMediaItem() }
+        assertEquals(1, players.size)
+    }
+
+    @Test
+    fun `a clip that fails hands over to the next one`() {
+        storePlaylist()
+        engine().showOnScreen()
+        val first = players.single()
+
+        first.fail()
+        idleFor(VideoWallpaperRecovery.BASE_BACKOFF_MS)
+
+        verify { first.mock.release() }
+        assertEquals(2, players.size)
+        assertEquals(1, players.last().index)
+        assertEquals(0L, players.last().startPosition)
+    }
+
+    @Test
+    fun `coming back to a playlist carries on where it was`() {
+        storePlaylist(advanceSeconds = 30)
+        val engine = engine()
+        engine.showOnScreen()
+        val player = players.single()
+        player.playFor(30_000L)
+
+        engine.onVisibilityChanged(false)
+        engine.onVisibilityChanged(true)
+
+        assertEquals(1, player.index)
+        verify(exactly = 0) { player.mock.seekTo(0) }
+        assertEquals("coming back must reuse the same player", 1, players.size)
+        assertTrue(player.wantsToPlay)
+    }
+
+    @Test
+    fun `a list edited while hidden is picked up on the way back`() {
+        val files = storePlaylist()
+        val engine = engine()
+        engine.showOnScreen()
+        val first = players.single()
+
+        engine.onVisibilityChanged(false)
+        storePlaylist(order = listOf(2, 1, 0))
+        engine.onVisibilityChanged(true)
+        idleFor(0)
+
+        verify { first.mock.release() }
+        assertEquals(2, players.size)
+        assertEquals(
+            files.reversed().map { Uri.fromFile(it) },
+            players.last().items.map { it.localConfiguration?.uri },
+        )
+    }
+
+    @Test
+    fun `a list switched off while hidden gives way to the single video`() {
+        storePlaylist()
+        val engine = engine()
+        engine.showOnScreen()
+
+        engine.onVisibilityChanged(false)
+        prefs().edit().putBoolean(VIDEO_WALLPAPER_PLAYLIST_ACTIVE_PREF, false).commit()
+        engine.onVisibilityChanged(true)
+        idleFor(0)
+
+        assertEquals(2, players.size)
+        assertEquals(Uri.fromFile(file), players.last().item?.localConfiguration?.uri)
+    }
+
+    @Test
+    fun `a surface the system described keeps its own file`() {
+        storePlaylist()
+        val service = Robolectric.buildService(VideoWallpaperService::class.java).create().get()
+
+        service.VideoEngine(file.absolutePath).showOnScreen()
+
+        val player = players.single()
+        assertEquals(Uri.fromFile(file), player.item?.localConfiguration?.uri)
+        assertTrue(player.items.isEmpty())
+    }
+
+    @Test
+    fun `nothing outlives the engine with a timer still running`() {
+        storePlaylist(advanceSeconds = 30)
+        val engine = engine()
+        engine.showOnScreen()
+        val player = players.single()
+        player.playFor(10_000L)
+        assertFalse(engine.resourceSnapshot().isDrained)
+
+        engine.onSurfaceDestroyed(holder)
+        engine.onDestroy()
+        idleFor(600_000L)
+
+        verify(exactly = 1) { player.mock.release() }
+        assertEquals(0, player.index)
+        assertEquals(1, players.size)
+        assertTrue(engine.resourceSnapshot().isDrained)
     }
 }

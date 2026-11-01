@@ -33,6 +33,7 @@ import com.freevibe.BuildConfig
 import com.freevibe.R
 import java.io.File
 import kotlin.math.max
+import kotlin.random.Random
 
 /**
  * Colour quantization only needs a rough thumbnail, and a GIF frame decoded at full
@@ -144,6 +145,11 @@ class VideoWallpaperService : WallpaperService() {
         private val recoveryHandler = Handler(Looper.getMainLooper())
         private var pendingResumePositionMs = 0
         private var gifValidationGeneration = 0L
+        private var activePlaylist: VideoPlaylist? = null
+        private var playlistIndex = 0
+        private var playlistAdvanceRunnable: Runnable? = null
+        private var playlistAdvanceDueMs = 0L
+        private var playlistAdvanceLeftMs = 0L
         @Volatile private var destroyed = false
         private val colorPublisher = LiveWallpaperColorPublisher()
         // A video has no source bitmap lying around, so one representative frame has
@@ -167,11 +173,20 @@ class VideoWallpaperService : WallpaperService() {
         private fun getVideoPath(): String? =
             describedVideoPath ?: getPrefs().getString("video_path", null)
 
+        /** A surface the system described by its own file keeps that file, whatever's picked later. */
+        private fun readPlaylist(): VideoPlaylist? =
+            if (describedVideoPath != null) null else readActiveVideoPlaylist(getPrefs())
+
         @RequiresApi(36)
         override fun onApplyWallpaper(which: Int): WallpaperDescription {
-            val content = auraWallpaperDescriptionContent(source = getVideoPath())
+            val playlist = readPlaylist()
+            val source = if (playlist != null) null else getVideoPath()
+            val content = auraWallpaperDescriptionContent(source = source)
             return buildAuraWallpaperDescription(
-                id = auraWallpaperDescriptionId("video", AuraWallpaperDescriptionContent(source = getVideoPath())),
+                id = auraWallpaperDescriptionId(
+                    "video",
+                    AuraWallpaperDescriptionContent(source = source ?: playlist?.let(::videoPlaylistKey)),
+                ),
                 title = getString(R.string.video_wallpaper_label),
                 description = getString(R.string.video_wallpaper_label),
                 content = content,
@@ -288,7 +303,10 @@ class VideoWallpaperService : WallpaperService() {
             resolveScreenSize()
             registerPowerSaveReceiver()
             reconcilePowerSavePause()
-            receiptStore.recordSurfaceCreated(LiveWallpaperReceiptStore.ENGINE_VIDEO, getVideoPath())
+            receiptStore.recordSurfaceCreated(
+                LiveWallpaperReceiptStore.ENGINE_VIDEO,
+                readPlaylist()?.clips?.firstOrNull()?.path ?: getVideoPath(),
+            )
             loadColorPublicationFromPrefs()
             loadDimmingFromPrefs()
             initializePlayer(holder)
@@ -316,15 +334,23 @@ class VideoWallpaperService : WallpaperService() {
                 loadDimmingFromPrefs()
                 reconcilePowerSavePause()
                 startTelemetryHeartbeat()
-                val path = getVideoPath()
-                if (path != null) {
-                    val file = File(path)
-                    // Re-init if the user picked a different video OR the same path's
-                    // contents changed. Path comparison guards against rare cases where
-                    // two different files happen to share the same lastModified timestamp.
-                    if (file.exists() && (path != lastPath || file.lastModified() != lastModified)) {
+                val playlist = readPlaylist()
+                if (playlist != null) {
+                    if (videoPlaylistKey(playlist) != lastPath) {
                         currentHolder?.let { initializePlayer(it) }
                         return
+                    }
+                } else {
+                    val path = getVideoPath()
+                    if (path != null) {
+                        val file = File(path)
+                        // Re-init if the user picked a different video OR the same path's
+                        // contents changed. Path comparison guards against rare cases where
+                        // two different files happen to share the same lastModified timestamp.
+                        if (file.exists() && (path != lastPath || file.lastModified() != lastModified)) {
+                            currentHolder?.let { initializePlayer(it) }
+                            return
+                        }
                     }
                 }
                 gifMovie?.let {
@@ -334,13 +360,17 @@ class VideoWallpaperService : WallpaperService() {
                 try {
                     player?.let {
                         if (!it.playWhenReady) {
-                            it.seekTo(0)
+                            // A list picks up where it paused. Starting over at every glance
+                            // would keep a long clip from ever ending and the list from moving on.
+                            if (activePlaylist == null) it.seekTo(0)
                             if (!motionPausedForPowerSave) it.play()
                         }
                     }
                 } catch (_: Exception) {}
+                startPlaylistAdvance()
             } else {
                 stopTelemetryHeartbeat()
+                stopPlaylistAdvance()
                 pauseGifPlayback()
                 try { player?.pause() } catch (_: Exception) {}
                 publishVideoTelemetry()
@@ -365,6 +395,10 @@ class VideoWallpaperService : WallpaperService() {
             cancelPendingRebuild()
             stopPlaybackWatchdog()
             releasePlayback()
+            readPlaylist()?.let { playlist ->
+                initializePlaylistPlayer(holder, playlist)
+                return
+            }
             val path = getVideoPath() ?: return
             val file = File(path)
             if (!file.exists()) return
@@ -420,6 +454,97 @@ class VideoWallpaperService : WallpaperService() {
         }
 
         /**
+         * One player runs the whole list, so moving between clips never swaps a surface, and the
+         * frame rate cap, the low battery cap and the visibility pause all stay in charge of it.
+         * The scaling stays on crop for every clip. A Fit clip was already drawn at the screen's size
+         * when it was prepared, so crop shows it whole, and no scaling change can land on a seam.
+         * The cost is that a Fit clip gets cropped when the screen turns or unfolds.
+         */
+        private fun initializePlaylistPlayer(holder: SurfaceHolder, playlist: VideoPlaylist) {
+            try {
+                val key = videoPlaylistKey(playlist)
+                if (key != lastPath) {
+                    recoveryState = VideoWallpaperRecovery.reset()
+                    playlistAdvanceLeftMs = 0L
+                    playlistIndex = if (playlist.shuffle) Random.nextInt(playlist.clips.size) else 0
+                    // Once per list, not per clip: new colors at every seam could re-theme the whole system.
+                    playlist.clips.getOrNull(playlistIndex)?.let { first ->
+                        refreshWallpaperColors(first.path, File(first.path).lastModified())
+                    }
+                }
+                lastPath = key
+                lastModified = 0L
+                pendingResumePositionMs = 0
+                activeMediaType = "video"
+                activePlaylist = playlist
+                configureSurface(holder)
+                configureFrameRate(holder)
+                publishVideoTelemetry()
+                val built = videoWallpaperPlayerFactory(this@VideoWallpaperService)
+                player = built
+                built.addListener(playerListener)
+                built.setVideoSurface(holder.surface)
+                built.videoScalingMode = C.VIDEO_SCALING_MODE_SCALE_TO_FIT_WITH_CROPPING
+                built.repeatMode = videoPlaylistRepeatMode(playlist)
+                built.shuffleModeEnabled = playlist.shuffle
+                built.preloadConfiguration = ExoPlayer.PreloadConfiguration(VIDEO_PLAYLIST_PRELOAD_US)
+                built.setPlaybackSpeed(getPlaybackSpeed())
+                built.setMediaItems(
+                    playlist.clips.mapIndexed { index, clip ->
+                        MediaItem.Builder()
+                            .setUri(Uri.fromFile(File(clip.path)))
+                            .setMediaId(index.toString())
+                            .build()
+                    },
+                    playlistIndex.coerceIn(playlist.clips.indices),
+                    0L,
+                )
+                built.playWhenReady = visible && !motionPausedForPowerSave
+                built.prepare()
+                startPlaybackWatchdog()
+                startPlaylistAdvance()
+            } catch (e: Exception) {
+                if (BuildConfig.DEBUG) android.util.Log.e("VideoWPService", "Playlist init failed: ${e.message}")
+                handlePlaybackFailure(
+                    VideoPlaybackFailure.PREPARE_ERROR,
+                    "${e.javaClass.simpleName}: ${e.message}",
+                )
+            }
+        }
+
+        /** The timer only counts time on screen, so a clip gets its whole turn however often the phone sleeps. */
+        private fun startPlaylistAdvance() {
+            stopPlaylistAdvance()
+            val playlist = activePlaylist ?: return
+            val interval = playlist.advanceSeconds * 1_000L
+            if (interval <= 0L || playlist.clips.size < 2 || !visible || motionPausedForPowerSave) return
+            val delay = playlistAdvanceLeftMs.takeIf { it > 0L } ?: interval
+            val runnable = Runnable {
+                playlistAdvanceRunnable = null
+                playlistAdvanceLeftMs = 0L
+                advancePlaylist()
+                startPlaylistAdvance()
+            }
+            playlistAdvanceDueMs = SystemClock.uptimeMillis() + delay
+            playlistAdvanceRunnable = runnable
+            recoveryHandler.postDelayed(runnable, delay)
+        }
+
+        private fun stopPlaylistAdvance() {
+            playlistAdvanceRunnable?.let {
+                recoveryHandler.removeCallbacks(it)
+                playlistAdvanceLeftMs = (playlistAdvanceDueMs - SystemClock.uptimeMillis()).coerceAtLeast(1L)
+            }
+            playlistAdvanceRunnable = null
+        }
+
+        private fun advancePlaylist() {
+            try {
+                player?.moveToNextPlaylistClip()
+            } catch (_: Exception) {}
+        }
+
+        /**
          * Applies the bounded recovery policy to a playback failure.
          *
          * Prepare errors, runtime errors, and a frozen-but-"playing" player all land
@@ -430,6 +555,7 @@ class VideoWallpaperService : WallpaperService() {
         private fun handlePlaybackFailure(failure: VideoPlaybackFailure, detail: String) {
             stopPlaybackWatchdog()
             val positionMs = runCatching { player?.currentPosition?.toInt() ?: 0 }.getOrDefault(0)
+            val failedPlaylist = activePlaylist
             releasePlayback()
             receiptStore.recordError(
                 LiveWallpaperReceiptStore.ENGINE_VIDEO,
@@ -449,6 +575,11 @@ class VideoWallpaperService : WallpaperService() {
                         "rebuild attempt ${decision.attempt} in ${decision.delayMs}ms",
                     )
                     scheduleRebuild(decision)
+                    if (failedPlaylist != null) {
+                        // A broken clip doesn't hold up the rest of the list.
+                        pendingResumePositionMs = 0
+                        playlistIndex = nextVideoPlaylistIndex(playlistIndex, failedPlaylist.clips.size)
+                    }
                 }
                 VideoRecoveryDecision.Fallback -> {
                     // Leave the last frame on the surface: a still image beats a loop
@@ -708,9 +839,9 @@ class VideoWallpaperService : WallpaperService() {
         }
 
         /**
-         * Video and GIF hold a decoder, up to four posted Runnables, and a power
-         * save receiver. Every one of them is engine-scoped, so all of them must
-         * be gone once the surface is.
+         * Video and GIF hold a decoder, up to four posted Runnables at once (a list's
+         * timer stands in for the GIF's frame loop), and a power save receiver. Every
+         * one of them is engine-scoped, so all of them must be gone once the surface is.
          */
         override fun resourceSnapshot(): LiveWallpaperResourceSnapshot =
             LiveWallpaperResourceSnapshot(
@@ -721,6 +852,7 @@ class VideoWallpaperService : WallpaperService() {
                     telemetryRunnable,
                     watchdogRunnable,
                     pendingRebuild,
+                    playlistAdvanceRunnable,
                 ).count { it != null },
                 broadcastReceivers = if (powerSaveReceiverRegistered) 1 else 0,
                 loaderThreads = colorLoader.outstanding,
@@ -733,6 +865,11 @@ class VideoWallpaperService : WallpaperService() {
             gifCanvasBackground?.takeUnless { it.isRecycled }?.recycle()
             gifCanvasBackground = null
             activeMediaType = "none"
+            if (activePlaylist != null) {
+                playlistIndex = runCatching { player?.currentMediaItemIndex }.getOrNull() ?: playlistIndex
+            }
+            stopPlaylistAdvance()
+            activePlaylist = null
             player?.apply {
                 try { removeListener(playerListener) } catch (_: Exception) {}
                 try { release() } catch (_: Exception) {}
@@ -792,6 +929,7 @@ class VideoWallpaperService : WallpaperService() {
                 VideoMotionPowerSaveAction.PAUSE -> {
                     pauseGifPlayback()
                     try { player?.pause() } catch (_: Exception) {}
+                    stopPlaylistAdvance()
                 }
                 VideoMotionPowerSaveAction.RESUME -> {
                     if (visible) {
@@ -801,6 +939,7 @@ class VideoWallpaperService : WallpaperService() {
                             player?.let { if (!it.playWhenReady) it.play() }
                         } catch (_: Exception) {
                         }
+                        startPlaylistAdvance()
                     }
                 }
                 VideoMotionPowerSaveAction.NONE -> Unit
@@ -857,6 +996,12 @@ class VideoWallpaperService : WallpaperService() {
             )
         }
 
+        private fun activePlaylistScaleMode(): String? {
+            val clips = activePlaylist?.clips ?: return null
+            val index = runCatching { player?.currentMediaItemIndex }.getOrNull() ?: playlistIndex
+            return clips.getOrNull(index)?.scaleMode
+        }
+
         private fun publishVideoTelemetry(profile: VideoPlaybackProfile = activeProfile) {
             getSharedPreferences(VIDEO_STATS_PREFS_NAME, MODE_PRIVATE)
                 .edit()
@@ -870,7 +1015,7 @@ class VideoWallpaperService : WallpaperService() {
                 .putBoolean("motion_paused_for_power_save", profile.motionPausedForPowerSave)
                 .putBoolean("charging", profile.isCharging)
                 .putBoolean("fps_overlay_enabled", isFpsOverlayEnabled())
-                .putString("scale_mode", getScaleMode())
+                .putString("scale_mode", activePlaylistScaleMode() ?: getScaleMode())
                 .putString("canvas_mode", getCanvasMode())
                 .putBoolean("canvas_baked", isCanvasBaked())
                 .apply {

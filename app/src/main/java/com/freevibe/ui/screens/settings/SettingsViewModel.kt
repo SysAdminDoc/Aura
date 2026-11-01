@@ -128,9 +128,12 @@ class SettingsViewModel @Inject constructor(
         scope = viewModelScope,
     )
     private val soundShuffle = SettingsSoundShuffleDelegate(soundShufflePoolManager, scope = viewModelScope)
+    private val videoPlaylist = SettingsVideoPlaylistDelegate(context, videoWallpaperStorage, viewModelScope)
 
     val parallaxGalleryResult get() = diagnosticsDelegate.parallaxGalleryResult
     val videoWallpaperSelectionResult get() = diagnosticsDelegate.videoWallpaperSelectionResult
+    val videoPlaylistState get() = videoPlaylist.state
+    val videoPlaylistMessages get() = videoPlaylist.messages
     val autoWpEnabled get() = rotation.autoWpEnabled
     val autoWpInterval get() = rotation.autoWpInterval
     val autoWpSource get() = rotation.autoWpSource
@@ -247,6 +250,14 @@ class SettingsViewModel @Inject constructor(
     fun clearVideoWallpaperSelectionResult() = diagnosticsDelegate.clearVideoWallpaperSelectionResult()
     fun applyParallaxFromGallery(uri: Uri) = diagnosticsDelegate.applyParallaxFromGallery(uri)
     fun prepareVideoWallpaperFromUri(uri: Uri) = diagnosticsDelegate.prepareVideoWallpaperFromUri(uri)
+    fun refreshVideoPlaylist() = videoPlaylist.refresh()
+    fun addVideoPlaylistClips(uris: List<Uri>) = videoPlaylist.addClips(uris)
+    fun setVideoPlaylistClipScale(index: Int, scaleMode: String) = videoPlaylist.setScale(index, scaleMode)
+    fun moveVideoPlaylistClip(from: Int, to: Int) = videoPlaylist.move(from, to)
+    fun removeVideoPlaylistClip(index: Int) = videoPlaylist.remove(index)
+    fun setVideoPlaylistShuffle(shuffle: Boolean) = videoPlaylist.setShuffle(shuffle)
+    fun setVideoPlaylistAdvance(seconds: Int) = videoPlaylist.setAdvance(seconds)
+    fun activateVideoPlaylist(onDone: () -> Unit) = videoPlaylist.activate(onDone)
     fun setAutoWallpaper(enabled: Boolean) = rotation.setAutoWallpaper(enabled)
     fun setAutoWpInterval(hours: Long) = rotation.setAutoWpInterval(hours)
     fun setAutoWpSource(source: String) = rotation.setAutoWpSource(source)

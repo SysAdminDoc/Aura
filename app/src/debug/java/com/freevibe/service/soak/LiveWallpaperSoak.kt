@@ -1,5 +1,6 @@
 package com.freevibe.service.soak
 
+import android.content.Context
 import android.graphics.Canvas
 import android.graphics.Rect
 import android.graphics.SurfaceTexture
@@ -10,8 +11,17 @@ import com.freevibe.service.LiveWallpaperReceiptStore
 import com.freevibe.service.LiveWallpaperResourceReporter
 import com.freevibe.service.LiveWallpaperResourceSnapshot
 import com.freevibe.service.ParallaxWallpaperService
+import com.freevibe.service.VIDEO_PLAYLIST_ADVANCE_CHOICES
+import com.freevibe.service.VIDEO_WALLPAPER_PLAYLIST_ACTIVE_PREF
+import com.freevibe.service.VIDEO_WALLPAPER_PLAYLIST_PREF
+import com.freevibe.service.VIDEO_WALLPAPER_PREFS_NAME
+import com.freevibe.service.VIDEO_WALLPAPER_SCALE_MODE_ZOOM
+import com.freevibe.service.VideoPlaylist
+import com.freevibe.service.VideoPlaylistClip
 import com.freevibe.service.VideoWallpaperService
 import com.freevibe.service.WeatherWallpaperService
+import com.freevibe.service.encodeVideoPlaylist
+import java.io.File
 
 /**
  * A cross-engine lifecycle soak harness for Aura's live wallpapers.
@@ -146,7 +156,7 @@ object LiveWallpaperSoakScenarios {
     val ALL = listOf(SURFACE_CHURN, VISIBILITY_CHURN, POWER_SAVER, UNLOCK, MEDIA_REPLACEMENT)
 }
 
-/** The four engine behaviours Aura ships across three wallpaper services. */
+/** The five engine behaviours Aura ships across three wallpaper services. */
 enum class LiveWallpaperSoakTarget(
     val serviceClass: Class<out WallpaperService>,
     val engineId: String,
@@ -168,6 +178,13 @@ enum class LiveWallpaperSoakTarget(
         "video_path",
         "soak-wallpaper.gif",
     ),
+    VIDEO_PLAYLIST(
+        VideoWallpaperService::class.java,
+        LiveWallpaperReceiptStore.ENGINE_VIDEO,
+        "freevibe_live_wp",
+        "video_path",
+        "soak-playlist.mp4",
+    ),
     WEATHER(
         WeatherWallpaperService::class.java,
         LiveWallpaperReceiptStore.ENGINE_WEATHER,
@@ -182,6 +199,30 @@ enum class LiveWallpaperSoakTarget(
         "image_path",
         "soak-parallax.png",
     ),
+}
+
+/** The two clips [LiveWallpaperSoakTarget.VIDEO_PLAYLIST] plays, the first being its media file. */
+fun soakPlaylistClips(mediaFile: File): List<File> =
+    listOf(mediaFile, File(mediaFile.parentFile, "soak-playlist-second.mp4"))
+
+/**
+ * Turns the list on for [LiveWallpaperSoakTarget.VIDEO_PLAYLIST] and off for every other target. A
+ * list is told apart by its clips rather than their bytes, so [generation] swaps their order, which
+ * is how a media replacement reaches a playing list. The timer is set, so a soak holds that too.
+ */
+fun writeSoakPlaylist(context: Context, target: LiveWallpaperSoakTarget, mediaFile: File, generation: Int) {
+    val clips = soakPlaylistClips(mediaFile).map { clip ->
+        VideoPlaylistClip(clip.absolutePath, clip.absolutePath, clip.name, VIDEO_WALLPAPER_SCALE_MODE_ZOOM)
+    }
+    val playlist = VideoPlaylist(
+        clips = if (generation % 2 == 0) clips else clips.asReversed(),
+        advanceSeconds = VIDEO_PLAYLIST_ADVANCE_CHOICES.first { it > 0 },
+    )
+    context.getSharedPreferences(VIDEO_WALLPAPER_PREFS_NAME, Context.MODE_PRIVATE)
+        .edit()
+        .putString(VIDEO_WALLPAPER_PLAYLIST_PREF, encodeVideoPlaylist(playlist))
+        .putBoolean(VIDEO_WALLPAPER_PLAYLIST_ACTIVE_PREF, target == LiveWallpaperSoakTarget.VIDEO_PLAYLIST)
+        .commit()
 }
 
 /**

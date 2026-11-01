@@ -64,7 +64,7 @@ The [privacy policy](https://github.com/SysAdminDoc/Aura/blob/main/docs/privacy/
 |---------|--------------|
 | **Wallpapers** | Reddit first, then optional Wallhaven, Pexels, Pixabay, Bing, NASA and Wikimedia results. Discover chips cover For You, AMOLED, 4K+, Portrait and Icon Safe. |
 | **Style learning** | What you apply, favorite and hide tunes Discover on your phone only. Settings can reset it. |
-| **Video wallpapers** | Reddit live wallpapers and cinemagraphs first, then YouTube and optional Pexels or Pixabay clips. Import your own videos and GIFs, trim the loop and crop landscape to portrait. |
+| **Video wallpapers** | Reddit live wallpapers and cinemagraphs first, then YouTube and optional Pexels or Pixabay clips. Import your own videos and GIFs, trim the loop and crop landscape to portrait, or line up to 12 clips as a playlist. |
 | **Fit Canvas** | Keeps the whole image, video or GIF over black, a color you pick, a palette color or a blurred edge. [How it behaves](docs/fit-canvas.md). |
 | **Live wallpapers** | Parallax depth, weather effects, AGSL shaders and touch ripples. A battery dashboard shows the real frame rate and caps it when power runs low. |
 | **Wallpaper editor** | Brightness, contrast, saturation, blur, depth portraits, text and stickers, with 9:16, 16:9 and 1:1 crop presets. |

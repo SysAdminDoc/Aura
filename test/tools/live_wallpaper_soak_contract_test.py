@@ -61,6 +61,14 @@ def test_the_gif_path_is_soaked_separately_from_video():
     assert '"soak-wallpaper.gif"' in harness
 
 
+def test_the_playlist_path_is_soaked_on_both_runners():
+    # A list runs one player across its clips with a timer of its own, and a list
+    # that's written but not switched on would soak the single video path instead.
+    assert "VIDEO_PLAYLIST(" in read(HARNESS)
+    for path in (JVM_SOAK, DEVICE_SOAK):
+        assert "writeSoakPlaylist(context, target, mediaFile, generation = 0)" in read(path), path
+
+
 def test_the_soak_covers_every_lifecycle_axis_that_churns_in_the_field():
     harness = read(HARNESS)
     for scenario in (

@@ -417,6 +417,7 @@ fun SettingsScreen(
                 videoFpsOverlayEnabled = videoFpsOverlayEnabled,
                 videoAutoBatterySaver = videoAutoBatterySaver,
                 videoBatteryDashboard = videoBatteryDashboard,
+                onFeedback = ::showSettingsFeedback,
             )
 
             if (SettingsSectionKeys.SERVICES in visibleSectionKeys) ServicesCommunitySettingsSection(

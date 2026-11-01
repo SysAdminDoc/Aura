@@ -3,6 +3,7 @@ package com.freevibe.ui.screens.settings
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.PlaylistPlay
 import androidx.compose.material.icons.filled.BatteryChargingFull
 import androidx.compose.material.icons.filled.SlowMotionVideo
 import androidx.compose.material.icons.filled.Speed
@@ -10,6 +11,7 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -17,11 +19,15 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.freevibe.R
 import com.freevibe.data.model.RedditFeedMediaType
 import com.freevibe.service.VIDEO_PLAYBACK_SPEEDS
+import com.freevibe.service.VideoWallpaperService
 import com.freevibe.service.sanitizeVideoPlaybackSpeed
 import com.freevibe.service.videoBatteryImpactSummary
+import com.freevibe.ui.LiveWallpaperSource
+import com.freevibe.ui.launchLiveWallpaperWithFeedback
 import java.math.BigDecimal
 
 @Composable
@@ -32,9 +38,18 @@ internal fun VideoSettingsSection(
     videoFpsOverlayEnabled: Boolean,
     videoAutoBatterySaver: Boolean,
     videoBatteryDashboard: VideoBatteryDashboardState,
+    onFeedback: (String) -> Unit,
 ) {
+    val context = LocalContext.current
     var showFpsPicker by remember { mutableStateOf(false) }
     var showSpeedPicker by remember { mutableStateOf(false) }
+    var showPlaylist by remember { mutableStateOf(false) }
+    val playlistState by viewModel.videoPlaylistState.collectAsStateWithLifecycle()
+
+    LaunchedEffect(viewModel) {
+        viewModel.refreshVideoPlaylist()
+        viewModel.videoPlaylistMessages.collect { message -> onFeedback(message) }
+    }
 
     SettingsSection(
         sectionKey = SettingsSectionKeys.VIDEO,
@@ -89,6 +104,41 @@ internal fun VideoSettingsSection(
                 videoPlaybackSpeedLabel(sanitizeVideoPlaybackSpeed(videoPlaybackSpeed)),
             ),
             onClick = { showSpeedPicker = true },
+        )
+        SettingsItem(
+            icon = Icons.AutoMirrored.Filled.PlaylistPlay,
+            title = stringResource(R.string.settings_video_playlist_title),
+            subtitle = videoPlaylistSubtitle(playlistState.playlist),
+            onClick = { showPlaylist = true },
+            searchAliases = setOf("playlist", "clips"),
+        )
+    }
+
+    if (showPlaylist) {
+        VideoPlaylistDialog(
+            state = playlistState,
+            onAddClips = viewModel::addVideoPlaylistClips,
+            onSetScale = viewModel::setVideoPlaylistClipScale,
+            onMove = viewModel::moveVideoPlaylistClip,
+            onRemove = viewModel::removeVideoPlaylistClip,
+            onSetShuffle = viewModel::setVideoPlaylistShuffle,
+            onSetAdvance = viewModel::setVideoPlaylistAdvance,
+            onApply = {
+                showPlaylist = false
+                viewModel.activateVideoPlaylist {
+                    onFeedback(
+                        launchLiveWallpaperWithFeedback(
+                            context = context,
+                            serviceClass = VideoWallpaperService::class.java,
+                            tag = "SettingsVideoPlaylist",
+                            source = LiveWallpaperSource.VIDEO,
+                            directRes = R.string.settings_feedback_video_direct,
+                            chooserRes = R.string.settings_feedback_video_chooser,
+                        ),
+                    )
+                }
+            },
+            onDismiss = { showPlaylist = false },
         )
     }
 

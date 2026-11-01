@@ -45,7 +45,7 @@ internal val THEME_PACK_EXTRACTION_LIMITS = ArchiveExtractionLimits(
 )
 private const val WIDGET_PREFS = "freevibe_widget"
 private const val LIVE_WALLPAPER_PREFS = "freevibe_live_wp"
-private val VIDEO_IMPORT_KEYS = setOf("video_path", "scale_mode")
+private val VIDEO_IMPORT_KEYS = setOf("video_path", "scale_mode", VIDEO_WALLPAPER_PLAYLIST_ACTIVE_PREF)
 private val WIDGET_IMPORT_KEYS = setOf("tint_vibrant", "tint_accent", "tint_dominant", "shuffle_count")
 
 @Serializable
@@ -467,6 +467,7 @@ class ThemePackRecipeManager @Inject constructor(
                 videoPrefs.edit()
                     .putString("video_path", path)
                     .putString("scale_mode", VIDEO_WALLPAPER_SCALE_MODE_ZOOM)
+                    .putBoolean(VIDEO_WALLPAPER_PLAYLIST_ACTIVE_PREF, false)
                     .commitOrThrow()
             }
             plan.widget?.let { widget ->

@@ -13,6 +13,8 @@ import com.freevibe.service.soak.LiveWallpaperSoakScenario
 import com.freevibe.service.soak.LiveWallpaperSoakScenarios
 import com.freevibe.service.soak.LiveWallpaperSoakTarget
 import com.freevibe.service.soak.SoakSurfaceHolder
+import com.freevibe.service.soak.soakPlaylistClips
+import com.freevibe.service.soak.writeSoakPlaylist
 import io.mockk.mockk
 import java.io.ByteArrayOutputStream
 import java.io.File
@@ -67,6 +69,7 @@ class LiveWallpaperSoakTest {
 
     private class RobolectricSoakEnvironment(
         private val mediaFile: File,
+        private val target: LiveWallpaperSoakTarget,
     ) : LiveWallpaperSoakEnvironment {
 
         private var generation = 0
@@ -85,6 +88,7 @@ class LiveWallpaperSoakTest {
             // Engines detect replacement by lastModified, and a same-millisecond
             // rewrite is exactly the case the path comparison was added for.
             mediaFile.setLastModified(mediaFile.lastModified() + 5_000L * generation)
+            writeSoakPlaylist(RuntimeEnvironment.getApplication(), target, mediaFile, generation)
             settle()
         }
 
@@ -117,6 +121,9 @@ class LiveWallpaperSoakTest {
             LiveWallpaperSoakTarget.PARALLAX,
             -> file.writeBytes(pngBytes(IMAGE_WIDTH, IMAGE_HEIGHT))
             LiveWallpaperSoakTarget.VIDEO -> file.writeBytes(ByteArray(64) { it.toByte() })
+            LiveWallpaperSoakTarget.VIDEO_PLAYLIST -> soakPlaylistClips(file).forEach { clip ->
+                clip.writeBytes(ByteArray(64) { it.toByte() })
+            }
             // GIF decode has no usable JVM shadow, so this target soaks the decode
             // failure and bounded-rebuild path; real GIF playback is what the
             // instrumented run on an emulator contributes.
@@ -197,6 +204,7 @@ class LiveWallpaperSoakTest {
             .edit()
             .putString(target.pathKey, mediaFile.absolutePath)
             .commit()
+        writeSoakPlaylist(context, target, mediaFile, generation = 0)
 
         @Suppress("UNCHECKED_CAST")
         val service = Robolectric
@@ -210,7 +218,7 @@ class LiveWallpaperSoakTest {
                 target = target,
                 engine = engine,
                 holder = holder,
-                environment = RobolectricSoakEnvironment(mediaFile),
+                environment = RobolectricSoakEnvironment(mediaFile, target),
             ).run(scenario, cycles)
         } finally {
             holder.release()
@@ -254,8 +262,8 @@ class LiveWallpaperSoakTest {
         val ceilings = mapOf(
             // A video player or a decoded Movie, never a growing set of either.
             "players" to 2,
-            // Video's four: GIF frame loop, telemetry heartbeat, stall watchdog,
-            // and a pending recovery rebuild.
+            // Video's four: telemetry heartbeat, stall watchdog, a pending recovery
+            // rebuild, and either the GIF frame loop or a playlist's timer.
             "frameCallbacks" to 4,
             "sensorListeners" to 1,
             "broadcastReceivers" to 1,
@@ -290,6 +298,7 @@ class LiveWallpaperSoakTest {
         val required = mapOf(
             LiveWallpaperSoakTarget.VIDEO to listOf("players", "frameCallbacks", "broadcastReceivers"),
             LiveWallpaperSoakTarget.GIF to listOf("frameCallbacks", "broadcastReceivers"),
+            LiveWallpaperSoakTarget.VIDEO_PLAYLIST to listOf("players", "frameCallbacks", "broadcastReceivers"),
             LiveWallpaperSoakTarget.WEATHER to listOf("frameCallbacks", "loaderThreads"),
             LiveWallpaperSoakTarget.PARALLAX to
                 listOf("frameCallbacks", "sensorListeners", "loaderThreads"),

@@ -14,6 +14,8 @@ import com.freevibe.service.soak.LiveWallpaperSoakScenario
 import com.freevibe.service.soak.LiveWallpaperSoakScenarios
 import com.freevibe.service.soak.LiveWallpaperSoakTarget
 import com.freevibe.service.soak.SoakSurfaceHolder
+import com.freevibe.service.soak.soakPlaylistClips
+import com.freevibe.service.soak.writeSoakPlaylist
 import java.io.File
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
@@ -71,6 +73,7 @@ class LiveWallpaperSoakInstrumentedTest {
         override fun replaceMedia() {
             generation += 1
             writeMedia(mediaFile, target, generation)
+            writeSoakPlaylist(context, target, mediaFile, generation)
             settle()
         }
 
@@ -99,6 +102,11 @@ class LiveWallpaperSoakInstrumentedTest {
                 } else {
                     file.writeBytes(GIF_BYTES)
                 }
+            LiveWallpaperSoakTarget.VIDEO_PLAYLIST -> soakPlaylistClips(file).forEach { clip ->
+                instrumentation.context.assets.open(REAL_CLIP_ASSET).use { input ->
+                    clip.outputStream().use { input.copyTo(it) }
+                }
+            }
             LiveWallpaperSoakTarget.WEATHER,
             LiveWallpaperSoakTarget.PARALLAX,
             -> file.outputStream().use { out ->
@@ -133,6 +141,7 @@ class LiveWallpaperSoakInstrumentedTest {
             .edit()
             .putString(target.pathKey, mediaFile.absolutePath)
             .commit()
+        writeSoakPlaylist(context, target, mediaFile, generation = 0)
 
         val service = buildService(target.serviceClass)
         val holder = SoakSurfaceHolder()

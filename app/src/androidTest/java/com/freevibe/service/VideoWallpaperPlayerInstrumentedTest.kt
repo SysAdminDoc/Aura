@@ -27,6 +27,7 @@ import java.nio.ByteOrder
 import java.util.concurrent.CopyOnWriteArrayList
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
+import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.atomic.AtomicReference
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
@@ -57,17 +58,29 @@ class VideoWallpaperPlayerInstrumentedTest {
         val error: PlaybackException?,
         val selectedAudio: Boolean,
         val audioFormatWasNull: Boolean,
+        val moves: Int,
     )
 
-    private fun clip(asset: String): File =
-        File(context.cacheDir, "player-test-$asset").also { file ->
+    private fun clip(asset: String, name: String = asset): File =
+        File(context.cacheDir, "player-test-$name").also { file ->
             instrumentation.context.assets.open(asset).use { input ->
                 file.outputStream().use { input.copyTo(it) }
             }
         }
 
     /** Plays [file] on a loop for [playMs] and reports every frame that reached the surface. */
-    private fun play(file: File, width: Int, height: Int, playMs: Long): Playback {
+    private fun play(file: File, width: Int, height: Int, playMs: Long): Playback =
+        play(listOf(file), width, height, playMs) { it.repeatMode = Player.REPEAT_MODE_ONE }
+
+    /** Plays [files] as one list, moving on by hand every [moveEveryMs] when that's given. */
+    private fun play(
+        files: List<File>,
+        width: Int,
+        height: Int,
+        playMs: Long,
+        moveEveryMs: Long = 0L,
+        setUp: (ExoPlayer) -> Unit,
+    ): Playback {
         val frames = CopyOnWriteArrayList<Frame>()
         val reader = SurfaceBrightnessReader(width, height) { brightness ->
             frames += Frame(SystemClock.uptimeMillis(), brightness)
@@ -75,20 +88,39 @@ class VideoWallpaperPlayerInstrumentedTest {
 
         val playerRef = AtomicReference<ExoPlayer>()
         val error = AtomicReference<PlaybackException?>()
+        val moves = AtomicInteger()
         try {
             instrumentation.runOnMainSync {
                 val player = buildVideoWallpaperPlayer(context)
                 playerRef.set(player)
                 player.addListener(object : Player.Listener {
                     override fun onPlayerError(failure: PlaybackException) = error.set(failure)
+
+                    override fun onMediaItemTransition(mediaItem: MediaItem?, reason: Int) {
+                        if (reason == Player.MEDIA_ITEM_TRANSITION_REASON_AUTO ||
+                            reason == Player.MEDIA_ITEM_TRANSITION_REASON_SEEK
+                        ) {
+                            moves.incrementAndGet()
+                        }
+                    }
                 })
                 player.setVideoSurface(reader.surface)
-                player.repeatMode = Player.REPEAT_MODE_ONE
-                player.setMediaItem(MediaItem.fromUri(Uri.fromFile(file)), 0L)
+                setUp(player)
+                player.setMediaItems(files.map { MediaItem.fromUri(Uri.fromFile(it)) }, 0, 0L)
                 player.playWhenReady = true
                 player.prepare()
             }
-            Thread.sleep(playMs)
+            if (moveEveryMs > 0L) {
+                var left = playMs
+                while (left > moveEveryMs) {
+                    Thread.sleep(moveEveryMs)
+                    left -= moveEveryMs
+                    instrumentation.runOnMainSync { playerRef.get().moveToNextPlaylistClip() }
+                }
+                Thread.sleep(left)
+            } else {
+                Thread.sleep(playMs)
+            }
             var decoded = 0
             var selectedAudio = false
             var audioFormatWasNull = false
@@ -98,12 +130,73 @@ class VideoWallpaperPlayerInstrumentedTest {
                 selectedAudio = player.currentTracks.groups.any { it.type == C.TRACK_TYPE_AUDIO && it.isSelected }
                 audioFormatWasNull = player.audioFormat == null
             }
-            return Playback(frames.toList(), decoded, error.get(), selectedAudio, audioFormatWasNull)
+            return Playback(frames.toList(), decoded, error.get(), selectedAudio, audioFormatWasNull, moves.get())
         } finally {
             instrumentation.runOnMainSync { playerRef.get()?.release() }
             reader.close()
-            file.delete()
+            files.forEach(File::delete)
         }
+    }
+
+    private fun assertNoSeam(label: String, playback: Playback, moves: Int) {
+        assertNull("the list must play: " + playback.error, playback.error)
+        assertTrue("$label only moved " + playback.moves + " times", playback.moves >= moves)
+        val frames = playback.frames
+        assertTrue("only " + frames.size + " frames reached the surface", frames.size > 30)
+
+        val darkest = frames.minOf { it.brightness }
+        val longest = frames.zipWithNext { a, b -> b.atMs - a.atMs }.max()
+        Log.i(
+            TAG,
+            label + " frames=" + frames.size + " moves=" + playback.moves + " darkest=" + darkest +
+                " longestGapMs=" + longest,
+        )
+        assertTrue("$label: a dark frame reached the surface, brightness $darkest", darkest > DARK_BELOW)
+        assertTrue("$label: the picture stood still for $longest ms", longest < LONGEST_GAP_MS)
+    }
+
+    private fun preloading(player: ExoPlayer, repeatMode: Int) {
+        player.repeatMode = repeatMode
+        player.preloadConfiguration = ExoPlayer.PreloadConfiguration(VIDEO_PLAYLIST_PRELOAD_US)
+    }
+
+    @Test
+    fun aListRunningIntoItsNextClipHasNoDarkFrameOrLongGap() {
+        val files = listOf(clip(LOOP_CLIP, "first.mp4"), clip(LOOP_CLIP, "second.mp4"))
+
+        val playback = play(files, 320, 180, playMs = LOOPS * CLIP_MS + STARTUP_MS) {
+            preloading(it, Player.REPEAT_MODE_ALL)
+        }
+
+        assertNoSeam("end of clip", playback, moves = LOOPS - 1)
+    }
+
+    @Test
+    fun aTimerCuttingAClipShortHasNoDarkFrameOrLongGap() {
+        val files = listOf(clip(LOOP_CLIP, "first.mp4"), clip(LOOP_CLIP, "second.mp4"))
+
+        val playback = play(
+            files,
+            320,
+            180,
+            playMs = TIMED_MOVES * TIMED_MOVE_MS + STARTUP_MS,
+            moveEveryMs = TIMED_MOVE_MS,
+        ) {
+            preloading(it, Player.REPEAT_MODE_ONE)
+        }
+
+        assertNoSeam("timer", playback, moves = TIMED_MOVES)
+    }
+
+    @Test
+    fun clipsOfDifferentSizeAndFrameRateFollowEachOtherCleanly() {
+        val files = listOf(clip(LOOP_CLIP), clip(ROTATED_CLIP))
+
+        val playback = play(files, 320, 180, playMs = LOOPS * CLIP_MS + STARTUP_MS) {
+            preloading(it, Player.REPEAT_MODE_ALL)
+        }
+
+        assertNoSeam("mixed clips", playback, moves = LOOPS - 1)
     }
 
     @Test
@@ -168,6 +261,8 @@ class VideoWallpaperPlayerInstrumentedTest {
         const val CLIP_MS = 2_000L
         const val CLIP_FRAMES = 60
         const val STARTUP_MS = 1_000L
+        const val TIMED_MOVES = 5
+        const val TIMED_MOVE_MS = 1_300L
         const val SAMPLE_STEP = 8
         const val DARK_BELOW = 30.0
         const val LONGEST_GAP_MS = 250L
