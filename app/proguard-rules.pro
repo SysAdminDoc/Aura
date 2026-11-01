@@ -3,6 +3,12 @@
 -keepclassmembers class com.freevibe.data.remote.** { *; }
 -keep class com.freevibe.service.FavoriteExportItem { *; }
 -keep @com.squareup.moshi.JsonClass class * { *; }
+# Moshi's built-in enum adapter finds each constant with Class.getField(name), and its own
+# consumer rule only covers enums marked @JsonClass. The app's aren't, so keep the names here.
+-keepclassmembers enum com.freevibe.** {
+    <fields>;
+    **[] values();
+}
 
 # Retrofit
 -dontwarn retrofit2.**
