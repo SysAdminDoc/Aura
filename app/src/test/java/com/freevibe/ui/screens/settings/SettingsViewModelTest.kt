@@ -326,6 +326,7 @@ class SettingsViewModelTest {
             rollbackAvailable = true,
         )
         every { manager.snapshot() } returns initial
+        every { manager.changes } returns MutableStateFlow(0L)
         coEvery { manager.updateStable(YtDlpUpdateConsent.REPOSITORY_CHECKS_BYPASS_CONFIRMED) } returns YtDlpUpdateResult(
             status = YtDlpUpdateStatus.UPDATED_PENDING_VALIDATION,
             snapshot = updated,
@@ -342,6 +343,32 @@ class SettingsViewModelTest {
         assertEquals(YtDlpUpdateStatus.UPDATED_PENDING_VALIDATION, viewModel.ytDlpUpdate.value.completedStatus)
         assertEquals(updated, viewModel.ytDlpUpdate.value.snapshot)
         coVerify(exactly = 1) { manager.updateStable(YtDlpUpdateConsent.REPOSITORY_CHECKS_BYPASS_CONFIRMED) }
+    }
+
+    @Test
+    fun `an extraction validating elsewhere reaches a Settings screen that is already open`() = runTest(dispatcher) {
+        val manager = mockk<YtDlpUpdateManager>()
+        val pending = YtDlpUpdateSnapshot(
+            activeVersionName = "2026.10.26",
+            lastStatus = YtDlpUpdateStatus.UPDATED_PENDING_VALIDATION,
+            pendingValidation = true,
+        )
+        val validated = pending.copy(lastStatus = YtDlpUpdateStatus.VALIDATED, pendingValidation = false)
+        val changes = MutableStateFlow(0L)
+        every { manager.snapshot() } returns pending
+        every { manager.changes } returns changes
+        val viewModel = createViewModel(
+            cacheDir = createTempDirectory("settings-ytdlp-open").toFile().also(tempDirs::add),
+            ytDlpUpdateManagerOverride = manager,
+        )
+        advanceUntilIdle()
+        assertEquals(pending, viewModel.ytDlpUpdate.value.snapshot)
+
+        every { manager.snapshot() } returns validated
+        changes.value = 1L
+        advanceUntilIdle()
+
+        assertEquals(validated, viewModel.ytDlpUpdate.value.snapshot)
     }
 
     @Test
@@ -509,6 +536,7 @@ class SettingsViewModelTest {
         }
         val ytDlpUpdateManager = ytDlpUpdateManagerOverride ?: mockk<YtDlpUpdateManager>().also {
             every { it.snapshot() } returns YtDlpUpdateSnapshot()
+            every { it.changes } returns MutableStateFlow(0L)
         }
         val themePackRecipeManager = themePackRecipeManagerOverride ?: mockk<ThemePackRecipeManager>().also {
             coEvery { it.exportThemePack(any(), any()) } returns Result.success(ThemePackExportReport(0, 0, 0))

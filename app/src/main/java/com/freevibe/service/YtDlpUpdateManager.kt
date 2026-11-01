@@ -10,6 +10,10 @@ import javax.inject.Inject
 import javax.inject.Singleton
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
@@ -86,6 +90,11 @@ class YtDlpUpdateManager @Inject constructor(
     private val libraryPrefs by lazy {
         context.getSharedPreferences(LIBRARY_PREFS, Context.MODE_PRIVATE)
     }
+
+    private val _changes = MutableStateFlow(0L)
+
+    /** Ticks after every status write, so a screen that's already open can read the new [snapshot]. */
+    val changes: StateFlow<Long> = _changes.asStateFlow()
 
     fun snapshot(): YtDlpUpdateSnapshot = readSnapshot()
 
@@ -354,6 +363,7 @@ class YtDlpUpdateManager @Inject constructor(
 
     private inline fun writeMetadata(block: android.content.SharedPreferences.Editor.() -> Unit) {
         metadataPrefs.edit().apply(block).apply()
+        _changes.update { it + 1 }
     }
 
     private fun String?.orNullIfBlank(): String? = this?.takeIf { it.isNotBlank() }

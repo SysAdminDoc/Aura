@@ -53,6 +53,25 @@ class YtDlpUpdateManagerTest {
     }
 
     @Test
+    fun `changes ticks when an extraction validates a pending update`() = runTest(dispatcher) {
+        val fixture = createFixture()
+        fixture.runtimeFile.writeText("old")
+        val fakeRuntime = FakeYtDlpRuntime(
+            updateAction = {
+                fixture.runtimeFile.writeText("new")
+                activeVersionName = "2026.07.04"
+            },
+        )
+        val manager = fixture.manager(fakeRuntime)
+        manager.updateStable(YtDlpUpdateConsent.REPOSITORY_CHECKS_BYPASS_CONFIRMED)
+        val afterUpdate = manager.changes.value
+
+        manager.recordExtractionSuccess()
+
+        assertTrue(manager.changes.value > afterUpdate)
+    }
+
+    @Test
     fun `first extraction failure restores previous runtime and version prefs`() = runTest(dispatcher) {
         val fixture = createFixture()
         fixture.runtimeFile.writeText("old")

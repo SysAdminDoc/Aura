@@ -98,6 +98,12 @@ internal class SettingsDiagnosticsDelegate(
         refreshBackgroundWorkDiagnostics()
         refreshExternalAutomationDiagnostics()
         refreshGeneratedAssetAudit()
+        // Extractions validate or roll back from other screens while Settings stays open.
+        scope.launch {
+            ytDlpUpdateManager.changes.collect {
+                _ytDlpUpdate.update { state -> state.copy(snapshot = ytDlpUpdateManager.snapshot()) }
+            }
+        }
     }
 
     fun clearParallaxGalleryResult() {
