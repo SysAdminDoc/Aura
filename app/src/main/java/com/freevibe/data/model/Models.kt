@@ -4,6 +4,7 @@ import androidx.compose.runtime.Immutable
 import androidx.room.Entity
 import androidx.room.Index
 import androidx.room.PrimaryKey
+import com.squareup.moshi.JsonClass
 import java.util.Locale
 
 // -- Unified content types --
@@ -30,6 +31,7 @@ fun isSourceUnavailable(value: String?): Boolean =
 // -- Wallpaper --
 
 @Immutable
+@JsonClass(generateAdapter = true)
 data class Wallpaper(
     val id: String,
     val source: ContentSource,
@@ -65,6 +67,7 @@ val Wallpaper.webUrl: String get() = remoteFullUrl.ifBlank { fullUrl }
 // -- Sound --
 
 @Immutable
+@JsonClass(generateAdapter = true)
 data class Sound(
     val id: String,
     val source: ContentSource,

@@ -39,7 +39,8 @@ class SelectedContentHolder @Inject constructor(
         val type = Types.newParameterizedType(List::class.java, Wallpaper::class.java)
         moshi.adapter<List<Wallpaper>>(type)
     }
-    private val persistScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+    // One writer at a time, so two quick selections can't land on disk in the wrong order.
+    private val persistScope = CoroutineScope(SupervisorJob() + Dispatchers.IO.limitedParallelism(1))
 
     private val _selectedWallpaper = MutableStateFlow<Wallpaper?>(loadWallpaper())
     val selectedWallpaper: StateFlow<Wallpaper?> = _selectedWallpaper.asStateFlow()
